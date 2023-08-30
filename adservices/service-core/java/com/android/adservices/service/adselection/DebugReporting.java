@@ -23,6 +23,12 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
 
+import com.google.common.util.concurrent.FluentFuture;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+
+import java.util.concurrent.ExecutorService;
+
 /**
  * Event-level debug reporting for ad selection.
  *
@@ -41,53 +47,63 @@ import com.android.adservices.service.devapi.DevContext;
  * <li>forDebuggingOnly.reportAdAuctionWin(String url)
  *
  *     <p>For the classes that wrap JavaScript code, see {@link DebugReportingScriptStrategy}.
+ *
  *     <p>For the classes that send events, see {@link DebugReportSenderStrategy}.
+ *
  *     <p>For the business logic processing events, see {@link DebugReportProcessor}.
  */
-public class DebugReporting {
+public abstract class DebugReporting {
 
-    private final AdServicesHttpsClient mAdServicesHttpsClient;
-    private final AdSelectionDebugReportDao mAdSelectionDebugReportDao;
-    private final boolean mEnabled;
-    private final DevContext mDevContext;
-    private final boolean mShouldSendReportImmediately;
-
-    public DebugReporting(
+    /**
+     * @return an instance of debug reporting after checking for is limited ad tracking is enabled
+     *     or not.
+     */
+    public static ListenableFuture<DebugReporting> createInstance(
             @NonNull Flags flags,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull DevContext devContext,
-            @NonNull AdSelectionDebugReportDao adSelectionDebugReportDao) {
-        mAdServicesHttpsClient = adServicesHttpsClient;
-        mEnabled = getEnablementStatus(flags);
-        mDevContext = devContext;
-        mShouldSendReportImmediately = shouldSendDebugReportsImmediately(flags);
-        mAdSelectionDebugReportDao = adSelectionDebugReportDao;
+            @NonNull AdSelectionDebugReportDao adSelectionDebugReportDao,
+            @NonNull ExecutorService lightweightExecutorService,
+            @NonNull AdIdFetcher adIdFetcher,
+            @NonNull String packageName,
+            int callingUid) {
+        if (!getEnablementStatus(flags)) {
+            return Futures.immediateFuture(new DebugReportingDisabled());
+        }
+        return FluentFuture.from(adIdFetcher.isLimitedAdTrackingEnabled(packageName, callingUid))
+                .transform(
+                        isLatEnabled -> {
+                            if (isLatEnabled) {
+                                return new DebugReportingDisabled();
+                            } else {
+                                return new DebugReportingEnabled(
+                                        flags,
+                                        adServicesHttpsClient,
+                                        devContext,
+                                        adSelectionDebugReportDao);
+                            }
+                        },
+                        lightweightExecutorService);
     }
 
-    public DebugReportingScriptStrategy getScriptStrategy() {
-        return mEnabled
-                ? new DebugReportingEnabledScriptStrategy()
-                : new DebugReportingScriptDisabledStrategy();
-    }
+    /**
+     * @return DebugReportingScriptStrategy to be used while running on device ad selection.
+     */
+    @NonNull
+    public abstract DebugReportingScriptStrategy getScriptStrategy();
 
-    public DebugReportSenderStrategy getSenderStrategy() {
-        return mEnabled
-                ? mShouldSendReportImmediately
-                        ? new DebugReportSenderStrategyHttpImpl(mAdServicesHttpsClient, mDevContext)
-                        : new DebugReportSenderStrategyBatchImpl(
-                                mAdSelectionDebugReportDao, mDevContext)
-                : new DebugReportSenderStrategyNoOp();
-    }
+    /**
+     * @return DebugReportSenderStrategy to be used while running on device ad selection.
+     */
+    @NonNull
+    public abstract DebugReportSenderStrategy getSenderStrategy();
 
-    public boolean isEnabled() {
-        return mEnabled;
-    }
+    /**
+     * @return returns status of debug reporting
+     */
+    public abstract boolean isEnabled();
 
     private static boolean getEnablementStatus(Flags flags) {
         return flags.getFledgeEventLevelDebugReportingEnabled();
-    }
-
-    private static boolean shouldSendDebugReportsImmediately(Flags flags) {
-        return flags.getFledgeEventLevelDebugReportSendImmediately();
     }
 }
