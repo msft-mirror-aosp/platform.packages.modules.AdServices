@@ -51,6 +51,36 @@ public class AdservicesWorkflows {
         device.wait(Until.hasObject(By.pkg(NOTIFICATION_PACKAGE).depth(0)), LAUNCH_TIMEOUT);
     }
 
+    public static void startNotificationActivity(
+            Context context, UiDevice device, boolean isEUActivity, String packageName) {
+        if (context.checkCallingOrSelfPermission(READ_DEVICE_CONFIG)
+                != PackageManager.PERMISSION_GRANTED) {
+            Log.d("adservices", "this does not have read_device_config permission");
+        } else {
+            Log.d("adservices", "this has read_device_config permission");
+        }
+        Intent intent = new Intent(packageName);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.putExtra("isEUDevice", isEUActivity);
+        context.startActivity(intent);
+        device.wait(Until.hasObject(By.pkg(packageName).depth(0)), LAUNCH_TIMEOUT);
+    }
+
+    public static void startSettingsActivity(Context context, UiDevice device, String packageName) {
+        if (context.checkCallingOrSelfPermission(READ_DEVICE_CONFIG)
+                != PackageManager.PERMISSION_GRANTED) {
+            Log.d("adservices", "this does not have read_device_config permission");
+        } else {
+            Log.d("adservices", "this has read_device_config permission");
+        }
+        // Launch the setting view.
+        Intent intent = new Intent(packageName);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
+        // Wait for the view to appear
+        device.wait(Until.hasObject(By.pkg(packageName).depth(0)), LAUNCH_TIMEOUT);
+    }
+
     public static void startSettingsActivity(Context context, UiDevice device) {
         if (context.checkCallingOrSelfPermission(READ_DEVICE_CONFIG)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -71,7 +101,21 @@ public class AdservicesWorkflows {
             UiDevice device,
             boolean isEuDevice,
             UiConstants.UX ux,
-            boolean isFlip,
+            boolean isV2,
+            boolean isGoSettings,
+            boolean isOptin)
+            throws Exception {
+        testNotificationActivityFlow(
+                context, device, NOTIFICATION_PACKAGE, isEuDevice, ux, isV2, isGoSettings, isOptin);
+    }
+
+    public static void testNotificationActivityFlow(
+            Context context,
+            UiDevice device,
+            String packageName,
+            boolean isEuDevice,
+            UiConstants.UX ux,
+            boolean isV2,
             boolean isGoSettings,
             boolean isOptin)
             throws Exception {
@@ -82,34 +126,55 @@ public class AdservicesWorkflows {
         }
         switch (ux) {
             case GA_UX:
-            case U18_UX:
                 UiUtils.enableGa();
                 break;
             case BETA_UX:
                 UiUtils.enableBeta();
                 break;
+            case U18_UX:
+                UiUtils.enableGa();
+                UiUtils.enableU18();
+                break;
         }
 
-        UiUtils.setFlipFlow(isFlip);
+        UiUtils.setFlipFlow(isV2);
 
-        startNotificationActivity(context, device, isEuDevice);
+        startNotificationActivity(context, device, isEuDevice, packageName);
         notificationConfirmWorkflow(
-                context, device, true, isEuDevice, ux, isFlip, isGoSettings, isOptin);
+                context, device, true, isEuDevice, ux, isV2, isGoSettings, isOptin);
     }
 
     public static void testSettingsPageFlow(
-            Context context, UiDevice device, UiConstants.UX ux, boolean isOptin) throws Exception {
+            Context context,
+            UiDevice device,
+            UiConstants.UX ux,
+            boolean isOptin,
+            boolean flipConsent)
+            throws Exception {
+        testSettingsPageFlow(context, device, SETTINGS_PACKAGE, ux, isOptin, flipConsent);
+    }
+
+    public static void testSettingsPageFlow(
+            Context context,
+            UiDevice device,
+            String packageName,
+            UiConstants.UX ux,
+            boolean isOptin,
+            boolean flipConsent)
+            throws Exception {
         switch (ux) {
             case GA_UX:
-            case U18_UX:
                 UiUtils.enableGa();
                 break;
             case BETA_UX:
                 UiUtils.enableBeta();
                 break;
+            case U18_UX:
+                UiUtils.enableGa();
+                UiUtils.enableU18();
         }
-        startSettingsActivity(context, device);
-        SettingsPages.testSettingsPageConsents(context, device, ux, isOptin, true);
+        startSettingsActivity(context, device, packageName);
+        SettingsPages.testSettingsPageConsents(context, device, ux, isOptin, flipConsent);
     }
 
     public static void verifyNotification(
@@ -119,7 +184,18 @@ public class AdservicesWorkflows {
             boolean isEuDevice,
             UiConstants.UX ux)
             throws Exception {
-        NotificationPages.verifyNotification(context, device, isDisplayed, isEuDevice, ux);
+        NotificationPages.verifyNotification(context, device, isDisplayed, isEuDevice, ux, false);
+    }
+
+    public static void verifyNotification(
+            Context context,
+            UiDevice device,
+            boolean isDisplayed,
+            boolean isEuDevice,
+            UiConstants.UX ux,
+            boolean isV2)
+            throws Exception {
+        NotificationPages.verifyNotification(context, device, isDisplayed, isEuDevice, ux, isV2);
     }
 
     public static void testClickNotificationFlow(
@@ -128,14 +204,14 @@ public class AdservicesWorkflows {
             boolean isDisplayed,
             boolean isEuDevice,
             UiConstants.UX ux,
-            boolean isFlip,
+            boolean isV2,
             boolean isOptin)
             throws Exception {
-        NotificationPages.verifyNotification(context, device, isDisplayed, isEuDevice, ux);
+        NotificationPages.verifyNotification(context, device, isDisplayed, isEuDevice, ux, isV2);
         // Only GA and row devices needs to got to settings page to set up consent.
         boolean isGoSettings = !isEuDevice;
         notificationConfirmWorkflow(
-                context, device, isDisplayed, isEuDevice, ux, isFlip, isGoSettings, isOptin);
+                context, device, isDisplayed, isEuDevice, ux, isV2, isGoSettings, isOptin);
     }
 
     public static void notificationConfirmWorkflow(
@@ -144,7 +220,7 @@ public class AdservicesWorkflows {
             boolean isDisplayed,
             boolean isEuDevice,
             UiConstants.UX ux,
-            boolean isFlip,
+            boolean isV2,
             boolean isGoSettings,
             boolean isOptin)
             throws Exception {
@@ -156,18 +232,18 @@ public class AdservicesWorkflows {
                 if (!isEuDevice) {
                     NotificationPages.rowNotificationLandingPage(context, device, isGoSettings);
                 } else {
-                    if (isFlip) {
+                    if (isV2) {
                         NotificationPages.euNotificationLandingPageMsmtAndFledgePage(
-                                context, device, isGoSettings);
+                                context, device, isGoSettings, isV2);
                         if (!isGoSettings) {
                             NotificationPages.euNotificationLandingPageTopicsPage(
-                                    context, device, isOptin);
+                                    context, device, isOptin, isV2);
                         }
                     } else {
                         NotificationPages.euNotificationLandingPageTopicsPage(
-                                context, device, isOptin);
+                                context, device, isOptin, isV2);
                         NotificationPages.euNotificationLandingPageMsmtAndFledgePage(
-                                context, device, isGoSettings);
+                                context, device, isGoSettings, isV2);
                     }
                 }
                 break;
@@ -179,8 +255,7 @@ public class AdservicesWorkflows {
                 }
                 break;
             case U18_UX:
-                NotificationPages.euNotificationLandingPageMsmtAndFledgePage(
-                        context, device, isGoSettings);
+                NotificationPages.u18NotifiacitonLandingPage(context, device, isGoSettings);
         }
 
         // if decide to go settings page, then we test settings page consent

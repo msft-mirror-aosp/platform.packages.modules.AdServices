@@ -124,7 +124,7 @@ public class GaUxGraduationChannelTest {
     @Test
     public void testRowU18ToGaAdIdEnabled() throws Exception {
         UiUtils.setAsRowDevice();
-        UiUtils.enableU18Ux();
+        UiUtils.enableU18();
         AdservicesTestHelper.killAdservicesProcess(sContext);
         AdServicesStates u18States =
                 new AdServicesStates.Builder()
@@ -163,7 +163,7 @@ public class GaUxGraduationChannelTest {
     @Test
     public void testRowU18ToBetaAdIdEnabled() throws Exception {
         UiUtils.setAsRowDevice();
-        UiUtils.enableU18Ux();
+        UiUtils.enableU18();
         AdservicesTestHelper.killAdservicesProcess(sContext);
         AdServicesStates u18States =
                 new AdServicesStates.Builder()
