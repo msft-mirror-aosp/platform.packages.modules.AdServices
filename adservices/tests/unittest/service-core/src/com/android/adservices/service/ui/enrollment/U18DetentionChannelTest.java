@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.ui.enrollment;
 
+import static com.android.adservices.service.FlagsConstants.KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
@@ -72,6 +73,7 @@ public class U18DetentionChannelTest {
                         () ->
                                 ConsentNotificationJobService.schedule(
                                         any(Context.class), anyBoolean(), anyBoolean()));
+        doReturn(true).when(mUxStatesManager).getFlag(KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED);
 
         mU18DetentionChannel = new U18DetentionChannel();
     }
@@ -81,6 +83,18 @@ public class U18DetentionChannelTest {
         if (mStaticMockSession != null) {
             mStaticMockSession.finishMocking();
         }
+    }
+
+    @Test
+    public void isEligibleTest_U18UxDetentionChannelDisabled() {
+        doReturn(false).when(mUxStatesManager).getFlag(KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED);
+
+        assertThat(
+                        mU18DetentionChannel.isEligible(
+                                PrivacySandboxUxCollection.U18_UX,
+                                mConsentManager,
+                                mUxStatesManager))
+                .isFalse();
     }
 
     @Test
