@@ -225,6 +225,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION =
             "measurement_enable_datastore_manager_throw_datastore_exception";
 
+    public static final String KEY_MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE =
+            "measurement_throw_unknown_exception_sampling_rate";
+
     // FLEDGE Custom Audience keys
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT =
             "fledge_custom_audience_max_count";

@@ -709,6 +709,9 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION =
             "measurement_enable_datastore_manager_throw_datastore_exception";
 
+    static final String KEY_MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE =
+            "measurement_throw_unknown_exception_sampling_rate";
+
     static final String KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS =
             "measurement_debug_reporting_fallback_job_period_ms";
     static final String KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS =
@@ -4671,6 +4674,14 @@ public final class PhFlags implements Flags {
                 /* flagName */
                         KEY_MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION,
                 /* defaultValue */ MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION);
+    }
+
+    @Override
+    public float getMeasurementThrowUnknownExceptionSamplingRate() {
+        return DeviceConfig.getFloat(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE,
+                /* defaultValue */ MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE);
     }
 
     @Override

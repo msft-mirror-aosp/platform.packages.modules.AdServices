@@ -6317,6 +6317,8 @@ public class MeasurementDaoTest {
         // Setup - insert 2 sources with different IDs
         mFlags = mock(Flags.class);
         ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(true).when(mFlags).getMeasurementEnableDatastoreManagerThrowDatastoreException();
+        doReturn(1.0f).when(mFlags).getMeasurementThrowUnknownExceptionSamplingRate();
         SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         String sourceId1 = "source1";
         Source source1WithDestinations =
@@ -6326,7 +6328,6 @@ public class MeasurementDaoTest {
                         .setWebDestinations(null)
                         .build();
         insertInDb(db, source1WithDestinations);
-        doReturn(true).when(mFlags).getMeasurementEnableDatastoreManagerThrowDatastoreException();
 
         // Execution
         try {
@@ -6341,6 +6342,58 @@ public class MeasurementDaoTest {
             assertEquals(DatastoreException.class, cause.getClass());
             assertEquals("Source retrieval failed. Id: random_source_id", cause.getMessage());
         }
+    }
+
+    @Test
+    public void getSource_nonExistingInDbNoSampling_swallowException() {
+        // Setup - insert 2 sources with different IDs
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(true).when(mFlags).getMeasurementEnableDatastoreManagerThrowDatastoreException();
+        doReturn(0.0f).when(mFlags).getMeasurementThrowUnknownExceptionSamplingRate();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        String sourceId1 = "source1";
+        Source source1WithDestinations =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId(sourceId1)
+                        .setAppDestinations(null)
+                        .setWebDestinations(null)
+                        .build();
+        insertInDb(db, source1WithDestinations);
+
+        // Execution
+        assertFalse(
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransaction(
+                                (dao) -> {
+                                    dao.getSource("random_source_id");
+                                }));
+    }
+
+    @Test
+    public void getSource_nonExistingInDbThrowingDisabled_swallowException() {
+        // Setup - insert 2 sources with different IDs
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(false).when(mFlags).getMeasurementEnableDatastoreManagerThrowDatastoreException();
+        doReturn(1.0f).when(mFlags).getMeasurementThrowUnknownExceptionSamplingRate();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        String sourceId1 = "source1";
+        Source source1WithDestinations =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId(sourceId1)
+                        .setAppDestinations(null)
+                        .setWebDestinations(null)
+                        .build();
+        insertInDb(db, source1WithDestinations);
+
+        // Execution
+        assertFalse(
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransaction(
+                                (dao) -> {
+                                    dao.getSource("random_source_id");
+                                }));
     }
 
     @Test
