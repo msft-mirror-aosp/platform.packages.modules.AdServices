@@ -939,6 +939,33 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getProtectedSignalsPeriodicEncodingEnabled() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED,
+                /* defaultValue */ PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED);
+    }
+
+    @Override
+    public long getProtectedSignalPeriodicEncodingJobPeriodMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS,
+                /* defaultValue */ PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS);
+    }
+
+    @Override
+    public long getProtectedSignalsPeriodicEncodingJobFlexMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS,
+                /* defaultValue */ PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS);
+    }
+
+    @Override
     public int getAdSelectionMaxConcurrentBiddingCount() {
         return DeviceConfig.getInt(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -3869,6 +3896,21 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B
                         + " = "
                         + getFledgeBackgroundFetchMaxResponseSizeB());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED
+                        + " = "
+                        + getProtectedSignalsPeriodicEncodingEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS
+                        + " = "
+                        + getProtectedSignalPeriodicEncodingJobPeriodMs());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS
+                        + " = "
+                        + getProtectedSignalsPeriodicEncodingJobFlexMs());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT
