@@ -26,6 +26,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Abstract class for Datastore management.
@@ -103,7 +104,10 @@ public abstract class DatastoreManager {
             transaction.rollback();
 
             if (FlagsFactory.getFlags()
-                    .getMeasurementEnableDatastoreManagerThrowDatastoreException()) {
+                            .getMeasurementEnableDatastoreManagerThrowDatastoreException()
+                    && ThreadLocalRandom.current().nextFloat()
+                            < FlagsFactory.getFlags()
+                                    .getMeasurementThrowUnknownExceptionSamplingRate()) {
                 throw new IllegalStateException(ex);
             }
         } catch (Exception ex) {
