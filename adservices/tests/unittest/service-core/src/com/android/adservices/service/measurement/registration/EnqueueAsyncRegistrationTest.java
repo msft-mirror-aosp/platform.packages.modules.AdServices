@@ -61,8 +61,9 @@ import java.util.List;
 public class EnqueueAsyncRegistrationTest {
 
     private static final Context sDefaultContext = ApplicationProvider.getApplicationContext();
-    private static final Uri REGISTRATION_URI_1 = Uri.parse("https://foo.test/bar?ad=134");
-    private static final Uri REGISTRATION_URI_2 = Uri.parse("https://foo.test/bar?ad=256");
+    private static final Uri REGISTRATION_URI_1 = Uri.parse("https://bar.test/bar?q=134");
+    private static final Uri REGISTRATION_URI_2 = Uri.parse("https://foo.test/bar?q=256");
+    private static final Uri INVALID_REGISTRATION_URI = Uri.parse("http://foo.test/bar?q=347");
     private static final String SDK_PACKAGE_NAME = "sdk.package.name";
     private static final boolean DEFAULT_AD_ID_PERMISSION = false;
     private static final WebSourceParams INPUT_SOURCE_REGISTRATION_1 =
@@ -71,11 +72,18 @@ public class EnqueueAsyncRegistrationTest {
     private static final WebSourceParams INPUT_SOURCE_REGISTRATION_2 =
             new WebSourceParams.Builder(REGISTRATION_URI_2).setDebugKeyAllowed(false).build();
 
+    private static final WebSourceParams INVALID_SOURCE_REGISTRATION =
+            new WebSourceParams.Builder(INVALID_REGISTRATION_URI).setDebugKeyAllowed(false).build();
+
     private static final WebTriggerParams INPUT_TRIGGER_REGISTRATION_1 =
             new WebTriggerParams.Builder(REGISTRATION_URI_1).setDebugKeyAllowed(true).build();
 
     private static final WebTriggerParams INPUT_TRIGGER_REGISTRATION_2 =
             new WebTriggerParams.Builder(REGISTRATION_URI_2).setDebugKeyAllowed(false).build();
+
+    private static final WebTriggerParams INVALID_TRIGGER_REGISTRATION =
+            new WebTriggerParams.Builder(INVALID_REGISTRATION_URI).setDebugKeyAllowed(false)
+                    .build();
 
     private static final List<WebSourceParams> sSourceParamsList = new ArrayList<>();
 
@@ -85,8 +93,10 @@ public class EnqueueAsyncRegistrationTest {
 
     static {
         sSourceParamsList.add(INPUT_SOURCE_REGISTRATION_1);
+        sSourceParamsList.add(INVALID_SOURCE_REGISTRATION);
         sSourceParamsList.add(INPUT_SOURCE_REGISTRATION_2);
         sTriggerParamsList.add(INPUT_TRIGGER_REGISTRATION_1);
+        sTriggerParamsList.add(INVALID_TRIGGER_REGISTRATION);
         sTriggerParamsList.add(INPUT_TRIGGER_REGISTRATION_2);
     }
 
@@ -135,13 +145,51 @@ public class EnqueueAsyncRegistrationTest {
     }
 
     @Test
+    public void appSourceOrTriggerRegistrationRequest_sourceInvalidRegistrationUri_doesNotInsert() {
+        DatastoreManager datastoreManager =
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
+        RegistrationRequest registrationRequest =
+                new RegistrationRequest.Builder(
+                                RegistrationRequest.REGISTER_SOURCE,
+                                // Invalid scheme for registrationUri
+                                Uri.parse("http://baz.test"),
+                                sDefaultContext.getPackageName(),
+                                SDK_PACKAGE_NAME)
+                        .build();
+
+        Assert.assertTrue(
+                EnqueueAsyncRegistration.appSourceOrTriggerRegistrationRequest(
+                        registrationRequest,
+                        DEFAULT_AD_ID_PERMISSION,
+                        Uri.parse("android-app://test.destination"),
+                        System.currentTimeMillis(),
+                        Source.SourceType.EVENT,
+                        datastoreManager,
+                        mContentResolver));
+
+        try (Cursor cursor =
+                DbTestUtil.getMeasurementDbHelperForTest()
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.AsyncRegistrationContract.TABLE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null)) {
+            Assert.assertFalse(cursor.moveToNext());
+        }
+    }
+
+    @Test
     public void testAppSourceRegistrationRequest_event_isValid() {
         DatastoreManager datastoreManager =
                 new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
         RegistrationRequest registrationRequest =
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_SOURCE,
-                                Uri.parse("http://baz.test"),
+                                Uri.parse("https://baz.test"),
                                 sDefaultContext.getPackageName(),
                                 SDK_PACKAGE_NAME)
                         .build();
@@ -196,7 +244,7 @@ public class EnqueueAsyncRegistrationTest {
         RegistrationRequest registrationRequest =
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_SOURCE,
-                                Uri.parse("http://baz.test"),
+                                Uri.parse("https://baz.test"),
                                 sDefaultContext.getPackageName(),
                                 SDK_PACKAGE_NAME)
                         .setInputEvent(mInputEvent)
@@ -246,13 +294,52 @@ public class EnqueueAsyncRegistrationTest {
     }
 
     @Test
+    public void
+            appSourceOrTriggerRegistrationRequest_triggerInvalidRegistrationUri_doesNotInsert() {
+        DatastoreManager datastoreManager =
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
+        RegistrationRequest registrationRequest =
+                new RegistrationRequest.Builder(
+                                RegistrationRequest.REGISTER_TRIGGER,
+                                // Invalid registrationUri
+                                Uri.parse("http://baz.test"),
+                                sDefaultContext.getPackageName(),
+                                SDK_PACKAGE_NAME)
+                        .build();
+
+        Assert.assertTrue(
+                EnqueueAsyncRegistration.appSourceOrTriggerRegistrationRequest(
+                        registrationRequest,
+                        DEFAULT_AD_ID_PERMISSION,
+                        Uri.parse("android-app://test.destination"),
+                        System.currentTimeMillis(),
+                        null,
+                        datastoreManager,
+                        mContentResolver));
+
+        try (Cursor cursor =
+                DbTestUtil.getMeasurementDbHelperForTest()
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.AsyncRegistrationContract.TABLE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null)) {
+            Assert.assertFalse(cursor.moveToNext());
+        }
+    }
+
+    @Test
     public void testAppTriggerRegistrationRequest_isValid() {
         DatastoreManager datastoreManager =
                 new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
         RegistrationRequest registrationRequest =
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_TRIGGER,
-                                Uri.parse("http://baz.test"),
+                                Uri.parse("https://baz.test"),
                                 sDefaultContext.getPackageName(),
                                 SDK_PACKAGE_NAME)
                         .build();
@@ -303,7 +390,7 @@ public class EnqueueAsyncRegistrationTest {
         RegistrationRequest registrationRequest =
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_TRIGGER,
-                                Uri.parse("http://baz.test"),
+                                Uri.parse("https://baz.test"),
                                 sDefaultContext.getPackageName(),
                                 SDK_PACKAGE_NAME)
                         .setAdIdValue(PLATFORM_AD_ID_VALUE)
@@ -365,143 +452,35 @@ public class EnqueueAsyncRegistrationTest {
                                 null,
                                 null,
                                 null,
-                                null)) {
+                                // Order by registration URI
+                                MeasurementTables.AsyncRegistrationContract.REGISTRATION_URI)) {
+
+            // The invalid registration was not inserted
+            Assert.assertEquals(2, cursor.getCount());
 
             Assert.assertTrue(cursor.moveToNext());
-            AsyncRegistration asyncRegistration =
+            AsyncRegistration asyncRegistration1 =
                     SqliteObjectMapper.constructAsyncRegistration(cursor);
-            if (asyncRegistration
-                    .getRegistrationUri()
-                    .equals(
-                            VALID_WEB_SOURCE_REGISTRATION_NULL_INPUT_EVENT
-                                    .getSourceParams()
-                                    .get(0)
-                                    .getRegistrationUri())) {
-                Assert.assertNotNull(asyncRegistration.getRegistrationUri());
-                Assert.assertEquals(REGISTRATION_URI_1, asyncRegistration.getRegistrationUri());
-                Assert.assertEquals(Source.SourceType.EVENT, asyncRegistration.getSourceType());
-                Assert.assertEquals(
-                        Uri.parse("android-app://test.destination"),
-                        asyncRegistration.getRegistrant());
-                Assert.assertNotNull(asyncRegistration.getWebDestination());
-                Assert.assertEquals(
-                        Uri.parse("android-app://example.test/aD1"),
-                        asyncRegistration.getWebDestination());
-                Assert.assertNotNull(asyncRegistration.getOsDestination());
-                Assert.assertEquals(
-                        Uri.parse("android-app://example.test/aD1"),
-                        asyncRegistration.getOsDestination());
-                Assert.assertNotNull(asyncRegistration.getVerifiedDestination());
-                Assert.assertEquals(
-                        Uri.parse("android-app://example.test/aD1"),
-                        asyncRegistration.getVerifiedDestination());
-                Assert.assertNotNull(asyncRegistration.getType());
-                Assert.assertEquals(
-                        AsyncRegistration.RegistrationType.WEB_SOURCE, asyncRegistration.getType());
+            Assert.assertEquals(REGISTRATION_URI_1, asyncRegistration1.getRegistrationUri());
+            Assert.assertEquals(Source.SourceType.EVENT, asyncRegistration1.getSourceType());
+            Assert.assertEquals(
+                    VALID_WEB_SOURCE_REGISTRATION_NULL_INPUT_EVENT.getTopOriginUri(),
+                    asyncRegistration1.getTopOrigin());
+            assertEqualsWebSourceRegistrationCommon(asyncRegistration1);
 
-                Assert.assertTrue(cursor.moveToNext());
-                AsyncRegistration asyncRegistrationTwo =
-                        SqliteObjectMapper.constructAsyncRegistration(cursor);
+            Assert.assertTrue(cursor.moveToNext());
+            AsyncRegistration asyncRegistration2 =
+                    SqliteObjectMapper.constructAsyncRegistration(cursor);
+            Assert.assertEquals(REGISTRATION_URI_2, asyncRegistration2.getRegistrationUri());
+            Assert.assertEquals(Source.SourceType.EVENT, asyncRegistration2.getSourceType());
+            Assert.assertEquals(
+                    VALID_WEB_SOURCE_REGISTRATION_NULL_INPUT_EVENT.getTopOriginUri(),
+                    asyncRegistration2.getTopOrigin());
+            assertEqualsWebSourceRegistrationCommon(asyncRegistration2);
 
-                Assert.assertNotNull(asyncRegistrationTwo.getRegistrationUri());
-                Assert.assertEquals(REGISTRATION_URI_2, asyncRegistrationTwo.getRegistrationUri());
-                Assert.assertEquals(Source.SourceType.EVENT, asyncRegistrationTwo.getSourceType());
-                Assert.assertEquals(
-                        Uri.parse("android-app://test.destination"),
-                        asyncRegistrationTwo.getRegistrant());
-                Assert.assertNotNull(asyncRegistrationTwo.getWebDestination());
-                Assert.assertEquals(
-                        Uri.parse("android-app://example.test/aD1"),
-                        asyncRegistrationTwo.getWebDestination());
-                Assert.assertNotNull(asyncRegistrationTwo.getOsDestination());
-                Assert.assertEquals(
-                        Uri.parse("android-app://example.test/aD1"),
-                        asyncRegistrationTwo.getOsDestination());
-                Assert.assertNotNull(asyncRegistrationTwo.getVerifiedDestination());
-                Assert.assertEquals(
-                        Uri.parse("android-app://example.test/aD1"),
-                        asyncRegistrationTwo.getVerifiedDestination());
-                Assert.assertNotNull(asyncRegistrationTwo.getTopOrigin());
-                Assert.assertEquals(
-                        VALID_WEB_SOURCE_REGISTRATION_NULL_INPUT_EVENT.getTopOriginUri(),
-                        asyncRegistrationTwo.getTopOrigin());
-                Assert.assertNotNull(asyncRegistrationTwo.getType());
-                Assert.assertEquals(
-                        AsyncRegistration.RegistrationType.WEB_SOURCE,
-                        asyncRegistrationTwo.getType());
-                Assert.assertNotNull(asyncRegistration.getRegistrationId());
-                Assert.assertEquals(
-                        asyncRegistration.getRegistrationId(),
-                        asyncRegistrationTwo.getRegistrationId());
-            } else if (asyncRegistration
-                    .getRegistrationUri()
-                    .equals(
-                            VALID_WEB_SOURCE_REGISTRATION_NULL_INPUT_EVENT
-                                    .getSourceParams()
-                                    .get(1)
-                                    .getRegistrationUri())) {
-                Assert.assertNotNull(asyncRegistration.getRegistrationUri());
-                Assert.assertEquals(REGISTRATION_URI_2, asyncRegistration.getRegistrationUri());
-                Assert.assertEquals(Source.SourceType.EVENT, asyncRegistration.getSourceType());
-                Assert.assertEquals(
-                        Uri.parse("android-app://test.destination"),
-                        asyncRegistration.getRegistrant());
-                Assert.assertNotNull(asyncRegistration.getWebDestination());
-                Assert.assertEquals(
-                        Uri.parse("android-app://example.test/aD1"),
-                        asyncRegistration.getWebDestination());
-                Assert.assertNotNull(asyncRegistration.getOsDestination());
-                Assert.assertEquals(
-                        Uri.parse("android-app://example.test/aD1"),
-                        asyncRegistration.getOsDestination());
-                Assert.assertNotNull(asyncRegistration.getVerifiedDestination());
-                Assert.assertEquals(
-                        Uri.parse("android-app://example.test/aD1"),
-                        asyncRegistration.getVerifiedDestination());
-                Assert.assertNotNull(asyncRegistration.getTopOrigin());
-                Assert.assertEquals(
-                        VALID_WEB_SOURCE_REGISTRATION_NULL_INPUT_EVENT.getTopOriginUri(),
-                        asyncRegistration.getTopOrigin());
-                Assert.assertNotNull(asyncRegistration.getType());
-                Assert.assertEquals(
-                        AsyncRegistration.RegistrationType.WEB_SOURCE, asyncRegistration.getType());
-
-                Assert.assertTrue(cursor.moveToNext());
-                AsyncRegistration asyncRegistrationTwo =
-                        SqliteObjectMapper.constructAsyncRegistration(cursor);
-                Assert.assertNotNull(asyncRegistrationTwo.getRegistrationUri());
-                Assert.assertEquals(REGISTRATION_URI_1, asyncRegistrationTwo.getRegistrationUri());
-                Assert.assertEquals(Source.SourceType.EVENT, asyncRegistrationTwo.getSourceType());
-                Assert.assertEquals(
-                        Uri.parse("android-app://test.destination"),
-                        asyncRegistrationTwo.getRegistrant());
-                Assert.assertNotNull(asyncRegistrationTwo.getWebDestination());
-                Assert.assertEquals(
-                        Uri.parse("android-app://example.test/aD1"),
-                        asyncRegistrationTwo.getWebDestination());
-                Assert.assertNotNull(asyncRegistrationTwo.getOsDestination());
-                Assert.assertEquals(
-                        Uri.parse("android-app://example.test/aD1"),
-                        asyncRegistrationTwo.getOsDestination());
-                Assert.assertNotNull(asyncRegistrationTwo.getVerifiedDestination());
-                Assert.assertEquals(
-                        Uri.parse("android-app://example.test/aD1"),
-                        asyncRegistrationTwo.getVerifiedDestination());
-                Assert.assertNotNull(asyncRegistrationTwo.getTopOrigin());
-                Assert.assertEquals(
-                        VALID_WEB_SOURCE_REGISTRATION_NULL_INPUT_EVENT.getTopOriginUri(),
-                        asyncRegistrationTwo.getTopOrigin());
-                Assert.assertNotNull(asyncRegistrationTwo.getType());
-                Assert.assertEquals(
-                        AsyncRegistration.RegistrationType.WEB_SOURCE,
-                        asyncRegistrationTwo.getType());
-                Assert.assertNotNull(asyncRegistration.getRegistrationId());
-                Assert.assertEquals(
-                        asyncRegistration.getRegistrationId(),
-                        asyncRegistrationTwo.getRegistrationId());
-            } else {
-                Assert.fail();
-            }
+            Assert.assertEquals(
+                    asyncRegistration1.getRegistrationId(),
+                    asyncRegistration2.getRegistrationId());
         }
     }
 
@@ -511,6 +490,7 @@ public class EnqueueAsyncRegistrationTest {
                 new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
         List<WebSourceParams> sourceParamsList = new ArrayList<>();
         sourceParamsList.add(INPUT_SOURCE_REGISTRATION_1);
+        sourceParamsList.add(INVALID_SOURCE_REGISTRATION);
         sourceParamsList.add(INPUT_SOURCE_REGISTRATION_2);
         WebSourceRegistrationRequest validWebSourceRegistration =
                 new WebSourceRegistrationRequest.Builder(
@@ -540,150 +520,37 @@ public class EnqueueAsyncRegistrationTest {
                                 null,
                                 null,
                                 null,
-                                null)) {
+                                // Order by registration URI
+                                MeasurementTables.AsyncRegistrationContract.REGISTRATION_URI)) {
+
+            // The invalid registration was not inserted
+            Assert.assertEquals(2, cursor.getCount());
 
             Assert.assertTrue(cursor.moveToNext());
-            AsyncRegistration asyncRegistration =
+            AsyncRegistration asyncRegistration1 =
                     SqliteObjectMapper.constructAsyncRegistration(cursor);
-            if (asyncRegistration
-                    .getRegistrationUri()
-                    .equals(
-                            validWebSourceRegistration
-                                    .getSourceParams()
-                                    .get(0)
-                                    .getRegistrationUri())) {
-                Assert.assertNotNull(asyncRegistration.getRegistrationUri());
-                Assert.assertEquals(REGISTRATION_URI_1, asyncRegistration.getRegistrationUri());
-                Assert.assertEquals(
-                        Source.SourceType.NAVIGATION, asyncRegistration.getSourceType());
-                Assert.assertEquals(
-                        Uri.parse("android-app://test.destination"),
-                        asyncRegistration.getRegistrant());
-                Assert.assertNotNull(asyncRegistration.getWebDestination());
-                Assert.assertEquals(
-                        Uri.parse("android-app://example.test/aD1"),
-                        asyncRegistration.getWebDestination());
-                Assert.assertNotNull(asyncRegistration.getOsDestination());
-                Assert.assertEquals(
-                        Uri.parse("android-app://example.test/aD1"),
-                        asyncRegistration.getOsDestination());
-                Assert.assertNotNull(asyncRegistration.getVerifiedDestination());
-                Assert.assertEquals(
-                        Uri.parse("android-app://example.test/aD1"),
-                        asyncRegistration.getVerifiedDestination());
-                Assert.assertNotNull(asyncRegistration.getType());
-                Assert.assertEquals(
-                        AsyncRegistration.RegistrationType.WEB_SOURCE, asyncRegistration.getType());
+            Assert.assertEquals(REGISTRATION_URI_1, asyncRegistration1.getRegistrationUri());
+            Assert.assertEquals(Source.SourceType.NAVIGATION, asyncRegistration1.getSourceType());
+            Assert.assertEquals(
+                    validWebSourceRegistration.getTopOriginUri(),
+                    asyncRegistration1.getTopOrigin());
+            assertEqualsWebSourceRegistrationCommon(asyncRegistration1);
 
-                Assert.assertTrue(cursor.moveToNext());
-                AsyncRegistration asyncRegistrationTwo =
-                        SqliteObjectMapper.constructAsyncRegistration(cursor);
+            Assert.assertTrue(cursor.moveToNext());
+            AsyncRegistration asyncRegistration2 =
+                    SqliteObjectMapper.constructAsyncRegistration(cursor);
+            Assert.assertEquals(REGISTRATION_URI_2, asyncRegistration2.getRegistrationUri());
+            Assert.assertEquals(Source.SourceType.NAVIGATION, asyncRegistration2.getSourceType());
+            Assert.assertEquals(
+                    validWebSourceRegistration.getTopOriginUri(),
+                    asyncRegistration2.getTopOrigin());
+            assertEqualsWebSourceRegistrationCommon(asyncRegistration2);
 
-                Assert.assertNotNull(asyncRegistrationTwo.getRegistrationUri());
-                Assert.assertEquals(REGISTRATION_URI_2, asyncRegistrationTwo.getRegistrationUri());
-                Assert.assertEquals(
-                        Source.SourceType.NAVIGATION, asyncRegistrationTwo.getSourceType());
-                Assert.assertEquals(
-                        Uri.parse("android-app://test.destination"),
-                        asyncRegistrationTwo.getRegistrant());
-                Assert.assertNotNull(asyncRegistrationTwo.getWebDestination());
-                Assert.assertEquals(
-                        Uri.parse("android-app://example.test/aD1"),
-                        asyncRegistrationTwo.getWebDestination());
-                Assert.assertNotNull(asyncRegistrationTwo.getOsDestination());
-                Assert.assertEquals(
-                        Uri.parse("android-app://example.test/aD1"),
-                        asyncRegistrationTwo.getOsDestination());
-                Assert.assertNotNull(asyncRegistrationTwo.getVerifiedDestination());
-                Assert.assertEquals(
-                        Uri.parse("android-app://example.test/aD1"),
-                        asyncRegistrationTwo.getVerifiedDestination());
-                Assert.assertNotNull(asyncRegistrationTwo.getTopOrigin());
-                Assert.assertEquals(
-                        validWebSourceRegistration.getTopOriginUri(),
-                        asyncRegistrationTwo.getTopOrigin());
-                Assert.assertNotNull(asyncRegistrationTwo.getType());
-                Assert.assertEquals(
-                        AsyncRegistration.RegistrationType.WEB_SOURCE,
-                        asyncRegistrationTwo.getType());
-                Assert.assertNotNull(asyncRegistration.getRegistrationId());
-                Assert.assertEquals(
-                        asyncRegistration.getRegistrationId(),
-                        asyncRegistrationTwo.getRegistrationId());
-            } else if (asyncRegistration
-                    .getRegistrationUri()
-                    .equals(
-                            validWebSourceRegistration
-                                    .getSourceParams()
-                                    .get(1)
-                                    .getRegistrationUri())) {
-                Assert.assertNotNull(asyncRegistration.getRegistrationUri());
-                Assert.assertEquals(REGISTRATION_URI_2, asyncRegistration.getRegistrationUri());
-                Assert.assertEquals(
-                        Source.SourceType.NAVIGATION, asyncRegistration.getSourceType());
-                Assert.assertEquals(
-                        Uri.parse("android-app://test.destination"),
-                        asyncRegistration.getRegistrant());
-                Assert.assertNotNull(asyncRegistration.getWebDestination());
-                Assert.assertEquals(
-                        Uri.parse("android-app://example.test/aD1"),
-                        asyncRegistration.getWebDestination());
-                Assert.assertNotNull(asyncRegistration.getOsDestination());
-                Assert.assertEquals(
-                        Uri.parse("android-app://example.test/aD1"),
-                        asyncRegistration.getOsDestination());
-                Assert.assertNotNull(asyncRegistration.getVerifiedDestination());
-                Assert.assertEquals(
-                        Uri.parse("android-app://example.test/aD1"),
-                        asyncRegistration.getVerifiedDestination());
-                Assert.assertNotNull(asyncRegistration.getTopOrigin());
-                Assert.assertEquals(
-                        validWebSourceRegistration.getTopOriginUri(),
-                        asyncRegistration.getTopOrigin());
-                Assert.assertNotNull(asyncRegistration.getType());
-                Assert.assertEquals(
-                        AsyncRegistration.RegistrationType.WEB_SOURCE, asyncRegistration.getType());
-
-                Assert.assertTrue(cursor.moveToNext());
-                AsyncRegistration asyncRegistrationTwo =
-                        SqliteObjectMapper.constructAsyncRegistration(cursor);
-                Assert.assertNotNull(asyncRegistrationTwo.getRegistrationUri());
-                Assert.assertEquals(REGISTRATION_URI_1, asyncRegistrationTwo.getRegistrationUri());
-                Assert.assertEquals(
-                        Source.SourceType.NAVIGATION, asyncRegistrationTwo.getSourceType());
-                Assert.assertEquals(
-                        Uri.parse("android-app://test.destination"),
-                        asyncRegistrationTwo.getRegistrant());
-                Assert.assertNotNull(asyncRegistrationTwo.getWebDestination());
-                Assert.assertEquals(
-                        Uri.parse("android-app://example.test/aD1"),
-                        asyncRegistrationTwo.getWebDestination());
-                Assert.assertNotNull(asyncRegistrationTwo.getOsDestination());
-                Assert.assertEquals(
-                        Uri.parse("android-app://example.test/aD1"),
-                        asyncRegistrationTwo.getOsDestination());
-                Assert.assertNotNull(asyncRegistrationTwo.getVerifiedDestination());
-                Assert.assertEquals(
-                        Uri.parse("android-app://example.test/aD1"),
-                        asyncRegistrationTwo.getVerifiedDestination());
-                Assert.assertNotNull(asyncRegistrationTwo.getTopOrigin());
-                Assert.assertEquals(
-                        validWebSourceRegistration.getTopOriginUri(),
-                        asyncRegistrationTwo.getTopOrigin());
-                Assert.assertNotNull(asyncRegistrationTwo.getType());
-                Assert.assertEquals(
-                        AsyncRegistration.RegistrationType.WEB_SOURCE,
-                        asyncRegistrationTwo.getType());
-                Assert.assertNotNull(asyncRegistration.getRegistrationId());
-                Assert.assertEquals(
-                        asyncRegistration.getRegistrationId(),
-                        asyncRegistrationTwo.getRegistrationId());
-            } else {
-                Assert.fail();
-            }
+            Assert.assertEquals(
+                    asyncRegistration1.getRegistrationId(),
+                    asyncRegistration2.getRegistrationId());
         }
     }
-
 
     @Test
     public void testWebTriggerRegistrationRequest_isValid() {
@@ -708,105 +575,27 @@ public class EnqueueAsyncRegistrationTest {
                                 null,
                                 null,
                                 null,
-                                null)) {
+                                // Order by registration URI
+                                MeasurementTables.AsyncRegistrationContract.REGISTRATION_URI)) {
+
+            // The invalid registration was not inserted
+            Assert.assertEquals(2, cursor.getCount());
+
             Assert.assertTrue(cursor.moveToNext());
-            AsyncRegistration asyncRegistration =
+            AsyncRegistration asyncRegistration1 =
                     SqliteObjectMapper.constructAsyncRegistration(cursor);
-            if (asyncRegistration
-                    .getRegistrationUri()
-                    .equals(
-                            VALID_WEB_TRIGGER_REGISTRATION
-                                    .getTriggerParams()
-                                    .get(0)
-                                    .getRegistrationUri())) {
-                Assert.assertNotNull(asyncRegistration.getRegistrationUri());
-                Assert.assertEquals(REGISTRATION_URI_1, asyncRegistration.getRegistrationUri());
-                Assert.assertNull(asyncRegistration.getSourceType());
-                Assert.assertNotNull(asyncRegistration.getRegistrant());
-                Assert.assertEquals(
-                        Uri.parse("android-app://test.destination"),
-                        asyncRegistration.getRegistrant());
-                Assert.assertNotNull(asyncRegistration.getTopOrigin());
-                Assert.assertEquals(
-                        VALID_WEB_TRIGGER_REGISTRATION.getDestination(),
-                        asyncRegistration.getTopOrigin());
-                Assert.assertNotNull(asyncRegistration.getType());
-                Assert.assertEquals(
-                        AsyncRegistration.RegistrationType.WEB_TRIGGER,
-                        asyncRegistration.getType());
+            Assert.assertEquals(REGISTRATION_URI_1, asyncRegistration1.getRegistrationUri());
+            assertEqualsWebTriggerRegistrationCommon(asyncRegistration1);
 
-                Assert.assertTrue(cursor.moveToNext());
-                AsyncRegistration asyncRegistrationTwo =
-                        SqliteObjectMapper.constructAsyncRegistration(cursor);
+            Assert.assertTrue(cursor.moveToNext());
+            AsyncRegistration asyncRegistration2 =
+                    SqliteObjectMapper.constructAsyncRegistration(cursor);
+            Assert.assertEquals(REGISTRATION_URI_2, asyncRegistration2.getRegistrationUri());
+            assertEqualsWebTriggerRegistrationCommon(asyncRegistration2);
 
-                Assert.assertNotNull(asyncRegistrationTwo.getRegistrationUri());
-                Assert.assertEquals(REGISTRATION_URI_2, asyncRegistrationTwo.getRegistrationUri());
-                Assert.assertNull(asyncRegistrationTwo.getSourceType());
-                Assert.assertNotNull(asyncRegistration.getRegistrant());
-                Assert.assertEquals(
-                        Uri.parse("android-app://test.destination"),
-                        asyncRegistrationTwo.getRegistrant());
-                Assert.assertNotNull(asyncRegistrationTwo.getTopOrigin());
-                Assert.assertEquals(
-                        VALID_WEB_TRIGGER_REGISTRATION.getDestination(),
-                        asyncRegistrationTwo.getTopOrigin());
-                Assert.assertNotNull(asyncRegistrationTwo.getType());
-                Assert.assertEquals(
-                        AsyncRegistration.RegistrationType.WEB_TRIGGER,
-                        asyncRegistrationTwo.getType());
-
-                Assert.assertNotNull(asyncRegistration.getRegistrationId());
-                Assert.assertEquals(
-                        asyncRegistration.getRegistrationId(),
-                        asyncRegistrationTwo.getRegistrationId());
-            } else if (asyncRegistration
-                    .getRegistrationUri()
-                    .equals(
-                            VALID_WEB_TRIGGER_REGISTRATION
-                                    .getTriggerParams()
-                                    .get(1)
-                                    .getRegistrationUri())) {
-                Assert.assertNotNull(asyncRegistration.getRegistrationUri());
-                Assert.assertEquals(REGISTRATION_URI_2, asyncRegistration.getRegistrationUri());
-                Assert.assertNull(asyncRegistration.getSourceType());
-                Assert.assertNotNull(asyncRegistration.getRegistrant());
-                Assert.assertEquals(
-                        Uri.parse("android-app://test.destination"),
-                        asyncRegistration.getRegistrant());
-                Assert.assertNotNull(asyncRegistration.getTopOrigin());
-                Assert.assertEquals(
-                        VALID_WEB_TRIGGER_REGISTRATION.getDestination(),
-                        asyncRegistration.getTopOrigin());
-                Assert.assertNotNull(asyncRegistration.getType());
-                Assert.assertEquals(
-                        AsyncRegistration.RegistrationType.WEB_TRIGGER,
-                        asyncRegistration.getType());
-
-                Assert.assertTrue(cursor.moveToNext());
-                AsyncRegistration asyncRegistrationTwo =
-                        SqliteObjectMapper.constructAsyncRegistration(cursor);
-                Assert.assertNotNull(asyncRegistrationTwo.getRegistrationUri());
-                Assert.assertEquals(REGISTRATION_URI_1, asyncRegistrationTwo.getRegistrationUri());
-                Assert.assertNull(asyncRegistrationTwo.getSourceType());
-                Assert.assertNotNull(asyncRegistrationTwo.getRegistrant());
-                Assert.assertEquals(
-                        Uri.parse("android-app://test.destination"),
-                        asyncRegistrationTwo.getRegistrant());
-                Assert.assertNotNull(asyncRegistrationTwo.getTopOrigin());
-                Assert.assertEquals(
-                        VALID_WEB_TRIGGER_REGISTRATION.getDestination(),
-                        asyncRegistrationTwo.getTopOrigin());
-                Assert.assertNotNull(asyncRegistrationTwo.getType());
-                Assert.assertEquals(
-                        AsyncRegistration.RegistrationType.WEB_TRIGGER,
-                        asyncRegistrationTwo.getType());
-                Assert.assertNotNull(asyncRegistration.getRegistrationId());
-                Assert.assertEquals(
-                        asyncRegistration.getRegistrationId(),
-                        asyncRegistrationTwo.getRegistrationId());
-            } else {
-                Assert.fail();
-            }
+            Assert.assertEquals(
+                    asyncRegistration1.getRegistrationId(),
+                    asyncRegistration2.getRegistrationId());
         }
     }
 
@@ -829,7 +618,7 @@ public class EnqueueAsyncRegistrationTest {
         RegistrationRequest registrationRequest =
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_SOURCE,
-                                Uri.parse("http://baz.test"),
+                                Uri.parse("https://baz.test"),
                                 sDefaultContext.getPackageName(),
                                 SDK_PACKAGE_NAME)
                         .build();
@@ -877,5 +666,38 @@ public class EnqueueAsyncRegistrationTest {
             Assert.assertEquals(
                     AsyncRegistration.RegistrationType.APP_SOURCE, asyncRegistration.getType());
         }
+    }
+
+    private static void assertEqualsWebSourceRegistrationCommon(
+            AsyncRegistration asyncRegistration) {
+        Assert.assertEquals(
+                Uri.parse("android-app://test.destination"),
+                asyncRegistration.getRegistrant());
+        Assert.assertEquals(
+                Uri.parse("android-app://example.test/aD1"),
+                asyncRegistration.getWebDestination());
+        Assert.assertEquals(
+                Uri.parse("android-app://example.test/aD1"),
+                asyncRegistration.getOsDestination());
+        Assert.assertEquals(
+                Uri.parse("android-app://example.test/aD1"),
+                asyncRegistration.getVerifiedDestination());
+        Assert.assertEquals(
+                AsyncRegistration.RegistrationType.WEB_SOURCE,
+                asyncRegistration.getType());
+    }
+
+    private static void assertEqualsWebTriggerRegistrationCommon(
+            AsyncRegistration asyncRegistration) {
+        Assert.assertNull(asyncRegistration.getSourceType());
+        Assert.assertEquals(
+                Uri.parse("android-app://test.destination"),
+                asyncRegistration.getRegistrant());
+        Assert.assertEquals(
+                VALID_WEB_TRIGGER_REGISTRATION.getDestination(),
+                asyncRegistration.getTopOrigin());
+        Assert.assertEquals(
+                AsyncRegistration.RegistrationType.WEB_TRIGGER,
+                asyncRegistration.getType());
     }
 }
