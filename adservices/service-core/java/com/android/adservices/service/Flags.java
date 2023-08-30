@@ -3048,4 +3048,12 @@ public interface Flags {
     default boolean getEnrollmentEnableLimitedLogging() {
         return ENROLLMENT_ENABLE_LIMITED_LOGGING;
     }
+
+    /** U18 UX detention channel is enabled by default. */
+    boolean IS_U18_UX_DETENTION_CHANNEL_ENABLED_DEFAULT = true;
+
+    /** Returns whether the U18 UX detentional channel is enabled. */
+    default boolean isU18UxDetentionChannelEnabled() {
+        return IS_U18_UX_DETENTION_CHANNEL_ENABLED_DEFAULT;
+    }
 }

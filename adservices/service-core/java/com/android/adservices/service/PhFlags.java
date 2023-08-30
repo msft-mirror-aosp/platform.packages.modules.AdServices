@@ -4649,6 +4649,14 @@ public final class PhFlags implements Flags {
                 /* defaultValue */ DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED);
     }
 
+    @Override
+    public boolean isU18UxDetentionChannelEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED,
+                /* defaultValue */ IS_U18_UX_DETENTION_CHANNEL_ENABLED_DEFAULT);
+    }
+
     /** Returns whether Measurement app package name logging is enabled. */
     @Override
     public boolean getMeasurementEnableAppPackageNameLogging() {
