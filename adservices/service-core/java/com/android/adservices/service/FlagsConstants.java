@@ -206,6 +206,10 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1 =
             "measurement_enable_ara_deduplication_alignment_v1";
+    public static final String KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS =
+            "measurement_debug_reporting_fallback_job_period_ms";
+    public static final String KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS =
+            "measurement_verbose_debug_reporting_fallback_job_period_ms";
 
     public static final String KEY_MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING =
             "measurement_enable_app_package_name_logging";
@@ -512,6 +516,10 @@ public final class FlagsConstants {
             "topics_on_device_classifier_kill_switch";
     public static final String KEY_MDD_BACKGROUND_TASK_KILL_SWITCH =
             "mdd_background_task_kill_switch";
+    public static final String KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH =
+            "measurement_debug_reporting_fallback_job_kill_switch";
+    public static final String KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH =
+            "measurement_verbose_debug_reporting_fallback_job_kill_switch";
     public static final String KEY_MDD_LOGGER_KILL_SWITCH = "mdd_logger_kill_switch";
     public static final String KEY_ADID_KILL_SWITCH = "adid_kill_switch";
     public static final String KEY_APPSETID_KILL_SWITCH = "appsetid_kill_switch";

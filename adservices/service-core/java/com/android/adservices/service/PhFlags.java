@@ -4503,4 +4503,40 @@ public final class PhFlags implements Flags {
                 /* flagName */ FlagsConstants.KEY_MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING,
                 /* defaultValue */ MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING);
     }
+
+    @Override
+    public boolean getMeasurementDebugReportingFallbackJobKillSwitch() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH,
+                /* defaultValue */ MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH);
+    }
+
+    @Override
+    public boolean getMeasurementVerboseDebugReportingFallbackJobKillSwitch() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH,
+                /* defaultValue */ MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH);
+    }
+
+    @Override
+    public long getMeasurementDebugReportingFallbackJobPeriodMs() {
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS,
+                /* defaultValue */ MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS);
+    }
+
+    @Override
+    public long getMeasurementVerboseDebugReportingFallbackJobPeriodMs() {
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS,
+                /* defaultValue */ MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS);
+    }
 }
