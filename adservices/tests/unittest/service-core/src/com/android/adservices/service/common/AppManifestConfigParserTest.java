@@ -16,9 +16,8 @@
 
 package com.android.adservices.service.common;
 
-import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import android.content.Context;
@@ -30,13 +29,19 @@ import androidx.test.filters.SmallTest;
 import com.android.adservices.service.exception.XmlParseException;
 import com.android.adservices.servicecoretest.R;
 
+import com.google.common.truth.Expect;
+
+import org.junit.Rule;
 import org.junit.Test;
 import org.xmlpull.v1.XmlPullParserException;
 
 @SmallTest
-public class AppManifestConfigParserTest {
-    private Context mContext = ApplicationProvider.getApplicationContext();
-    private String mPackageName = mContext.getPackageName();
+public final class AppManifestConfigParserTest {
+
+    public @Rule final Expect expect = Expect.create();
+
+    private final Context mContext = ApplicationProvider.getApplicationContext();
+    private final String mPackageName = mContext.getPackageName();
 
     @Test
     public void testValidXml() throws Exception {
@@ -46,33 +51,47 @@ public class AppManifestConfigParserTest {
                         .getXml(R.xml.ad_services_config);
 
         AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(parser);
-        assertThat(appManifestConfig).isNotNull();
+        assertWithMessage("manifest for ad_services_config").that(appManifestConfig).isNotNull();
 
         // Verify IncludesSdkLibrary tags.
-        assertThat(appManifestConfig.getIncludesSdkLibraryConfig()).isNotNull();
-        assertThat(appManifestConfig.getIncludesSdkLibraryConfig().getIncludesSdkLibraries())
+        expect.withMessage("getIncludesSdkLibraryConfig()")
+                .that(appManifestConfig.getIncludesSdkLibraryConfig())
+                .isNotNull();
+        expect.withMessage("getIncludesSdkLibraryConfig().getIncludesSdkLibraries()")
+                .that(appManifestConfig.getIncludesSdkLibraryConfig().getIncludesSdkLibraries())
                 .contains("1234567");
 
         // Verify Attribution tags.
-        assertEquals(appManifestConfig.getAttributionConfig().getAllowAllToAccess(), false);
-        assertEquals(
-                appManifestConfig.getAttributionConfig().getAllowAdPartnersToAccess().size(), 1);
-        assertThat(appManifestConfig.getAttributionConfig().getAllowAdPartnersToAccess())
+        expect.withMessage("getAttributionConfig().getAllowAllToAccess()")
+                .that(appManifestConfig.getAttributionConfig().getAllowAllToAccess())
+                .isFalse();
+        expect.withMessage("getAttributionConfig().getAllowAdPartnersToAccess()")
+                .that(appManifestConfig.getAttributionConfig().getAllowAdPartnersToAccess())
+                .hasSize(1);
+        expect.withMessage("getAttributionConfig().getAllowAdPartnersToAccess()")
+                .that(appManifestConfig.getAttributionConfig().getAllowAdPartnersToAccess())
                 .contains("1234");
 
         // Verify Custom Audience tags.
-        assertEquals(appManifestConfig.getCustomAudiencesConfig().getAllowAllToAccess(), false);
-        assertEquals(
-                appManifestConfig.getCustomAudiencesConfig().getAllowAdPartnersToAccess().size(),
-                2);
-        assertThat(appManifestConfig.getCustomAudiencesConfig().getAllowAdPartnersToAccess())
+        expect.withMessage("getCustomAudiencesConfig().getAllowAllToAccess()")
+                .that(appManifestConfig.getCustomAudiencesConfig().getAllowAllToAccess())
+                .isFalse();
+        expect.withMessage("getCustomAudiencesConfig().getAllowAdPartnersToAccess()")
+                .that(appManifestConfig.getCustomAudiencesConfig().getAllowAdPartnersToAccess())
+                .hasSize(2);
+        expect.withMessage("getCustomAudiencesConfig().getAllowAdPartnersToAccess()")
+                .that(appManifestConfig.getCustomAudiencesConfig().getAllowAdPartnersToAccess())
                 .contains("1234");
-        assertThat(appManifestConfig.getCustomAudiencesConfig().getAllowAdPartnersToAccess())
+        expect.withMessage("getCustomAudiencesConfig().getAllowAdPartnersToAccess()")
+                .that(appManifestConfig.getCustomAudiencesConfig().getAllowAdPartnersToAccess())
                 .contains("4567");
 
         // Verify Topics tags.
-        assertEquals(appManifestConfig.getTopicsConfig().getAllowAllToAccess(), false);
-        assertThat(appManifestConfig.getTopicsConfig().getAllowAdPartnersToAccess())
+        expect.withMessage("getTopicsConfig().getAllowAllToAccess()")
+                .that(appManifestConfig.getTopicsConfig().getAllowAllToAccess())
+                .isFalse();
+        expect.withMessage("getTopicsConfig().getAllowAdPartnersToAccess()")
+                .that(appManifestConfig.getTopicsConfig().getAllowAdPartnersToAccess())
                 .contains("1234567");
     }
 
@@ -86,7 +105,9 @@ public class AppManifestConfigParserTest {
         Exception e =
                 assertThrows(
                         XmlParseException.class, () -> AppManifestConfigParser.getConfig(parser));
-        assertEquals("Sdk name not mentioned in <includes-sdk-library>", e.getMessage());
+        expect.that(e)
+                .hasMessageThat()
+                .isEqualTo("Sdk name not mentioned in <includes-sdk-library>");
     }
 
     @Test
@@ -99,8 +120,9 @@ public class AppManifestConfigParserTest {
         Exception e =
                 assertThrows(
                         XmlParseException.class, () -> AppManifestConfigParser.getConfig(parser));
-        assertEquals(
-                "allowAll cannot be set to true when allowAdPartners is also set", e.getMessage());
+        expect.that(e)
+                .hasMessageThat()
+                .isEqualTo("allowAll cannot be set to true when allowAdPartners is also set");
     }
 
     @Test
@@ -111,22 +133,42 @@ public class AppManifestConfigParserTest {
                         .getXml(R.xml.ad_services_config_missing_tags);
 
         AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(parser);
-        assertThat(appManifestConfig).isNotNull();
+        assertWithMessage("manifest for ad_services_config_missing_tags")
+                .that(appManifestConfig)
+                .isNotNull();
 
-        assertThat(appManifestConfig.getIncludesSdkLibraryConfig()).isNotNull();
-        assertThat(appManifestConfig.getIncludesSdkLibraryConfig().getIncludesSdkLibraries())
+        expect.withMessage("getIncludesSdkLibraryConfig()")
+                .that(appManifestConfig.getIncludesSdkLibraryConfig())
+                .isNotNull();
+        expect.withMessage("getIncludesSdkLibraryConfig().getIncludesSdkLibraries()")
+                .that(appManifestConfig.getIncludesSdkLibraryConfig().getIncludesSdkLibraries())
                 .isEmpty();
-        assertThat(appManifestConfig.getAttributionConfig()).isNull();
-        assertThat(appManifestConfig.isAllowedAttributionAccess("not actually there")).isFalse();
-        assertThat(appManifestConfig.getCustomAudiencesConfig()).isNull();
-        assertThat(appManifestConfig.isAllowedCustomAudiencesAccess("not actually there"))
+        expect.withMessage("getAttributionConfig()")
+                .that(appManifestConfig.getAttributionConfig())
+                .isNull();
+        expect.withMessage("isAllowedAttributionAccess()")
+                .that(appManifestConfig.isAllowedAttributionAccess("not actually there"))
                 .isFalse();
-        assertThat(appManifestConfig.getTopicsConfig()).isNull();
-        assertThat(appManifestConfig.isAllowedTopicsAccess("not actually there")).isFalse();
-        assertThat(appManifestConfig.getAdIdConfig()).isNull();
-        assertThat(appManifestConfig.isAllowedAdIdAccess("not actually there")).isFalse();
-        assertThat(appManifestConfig.getAppSetIdConfig()).isNull();
-        assertThat(appManifestConfig.isAllowedAppSetIdAccess("not actually there")).isFalse();
+        expect.withMessage("getCustomAudiencesConfig()")
+                .that(appManifestConfig.getCustomAudiencesConfig())
+                .isNull();
+        expect.withMessage("isAllowedCustomAudiencesAccess()")
+                .that(appManifestConfig.isAllowedCustomAudiencesAccess("not actually there"))
+                .isFalse();
+        expect.withMessage("getTopicsConfig()").that(appManifestConfig.getTopicsConfig()).isNull();
+        expect.withMessage("isAllowedTopicsAccess()")
+                .that(appManifestConfig.isAllowedTopicsAccess("not actually there"))
+                .isFalse();
+        expect.withMessage("getAdIdConfig()").that(appManifestConfig.getAdIdConfig()).isNull();
+        expect.withMessage("isAllowedAdIdAccess()")
+                .that(appManifestConfig.isAllowedAdIdAccess("not actually there"))
+                .isFalse();
+        expect.withMessage("getAppSetIdConfig()")
+                .that(appManifestConfig.getAppSetIdConfig())
+                .isNull();
+        expect.withMessage("isAllowedAppSetIdAccess()")
+                .that(appManifestConfig.isAllowedAppSetIdAccess("not actually there"))
+                .isFalse();
     }
 
     @Test
@@ -137,11 +179,19 @@ public class AppManifestConfigParserTest {
                         .getXml(R.xml.ad_services_config_missing_values);
 
         AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(parser);
-        assertThat(appManifestConfig).isNotNull();
+        assertWithMessage("manifest for ad_services_config_missing_values")
+                .that(appManifestConfig)
+                .isNotNull();
 
-        assertThat(appManifestConfig.getAttributionConfig().getAllowAllToAccess()).isFalse();
-        assertThat(appManifestConfig.getCustomAudiencesConfig().getAllowAllToAccess()).isFalse();
-        assertThat(appManifestConfig.getTopicsConfig().getAllowAllToAccess()).isFalse();
+        expect.withMessage("getAttributionConfig().getAllowAllToAccess()")
+                .that(appManifestConfig.getAttributionConfig().getAllowAllToAccess())
+                .isFalse();
+        expect.withMessage("getCustomAudiencesConfig().getAllowAllToAccess()")
+                .that(appManifestConfig.getCustomAudiencesConfig().getAllowAllToAccess())
+                .isFalse();
+        expect.withMessage("getTopicsConfig().getAllowAllToAccess()")
+                .that(appManifestConfig.getTopicsConfig().getAllowAllToAccess())
+                .isFalse();
     }
 
     @Test
@@ -154,7 +204,7 @@ public class AppManifestConfigParserTest {
         Exception e =
                 assertThrows(
                         XmlParseException.class, () -> AppManifestConfigParser.getConfig(parser));
-        assertEquals("Tag custom-audiences appears more than once", e.getMessage());
+        expect.that(e).hasMessageThat().isEqualTo("Tag custom-audiences appears more than once");
     }
 
     @Test
@@ -168,7 +218,7 @@ public class AppManifestConfigParserTest {
                 assertThrows(
                         XmlPullParserException.class,
                         () -> AppManifestConfigParser.getConfig(parser));
-        assertEquals("expected START_TAGBinary XML file line #17", e.getMessage());
+        expect.that(e).hasMessageThat().isEqualTo("expected START_TAGBinary XML file line #17");
     }
 
     @Test
@@ -181,8 +231,9 @@ public class AppManifestConfigParserTest {
         Exception e =
                 assertThrows(
                         XmlParseException.class, () -> AppManifestConfigParser.getConfig(parser));
-        assertEquals(
-                "Unknown tag: foobar [Tags and attributes are case sensitive]", e.getMessage());
+        expect.that(e)
+                .hasMessageThat()
+                .isEqualTo("Unknown tag: foobar [Tags and attributes are case sensitive]");
     }
 
     @Test
@@ -195,8 +246,8 @@ public class AppManifestConfigParserTest {
         Exception e =
                 assertThrows(
                         XmlParseException.class, () -> AppManifestConfigParser.getConfig(parser));
-        assertEquals(
-                "Unknown attribute: foobar [Tags and attributes are case sensitive]",
-                e.getMessage());
+        expect.that(e)
+                .hasMessageThat()
+                .isEqualTo("Unknown attribute: foobar [Tags and attributes are case sensitive]");
     }
 }
