@@ -118,6 +118,10 @@ android_test {
       "src/android/adservices/cts/*.java",
       "src/android/adservices/server/*.java",
     ],
+    plugins: [
+        "auto_value_plugin",
+        "auto_annotation_plugin"
+    ],
     test_suites: [
         "cts",
         "mts-adservices",
@@ -138,6 +142,7 @@ android_test {
         "adservices-test-utility",
         "mockwebserver",
         "testng",
+        "auto_value_annotations",
     ],
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
@@ -164,6 +169,10 @@ android_test {
         "mts-extservices",
         "general-tests",
     ],
+    plugins: [
+        "auto_value_plugin",
+        "auto_annotation_plugin"
+    ],
     static_libs: [
         "androidx.room_room-runtime",
         "androidx.room_room-testing",
@@ -177,6 +186,7 @@ android_test {
         "adservices-test-fixtures",
         "adservices-test-utility",
         "testng",
+        "auto_value_annotations",
     ],
     sdk_version: "module_current",
     min_sdk_version: "31",
