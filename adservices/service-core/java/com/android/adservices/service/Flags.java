@@ -3353,4 +3353,12 @@ public interface Flags {
     default boolean getCobaltLoggingEnabled() {
         return !getGlobalKillSwitch() && COBALT_LOGGING_ENABLED;
     }
+
+    /** U18 UX detention channel is enabled by default. */
+    boolean IS_U18_UX_DETENTION_CHANNEL_ENABLED_DEFAULT = true;
+
+    /** Returns whether the U18 UX detentional channel is enabled. */
+    default boolean isU18UxDetentionChannelEnabled() {
+        return IS_U18_UX_DETENTION_CHANNEL_ENABLED_DEFAULT;
+    }
 }
