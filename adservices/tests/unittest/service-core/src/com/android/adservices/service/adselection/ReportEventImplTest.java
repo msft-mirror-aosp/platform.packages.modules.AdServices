@@ -27,8 +27,8 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZE
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
-import static com.android.adservices.service.adselection.InteractionReporter.INTERACTION_DATA_SIZE_MAX_EXCEEDED;
-import static com.android.adservices.service.adselection.InteractionReporter.INTERACTION_KEY_SIZE_MAX_EXCEEDED;
+import static com.android.adservices.service.adselection.EventReporter.INTERACTION_DATA_SIZE_MAX_EXCEEDED;
+import static com.android.adservices.service.adselection.EventReporter.INTERACTION_KEY_SIZE_MAX_EXCEEDED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
@@ -109,11 +109,11 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class InteractionReporterTest {
+public class ReportEventImplTest {
+    private static final Instant ACTIVATION_TIME = Instant.now();
     private static final int MY_UID = Process.myUid();
 
     private static final int BID = 6;
-    private static final Instant ACTIVATION_TIME = Instant.now();
     private static final long AD_SELECTION_ID = 1;
 
     private static final String SELLER_INTERACTION_REPORTING_PATH = "/seller/interactionReporting/";
@@ -161,9 +161,7 @@ public class InteractionReporterTest {
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
-
-    private InteractionReporter mInteractionReporter;
-
+    private ReportEventImpl mEventReporter;
     private DBAdSelection mDBAdSelection;
     private DBRegisteredAdInteraction mDBRegisteredAdInteractionSellerClick;
     private DBRegisteredAdInteraction mDBRegisteredAdInteractionBuyerClick;
@@ -188,8 +186,8 @@ public class InteractionReporterTest {
                         .build()
                         .adSelectionEntryDao();
 
-        mInteractionReporter =
-                new InteractionReporter(
+        mEventReporter =
+                new ReportEventImpl(
                         mAdSelectionEntryDao,
                         mHttpClient,
                         mLightweightExecutorService,
@@ -254,7 +252,7 @@ public class InteractionReporterTest {
     }
 
     @Test
-    public void testReportInteractionSuccessfullyReportsRegisteredInteractions() throws Exception {
+    public void testImplSuccessfullyReportsRegisteredInteractions() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
                 AD_SELECTION_ID,
@@ -304,8 +302,7 @@ public class InteractionReporterTest {
     }
 
     @Test
-    public void testReportInteractionDoesNotCrashAfterSellerReportingThrowsAnException()
-            throws Exception {
+    public void testImplDoesNotCrashAfterSellerReportingThrowsAnException() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
 
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
@@ -377,8 +374,7 @@ public class InteractionReporterTest {
     }
 
     @Test
-    public void testReportInteractionDoesNotCrashAfterBuyerReportingThrowsAnException()
-            throws Exception {
+    public void testImplDoesNotCrashAfterBuyerReportingThrowsAnException() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
 
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
@@ -450,7 +446,7 @@ public class InteractionReporterTest {
     }
 
     @Test
-    public void testReportInteractionOnlyReportsBuyersRegisteredInteractions() throws Exception {
+    public void testImplOnlyReportsBuyersRegisteredInteractions() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
 
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
@@ -508,7 +504,7 @@ public class InteractionReporterTest {
     }
 
     @Test
-    public void testReportInteractionOnlyReportsSellerRegisteredInteractions() throws Exception {
+    public void testImplOnlyReportsSellerRegisteredInteractions() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
 
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
@@ -566,8 +562,7 @@ public class InteractionReporterTest {
     }
 
     @Test
-    public void testReportInteractionReturnsOnlyReportsUriThatPassesEnrollmentCheck()
-            throws Exception {
+    public void testImplReturnsOnlyReportsUriThatPassesEnrollmentCheck() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
                 AD_SELECTION_ID,
@@ -586,8 +581,8 @@ public class InteractionReporterTest {
         mFlags = FLAGS_ENROLLMENT_CHECK;
 
         // Re init interaction reporter
-        mInteractionReporter =
-                new InteractionReporter(
+        mEventReporter =
+                new ReportEventImpl(
                         mAdSelectionEntryDao,
                         mHttpClient,
                         mLightweightExecutorService,
@@ -649,9 +644,8 @@ public class InteractionReporterTest {
     }
 
     @Test
-    public void
-            testReportInteractionReturnsSuccessButDoesNotDoReportingWhenBothFailEnrollmentCheck()
-                    throws Exception {
+    public void testImplReturnsSuccessButDoesNotDoReportingWhenBothFailEnrollmentCheck()
+            throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
                 AD_SELECTION_ID,
@@ -669,9 +663,9 @@ public class InteractionReporterTest {
 
         mFlags = FLAGS_ENROLLMENT_CHECK;
 
-        // Re init interaction reporter
-        mInteractionReporter =
-                new InteractionReporter(
+        // Re init event reporter
+        mEventReporter =
+                new ReportEventImpl(
                         mAdSelectionEntryDao,
                         mHttpClient,
                         mLightweightExecutorService,
@@ -719,7 +713,7 @@ public class InteractionReporterTest {
     }
 
     @Test
-    public void testReportInteractionFailsWithInvalidPackageName() throws Exception {
+    public void testImplFailsWithInvalidPackageName() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
                 AD_SELECTION_ID,
@@ -784,7 +778,7 @@ public class InteractionReporterTest {
     }
 
     @Test
-    public void testReportInteractionFailsWhenForegroundCheckFails() throws Exception {
+    public void testImplFailsWhenForegroundCheckFails() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
                 AD_SELECTION_ID,
@@ -850,7 +844,7 @@ public class InteractionReporterTest {
     }
 
     @Test
-    public void testReportInteractionFailsWhenThrottled() throws Exception {
+    public void testImplFailsWhenThrottled() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
                 AD_SELECTION_ID,
@@ -944,7 +938,7 @@ public class InteractionReporterTest {
     }
 
     @Test
-    public void testReportInteractionFailsWhenAppNotInAllowList() throws Exception {
+    public void testImplFailsWhenAppNotInAllowList() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
                 AD_SELECTION_ID,
@@ -1005,7 +999,7 @@ public class InteractionReporterTest {
     }
 
     @Test
-    public void testReportInteractionFailsSilentlyWithoutConsent() throws Exception {
+    public void testImplFailsSilentlyWithoutConsent() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
                 AD_SELECTION_ID,
@@ -1065,7 +1059,7 @@ public class InteractionReporterTest {
     }
 
     @Test
-    public void testReportInteractionFailsWithUnknownAdSelectionId() throws Exception {
+    public void testImplFailsWithUnknownAdSelectionId() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
                 AD_SELECTION_ID,
@@ -1112,8 +1106,7 @@ public class InteractionReporterTest {
     }
 
     @Test
-    public void testReportInteractionSucceedsWhenNotFindingRegisteredAdInteractions()
-            throws Exception {
+    public void testImplSucceedsWhenNotFindingRegisteredAdInteractions() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
 
         mMockWebServerRule.startMockWebServer(
@@ -1148,7 +1141,7 @@ public class InteractionReporterTest {
     }
 
     @Test
-    public void testReportInteractionFailsWhenInteractionDataExceedsMaxSize() throws Exception {
+    public void testImplFailsWhenInteractionDataExceedsMaxSize() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
                 AD_SELECTION_ID,
@@ -1194,7 +1187,7 @@ public class InteractionReporterTest {
     }
 
     @Test
-    public void testReportInteractionFailsWhenInteractionKeyExceedsMaxSize() throws Exception {
+    public void testImplFailsWhenInteractionKeyExceedsMaxSize() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
                 AD_SELECTION_ID,
@@ -1231,9 +1224,9 @@ public class InteractionReporterTest {
                     }
                 };
 
-        // Re init interaction reporter with new flags
-        mInteractionReporter =
-                new InteractionReporter(
+        // Re init event reporter with new flags
+        mEventReporter =
+                new ReportEventImpl(
                         mAdSelectionEntryDao,
                         mHttpClient,
                         mLightweightExecutorService,
@@ -1284,7 +1277,7 @@ public class InteractionReporterTest {
         }
 
         ReportInteractionTestCallback callback = new ReportInteractionTestCallback(resultLatch);
-        mInteractionReporter.reportInteraction(inputParams, callback);
+        mEventReporter.reportInteraction(inputParams, callback);
         resultLatch.await();
         return callback;
     }

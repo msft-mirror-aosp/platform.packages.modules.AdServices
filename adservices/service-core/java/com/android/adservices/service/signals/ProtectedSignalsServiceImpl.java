@@ -99,9 +99,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                         new UpdateProcessingOrchestrator(
                                 ProtectedSignalsDatabase.getInstance(context).protectedSignalsDao(),
                                 new UpdateProcessorSelector(),
-                                new UpdateEncoderEventHandler(
-                                        ProtectedSignalsDatabase.getInstance(context)
-                                                .getEncoderEndpointsDao())),
+                                new UpdateEncoderEventHandler(context)),
                         new AdTechUriValidator(ADTECH_CALLER_NAME, "", CLASS_NAME, FIELD_NAME)),
                 FledgeAuthorizationFilter.create(context, AdServicesLoggerImpl.getInstance()),
                 ConsentManager.getInstance(context),

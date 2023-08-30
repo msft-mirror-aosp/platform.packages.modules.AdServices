@@ -17,12 +17,18 @@
 package com.android.adservices.service.signals.updateprocessors;
 
 import android.adservices.common.AdTechIdentifier;
+import android.content.Context;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
 
 import com.android.adservices.data.signals.DBEncoderEndpoint;
 import com.android.adservices.data.signals.EncoderEndpointsDao;
+import com.android.adservices.data.signals.EncoderLogicHandler;
+import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.util.concurrent.FluentFuture;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -32,12 +38,23 @@ import java.util.Objects;
  * UpdateEncoderEvent}
  */
 public class UpdateEncoderEventHandler {
-
     @NonNull private final EncoderEndpointsDao mEncoderEndpointsDao;
+    @NonNull private final EncoderLogicHandler mEncoderLogicHandler;
 
-    public UpdateEncoderEventHandler(@NonNull EncoderEndpointsDao encoderEndpointsDao) {
+    @VisibleForTesting
+    UpdateEncoderEventHandler(
+            @NonNull EncoderEndpointsDao encoderEndpointsDao,
+            @NonNull EncoderLogicHandler encoderLogicHandler) {
         Objects.requireNonNull(encoderEndpointsDao);
+        Objects.requireNonNull(encoderLogicHandler);
         mEncoderEndpointsDao = encoderEndpointsDao;
+        mEncoderLogicHandler = encoderLogicHandler;
+    }
+
+    public UpdateEncoderEventHandler(@NonNull Context context) {
+        this(
+                ProtectedSignalsDatabase.getInstance(context).getEncoderEndpointsDao(),
+                new EncoderLogicHandler(context));
     }
 
     /**
@@ -66,11 +83,19 @@ public class UpdateEncoderEventHandler {
                                 .setCreationTime(Instant.now())
                                 .setDownloadUri(uri)
                                 .build();
+
+                DBEncoderEndpoint previousRegisteredEncoder =
+                        mEncoderEndpointsDao.getEndpoint(buyer);
                 mEncoderEndpointsDao.registerEndpoint(endpoint);
-                // TODO(b/295105947): Trigger download if this is the first registration for buyer
+
+                if (previousRegisteredEncoder == null) {
+                    // We immediately download and update if no previous encoder existed
+                    FluentFuture<Boolean> unused = mEncoderLogicHandler.downloadAndUpdate(buyer);
+                }
                 break;
             case DELETE:
                 mEncoderEndpointsDao.deleteEncoderEndpoint(buyer);
+                // TODO(b/297586190): Delete persisted encoding logic when deleting encoder endpoint
                 break;
             default:
                 throw new IllegalArgumentException(

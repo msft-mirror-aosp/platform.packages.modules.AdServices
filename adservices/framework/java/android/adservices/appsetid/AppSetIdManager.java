@@ -23,7 +23,6 @@ import android.annotation.NonNull;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.os.Build;
-import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 import android.os.SystemClock;
@@ -120,9 +119,7 @@ public class AppSetIdManager {
      *
      * @param executor The executor to run callback.
      * @param callback The callback that's called after appsetid are available or an error occurs.
-     * @throws SecurityException if caller is not authorized to call this API.
      * @throws IllegalStateException if this API is not available.
-     * @throws LimitExceededException if rate limit was reached.
      */
     @NonNull
     public void getAppSetId(

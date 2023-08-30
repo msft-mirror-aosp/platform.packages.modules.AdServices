@@ -244,6 +244,31 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
+    public String getSourceRegistrant(@NonNull String sourceId) throws DatastoreException {
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.SourceContract.TABLE,
+                                new String[] {
+                                    MeasurementTables.SourceContract.REGISTRANT,
+                                },
+                                MeasurementTables.SourceContract.ID + " = ? ",
+                                new String[] {sourceId},
+                                /* groupBy= */ null,
+                                /* having= */ null,
+                                /* orderBy= */ null,
+                                /* limit= */ null)) {
+            if (cursor.getCount() == 0) {
+                throw new DatastoreException("Source retrieval failed. Id: " + sourceId);
+            }
+            cursor.moveToNext();
+            return cursor.getString(
+                    cursor.getColumnIndex(MeasurementTables.SourceContract.REGISTRANT));
+        }
+    }
+
+    @Override
     public Trigger getTrigger(@NonNull String triggerId) throws DatastoreException {
         try (Cursor cursor =
                 mSQLTransaction

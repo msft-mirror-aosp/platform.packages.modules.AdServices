@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.common;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.PersistableBundle;
 import android.util.AtomicFile;
@@ -65,6 +66,7 @@ public class BooleanFileDatastore {
     private final AtomicFile mAtomicFile;
     private final Map<String, Boolean> mLocalMap = new HashMap<>();
 
+    @SuppressLint("NewAdServicesFile")
     public BooleanFileDatastore(
             @NonNull Context adServicesContext, @NonNull String filename, int datastoreVersion) {
         Objects.requireNonNull(adServicesContext);

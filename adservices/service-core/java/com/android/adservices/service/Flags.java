@@ -1182,6 +1182,12 @@ public interface Flags {
         return FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_TIMEOUT_MS;
     }
 
+    long FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS = 5000;
+
+    default long getFledgeAuctionServerOverallTimeoutMs() {
+        return FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS;
+    }
+
     boolean FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_ENABLED = false;
 
     /** Returns whether to run periodic job to fetch encryption keys. */
@@ -1751,6 +1757,64 @@ public interface Flags {
         return getGlobalKillSwitch()
                 || getMeasurementKillSwitch()
                 || MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH;
+    }
+
+    /**
+     * Measurement Debug Reporting Fallback Job kill Switch. The default value is false which means
+     * the job is enabled. This flag is used for emergency turning off the Debug Reporting Fallback
+     * Job.
+     */
+    boolean MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for the Measurement Debug Reporting Fallback Job. The API will
+     * be disabled if either the Global Kill Switch, Measurement Kill Switch, or the Measurement
+     * Debug Reporting Fallback Job kill switch value is true.
+     */
+    default boolean getMeasurementDebugReportingFallbackJobKillSwitch() {
+        // We check the Global Kill Switch first. As a result, it overrides all other kill Switches.
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH;
+    }
+
+    /**
+     * Measurement Verbose Debug Reporting Fallback Job kill Switch. The default value is false
+     * which means the job is enabled. This flag is used for emergency turning off the Verbose Debug
+     * Reporting Fallback Job.
+     */
+    boolean MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for the Measurement Debug Reporting Fallback Job. The API will
+     * be disabled if either the Global Kill Switch, Measurement Kill Switch, or the Measurement
+     * Debug Reporting Fallback Job kill switch value is true.
+     */
+    default boolean getMeasurementVerboseDebugReportingFallbackJobKillSwitch() {
+        // We check the Global Kill Switch first. As a result, it overrides all other kill Switches.
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH;
+    }
+
+    /**
+     * Returns the job period in millis for the Measurement Verbose Debug Reporting Fallback Job.
+     */
+    long MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(1);
+
+    /**
+     * Returns the job period in millis for the Measurement Verbose Debug Reporting Fallback Job.
+     */
+    default long getMeasurementVerboseDebugReportingFallbackJobPeriodMs() {
+        return MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS;
+    }
+
+    /** Returns the job period in millis for the Measurement Debug Reporting Fallback Job. */
+    long MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(1);
+
+    /** Returns the job period in millis for the Measurement Debug Reporting Fallback Job. */
+    default long getMeasurementDebugReportingFallbackJobPeriodMs() {
+        return MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS;
     }
 
     /**
@@ -2954,6 +3018,66 @@ public interface Flags {
     /** Returns whether Measurement ARA deduplication alignment v1 feature is enabled. */
     default boolean getMeasurementEnableAraDeduplicationAlignmentV1() {
         return MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1;
+    }
+
+    /** Default Measurement app package name logging flag. */
+    boolean MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING = true;
+
+    /** Returns whether Measurement app package name logging is enabled. */
+    default boolean getMeasurementEnableAppPackageNameLogging() {
+        return MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING;
+    }
+
+    /** Disable measurement reporting jobs to throw unaccounted exceptions by default. */
+    boolean MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION = false;
+
+    /**
+     * If enabled, measurement reporting jobs will throw unaccounted e.g. unexpected unchecked
+     * exceptions.
+     */
+    default boolean getMeasurementEnableReportingJobsThrowUnaccountedException() {
+        return MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION;
+    }
+
+    /**
+     * Disable measurement reporting jobs to throw {@link org.json.JSONException} exception by
+     * default.
+     */
+    boolean MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_JSON_EXCEPTION = false;
+
+    /** If enabled, measurement reporting jobs will throw {@link org.json.JSONException}. */
+    default boolean getMeasurementEnableReportingJobsThrowJsonException() {
+        return MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_JSON_EXCEPTION;
+    }
+
+    /** Disable measurement report to be deleted if any unrecoverable exception occurs. */
+    boolean MEASUREMENT_ENABLE_DELETE_REPORTS_ON_UNRECOVERABLE_EXCEPTION = false;
+
+    /** If enabled, measurement reports will get deleted if any unrecoverable exception occurs. */
+    default boolean getMeasurementEnableReportDeletionOnUnrecoverableException() {
+        return MEASUREMENT_ENABLE_DELETE_REPORTS_ON_UNRECOVERABLE_EXCEPTION;
+    }
+
+    /** Disable measurement aggregate reporting jobs to throw {@code CryptoException} by default. */
+    boolean MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_CRYPTO_EXCEPTION = false;
+
+    /** If enabled, measurement aggregate reporting job will throw {@code CryptoException}. */
+    default boolean getMeasurementEnableReportingJobsThrowCryptoException() {
+        return MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_CRYPTO_EXCEPTION;
+    }
+
+    /**
+     * Disable measurement datastore to throw {@link
+     * com.android.adservices.data.measurement.DatastoreException} when it occurs by default.
+     */
+    boolean MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION = false;
+
+    /**
+     * If enabled, measurement DatastoreManager can throw DatastoreException wrapped in an unchecked
+     * exception.
+     */
+    default boolean getMeasurementEnableDatastoreManagerThrowDatastoreException() {
+        return MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION;
     }
 
     /** Default U18 UX feature flag.. */

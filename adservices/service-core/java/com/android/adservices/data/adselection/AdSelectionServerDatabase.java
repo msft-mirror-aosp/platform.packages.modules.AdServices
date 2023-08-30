@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.adselection;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
@@ -57,6 +58,7 @@ public abstract class AdSelectionServerDatabase extends RoomDatabase {
     private static AdSelectionServerDatabase sSingleton = null;
 
     /** Returns an instance of the AdSelectionEncryptionDatabase given a context. */
+    @SuppressLint("NewAdServicesFile")
     public static AdSelectionServerDatabase getInstance(@NonNull Context context) {
         Objects.requireNonNull(context, "Context must be present.");
         synchronized (SINGLETON_LOCK) {
