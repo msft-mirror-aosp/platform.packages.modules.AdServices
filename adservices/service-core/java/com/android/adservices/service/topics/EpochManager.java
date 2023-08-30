@@ -42,7 +42,6 @@ import com.android.internal.util.Preconditions;
 
 import java.io.PrintWriter;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -537,7 +536,8 @@ public class EpochManager {
     }
 
     // Gets a topic ID for logging from the given topic using randomized response mechanism.
-    private int getTopicIdForLogging(Topic topic) {
+    @VisibleForTesting
+    int getTopicIdForLogging(Topic topic) {
         List<Integer> topicsTaxonomy = mClassifierManager.getTopicsTaxonomy();
 
         // Probability of logging real vs. random topic:
@@ -552,16 +552,21 @@ public class EpochManager {
 
         int topicId = topic.getTopic();
 
+        // In order to prevent select a random topic from being stuck in a loop,
+        // return the topic directly if taxonomy size is 0 or 1.
+        if (taxonomySize <= 1) {
+            return topicId;
+        }
+
         if (mRandom.nextDouble() < pRandomization) {
             // Log a random topic ID other than the real one.
             int randomTopicId = topicId;
 
-            Collections.shuffle(topicsTaxonomy);
-            for (int candidateTopicId : topicsTaxonomy) {
-                if (candidateTopicId != topicId) {
-                    randomTopicId = candidateTopicId;
-                    break;
-                }
+            // Set a maximum attempts to prevent select a random topic from being stuck in the loop.
+            int maxAttempts = 5;
+
+            while (randomTopicId == topicId && maxAttempts-- > 0) {
+                randomTopicId = topicsTaxonomy.get(mRandom.nextInt(taxonomySize));
             }
 
             return randomTopicId;

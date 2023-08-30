@@ -16,11 +16,19 @@
 
 package android.adservices.adselection;
 
+import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTION_ID;
+import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTION_ID_MESSAGE;
+
+import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.android.adservices.AdServicesParcelableUtil;
+import com.android.internal.util.Preconditions;
+
+import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -29,8 +37,10 @@ import java.util.Objects;
  * @hide
  */
 public final class PersistAdSelectionResultInput implements Parcelable {
-    @Nullable private final PersistAdSelectionResultRequest mPersistAdSelectionResultRequest;
-    @Nullable private final String mCallerPackageName;
+    private final long mAdSelectionId;
+    @Nullable private final AdTechIdentifier mSeller;
+    @Nullable private final byte[] mAdSelectionResult;
+    @NonNull private final String mCallerPackageName;
 
     @NonNull
     public static final Creator<PersistAdSelectionResultInput> CREATOR =
@@ -45,20 +55,45 @@ public final class PersistAdSelectionResultInput implements Parcelable {
             };
 
     private PersistAdSelectionResultInput(
-            @NonNull PersistAdSelectionResultRequest persistAdSelectionResultRequest,
+            long adSelectionId,
+            @Nullable AdTechIdentifier seller,
+            @Nullable byte[] adSelectionResult,
             @NonNull String callerPackageName) {
-        Objects.requireNonNull(persistAdSelectionResultRequest);
+        Objects.requireNonNull(callerPackageName);
 
-        this.mPersistAdSelectionResultRequest = persistAdSelectionResultRequest;
+        this.mAdSelectionId = adSelectionId;
+        this.mSeller = seller;
+        this.mAdSelectionResult = adSelectionResult;
         this.mCallerPackageName = callerPackageName;
     }
 
     private PersistAdSelectionResultInput(@NonNull Parcel in) {
         Objects.requireNonNull(in);
 
-        this.mPersistAdSelectionResultRequest =
-                PersistAdSelectionResultRequest.CREATOR.createFromParcel(in);
+        this.mAdSelectionId = in.readLong();
+        this.mSeller =
+                AdServicesParcelableUtil.readNullableFromParcel(
+                        in, AdTechIdentifier.CREATOR::createFromParcel);
+        this.mAdSelectionResult = in.createByteArray();
         this.mCallerPackageName = in.readString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof PersistAdSelectionResultInput) {
+            PersistAdSelectionResultInput obj = (PersistAdSelectionResultInput) o;
+            return mAdSelectionId == obj.mAdSelectionId
+                    && Objects.equals(mSeller, obj.mSeller)
+                    && Arrays.equals(mAdSelectionResult, obj.mAdSelectionResult)
+                    && Objects.equals(mCallerPackageName, obj.mCallerPackageName);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+                mAdSelectionId, mSeller, Arrays.hashCode(mAdSelectionResult), mCallerPackageName);
     }
 
     @Override
@@ -70,23 +105,46 @@ public final class PersistAdSelectionResultInput implements Parcelable {
     public void writeToParcel(@NonNull Parcel dest, int flags) {
         Objects.requireNonNull(dest);
 
-        mPersistAdSelectionResultRequest.writeToParcel(dest, flags);
+        dest.writeLong(mAdSelectionId);
+        AdServicesParcelableUtil.writeNullableToParcel(
+                dest,
+                mSeller,
+                (targetParcel, sourceSignals) -> sourceSignals.writeToParcel(targetParcel, flags));
+        dest.writeByteArray(mAdSelectionResult);
         dest.writeString(mCallerPackageName);
     }
 
     /**
-     * Returns the {@link PersistAdSelectionResultRequest}, one of the inputs to {@link
-     * PersistAdSelectionResultInput} as noted in {@link AdSelectionService}.
+     * @return an ad selection id.
+     */
+    public long getAdSelectionId() {
+        return mAdSelectionId;
+    }
+
+    /**
+     * @return a seller.
      */
     @Nullable
-    public PersistAdSelectionResultRequest getPersistAdSelectionResultRequest() {
-        return mPersistAdSelectionResultRequest;
+    public AdTechIdentifier getSeller() {
+        return mSeller;
+    }
+
+    /**
+     * @return an ad selection result.
+     */
+    @Nullable
+    public byte[] getAdSelectionResult() {
+        if (Objects.isNull(mAdSelectionResult)) {
+            return null;
+        } else {
+            return Arrays.copyOf(mAdSelectionResult, mAdSelectionResult.length);
+        }
     }
 
     /**
      * @return the caller package name
      */
-    @Nullable
+    @NonNull
     public String getCallerPackageName() {
         return mCallerPackageName;
     }
@@ -97,18 +155,37 @@ public final class PersistAdSelectionResultInput implements Parcelable {
      * @hide
      */
     public static final class Builder {
-        @Nullable private PersistAdSelectionResultRequest mPersistAdSelectionResultRequest;
+        private long mAdSelectionId;
+        @Nullable private AdTechIdentifier mSeller;
+        @Nullable private byte[] mAdSelectionResult;
         @Nullable private String mCallerPackageName;
 
         public Builder() {}
 
-        /** Set the PersistAdSelectionResultRequest. */
+        /** Sets the ad selection id {@link Long}. */
         @NonNull
-        public PersistAdSelectionResultInput.Builder setPersistAdSelectionResultRequest(
-                @NonNull PersistAdSelectionResultRequest persistAdSelectionResultRequest) {
-            Objects.requireNonNull(persistAdSelectionResultRequest);
+        public PersistAdSelectionResultInput.Builder setAdSelectionId(long adSelectionId) {
+            this.mAdSelectionId = adSelectionId;
+            return this;
+        }
 
-            this.mPersistAdSelectionResultRequest = persistAdSelectionResultRequest;
+        /** Sets the seller {@link AdTechIdentifier}. */
+        @NonNull
+        public PersistAdSelectionResultInput.Builder setSeller(@Nullable AdTechIdentifier seller) {
+            this.mSeller = seller;
+            return this;
+        }
+
+        /** Sets the ad selection result {@link String}. */
+        @NonNull
+        public PersistAdSelectionResultInput.Builder setAdSelectionResult(
+                @Nullable byte[] adSelectionResult) {
+            if (!Objects.isNull(adSelectionResult)) {
+                this.mAdSelectionResult =
+                        Arrays.copyOf(adSelectionResult, adSelectionResult.length);
+            } else {
+                this.mAdSelectionResult = null;
+            }
             return this;
         }
 
@@ -122,14 +199,20 @@ public final class PersistAdSelectionResultInput implements Parcelable {
             return this;
         }
 
-        /** Builds a {@link PersistAdSelectionResultInput} instance. */
+        /**
+         * Builds a {@link PersistAdSelectionResultInput} instance.
+         *
+         * @throws IllegalArgumentException if the adSelectionId is not set
+         * @throws NullPointerException if the CallerPackageName is null
+         */
         @NonNull
         public PersistAdSelectionResultInput build() {
-            Objects.requireNonNull(mPersistAdSelectionResultRequest);
             Objects.requireNonNull(mCallerPackageName);
+            Preconditions.checkArgument(
+                    mAdSelectionId != UNSET_AD_SELECTION_ID, UNSET_AD_SELECTION_ID_MESSAGE);
 
             return new PersistAdSelectionResultInput(
-                    mPersistAdSelectionResultRequest, mCallerPackageName);
+                    mAdSelectionId, mSeller, mAdSelectionResult, mCallerPackageName);
         }
     }
 }

@@ -67,6 +67,21 @@ public final class GetAdSelectionDataResponse implements Parcelable {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (o instanceof GetAdSelectionDataResponse) {
+            GetAdSelectionDataResponse response = (GetAdSelectionDataResponse) o;
+            return mAdSelectionId == response.mAdSelectionId
+                    && Arrays.equals(mAdSelectionData, response.mAdSelectionData);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mAdSelectionId, Arrays.hashCode(mAdSelectionData));
+    }
+
+    @Override
     public int describeContents() {
         return 0;
     }
@@ -89,7 +104,6 @@ public final class GetAdSelectionDataResponse implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         Objects.requireNonNull(dest);
-        Objects.requireNonNull(mAdSelectionData);
 
         dest.writeLong(mAdSelectionId);
         dest.writeByteArray(mAdSelectionData);
@@ -128,8 +142,7 @@ public final class GetAdSelectionDataResponse implements Parcelable {
         /**
          * Builds a {@link GetAdSelectionDataResponse} instance.
          *
-         * @throws IllegalArgumentException if the adSelectionIid is not set
-         * @throws NullPointerException if the RenderUri is null
+         * @throws IllegalArgumentException if the adSelectionId is not set
          */
         @NonNull
         public GetAdSelectionDataResponse build() {

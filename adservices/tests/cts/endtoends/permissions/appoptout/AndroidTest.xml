@@ -17,7 +17,7 @@
 <configuration description="Config for Cts Ad Services Permissions E2E tests">
     <option name="test-suite-tag" value="cts" />
     <option name="test-tag" value="CtsAdServicesPermissionsAppOptOutEndToEndTests" />
-    <option name="config-descriptor:metadata" key="component" value="framework"/>
+    <option name="config-descriptor:metadata" key="component" value="adservices"/>
     <option name="config-descriptor:metadata" key="parameter" value="not_instant_app" />
     <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi" />
     <option name="config-descriptor:metadata" key="parameter" value="secondary_user" />
@@ -55,6 +55,12 @@
         <!-- Increase the allowed API queries per second -->
         <option name="run-command" value="setprop debug.adservices.sdk_request_permits_per_second 1000" />
         <option name="teardown-command" value="setprop debug.adservices.sdk_request_permits_per_second 1" />
+
+        <!-- Temporarily enable fetchAndJoinCustomAudience API -->
+        <option name="run-command"
+                value="device_config put adservices fledge_fetch_custom_audience_enabled true" />
+        <option name="teardown-command"
+                value="device_config put adservices fledge_fetch_custom_audience_enabled false" />
 
         <!-- Temporarily disable Device Config sync -->
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />

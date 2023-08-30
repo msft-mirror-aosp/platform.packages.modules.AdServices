@@ -33,6 +33,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 
 import java.util.Objects;
@@ -157,8 +158,20 @@ public abstract class AbstractFledgeServiceFilter {
      *     to perform the operation
      */
     protected void assertFledgeEnrollment(
-            AdTechIdentifier adTech, String callerPackageName, int apiName)
+            AdTechIdentifier adTech,
+            String callerPackageName,
+            int apiName,
+            @NonNull DevContext devContext)
             throws FledgeAuthorizationFilter.AdTechNotAllowedException {
+        Uri adTechUri = Uri.parse("https://" + adTech.toString());
+        boolean isLocalhostAddress =
+                WebAddresses.isLocalhost(adTechUri) || WebAddresses.isLocalhostIp(adTechUri);
+        boolean isDeveloperMode = devContext.getDevOptionsEnabled();
+        if (isLocalhostAddress && isDeveloperMode) {
+            // Skip check for localhost and 127.0.0.1 addresses for debuggable CTS.
+            return;
+        }
+
         if (!mFlags.getDisableFledgeEnrollmentCheck()) {
             mFledgeAuthorizationFilter.assertAdTechAllowed(
                     mContext, callerPackageName, adTech, apiName);
@@ -213,5 +226,6 @@ public abstract class AbstractFledgeServiceFilter {
             boolean enforceConsent,
             int callerUid,
             int apiName,
-            @NonNull Throttler.ApiKey apiKey);
+            @NonNull Throttler.ApiKey apiKey,
+            @NonNull DevContext devContext);
 }

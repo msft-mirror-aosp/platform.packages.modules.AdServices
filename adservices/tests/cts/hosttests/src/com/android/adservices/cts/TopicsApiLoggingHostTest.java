@@ -25,6 +25,7 @@ import android.cts.statsdatom.lib.ConfigUtils;
 import android.cts.statsdatom.lib.DeviceUtils;
 import android.cts.statsdatom.lib.ReportUtils;
 
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.internal.os.StatsdConfigProto.StatsdConfig;
 import com.android.os.AtomsProto.AdServicesApiCalled;
 import com.android.os.AtomsProto.Atom;
@@ -66,7 +67,12 @@ public class TopicsApiLoggingHostTest implements IDeviceTest {
     private static final String TARGET_EXT_ADSERVICES_PACKAGE = "com.google.android.ext.services";
     private static final String TARGET_EXT_ADSERVICES_PACKAGE_AOSP = "com.android.ext.services";
 
-    @Rule public TestMetrics mMetrics = new TestMetrics();
+    @Rule(order = 0)
+    public AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
+    @Rule(order = 1)
+    public TestMetrics mMetrics = new TestMetrics();
 
     private ITestDevice mDevice;
     private int mApiLevel;
@@ -76,6 +82,7 @@ public class TopicsApiLoggingHostTest implements IDeviceTest {
     @Override
     public void setDevice(ITestDevice device) {
         mDevice = device;
+        adServicesDeviceSupportedRule.setDevice(device);
     }
 
     @Override

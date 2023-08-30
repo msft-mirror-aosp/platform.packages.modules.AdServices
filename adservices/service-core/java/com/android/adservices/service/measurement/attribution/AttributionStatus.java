@@ -65,6 +65,7 @@ public class AttributionStatus {
     private boolean mIsSourceDerived;
     private boolean mIsInstallAttribution;
     @Nullable private Long mAttributionDelay;
+    private String mSourceRegistrant;
 
     public AttributionStatus() {
         mSourceType = SourceType.UNKNOWN;
@@ -73,6 +74,7 @@ public class AttributionStatus {
         mFailureType = FailureType.UNKNOWN;
         mIsSourceDerived = false;
         mIsInstallAttribution = false;
+        mSourceRegistrant = "";
     }
 
     /** Get the type of the source that is getting attributed. */
@@ -180,5 +182,15 @@ public class AttributionStatus {
     /** Set attribution delay. */
     public void setAttributionDelay(Long attributionDelay) {
         mAttributionDelay = attributionDelay;
+    }
+
+    /** Get source registrant. */
+    public String getSourceRegistrant() {
+        return mSourceRegistrant;
+    }
+
+    /** Set source registrant. */
+    public void setSourceRegistrant(String sourceRegistrant) {
+        mSourceRegistrant = sourceRegistrant;
     }
 }

@@ -208,8 +208,8 @@ public abstract class E2ETest {
                 "navigation_source_trigger_data_cardinality";
         String RATE_LIMIT_MAX_ATTRIBUTION_REPORTING_ORIGINS =
                 "rate_limit_max_attribution_reporting_origins";
-        String MAX_DESTINATIONS_PER_SOURCE_SITE_REPORTING_ORIGIN =
-                "max_destinations_per_source_site_reporting_origin";
+        String MAX_DESTINATIONS_PER_SOURCE_SITE_REPORTING_SITE =
+                "max_destinations_per_source_site_reporting_site";
         String RATE_LIMIT_MAX_SOURCE_REGISTRATION_REPORTING_ORIGINS =
                 "rate_limit_max_source_registration_reporting_origins";
         // System health params
@@ -257,9 +257,9 @@ public abstract class E2ETest {
                         Flags.MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION;
             }
             if (!json.isNull(ApiConfigKeys
-                    .MAX_DESTINATIONS_PER_SOURCE_SITE_REPORTING_ORIGIN)) {
+                    .MAX_DESTINATIONS_PER_SOURCE_SITE_REPORTING_SITE)) {
                 mMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource = json.getInt(
-                        ApiConfigKeys.MAX_DESTINATIONS_PER_SOURCE_SITE_REPORTING_ORIGIN);
+                        ApiConfigKeys.MAX_DESTINATIONS_PER_SOURCE_SITE_REPORTING_SITE);
             } else {
                 mMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource =
                         Flags.MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE;
@@ -332,6 +332,11 @@ public abstract class E2ETest {
 
     static Collection<Object[]> data(String testDirName, Function<String, String> preprocessor)
             throws IOException, JSONException {
+        return data(testDirName, preprocessor, new HashMap<>());
+    }
+
+    static Collection<Object[]> data(String testDirName, Function<String, String> preprocessor,
+            Map<String, String> apiConfigPhFlags) throws IOException, JSONException {
         AssetManager assetManager = sContext.getAssets();
         List<InputStream> inputStreams = new ArrayList<>();
         List<String> dirPathList = new ArrayList<>(Collections.singletonList(testDirName));
@@ -349,7 +354,10 @@ public abstract class E2ETest {
             }
         }
         return getTestCasesFrom(
-                inputStreams, testFileList.stream().toArray(String[]::new), preprocessor);
+                inputStreams,
+                testFileList.stream().toArray(String[]::new),
+                preprocessor,
+                apiConfigPhFlags);
     }
 
     private static boolean isDirectory(String testAssetName) throws IOException {
@@ -1089,9 +1097,11 @@ public abstract class E2ETest {
      * {@code [Collection<Object> actions, ReportObjects expectedOutput,
      * ParamsProvider paramsProvider, String name]}
      */
-    private static Collection<Object[]> getTestCasesFrom(List<InputStream> inputStreams,
-            String[] filenames, Function<String, String> preprocessor)
-            throws IOException, JSONException {
+    private static Collection<Object[]> getTestCasesFrom(
+            List<InputStream> inputStreams,
+            String[] filenames,
+            Function<String, String> preprocessor,
+            Map<String, String> apiConfigPhFlags) throws IOException, JSONException {
         List<Object[]> testCases = new ArrayList<>();
 
         for (int i = 0; i < inputStreams.size(); i++) {
@@ -1118,23 +1128,37 @@ public abstract class E2ETest {
 
             ReportObjects expectedOutput = getExpectedOutput(output);
 
-            JSONObject ApiConfigObj = testObj.isNull(TestFormatJsonMapping.API_CONFIG_KEY)
+            JSONObject apiConfigObj = testObj.isNull(TestFormatJsonMapping.API_CONFIG_KEY)
                     ? new JSONObject()
                     : testObj.getJSONObject(TestFormatJsonMapping.API_CONFIG_KEY);
 
-            ParamsProvider paramsProvider = new ParamsProvider(ApiConfigObj);
+            ParamsProvider paramsProvider = new ParamsProvider(apiConfigObj);
 
             testCases.add(
                     new Object[] {
-                        actions, expectedOutput, paramsProvider, name, extractPhFlags(testObj)
+                        actions,
+                        expectedOutput,
+                        paramsProvider,
+                        name,
+                        extractPhFlags(testObj, apiConfigObj, apiConfigPhFlags)
                     });
         }
 
         return testCases;
     }
 
-    private static Map<String, String> extractPhFlags(JSONObject testObj) {
+    private static Map<String, String> extractPhFlags(JSONObject testObj, JSONObject apiConfigObj,
+            // Interop tests may have some configurations in the "api_config" field that correspond
+            // with Ph Flags.
+            Map<String, String> apiConfigPhFlags) {
         Map<String, String> phFlagsMap = new HashMap<>();
+        apiConfigPhFlags.keySet().forEach(
+                (key) -> {
+                        if (!apiConfigObj.isNull(key)) {
+                            phFlagsMap.put(apiConfigPhFlags.get(key), apiConfigObj.optString(key));
+                        }
+                }
+        );
         if (testObj.isNull(TestFormatJsonMapping.PH_FLAGS_OVERRIDE_KEY)) {
             return phFlagsMap;
         }
@@ -1371,11 +1395,14 @@ public abstract class E2ETest {
         mPhFlagsMap
                 .keySet()
                 .forEach(
-                        key ->
+                        key -> {
+                                log(String.format(
+                                        "Setting PhFlag %s to %s", key, mPhFlagsMap.get(key)));
                                 DeviceConfig.setProperty(
                                         DeviceConfig.NAMESPACE_ADSERVICES,
                                         key,
                                         mPhFlagsMap.get(key),
-                                        false));
+                                        false);
+                        });
     }
 }

@@ -41,6 +41,14 @@ public class UxUtil {
                         || UxStatesManager.getInstance(context).isEeaDevice();
     }
 
+    /** Returns if UXStates should be used. */
+    public static boolean isUxStatesReady(Context context) {
+        PrivacySandboxUxCollection ux = getUx(context);
+        return FlagsFactory.getFlags().getEnableAdServicesSystemApi()
+                && ux != null
+                && ux != PrivacySandboxUxCollection.UNSUPPORTED_UX;
+    }
+
     /** Returns the current UX. */
     public static PrivacySandboxUxCollection getUx(Context context) {
         if (FlagsFactory.getFlags().getConsentNotificationActivityDebugMode()) {

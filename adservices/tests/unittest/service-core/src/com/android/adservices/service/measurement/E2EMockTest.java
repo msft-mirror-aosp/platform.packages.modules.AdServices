@@ -40,6 +40,7 @@ import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.enrollment.EnrollmentUtil;
 import com.android.adservices.service.measurement.actions.Action;
@@ -88,6 +89,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -341,7 +343,8 @@ public abstract class E2EMockTest extends E2ETest {
                         sDatastoreManager,
                         reportTime - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
                         reportTime,
-                        true);
+                        true,
+                        mFlags);
 
         processActualDebugEventReports(
                 timestamp,
@@ -355,7 +358,8 @@ public abstract class E2EMockTest extends E2ETest {
                         sDatastoreManager,
                         reportTime - SystemHealthParams.MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS,
                         reportTime,
-                        true);
+                        true,
+                        mFlags);
 
         processActualDebugAggregateReports(
                 (List<AggregateReport>) aggregateCaptures[0],
@@ -407,7 +411,8 @@ public abstract class E2EMockTest extends E2ETest {
                         reportingJob.mTimestamp
                                 - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
                         reportingJob.mTimestamp,
-                        false);
+                        false,
+                        mFlags);
 
         processActualEventReports(
                 (List<EventReport>) eventCaptures[0],
@@ -428,7 +433,8 @@ public abstract class E2EMockTest extends E2ETest {
                         reportingJob.mTimestamp
                                 - SystemHealthParams.MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS,
                         reportingJob.mTimestamp,
-                        false);
+                        false,
+                        mFlags);
 
         processActualAggregateReports(
                 (List<AggregateReport>) aggregateCaptures[0],
@@ -454,7 +460,7 @@ public abstract class E2EMockTest extends E2ETest {
         List<JSONObject> eventReportObjects =
                 getActualEventReportObjects(eventReports, destinations, payloads);
         for (JSONObject obj : eventReportObjects) {
-            obj.put(TestFormatJsonMapping.REPORT_TIME_KEY, triggerTime);
+            obj.put(TestFormatJsonMapping.REPORT_TIME_KEY, String.valueOf(triggerTime));
         }
         mActualOutput.mDebugEventReportObjects.addAll(eventReportObjects);
     }
@@ -656,7 +662,8 @@ public abstract class E2EMockTest extends E2ETest {
     }
 
     private String getEnrollmentId(String uri) {
-        String authority = Uri.parse(uri).getAuthority();
+        Optional<Uri> domainAndScheme = WebAddresses.topPrivateDomainAndScheme(Uri.parse(uri));
+        String authority = domainAndScheme.get().getAuthority();
         return mUriToEnrollmentId.computeIfAbsent(authority, k -> "enrollment-id-" + authority);
     }
 

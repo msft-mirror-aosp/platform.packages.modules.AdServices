@@ -53,6 +53,7 @@ public class CommonFixture {
     public static final Instant FIXED_NOW_TRUNCATED_TO_MILLI =
             FIXED_NOW.truncatedTo(ChronoUnit.MILLIS);
     public static final Instant FIXED_EARLIER_ONE_DAY = FIXED_NOW.minus(1, ChronoUnit.DAYS);
+    public static final Instant FIXED_NEXT_ONE_DAY = FIXED_NOW.plus(1, ChronoUnit.DAYS);
     public static final Clock FIXED_CLOCK_TRUNCATED_TO_MILLI =
             Clock.fixed(FIXED_NOW.truncatedTo(ChronoUnit.MILLIS), ZoneOffset.UTC);
     public static final AdTechIdentifier NOT_ENROLLED_BUYER =
