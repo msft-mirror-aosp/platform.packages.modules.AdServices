@@ -348,6 +348,12 @@
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
+        <!-- FLEDGE Ad selection debug report sender Job -->
+        <service android:name=
+                     "com.android.adservices.service.adselection.DebugReportSenderJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
         <!-- Measurement Registration Job -->
         <service android:name=
                      "com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService"

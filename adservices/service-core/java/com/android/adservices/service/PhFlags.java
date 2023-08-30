@@ -48,7 +48,6 @@ import java.util.stream.Collectors;
 /** Flags Implementation that delegates to DeviceConfig. */
 // TODO(b/228037065): Add validation logics for Feature flags read from PH.
 public final class PhFlags implements Flags {
-
     private static final PhFlags sSingleton = new PhFlags();
 
     /** Returns the singleton instance of the PhFlags. */
@@ -2283,6 +2282,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeEventLevelDebugReportSendImmediately() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORT_SEND_IMMEDIATELY,
+                /* defaultValue */ FLEDGE_EVENT_LEVEL_DEBUG_REPORT_SEND_IMMEDIATELY);
+    }
+
+    @Override
     public int getFledgeEventLevelDebugReportingBatchDelaySeconds() {
         return DeviceConfig.getInt(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -2300,6 +2307,53 @@ public final class PhFlags implements Flags {
                         .KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_MAX_ITEMS_PER_BATCH,
                 /* defaultValue */
                 FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_MAX_ITEMS_PER_BATCH);
+    }
+
+    @Override
+    public int getFledgeDebugReportSenderJobNetworkConnectionTimeoutMs() {
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_FLEDGE_DEBUG_REPORTI_SENDER_JOB_NETWORK_CONNECT_TIMEOUT_MS,
+                /* defaultValue */
+                FLEDGE_DEBUG_REPORT_SENDER_JOB_NETWORK_CONNECT_TIMEOUT_MS);
+    }
+
+    @Override
+    public int getFledgeDebugReportSenderJobNetworkReadTimeoutMs() {
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_FLEDGE_DEBUG_REPORTI_SENDER_JOB_NETWORK_READ_TIMEOUT_MS,
+                /* defaultValue */
+                FLEDGE_DEBUG_REPORT_SENDER_JOB_NETWORK_READ_TIMEOUT_MS);
+    }
+
+    @Override
+    public long getFledgeDebugReportSenderJobMaxRuntimeMs() {
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_FLEDGE_DEBUG_REPORTI_SENDER_JOB_MAX_TIMEOUT_MS,
+                /* defaultValue */
+                FLEDGE_DEBUG_REPORT_SENDER_JOB_MAX_RUNTIME_MS);
+    }
+
+    @Override
+    public long getFledgeDebugReportSenderJobPeriodMs() {
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_FLEDGE_DEBUG_REPORT_SENDER_JOB_PERIOD_MS,
+                /* defaultValue */
+                FLEDGE_DEBUG_REPORT_SENDER_JOB_PERIOD_MS);
+    }
+
+    @Override
+    public long getFledgeDebugReportSenderJobFlexMs() {
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_FLEDGE_DEBUG_REPORT_SENDER_JOB_FLEX_MS,
+                /* defaultValue */
+                FLEDGE_DEBUG_REPORT_SENDER_JOB_FLEX_MS);
     }
 
     @Override
@@ -4017,6 +4071,12 @@ public final class PhFlags implements Flags {
 
         writer.println(
                 "\t"
+                        + FlagsConstants.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORT_SEND_IMMEDIATELY
+                        + " = "
+                        + getFledgeEventLevelDebugReportSendImmediately());
+
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_BATCH_DELAY_SECONDS
                         + " = "
                         + getFledgeEventLevelDebugReportingBatchDelaySeconds());
@@ -4025,11 +4085,44 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_MAX_ITEMS_PER_BATCH
                         + " = "
                         + getFledgeEventLevelDebugReportingMaxItemsPerBatch());
+
+        writer.println(
+                "\t"
+                        + FlagsConstants
+                                .KEY_FLEDGE_DEBUG_REPORTI_SENDER_JOB_NETWORK_CONNECT_TIMEOUT_MS
+                        + " = "
+                        + getFledgeDebugReportSenderJobNetworkConnectionTimeoutMs());
+
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_DEBUG_REPORTI_SENDER_JOB_NETWORK_READ_TIMEOUT_MS
+                        + " = "
+                        + getFledgeDebugReportSenderJobNetworkReadTimeoutMs());
+
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_DEBUG_REPORTI_SENDER_JOB_MAX_TIMEOUT_MS
+                        + " = "
+                        + getFledgeDebugReportSenderJobMaxRuntimeMs());
+
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_DEBUG_REPORT_SENDER_JOB_PERIOD_MS
+                        + " = "
+                        + getFledgeDebugReportSenderJobPeriodMs());
+
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_DEBUG_REPORT_SENDER_JOB_FLEX_MS
+                        + " = "
+                        + getFledgeDebugReportSenderJobFlexMs());
+
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH
                         + " = "
                         + getProtectedSignalsServiceKillSwitch());
+
         writer.println("==== AdServices PH Flags Throttling Related Flags ====");
         writer.println(
                 "\t"
