@@ -5021,6 +5021,15 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getEnableRvcUx() {
+        return getEnableAdServicesSystemApi()
+                && DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        /* flagName */ FlagsConstants.KEY_RVC_UX_ENABLED,
+                        /* defaultValue */ DEFAULT_RVC_UX_ENABLED);
+    }
+
+    @Override
     public boolean getEnableAdServicesSystemApi() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -5039,6 +5048,7 @@ public final class PhFlags implements Flags {
                 FlagsConstants.KEY_RECORD_MANUAL_INTERACTION_ENABLED,
                 getRecordManualInteractionEnabled());
         uxMap.put(FlagsConstants.KEY_GA_UX_FEATURE_ENABLED, getGaUxFeatureEnabled());
+        uxMap.put(FlagsConstants.KEY_RVC_UX_ENABLED, getEnableRvcUx());
         uxMap.put(
                 FlagsConstants.KEY_UI_OTA_STRINGS_FEATURE_ENABLED, getUiOtaStringsFeatureEnabled());
         uxMap.put(

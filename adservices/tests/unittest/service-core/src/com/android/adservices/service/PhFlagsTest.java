@@ -69,6 +69,7 @@ import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_PLATFORM_
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT;
 import static com.android.adservices.service.Flags.DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK;
+import static com.android.adservices.service.Flags.DEFAULT_RVC_UX_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_U18_UX_ENABLED;
 import static com.android.adservices.service.Flags.DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.Flags.DISABLE_MEASUREMENT_ENROLLMENT_CHECK;
@@ -714,6 +715,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_NUMBER_OF
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION;
+import static com.android.adservices.service.FlagsConstants.KEY_RVC_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_DIALOG_FRAGMENT_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_EEA_COUNTRIES;
@@ -6887,6 +6889,48 @@ public class PhFlagsTest {
                 /* makeDefault */ false);
 
         assertThat(mPhFlags.getU18UxEnabled()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testRvcUxEnabled_adServicesSystemApiTrue_rvcUxTrue() {
+        testRvcUxEnabled(true, true, true);
+    }
+
+    @Test
+    public void testRvcUxEnabled_adServicesSystemApiTrue_rvcUxFalse() {
+        testRvcUxEnabled(true, false, false);
+    }
+
+    @Test
+    public void testRvcUxEnabled_adServicesSystemApiFalse_rvcUxTrue() {
+        testRvcUxEnabled(false, true, false);
+    }
+
+    @Test
+    public void testRvcUxEnabled_adServicesSystemApiFalse_rvcUxFalse() {
+        testRvcUxEnabled(false, false, false);
+    }
+
+    private void testRvcUxEnabled(
+            boolean adServicesSystemApi,
+            boolean phOverridingValue,
+            boolean expected) {
+
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getEnableRvcUx()).isEqualTo(DEFAULT_RVC_UX_ENABLED);
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENABLE_AD_SERVICES_SYSTEM_API,
+                Boolean.toString(adServicesSystemApi),
+                /* makeDefault */ false);
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_RVC_UX_ENABLED,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getEnableRvcUx()).isEqualTo(expected);
     }
 
     @Test
