@@ -146,9 +146,8 @@ public class AggregateReportingJobHandler {
                     if (mUploadMethod != null) {
                         reportingStatus.setUploadMethod(mUploadMethod);
                     }
-                    if (!mIsDebugInstance) {
-                        logReportingStats(reportingStatus);
-                    }
+                    // Logged as UNKNOWN_UPLOAD_METHOD for debug reports
+                    logReportingStats(reportingStatus);
                 }
             } else {
                 LogUtil.w("The number of keys do not align with the number of reports");
