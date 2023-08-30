@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement.reporting;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MESUREMENT_REPORTS_UPLOADED;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.net.Uri;
@@ -29,6 +30,8 @@ import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.KeyValueData;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.MeasurementReportsStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
@@ -46,12 +49,25 @@ public class DebugReportingJobHandler {
     private final EnrollmentDao mEnrollmentDao;
     private final DatastoreManager mDatastoreManager;
     private final Flags mFlags;
+    private ReportingStatus.UploadMethod mUploadMethod;
 
+    @VisibleForTesting
     DebugReportingJobHandler(
             EnrollmentDao enrollmentDao, DatastoreManager datastoreManager, Flags flags) {
         mEnrollmentDao = enrollmentDao;
         mDatastoreManager = datastoreManager;
         mFlags = flags;
+    }
+
+    DebugReportingJobHandler(
+            EnrollmentDao enrollmentDao,
+            DatastoreManager datastoreManager,
+            Flags flags,
+            ReportingStatus.UploadMethod uploadMethod) {
+        mEnrollmentDao = enrollmentDao;
+        mDatastoreManager = datastoreManager;
+        mFlags = flags;
+        mUploadMethod = uploadMethod;
     }
 
     /** Finds all debug reports and attempts to upload them individually. */
@@ -75,13 +91,42 @@ public class DebugReportingJobHandler {
                 return;
             }
 
-            @AdServicesStatusUtils.StatusCode int result = performReport(debugReportId);
-            if (result != AdServicesStatusUtils.STATUS_SUCCESS) {
+            ReportingStatus reportingStatus = new ReportingStatus();
+            if (mUploadMethod != null) {
+                reportingStatus.setUploadMethod(mUploadMethod);
+            }
+            @AdServicesStatusUtils.StatusCode
+            int result = performReport(debugReportId, reportingStatus);
+            if (result == AdServicesStatusUtils.STATUS_SUCCESS) {
+                reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.SUCCESS);
+                logReportingStats(reportingStatus);
+            } else {
+                reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.FAILURE);
+                logReportingStats(reportingStatus);
+                boolean isMarkedForDeletionFlagEnabled =
+                        mFlags.getMeasurementEnableReportDeletionOnUnrecoverableException();
+                boolean isMarkedForDeletion =
+                        reportingStatus.getFailureStatus()
+                                        == ReportingStatus.FailureStatus.SERIALIZATION_ERROR
+                                && isMarkedForDeletionFlagEnabled;
                 mDatastoreManager.runInTransaction(
-                        (dao) ->
-                                dao.incrementReportingRetryCount(
-                                        debugReportId,
-                                        KeyValueData.DataType.DEBUG_REPORT_RETRY_COUNT));
+                        (dao) -> {
+                            int retryCount =
+                                    dao.incrementAndGetReportingRetryCount(
+                                            debugReportId,
+                                            KeyValueData.DataType.DEBUG_REPORT_RETRY_COUNT);
+                            if (retryCount >= mFlags.getMeasurementReportingRetryLimit()
+                                    && !isMarkedForDeletion) {
+                                reportingStatus.setFailureStatus(
+                                        ReportingStatus.FailureStatus.JOB_RETRY_LIMIT_REACHED);
+                            }
+                        });
+            }
+
+            // log final attempt separately
+            if (reportingStatus.getFailureStatus()
+                    == ReportingStatus.FailureStatus.JOB_RETRY_LIMIT_REACHED) {
+                logReportingStats(reportingStatus);
             }
         }
     }
@@ -93,7 +138,7 @@ public class DebugReportingJobHandler {
      * @param debugReportId for the datastore id of the {@link DebugReport}
      * @return success
      */
-    int performReport(String debugReportId) {
+    int performReport(String debugReportId, ReportingStatus reportingStatus) {
         Optional<DebugReport> debugReportOpt =
                 mDatastoreManager.runInTransactionWithResult(
                         (dao) -> dao.getDebugReport(debugReportId));
@@ -102,6 +147,9 @@ public class DebugReportingJobHandler {
             return AdServicesStatusUtils.STATUS_IO_ERROR;
         }
         DebugReport debugReport = debugReportOpt.get();
+        reportingStatus.setReportType(debugReport.getType());
+        String sourceRegistrant = "";
+        reportingStatus.setSourceRegistrant(sourceRegistrant);
 
         try {
             Uri reportingOrigin = debugReport.getRegistrationOrigin();
@@ -118,10 +166,12 @@ public class DebugReportingJobHandler {
                     return AdServicesStatusUtils.STATUS_SUCCESS;
                 } else {
                     LogUtil.d("Deleting debug report failed");
+                    reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.DATASTORE);
                     return AdServicesStatusUtils.STATUS_IO_ERROR;
                 }
             } else {
                 LogUtil.d("Sending debug report failed with http error");
+                reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.NETWORK);
                 return AdServicesStatusUtils.STATUS_IO_ERROR;
             }
         } catch (IOException e) {
@@ -130,6 +180,7 @@ public class DebugReportingJobHandler {
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
+            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.NETWORK);
             // TODO(b/298330312): Change to defined error codes
             return AdServicesStatusUtils.STATUS_IO_ERROR;
         } catch (JSONException e) {
@@ -139,6 +190,7 @@ public class DebugReportingJobHandler {
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
+            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.SERIALIZATION_ERROR);
             if (mFlags.getMeasurementEnableReportDeletionOnUnrecoverableException()) {
                 // Unrecoverable state - delete the report.
                 mDatastoreManager.runInTransaction(dao -> dao.deleteDebugReport(debugReportId));
@@ -158,6 +210,7 @@ public class DebugReportingJobHandler {
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
+            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.UNKNOWN);
             if (mFlags.getMeasurementEnableReportingJobsThrowUnaccountedException()
                     && ThreadLocalRandom.current().nextFloat()
                             < mFlags.getMeasurementThrowUnknownExceptionSamplingRate()) {
@@ -181,5 +234,36 @@ public class DebugReportingJobHandler {
             throws IOException {
         DebugReportSender debugReportSender = new DebugReportSender();
         return debugReportSender.sendReport(adTechDomain, debugReportPayload);
+    }
+
+    private boolean isSourceRegistrationOrigin(DebugReport debugReport) {
+        boolean result = false;
+        String type = debugReport.getType();
+        if (type.equals(DebugReportApi.Type.SOURCE_DESTINATION_LIMIT)
+                || type.equals(DebugReportApi.Type.SOURCE_NOISED)
+                || type.equals(DebugReportApi.Type.SOURCE_STORAGE_LIMIT)
+                || type.equals(DebugReportApi.Type.SOURCE_SUCCESS)
+                || type.equals(DebugReportApi.Type.SOURCE_UNKNOWN_ERROR)
+                || type.equals(DebugReportApi.Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR)) {
+            result = true;
+        }
+        return result;
+    }
+
+    private void logReportingStats(ReportingStatus reportingStatus) {
+        if (!reportingStatus.getReportingDelay().isPresent()) {
+            reportingStatus.setReportingDelay(0L);
+        }
+        AdServicesLoggerImpl.getInstance()
+                .logMeasurementReports(
+                        new MeasurementReportsStats.Builder()
+                                .setCode(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED)
+                                .setType(reportingStatus.getReportType().getValue())
+                                .setResultCode(reportingStatus.getUploadStatus().getValue())
+                                .setFailureType(reportingStatus.getFailureStatus().getValue())
+                                .setUploadMethod(reportingStatus.getUploadMethod().getValue())
+                                .setReportingDelay(reportingStatus.getReportingDelay().get())
+                                .setSourceRegistrant(reportingStatus.getSourceRegistrant())
+                                .build());
     }
 }

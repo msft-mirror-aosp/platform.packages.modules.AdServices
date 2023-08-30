@@ -193,7 +193,10 @@ public class VerboseDebugReportingFallbackJobService extends JobService {
                 DatastoreManager datastoreManager =
                         DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
                 new DebugReportingJobHandler(
-                                enrollmentDao, datastoreManager, FlagsFactory.getFlags())
+                                enrollmentDao,
+                                datastoreManager,
+                                FlagsFactory.getFlags(),
+                                ReportingStatus.UploadMethod.FALLBACK)
                         .performScheduledPendingReports();
                 return;
             } finally {
