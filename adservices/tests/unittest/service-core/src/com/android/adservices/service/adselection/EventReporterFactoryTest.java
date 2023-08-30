@@ -18,6 +18,7 @@ package com.android.adservices.service.adselection;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.content.Context;
 import android.os.Process;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -26,6 +27,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -50,6 +52,8 @@ public class EventReporterFactoryTest {
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
     private static final int MY_UID = Process.myUid();
     @Mock private MeasurementImpl mMeasurementServiceMock;
+    @Mock private ConsentManager mConsentManagerMock;
+    @Mock private Context mContextMock;
 
     @Test
     public void testFactory_registerAdBeaconDisabled_allDisabled() {
@@ -129,7 +133,9 @@ public class EventReporterFactoryTest {
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
                         DevContext.createForDevOptionsDisabled(),
-                        mMeasurementServiceMock)
+                        mMeasurementServiceMock,
+                        mConsentManagerMock,
+                        mContextMock)
                 .getEventReporter();
     }
 

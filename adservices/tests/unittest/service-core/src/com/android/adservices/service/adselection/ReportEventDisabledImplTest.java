@@ -78,7 +78,7 @@ public class ReportEventDisabledImplTest {
                         DevContext.createForDevOptionsDisabled());
 
         CountDownLatch resultLatch = new CountDownLatch(1);
-        ReportInteractionTestCallback callback = new ReportInteractionTestCallback(resultLatch);
+        ReportEventTestCallback callback = new ReportEventTestCallback(resultLatch);
         eventReporter.reportInteraction(mReportInteractionInputMock, callback);
         resultLatch.await();
 
@@ -87,12 +87,12 @@ public class ReportEventDisabledImplTest {
         assertThat(callback.mFledgeErrorResponse.getErrorMessage()).isEqualTo(API_DISABLED_MESSAGE);
     }
 
-    static class ReportInteractionTestCallback extends ReportInteractionCallback.Stub {
+    static class ReportEventTestCallback extends ReportInteractionCallback.Stub {
         private final CountDownLatch mCountDownLatch;
         boolean mIsSuccess = false;
         FledgeErrorResponse mFledgeErrorResponse;
 
-        ReportInteractionTestCallback(CountDownLatch countDownLatch) {
+        ReportEventTestCallback(CountDownLatch countDownLatch) {
             mCountDownLatch = countDownLatch;
         }
 
