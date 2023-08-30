@@ -129,9 +129,8 @@ public class EventReportingJobHandler {
             if (mUploadMethod != null) {
                 reportingStatus.setUploadMethod(mUploadMethod);
             }
-            if (!mIsDebugInstance) {
-                logReportingStats(reportingStatus);
-            }
+            // Logged as UNKNOWN_UPLOAD_METHOD for debug reports
+            logReportingStats(reportingStatus);
         }
         return true;
     }
