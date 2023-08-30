@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static com.android.adservices.service.Flags.MEASUREMENT_REPORT_RETRY_LIMIT;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
@@ -121,7 +123,8 @@ public class DebugReportingJobHandlerTest {
 
         Assert.assertEquals(
                 AdServicesStatusUtils.STATUS_SUCCESS,
-                mSpyDebugReportingJobHandler.performReport(debugReport.getId()));
+                mSpyDebugReportingJobHandler.performReport(
+                        debugReport.getId(), new ReportingStatus()));
 
         verify(mMeasurementDao, times(1)).deleteDebugReport(any());
         verify(mTransaction, times(2)).begin();
@@ -144,7 +147,8 @@ public class DebugReportingJobHandlerTest {
 
         Assert.assertEquals(
                 AdServicesStatusUtils.STATUS_IO_ERROR,
-                mSpyDebugReportingJobHandler.performReport(debugReport.getId()));
+                mSpyDebugReportingJobHandler.performReport(
+                        debugReport.getId(), new ReportingStatus()));
 
         verify(mMeasurementDao, never()).deleteDebugReport(any());
         verify(mTransaction, times(1)).begin();
@@ -232,7 +236,8 @@ public class DebugReportingJobHandlerTest {
 
         assertEquals(
                 AdServicesStatusUtils.STATUS_IO_ERROR,
-                mSpyDebugReportingJobHandler.performReport(debugReport.getId()));
+                mSpyDebugReportingJobHandler.performReport(
+                        debugReport.getId(), new ReportingStatus()));
 
         verify(mMeasurementDao, never()).deleteDebugReport(anyString());
         verify(mSpyDebugReportingJobHandler, times(1))
@@ -258,7 +263,8 @@ public class DebugReportingJobHandlerTest {
 
         assertEquals(
                 AdServicesStatusUtils.STATUS_UNKNOWN_ERROR,
-                mSpyDebugReportingJobHandler.performReport(debugReport.getId()));
+                mSpyDebugReportingJobHandler.performReport(
+                        debugReport.getId(), new ReportingStatus()));
         verify(mMeasurementDao, never()).deleteDebugReport(anyString());
         verify(mTransaction, times(1)).begin();
         verify(mTransaction, times(1)).end();
@@ -281,7 +287,7 @@ public class DebugReportingJobHandlerTest {
                 .createReportJsonPayload(Mockito.any());
 
         try {
-            mSpyDebugReportingJobHandler.performReport(debugReport.getId());
+            mSpyDebugReportingJobHandler.performReport(debugReport.getId(), new ReportingStatus());
             fail();
         } catch (IllegalStateException e) {
             assertEquals(JSONException.class, e.getCause().getClass());
@@ -311,7 +317,8 @@ public class DebugReportingJobHandlerTest {
 
         assertEquals(
                 AdServicesStatusUtils.STATUS_UNKNOWN_ERROR,
-                mSpyDebugReportingJobHandler.performReport(debugReport.getId()));
+                mSpyDebugReportingJobHandler.performReport(
+                        debugReport.getId(), new ReportingStatus()));
         verify(mMeasurementDao).deleteDebugReport(debugReport.getId());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
@@ -333,7 +340,8 @@ public class DebugReportingJobHandlerTest {
 
         assertEquals(
                 AdServicesStatusUtils.STATUS_UNKNOWN_ERROR,
-                mSpyDebugReportingJobHandler.performReport(debugReport.getId()));
+                mSpyDebugReportingJobHandler.performReport(
+                        debugReport.getId(), new ReportingStatus()));
         verify(mMeasurementDao, never()).deleteDebugReport(anyString());
         verify(mTransaction, times(1)).begin();
         verify(mTransaction, times(1)).end();
@@ -355,7 +363,7 @@ public class DebugReportingJobHandlerTest {
         doReturn(1.0f).when(mFlags).getMeasurementThrowUnknownExceptionSamplingRate();
 
         try {
-            mSpyDebugReportingJobHandler.performReport(debugReport.getId());
+            mSpyDebugReportingJobHandler.performReport(debugReport.getId(), new ReportingStatus());
             fail();
         } catch (RuntimeException e) {
             assertEquals("unknown exception", e.getMessage());
@@ -382,8 +390,68 @@ public class DebugReportingJobHandlerTest {
 
         assertEquals(
                 AdServicesStatusUtils.STATUS_UNKNOWN_ERROR,
-                mSpyDebugReportingJobHandler.performReport(debugReport.getId()));
+                mSpyDebugReportingJobHandler.performReport(
+                        debugReport.getId(), new ReportingStatus()));
         verify(mMeasurementDao, never()).deleteDebugReport(anyString());
+        verify(mTransaction, times(1)).begin();
+        verify(mTransaction, times(1)).end();
+    }
+
+    @Test
+    public void performReport_finalRetryAttempt_reportStatusSetToRetryLimitExceededError()
+            throws DatastoreException, IOException, JSONException {
+        DebugReport debugReport = createDebugReport1();
+        ReportingStatus reportingStatus = new ReportingStatus();
+
+        when(mFlags.getMeasurementReportingRetryLimitEnabled()).thenReturn(true);
+        when(mFlags.getMeasurementReportingRetryLimit()).thenReturn(MEASUREMENT_REPORT_RETRY_LIMIT);
+        when(mMeasurementDao.getDebugReport(debugReport.getId())).thenReturn(debugReport);
+        doThrow(new IOException())
+                .when(mSpyDebugReportingJobHandler)
+                .makeHttpPostRequest(Mockito.eq(REGISTRATION_URI), any());
+        doReturn(new JSONArray(Collections.singletonList(debugReport.toPayloadJson())))
+                .when(mSpyDebugReportingJobHandler)
+                .createReportJsonPayload(Mockito.any());
+
+        assertEquals(
+                AdServicesStatusUtils.STATUS_IO_ERROR,
+                mSpyDebugReportingJobHandler.performReport(debugReport.getId(), reportingStatus));
+        assertEquals(
+                ReportingStatus.FailureStatus.JOB_RETRY_LIMIT_REACHED,
+                reportingStatus.getFailureStatus());
+
+        verify(mMeasurementDao, never()).deleteDebugReport(anyString());
+        verify(mSpyDebugReportingJobHandler, times(1))
+                .makeHttpPostRequest(Mockito.eq(REGISTRATION_URI), Mockito.any());
+        verify(mTransaction, times(1)).begin();
+        verify(mTransaction, times(1)).end();
+    }
+
+    @Test
+    public void performReport_notFinalRetryAttempt_reportStatusSetToNetworkError()
+            throws DatastoreException, IOException, JSONException {
+        DebugReport debugReport = createDebugReport1();
+        ReportingStatus reportingStatus = new ReportingStatus();
+
+        when(mFlags.getMeasurementReportingRetryLimitEnabled()).thenReturn(true);
+        when(mFlags.getMeasurementReportingRetryLimit())
+                .thenReturn(MEASUREMENT_REPORT_RETRY_LIMIT - 1);
+        when(mMeasurementDao.getDebugReport(debugReport.getId())).thenReturn(debugReport);
+        doThrow(new IOException())
+                .when(mSpyDebugReportingJobHandler)
+                .makeHttpPostRequest(Mockito.eq(REGISTRATION_URI), any());
+        doReturn(new JSONArray(Collections.singletonList(debugReport.toPayloadJson())))
+                .when(mSpyDebugReportingJobHandler)
+                .createReportJsonPayload(Mockito.any());
+
+        assertEquals(
+                AdServicesStatusUtils.STATUS_IO_ERROR,
+                mSpyDebugReportingJobHandler.performReport(debugReport.getId(), reportingStatus));
+        assertEquals(ReportingStatus.FailureStatus.NETWORK, reportingStatus.getFailureStatus());
+
+        verify(mMeasurementDao, never()).deleteDebugReport(anyString());
+        verify(mSpyDebugReportingJobHandler, times(1))
+                .makeHttpPostRequest(Mockito.eq(REGISTRATION_URI), Mockito.any());
         verify(mTransaction, times(1)).begin();
         verify(mTransaction, times(1)).end();
     }
