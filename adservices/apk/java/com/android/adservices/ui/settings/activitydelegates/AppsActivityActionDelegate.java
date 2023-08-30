@@ -193,6 +193,8 @@ public class AppsActivityActionDelegate extends BaseActionDelegate {
         // reset apps button
         configureElement(
                 R.id.reset_apps_button, button -> mAppsViewModel.resetAppsButtonClickHandler());
+
+        configureNotifyAdapterDataChange(mAppsViewModel.getApps(), adapter);
     }
 
     private void listenToAppsViewModelUiEvents() {

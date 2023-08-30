@@ -36,6 +36,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 /** Generates noised reports for the provided source. */
@@ -75,7 +76,7 @@ public class SourceNoiseHandler {
      */
     public List<Source.FakeReport> assignAttributionModeAndGenerateFakeReports(
             @NonNull Source source) {
-        Random rand = new Random();
+        ThreadLocalRandom rand = ThreadLocalRandom.current();
         double value = rand.nextDouble();
         if (value > getRandomAttributionProbability(source)) {
             source.setAttributionMode(Source.AttributionMode.TRUTHFULLY);
@@ -194,7 +195,7 @@ public class SourceNoiseHandler {
                 mEventReportWindowCalcDelegate.getMaxReportCount(
                         source, isInstallDetectionEnabled(source));
         int destinationMultiplier = getDestinationTypeMultiplier(source);
-        int numberOfStates =
+        long numberOfStates =
                 Combinatorics.getNumberOfStarsAndBarsSequences(
                         /*numStars=*/ maxReportCount,
                         /*numBars=*/ triggerDataCardinality

@@ -69,6 +69,7 @@ import java.util.stream.IntStream;
 public final class FetcherUtilTest {
     private static final String LONG_FILTER_STRING = "12345678901234567890123456";
     private static final Uri REGISTRATION_URI = WebUtil.validUri("https://foo.test");
+    private static final Uri REGISTRANT_URI = WebUtil.validUri("https://bar.test");
     private static final String KEY = "key";
 
     @Mock Flags mFlags;
@@ -435,6 +436,7 @@ public final class FetcherUtilTest {
                         .setRegistrationId(UUID.randomUUID().toString())
                         .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
                         .setRegistrationUri(REGISTRATION_URI)
+                        .setRegistrant(REGISTRANT_URI)
                         .build();
 
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
@@ -455,7 +457,8 @@ public final class FetcherUtilTest {
                                                 APP_REGISTRATION_SURFACE_TYPE,
                                                 UNKNOWN_STATUS,
                                                 UNKNOWN_REGISTRATION_FAILURE_TYPE,
-                                                0)
+                                                0,
+                                                REGISTRANT_URI.toString())
                                         .setAdTechDomain(null)
                                         .build()));
     }
@@ -477,6 +480,7 @@ public final class FetcherUtilTest {
                         .setRegistrationId(UUID.randomUUID().toString())
                         .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
                         .setRegistrationUri(REGISTRATION_URI)
+                        .setRegistrant(REGISTRANT_URI)
                         .build();
 
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
@@ -497,7 +501,8 @@ public final class FetcherUtilTest {
                                                 APP_REGISTRATION_SURFACE_TYPE,
                                                 UNKNOWN_STATUS,
                                                 UNKNOWN_REGISTRATION_FAILURE_TYPE,
-                                                0)
+                                                0,
+                                                REGISTRANT_URI.toString())
                                         .setAdTechDomain(REGISTRATION_URI.toString())
                                         .build()));
     }
@@ -522,6 +527,7 @@ public final class FetcherUtilTest {
                         .setRegistrationId(UUID.randomUUID().toString())
                         .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
                         .setRegistrationUri(REGISTRATION_URI)
+                        .setRegistrant(REGISTRANT_URI)
                         .build();
 
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
@@ -542,7 +548,8 @@ public final class FetcherUtilTest {
                                                 APP_REGISTRATION_SURFACE_TYPE,
                                                 UNKNOWN_STATUS,
                                                 UNKNOWN_REGISTRATION_FAILURE_TYPE,
-                                                0)
+                                                0,
+                                                REGISTRANT_URI.toString())
                                         .setAdTechDomain(null)
                                         .build()));
     }

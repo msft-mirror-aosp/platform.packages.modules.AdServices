@@ -47,7 +47,6 @@ public final class DebugReportingJobService extends JobService {
 
     public static final String EXTRA_BUNDLE_IS_DEBUG_REPORT_API =
             "EXTRA_BUNDLE_IS_DEBUG_REPORT_API";
-    private static final long DEBUG_REPORT_API_JOB_DELAY_MS = 3600 * 1000L;
     private static final Executor sBlockingExecutor = AdServicesExecutors.getBlockingExecutor();
 
     @Override
@@ -90,7 +89,6 @@ public final class DebugReportingJobService extends JobService {
                                 getJobId(isDebugReportApi),
                                 new ComponentName(context, DebugReportingJobService.class))
                         .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
-                        .setOverrideDeadline(getJobDelay(isDebugReportApi))
                         .setExtras(getBundle(isDebugReportApi))
                         .build();
         jobScheduler.schedule(job);
@@ -145,7 +143,7 @@ public final class DebugReportingJobService extends JobService {
         DatastoreManager datastoreManager =
                 DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
         if (isDebugReportApi) {
-            new DebugReportingJobHandler(enrollmentDao, datastoreManager)
+            new DebugReportingJobHandler(enrollmentDao, datastoreManager, FlagsFactory.getFlags())
                     .performScheduledPendingReports();
         } else {
             new EventReportingJobHandler(
@@ -164,14 +162,6 @@ public final class DebugReportingJobService extends JobService {
             return MEASUREMENT_DEBUG_REPORT_API_JOB.getJobId();
         } else {
             return MEASUREMENT_DEBUG_REPORT_JOB.getJobId();
-        }
-    }
-
-    private static long getJobDelay(boolean isDebugReportApi) {
-        if (isDebugReportApi) {
-            return DEBUG_REPORT_API_JOB_DELAY_MS;
-        } else {
-            return 1L;
         }
     }
 

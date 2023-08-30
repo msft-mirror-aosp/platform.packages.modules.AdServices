@@ -16,8 +16,6 @@
 
 package com.android.adservices.data.topics.migration;
 
-import static org.junit.Assert.assertThrows;
-
 import android.database.sqlite.SQLiteDatabase;
 
 import org.junit.Before;
@@ -36,20 +34,7 @@ public class AbstractTopicsDbMigratorTest {
 
     @Test
     public void testPerformMigration_onUpgrade() {
-        // Test targetVersion is newer than newVersion on upgrading
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        initMigrator(/* targetVersion */ 3)
-                                .performMigration(mDb, /* oldVersion */ 1, /* newVersion */ 2));
-
-        // Test targetVersion is not newer than oldVersion on upgrading
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        initMigrator(/* targetVersion */ 1)
-                                .performMigration(mDb, /* oldVersion */ 1, /* newVersion */ 2));
-
+        // TODO(b/295233784): Improve the test coverage for migrating multiple migrators
         // Test to perform on Upgrading
         initMigrator(/* targetVersion */ 2)
                 .performMigration(mDb, /* oldVersion */ 1, /* newVersion */ 2);

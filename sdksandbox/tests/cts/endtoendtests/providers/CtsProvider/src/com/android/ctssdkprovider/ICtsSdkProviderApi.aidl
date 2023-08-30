@@ -34,4 +34,6 @@ interface ICtsSdkProviderApi {
     String getClientPackageName();
     void checkRoomDatabaseAccess();
     void checkCanUseSharedPreferences();
+    void checkReadFileDescriptor(in ParcelFileDescriptor fd, String expectedValue);
+    ParcelFileDescriptor createFileDescriptor(String valueToWrite);
 }

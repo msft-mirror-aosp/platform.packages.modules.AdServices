@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.consent;
 
+import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.internal.annotations.VisibleForTesting;
 
 /** ConsentManager related Constants. */
@@ -51,7 +52,8 @@ public class ConsentConstants {
 
     // Internal datastore filename. The name should be unique to avoid multiple threads or processes
     // to update the same file.
-    static final String STORAGE_XML_IDENTIFIER = "ConsentManagerStorageIdentifier.xml";
+    static final String STORAGE_XML_IDENTIFIER =
+            FileCompatUtils.getAdservicesFilename("ConsentManagerStorageIdentifier.xml");
 
     // The name of shared preferences file to store status of one-time migrations.
     // Once a migration has happened, it marks corresponding shared preferences to prevent it

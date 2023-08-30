@@ -29,6 +29,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -306,10 +307,13 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
                                 setVideoURI(Uri.parse(url));
                                 requestFocus();
 
-                                // Add playback controls to the video.
-                                MediaController mediaController = new MediaController(getContext());
-                                mediaController.setAnchorView(this);
-                                setMediaController(mediaController);
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                                    // Add playback controls to the video.
+                                    MediaController mediaController =
+                                            new MediaController(getContext());
+                                    mediaController.setAnchorView(this);
+                                    setMediaController(mediaController);
+                                }
 
                                 setOnPreparedListener(this::onPrepared);
                             });

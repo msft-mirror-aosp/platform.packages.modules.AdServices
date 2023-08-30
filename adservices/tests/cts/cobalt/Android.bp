@@ -25,11 +25,11 @@ android_test {
         "androidx.test.runner",
         "compatibility-device-util-axt",
         "truth-prebuilt",
-        "framework-adservices.impl", // MOVE THIS TO LIBS
     ],
     libs: [
         "android.test.base",
         "android.test.runner",
+        "framework-adservices-lib",
     ],
     test_suites: [
         "cts",
@@ -52,12 +52,12 @@ android_test {
         "androidx.test.runner",
         "compatibility-device-util-axt",
         "truth-prebuilt",
-        "framework-adservices.impl", // MOVE THIS TO LIBS
     ],
     libs: [
         "android.ext.adservices",
         "android.test.base",
         "android.test.runner",
+        "framework-adservices-lib",
     ],
     test_suites: [
         "cts",
