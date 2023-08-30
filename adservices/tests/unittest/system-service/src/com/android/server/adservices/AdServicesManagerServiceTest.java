@@ -68,7 +68,6 @@ import com.android.server.adservices.feature.PrivacySandboxUxCollection;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -573,7 +572,6 @@ public class AdServicesManagerServiceTest {
         assertThrows(SecurityException.class, () -> service.getConsent(ConsentParcel.ALL_API));
     }
 
-    @Ignore
     @Test
     public void testRecordGaUxNotificationDisplayed() throws IOException {
         AdServicesManagerService service =
