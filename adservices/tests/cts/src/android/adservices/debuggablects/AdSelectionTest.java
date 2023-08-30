@@ -31,9 +31,10 @@ import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.JoinCustomAudienceRequest;
 import android.adservices.customaudience.TrustedBiddingData;
 import android.adservices.utils.MockWebServerRule;
+import android.adservices.utils.ScenarioDispatcher;
+import android.adservices.utils.Scenarios;
 import android.content.Context;
 import android.net.Uri;
-import android.util.ArrayMap;
 import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -45,10 +46,7 @@ import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.mockwebserver.Dispatcher;
-import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
-import com.google.mockwebserver.RecordedRequest;
 
 import org.junit.After;
 import org.junit.Assume;
@@ -57,14 +55,9 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -117,7 +110,7 @@ public class AdSelectionTest extends ForegroundDebuggableCtsTest {
                         .build();
         mAdSelectionClient =
                 new AdSelectionClient.Builder().setContext(CONTEXT).setExecutor(executor).build();
-        setupDefaultMockWebServer();
+        mCacheBuster = mCacheBusterRandom.nextInt();
     }
 
     @After
@@ -136,6 +129,10 @@ public class AdSelectionTest extends ForegroundDebuggableCtsTest {
 
     @Test
     public void testAdSelection_withBiddingAndScoringLogic_happyPath() throws Exception {
+        ScenarioDispatcher dispatcher =
+                ScenarioDispatcher.fromScenario(
+                        "scenarios/remarketing-cuj-default.json", getCacheBusterPrefix());
+        setupDefaultMockWebServer(dispatcher);
         JoinCustomAudienceRequest joinCustomAudienceRequest = makeJoinCustomAudienceRequest();
 
         try {
@@ -158,25 +155,18 @@ public class AdSelectionTest extends ForegroundDebuggableCtsTest {
             Log.d(TAG, "Left Custom Audience.");
         }
 
-        List<String> urls = getUrlsCalled(mMockWebServer, 4);
-        assertThat(urls).contains(getCacheBusterPrefix() + "/buyer/bidding/simple_logic");
-        assertThat(urls).contains(getCacheBusterPrefix() + "/seller/decision/simple_logic");
-    }
-
-    private String getServerBaseDomain() {
-        return mMockWebServer.getHostName();
+        assertThat(dispatcher.getCalledPaths())
+                .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
     }
 
     private String getServerBaseAddress() {
         return String.format(
-                "https://%s:%s", mMockWebServer.getHostName(), mMockWebServer.getPort());
+                "https://%s:%s%s/",
+                mMockWebServer.getHostName(), mMockWebServer.getPort(), getCacheBusterPrefix());
     }
 
     private AdSelectionConfig makeAdSelectionConfig() {
         AdSelectionSignals signals = makeAdSelectionSignals();
-        Uri decisionLogicUri =
-                Uri.parse(String.format("%s/seller/decision/simple_logic", mServerBaseAddress));
-        Log.d(TAG, "Decision logic URI: " + decisionLogicUri.toString());
         Log.d(TAG, "Ad tech: " + mAdTechIdentifier.toString());
         return new AdSelectionConfig.Builder()
                 .setSeller(mAdTechIdentifier)
@@ -184,81 +174,24 @@ public class AdSelectionTest extends ForegroundDebuggableCtsTest {
                 .setCustomAudienceBuyers(ImmutableList.of(mAdTechIdentifier))
                 .setAdSelectionSignals(signals)
                 .setSellerSignals(signals)
-                .setDecisionLogicUri(decisionLogicUri)
+                .setDecisionLogicUri(Uri.parse(mServerBaseAddress + Scenarios.SCORING_LOGIC_PATH))
                 .setTrustedScoringSignalsUri(
-                        Uri.parse(
-                                String.format(
-                                        "%s/seller/scoringsignals/simple", mServerBaseAddress)))
+                        Uri.parse(mServerBaseAddress + Scenarios.SCORING_SIGNALS_PATH))
                 .build();
     }
 
-    private static String loadResource(String fileName) {
-        String lines = "";
-        try {
-            InputStream is = ApplicationProvider.getApplicationContext().getAssets().open(fileName);
-            byte[] bytes = is.readAllBytes();
-            is.close();
-            lines = new String(bytes);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-        return lines;
-    }
-
-    private void setupDefaultMockWebServer() throws Exception {
+    private void setupDefaultMockWebServer(ScenarioDispatcher dispatcher) throws Exception {
         if (mMockWebServer != null) {
             mMockWebServer.shutdown();
         }
-        Map<String, String> pathToFileMap = new ArrayMap<>();
-        pathToFileMap.put("/buyer/bidding/simple_logic", "BiddingLogic.js");
-        pathToFileMap.put("/seller/decision/simple_logic", "ScoringLogic.js");
-        pathToFileMap.put("/seller/scoringsignals/simple", "ScoringSignals.json");
-        pathToFileMap.put("/buyer/biddingsignals/simple", "BiddingSignals.json");
-        mMockWebServer = makeMockWebServer(pathToFileMap);
-        mCacheBuster = mCacheBusterRandom.nextInt();
-        mServerBaseAddress = getServerBaseAddress() + getCacheBusterPrefix();
-        mAdTechIdentifier = AdTechIdentifier.fromString(getServerBaseDomain());
+        mMockWebServer = mMockWebServerRule.startMockWebServer(dispatcher);
+        mServerBaseAddress = getServerBaseAddress();
+        mAdTechIdentifier = AdTechIdentifier.fromString(mMockWebServer.getHostName());
         Log.d(TAG, "Started default MockWebServer.");
     }
 
     private String getCacheBusterPrefix() {
         return String.format("/%s", mCacheBuster);
-    }
-
-    private MockWebServer makeMockWebServer(Map<String, String> pathToFileMap) throws Exception {
-        return mMockWebServerRule.startMockWebServer(
-                new Dispatcher() {
-                    @Override
-                    public MockResponse dispatch(RecordedRequest request) {
-                        Log.d(TAG, String.format("Serving: %s", request.getPath()));
-                        for (Map.Entry<String, String> pathToFile : pathToFileMap.entrySet()) {
-                            String path = pathToFile.getKey();
-                            String filePath = pathToFile.getValue();
-                            if (request.getPath().contains(path)) {
-                                return new MockResponse()
-                                        .setBody(
-                                                Objects.requireNonNull(loadResource(filePath))
-                                                        .getBytes(StandardCharsets.UTF_8));
-                            }
-                        }
-                        return new MockResponse().setResponseCode(404);
-                    }
-                });
-    }
-
-    private static List<String> getUrlsCalled(MockWebServer mockWebServer, int expectedRequests)
-            throws InterruptedException {
-        ImmutableList.Builder<String> builder = ImmutableList.builder();
-        RecordedRequest request = null;
-        for (int i = 0; i < expectedRequests; i++) {
-            request = mockWebServer.takeRequest();
-            if (request == null) {
-                break;
-            }
-            builder.add(request.getPath());
-        }
-        return builder.build();
     }
 
     private static AdSelectionSignals makeAdSelectionSignals() {
@@ -267,33 +200,26 @@ public class AdSelectionTest extends ForegroundDebuggableCtsTest {
     }
 
     private JoinCustomAudienceRequest makeJoinCustomAudienceRequest() {
+        Uri trustedBiddingUri = Uri.parse(mServerBaseAddress + Scenarios.BIDDING_SIGNALS_PATH);
+        Uri dailyUpdateUri =
+                Uri.parse(mServerBaseAddress + Scenarios.getDailyUpdatePath(CUSTOM_AUDIENCE));
         return new JoinCustomAudienceRequest.Builder()
                 .setCustomAudience(
                         new CustomAudience.Builder()
                                 .setName(AdSelectionTest.CUSTOM_AUDIENCE)
-                                .setDailyUpdateUri(
-                                        Uri.parse(
-                                                String.format(
-                                                        "%s/buyer/dailyupdate/%s",
-                                                        mServerBaseAddress,
-                                                        AdSelectionTest.CUSTOM_AUDIENCE)))
+                                .setDailyUpdateUri(dailyUpdateUri)
                                 .setTrustedBiddingData(
                                         new TrustedBiddingData.Builder()
                                                 .setTrustedBiddingKeys(ImmutableList.of())
-                                                .setTrustedBiddingUri(
-                                                        Uri.parse(
-                                                                String.format(
-                                                                        "%s/buyer/biddingsignals"
-                                                                                + "/simple",
-                                                                        mServerBaseAddress)))
+                                                .setTrustedBiddingUri(trustedBiddingUri)
                                                 .build())
                                 .setUserBiddingSignals(AdSelectionSignals.fromString("{}"))
                                 .setAds(makeAds())
                                 .setBiddingLogicUri(
                                         Uri.parse(
                                                 String.format(
-                                                        "%s/buyer/bidding/simple_logic",
-                                                        mServerBaseAddress)))
+                                                        mServerBaseAddress
+                                                                + Scenarios.BIDDING_LOGIC_PATH)))
                                 .setBuyer(mAdTechIdentifier)
                                 .setActivationTime(Instant.now())
                                 .setExpirationTime(Instant.now().plus(5, ChronoUnit.DAYS))
