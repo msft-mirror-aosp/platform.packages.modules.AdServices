@@ -795,4 +795,7 @@ public final class FlagsConstants {
     public static final String KEY_U18_UX_ENABLED = "u18_ux_enabled";
 
     public static final String KEY_ENABLE_AD_SERVICES_SYSTEM_API = "enable_ad_services_system_api";
+
+    public static final String KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED =
+            "is_u18_ux_detention_channel_enabled";
 }

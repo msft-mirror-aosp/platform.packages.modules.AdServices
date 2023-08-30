@@ -2910,6 +2910,11 @@ public final class PhFlags implements Flags {
 
     @Override
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED
+                        + " = "
+                        + isU18UxDetentionChannelEnabled());
         writer.println("\t" + FlagsConstants.KEY_DEBUG_UX + " = " + getDebugUx());
         writer.println(
                 "\t"
@@ -4493,6 +4498,14 @@ public final class PhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED,
                 /* defaultValue */ DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED);
+    }
+
+    @Override
+    public boolean isU18UxDetentionChannelEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED,
+                /* defaultValue */ IS_U18_UX_DETENTION_CHANNEL_ENABLED_DEFAULT);
     }
 
     /** Returns whether Measurement app package name logging is enabled. */
