@@ -92,7 +92,7 @@
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"Купуялык параметрлерине өтүп, аларды каалаган убакта өзгөртө аласыз."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Жарнамалардын темалары тууралуу кеңири маалымат"</string>
     <string name="notificationUI_learn_more_from_privacy_policy" msgid="7809111628979410445"><a href="https://policies.google.com/privacy">"Купуялык саясатыбыздан"</a>" Android маалыматыңызды кандайча коргой турганын билип алыңыз."</string>
-    <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"Байкап көрүңүз"</string>
+    <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"Байкап көрүү"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  Кандай маалымат колдонулат"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Жарнамалардын темалары соңку пайдаланган колдонмолоруңузга жана аларды канчалык көп ачканыңызга жараша аныкталат."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  Бул маалымат кандайча колдонулат"</string>
