@@ -193,7 +193,7 @@
     <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Αυτή η λίστα θεμάτων θα διαγραφεί. Το Android δεν θα σημειώνει πλέον θέματα που σας ενδιαφέρουν, αλλά μπορεί να βλέπετε ακόμα συναφείς διαφημίσεις."</string>
     <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Οι διαφημίσεις που προτείνονται από εφαρμογές είναι ενεργές"</string>
     <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Οι εφαρμογές μπορεί να ξεκινήσουν να προτείνουν διαφημίσεις. Θα δείτε μια λίστα με τις εφαρμογές μόλις ξεκινήσουν να προτείνουν διαφημίσεις."</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Να απενεργοποιηθούν οι διαφημίσεις που προτείνονται από εφαρμογές;"</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Απενεργοποίηση προτάσεων για διαφημίσεις από εφαρμογές;"</string>
     <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Όλα τα δεδομένα σχετικά με τις προτάσεις διαφημίσεων θα διαγραφούν. Οι εφαρμογές δεν θα μπορούν να προτείνουν πλέον διαφημίσεις, αλλά μπορεί να βλέπετε ακόμα συναφείς διαφημίσεις."</string>
     <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Η μέτρηση διαφημίσεων είναι ενεργή"</string>
     <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Το Android μπορεί να κοινοποιεί μόνο πολύ περιορισμένες πληροφορίες σε εφαρμογές για να τις βοηθάει στη μέτρηση της απόδοσης των διαφημίσεών τους."</string>

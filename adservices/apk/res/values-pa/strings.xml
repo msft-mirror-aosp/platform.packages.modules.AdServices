@@ -196,7 +196,7 @@
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"ਕੀ \'ਐਪ ਵੱਲੋਂ ਸੁਝਾਏ ਵਿਗਿਆਪਨ\' ਵਿਸ਼ੇਸ਼ਤਾ ਨੂੰ ਬੰਦ ਕਰਨਾ ਹੈ?"</string>
     <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"ਵਿਗਿਆਪਨ ਸੰਬੰਧੀ ਸੁਝਾਅ ਦਾ ਸਾਰਾ ਡਾਟਾ ਮਿਟਾ ਦਿੱਤਾ ਜਾਵੇਗਾ। ਐਪਾਂ ਹੁਣ ਵਿਗਿਆਪਨਾਂ ਦੇ ਸੁਝਾਅ ਨਹੀਂ ਦੇ ਸਕਣਗੀਆਂ, ਪਰ ਤੁਸੀਂ ਹਾਲੇ ਵੀ ਢੁਕਵੇਂ ਵਿਗਿਆਪਨ ਦੇਖ ਸਕਦੇ ਹੋ।"</string>
     <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"ਵਿਗਿਆਪਨ ਮਾਪ ਦੀ ਸੁਵਿਧਾ ਚਾਲੂ ਹੈ"</string>
-    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android ਐਪਾਂ ਦੇ ਵਿਗਿਆਪਨਾਂ ਦੀ ਕਾਰਗੁਜ਼ਾਰੀ ਨੂੰ ਮਾਪਣ ਵਿੱਚ ਉਨ੍ਹਾਂ ਦੀ ਮਦਦ ਕਰਨ ਲਈ ਐਪਾਂ ਨਾਲ ਬਹੁਤ ਹੀ ਸੀਮਤ ਜਾਣਕਾਰੀ ਸਾਂਝੀ ਕਰ ਸਕਦਾ ਹੈ।"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"ਐਪਾਂ ਦੇ ਵਿਗਿਆਪਨਾਂ ਦੀ ਕਾਰਗੁਜ਼ਾਰੀ ਨੂੰ ਮਾਪਣ ਵਿੱਚ ਉਨ੍ਹਾਂ ਦੀ ਮਦਦ ਕਰਨ ਵਾਸਤੇ, Android ਉਨ੍ਹਾਂ ਨਾਲ ਬਹੁਤ ਸੀਮਤ ਜਾਣਕਾਰੀ ਸਾਂਝੀ ਕਰ ਸਕਦਾ ਹੈ।"</string>
     <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"ਕੀ ਵਿਗਿਆਪਨ ਮਾਪ ਦੀ ਸੁਵਿਧਾ ਨੂੰ ਬੰਦ ਕਰਨਾ ਹੈ?"</string>
     <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"ਸਾਰੀਆਂ ਵਿਚਾਰ-ਅਧੀਨ ਵਿਗਿਆਪਨ ਮਾਪ ਰਿਪੋਰਟਾਂ ਮਿਟਾ ਦਿੱਤੀਆਂ ਜਾਣਗੀਆਂ ਅਤੇ ਕੋਈ ਵੀ ਨਵੀਂ ਰਿਪੋਰਟ ਸਿਰਜੀ ਜਾਂ ਸਾਂਝੀ ਨਹੀਂ ਕੀਤੀ ਜਾਵੇਗੀ।"</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"ਵਿਗਿਆਪਨ ਪਰਦੇਦਾਰੀ"</string>

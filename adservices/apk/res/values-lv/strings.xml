@@ -194,7 +194,7 @@
     <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Lietotņu ieteiktas reklāmas ir ieslēgtas"</string>
     <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Lietotnēs var tikt sākta reklāmu ieteikšana. Kad tajās tiks sākta reklāmu ieteikšana, tiks parādīts lietotņu saraksts."</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Vai izslēgt lietotņu ieteiktas reklāmas?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Visi reklāmu ieteikumu dati tiks izdzēsti. Lietotnēs vairs nevarēs ieteikt reklāmas, taču jums joprojām var tikt rādītas atbilstošas reklāmas."</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Visi reklāmu ieteikumu dati tiks izdzēsti. Lietotnes vairs nevarēs ieteikt reklāmas, taču jums joprojām var tikt rādītas atbilstošas reklāmas."</string>
     <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Reklāmu novērtēšana ir ieslēgta"</string>
     <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Operētājsistēmā Android drīkst kopīgot ar lietotnēm tikai stingri ierobežotu informāciju, lai lietotnēs varētu efektīvāk mērīt attiecīgo lietotņu reklāmu veiktspēju."</string>
     <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Vai izslēgt reklāmu novērtēšanu?"</string>

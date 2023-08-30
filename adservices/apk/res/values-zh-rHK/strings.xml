@@ -188,7 +188,7 @@
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"系統將刪除清單上來自應用程式的廣告建議資料，而應用程式之後會建議新的廣告。你可能仍會看到部分相關的廣告。"</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"應用程式資料已重設"</string>
     <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"廣告主題已開啟"</string>
-    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android 會開始記錄感興趣的主題，但可能需要一段時間，才會顯示你的第一個主題。"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android 會開始記錄你感興趣的主題，但可能需要一段時間，才會顯示你的第一個主題。"</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"要關閉廣告主題嗎？"</string>
     <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"系統將會刪除此主題清單。Android 不會再記錄感興趣的主題，但你仍可看到相關廣告。"</string>
     <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"應用程式建議廣告已開啟"</string>
@@ -198,7 +198,7 @@
     <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"廣告成效評估已開啟"</string>
     <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android 只能將極少量的資訊提供給應用程式，以協助應用程式評估其廣告成效。"</string>
     <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"要關閉廣告成效評估嗎？"</string>
-    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"系統會刪除所有待處理的廣告成效評估報告，不會產生或提供任何新報告。"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"系統會刪除所有待處理的廣告成效評估報告，亦不會產生或提供任何新報告。"</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"廣告私隱權"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"廣告主題"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"應用程式建議的廣告"</string>

@@ -191,7 +191,7 @@
     <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android-ը կսկսի հիշել ձեզ հետաքրքրող թեմաները, սակայն կարող է որոշակի ժամանակ պահանջվել, մինչև այդ թեմաներով առաջին գովազդները ձեզ կցուցադրվեն։"</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Անջատե՞լ գովազդների թեմաները"</string>
     <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Թեմաների այս ցանկը կջնջվի։ Android-ն այլևս չի հիշի ձեզ հետաքրքրող թեմաները, սակայն դուք դեռ կարող եք տեսնել համապատասխան գովազդներ։"</string>
-    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Հավելվածների կողմից առաջարկվող գովազդները միացված են"</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Հավելվածների առաջարկած գովազդները միացված են"</string>
     <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Հավելվածները կարող են սկսել գովազդ առաջարկել։ Դուք կտեսնեք հավելվածների ցանկը, երբ դրանք սկսեն գովազդ առաջարկել։"</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Անջատե՞լ հավելվածների կողմից առաջարկվող գովազդները"</string>
     <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Առաջարկվող գովազդների մասին բոլոր տվյալները կհեռացվեն։ Հավելվածներն այլևս չեն կարողանա գովազդ առաջարկել, սակայն դուք դեռ կարող եք տեսնել համապատասխան գովազդ։"</string>

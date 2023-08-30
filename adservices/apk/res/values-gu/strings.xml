@@ -194,7 +194,7 @@
     <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"ઍપ દ્વારા સૂચવેલી જાહેરાતો ચાલુ છે"</string>
     <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"ઍપ સૂચવેલી જાહેરાતો બતાવવાનું શરૂ કરી શકે. એકવાર જાહેરાતો સૂચવવાનું શરૂ કરે, પછી તમે ઍપની સૂચિ જોઈ શકશો."</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"ઍપ દ્વારા સૂચવેલી જાહેરાતો બંધ કરીએ?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"જાહેરાતના સૂચનનો બધો ડેટા ડિલીટ કરવામાં આવશે. ઍપ હવેથી કોઈ જાહેરતો સૂચિત કરી શકશે નહીં, પણ તમે કદાચ સંબંધિત જાહેરાત જોઈ શકશો."</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"જાહેરાતના સૂચનનો બધો ડેટા ડિલીટ કરવામાં આવશે. ઍપ હવેથી કોઈ જાહેરાતો સૂચિત કરી શકશે નહીં, પણ તમે કદાચ સંબંધિત જાહેરાત જોઈ શકશો."</string>
     <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"જાહેરાતની માપણી ચાલુ છે"</string>
     <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android ઍપને તેમની જાહેરાતોના પર્ફોર્મન્સની માપણી કરવામાં સહાય કરવામાં ફક્ત મર્યાદિત માહિતી ઍપ સાથે શેર કરી શકે છે."</string>
     <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"જાહેરાતની માપણી બંધ કરીએ?"</string>
