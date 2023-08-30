@@ -3873,6 +3873,14 @@ public interface Flags {
         return ENABLE_DATABASE_SCHEMA_VERSION_8;
     }
 
+    /** Flag to control which allow list in getMeasurementApiStatus. */
+    boolean MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK = false;
+
+    /** Returns the flag to control which allow list to use in getMeasurementApiStatus. */
+    default boolean getMsmtEnableApiStatusAllowListCheck() {
+        return MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK;
+    }
+
     /**
      * Default whether to limit logging for enrollment metrics to avoid performance issues. This
      * includes not logging data that requires database queries and downloading MDD files.

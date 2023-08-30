@@ -1032,6 +1032,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW =
             "measurement_min_post_install_exclusivity_window";
 
+    public static final String KEY_MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK =
+            "measurement_enable_api_status_allow_list_check";
+
     // Database Schema Version Flags
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 =
             "enable_database_schema_version_8";
