@@ -21,6 +21,7 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.enrollment.base.PrivacySandboxEnrollmentChannel;
@@ -39,6 +40,9 @@ public class U18DetentionChannel implements PrivacySandboxEnrollmentChannel {
                 && consentManager.wasGaUxNotificationDisplayed();
     }
 
-    /** Enroll U18 users upon graduation. */
-    public void enroll(Context context, ConsentManager consentManager) {}
+    /** Perform enrollment action for detained users. */
+    public void enroll(Context context, ConsentManager consentManager) {
+        consentManager.disable(context, AdServicesApiType.FLEDGE);
+        consentManager.disable(context, AdServicesApiType.TOPICS);
+    }
 }
