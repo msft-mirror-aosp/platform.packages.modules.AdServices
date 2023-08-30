@@ -29,6 +29,7 @@ import static org.mockito.Mockito.never;
 import android.content.Context;
 
 import com.android.adservices.service.common.ConsentNotificationJobService;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.enrollment.impl.U18DetentionChannel;
@@ -60,7 +61,6 @@ public class U18DetentionChannelTest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(UxStatesManager.class)
-                        .spyStatic(ConsentManager.class)
                         .spyStatic(ConsentNotificationJobService.class)
                         .strictness(Strictness.WARN)
                         .initMocks(this)
@@ -138,5 +138,14 @@ public class U18DetentionChannelTest {
         verify(
                 () -> ConsentNotificationJobService.schedule(any(), anyBoolean(), anyBoolean()),
                 never());
+    }
+
+    @Test
+    public void enrollTest_targetingApisDisabled() {
+        mU18DetentionChannel.enroll(mContext, mConsentManager);
+
+        verify(mConsentManager).disable(mContext, AdServicesApiType.FLEDGE);
+        verify(mConsentManager).disable(mContext, AdServicesApiType.TOPICS);
+        verify(mConsentManager, never()).disable(mContext, AdServicesApiType.MEASUREMENTS);
     }
 }
