@@ -164,6 +164,7 @@ import static com.android.adservices.service.Flags.ISOLATE_MAX_HEAP_SIZE_BYTES;
 import static com.android.adservices.service.Flags.IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED;
 import static com.android.adservices.service.Flags.IS_EEA_DEVICE;
 import static com.android.adservices.service.Flags.IS_EEA_DEVICE_FEATURE_ENABLED;
+import static com.android.adservices.service.Flags.IS_U18_UX_DETENTION_CHANNEL_ENABLED_DEFAULT;
 import static com.android.adservices.service.Flags.MAINTENANCE_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.MAINTENANCE_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES;
@@ -556,6 +557,7 @@ import static com.android.adservices.service.PhFlags.KEY_UI_EEA_COUNTRIES;
 import static com.android.adservices.service.PhFlags.KEY_UI_FEATURE_TYPE_LOGGING_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL;
 import static com.android.adservices.service.PhFlags.KEY_UI_TOGGLE_SPEED_BUMP_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_IS_U18_UX_DETENTION_CAHNNEL_ENABLED;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -6631,6 +6633,22 @@ public class PhFlagsTest {
                 /* makeDefault */ !CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE);
 
         assertThat(mPhFlags.getConsentNotificationActivityDebugMode()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testU18UxDetentionChannel() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.isU18UxDetentionChannelEnabled())
+                .isEqualTo(IS_U18_UX_DETENTION_CHANNEL_ENABLED_DEFAULT);
+
+        boolean phOverridingValue = !IS_U18_UX_DETENTION_CHANNEL_ENABLED_DEFAULT;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ !IS_U18_UX_DETENTION_CHANNEL_ENABLED_DEFAULT);
+
+        assertThat(mPhFlags.isU18UxDetentionChannelEnabled()).isEqualTo(phOverridingValue);
     }
 
     @Test
