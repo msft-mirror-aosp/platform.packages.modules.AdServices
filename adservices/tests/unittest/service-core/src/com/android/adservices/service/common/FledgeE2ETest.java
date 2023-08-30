@@ -127,7 +127,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdCost;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
 import com.android.adservices.service.adselection.AdSelectionServiceImpl;
-import com.android.adservices.service.adselection.InteractionReporter;
+import com.android.adservices.service.adselection.EventReporter;
 import com.android.adservices.service.adselection.JsVersionHelper;
 import com.android.adservices.service.adselection.JsVersionRegister;
 import com.android.adservices.service.adselection.UpdateAdCounterHistogramWorkerTest;
@@ -1426,7 +1426,7 @@ public class FledgeE2ETest {
                 AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
         assertEquals(
                 reportInteractionTestCallback.mFledgeErrorResponse.getErrorMessage(),
-                InteractionReporter.NO_MATCH_FOUND_IN_AD_SELECTION_DB);
+                EventReporter.NO_MATCH_FOUND_IN_AD_SELECTION_DB);
     }
 
     @Test

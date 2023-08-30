@@ -69,7 +69,7 @@ public final class UiApiLoggingHostTest implements IDeviceTest {
     private String mTargetPackageAosp;
 
     @Rule(order = 0)
-    public SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastR();
+    public SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAnyLevel();
 
     @Rule(order = 1)
     public AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =

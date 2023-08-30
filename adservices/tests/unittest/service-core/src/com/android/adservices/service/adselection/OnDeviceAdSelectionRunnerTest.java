@@ -874,7 +874,7 @@ public class OnDeviceAdSelectionRunnerTest {
                 expectedAdSelectionResult,
                 mAdSelectionEntryDao.getAdSelectionEntityById(AD_SELECTION_ID));
         DBAdSelectionHistogramInfo histogramInfo =
-                mAdSelectionEntryDao.getAdSelectionHistogramInfo(
+                mAdSelectionEntryDao.getAdSelectionHistogramInfoInOnDeviceTable(
                         resultsCallback.mAdSelectionResponse.getAdSelectionId(),
                         MY_APP_PACKAGE_NAME);
         assertThat(histogramInfo).isNotNull();
@@ -3151,7 +3151,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         callback.mAdSelectionResponse.getAdSelectionId()));
 
         DBAdSelectionHistogramInfo histogramInfo =
-                mAdSelectionEntryDao.getAdSelectionHistogramInfo(
+                mAdSelectionEntryDao.getAdSelectionHistogramInfoInOnDeviceTable(
                         callback.mAdSelectionResponse.getAdSelectionId(), MY_APP_PACKAGE_NAME);
         assertThat(histogramInfo).isNotNull();
         assertThat(histogramInfo.getBuyer()).isEqualTo(BUYER_1);

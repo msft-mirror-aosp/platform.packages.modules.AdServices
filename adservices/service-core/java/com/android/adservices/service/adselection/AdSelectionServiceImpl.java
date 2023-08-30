@@ -56,6 +56,7 @@ import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
 import android.annotation.NonNull;
 import android.content.Context;
+import android.os.Binder;
 import android.os.Build;
 import android.os.RemoteException;
 
@@ -95,6 +96,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.js.JSSandboxIsNotAvailableException;
 import com.android.adservices.service.js.JSScriptEngine;
+import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -355,20 +357,27 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         final boolean forceSearchOnAbsentOwner =
                 BinderFlagReader.readFlag(
                         mFlags::getFledgeAuctionServerForceSearchWhenOwnerIsAbsentEnabled);
+        final boolean auctionServerEnabledForUpdateHistogram =
+                BinderFlagReader.readFlag(mFlags::getFledgeAuctionServerEnabledForUpdateHistogram);
+
         PersistAdSelectionResultRunner.ReportingRegistrationLimits limits =
                 PersistAdSelectionResultRunner.ReportingRegistrationLimits.builder()
                         .setMaxRegisteredAdBeaconsTotalCount(
                                 BinderFlagReader.readFlag(
-                                        mFlags::getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount))
+                                        mFlags
+                                                ::getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount))
                         .setMaxInteractionKeySize(
                                 BinderFlagReader.readFlag(
-                                        mFlags::getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB))
+                                        mFlags
+                                                ::getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB))
                         .setMaxInteractionReportingUriSize(
                                 BinderFlagReader.readFlag(
-                                        mFlags::getFledgeReportImpressionMaxInteractionReportingUriSizeB))
+                                        mFlags
+                                                ::getFledgeReportImpressionMaxInteractionReportingUriSizeB))
                         .setMaxRegisteredAdBeaconsPerAdTechCount(
                                 BinderFlagReader.readFlag(
-                                        mFlags::getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount))
+                                        mFlags
+                                                ::getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount))
                         .build();
         mLightweightExecutor.execute(
                 () -> {
@@ -385,7 +394,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     devContext,
                                     overallTimeout,
                                     forceSearchOnAbsentOwner,
-                                    limits);
+                                    limits,
+                                    mAdFilteringFeatureFactory.getAdCounterHistogramUpdater(
+                                            mAdSelectionEntryDao,
+                                            auctionServerEnabledForUpdateHistogram));
                     runner.run(inputParams, callback);
                     Tracing.endAsyncSection(Tracing.PERSIST_AD_SELECTION_RESULT, traceCookie);
                 });
@@ -424,6 +436,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         int callingUid = getCallingUid(apiName);
 
         DevContext devContext = mDevContextFilter.createDevContext();
+        final boolean auctionServerEnabledForUpdateHistogram =
+                BinderFlagReader.readFlag(mFlags::getFledgeAuctionServerEnabledForUpdateHistogram);
         mLightweightExecutor.execute(
                 () -> {
                     // TODO(b/249298855): Evolve off device ad selection logic.
@@ -434,7 +448,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 callback,
                                 adSelectionExecutionLogger,
                                 mAdSelectionServiceFilter,
-                                callingUid);
+                                callingUid,
+                                auctionServerEnabledForUpdateHistogram);
                     } else {
                         runOnDeviceAdSelection(
                                 devContext,
@@ -442,7 +457,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 callback,
                                 adSelectionExecutionLogger,
                                 mAdSelectionServiceFilter,
-                                callingUid);
+                                callingUid,
+                                auctionServerEnabledForUpdateHistogram);
                     }
                 });
     }
@@ -453,7 +469,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull AdSelectionCallback callback,
             @NonNull AdSelectionExecutionLogger adSelectionExecutionLogger,
             @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
-            final int callerUid) {
+            final int callerUid,
+            final boolean auctionServerEnabledForUpdateHistogram) {
         OnDeviceAdSelectionRunner runner =
                 new OnDeviceAdSelectionRunner(
                         mContext,
@@ -471,7 +488,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAdFilteringFeatureFactory.getAdFilterer(),
                         mAdFilteringFeatureFactory.getAdCounterKeyCopier(),
                         mAdFilteringFeatureFactory.getAdCounterHistogramUpdater(
-                                mAdSelectionEntryDao),
+                                mAdSelectionEntryDao, auctionServerEnabledForUpdateHistogram),
                         mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
                         new DebugReporting(mFlags, mAdServicesHttpsClient, devContext),
                         callerUid);
@@ -484,7 +501,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull AdSelectionCallback callback,
             @NonNull AdSelectionExecutionLogger adSelectionExecutionLogger,
             @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
-            int callerUid) {
+            int callerUid,
+            boolean auctionServerEnabledForUpdateHistogram) {
         TrustedServerAdSelectionRunner runner =
                 new TrustedServerAdSelectionRunner(
                         mContext,
@@ -502,7 +520,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAdFilteringFeatureFactory.getAdFilterer(),
                         mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
                         mAdFilteringFeatureFactory.getAdCounterHistogramUpdater(
-                                mAdSelectionEntryDao),
+                                mAdSelectionEntryDao, auctionServerEnabledForUpdateHistogram),
                         mAdRenderIdValidator,
                         new DebugReporting(mFlags, mAdServicesHttpsClient, devContext),
                         callerUid);
@@ -652,20 +670,34 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         int callerUid = getCallingUid(apiName);
         DevContext devContext = mDevContextFilter.createDevContext();
 
-        InteractionReporter interactionReporter =
-                new InteractionReporter(
-                        mAdSelectionEntryDao,
-                        mAdServicesHttpsClient,
-                        mLightweightExecutor,
-                        mBackgroundExecutor,
-                        mAdServicesLogger,
-                        mFlags,
-                        mAdSelectionServiceFilter,
-                        callerUid,
-                        mFledgeAuthorizationFilter,
-                        devContext);
+        // Get an instance of measurement service
+        // Binder identity is cleared and eventually restored to allow reading values of device
+        // config flags.
+        MeasurementImpl measurementService;
+        final long token = Binder.clearCallingIdentity();
+        try {
+            measurementService = MeasurementImpl.getInstance(mContext);
+        } finally {
+            Binder.restoreCallingIdentity(token);
+        }
 
-        interactionReporter.reportInteraction(inputParams, callback);
+        // Get an instance of the event reporter
+        EventReporter eventReporter =
+                new EventReporterFactory(
+                                mAdSelectionEntryDao,
+                                mAdServicesHttpsClient,
+                                mLightweightExecutor,
+                                mBackgroundExecutor,
+                                mAdServicesLogger,
+                                mFlags,
+                                mAdSelectionServiceFilter,
+                                callerUid,
+                                mFledgeAuthorizationFilter,
+                                devContext,
+                                measurementService)
+                        .getEventReporter();
+
+        eventReporter.reportInteraction(inputParams, callback);
     }
 
     @Override
@@ -734,6 +766,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         final int adCounterHistogramLowerMaxPerBuyerEventCount =
                 BinderFlagReader.readFlag(
                         mFlags::getFledgeAdCounterHistogramLowerMaxPerBuyerEventCount);
+        final boolean auctionServerEnabledForUpdateHistogram =
+                BinderFlagReader.readFlag(mFlags::getFledgeAuctionServerEnabledForUpdateHistogram);
 
         final UpdateAdCounterHistogramWorker worker =
                 new UpdateAdCounterHistogramWorker(
@@ -743,7 +777,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 adCounterHistogramAbsoluteMaxTotalEventCount,
                                 adCounterHistogramLowerMaxTotalEventCount,
                                 adCounterHistogramAbsoluteMaxPerBuyerEventCount,
-                                adCounterHistogramLowerMaxPerBuyerEventCount),
+                                adCounterHistogramLowerMaxPerBuyerEventCount,
+                                auctionServerEnabledForUpdateHistogram),
                         mBackgroundExecutor,
                         // TODO(b/235841960): Use the same injected clock as AdSelectionRunner
                         //  after aligning on Clock usage

@@ -29,7 +29,6 @@ import static com.android.adservices.service.measurement.SourceFixture.ValidSour
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -37,6 +36,10 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 
 import android.adservices.measurement.DeletionRequest;
 import android.content.ContentValues;
@@ -83,9 +86,11 @@ import org.json.JSONException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.quality.Strictness;
 
 import java.time.Instant;
@@ -109,6 +114,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+@RunWith(MockitoJUnitRunner.class)
 public class MeasurementDaoTest {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Uri APP_TWO_SOURCES = Uri.parse("android-app://com.example1.two-sources");
@@ -161,6 +167,7 @@ public class MeasurementDaoTest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
+                        .spyStatic(MeasurementDbHelper.class)
                         .strictness(Strictness.WARN)
                         .startMocking();
         ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
@@ -317,36 +324,26 @@ public class MeasurementDaoTest {
     private void insertSourceReachingDbSizeLimit(long dbSize, long dbSizeMaxLimit) {
         final Source validSource = SourceFixture.getValidSource();
 
-        final MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(MeasurementDbHelper.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
+        // Mocking that the DB file has a size of 100 bytes
+        final MeasurementDbHelper spyMeasurementDbHelper =
+                spy(MeasurementDbHelper.getInstance(sContext));
+        ExtendedMockito.doReturn(spyMeasurementDbHelper)
+                .when(() -> MeasurementDbHelper.getInstance(ArgumentMatchers.any()));
+        ExtendedMockito.doReturn(dbSize).when(spyMeasurementDbHelper).getDbFileSize();
 
-        try {
-            // Mocking that the DB file has a size of 100 bytes
-            final MeasurementDbHelper spyMeasurementDbHelper =
-                    Mockito.spy(MeasurementDbHelper.getInstance(sContext));
-            ExtendedMockito.doReturn(spyMeasurementDbHelper)
-                    .when(() -> MeasurementDbHelper.getInstance(ArgumentMatchers.any()));
-            ExtendedMockito.doReturn(dbSize).when(spyMeasurementDbHelper).getDbFileSize();
+        // Mocking that the flags return a max limit size of 100 bytes
+        Flags mockFlags = Mockito.mock(Flags.class);
+        ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(dbSizeMaxLimit).when(mockFlags).getMeasurementDbSizeLimit();
 
-            // Mocking that the flags return a max limit size of 100 bytes
-            Flags mockFlags = Mockito.mock(Flags.class);
-            ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
-            ExtendedMockito.doReturn(dbSizeMaxLimit).when(mockFlags).getMeasurementDbSizeLimit();
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction((dao) -> dao.insertSource(validSource));
 
-            DatastoreManagerFactory.getDatastoreManager(sContext)
-                    .runInTransaction((dao) -> dao.insertSource(validSource));
-
-            try (Cursor sourceCursor =
-                    MeasurementDbHelper.getInstance(sContext)
-                            .getReadableDatabase()
-                            .query(SourceContract.TABLE, null, null, null, null, null, null)) {
-                assertFalse(sourceCursor.moveToNext());
-            }
-        } finally {
-            session.finishMocking();
+        try (Cursor sourceCursor =
+                MeasurementDbHelper.getInstance(sContext)
+                        .getReadableDatabase()
+                        .query(SourceContract.TABLE, null, null, null, null, null, null)) {
+            assertFalse(sourceCursor.moveToNext());
         }
     }
 
@@ -395,36 +392,26 @@ public class MeasurementDaoTest {
     private void insertTriggerReachingDbSizeLimit(long dbSize, long dbSizeMaxLimit) {
         final Trigger validTrigger = TriggerFixture.getValidTrigger();
 
-        final MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(MeasurementDbHelper.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
+        // Mocking that the DB file has a size of 100 bytes
+        final MeasurementDbHelper spyMeasurementDbHelper =
+                spy(MeasurementDbHelper.getInstance(sContext));
+        ExtendedMockito.doReturn(spyMeasurementDbHelper)
+                .when(() -> MeasurementDbHelper.getInstance(ArgumentMatchers.any()));
+        ExtendedMockito.doReturn(dbSize).when(spyMeasurementDbHelper).getDbFileSize();
 
-        try {
-            // Mocking that the DB file has a size of 100 bytes
-            final MeasurementDbHelper spyMeasurementDbHelper =
-                    Mockito.spy(MeasurementDbHelper.getInstance(sContext));
-            ExtendedMockito.doReturn(spyMeasurementDbHelper)
-                    .when(() -> MeasurementDbHelper.getInstance(ArgumentMatchers.any()));
-            ExtendedMockito.doReturn(dbSize).when(spyMeasurementDbHelper).getDbFileSize();
+        // Mocking that the flags return a max limit size of 100 bytes
+        Flags mockFlags = Mockito.mock(Flags.class);
+        ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(dbSizeMaxLimit).when(mockFlags).getMeasurementDbSizeLimit();
 
-            // Mocking that the flags return a max limit size of 100 bytes
-            Flags mockFlags = Mockito.mock(Flags.class);
-            ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
-            ExtendedMockito.doReturn(dbSizeMaxLimit).when(mockFlags).getMeasurementDbSizeLimit();
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction((dao) -> dao.insertTrigger(validTrigger));
 
-            DatastoreManagerFactory.getDatastoreManager(sContext)
-                    .runInTransaction((dao) -> dao.insertTrigger(validTrigger));
-
-            try (Cursor sourceCursor =
-                    MeasurementDbHelper.getInstance(sContext)
-                            .getReadableDatabase()
-                            .query(TriggerContract.TABLE, null, null, null, null, null, null)) {
-                assertFalse(sourceCursor.moveToNext());
-            }
-        } finally {
-            session.finishMocking();
+        try (Cursor sourceCursor =
+                MeasurementDbHelper.getInstance(sContext)
+                        .getReadableDatabase()
+                        .query(TriggerContract.TABLE, null, null, null, null, null, null)) {
+            assertFalse(sourceCursor.moveToNext());
         }
     }
 
@@ -6323,6 +6310,37 @@ public class MeasurementDaoTest {
                             assertEquals(registrant1, dao.getSourceRegistrant(sourceId1));
                             assertEquals(registrant2, dao.getSourceRegistrant(sourceId2));
                         });
+    }
+
+    @Test
+    public void getSource_nonExistingInDb_throwsException() {
+        // Setup - insert 2 sources with different IDs
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        String sourceId1 = "source1";
+        Source source1WithDestinations =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId(sourceId1)
+                        .setAppDestinations(null)
+                        .setWebDestinations(null)
+                        .build();
+        insertInDb(db, source1WithDestinations);
+        doReturn(true).when(mFlags).getMeasurementEnableDatastoreManagerThrowDatastoreException();
+
+        // Execution
+        try {
+            DatastoreManagerFactory.getDatastoreManager(sContext)
+                    .runInTransaction(
+                            (dao) -> {
+                                dao.getSource("random_source_id");
+                            });
+            fail();
+        } catch (IllegalStateException e) {
+            Throwable cause = e.getCause();
+            assertEquals(DatastoreException.class, cause.getClass());
+            assertEquals("Source retrieval failed. Id: random_source_id", cause.getMessage());
+        }
     }
 
     @Test
