@@ -807,4 +807,7 @@ public final class FlagsConstants {
 
     public static final String KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED =
             "is_u18_ux_detention_channel_enabled";
+
+    public static final String KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED =
+            "is_u18_supervised_account_enabled";
 }

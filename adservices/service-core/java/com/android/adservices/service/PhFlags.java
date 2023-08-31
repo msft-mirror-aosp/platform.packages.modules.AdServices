@@ -4435,6 +4435,11 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION
                         + " = "
                         + getMeasurementMaxAggregateKeysPerTriggerRegistration());
+        writer.println(
+                "\t"
+                        + KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED
+                        + " = "
+                        + isU18SupervisedAccountEnabled());
     }
 
     @VisibleForTesting
@@ -4632,6 +4637,9 @@ public final class PhFlags implements Flags {
         uxMap.put(
                 KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED,
                 isU18UxDetentionChannelEnabled());
+        uxMap.put(
+                KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED,
+                isU18SupervisedAccountEnabled());
         return uxMap;
     }
 
@@ -4822,5 +4830,16 @@ public final class PhFlags implements Flags {
     public String getMeasurementAppPackageNameLoggingAllowlist() {
         return DeviceConfig.getString(
                 NAMESPACE_ADSERVICES, KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST, "");
+    }
+
+    static final String KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED =
+            "is_u18_supervised_account_enabled";
+
+    @Override
+    public boolean isU18SupervisedAccountEnabled() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED,
+                /* defaultValue */ IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT);
     }
 }
