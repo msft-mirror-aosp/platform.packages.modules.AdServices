@@ -16,9 +16,12 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static android.app.job.JobInfo.NETWORK_TYPE_ANY;
+
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -347,7 +350,7 @@ public class AggregateFallbackReportingJobServiceTest {
     }
 
     @Test
-    public void testSchedule_jobInfoIsPersisted() throws Exception {
+    public void testSchedule_jobInfoCheckParameters() throws Exception {
         runWithMocks(
                 () -> {
                     final JobScheduler jobScheduler = mock(JobScheduler.class);
@@ -364,8 +367,14 @@ public class AggregateFallbackReportingJobServiceTest {
 
                     // Validate
                     verify(jobScheduler, times(1)).schedule(captor.capture());
-                    assertNotNull(captor.getValue());
-                    assertTrue(captor.getValue().isPersisted());
+
+                    final JobInfo jobInfo = captor.getValue();
+                    assertNotNull(jobInfo);
+                    assertEquals(NETWORK_TYPE_ANY, jobInfo.getNetworkType());
+                    assertTrue(jobInfo.isRequireDeviceIdle());
+                    assertTrue(jobInfo.isRequireBatteryNotLow());
+                    assertTrue(jobInfo.isPeriodic());
+                    assertTrue(jobInfo.isPersisted());
                 });
     }
 
