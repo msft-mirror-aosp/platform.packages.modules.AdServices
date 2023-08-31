@@ -39,7 +39,9 @@ import com.android.adservices.service.measurement.util.JobLockHolder;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
-import java.util.concurrent.Executor;
+import com.google.common.util.concurrent.ListeningExecutorService;
+
+import java.util.concurrent.Future;
 
 /**
  * Fallback attribution job. The actual job execution logic is part of {@link
@@ -48,7 +50,9 @@ import java.util.concurrent.Executor;
 public class AttributionFallbackJobService extends JobService {
     private static final int MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID =
             MEASUREMENT_ATTRIBUTION_FALLBACK_JOB.getJobId();
-    private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
+    private static final ListeningExecutorService sBackgroundExecutor =
+            AdServicesExecutors.getBackgroundExecutor();
+    private Future mExecutorFuture;
 
     @Override
     public void onCreate() {
@@ -79,25 +83,28 @@ public class AttributionFallbackJobService extends JobService {
         }
 
         LogUtil.d("AttributionFallbackJobService.onStartJob");
-        sBackgroundExecutor.execute(
-                () -> {
-                    processPendingAttributions();
+        mExecutorFuture =
+                sBackgroundExecutor.submit(
+                        () -> {
+                            processPendingAttributions();
 
-                    DebugReportingJobService.scheduleIfNeeded(
-                            getApplicationContext(), /* forceSchedule */ false);
+                            DebugReportingJobService.scheduleIfNeeded(
+                                    getApplicationContext(), /* forceSchedule */ false);
 
-                    AdservicesJobServiceLogger.getInstance(AttributionFallbackJobService.this)
-                            .recordJobFinished(
-                                    MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID,
-                                    /* isSuccessful */ true,
-                                    /* shouldRetry */ false);
+                            AdservicesJobServiceLogger.getInstance(
+                                            AttributionFallbackJobService.this)
+                                    .recordJobFinished(
+                                            MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID,
+                                            /* isSuccessful */ true,
+                                            /* shouldRetry */ false);
 
-                    jobFinished(params, /* wantsReschedule= */ false);
-                });
+                            jobFinished(params, /* wantsReschedule= */ false);
+                        });
         return true;
     }
 
-    private void processPendingAttributions() {
+    @VisibleForTesting
+    void processPendingAttributions() {
         final JobLockHolder lock = JobLockHolder.getInstance(ATTRIBUTION_PROCESSING);
         if (lock.tryLock()) {
             try {
@@ -119,7 +126,9 @@ public class AttributionFallbackJobService extends JobService {
     public boolean onStopJob(JobParameters params) {
         LogUtil.d("AttributionFallbackJobService.onStopJob");
         boolean shouldRetry = true;
-
+        if (mExecutorFuture != null) {
+            shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
+        }
         AdservicesJobServiceLogger.getInstance(this)
                 .recordOnStopJob(params, MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID, shouldRetry);
         return shouldRetry;
@@ -188,5 +197,10 @@ public class AttributionFallbackJobService extends JobService {
 
         // Returning false means that this job has completed its work.
         return false;
+    }
+
+    @VisibleForTesting
+    Future getFutureForTesting() {
+        return mExecutorFuture;
     }
 }

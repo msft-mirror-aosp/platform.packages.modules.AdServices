@@ -34,18 +34,24 @@ import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.util.JobLockHolder;
+import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
-import java.util.concurrent.Executor;
+import com.google.common.util.concurrent.ListeningExecutorService;
+
+import java.util.concurrent.Future;
 
 /**
  * Main service for scheduling verbose debug reporting jobs. The actual job execution logic is part
  * of {@link DebugReportingJobHandler }.
  */
 public final class VerboseDebugReportingJobService extends JobService {
-    private static final Executor sBlockingExecutor = AdServicesExecutors.getBlockingExecutor();
+    private static final ListeningExecutorService sBlockingExecutor =
+            AdServicesExecutors.getBlockingExecutor();
     private static final int VERBOSE_DEBUG_REPORT_JOB_ID =
             MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB.getJobId();
+
+    private Future mExecutorFuture;
 
     @Override
     public boolean onStartJob(JobParameters params) {
@@ -58,24 +64,39 @@ public final class VerboseDebugReportingJobService extends JobService {
             return skipAndCancelBackgroundJob(params);
         }
 
+        AdservicesJobServiceLogger.getInstance(this).recordOnStartJob(VERBOSE_DEBUG_REPORT_JOB_ID);
+
         if (FlagsFactory.getFlags().getMeasurementJobVerboseDebugReportingKillSwitch()) {
             LogUtil.e("VerboseDebugReportingJobService is disabled");
             return skipAndCancelBackgroundJob(params);
         }
 
         LogUtil.d("VerboseDebugReportingJobService.onStartJob");
-        sBlockingExecutor.execute(
-                () -> {
-                    sendReports();
-                    jobFinished(params, /* wantsReschedule= */ false);
-                });
+        mExecutorFuture =
+                sBlockingExecutor.submit(
+                        () -> {
+                            sendReports();
+                            AdservicesJobServiceLogger.getInstance(
+                                            VerboseDebugReportingJobService.this)
+                                    .recordJobFinished(
+                                            VERBOSE_DEBUG_REPORT_JOB_ID,
+                                            /* isSuccessful */ true,
+                                            /* shouldRetry*/ false);
+                            jobFinished(params, /* wantsReschedule= */ false);
+                        });
         return true;
     }
 
     @Override
     public boolean onStopJob(JobParameters params) {
         LogUtil.d("VerboseDebugReportingJobService.onStopJob");
-        return true;
+        boolean shouldRetry = true;
+        if (mExecutorFuture != null) {
+            shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
+        }
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordOnStopJob(params, VERBOSE_DEBUG_REPORT_JOB_ID, shouldRetry);
+        return shouldRetry;
     }
 
     /** Schedules {@link VerboseDebugReportingJobService} */
@@ -131,7 +152,8 @@ public final class VerboseDebugReportingJobService extends JobService {
         return false;
     }
 
-    private void sendReports() {
+    @VisibleForTesting
+    void sendReports() {
         final JobLockHolder lock = JobLockHolder.getInstance(VERBOSE_DEBUG_REPORTING);
         if (lock.tryLock()) {
             try {
@@ -147,5 +169,10 @@ public final class VerboseDebugReportingJobService extends JobService {
             }
         }
         LogUtil.d("VerboseDebugReportingJobService did not acquire the lock");
+    }
+
+    @VisibleForTesting
+    Future getFutureForTesting() {
+        return mExecutorFuture;
     }
 }

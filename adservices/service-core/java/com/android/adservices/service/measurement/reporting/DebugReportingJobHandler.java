@@ -61,6 +61,16 @@ public class DebugReportingJobHandler {
 
         List<String> pendingDebugReportIdsInWindow = pendingDebugReports.get();
         for (String debugReportId : pendingDebugReportIdsInWindow) {
+            // If the job service's requirements specified at runtime are no longer met, the job
+            // service will interrupt this thread.  If the thread has been interrupted, it will exit
+            // early.
+            if (Thread.currentThread().isInterrupted()) {
+                LogUtil.d(
+                        "DebugReportingJobHandler performScheduledPendingReports "
+                                + "thread interrupted, exiting early.");
+                return;
+            }
+
             performReport(debugReportId);
         }
     }

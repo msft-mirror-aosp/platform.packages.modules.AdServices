@@ -133,6 +133,16 @@ public class AggregateReportingJobHandler {
 
             if (keys.size() == reportIds.size()) {
                 for (int i = 0; i < reportIds.size(); i++) {
+                    // If the job service's requirements specified at runtime are no longer met, the
+                    // job service will interrupt this thread.  If the thread has been interrupted,
+                    // it will exit early.
+                    if (Thread.currentThread().isInterrupted()) {
+                        LogUtil.d(
+                                "AggregateReportingJobHandler performScheduledPendingReports "
+                                        + "thread interrupted, exiting early.");
+                        return true;
+                    }
+
                     ReportingStatus reportingStatus = new ReportingStatus();
                     final String aggregateReportId = reportIds.get(i);
                     @AdServicesStatusUtils.StatusCode
