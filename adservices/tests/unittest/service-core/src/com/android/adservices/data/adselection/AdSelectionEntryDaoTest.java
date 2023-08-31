@@ -1852,22 +1852,20 @@ public class AdSelectionEntryDaoTest {
     @Test
     public void testDoesAdSelectionMatchingCallerPackageNameExist() {
         assertFalse(
-                mAdSelectionEntryDao
-                        .doesAdSelectionMatchingCallerPackageNameExistInServerAuctionTable(
-                                AD_SELECTION_ID_1, TEST_PACKAGE_NAME_1));
+                mAdSelectionEntryDao.doesAdSelectionIdAndCallerPackageNameExists(
+                        AD_SELECTION_ID_1, TEST_PACKAGE_NAME_1));
         mAdSelectionEntryDao.persistAdSelectionInitialization(
                 AD_SELECTION_ID_1, DataHandlersFixture.AD_SELECTION_INITIALIZATION_1);
         assertTrue(
-                mAdSelectionEntryDao
-                        .doesAdSelectionMatchingCallerPackageNameExistInServerAuctionTable(
-                                AD_SELECTION_ID_1, TEST_PACKAGE_NAME_1));
+                mAdSelectionEntryDao.doesAdSelectionIdAndCallerPackageNameExists(
+                        AD_SELECTION_ID_1, TEST_PACKAGE_NAME_1));
 
         assertFalse(
-                mAdSelectionEntryDao.doesAdSelectionMatchingCallerPackageNameExistInOnDeviceTable(
+                mAdSelectionEntryDao.doesAdSelectionIdAndCallerPackageNameExists(
                         AD_SELECTION_ID_2, CALLER_PACKAGE_NAME_2));
         mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_2);
         assertTrue(
-                mAdSelectionEntryDao.doesAdSelectionMatchingCallerPackageNameExistInOnDeviceTable(
+                mAdSelectionEntryDao.doesAdSelectionIdAndCallerPackageNameExists(
                         AD_SELECTION_ID_2, CALLER_PACKAGE_NAME_2));
     }
 

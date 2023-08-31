@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.adselection.DataHandlersFixture.AD_SELECTION_ID_2;
 import static android.adservices.common.AdServicesStatusUtils.ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE;
 import static android.adservices.common.AdServicesStatusUtils.RATE_LIMIT_REACHED_ERROR_MESSAGE;
 import static android.adservices.common.AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE;
@@ -51,6 +52,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 
 import android.adservices.adselection.CustomAudienceSignalsFixture;
+import android.adservices.adselection.DataHandlersFixture;
 import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportInteractionCallback;
 import android.adservices.adselection.ReportInteractionInput;
@@ -74,6 +76,7 @@ import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
+import com.android.adservices.data.adselection.datahandlers.RegisteredAdInteraction;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AllowLists;
@@ -1089,7 +1092,7 @@ public class ReportAndRegisterEventFallbackImplTest {
 
         // Instantiate flags with small max interaction data size.
         Flags flags =
-                new Flags() {
+                new ReportEventTestFlags() {
                     @Override
                     public long
                             getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB() {
@@ -1125,7 +1128,7 @@ public class ReportAndRegisterEventFallbackImplTest {
 
         // Instantiate flags with kill switch turned on.
         Flags flags =
-                new Flags() {
+                new ReportEventTestFlags() {
                     @Override
                     public boolean getMeasurementApiRegisterSourceKillSwitch() {
                         return true;
@@ -1174,7 +1177,7 @@ public class ReportAndRegisterEventFallbackImplTest {
 
         // Instantiate flags with no allow list.
         Flags flags =
-                new Flags() {
+                new ReportEventTestFlags() {
                     @Override
                     public String getMsmtApiAppAllowList() {
                         return AllowLists.ALLOW_NONE;
@@ -1304,6 +1307,126 @@ public class ReportAndRegisterEventFallbackImplTest {
                 .containsExactly(
                         SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT,
                         BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT);
+    }
+
+    @Test
+    public void testReportEventImplFailsWithUnknownAdSelectionId_serverAuctionEnabled()
+            throws Exception {
+        enableARA();
+        persistReportingArtifacts();
+        persistReportingArtifactsForServerAuction(AD_SELECTION_ID_2);
+
+        // Mock server to handle fallback since measurement cannot report and register event.
+        mMockWebServerRule.startMockWebServer(List.of(new MockResponse(), new MockResponse()));
+
+        ReportInteractionInput inputParams =
+                mInputBuilder.setAdSelectionId(AD_SELECTION_ID_2 + 1).build();
+
+        Flags flags =
+                new ReportEventTestFlags() {
+                    @Override
+                    public boolean getFledgeAuctionServerEnabledForReportEvent() {
+                        return true;
+                    }
+                };
+
+        // Re init interaction reporter
+        mEventReporter = getReportAndRegisterEventFallbackImpl(flags);
+        ReportAndRegisterEventFallbackImplTest.ReportEventTestCallback callback =
+                callReportEvent(inputParams, true);
+
+        assertFalse(callback.mIsSuccess);
+        assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(STATUS_INVALID_ARGUMENT),
+                        anyInt());
+    }
+
+    @Test
+    public void test_idFoundInInitializationDb_registeredInteractionsReported() throws Exception {
+        enableARA();
+        persistReportingArtifactsForServerAuction(AD_SELECTION_ID_2);
+        Flags flags =
+                new ReportEventTestFlags() {
+                    @Override
+                    public boolean getFledgeAuctionServerEnabledForReportEvent() {
+                        return true;
+                    }
+                };
+
+        // Re init interaction reporter
+        mEventReporter = getReportAndRegisterEventFallbackImpl(flags);
+
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(new MockResponse(), new MockResponse()));
+
+        ReportInteractionInput inputParams =
+                mInputBuilder
+                        .setAdSelectionId(AD_SELECTION_ID_2)
+                        .setCallerPackageName(DataHandlersFixture.TEST_PACKAGE_NAME_1)
+                        .build();
+
+        // Count down callback + log interaction.
+        ReportAndRegisterEventFallbackImplTest.ReportEventTestCallback callback =
+                callReportEvent(inputParams, true);
+
+        assertTrue(callback.mIsSuccess);
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
+
+        List<String> notifications =
+                ImmutableList.of(server.takeRequest().getPath(), server.takeRequest().getPath());
+
+        assertThat(notifications)
+                .containsExactly(
+                        SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT,
+                        BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT);
+
+        // Verify registerEvent was called with exact parameters.
+        verifyRegisterEvent(SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT, inputParams);
+        verifyRegisterEvent(BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT, inputParams);
+    }
+
+    private void persistReportingArtifactsForServerAuction(long adSelectionId) {
+        RegisteredAdInteraction buyerClick =
+                RegisteredAdInteraction.builder()
+                        .setInteractionKey(CLICK_EVENT)
+                        .setInteractionReportingUri(
+                                mMockWebServerRule.uriForPath(
+                                        BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT))
+                        .build();
+
+        RegisteredAdInteraction sellerClick =
+                RegisteredAdInteraction.builder()
+                        .setInteractionKey(CLICK_EVENT)
+                        .setInteractionReportingUri(
+                                mMockWebServerRule.uriForPath(
+                                        SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT))
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelectionInitialization(
+                adSelectionId, DataHandlersFixture.AD_SELECTION_INITIALIZATION_1);
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractionsForDestination(
+                adSelectionId,
+                BUYER_DESTINATION,
+                List.of(buyerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination);
+
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractionsForDestination(
+                adSelectionId,
+                SELLER_DESTINATION,
+                List.of(sellerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination);
     }
 
     private void persistReportingArtifacts() {
