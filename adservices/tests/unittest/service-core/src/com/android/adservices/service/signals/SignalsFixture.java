@@ -18,6 +18,8 @@ package com.android.adservices.service.signals;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertEquals;
+
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 
@@ -26,8 +28,11 @@ import com.android.adservices.data.signals.DBProtectedSignal;
 import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class SignalsFixture {
 
@@ -36,10 +41,10 @@ public class SignalsFixture {
     public static final byte[] VALUE_1 = {(byte) 42};
     public static final byte[] VALUE_2 = {(byte) 42, (byte) 5, (byte) 9};
 
-    public static String BASE64_KEY_1 = Base64.getEncoder().encodeToString(KEY_1);
-    public static String BASE64_KEY_2 = Base64.getEncoder().encodeToString(KEY_2);
-    public static String BASE64_VALUE_1 = Base64.getEncoder().encodeToString(VALUE_1);
-    public static String BASE64_VALUE_2 = Base64.getEncoder().encodeToString(VALUE_2);
+    public static String BASE64_KEY_1 = toBase64(KEY_1);
+    public static String BASE64_KEY_2 = toBase64(KEY_2);
+    public static String BASE64_VALUE_1 = toBase64(VALUE_1);
+    public static String BASE64_VALUE_2 = toBase64(VALUE_2);
 
     public static ByteBuffer BB_KEY_1 = ByteBuffer.wrap(KEY_1);
     public static ByteBuffer BB_KEY_2 = ByteBuffer.wrap(KEY_2);
@@ -53,6 +58,18 @@ public class SignalsFixture {
     public static final long ID_1 = 123L;
     public static final long ID_2 = 456L;
     public static final long ID_3 = 789L;
+
+    public static byte[] intToBytes(int i) {
+        return intToByteBuffer(i).array();
+    }
+
+    public static String intToBase64(int i) {
+        return toBase64(intToBytes(i));
+    }
+
+    public static ByteBuffer intToByteBuffer(int i) {
+        return ByteBuffer.allocate(4).putInt(i);
+    }
 
     public static DBProtectedSignal createSignal(byte[] key, byte[] value) {
         return DBProtectedSignal.builder()
@@ -100,5 +117,35 @@ public class SignalsFixture {
                     builder.setBuyer(ADTECH).setPackageName(PACKAGE).setCreationTime(NOW).build());
         }
         assertThat(actualBuilt).containsExactlyElementsIn(expectedBuilt);
+    }
+
+    public static void assertSignalsUnorderedListEqualsExceptIdAndTime(
+            List<DBProtectedSignal> expected, List<DBProtectedSignal> actual) {
+        // Convert each signal into a string of with elements:
+        // buyer:key (base64):value (base 64):package name
+
+        Set<String> expectedSet =
+                expected.stream()
+                        .map(SignalsFixture::signalToStringNoTimeOrId)
+                        .collect(Collectors.toSet());
+        Set<String> actualSet =
+                actual.stream()
+                        .map(SignalsFixture::signalToStringNoTimeOrId)
+                        .collect(Collectors.toSet());
+        assertEquals(expectedSet, actualSet);
+    }
+
+    private static String signalToStringNoTimeOrId(DBProtectedSignal signal) {
+        return String.join(
+                ":",
+                Arrays.asList(
+                        signal.getBuyer().toString(),
+                        toBase64(signal.getKey()),
+                        toBase64(signal.getValue()),
+                        signal.getPackageName()));
+    }
+
+    private static String toBase64(byte[] in) {
+        return Base64.getEncoder().encodeToString(in);
     }
 }

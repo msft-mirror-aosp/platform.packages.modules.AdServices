@@ -225,8 +225,11 @@ public class ProtectedSignalsServiceImplTest {
 
     @Test
     public void testFetchSignalUpdatesIllegalArgumentException() throws Exception {
+        IllegalArgumentException exception = new IllegalArgumentException(EXCEPTION_MESSAGE);
+        SettableFuture<Object> future = SettableFuture.create();
+        future.setException(exception);
         when(mFetchOrchestratorMock.orchestrateFetch(eq(URI), eq(ADTECH), eq(PACKAGE)))
-                .thenThrow(new IllegalArgumentException(EXCEPTION_MESSAGE));
+                .thenReturn(FluentFuture.from(future));
         mProtectedSignalsService.fetchSignalUpdates(mInput, mFetchSignalUpdatesCallbackMock);
 
         verify(mFetchSignalUpdatesCallbackMock).onFailure(mErrorCaptor.capture());
