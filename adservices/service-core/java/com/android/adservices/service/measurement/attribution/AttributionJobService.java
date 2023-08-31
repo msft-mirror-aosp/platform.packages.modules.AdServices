@@ -40,7 +40,9 @@ import com.android.adservices.service.measurement.util.JobLockHolder;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
-import java.util.concurrent.Executor;
+import com.google.common.util.concurrent.ListeningExecutorService;
+
+import java.util.concurrent.Future;
 
 /**
  * Service for scheduling attribution jobs. The actual job execution logic is part of {@link
@@ -49,7 +51,10 @@ import java.util.concurrent.Executor;
 public class AttributionJobService extends JobService {
     private static final int MEASUREMENT_ATTRIBUTION_JOB_ID =
             MEASUREMENT_ATTRIBUTION_JOB.getJobId();
-    private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
+    private static final ListeningExecutorService sBackgroundExecutor =
+            AdServicesExecutors.getBackgroundExecutor();
+
+    private Future mExecutorFuture;
 
     @Override
     public void onCreate() {
@@ -80,22 +85,24 @@ public class AttributionJobService extends JobService {
         }
 
         LogUtil.d("AttributionJobService.onStartJob");
-        sBackgroundExecutor.execute(
-                () -> {
-                    boolean needsRescheduling = processPendingAttributions();
+        mExecutorFuture =
+                sBackgroundExecutor.submit(
+                        () -> {
+                            boolean needsRescheduling = processPendingAttributions();
 
-                    AdservicesJobServiceLogger.getInstance(AttributionJobService.this)
-                            .recordJobFinished(
-                                    MEASUREMENT_ATTRIBUTION_JOB_ID,
-                                    /* isSuccessful= */ true,
-                                    needsRescheduling);
+                            AdservicesJobServiceLogger.getInstance(AttributionJobService.this)
+                                    .recordJobFinished(
+                                            MEASUREMENT_ATTRIBUTION_JOB_ID,
+                                            /* isSuccessful= */ true,
+                                            needsRescheduling);
 
-                    jobFinished(params, needsRescheduling);
-                    // jobFinished is asynchronous, so forcing scheduling avoiding concurrency issue
-                    scheduleIfNeeded(this, /* forceSchedule */ true);
-                    DebugReportingJobService.scheduleIfNeeded(
-                            getApplicationContext(), /* forceSchedule */ false);
-                });
+                            jobFinished(params, needsRescheduling);
+                            // jobFinished is asynchronous, so forcing scheduling avoiding
+                            // concurrency issue
+                            scheduleIfNeeded(this, /* forceSchedule */ true);
+                            DebugReportingJobService.scheduleIfNeeded(
+                                    getApplicationContext(), /* forceSchedule */ false);
+                        });
         return true;
     }
 
@@ -103,7 +110,8 @@ public class AttributionJobService extends JobService {
      * Returns false if the job doesn't need to be rescheduled. If there are pending records to be
      * processed it will return true.
      */
-    private boolean processPendingAttributions() {
+    @VisibleForTesting
+    boolean processPendingAttributions() {
         final JobLockHolder lock = JobLockHolder.getInstance(ATTRIBUTION_PROCESSING);
         if (lock.tryLock()) {
             try {
@@ -127,7 +135,9 @@ public class AttributionJobService extends JobService {
     public boolean onStopJob(JobParameters params) {
         LogUtil.d("AttributionJobService.onStopJob");
         boolean shouldRetry = true;
-
+        if (mExecutorFuture != null) {
+            shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
+        }
         AdservicesJobServiceLogger.getInstance(this)
                 .recordOnStopJob(params, MEASUREMENT_ATTRIBUTION_JOB_ID, shouldRetry);
         return shouldRetry;
@@ -196,5 +206,10 @@ public class AttributionJobService extends JobService {
 
         // Returning false means that this job has completed its work.
         return false;
+    }
+
+    @VisibleForTesting
+    Future getFutureForTesting() {
+        return mExecutorFuture;
     }
 }
