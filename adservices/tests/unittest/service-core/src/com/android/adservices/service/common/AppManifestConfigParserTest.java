@@ -54,45 +54,107 @@ public final class AppManifestConfigParserTest {
         assertWithMessage("manifest for ad_services_config").that(appManifestConfig).isNotNull();
 
         // Verify IncludesSdkLibrary tags.
+        AppManifestIncludesSdkLibraryConfig includesSdkLibraryConfig =
+                appManifestConfig.getIncludesSdkLibraryConfig();
         expect.withMessage("getIncludesSdkLibraryConfig()")
-                .that(appManifestConfig.getIncludesSdkLibraryConfig())
+                .that(includesSdkLibraryConfig)
                 .isNotNull();
-        expect.withMessage("getIncludesSdkLibraryConfig().getIncludesSdkLibraries()")
-                .that(appManifestConfig.getIncludesSdkLibraryConfig().getIncludesSdkLibraries())
-                .contains("1234567");
+        if (includesSdkLibraryConfig != null) {
+            expect.withMessage("getIncludesSdkLibraryConfig().getIncludesSdkLibraries()")
+                    .that(appManifestConfig.getIncludesSdkLibraryConfig().getIncludesSdkLibraries())
+                    .containsExactly("1234", "4567", "89", "1234567");
+        }
 
         // Verify Attribution tags.
-        expect.withMessage("getAttributionConfig().getAllowAllToAccess()")
-                .that(appManifestConfig.getAttributionConfig().getAllowAllToAccess())
+        expect.withMessage("getAttributionConfig().getAllowAdPartnersToAccess()")
+                .that(appManifestConfig.isAllowedAttributionAccess("1234"))
+                .isTrue();
+        expect.withMessage("isAllowedAttributionAccess()")
+                .that(appManifestConfig.isAllowedAttributionAccess("108"))
                 .isFalse();
-        expect.withMessage("getAttributionConfig().getAllowAdPartnersToAccess()")
-                .that(appManifestConfig.getAttributionConfig().getAllowAdPartnersToAccess())
-                .hasSize(1);
-        expect.withMessage("getAttributionConfig().getAllowAdPartnersToAccess()")
-                .that(appManifestConfig.getAttributionConfig().getAllowAdPartnersToAccess())
-                .contains("1234");
+        AppManifestAttributionConfig attributionConfig = appManifestConfig.getAttributionConfig();
+        expect.withMessage("getAttributionConfig()").that(attributionConfig).isNotNull();
+        if (attributionConfig != null) {
+            expect.withMessage("getAttributionConfig().getAllowAllToAccess()")
+                    .that(attributionConfig.getAllowAllToAccess())
+                    .isFalse();
+            expect.withMessage("getAttributionConfig().getAllowAdPartnersToAccess()")
+                    .that(appManifestConfig.getAttributionConfig().getAllowAdPartnersToAccess())
+                    .containsExactly("1234");
+        }
 
         // Verify Custom Audience tags.
-        expect.withMessage("getCustomAudiencesConfig().getAllowAllToAccess()")
-                .that(appManifestConfig.getCustomAudiencesConfig().getAllowAllToAccess())
+        expect.withMessage("isAllowedCustomAudiencesAccess()")
+                .that(appManifestConfig.isAllowedCustomAudiencesAccess("108"))
                 .isFalse();
-        expect.withMessage("getCustomAudiencesConfig().getAllowAdPartnersToAccess()")
-                .that(appManifestConfig.getCustomAudiencesConfig().getAllowAdPartnersToAccess())
-                .hasSize(2);
-        expect.withMessage("getCustomAudiencesConfig().getAllowAdPartnersToAccess()")
-                .that(appManifestConfig.getCustomAudiencesConfig().getAllowAdPartnersToAccess())
-                .contains("1234");
-        expect.withMessage("getCustomAudiencesConfig().getAllowAdPartnersToAccess()")
-                .that(appManifestConfig.getCustomAudiencesConfig().getAllowAdPartnersToAccess())
-                .contains("4567");
+        AppManifestCustomAudiencesConfig customAudiencesConfig =
+                appManifestConfig.getCustomAudiencesConfig();
+        expect.withMessage("getCustomAudiencesConfig()").that(customAudiencesConfig).isNotNull();
+        if (customAudiencesConfig != null) {
+            expect.withMessage("getCustomAudiencesConfig().getAllowAllToAccess()")
+                    .that(customAudiencesConfig.getAllowAllToAccess())
+                    .isFalse();
+            expect.withMessage("getCustomAudiencesConfig().getAllowAdPartnersToAccess()")
+                    .that(customAudiencesConfig.getAllowAdPartnersToAccess())
+                    .hasSize(2);
+            expect.withMessage("getCustomAudiencesConfig().getAllowAdPartnersToAccess()")
+                    .that(customAudiencesConfig.getAllowAdPartnersToAccess())
+                    .containsExactly("1234", "4567");
+        }
 
         // Verify Topics tags.
-        expect.withMessage("getTopicsConfig().getAllowAllToAccess()")
-                .that(appManifestConfig.getTopicsConfig().getAllowAllToAccess())
+        expect.withMessage("1234567()")
+                .that(appManifestConfig.isAllowedTopicsAccess("1234567"))
+                .isTrue();
+        expect.withMessage("isAllowedTopicsAccess()")
+                .that(appManifestConfig.isAllowedTopicsAccess("108"))
                 .isFalse();
-        expect.withMessage("getTopicsConfig().getAllowAdPartnersToAccess()")
-                .that(appManifestConfig.getTopicsConfig().getAllowAdPartnersToAccess())
-                .contains("1234567");
+        AppManifestTopicsConfig topicsConfig = appManifestConfig.getTopicsConfig();
+        expect.withMessage("getTopicsConfig()").that(topicsConfig).isNotNull();
+        if (topicsConfig != null) {
+            expect.withMessage("getTopicsConfig().getAllowAllToAccess()")
+                    .that(topicsConfig.getAllowAllToAccess())
+                    .isFalse();
+            expect.withMessage("getTopicsConfig().getAllowAdPartnersToAccess()")
+                    .that(topicsConfig.getAllowAdPartnersToAccess())
+                    .contains("1234567");
+        }
+
+        // Verify AppId tags.
+        expect.withMessage("isAllowedAdIdAccess()")
+                .that(appManifestConfig.isAllowedAdIdAccess("42"))
+                .isTrue();
+        expect.withMessage("isAllowedAdIdAccess()")
+                .that(appManifestConfig.isAllowedAdIdAccess("108"))
+                .isFalse();
+        AppManifestAdIdConfig adIdConfig = appManifestConfig.getAdIdConfig();
+        expect.withMessage("getAdIdConfig()").that(adIdConfig).isNotNull();
+        if (adIdConfig != null) {
+            expect.withMessage("getAdIdConfig().getAllowAllToAccess()")
+                    .that(adIdConfig.getAllowAllToAccess())
+                    .isFalse();
+            expect.withMessage("getAdIdConfig().getAllowAdPartnersToAccess()")
+                    .that(adIdConfig.getAllowAdPartnersToAccess())
+                    .containsExactly("4", "8", "15", "16", "23", "42");
+        }
+
+        // Verify AppSetId tags.
+        expect.withMessage("isAllowedAppSetIdAccess()")
+                .that(appManifestConfig.isAllowedAppSetIdAccess("42"))
+                .isTrue();
+        expect.withMessage("isAllowedAppSetIdAccess()")
+                .that(appManifestConfig.isAllowedAppSetIdAccess("108"))
+                .isFalse();
+        AppManifestAppSetIdConfig appSetIdConfig = appManifestConfig.getAppSetIdConfig();
+        expect.withMessage("getAppSetIdConfig()").that(appSetIdConfig).isNotNull();
+        if (appSetIdConfig != null) {
+            expect.withMessage("getAppSetIdConfig().getAllowAllToAccess()")
+                    .that(appSetIdConfig.getAllowAllToAccess())
+                    .isFalse();
+            expect.withMessage("getAppSetIdConfig().getAllowAdPartnersToAccess()")
+                    .that(appSetIdConfig.getAllowAdPartnersToAccess())
+                    .containsExactly("4", "8", "15", "16", "23", "42");
+        }
     }
 
     @Test
