@@ -35,7 +35,6 @@ import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
 
-
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -54,6 +53,10 @@ public final class PhFlags implements Flags {
     public static final String KEY_MAINLINE_TRAIN_VERSION = "mainline_train_version";
     // TODO(b/298090610): Remove NAMESPACE_ADSERVICES after M10 is fully rolled out.
     static final String NAMESPACE_ADSERVICES = "adservices";
+    // TODO(b/297089223): Move this flag to FlagsConstants after M10 is fully rolled out.
+    public static final String KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST =
+            "measurement_app_package_name_logging_allowlist";
+
     /** Returns the singleton instance of the PhFlags. */
     @NonNull
     public static PhFlags getInstance() {
@@ -3565,6 +3568,11 @@ public final class PhFlags implements Flags {
                         + getMeasurementEnableAppPackageNameLogging());
         writer.println(
                 "\t"
+                        + KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST
+                        + " = "
+                        + getMeasurementAppPackageNameLoggingAllowlist());
+        writer.println(
+                "\t"
                         + FlagsConstants
                                 .KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION
                         + " = "
@@ -4712,5 +4720,11 @@ public final class PhFlags implements Flags {
                                         .KEY_MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH,
                                 /* defaultValue */
                                 MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH));
+    }
+
+    @Override
+    public String getMeasurementAppPackageNameLoggingAllowlist() {
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES, KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST, "");
     }
 }

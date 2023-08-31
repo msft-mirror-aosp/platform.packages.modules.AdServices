@@ -46,6 +46,7 @@ import com.android.adservices.errorlogging.AdServicesErrorStats;
 import com.android.adservices.errorlogging.StatsdAdServicesErrorLogger;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.spe.stats.ExecutionReportedStats;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
@@ -85,6 +86,15 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
         return sStatsdAdServicesLogger;
     }
 
+    private String getAllowlistedAppPackageName(String appPackageName) {
+        if (!mFlags.getMeasurementEnableAppPackageNameLogging()
+                || !AllowLists.isPackageAllowListed(
+                        mFlags.getMeasurementAppPackageNameLoggingAllowlist(), appPackageName)) {
+            return "";
+        }
+        return appPackageName;
+    }
+
     /** log method for measurement reporting. */
     public void logMeasurementReports(MeasurementReportsStats measurementReportsStats) {
         AdServicesStatsLog.write(
@@ -94,7 +104,7 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 measurementReportsStats.getFailureType(),
                 measurementReportsStats.getUploadMethod(),
                 measurementReportsStats.getReportingDelay(),
-                measurementReportsStats.getSourceRegistrant());
+                getAllowlistedAppPackageName(measurementReportsStats.getSourceRegistrant()));
     }
 
     /** log method for API call stats. */
@@ -139,7 +149,7 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 stats.getRegistrationStatus(),
                 stats.getFailureType(),
                 stats.getRegistrationDelay(),
-                stats.getSourceRegistrant());
+                getAllowlistedAppPackageName(stats.getSourceRegistrant()));
     }
 
     @Override
@@ -326,7 +336,7 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 stats.isMatched(),
                 stats.getDebugJoinKeyHashedValue(),
                 stats.getDebugJoinKeyHashLimit(),
-                stats.getSourceRegistrant());
+                getAllowlistedAppPackageName(stats.getSourceRegistrant()));
     }
 
     @Override
@@ -338,7 +348,7 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 stats.isMatched(),
                 stats.getNumUniqueAdIds(),
                 stats.getNumUniqueAdIdsLimit(),
-                stats.getSourceRegistrant());
+                getAllowlistedAppPackageName(stats.getSourceRegistrant()));
     }
 
     @Override
@@ -376,7 +386,7 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 measurementAttributionStats.isSourceDerived(),
                 measurementAttributionStats.isInstallAttribution(),
                 measurementAttributionStats.getAttributionDelay(),
-                measurementAttributionStats.getSourceRegistrant());
+                getAllowlistedAppPackageName(measurementAttributionStats.getSourceRegistrant()));
     }
 
     /** log method for measurement wipeout. */
@@ -384,7 +394,7 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
         AdServicesStatsLog.write(
                 measurementWipeoutStats.getCode(),
                 measurementWipeoutStats.getWipeoutType(),
-                measurementWipeoutStats.getSourceRegistrant());
+                getAllowlistedAppPackageName(measurementWipeoutStats.getSourceRegistrant()));
     }
 
     /** log method for measurement attribution. */
@@ -394,7 +404,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 measurementDelayedSourceRegistrationStats.getCode(),
                 measurementDelayedSourceRegistrationStats.getRegistrationStatus(),
                 measurementDelayedSourceRegistrationStats.getRegistrationDelay(),
-                measurementDelayedSourceRegistrationStats.getRegistrant());
+                getAllowlistedAppPackageName(
+                        measurementDelayedSourceRegistrationStats.getRegistrant()));
     }
 
     /** log method for consent migrations. */
