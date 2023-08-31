@@ -17,6 +17,7 @@
 package com.android.adservices.service.stats;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__MEASUREMENT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED;
@@ -96,6 +97,19 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
         return appPackageName;
     }
 
+    private String getAllowlistedAppPackageNameForApiClass(int apiClass, String appPackageName) {
+        if (apiClass != AD_SERVICES_API_CALLED__API_CLASS__MEASUREMENT) {
+            return "";
+        }
+        if (!mFlags.getMeasurementEnableAppPackageNameLogging()
+                || !AllowLists.isPackageAllowListed(
+                        mFlags.getMeasurementAppPackageNameLoggingAllowlist(),
+                        "android-app://" + appPackageName)) {
+            return "";
+        }
+        return appPackageName;
+    }
+
     /** log method for measurement reporting. */
     public void logMeasurementReports(MeasurementReportsStats measurementReportsStats) {
         AdServicesStatsLog.write(
@@ -117,7 +131,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 apiCallStats.getCode(),
                 apiCallStats.getApiClass(),
                 apiCallStats.getApiName(),
-                apiCallStats.getAppPackageName(),
+                getAllowlistedAppPackageNameForApiClass(
+                        apiCallStats.getApiClass(), apiCallStats.getAppPackageName()),
                 apiCallStats.getSdkPackageName(),
                 apiCallStats.getLatencyMillisecond(),
                 apiCallStats.getResultCode());
