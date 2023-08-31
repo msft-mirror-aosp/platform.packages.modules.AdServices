@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,17 +17,25 @@
 /**
  * Returns the bid passed in the user_bidding_signals, if empty then generates
  * a bid of 10 for the shoes CA or
+ * a bid of 15 for app_install CA or
  * a bid of 5 otherwise
  */
-function generateBid(ad, auction_signals, per_buyer_signals, trusted_bidding_signals, contextual_signals, custom_audience_signals) {
-  var bid = 5;
-  if ('user_bidding_signals' in custom_audience_signals && 'bid' in custom_audience_signals.user_bidding_signals) {
-      bid = custom_audience_signals.user_bidding_signals.bid;
-  }
-  if (custom_audience_signals.name === "shoes") {
-      bid = 10;
-  }
-  return {'status': 0, 'ad': ad, 'bid': bid };
+function generateBid(custom_audience, auction_signals, per_buyer_signals, trusted_bidding_signals, contextual_signals) {
+    var bid = 5;
+    if ('user_bidding_signals' in contextual_signals && 'bid' in contextual_signals.user_bidding_signals) {
+          bid = contextual_signals.user_bidding_signals.bid;
+    }
+    if (custom_audience.name === "shoes") {
+        bid = 10;
+    } else if (custom_audience.name === "app_install") {
+        bid = 15;
+    }
+    return {
+        'status': 0,
+        'ad': custom_audience.ads[0],
+        'bid': bid,
+        'render': custom_audience.ads[0].render_uri
+    };
 }
 
 function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,
