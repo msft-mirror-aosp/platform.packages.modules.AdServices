@@ -50,6 +50,7 @@ import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.FrequencyCapAdDataValidator;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.profiling.Tracing;
@@ -116,6 +117,10 @@ public abstract class AdSelectionRunner {
     static final String AD_SELECTION_TIMED_OUT = "Ad selection exceeded allowed time limit";
 
     @VisibleForTesting
+    static final String ON_DEVICE_AUCTION_KILL_SWITCH_ENABLED =
+            "On device auction kill switch enabled";
+
+    @VisibleForTesting
     static final String JS_SANDBOX_IS_NOT_AVAILABLE =
             String.format(
                     AD_SELECTION_ERROR_PATTERN,
@@ -136,6 +141,7 @@ public abstract class AdSelectionRunner {
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     @NonNull private final AdFilterer mAdFilterer;
     @NonNull private final FrequencyCapAdDataValidator mFrequencyCapAdDataValidator;
+    @NonNull private final AdCounterHistogramUpdater mAdCounterHistogramUpdater;
     private final int mCallerUid;
     @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
 
@@ -163,6 +169,7 @@ public abstract class AdSelectionRunner {
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final AdFilterer adFilterer,
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
+            @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
             @NonNull final DebugReporting debugReporting,
             final int callerUid) {
         Objects.requireNonNull(context);
@@ -175,6 +182,7 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(adFilterer);
         Objects.requireNonNull(frequencyCapAdDataValidator);
+        Objects.requireNonNull(adCounterHistogramUpdater);
         Objects.requireNonNull(debugReporting);
 
         Preconditions.checkArgument(
@@ -195,6 +203,7 @@ public abstract class AdSelectionRunner {
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mAdFilterer = adFilterer;
         mFrequencyCapAdDataValidator = frequencyCapAdDataValidator;
+        mAdCounterHistogramUpdater = adCounterHistogramUpdater;
         mCallerUid = callerUid;
         mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
         mDebugReporting = debugReporting;
@@ -216,6 +225,7 @@ public abstract class AdSelectionRunner {
             @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull AdFilterer adFilterer,
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
+            @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
             @NonNull final DebugReporting debugReporting) {
         Objects.requireNonNull(context);
@@ -231,6 +241,7 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(adSelectionExecutionLogger);
         Objects.requireNonNull(adFilterer);
         Objects.requireNonNull(frequencyCapAdDataValidator);
+        Objects.requireNonNull(adCounterHistogramUpdater);
         Objects.requireNonNull(debugReporting);
 
         Preconditions.checkArgument(
@@ -250,6 +261,7 @@ public abstract class AdSelectionRunner {
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mAdFilterer = adFilterer;
         mFrequencyCapAdDataValidator = frequencyCapAdDataValidator;
+        mAdCounterHistogramUpdater = adCounterHistogramUpdater;
         mCallerUid = callerUid;
         mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
         mDebugReporting = debugReporting;
@@ -262,7 +274,9 @@ public abstract class AdSelectionRunner {
      * @param callback used to notify the result back to the calling seller
      */
     public void runAdSelection(
-            @NonNull AdSelectionInput inputParams, @NonNull AdSelectionCallback callback) {
+            @NonNull AdSelectionInput inputParams,
+            @NonNull AdSelectionCallback callback,
+            @NonNull DevContext devContext) {
         final int traceCookie = Tracing.beginAsyncSection(Tracing.RUN_AD_SELECTION);
         Objects.requireNonNull(inputParams);
         Objects.requireNonNull(callback);
@@ -274,18 +288,7 @@ public abstract class AdSelectionRunner {
                             () -> {
                                 try {
                                     Trace.beginSection(Tracing.VALIDATE_REQUEST);
-                                    sLogger.v("Starting filtering and validation.");
-                                    mAdSelectionServiceFilter.filterRequest(
-                                            adSelectionConfig.getSeller(),
-                                            inputParams.getCallerPackageName(),
-                                            mFlags
-                                                    .getEnforceForegroundStatusForFledgeRunAdSelection(),
-                                            true,
-                                            mCallerUid,
-                                            AdServicesStatsLog
-                                                    .AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
-                                            Throttler.ApiKey.FLEDGE_API_SELECT_ADS);
-                                    validateAdSelectionConfig(adSelectionConfig);
+                                    validateRequest(inputParams, devContext);
                                 } finally {
                                     sLogger.v("Completed filtering and validation.");
                                     Trace.endSection();
@@ -348,6 +351,27 @@ public abstract class AdSelectionRunner {
             sLogger.v("run ad selection fails fast with exception %s.", t.toString());
             notifyFailureToCaller(callback, t);
         }
+    }
+
+    private void validateRequest(
+            @NonNull AdSelectionInput inputParams, @NonNull DevContext devContext) {
+        if (mFlags.getFledgeOnDeviceAuctionKillSwitch()) {
+            sLogger.v("On Device auction kill switch enabled.");
+            throw new IllegalStateException(ON_DEVICE_AUCTION_KILL_SWITCH_ENABLED);
+        }
+
+        sLogger.v("Starting filtering and validation.");
+        AdSelectionConfig adSelectionConfig = inputParams.getAdSelectionConfig();
+        mAdSelectionServiceFilter.filterRequest(
+                adSelectionConfig.getSeller(),
+                inputParams.getCallerPackageName(),
+                mFlags.getEnforceForegroundStatusForFledgeRunAdSelection(),
+                true,
+                mCallerUid,
+                AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
+                devContext);
+        validateAdSelectionConfig(adSelectionConfig);
     }
 
     @Nullable
@@ -605,7 +629,19 @@ public abstract class AdSelectionRunner {
                             .setCreationTimestamp(mClock.instant())
                             .setCallerPackageName(callerPackageName);
                     dbAdSelection = adSelectionOrchestrationResult.mDbAdSelectionBuilder.build();
+
                     mAdSelectionExecutionLogger.startPersistAdSelection(dbAdSelection);
+
+                    try {
+                        mAdCounterHistogramUpdater.updateWinHistogram(dbAdSelection);
+                    } catch (Exception exception) {
+                        // Frequency capping is not crucial enough to crash the entire process
+                        sLogger.w(
+                                exception,
+                                "Error encountered updating ad counter histogram with win event; "
+                                        + "continuing ad selection persistence");
+                    }
+
                     mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
                     mAdSelectionEntryDao.persistBuyerDecisionLogic(
                             new DBBuyerDecisionLogic.Builder()

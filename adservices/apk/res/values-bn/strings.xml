@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"অ্যাপ্লিকেশনকে AdServices Consent API অ্যাক্সেস করার অনুমতি দেয়।"</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID API-এ অ্যাক্সেস করা"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"অ্যাপ্লিকেশনকে Ad ID API অ্যাক্সেস করার অনুমতি দেয়।"</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"AdServices Cobalt Upload API-এ অ্যাক্সেস"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"এটি অ্যাপ্লিকেশনকে AdServices Cobalt Upload API অ্যাক্সেস করার অনুমতি দেয়।"</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"App Set ID API-এ অ্যাক্সেস করা"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"অ্যাপ্লিকেশনকে App Set ID API অ্যাক্সেস করার অনুমতি দেয়।"</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service API-এ অ্যাক্সেস দেয়"</string>
@@ -40,7 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"অ্যাপ্লিকেশনকে AdService এনাবেলমেন্ট স্টেট API অ্যাক্সেস করার অনুমতি দেয়।"</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManager’s API-এ অ্যাক্সেস করা"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"AdServicesManager’s API অ্যাক্সেস করার জন্য কোনও একটি অ্যাপ্লিকেশনকে অনুমতি দেয়।"</string>
-    <string name="app_label" msgid="5985320129629013968">"Android সিস্টেম"</string>
+    <string name="app_label" msgid="5844694701336604490">"বিজ্ঞাপন সংক্রান্ত গোপনীয়তা"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Android-এর বিজ্ঞাপন সম্পর্কিত গোপনীয়তা বিটাতে যোগ দিন"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"আপনাকে বিজ্ঞাপন দেখাতে Android অ্যাপের জন্য আরও ব্যক্তিগত উপায় এক্সপ্লোর করছে"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"আরও জানুন"</string>

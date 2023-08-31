@@ -84,6 +84,16 @@ public class FlagsFactory {
             public boolean getEnableDatabaseSchemaVersion8() {
                 return true;
             }
+
+            @Override
+            public boolean getFledgeAuctionServerEnabled() {
+                return true;
+            }
+
+            @Override
+            public boolean getFledgeEventLevelDebugReportingEnabled() {
+                return true;
+            }
         };
     }
 }

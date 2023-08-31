@@ -27,6 +27,7 @@ import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.tests.ui.libs.AdservicesWorkflows;
 import com.android.adservices.tests.ui.libs.UiConstants.UX;
 import com.android.adservices.tests.ui.libs.UiUtils;
 
@@ -134,14 +135,14 @@ public class GaUxAlreadyEnrolledChannelTest {
         mCommonManager.enableAdServices(
                 adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, UX.GA_UX);
 
         // Notifications should not be shown twice.
         mCommonManager.enableAdServices(
                 adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, UX.GA_UX);
     }
 
@@ -162,14 +163,14 @@ public class GaUxAlreadyEnrolledChannelTest {
         mCommonManager.enableAdServices(
                 adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, UX.GA_UX);
 
         // Notifications should not be shown twice.
         mCommonManager.enableAdServices(
                 adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ true, UX.GA_UX);
     }
 
@@ -190,14 +191,14 @@ public class GaUxAlreadyEnrolledChannelTest {
         mCommonManager.enableAdServices(
                 adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, UX.GA_UX);
 
         // Notifications should not be shown twice.
         mCommonManager.enableAdServices(
                 adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ true, UX.GA_UX);
     }
 
@@ -216,14 +217,14 @@ public class GaUxAlreadyEnrolledChannelTest {
         mCommonManager.enableAdServices(
                 adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, UX.GA_UX);
 
         // Notifications should not be shown twice.
         mCommonManager.enableAdServices(
                 adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ true, UX.GA_UX);
     }
 }

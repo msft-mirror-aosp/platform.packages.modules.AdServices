@@ -19,6 +19,7 @@ package com.android.adservices.service.adselection;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
+import com.android.adservices.service.devapi.DevContext;
 
 /**
  * Event-level debug reporting for ad selection.
@@ -45,10 +46,13 @@ public class DebugReporting {
 
     private final AdServicesHttpsClient mAdServicesHttpsClient;
     private final boolean mEnabled;
+    private final DevContext mDevContext;
 
-    public DebugReporting(Flags flags, AdServicesHttpsClient adServicesHttpsClient) {
+    public DebugReporting(
+            Flags flags, AdServicesHttpsClient adServicesHttpsClient, DevContext devContext) {
         mAdServicesHttpsClient = adServicesHttpsClient;
         mEnabled = getEnablementStatus(flags);
+        mDevContext = devContext;
     }
 
     public DebugReportingScriptStrategy getScriptStrategy() {
@@ -59,7 +63,7 @@ public class DebugReporting {
 
     public DebugReportSenderStrategy getSenderStrategy() {
         return mEnabled
-                ? new DebugReportSenderStrategyHttpImpl(mAdServicesHttpsClient)
+                ? new DebugReportSenderStrategyHttpImpl(mAdServicesHttpsClient, mDevContext)
                 : new DebugReportSenderStrategyNoOp();
     }
 

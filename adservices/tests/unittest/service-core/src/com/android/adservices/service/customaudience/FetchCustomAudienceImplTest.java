@@ -118,6 +118,7 @@ import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -216,7 +217,8 @@ public class FetchCustomAudienceImplTest {
                         true,
                         Process.myUid(),
                         API_NAME,
-                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE);
+                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
+                        DevContext.createForDevOptionsDisabled());
 
         doReturn(
                         CustomAudienceStats.builder()
@@ -281,7 +283,8 @@ public class FetchCustomAudienceImplTest {
                         true,
                         Process.myUid(),
                         API_NAME,
-                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE);
+                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
+                        DevContext.createForDevOptionsDisabled());
 
         FetchCustomAudienceTestCallback callback =
                 callFetchCustomAudience(
@@ -311,7 +314,8 @@ public class FetchCustomAudienceImplTest {
                         true,
                         Process.myUid(),
                         API_NAME,
-                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE);
+                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
+                        DevContext.createForDevOptionsDisabled());
 
         FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
 
@@ -338,7 +342,8 @@ public class FetchCustomAudienceImplTest {
                         true,
                         Process.myUid(),
                         API_NAME,
-                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE);
+                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
+                        DevContext.createForDevOptionsDisabled());
 
         FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
 
@@ -366,7 +371,8 @@ public class FetchCustomAudienceImplTest {
                         true,
                         Process.myUid(),
                         API_NAME,
-                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE);
+                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
+                        DevContext.createForDevOptionsDisabled());
 
         FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
 
@@ -394,7 +400,8 @@ public class FetchCustomAudienceImplTest {
                         true,
                         Process.myUid(),
                         API_NAME,
-                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE);
+                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
+                        DevContext.createForDevOptionsDisabled());
 
         FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
 
@@ -422,7 +429,8 @@ public class FetchCustomAudienceImplTest {
                         true,
                         Process.myUid(),
                         API_NAME,
-                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE);
+                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
+                        DevContext.createForDevOptionsDisabled());
 
         FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
 
@@ -820,7 +828,8 @@ public class FetchCustomAudienceImplTest {
             FetchAndJoinCustomAudienceInput input) throws Exception {
         CountDownLatch resultLatch = new CountDownLatch(1);
         FetchCustomAudienceTestCallback callback = new FetchCustomAudienceTestCallback(resultLatch);
-        mFetchCustomAudienceImpl.doFetchCustomAudience(input, callback);
+        mFetchCustomAudienceImpl.doFetchCustomAudience(
+                input, callback, DevContext.createForDevOptionsDisabled());
         resultLatch.await();
         return callback;
     }

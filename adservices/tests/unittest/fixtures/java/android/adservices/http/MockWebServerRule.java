@@ -21,8 +21,7 @@ import static org.junit.Assert.assertFalse;
 
 import android.content.Context;
 import android.net.Uri;
-
-import com.android.adservices.LogUtil;
+import android.util.Log;
 
 import com.google.mockwebserver.Dispatcher;
 import com.google.mockwebserver.MockResponse;
@@ -52,6 +51,8 @@ import javax.net.ssl.SSLSocketFactory;
 
 /** Instances of this class are not thread safe. */
 public class MockWebServerRule implements TestRule {
+    private static final String LOG_TAG = "adservices";
+
     private static final int UNINITIALIZED = -1;
     private final InputStream mCertificateInputStream;
     private final char[] mKeyStorePassword;
@@ -105,22 +106,22 @@ public class MockWebServerRule implements TestRule {
     private MockWebServer startMockWebServer(MockWebServerInitializer mockWebServerInitializer)
             throws Exception {
         if (mPort == UNINITIALIZED) {
-            LogUtil.v("Initializing MockWebServer. Finding port");
+            Log.v(LOG_TAG, "Initializing MockWebServer. Finding port");
             reserveServerListeningPort();
-            LogUtil.v("MockWebServer will use port " + mPort);
+            Log.v(LOG_TAG, "MockWebServer will use port " + mPort);
         } else {
-            LogUtil.v("MockWebServer already initialized at port " + mPort);
+            Log.v(LOG_TAG, "MockWebServer already initialized at port " + mPort);
         }
 
-        LogUtil.v("Initializing MockWebServer");
+        Log.v(LOG_TAG, "Initializing MockWebServer");
         mMockWebServer = new MockWebServer();
         if (useHttps()) {
             mMockWebServer.useHttps(getTestingSslSocketFactory(), false);
         }
         mockWebServerInitializer.initWebServer(mMockWebServer);
-        LogUtil.v("Starting MockWebServer");
+        Log.v(LOG_TAG, "Starting MockWebServer");
         mMockWebServer.play(mPort);
-        LogUtil.v("MockWebServer started at port " + mPort);
+        Log.v(LOG_TAG, "MockWebServer started at port " + mPort);
         return mMockWebServer;
     }
 

@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 
@@ -28,25 +29,25 @@ import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
+import android.util.Log;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
+import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.exception.XmlParseException;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.After;
-import org.junit.Assume;
-import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoSession;
-
-import java.io.IOException;
 
 @SmallTest
-public class AppManifestConfigHelperTest {
+public final class AppManifestConfigHelperTest {
+
+    private static final String TAG = AppManifestConfigHelperTest.class.getSimpleName();
     private static final int RESOURCE_ID = 123;
     private static final String AD_SERVICES_CONFIG_PROPERTY =
             "android.adservices.AD_SERVICES_CONFIG";
@@ -60,27 +61,19 @@ public class AppManifestConfigHelperTest {
     @Mock private Resources mMockResources;
     @Mock private XmlResourceParser mMockParser;
 
-    private MockitoSession mSession;
+    @Rule
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(AppManifestConfigParser.class)
+                    .spyStatic(AndroidManifestConfigParser.class)
+                    .spyStatic(SdkLevel.class)
+                    .build();
 
-    @Before
-    public void before() {
-        mSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(AppManifestConfigParser.class)
-                        .spyStatic(AndroidManifestConfigParser.class)
-                        .initMocks(this)
-                        .startMocking();
-    }
-
-    @After
-    public void teardown() {
-        mSession.finishMocking();
-    }
+    @Rule public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAnyLevel();
 
     @Test
-    public void testIsAllowedAttributionAccess_sPlus() throws PackageManager.NameNotFoundException {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
-
+    @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
+    public void testIsAllowedAttributionAccess_sPlus() throws Exception {
         PackageManager.Property property = Mockito.mock(PackageManager.Property.class);
         doReturn(mMockPackageManager).when(mMockContext).getPackageManager();
         doReturn(property)
@@ -99,10 +92,8 @@ public class AppManifestConfigHelperTest {
     }
 
     @Test
-    public void testIsAllowedAttributionAccess_parsingExceptionSwallowed_sPlus()
-            throws PackageManager.NameNotFoundException {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
-
+    @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
+    public void testIsAllowedAttributionAccess_parsingExceptionSwallowed_sPlus() throws Exception {
         PackageManager.Property property = Mockito.mock(PackageManager.Property.class);
         doReturn(mMockPackageManager).when(mMockContext).getPackageManager();
         doReturn(property)
@@ -120,9 +111,8 @@ public class AppManifestConfigHelperTest {
     }
 
     @Test
-    public void testIsAllowedAttributionAccess_rMinus()
-            throws PackageManager.NameNotFoundException, IOException {
-        Assume.assumeFalse(SdkLevel.isAtLeastS());
+    public void testIsAllowedAttributionAccess_rMinus() throws Exception {
+        mockSdkLevelR();
 
         doReturn(mMockPackageManager).when(mMockContext).getPackageManager();
         doReturn(mMockContext).when(mMockContext).createPackageContext(PACKAGE_NAME, 0);
@@ -145,10 +135,8 @@ public class AppManifestConfigHelperTest {
     }
 
     @Test
-    public void testIsAllowedCustomAudiencesAccess_sPlus()
-            throws PackageManager.NameNotFoundException {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
-
+    @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
+    public void testIsAllowedCustomAudiencesAccess_sPlus() throws Exception {
         PackageManager.Property property = Mockito.mock(PackageManager.Property.class);
         doReturn(mMockPackageManager).when(mMockContext).getPackageManager();
         doReturn(property)
@@ -167,10 +155,9 @@ public class AppManifestConfigHelperTest {
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
     public void testIsAllowedCustomAudiencesAccess_parsingExceptionSwallowed_sPlus()
-            throws PackageManager.NameNotFoundException {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
-
+            throws Exception {
         PackageManager.Property property = Mockito.mock(PackageManager.Property.class);
         doReturn(mMockPackageManager).when(mMockContext).getPackageManager();
         doReturn(property)
@@ -188,9 +175,8 @@ public class AppManifestConfigHelperTest {
     }
 
     @Test
-    public void testIsAllowedCustomAudiencesAccess_rMinus()
-            throws PackageManager.NameNotFoundException, IOException {
-        Assume.assumeFalse(SdkLevel.isAtLeastS());
+    public void testIsAllowedCustomAudiencesAccess_rMinus() throws Exception {
+        mockSdkLevelR();
 
         doReturn(mMockPackageManager).when(mMockContext).getPackageManager();
         doReturn(mMockContext).when(mMockContext).createPackageContext(PACKAGE_NAME, 0);
@@ -214,9 +200,8 @@ public class AppManifestConfigHelperTest {
     }
 
     @Test
-    public void testIsAllowedTopicsAccess_sPlus() throws PackageManager.NameNotFoundException {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
-
+    @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
+    public void testIsAllowedTopicsAccess_sPlus() throws Exception {
         PackageManager.Property property = Mockito.mock(PackageManager.Property.class);
         doReturn(mMockPackageManager).when(mMockContext).getPackageManager();
         doReturn(property)
@@ -238,10 +223,8 @@ public class AppManifestConfigHelperTest {
     }
 
     @Test
-    public void testIsAllowedTopicsAccess_parsingExceptionSwallowed_sPlus()
-            throws PackageManager.NameNotFoundException {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
-
+    @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
+    public void testIsAllowedTopicsAccess_parsingExceptionSwallowed_sPlus() throws Exception {
         PackageManager.Property property = Mockito.mock(PackageManager.Property.class);
         doReturn(mMockPackageManager).when(mMockContext).getPackageManager();
         doReturn(property)
@@ -262,9 +245,8 @@ public class AppManifestConfigHelperTest {
     }
 
     @Test
-    public void testIsAllowedTopicsAccess_rMinus()
-            throws PackageManager.NameNotFoundException, IOException {
-        Assume.assumeFalse(SdkLevel.isAtLeastS());
+    public void testIsAllowedTopicsAccess_rMinus() throws Exception {
+        mockSdkLevelR();
 
         doReturn(mMockPackageManager).when(mMockContext).getPackageManager();
         doReturn(mMockContext).when(mMockContext).createPackageContext(PACKAGE_NAME, 0);
@@ -287,5 +269,13 @@ public class AppManifestConfigHelperTest {
                                 PACKAGE_NAME,
                                 ENROLLMENT_ID))
                 .isTrue();
+    }
+
+    private void mockSdkLevelR() {
+        if (SdkLevel.isAtLeastS()) {
+            mockIsAtLeastS(false);
+        } else {
+            Log.v(TAG, "mockSdkLevelR(): not needed, device is not at least S");
+        }
     }
 }

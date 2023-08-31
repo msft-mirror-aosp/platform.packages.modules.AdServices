@@ -34,6 +34,7 @@ import com.android.adservices.ui.settings.viewmodels.TopicsViewModel;
 @RequiresApi(Build.VERSION_CODES.S)
 public class TopicsActivity extends AdServicesBaseActivity {
     private TopicsActionDelegate mActionDelegate;
+    private TopicsActivityActionDelegate mActivityActionDelegate;
 
     /** @return the action delegate for the activity. */
     public TopicsActionDelegate getActionDelegate() {
@@ -46,6 +47,13 @@ public class TopicsActivity extends AdServicesBaseActivity {
         if (!isUxStatesReady(this)) {
             initFragment();
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        TopicsViewModel viewModel = new ViewModelProvider(this).get(TopicsViewModel.class);
+        viewModel.refresh();
     }
 
     @Override
@@ -76,7 +84,8 @@ public class TopicsActivity extends AdServicesBaseActivity {
     private void initActivity() {
         setContentView(R.layout.topics_activity);
         // no need to store since not using
-        new TopicsActivityActionDelegate(
-                this, new ViewModelProvider(this).get(TopicsViewModel.class));
+        mActivityActionDelegate =
+                new TopicsActivityActionDelegate(
+                        this, new ViewModelProvider(this).get(TopicsViewModel.class));
     }
 }

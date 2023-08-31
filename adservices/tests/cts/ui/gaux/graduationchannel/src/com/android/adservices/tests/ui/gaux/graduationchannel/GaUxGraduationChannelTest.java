@@ -27,6 +27,7 @@ import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.tests.ui.libs.AdservicesWorkflows;
 import com.android.adservices.tests.ui.libs.UiConstants.UX;
 import com.android.adservices.tests.ui.libs.UiUtils;
 
@@ -123,8 +124,8 @@ public class GaUxGraduationChannelTest {
     @Test
     public void testRowU18ToGaAdIdEnabled() throws Exception {
         UiUtils.setAsRowDevice();
-        UiUtils.enableU18Ux();
-
+        UiUtils.enableU18();
+        AdservicesTestHelper.killAdservicesProcess(sContext);
         AdServicesStates u18States =
                 new AdServicesStates.Builder()
                         .setU18Account(true)
@@ -135,11 +136,11 @@ public class GaUxGraduationChannelTest {
 
         mCommonManager.enableAdServices(u18States, Executors.newCachedThreadPool(), mCallback);
 
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, UX.U18_UX);
 
         UiUtils.enableGa();
-
+        AdservicesTestHelper.killAdservicesProcess(sContext);
         AdServicesStates adultStates =
                 new AdServicesStates.Builder()
                         .setU18Account(false)
@@ -151,7 +152,7 @@ public class GaUxGraduationChannelTest {
         mCommonManager.enableAdServices(adultStates, Executors.newCachedThreadPool(), mCallback);
 
         // No notifications should be shown as graduation channel is disabled.
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, UX.GA_UX);
     }
 
@@ -162,8 +163,8 @@ public class GaUxGraduationChannelTest {
     @Test
     public void testRowU18ToBetaAdIdEnabled() throws Exception {
         UiUtils.setAsRowDevice();
-        UiUtils.enableU18Ux();
-
+        UiUtils.enableU18();
+        AdservicesTestHelper.killAdservicesProcess(sContext);
         AdServicesStates u18States =
                 new AdServicesStates.Builder()
                         .setU18Account(true)
@@ -174,11 +175,11 @@ public class GaUxGraduationChannelTest {
 
         mCommonManager.enableAdServices(u18States, Executors.newCachedThreadPool(), mCallback);
 
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, UX.U18_UX);
 
         UiUtils.enableBeta();
-
+        AdservicesTestHelper.killAdservicesProcess(sContext);
         AdServicesStates adultStates =
                 new AdServicesStates.Builder()
                         .setU18Account(false)
@@ -190,7 +191,7 @@ public class GaUxGraduationChannelTest {
         mCommonManager.enableAdServices(adultStates, Executors.newCachedThreadPool(), mCallback);
 
         // No notifications should be shown as there is no enrollment channel from U18 to Beta UX.
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, UX.BETA_UX);
     }
 }

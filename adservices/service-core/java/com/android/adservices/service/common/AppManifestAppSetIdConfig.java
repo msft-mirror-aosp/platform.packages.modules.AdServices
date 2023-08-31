@@ -16,15 +16,10 @@
 
 package com.android.adservices.service.common;
 
-import android.annotation.NonNull;
-
 import java.util.List;
 
 /** AppSetId part of the app manifest config (<ad-services-config>). */
-public class AppManifestAppSetIdConfig {
-    private final boolean mAllowAllToAccess;
-    private final List<String> mAllowAdPartnersToAccess;
-
+final class AppManifestAppSetIdConfig extends AppManifestApiConfig {
     /**
      * Constructor.
      *
@@ -32,20 +27,7 @@ public class AppManifestAppSetIdConfig {
      * @param allowAdPartnersToAccess corresponds to the list in the config.
      */
     public AppManifestAppSetIdConfig(
-            boolean allowAllToAccess, @NonNull List<String> allowAdPartnersToAccess) {
-        mAllowAllToAccess = allowAllToAccess;
-        mAllowAdPartnersToAccess = allowAdPartnersToAccess;
-    }
-
-    /** Getter for allowAllToAccess. */
-    @NonNull
-    public boolean getAllowAllToAccess() {
-        return mAllowAllToAccess;
-    }
-
-    /** Getter for allowAdPartnersToAccess. */
-    @NonNull
-    public List<String> getAllowAdPartnersToAccess() {
-        return mAllowAdPartnersToAccess;
+            boolean allowAllToAccess, List<String> allowAdPartnersToAccess) {
+        super(allowAllToAccess, allowAdPartnersToAccess);
     }
 }

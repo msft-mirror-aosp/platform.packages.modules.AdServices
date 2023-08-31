@@ -282,7 +282,29 @@ public final class AdSelectionConfig implements Parcelable {
         }
 
         /**
-         * Sets the URI used to fetch decision logic for use in the ad selection process.
+         * Sets the URI used to fetch decision logic for use in the ad selection process. Decision
+         * URI could be either of the two schemas:
+         *
+         * <ul>
+         *   <li><b>HTTPS:</b> HTTPS URIs have to be absolute URIs where the host matches the {@code
+         *       seller}
+         *   <li><b>Ad Selection Prebuilt:</b> Ad Selection Service URIs follow {@code
+         *       ad-selection-prebuilt://ad-selection/<name>?<script-generation-parameters>} format.
+         *       FLEDGE generates the appropriate JS script without the need for a network call.
+         *       <p>Available prebuilt scripts:
+         *       <ul>
+         *         <li><b>{@code highest-bid-wins} for {@code scoreAds} and {@code
+         *             reportResult}:</b> This JS picks the ad with the highest bid for scoring. For
+         *             reporting, the given URI is parameterized with {@code render_uri} and {@code
+         *             bid}. Below parameter(s) are required to use this prebuilt:
+         *             <ul>
+         *               <li><b>{@code reportingUrl}:</b> Base reporting uri that will be
+         *                   parameterized later with {@code render_uri} and {@code bid}
+         *             </ul>
+         *             <p>Ex. If your base reporting URL is "https://www.ssp.com" then, {@code
+         *             ad-selection-prebuilt://ad-selection/highest-bid-wins/?reportingUrl=https://www.ssp.com}
+         *       </ul>
+         * </ul>
          *
          * <p>See {@link #getDecisionLogicUri()} for more details.
          */

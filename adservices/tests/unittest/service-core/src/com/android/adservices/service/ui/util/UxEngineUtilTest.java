@@ -16,10 +16,11 @@
 
 package com.android.adservices.service.ui.util;
 
-import static com.android.adservices.service.PhFlags.KEY_ADSERVICES_ENABLED;
-import static com.android.adservices.service.PhFlags.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
-import static com.android.adservices.service.PhFlags.KEY_GA_UX_FEATURE_ENABLED;
-import static com.android.adservices.service.PhFlags.KEY_U18_UX_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
 import static com.android.adservices.service.consent.ConsentManager.MANUAL_INTERACTIONS_RECORDED;
 import static com.android.adservices.service.consent.ConsentManager.NO_MANUAL_INTERACTIONS_RECORDED;
 import static com.android.adservices.service.consent.ConsentManager.UNKNOWN;
@@ -99,6 +100,7 @@ public class UxEngineUtilTest {
         // Default states for testing supported UXs.
         doReturn(true).when(mConsentManager).isEntryPointEnabled();
         doReturn(true).when(mUxStatesManager).getFlag(KEY_ADSERVICES_ENABLED);
+        doReturn(true).when(mUxStatesManager).getFlag(KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED);
 
         mUxEngineUtil = UxEngineUtil.getInstance();
 

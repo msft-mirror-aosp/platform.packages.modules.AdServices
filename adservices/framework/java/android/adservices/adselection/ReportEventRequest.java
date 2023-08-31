@@ -113,8 +113,6 @@ public class ReportEventRequest {
      *
      * <p>This field is either {@code null}, representing a <em>view</em> event, or has an {@link
      * InputEvent} object, representing a <em>click</em> event.
-     *
-     * @hide
      */
     @Nullable
     public InputEvent getInputEvent() {
@@ -230,8 +228,6 @@ public class ReportEventRequest {
          * Sets the input event associated with the user interaction.
          *
          * <p>See {@link #getInputEvent()} for more information.
-         *
-         * @hide
          */
         @NonNull
         public Builder setInputEvent(@Nullable InputEvent inputEvent) {

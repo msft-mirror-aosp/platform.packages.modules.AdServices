@@ -44,6 +44,7 @@ import com.android.adservices.service.appsearch.AppSearchConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.GetTopicsReportedStats;
 import com.android.adservices.service.topics.classifier.ClassifierManager;
+import com.android.adservices.service.topics.cobalt.TopicsCobaltLogger;
 
 import com.google.common.collect.ImmutableList;
 
@@ -86,6 +87,7 @@ public final class CacheManagerTest {
     @Mock AdServicesManager mMockAdServicesManager;
     @Mock AppSearchConsentManager mAppSearchConsentManager;
     @Mock ClassifierManager mClassifierManager;
+    @Mock TopicsCobaltLogger mTopicsCobaltLogger;
 
     @Mock Random mRandom;
 
@@ -121,7 +123,8 @@ public final class CacheManagerTest {
                         mMockFlags,
                         mLogger,
                         mBlockedTopicsManager,
-                        mGlobalBlockedTopicsManager);
+                        mGlobalBlockedTopicsManager,
+                        mTopicsCobaltLogger);
     }
 
     @Test
@@ -148,12 +151,14 @@ public final class CacheManagerTest {
     public void testGetTopics() {
         ArgumentCaptor<GetTopicsReportedStats> argument =
                 ArgumentCaptor.forClass(GetTopicsReportedStats.class);
+        ArgumentCaptor<List<Topic>> cobaltArgumentCaptor = ArgumentCaptor.forClass(List.class);
 
         // Assume the current epochId is 4L, we will load cache for returned topics in the last 3
         // epochs: epochId in {3, 2, 1}.
         long currentEpochId = 4L;
         // Mock Flags to make it independent of configuration
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(3);
+        when(mMockFlags.getTopicsCobaltLoggingEnabled()).thenReturn(true);
 
         Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L, /* modelVersion */ 1L);
         Topic topic2 = Topic.create(/* topic */ 2, /* taxonomyVersion */ 1L, /* modelVersion */ 1L);
@@ -296,6 +301,24 @@ public final class CacheManagerTest {
                         mCacheManager.getTopics(
                                 /* numberOfLookBackEpochs= */ 3, currentEpochId, "app5", "sdk1"))
                 .containsExactlyElementsIn(Arrays.asList(topic1, topic5));
+
+        // Verify Cobalt Logger.
+        verify(mTopicsCobaltLogger, times(19)).logTopicOccurrences(cobaltArgumentCaptor.capture());
+        // Verify 19 Topic lists.
+        assertThat(cobaltArgumentCaptor.getAllValues()).hasSize(19);
+        // Verify Topics logged on the last call.
+        assertThat(cobaltArgumentCaptor.getAllValues().get(18))
+                .containsExactly(
+                        Topic.create(
+                                /* topic= */ 1,
+                                /* taxonomyVersion= */ 1,
+                                /* modelVersion= */ 1,
+                                /* loggedTopic= */ -1),
+                        Topic.create(
+                                /* topic= */ 5,
+                                /* taxonomyVersion= */ 1,
+                                /* modelVersion= */ 1,
+                                /* loggedTopic= */ -1));
 
         // GetTopics is invoked 19 times.
         verify(mLogger, times(19)).logGetTopicsReportedStats(argument.capture());
@@ -537,7 +560,8 @@ public final class CacheManagerTest {
                         mMockFlags,
                         mLogger,
                         mBlockedTopicsManager,
-                        new GlobalBlockedTopicsManager(globalBlockedTopicIds));
+                        new GlobalBlockedTopicsManager(globalBlockedTopicIds),
+                        mTopicsCobaltLogger);
         mCacheManager.loadCache(currentEpochId);
 
         verify(mMockFlags).getTopicsNumberOfLookBackEpochs();
@@ -604,7 +628,8 @@ public final class CacheManagerTest {
                         mMockFlags,
                         mLogger,
                         blockedTopicsManager,
-                        globalBlockedTopicsManager);
+                        globalBlockedTopicsManager,
+                        mTopicsCobaltLogger);
 
         ArgumentCaptor<GetTopicsReportedStats> argument =
                 ArgumentCaptor.forClass(GetTopicsReportedStats.class);
@@ -737,7 +762,8 @@ public final class CacheManagerTest {
                         mMockFlags,
                         mLogger,
                         blockedTopicsManager,
-                        globalBlockedTopicsManager);
+                        globalBlockedTopicsManager,
+                        mTopicsCobaltLogger);
 
         ArgumentCaptor<GetTopicsReportedStats> argument =
                 ArgumentCaptor.forClass(GetTopicsReportedStats.class);

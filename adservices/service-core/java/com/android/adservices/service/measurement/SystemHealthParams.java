@@ -102,12 +102,6 @@ public class SystemHealthParams {
     /** Maximum number of aggregate deduplication keys allowed during trigger registration. */
     public static final int MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION = 50;
 
-    /** Maximum number of aggregatable trigger data allowed in a trigger registration. */
-    public static final int MAX_AGGREGATABLE_TRIGGER_DATA = 50;
-
-    /** Maximum number of event trigger data allowed in a trigger registration. */
-    public static final int MAX_ATTRIBUTION_EVENT_TRIGGER_DATA = 10;
-
     /** Maximum window for a delayed source to be considered valid instead of missed. */
     public static final long MAX_DELAYED_SOURCE_REGISTRATION_WINDOW = TimeUnit.MINUTES.toMillis(2);
 }
