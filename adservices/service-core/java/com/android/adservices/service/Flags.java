@@ -3114,6 +3114,14 @@ public interface Flags {
         return MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING;
     }
 
+    /** Default allowlist to enable app package name logging. */
+    String MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST = "";
+
+    /** Returns a list of app package names that allows logging. */
+    default String getMeasurementAppPackageNameLoggingAllowlist() {
+        return MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST;
+    }
+
     /** Disable measurement reporting jobs to throw unaccounted exceptions by default. */
     boolean MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION = false;
 

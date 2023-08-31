@@ -61,6 +61,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
 public class StatsdAdServicesLoggerTest {
     // Atom IDs
@@ -110,6 +111,7 @@ public class StatsdAdServicesLoggerTest {
                 ExtendedMockito.mockitoSession()
                         .mockStatic(SdkLevel.class)
                         .mockStatic(AdServicesStatsLog.class)
+                        .strictness(Strictness.LENIENT)
                         .initMocks(this)
                         .startMocking();
 
@@ -387,6 +389,8 @@ public class StatsdAdServicesLoggerTest {
 
     @Test
     public void logMeasurementDebugKeysMatch_success() {
+        when(mFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
+        when(mFlags.getMeasurementAppPackageNameLoggingAllowlist()).thenReturn(SOURCE_REGISTRANT);
         final String enrollmentId = "EnrollmentId";
         long hashedValue = 5000L;
         long hashLimit = 10000L;
@@ -434,6 +438,8 @@ public class StatsdAdServicesLoggerTest {
 
     @Test
     public void logMeasurementAttribution_success() {
+        when(mFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
+        when(mFlags.getMeasurementAppPackageNameLoggingAllowlist()).thenReturn(SOURCE_REGISTRANT);
         MeasurementAttributionStats stats =
                 new MeasurementAttributionStats.Builder()
                         .setCode(AD_SERVICES_MEASUREMENT_ATTRIBUTION)
@@ -484,6 +490,8 @@ public class StatsdAdServicesLoggerTest {
 
     @Test
     public void logMeasurementWipeout_success() {
+        when(mFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
+        when(mFlags.getMeasurementAppPackageNameLoggingAllowlist()).thenReturn(SOURCE_REGISTRANT);
         MeasurementWipeoutStats stats =
                 new MeasurementWipeoutStats.Builder()
                         .setCode(AD_SERVICES_MEASUREMENT_WIPEOUT)
@@ -511,6 +519,8 @@ public class StatsdAdServicesLoggerTest {
 
     @Test
     public void logMeasurementDelayedSourceRegistration_success() {
+        when(mFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
+        when(mFlags.getMeasurementAppPackageNameLoggingAllowlist()).thenReturn(SOURCE_REGISTRANT);
         int UnknownEnumValue = 0;
         long registrationDelay = 500L;
         MeasurementDelayedSourceRegistrationStats stats =
@@ -663,6 +673,8 @@ public class StatsdAdServicesLoggerTest {
 
     @Test
     public void logMeasurementAdIdMatchForDebugKeys_success() {
+        when(mFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
+        when(mFlags.getMeasurementAppPackageNameLoggingAllowlist()).thenReturn(SOURCE_REGISTRANT);
         final String enrollmentId = "EnrollmentId";
         long uniqueAdIdValue = 1L;
         long uniqueAdIdLimit = 5L;
@@ -702,6 +714,103 @@ public class StatsdAdServicesLoggerTest {
                                 eq(uniqueAdIdValue),
                                 eq(uniqueAdIdLimit),
                                 eq(SOURCE_REGISTRANT));
+
+        ExtendedMockito.verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void logMeasurementAdIdMatchForDebugKeys_appLoggingDisabled_emptyString() {
+        when(mFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(false);
+        final String enrollmentId = "EnrollmentId";
+        long uniqueAdIdValue = 1L;
+        long uniqueAdIdLimit = 5L;
+        int attributionType = AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB;
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(enrollmentId)
+                        .setMatched(true)
+                        .setAttributionType(attributionType)
+                        .setNumUniqueAdIds(uniqueAdIdValue)
+                        .setNumUniqueAdIdsLimit(uniqueAdIdLimit)
+                        .setSourceRegistrant(SOURCE_REGISTRANT)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(),
+                                        anyString(),
+                                        anyInt(),
+                                        anyBoolean(),
+                                        anyLong(),
+                                        anyLong(),
+                                        anyString()));
+
+        // Invoke logging call
+        mLogger.logMeasurementAdIdMatchForDebugKeysStats(stats);
+
+        // Verify only compat logging took place
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_MEASUREMENT_AD_ID_MATCH_FOR_DEBUG_KEYS),
+                                eq(enrollmentId),
+                                eq(attributionType),
+                                eq(true),
+                                eq(uniqueAdIdValue),
+                                eq(uniqueAdIdLimit),
+                                eq(""));
+
+        ExtendedMockito.verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void logMeasurementAdIdMatchForDebugKeys_appNotAllowlisted_emptyString() {
+        when(mFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
+        when(mFlags.getMeasurementAppPackageNameLoggingAllowlist()).thenReturn("");
+        final String enrollmentId = "EnrollmentId";
+        long uniqueAdIdValue = 1L;
+        long uniqueAdIdLimit = 5L;
+        int attributionType = AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB;
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(enrollmentId)
+                        .setMatched(true)
+                        .setAttributionType(attributionType)
+                        .setNumUniqueAdIds(uniqueAdIdValue)
+                        .setNumUniqueAdIdsLimit(uniqueAdIdLimit)
+                        .setSourceRegistrant(SOURCE_REGISTRANT)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(),
+                                        anyString(),
+                                        anyInt(),
+                                        anyBoolean(),
+                                        anyLong(),
+                                        anyLong(),
+                                        anyString()));
+
+        // Invoke logging call
+        mLogger.logMeasurementAdIdMatchForDebugKeysStats(stats);
+
+        // Verify only compat logging took place
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_MEASUREMENT_AD_ID_MATCH_FOR_DEBUG_KEYS),
+                                eq(enrollmentId),
+                                eq(attributionType),
+                                eq(true),
+                                eq(uniqueAdIdValue),
+                                eq(uniqueAdIdLimit),
+                                eq(""));
 
         ExtendedMockito.verify(writeInvocation);
 
