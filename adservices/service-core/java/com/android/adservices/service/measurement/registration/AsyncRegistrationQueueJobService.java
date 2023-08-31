@@ -123,26 +123,27 @@ public class AsyncRegistrationQueueJobService extends JobService {
     }
 
     @VisibleForTesting
-    protected static void schedule(Context context, JobScheduler jobScheduler) {
-        final JobInfo job =
-                new JobInfo.Builder(
-                                MEASUREMENT_ASYNC_REGISTRATION_JOB_ID,
-                                new ComponentName(context, AsyncRegistrationQueueJobService.class))
-                        .addTriggerContentUri(
-                                new JobInfo.TriggerContentUri(
-                                        AsyncRegistrationContentProvider.TRIGGER_URI,
-                                        JobInfo.TriggerContentUri.FLAG_NOTIFY_FOR_DESCENDANTS))
-                        .setTriggerContentUpdateDelay(
-                                SystemHealthParams
-                                        .getMeasurementAsyncRegistrationJobQueueMinDelayMs())
-                        .setTriggerContentMaxDelay(
-                                SystemHealthParams
-                                        .getMeasurementAsyncRegistrationJobQueueMaxDelayMs())
-                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                        .setPersisted(false) // Can't call addTriggerContentUri() on a persisted job
-                        .build();
+    protected static void schedule(JobScheduler jobScheduler, JobInfo job) {
         jobScheduler.schedule(job);
     }
+
+    private static JobInfo buildJobInfo(Context context) {
+        return new JobInfo.Builder(
+                        MEASUREMENT_ASYNC_REGISTRATION_JOB_ID,
+                        new ComponentName(context, AsyncRegistrationQueueJobService.class))
+                .addTriggerContentUri(
+                        new JobInfo.TriggerContentUri(
+                                AsyncRegistrationContentProvider.TRIGGER_URI,
+                                JobInfo.TriggerContentUri.FLAG_NOTIFY_FOR_DESCENDANTS))
+                .setTriggerContentUpdateDelay(
+                        SystemHealthParams.getMeasurementAsyncRegistrationJobQueueMinDelayMs())
+                .setTriggerContentMaxDelay(
+                        SystemHealthParams.getMeasurementAsyncRegistrationJobQueueMaxDelayMs())
+                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                .setPersisted(false) // Can't call addTriggerContentUri() on a persisted job
+                .build();
+    }
+
     /**
      * Schedule Async Registration Queue Job Service if it is not already scheduled
      *
@@ -161,10 +162,12 @@ public class AsyncRegistrationQueueJobService extends JobService {
             return;
         }
 
-        final JobInfo job = jobScheduler.getPendingJob(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID);
+        final JobInfo scheduledJobInfo =
+                jobScheduler.getPendingJob(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
-        if (job == null || forceSchedule) {
-            schedule(context, jobScheduler);
+        JobInfo jobInfo = buildJobInfo(context);
+        if (forceSchedule || !jobInfo.equals(scheduledJobInfo)) {
+            schedule(jobScheduler, jobInfo);
             LogUtil.d("Scheduled AsyncRegistrationQueueJobService");
         } else {
             LogUtil.d("AsyncRegistrationQueueJobService already scheduled, skipping reschedule");

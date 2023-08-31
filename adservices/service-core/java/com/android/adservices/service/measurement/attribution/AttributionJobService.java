@@ -145,20 +145,22 @@ public class AttributionJobService extends JobService {
 
     /** Schedules {@link AttributionJobService} to observer {@link Trigger} content URI change. */
     @VisibleForTesting
-    static void schedule(Context context, JobScheduler jobScheduler) {
-        final JobInfo job =
-                new JobInfo.Builder(
-                                MEASUREMENT_ATTRIBUTION_JOB_ID,
-                                new ComponentName(context, AttributionJobService.class))
-                        .addTriggerContentUri(
-                                new JobInfo.TriggerContentUri(
-                                        TriggerContentProvider.TRIGGER_URI,
-                                        JobInfo.TriggerContentUri.FLAG_NOTIFY_FOR_DESCENDANTS))
-                        .setTriggerContentUpdateDelay(
-                                SystemHealthParams.ATTRIBUTION_JOB_TRIGGERING_DELAY_MS)
-                        .setPersisted(false) // Can't call addTriggerContentUri() on a persisted job
-                        .build();
-        jobScheduler.schedule(job);
+    static void schedule(JobScheduler jobScheduler, JobInfo jobInfo) {
+        jobScheduler.schedule(jobInfo);
+    }
+
+    private static JobInfo buildJobInfo(Context context) {
+        return new JobInfo.Builder(
+                        MEASUREMENT_ATTRIBUTION_JOB_ID,
+                        new ComponentName(context, AttributionJobService.class))
+                .addTriggerContentUri(
+                        new JobInfo.TriggerContentUri(
+                                TriggerContentProvider.TRIGGER_URI,
+                                JobInfo.TriggerContentUri.FLAG_NOTIFY_FOR_DESCENDANTS))
+                .setTriggerContentUpdateDelay(
+                        SystemHealthParams.ATTRIBUTION_JOB_TRIGGERING_DELAY_MS)
+                .setPersisted(false) // Can't call addTriggerContentUri() on a persisted job
+                .build();
     }
 
     /**
@@ -179,10 +181,11 @@ public class AttributionJobService extends JobService {
             return;
         }
 
-        final JobInfo job = jobScheduler.getPendingJob(MEASUREMENT_ATTRIBUTION_JOB_ID);
+        final JobInfo scheduledJob = jobScheduler.getPendingJob(MEASUREMENT_ATTRIBUTION_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
-        if (job == null || forceSchedule) {
-            schedule(context, jobScheduler);
+        final JobInfo job = buildJobInfo(context);
+        if (forceSchedule || !job.equals(scheduledJob)) {
+            schedule(jobScheduler, job);
             LogUtil.d("Scheduled AttributionJobService");
         } else {
             LogUtil.d("AttributionJobService already scheduled, skipping reschedule");

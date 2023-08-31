@@ -113,17 +113,7 @@ public class DebugReportingFallbackJobService extends JobService {
     }
 
     @VisibleForTesting
-    protected static void schedule(Context context, JobScheduler jobScheduler) {
-        final JobInfo job =
-                new JobInfo.Builder(
-                                MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID,
-                                new ComponentName(context, DebugReportingFallbackJobService.class))
-                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                        .setPeriodic(
-                                FlagsFactory.getFlags()
-                                        .getMeasurementDebugReportingFallbackJobPeriodMs())
-                        .setPersisted(true)
-                        .build();
+    protected static void schedule(JobScheduler jobScheduler, JobInfo job) {
         jobScheduler.schedule(job);
     }
 
@@ -145,10 +135,12 @@ public class DebugReportingFallbackJobService extends JobService {
             return;
         }
 
-        final JobInfo job = jobScheduler.getPendingJob(MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID);
+        final JobInfo scheduledJob =
+                jobScheduler.getPendingJob(MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
-        if (job == null || forceSchedule) {
-            schedule(context, jobScheduler);
+        JobInfo jobInfo = buildJobInfo(context);
+        if (forceSchedule || !jobInfo.equals(scheduledJob)) {
+            schedule(jobScheduler, jobInfo);
             LogUtil.d("Scheduled DebugReportingFallbackJobService");
         } else {
             LogUtil.d("DebugReportingFallbackJobService already scheduled, skipping reschedule");
@@ -172,6 +164,17 @@ public class DebugReportingFallbackJobService extends JobService {
 
         // Returning false to reschedule this job.
         return false;
+    }
+
+    private static JobInfo buildJobInfo(Context context) {
+        return new JobInfo.Builder(
+                        MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID,
+                        new ComponentName(context, DebugReportingFallbackJobService.class))
+                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                .setPeriodic(
+                        FlagsFactory.getFlags().getMeasurementDebugReportingFallbackJobPeriodMs())
+                .setPersisted(true)
+                .build();
     }
 
     @VisibleForTesting
