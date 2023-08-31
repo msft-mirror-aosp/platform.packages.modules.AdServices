@@ -91,7 +91,7 @@
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"기기 설정에서 광고 주제를 확인하고 앱과 공유하길 원하지 않는 주제를 차단할 수 있습니다. Android에서는 광고 주제를 정기적으로 자동 삭제합니다."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"언제든지 개인 정보 보호 설정에서 변경할 수 있습니다."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"광고 주제에 관해 자세히 알아보기"</string>
-    <string name="notificationUI_learn_more_from_privacy_policy" msgid="7809111628979410445"><a href="https://policies.google.com/privacy">"개인정보처리방침"</a>"에서 Android가 사용자의 데이터를 보호하는 방법을 알아보세요."</string>
+    <string name="notificationUI_learn_more_from_privacy_policy" msgid="7809111628979410445"><a href="https://policies.google.com/privacy">"개인정보처리방침"</a>"에서 Android가 내 데이터를 보호하는 방법을 자세히 알아보세요."</string>
     <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"사용해 보기"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  사용되는 데이터"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"광고 주제는 내가 이 기기에서 최근 사용한 앱과 사용 빈도에 기반합니다."</string>
@@ -120,7 +120,7 @@
     <string name="notificationUI_fledge_measurement_introduction_text1_v2" msgid="4019531984422364790">"Android에서는 개인 맞춤 광고를 표시할 때 앱에서 획득할 수 있는 사용자 관련 정보를 제한하는 새로운 방법을 도입합니다."</string>
     <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  앱 추천 광고 기능에서는 새로운 개인 정보 보호 기능이 앱에서 관련성 있는 광고를 표시할 수 있도록 하는 동시에 사용자의 신원 및 앱 사용에 관한 정보를 보호합니다. 사용하는 앱은 내 활동을 토대로 다른 앱에 표시될 관련성 있는 광고를 추천할 수 있습니다. 개인 정보 보호 설정에서 앱 목록을 확인하고 광고를 추천하지 못하도록 차단할 수 있습니다."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  광고 측정 시 광고의 실적을 파악하기 위해 제한된 유형의 데이터(예: 하루 중 광고가 사용자에게 표시된 시간)가 앱 간에 공유됩니다."</string>
-    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2_v2" msgid="5467298277353569728">"이 기기에서의 내 앱 활동은 광고를 추천하는 데 사용될 수 있습니다."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2_v2" msgid="5467298277353569728">"이 기기에서의 내 앱 활동이 광고를 추천하는 데 사용될 수 있습니다."</string>
     <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"다른 광고 개인 정보 보호 기능 사용 설정"</string>
     <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"표시되는 광고와 관련해 더 많은 선택권을 보장하기 위해 Android에서 새로운 개인 정보 보호 기능도 제공합니다"</string>
     <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"광고 주제는 앱에서 내 신원 정보와 앱 사용 정보를 보호하면서 관련성 있는 광고를 표시하는 데 도움이 됩니다. Android는 최근 사용한 앱을 기반으로 관심분야 주제를 파악할 수 있습니다. 나중에 내게 관련성이 더 높은 광고를 표시하기 위해 내가 사용하는 앱에서 Android에 관련 주제를 요청할 수 있습니다."</string>
@@ -143,8 +143,8 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"차단 해제"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"차단한 관심분야"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"모든 관심분야 재설정"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"지금 표시할 관심분야 없음"</string>
-    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"현재 표시할 주제 없음"</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"지금 표시할 관심분야가 없습니다."</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"지금 표시할 주제가 없습니다.\n"<a href="https://support.google.com/android?p=ad_privacy">"광고 주제"</a>"에 관해 자세히 알아보기"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"개인 정보 보호 샌드박스"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android의 광고 개인 정보 보호 베타는 앱에서 사용자가 좋아할 만한 광고를 표시할 수 있는 새로운 기능을 제공합니다. 이 새로운 기술은 기기 식별자를 사용하지 않습니다.\n\nAndroid는 사용자가 관심을 보일 만한 광고 종류를 추정하고 관심분야를 기기에 임시 저장합니다. 이렇게 하면 앱이 다른 개발자의 웹사이트/앱에서 이루어진 활동을 추적하지 않고도 관련성 있는 광고를 표시할 수 있습니다."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"차단한 관심분야가 없습니다."</string>
@@ -157,7 +157,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"차단된 앱 보기"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"앱에서 추정한 관심분야 초기화"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"현재 관심분야를 추정할 만한 앱이 없습니다."</string>
-    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"지금 표시할 앱 없음"</string>
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"지금 표시할 앱이 없습니다. \n"<a href="https://support.google.com/android?p=ad_privacy">"앱 추천 광고"</a>"에 관해 자세히 알아보기"</string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"개인 정보 보호 샌드박스"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android의 광고 개인 정보 보호 베타는 앱에서 사용자가 좋아할 만한 광고를 표시할 수 있는 새로운 기능을 제공합니다. 이 새로운 기술은 기기 식별자를 사용하지 않습니다.\n\n앱은 사용자가 관심을 보일 만한 광고 종류를 추정하고 관심분야를 기기에 임시 저장합니다. 이렇게 하면 앱이 다른 개발자의 웹사이트/앱에서 이루어진 활동을 추적하지 않고도 관련성 있는 광고를 표시할 수 있습니다."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"차단한 앱이 없습니다."</string>
@@ -187,14 +187,25 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"앱에서 추천하는 광고를 재설정하시겠습니까?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"목록의 앱에서 제공한 광고 추천 데이터가 삭제되고 앞으로는 앱에서 새로운 광고를 추천합니다. 관련된 일부 광고는 계속 표시될 수 있습니다."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"앱 데이터 재설정됨"</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"모든 주제를 재설정하시겠습니까?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"앱에서 추천하는 광고를 재설정하시겠습니까?"</string>
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"광고 주제 사용 설정됨"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"이제 Android에서 관심분야 주제를 파악합니다. 주제가 표시될 때까지 시간이 걸릴 수 있습니다."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"광고 주제를 사용 중지하시겠습니까?"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"주제 목록이 삭제됩니다. Android에서 더 이상 관심분야 주제를 파악하지 않지만, 관련성 있는 광고가 계속 표시될 수 있습니다."</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"앱 추천 광고 사용 설정됨"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"이제 앱에서 광고를 추천합니다. 광고 추천이 시작되면 앱 목록이 표시됩니다."</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"앱 추천 광고를 사용 중지하시겠습니까?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"모든 광고 추천 데이터가 삭제됩니다. 앱이 더 이상 광고를 추천할 수 없지만, 관련성 있는 광고가 계속 표시될 수 있습니다."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"광고 측정 사용 설정됨"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android는 앱의 광고 실적 측정을 위한 목적으로 매우 제한된 정보만 앱과 공유할 수 있습니다."</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"광고 측정을 사용 중지하시겠습니까?"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"모든 대기 중인 광고 측정 보고서가 삭제되며 새로운 보고서가 생성되거나 공유되지 않습니다."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"광고 개인 정보 보호"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"광고 주제"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"앱 추천 광고"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android는 최근 사용한 앱과 앱 사용 빈도를 기반으로 관심 주제를 파악합니다."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"앱을 사용하면 앱에서 내가 앱을 사용하는 방식을 기반으로 내 관심분야를 파악할 수도 있습니다."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"사용하는 앱에서 광고 실적 측정에 도움이 되는 정보를 Android에 요구할 수 있습니다. Android는 제한된 유형의 데이터를 앱에서 수집하도록 허용합니다."</string>
+    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916"><a href="https://support.google.com/android?p=ad_privacy">"Android의 광고 개인 정보 보호"</a>"에 관해 자세히 알아보기"</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"사용/주제 <xliff:g id="TOPICS_COUNT">%1$d</xliff:g>개"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{사용/주제 #개}other{사용/주제 #개}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"사용/앱 <xliff:g id="APPS_COUNT">%1$d</xliff:g>개"</string>
@@ -211,6 +222,11 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"차단한 앱"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"앱 추천 데이터 재설정"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"일반적으로 앱에서는 사용 환경을 맞춤설정하기 위해 사용자가 관심을 갖는 항목을 기억합니다. 앱은 또한 Android에 요청해 사용자의 주제에 관한 정보를 저장할 수 있습니다.\n\n예를 들어 사용자가 마라톤 훈련에 관한 앱을 이용한다면 앱은 사용자가 러닝화에 관심이 있는 것으로 파악할 수 있습니다. 나중에 다른 앱을 사용할 때 이전 앱에서 추천한 러닝화에 관한 광고가 표시될 수 있습니다.\n\nAndroid는 앱 추천 데이터를 정기적으로 자동 삭제합니다. 앱을 다시 사용하면 목록에 이 앱이 다시 표시될 수 있습니다. 원하지 않으면 앱이 나에게 광고를 추천하지 않도록 차단할 수 있습니다.\n\n사용하는 앱에서 광고 추천 설정, 광고 주제 설정, 광고 ID 설정, 사용 중인 앱이 광고를 맞춤설정하는지에 따라 나에게 표시되는 광고가 맞춤설정될 수 있습니다."</string>
+    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"새로운 광고 개인 정보 보호 기능 사용 가능"</string>
+    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"광고 실적을 측정하는 데 도움이 되는 매우 제한된 정보만 앱 간에 공유됩니다."</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"광고 측정이라는 새로운 광고 개인 정보 보호 기능이 출시됩니다. Android에서 광고가 사용자에게 게시된 시기 등의 제한된 정보만 앱 간에 공유되어 광고 실적을 측정하도록 돕습니다."</string>
+    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"광고 개인 정보 보호 설정에서 변경할 수 있습니다."</string>
+    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"사용하는 앱에서 광고 실적 측정에 도움이 되는 정보를 Android에 요구할 수 있습니다. Android는 제한된 유형의 데이터만 앱에서 수집하도록 허용합니다."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"음악, 뉴스, 스포츠와 같은 관심분야를 나타내는 기호를 보여주는 컬러 그림"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"원 안에 자물쇠가 그려져 있는 컬러 그림"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"9개의 점이 사각형을 이루고 있는 작은 흑백 그림"</string>

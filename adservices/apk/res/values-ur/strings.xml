@@ -136,15 +136,15 @@
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"رازداری سینڈ باکس"</string>
     <string name="settingsUI_topics_title" msgid="5996189869721397937">"‏Android کے ذریعے تخمینہ شدہ دلچسپیاں"</string>
     <string name="settingsUI_apps_title" msgid="2772289096915264175">"دلچسپیوں کا تخمینہ لگانے والی ایپس"</string>
-    <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"Ad measurement"</string>
+    <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"اشتہار کی اثرپذیری کی پیمائش"</string>
     <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"‏اپنے اشتہارات کی اثرپذیری کی پیمائش کرنے کیلئے، ایپس رازداری سینڈ باکس کا استعمال کر سکتی ہیں۔ ایسا کرنے کیلئے، مشتہرین Android کی مدد سے ان کے اشتہارات اور ایپس کے درمیان آپ کے تعاملات سے متعلق ڈیٹا کو عارضی طور پر محفوظ کر سکتے ہیں۔ آپ کتنا ڈیٹا محفوظ کر سکتے ہیں، یہ امر محدود کردہ ہے اور اسے باقاعدگی سے حذف کیا جائے گا۔\n\nآپ رازداری سینڈ باکس آف کر کے کسی بھی وقت اس ڈیٹا کو حذف کر سکتے ہیں۔"</string>
     <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"‏آپ کی استعمال کی جانے والی ایپس کی بنیاد پر، Android وقتاً فوقتاً آپ کی سرفہرست دلچسپیوں کا تخمینہ لگاتا ہے۔ ایپس Android سے ان دلچسپیوں کا استعمال کرتے ہوئے آپ کو متعلقہ اشتہارات دکھانے کیلئے کہہ سکتی ہیں۔\n\nاگر آپ کسی دلچسپی کو مسدود کریں گے تو اسے اس وقت تک دوبارہ فہرست میں شامل نہیں کیا جائے گا جب تک آپ اسے غیر مسدود نہ کر دیں۔ آپ کو اب بھی کچھ متعلقہ اشتہارات دکھائی دے سکتے ہیں۔"</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"مسدود کریں"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"غیر مسدود کریں"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"آپ کی مسدود کردہ دلچسپیاں"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"تمام دلچسپیوں کو ری سیٹ کریں"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"فی الوقت دکھانے کے لیے کوئی دلچسپی نہیں ہے"</string>
-    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"فی الوقت دکھانے کے لیے کوئی موضوع نہیں"</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"فی الوقت دکھانے کے لیے کوئی دلچسپی نہیں ہے۔"</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"ابھی دکھانے کے لیے کوئی عنوان نہیں ہے۔\n"<a href="https://support.google.com/android?p=ad_privacy">"اشتہار کے عنوانات"</a>" کے بارے میں مزید جانیں"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"رازداری سینڈ باکس"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"‏Android کے اشتہارات کی رازداری کا بی ٹا ورژن ایسی نئی خصوصیات فراہم کرتا ہے جن کا استعمال کر کے ایپس آپ کو پسند آ سکنے والے اشتہارات دکھا سکتی ہیں۔ یہ ٹیکنالوجیز آلے کے شناخت کاران کا استعمال نہیں کرتی ہیں۔\n\nAndroid یہ تخمینہ لگا سکتا ہے کہ آپ کو کن اقسام کے اشتہارات میں دلچسپی ہو سکتی ہے اور وہ آپ کے آلے پر عارضی طور پر دلچسپیوں کو محفوظ کر سکتا ہے۔ اس سے ایپس کو ویب سائٹس پر آپ کی سرگرمی اور دیگر ڈیولپرز کی ایپس کو ٹریک کئے بغیر آپ کو متعلقہ اشتہارات دکھانے کی سہولت حاصل ہوتی ہے۔"</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"آپ کے پاس کوئی مسدود کردہ دلچسپی نہیں ہے"</string>
@@ -157,13 +157,13 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"مسدود کردہ ایپس ملاحظہ کریں"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"ایپس کے ذریعے تخمینہ شدہ دلچسپیوں کو ری سیٹ کریں"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"فی الوقت کوئی ایپ آپ کیلئے دلچسپیاں تجویز نہیں کر رہی ہے"</string>
-    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"ابھی دکھانے کے لیے کوئی ایپ نہیں ہے"</string>
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"ابھی دکھانے کے لیے کوئی ایپ نہیں ہے۔ \n"<a href="https://support.google.com/android?p=ad_privacy">"ایپس کے تجویز کردہ اشتہارات"</a>" کے بارے میں مزید جانیں"</string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"رازداری سینڈ باکس"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"‏Android کے اشتہارات کی رازداری کا بی ٹا ورژن ایسی نئی خصوصیات فراہم کرتا ہے جن کا استعمال کر کے ایپس آپ کو پسند آ سکنے والے اشتہارات دکھا سکتی ہیں۔ یہ ٹیکنالوجیز آلے کے شناخت کاران کا استعمال نہیں کرتی ہیں۔\n\nایپس یہ تخمینہ لگا سکتی ہیں کہ آپ کو کن اقسام کے اشتہارات میں دلچسپی ہو سکتی ہے اور وہ آپ کے آلے پر عارضی طور پر دلچسپیوں کو محفوظ کر سکتی ہیں۔ اس سے ایپس کو ویب سائٹس پر آپ کی سرگرمی اور دیگر ڈیولپرز کی ایپس کو ٹریک کئے بغیر آپ کو متعلقہ اشتہارات دکھانے کی سہولت حاصل ہوتی ہے۔"</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"آپ کے پاس کوئی مسدود کردہ ایپ نہیں ہے"</string>
     <string name="settingsUI_no_blocked_apps_ga_text" msgid="7488680173653861943">"مسدود کردہ کوئی ایپ نہیں ہے"</string>
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"اشتہار کی پیمائش کی اجازت دیں"</string>
-    <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"‏ایپس اور مشتہرین Android سے ایسی معلومات کی درخواست کر سکتے ہیں جو انہیں اپنے اشتہارات کی کارکردگی کی پیمائش کرنے میں مدد کرتی ہے۔\n\nاشتہار کی پیمائش کا ڈیٹا آپ کے آلے سے باقاعدگی سے حذف کیا جاتا ہے۔"</string>
+    <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"‏ایپس اور مشتہرین Android سے ایسی معلومات کی درخواست کر سکتے ہیں جو انہیں اپنے اشتہارات کی کارکردگی کی پیمائش کرنے میں مدد کرتی ہے۔\n\nاشتہار کی اثرپذیری کی پیمائش کا ڈیٹا آپ کے آلے سے باقاعدگی سے حذف کیا جاتا ہے۔"</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"پیمائش کے ڈیٹا کو ری سیٹ کریں"</string>
     <string name="settingsUI_measurement_view_footer_text" msgid="5978750159738729308">"‏Android اس معلومات کو محدود کر کے جس کا اشتراک ایپس ایک دوسرے کے ساتھ کر سکتی ہیں، آپ کی رازداری کی حفاظت کرتا ہے۔ آپ کی شناخت کی حفاظت کے لیے رپورٹیں تاخیر سے بھیجی جاتی ہیں۔\n\nممکن ہے کہ آپ کے براؤزر میں کوئی مماثل ترتیب موجود ہو۔ اگر Android اور آپ کے براؤزر دونوں کے لیے اشتہار کی پیمائش آن ہے تو کمپنی آپ کے استعمال کی جانے والی ایپس اور آپ کے ملاحظہ کی جانے والی سائٹس کے درمیان اشتہار کی تاثیر کی پیمائش کر سکتی ہے۔ آپ کی براؤزنگ کی سرگزشت کو آپ کے آلے پر نجی رکھا جاتا ہے۔\n\nہماری "<a href="https://policies.google.com/privacy">"رازداری کی پالیسی"</a>" میں اس بارے میں مزید جانیں کہ Android آپ کے ڈیٹا کی حفاظت کیسے کرتا ہے۔"</string>
     <string name="settingsUI_measurement_are_reset" msgid="4375330550418573499">"اشتہار کی پیمائش کا ڈیٹا ری سیٹ کیا گیا"</string>
@@ -187,14 +187,25 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"ایپس کے ذریعے تجویز کردہ اشتہارات کو ری سیٹ کریں؟"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"آپ کی فہرست میں موجود ایپس سے اشتہار کی تجویز کا ڈیٹا حذف کر دیا جائے گا اور ایپس مستقبل میں نئے اشتہارات تجویز کریں گی۔ آپ اب بھی کچھ متعلقہ اشتہارات دیکھ سکتے ہیں۔"</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"ایپ کے ڈیٹا کو ری سیٹ کر دیا گیا"</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"سبھی موضوعات کو ری سیٹ کریں؟"</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"ایپس کے ذریعے تجویز کردہ اشتہارات کو ری سیٹ کریں؟"</string>
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"\'اشتہار کے عنوانات\' آن ہے"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"‏Android دلچسپی کے عنوانات کو نوٹ کرنا شروع کرے گا، لیکن آپ کے ابتدائی عنوانات کو دکھائی دینے میں کچھ وقت لگ سکتا ہے۔"</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"\'اشتہار کے عنوانات\' آف کریں؟"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"‏عنوانات کی یہ فہرست حذف ہو جائے گی۔ Android دلچسپی کے عنوانات کو مزید نوٹ نہیں کرے گا، لیکن اس کے باوجود آپ کو متعلقہ اشتہارات دکھائی دے سکتے ہیں۔"</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"\'ایپس کے تجویز کردہ اشتہارات\' آن ہے"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"ایپس اشتہارات تجویز کرنا شروع کر سکتی ہیں۔ ایپس کی جانب سے اشتہارات تجویز کرنا شروع کرنے کے بعد، آپ کو ان کی فہرست دکھائی دے گی۔"</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"\'ایپس کے تجویز کردہ اشتہارات\' آف کریں؟"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"اشتہار کی تجویز کا تمام ڈیٹا حذف ہو جائے گا۔ ایپس اشتہارات مزید تجویز نہیں کر پائیں گی، لیکن اس کے باوجود آپ کو متعلقہ اشتہارات دکھائی دے سکتے ہیں۔"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"اشتہار کی پیمائش آن ہے"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"‏اپنے اشتہارات کی کارکردگی کی پیمائش کرنے میں ایپس کی مدد کرنے کیلئے، ایپس کے ساتھ Android صرف بہت ہی محدود معلومات کا اشتراک کر سکتا ہے۔"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"اشتہار کی پیمائش آف کریں؟"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"اشتہار کی پیمائش کی تمام زیر التواء رپورٹس حذف ہو جائیں گی اور کوئی نئی رپورٹ جنریٹ نہیں ہوگی یا کسی نئی رپورٹ کا اشتراک نہیں کیا جائے گا۔"</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"اشتہارات کی رازداری"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"اشتہار کے موضوعات"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"ایپس کے تجویز کردہ اشتہارات"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"‏Android ان ایپس کی بنیاد پر دلچسپی کے موضوعات کو نوٹ کرتا ہے جنہیں آپ نے حال ہی میں استعمال کیا ہے اور آپ انہیں کتنی مرتبہ استعمال کرتے ہیں۔"</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"آپ جو ایپس استعمال کرتے ہیں وہ اس بات کا تعین بھی کر سکتی ہیں کہ آپ ان کو کس طرح استعمال کرتے ہیں اس کی بنیاد پر آپ کو کیا پسند ہے۔"</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"‏آپ جو ایپس استعمال کرتے ہیں وہ اپنے اشتہارات کی کارکردگی کی پیمائش کرنے میں مدد کے لیے Android سے معلومات طلب کر سکتی ہیں۔ Android ایپس کو محدود قسم کا ڈیٹا اکٹھا کرنے دیتا ہے۔"</string>
+    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916">"‏"<a href="https://support.google.com/android?p=ad_privacy">"Android پر اشتہار کی رازداری"</a>" کے بارے میں مزید جانیں"</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"آن ہے / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> موضوعات"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{آن / # موضوع}other{آن / # موضوعات}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"آن ہے / <xliff:g id="APPS_COUNT">%1$d</xliff:g> ایپس"</string>
@@ -211,6 +222,11 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"آپ کی مسدود کردہ ایپس"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"ایپ کے تجویز کردہ ڈیٹا کو ری سیٹ کریں"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"‏یہ ان ایپس کے لیے عام ہے جنہیں آپ اپنے تجربے کو ذاتی نوعیت کا بنانے کے لیے ان چیزوں کو یاد رکھنے کے لیے استعمال کرتے ہیں جن میں آپ کی دلچسپی ہے۔ ایپس آپ کے موضوعات کے بارے میں بھی معلومات کو Android کے ساتھ اسٹور کر سکتی ہیں۔\n\nمثال کے طور پر، اگر آپ میراتھن ٹریننگ کے بارے میں کوئی ایپ استعمال کرتے ہیں تو ایپ یہ فیصلہ کر سکتی ہے کہ آپ کو رننگ شوز میں دلچسپی ہے۔ بعد میں، اگر آپ کوئی مختلف ایپ استعمال کرتے ہیں تو وہ ایپ آپ کو پہلی ایپ کے تجویز کردہ رننگ شوز کا اشتہار دکھا سکتی ہے۔\n\nAndroid ایپ کے تجویز کردہ ڈیٹا کو باقاعدگی سے خودکار طور پر حذف کرتا ہے۔ آپ جو ایپ دوبارہ استعمال کرتے ہیں وہ فہرست میں دوبارہ ظاہر ہو سکتی ہے۔ یا آپ کسی ایپ کو اپنے لیے اشتہارات تجویز کرنے سے مسدود کر سکتے ہیں۔\n\nآپ کی ایپس میں، آپ جو اشتہار دیکھتے ہیں وہ ذاتی نوعیت کا ہو سکتا ہے، اس ترتیب، اشتہار کے موضوعات کی ترتیب، آپ کی تشہیری ID کی ترتیبات اور آیا آپ جس ایپ کو استعمال کر رہے ہیں وہ اشتہارات کو ذاتی نوعیت کا بناتی ہے کی بنیاد پر۔"</string>
+    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"اشتہارات کی رازداری کی نئی خصوصیت دستیاب ہے"</string>
+    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"اشتہار کی کارکردگی کی پیمائش کرنے میں مدد کیلئے ایپس کے درمیان صرف بہت محدود معلومات کا اشتراک کیا جاتا ہے"</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"‏ہم اشتہارات کی رازداری کی ایک نئی خصوصیت شروع کر رہے ہیں جسے اشتہار کی اثرپذیری کی پیمائش کہتے ہیں۔ Android ایپس کے درمیان صرف بہت محدود معلومات کا اشتراک کرتا ہے، جیسے کہ آپ کو اشتہار کب دکھایا گیا تھا، تاکہ ایپس کو اشتہارات کی کارکردگی کی پیمائش کرنے میں مدد مل سکے۔"</string>
+    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"آپ اشتہار کی رازداری کی ترتیبات میں تبدیلیاں کر سکتے ہیں۔"</string>
+    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"‏آپ جو ایپس استعمال کرتے ہیں وہ اپنے اشتہارات کی کارکردگی کی پیمائش کرنے میں مدد کے لیے Android سے معلومات طلب کر سکتی ہیں۔ Android ایپس کو صرف محدود قسم کا ڈیٹا جمع کرنے دیتا ہے۔"</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"موسیقی، خبروں اور اسپورٹس جیسے دلچسپی کے موضوعات کی نمائندگی کرنے والے علامات کا رنگین خاکہ"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"دائرے کے اندر قفل کا رنگین خاکہ"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"مربع کو تشکیل دینے والے نو نقطوں کا چھوٹا سیاہ اور سفید خاکہ"</string>
@@ -651,7 +667,7 @@
     <string name="topic10434" msgid="7081309045291255264">"ہنی مون اور رومانی سفر"</string>
     <string name="topic10435" msgid="1064605516265819020">"ہوٹلز اور رہائش"</string>
     <string name="topic10436" msgid="9050375924140897722">"لمبی دوری کی بس اور ریل"</string>
-    <string name="topic10437" msgid="2655664900730187701">"کم قیمت اور ہنگامی سفر"</string>
+    <string name="topic10437" msgid="2655664900730187701">"کم قیمت اور ایمرجنسی سفر"</string>
     <string name="topic10438" msgid="7944023251845122923">"سامان اور سفر کے لوازمات"</string>
     <string name="topic10439" msgid="7845433008088931971">"سیاحتی مقامات"</string>
     <string name="topic10440" msgid="485118071443976808">"سواحل اور جزائر"</string>

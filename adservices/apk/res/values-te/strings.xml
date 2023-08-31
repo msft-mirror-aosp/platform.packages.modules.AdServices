@@ -62,10 +62,10 @@
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"మీరు బీటా వెర్షన్‌లో భాగంగా ఉన్నారు"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"మీ పరికరం కోసం గోప్యతా పరిరక్షణ టెక్నాలజీల సెట్ ఆన్‌లో ఉంది, మీకు యాడ్‌లను చూపడానికి యాప్‌లు ఈ మరిన్ని, కొత్త ప్రైవేట్ మార్గాలను పరీక్షించగలవు. మీరు మీ గోప్యతా సెట్టింగ్‌లలో ఎప్పుడైనా బీటాను ఆఫ్ చేయవచ్చు."</string>
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"అర్థమైంది"</string>
-    <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Android గోప్యతా పరిరక్షణ టెక్నాలజీల సెట్ మీకు నచ్చే యాడ్‌లను చూపడానికి యాప్‌లు ఉపయోగించగల కొత్త ఫీచర్‌లను అందిస్తుంది. ఈ టెక్నాలజీలు పరికర ఐడెంటిఫైయర్‌లను ఉపయోగించవు.\n\nమీకు ఆసక్తి కలిగించే యాడ్‌ల రకాలను Android, అలాగే మీ యాప్‌లు అంచనా వేయగలవు, అలాగే ఆసక్తులను మీ పరికరంలో తాత్కాలికంగా సేవ్ చేయగలవు. ఇతర డెవలపర్‌ల నుండి వెబ్‌సైట్‌లు, యాప్‌లలో మీ యాక్టివిటీని ట్రాక్ చేయకుండానే, మీరు ఇష్టపడే యాడ్‌లను చూపడానికి ఇది యాప్‌లను అనుమతిస్తుంది."</string>
+    <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Android గోప్యతా పరిరక్షణ టెక్నాలజీల సెట్, మీకు నచ్చే యాడ్‌లను చూపడానికి యాప్‌లు ఉపయోగించగల కొత్త ఫీచర్‌లను అందిస్తుంది. ఈ టెక్నాలజీలు పరికర ఐడెంటిఫైయర్‌లను ఉపయోగించవు.\n\nమీకు ఆసక్తి కలిగించే యాడ్‌ల రకాలను Android, అలాగే మీ యాప్‌లు అంచనా వేయగలవు. సదరు ఆసక్తులను మీ పరికరంలో తాత్కాలికంగా సేవ్ చేయగలవు. ఇతర డెవలపర్‌ల వెబ్‌సైట్లలో, యాప్‌లలో మీ యాక్టివిటీని ట్రాక్ చేయకుండానే, మీరు ఇష్టపడే యాడ్‌లను చూపడానికి ఇది యాప్‌లను అనుమతిస్తుంది."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"గోప్యతా పరిరక్షణ టెక్నాలజీల సెట్‌తో యాడ్‌ల వ్యక్తిగతీకరణ"</string>
     <string name="notificationUI_how_it_works_expanded_text3" msgid="603165966360369018">"•  Android ద్వారా అంచనా వేయబడిన ఆసక్తులు"</string>
-    <string name="notificationUI_how_it_works_expanded_text4" msgid="3910573920883580609">"మీరు ఉపయోగించే యాప్‌ల ఆధారంగా Android కాలానుగుణంగా మీ అత్యుత్తమ స్థాయి ఆసక్తులను అంచనా వేస్తుంది, ఉదాహరణకు, \"క్రీడలు\" లేదా \"ట్రావెల్.\"\n\nతర్వాత, ఒక యాప్ మీకు మరింత సంబంధిత యాడ్‌లను చూపడానికి ఆ ఆసక్తులను ఉపయోగించమని Android పరికరాన్ని అడగవచ్చు.\n\nమీరు మీ గోప్యతా సెట్టింగ్‌లలో ప్రస్తుత ఆసక్తుల లిస్ట్‌ను చూడవచ్చు, మీకు నచ్చని వాటిని బ్లాక్ చేయవచ్చు."</string>
+    <string name="notificationUI_how_it_works_expanded_text4" msgid="3910573920883580609">"మీరు ఉపయోగించే యాప్‌ల ఆధారంగా Android కాలానుగుణంగా మీ టాప్ ఆసక్తులను అంచనా వేస్తుంది, ఉదాహరణకు, \"క్రీడలు\" లేదా \"ట్రావెల్.\"\n\nతర్వాత, ఒక యాప్ మీకు మరింత సంబంధిత యాడ్‌లను చూపడానికి ఆ ఆసక్తులను ఉపయోగించమని Androidను అడగవచ్చు.\n\nమీరు మీ గోప్యతా సెట్టింగ్‌లలో ప్రస్తుత ఆసక్తుల లిస్ట్‌ను చూడవచ్చు, మీకు నచ్చని వాటిని బ్లాక్ చేయవచ్చు."</string>
     <string name="notificationUI_how_it_works_expanded_text5" msgid="7257714040472055781">"•  యాప్‌ల ద్వారా అంచనా వేయబడిన ఆసక్తులు"</string>
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"యాప్‌లు మీ ఆసక్తులను అంచనా వేయగలవు. అలాగే ఆ అంచనాను Android పరికరంలో తాత్కాలికంగా సేవ్ చేయగలవు. ఉదాహరణకు, మీరు రన్నింగ్ షూస్ కొనుగోలు చేయడానికి ఉపయోగించే యాప్ మీ ఆసక్తిని \"రన్నింగ్ మారథాన్‌లు\"గా అంచనా వేయవచ్చు.\n\nతర్వాత, ఈ ఆసక్తి ఆధారంగా, వేరే యాప్ మీకు మారథాన్‌లకు సంబంధించిన యాడ్‌లను చూపుతుంది.\n\nమీ గోప్యతా సెట్టింగ్‌లలో, మీరు ఆసక్తులను సేవ్ చేసిన యాప్‌ల లిస్ట్‌ను మేనేజ్ చేయవచ్చు."</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"యాడ్‌ల విషయంలో కొత్త గోప్యతా ఫీచర్‌లు"</string>
@@ -127,7 +127,7 @@
     <string name="notificationUI_container3_body_ga_text_eu_v2" msgid="3204499878554843655">"మీ గోప్యతా సెట్టింగ్‌లలో మీరు యాడ్ టాపిక్‌లను చూడవచ్చు, యాప్‌లతో షేర్ చేయకూడదనుకునే వాటిని మీరు బ్లాక్ చేయవచ్చు. అలాగే, Android క్రమం తప్పకుండా యాడ్ టాపిక్‌లను ఆటోమేటిక్‌గా తొలగిస్తుంది కూడా."</string>
     <string name="notificationUI_right_control_button_ga_text_eu_v2" msgid="7227289411885047121">"దీన్ని ఆన్ చేయండి"</string>
     <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"యాడ్‌ల విషయంలో గోప్యతకు సంబంధించి కొత్త ఫీచర్‌లు ఇప్పుడు అందుబాటులో ఉన్నాయి"</string>
-    <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"మీ గుర్తింపును సంరక్షించుకుంటూనే, మీకు ఎలాంటి యాడ్‌లు కనిపించాలి అనే విషయంలో ఇప్పుడు మీకు మరిన్ని ఎంపికలు అందుబాటులో ఉన్నాయి"</string>
+    <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"మీ గుర్తింపును సంరక్షించుకుంటూనే, మీకు ఎలాంటి యాడ్‌లు కనిపించాలి అనే విషయంలో ఇప్పుడు మీకు మరిన్ని ఆప్షన్‌లు అందుబాటులో ఉన్నాయి"</string>
     <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"యాడ్‌ల విషయంలో గోప్యతకు సంబంధించి కొత్త ఫీచర్‌లు ఇప్పుడు అందుబాటులో ఉన్నాయి"</string>
     <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"మీకు ఎలాంటి యాడ్‌లు కనిపించాలి అనే విషయానికి సంబంధించి మరిన్ని ఎంపికలను మీకు అందించే కొత్త గోప్యతా ఫీచర్‌లను Android ఇప్పుడు అందిస్తోంది."</string>
     <string name="notificationUI_next_button_text" msgid="5564270455474313663">"తర్వాత"</string>
@@ -143,8 +143,8 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"అన్‌బ్లాక్ చేయండి"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"మీరు బ్లాక్ చేసిన ఆసక్తులు"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"ఆసక్తులన్నింటినీ రీసెట్ చేయండి"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"ప్రస్తుతం చూపించడానికి ఆసక్తులు ఏవీ లేవు"</string>
-    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"ప్రస్తుతం చూపడానికి టాపిక్‌లు ఏవీ లేవు"</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"ప్రస్తుతం చూపించడానికి ఆసక్తులు ఏవీ లేవు."</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"ప్రస్తుతం చూపించడానికి టాపిక్‌లు ఏవీ లేవు.\n"<a href="https://support.google.com/android?p=ad_privacy">"యాడ్ టాపిక్‌"</a>"ల గురించి మరింత తెలుసుకోండి"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"గోప్యతా పరిరక్షణ టెక్నాలజీల సెట్"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android యాడ్‌ల విషయంలో గోప్యతా బీటా వెర్షన్ మీకు నచ్చే యాడ్‌లను చూపడానికి యాప్‌లు ఉపయోగించగల కొత్త ఫీచర్‌లను అందిస్తుంది. ఈ టెక్నాలజీలు పరికర ఐడెంటిఫైయర్‌లను ఉపయోగించవు.\n\nAndroid పరికరం మీకు ఆసక్తి కలిగించే యాడ్‌ల రకాలను అంచనా వేయగలదు, అలాగే ఈ ఆసక్తులను మీ పరికరంలో తాత్కాలికంగా సేవ్ చేయగలవు. ఇతర డెవలపర్‌ల నుండి వెబ్‌సైట్‌లు, యాప్‌లలో మీ యాక్టివిటీని ట్రాక్ చేయకుండానే, సంబంధిత యాడ్‌లను మీకు చూపడానికి ఇది యాప్‌లను అనుమతిస్తుంది."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"మీకు బ్లాక్ చేయబడిన ఆసక్తులు లేవు"</string>
@@ -157,7 +157,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"బ్లాక్ చేయబడిన యాప్‌లను చూడండి"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"యాప్‌ల ద్వారా అంచనా వేయబడిన ఆసక్తులను రీసెట్ చేయండి"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"ప్రస్తుతం ఏ యాప్‌లు మీ కోసం ఆసక్తులను జెనరేట్ చేయడం లేదు"</string>
-    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"ప్రస్తుతం చూపించడానికి యాప్‌లు ఏవీ లేవు"</string>
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"ప్రస్తుతం చూపించడానికి యాప్‌లు ఏవీ లేవు. \n "<a href="https://support.google.com/android?p=ad_privacy">"యాప్-సూచించిన ‌యాడ్‌ల"</a>"గురించి మరింత తెలుసుకోండి"</string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"గోప్యతా పరిరక్షణ టెక్నాలజీల సెట్"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android యాడ్‌ల విషయంలో గోప్యత బీటా వెర్షన్ మీకు నచ్చే యాడ్‌లను చూపడానికి యాప్‌లు ఉపయోగించగల కొత్త ఫీచర్‌లను అందిస్తుంది. ఈ టెక్నాలజీలు పరికర ఐడెంటిఫైయర్‌లను ఉపయోగించవు.\n\nయాప్‌లు మీకు ఆసక్తి కలిగించే యాడ్‌ల రకాలను అంచనా వేయగలవు, అలాగే ఈ ఆసక్తులను మీ పరికరంలో తాత్కాలికంగా సేవ్ చేయగలవు. ఇతర డెవలపర్‌ల నుండి వెబ్‌సైట్‌లు, యాప్‌లలో మీ యాక్టివిటీని ట్రాక్ చేయకుండానే, సంబంధిత యాడ్‌లను మీకు చూపడానికి ఇది యాప్‌లను అనుమతిస్తుంది."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"యాప్‌లు వేటినీ మీరు బ్లాక్ చేయలేదు"</string>
@@ -187,14 +187,25 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"యాప్‌లు సూచించిన యాడ్‌లను రీసెట్ చేయాలా?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"మీ లిస్ట్‌లోని యాప్‌ల నుండి యాడ్-సూచనల డేటా తొలగించబడుతుంది, అలాగే యాప్‌లు ఇకపై కొత్త యాడ్‌లను సూచిస్తాయి. మీకు ఇప్పటికీ కొన్ని సంబంధిత యాడ్‌లు కనిపించవచ్చు."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"యాప్ డేటా రీసెట్ చేయబడింది"</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"అన్ని టాపిక్‌లనూ రీసెట్ చేయాలా?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"యాప్‌లు సూచించిన యాడ్‌లను రీసెట్ చేయాలా?"</string>
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"యాడ్ టాపిక్‌లు ఆన్‌లో ఉంది"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android ఆసక్తికర అంశాలను గుర్తించడం ప్రారంభిస్తుంది, అయితే మీ మొదటి టాపిక్‌లు కనిపించడానికి కొంత సమయం పట్టవచ్చు."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"యాడ్ టాపిక్‌లను ఆఫ్ చేయాలా?"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"ఈ టాపిక్‌ల లిస్ట్ తొలగించబడుతుంది. Android ఇకపై ఆసక్తి కలిగించే టాపిక్‌లను నోట్ చేయదు, కానీ మీరు ఇప్పటికీ సంబంధిత యాడ్‌లను చూడవచ్చు."</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"యాప్-సూచించిన యాడ్‌లు ఆన్‌లో ఉంది"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"యాప్‌లు యాడ్‌లను సూచించడం ప్రారంభించవచ్చు. యాప్‌లు యాడ్‌లను సూచించడం ప్రారంభించిన తర్వాత మీరు వాటి లిస్ట్‌ను చూస్తారు."</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"యాప్ సూచించిన యాడ్‌లను ఆఫ్ చేయాలా?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"యాడ్ సూచన డేటా అంతా తొలగించబడుతుంది. యాప్‌లు ఇకపై యాడ్‌లను సూచించలేవు, కానీ మీరు ఇప్పటికీ సంబంధిత యాడ్‌లను చూడవచ్చు."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"యాడ్‌ల మెజర్‌మెంట్ ఆన్‌లో ఉంది"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"యాప్‌లు తమ యాడ్‌ల పనితీరును కొలవడంలో సహాయపడటానికి Android, యాప్‌లతో చాలా పరిమిత సమాచారాన్ని మాత్రమే షేర్ చేయగలదు."</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"యాడ్‌ల మెజర్‌మెంట్‌ను ఆఫ్ చేయాలా?"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"పెండింగ్‌లో ఉన్న యాడ్‌ల మెజర్‌మెంట్ రిపోర్ట్‌లు అన్నీ తొలగించబడతాయి, కొత్త రిపోర్ట్‌లు రూపొందించబడవు లేదా షేర్ చేయబడవు."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"యాడ్‌ల విషయంలో గోప్యత"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"యాడ్ టాపిక్‌లు"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"యాప్ సూచించిన యాడ్‌లు"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"మీరు ఇటీవల ఉపయోగించిన యాప్‌లు, మీరు వాటిని ఎంత తరచుగా ఉపయోగిస్తున్నారు అనే దాని ఆధారంగా మీకు ఆసక్తి ఉన్న టాపిక్‌లను Android నోట్ చేస్తుంది."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"మీరు ఉపయోగించే యాప్‌లు, వాటిని మీరు ఎలా ఉపయోగిస్తున్నారనే దాని ఆధారంగా, మీకు ఏవేవి అంటే ఇష్టమో కూడా నిర్ణయించగలవు."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"మీరు ఉపయోగించే యాప్‌లు తమ యాడ్‌ల పనితీరును అంచనా వేయడంలో సహాయపడటానికి Androidను సమాచారం కోసం అడగవచ్చు. పరిమిత రకాల డేటాను కలెక్ట్ చేయడానికి యాప్‌లను Android అనుమతిస్తుంది."</string>
+    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916"><a href="https://support.google.com/android?p=ad_privacy">"‌Androidలో యాడ్‌ల విషయంలో గోప్యత"</a>"‌గురించి మరింత తెలుసుకోండి"</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"ఆన్‌లో ఉన్నాయి / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> టాపిక్‌లు"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{ఆన్‌లో ఉంది / # టాపిక్}other{ఆన్‌లో ఉన్నాయి / # టాపిక్‌లు}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"ఆన్‌లో ఉన్నాయి / <xliff:g id="APPS_COUNT">%1$d</xliff:g> యాప్‌లు"</string>
@@ -211,6 +222,11 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"మీరు బ్లాక్ చేసిన యాప్‌లు"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"యాప్‌లు సూచించిన డేటాను రీసెట్ చేయండి"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"మీరు ఉపయోగించే యాప్‌లు, మీ అనుభవాన్ని వ్యక్తిగతీకరించడానికి మీకు ఆసక్తి ఉన్న అంశాలను గుర్తుంచుకోవడం సాధారణం. యాప్‌లు మీ టాపిక్‌ల గురించి Androidతో సమాచారాన్ని కూడా స్టోర్ చేయగలవు.\n\nఉదాహరణకు, మీరు మారథాన్ ట్రైనింగ్‌కు సంబంధించిన యాప్‌ను ఉపయోగిస్తే, మీరు రన్నింగ్ షూల పట్ల ఆసక్తి కలిగి ఉన్నారని యాప్ నిర్ధారించవచ్చు. తర్వాత, మీరు వేరొక యాప్‌ను ఉపయోగిస్తే, మొదటి యాప్ సూచించిన రన్నింగ్ షూలకు సంబంధించిన యాడ్‌ను మీకు చూపవచ్చు.\n\nAndroid క్రమం తప్పకుండా యాప్ సూచించిన డేటాను ఆటోమేటిక్‌గా తొలగిస్తుంది. మీరు మళ్లీ ఉపయోగించే యాప్ లిస్ట్‌లో తిరిగి కనిపించవచ్చు. లేదా, మీ కోసం యాడ్‌లను సూచించకుండా మీరు యాప్‌ను బ్లాక్ చేయవచ్చు.\n\nమీ యాప్‌లలో మీరు చూసే యాడ్, ఈ సెట్టింగ్, యాడ్ టాపిక్‌ల సెట్టింగ్, మీ అడ్వర్టయిజింగ్ ID సెట్టింగ్‌లు ఇంకా మీరు ఉపయోగిస్తున్న యాప్ యాడ్‌లను వ్యక్తిగతీకరిస్తుందా అనే దాని ఆధారంగా అనుకూలీకరించబడవచ్చు."</string>
+    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"కొత్త యాడ్‌ల విషయంలో గోప్యత ఫీచర్ అందుబాటులో ఉంది"</string>
+    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"యాడ్ పనితీరును కొలవడానికి యాప్‌ల మధ్య చాలా పరిమిత సమాచారం మాత్రమే షేర్ చేయబడుతుంది"</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"మేము యాడ్‌ల విషయంలో, యాడ్ మెజర్‌మెంట్ అనే కొత్త గోప్యతా ఫీచర్‌ను లాంచ్ చేస్తున్నాము. యాడ్‌ల పనితీరును కొలవడానికి యాప్‌లకు సహాయం చేయడానికి, మీకు యాడ్ చూపబడినప్పుడు వంటి చాలా పరిమిత సమాచారాన్ని మాత్రమే Android యాప్‌ల మధ్య షేర్ చేస్తుంది."</string>
+    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"మీరు యాడ్‌ల విషయంలో గోప్యత సెట్టింగ్‌లలో మార్పులు చేయవచ్చు."</string>
+    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"మీరు ఉపయోగించే యాప్‌లు తమ యాడ్‌ల పనితీరును అంచనా వేయడంలో సహాయపడటానికి Androidను సమాచారం కోసం అడగవచ్చు. పరిమిత రకాల డేటాను మాత్రమే కలెక్ట్ చేయడానికి యాప్‌లను Android అనుమతిస్తుంది."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"మ్యూజిక్, వార్తలు, క్రీడల వంటి ఆసక్తి ఉన్న టాపిక్‌లను రంగురంగుల చిహ్నాలతో సూచించిన ఉదాహరణ"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"సర్కిల్ లోపల లాక్‌ను రంగు రంగులుగా సూచించిన ఉదాహరణ"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"తొమ్మిది చుక్కలతో ఏర్పడిన స్క్వేర్‌ను నలుపు, తెలుపు రంగులతో సూచించిన ఉదాహరణ"</string>

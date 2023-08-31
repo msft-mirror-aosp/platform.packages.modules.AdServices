@@ -143,8 +143,8 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Разблокировать"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Заблокированные интересы"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Сбросить все интересы"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Пока интересов нет."</string>
-    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"Пока тем нет."</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"Пока интересов нет."</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"Пока тем нет.\nПодробнее "<a href="https://support.google.com/android?p=ad_privacy">"о темах рекламы"</a>"…"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"В бета-версии конфиденциальности в рекламе для Android приложениям предоставлены новые возможности для показа объявлений. Эти технологии не требуют идентификаторов устройств.\n\nAndroid сможет определять, реклама на какие темы может вас заинтересовать, и временно хранить эти сведения на вашем устройстве. Приложения смогут показывать релевантные объявления без отслеживания ваших действий на сайтах и в продуктах других разработчиков."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Нет заблокированных интересов"</string>
@@ -157,7 +157,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"Показать заблокированные приложения"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Сбросить интересы по данным приложений"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Нет приложений, определяющих ваши интересы"</string>
-    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"Пока приложений нет."</string>
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"Пока приложений нет. \nПодробнее "<a href="https://support.google.com/android?p=ad_privacy">"о рекламе, предлагаемой приложениями"</a>"…"</string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"В бета-версии конфиденциальности в рекламе для Android приложениям предоставлены новые возможности для показа объявлений. Эти технологии не требуют идентификаторов устройств.\n\nПриложения смогут определять, реклама на какие темы может вас заинтересовать, и временно хранить эти сведения на вашем устройстве. Приложения смогут показывать релевантные объявления без отслеживания ваших действий на сайтах и в продуктах других разработчиков."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Нет заблокированных приложений"</string>
@@ -187,14 +187,25 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Сбросить настройки рекламы, предлагаемой приложениями?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Данные рекламы, которая предлагается приложениями из вашего списка, будут удалены, но похожие объявления иногда могут появляться. Впоследствии приложения будут предлагать новую рекламу."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Данные приложений были сброшены."</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Сбросить все темы?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Сбросить настройки рекламы, предлагаемой приложениями?"</string>
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Темы рекламы включены"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android начнет отмечать интересующие вас темы. Первые темы могут появиться не сразу."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Отключить темы рекламы?"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Список тем будет удален. Android больше не будет отмечать интересующие вас темы, но реклама может по-прежнему оставаться актуальной."</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Реклама, предлагаемая приложениями, включена"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Теперь приложения могут предлагать рекламу. Вы увидите список приложений, которые уже начали это делать."</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Отключить рекламу, предлагаемую приложениями?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Все данные о рекламных предложениях будут удалены. Приложения больше не смогут предлагать рекламу, но она может по-прежнему оставаться актуальной."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Оценка эффективности рекламы включена"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android может предоставлять приложениям только очень ограниченную информацию, чтобы помочь им оценить эффективность рекламы."</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Отключить оценку эффективности рекламы?"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"Все подготовленные отчеты об эффективности рекламы будут удалены. Новые отчеты не будут создаваться или передаваться."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Конфиден­циаль­ность в рекламе"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Темы объявлений"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Реклама, предлагаемая приложениями"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android определяет интересные вам темы исходя из того, какие приложения вы недавно открывали и как часто вы ими пользуетесь."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Приложения также могут определять ваши интересы на основе действий, которые вы в них выполняете."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Приложения, которые вы используете, могут запрашивать у Android сведения для оценки эффективности рекламы. Android позволяет приложениям собирать только определенные типы данных."</string>
+    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916">"Подробнее "<a href="https://support.google.com/android?p=ad_privacy">"о конфиденциальности в рекламе на устройствах Android"</a>"…"</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Включено (тем: <xliff:g id="TOPICS_COUNT">%1$d</xliff:g>)"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Включена / # тема}one{Включена / # тема}few{Включено / # темы}many{Включено / # тем}other{Включено / # темы}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Включено (приложений: <xliff:g id="APPS_COUNT">%1$d</xliff:g>)"</string>
@@ -211,6 +222,11 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Приложения, которые вы заблокировали"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Удалить данные, предложенные приложениями"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Обычно приложения, которые вы используете, запоминают интересные вам темы, чтобы предлагать персонализированный контент. Они также могут хранить информацию о ваших интересах в Android.\n\nНапример, если вы пользовались приложением с тренировками к марафону, оно может определить, что вам интересны беговые кроссовки. Если затем вы откроете другое приложение, в нем может быть показана реклама беговых кроссовок, предложенная первым приложением.\n\nAndroid регулярно удаляет данные рекламы, предлагаемой приложениями. Если вы продолжите пользоваться приложением, его данные снова могут попасть в список. Вы также можете запретить приложению предлагать вам объявления.\n\nРеклама, которую вы видите в приложениях, может быть персонализированной. Она показывается с учетом этого параметра, а также настроек тем объявлений, рекламного идентификатора и используемого приложения."</string>
+    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"Новая функция конфиденциальности в рекламе"</string>
+    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Для оценки эффективности рекламы приложения могут обмениваться только определенными типами данных"</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Мы запускаем новую функцию конфиденциальности. Для оценки эффективности рекламы приложения в Android могут обмениваться только определенными типами данных, в том числе о времени показа объявления пользователю."</string>
+    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Изменения можно внести в настройках конфиденциальности рекламы."</string>
+    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Приложения, которые вы используете, могут запрашивать у Android сведения для оценки эффективности рекламы. Android позволяет приложениям собирать только определенные типы данных."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Цветные символы, представляющие интересные темы, например музыка, новости и спорт"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Цветное изображение замка внутри круга"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Маленькое черно-белое изображение – девять точек, формирующих квадрат"</string>

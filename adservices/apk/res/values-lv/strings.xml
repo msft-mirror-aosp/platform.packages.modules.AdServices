@@ -143,8 +143,8 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Atbloķēt"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Bloķētās intereses"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Atiestatīt visas intereses"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Pašlaik nav parādāmu interešu"</string>
-    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"Pašlaik nav parādāmu tēmu"</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"Pašlaik nav parādāmu interešu."</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"Pašlaik nav parādāmu tēmu.\nUzziniet vairāk par "<a href="https://support.google.com/android?p=ad_privacy">"reklāmu tēmām"</a>"."</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Konfidencialitātes smilškaste"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android reklāmu konfidencialitātes beta programma ietver jaunas funkcijas, ko lietotnes var izmantot, lai rādītu reklāmas, kas jums varētu interesēt. Šīs tehnoloģijas neizmanto ierīču identifikatorus.\n\nOperētājsistēma Android var aptuveni noteikt, kādas reklāmas jūs varētu interesēt, un šīs intereses var īslaicīgi saglabāt jūsu ierīcē. Tādējādi lietotnes var rādīt jums atbilstošas reklāmas, neizsekojot jūsu darbības tīmekļa vietnēs un citu izstrādātāju lietotnēs."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Jums nav bloķētu interešu"</string>
@@ -157,7 +157,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"Skatīt bloķētās lietotnes"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Atiestatīt lietotnēs noteiktās intereses"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Šobrīd nevienā lietotnē netiek noteiktas jūsu intereses"</string>
-    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"Pašlaik nav parādāmu lietotņu"</string>
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"Pašlaik nav parādāmu lietotņu. \nUzziniet vairāk par "<a href="https://support.google.com/android?p=ad_privacy">"lietotņu ieteiktām reklāmām"</a>"."</string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Konfidencialitātes smilškaste"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android reklāmu konfidencialitātes beta programma ietver jaunas funkcijas, ko lietotnes var izmantot, lai rādītu reklāmas, kas jums varētu interesēt. Šīs tehnoloģijas neizmanto ierīču identifikatorus.\n\nLietotnes var aptuveni noteikt, kādas reklāmas jūs varētu interesēt, un šīs intereses var īslaicīgi saglabāt jūsu ierīcē. Tādējādi lietotnes var rādīt jums atbilstošas reklāmas, neizsekojot jūsu darbības tīmekļa vietnēs un citu izstrādātāju lietotnēs."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Nav bloķēta neviena lietotne"</string>
@@ -187,14 +187,25 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Vai atiestatīt lietotņu ieteiktās reklāmas?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Reklāmu ieteikumu dati no jūsu sarakstā iekļautajām lietotnēm tiks dzēsti, un turpmāk lietotnēs tiks ieteiktas jaunas reklāmas. Jums joprojām var tikt rādītas dažas atbilstošas reklāmas."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Tika atiestatīti lietotņu dati."</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Vai atiestatīt visas tēmas?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Vai atiestatīt lietotņu ieteiktās reklāmas?"</string>
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Reklāmu tēmas ir ieslēgtas"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Operētājsistēmā Android tiks sākta interesējošo tēmu reģistrēšana, taču var paiet kāds laiks, līdz tiks parādītas pirmās tēmas."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Vai izslēgt reklāmu tēmas?"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Tēmu saraksts tiks izdzēsts. Operētājsistēmā Android vairs netiks reģistrētas interesējošās tēmas, taču jums joprojām var tikt rādītas atbilstošas reklāmas."</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Lietotņu ieteiktas reklāmas ir ieslēgtas"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Lietotnēs var tikt sākta reklāmu ieteikšana. Kad tajās tiks sākta reklāmu ieteikšana, tiks parādīts lietotņu saraksts."</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Vai izslēgt lietotņu ieteiktas reklāmas?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Visi reklāmu ieteikumu dati tiks izdzēsti. Lietotnes vairs nevarēs ieteikt reklāmas, taču jums joprojām var tikt rādītas atbilstošas reklāmas."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Reklāmu novērtēšana ir ieslēgta"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Operētājsistēmā Android drīkst kopīgot ar lietotnēm tikai stingri ierobežotu informāciju, lai lietotnēs varētu efektīvāk mērīt attiecīgo lietotņu reklāmu veiktspēju."</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Vai izslēgt reklāmu novērtēšanu?"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"Visi neapstiprinātie reklāmu novērtēšanas pārskati tiks izdzēsti, un netiks ne ģenerēti, ne kopīgoti jauni pārskati."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Reklāmu konfidencialitāte"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Reklāmu tēmas"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Lietotnēs ieteiktās reklāmas"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android nosaka, kādas tēmas jūs interesē, ņemot vērā nesen izmantotās lietotnes un to, cik bieži izmantojat šīs lietotnes."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Jūsu izmantotās lietotnes var arī noteikt, kas jums patīk, ņemot vērā to, kā jūs izmantojat šīs lietotnes."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Jūsu izmantotās lietotnes var pieprasīt informāciju no operētājsistēmas Android, lai varētu efektīvāk novērtēt reklāmu veiktspēju šajās lietotnēs. Android ļauj lietotnēm vākt tikai noteiktu veidu datus."</string>
+    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916">"Uzziniet vairāk par "<a href="https://support.google.com/android?p=ad_privacy">"reklāmu konfidencialitāti operētājsistēmā Android"</a>"."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Ieslēgtas / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> tēma(-s)"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Ieslēgti, # tēma}zero{Ieslēgti, # tēmu}one{Ieslēgti, # tēma}other{Ieslēgti, # tēmas}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Ieslēgtas / <xliff:g id="APPS_COUNT">%1$d</xliff:g> lietotne(-s)"</string>
@@ -211,6 +222,11 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Jūsu bloķētās lietotnes"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Atiestatīt lietotņu ieteiktos datus"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Lietotnēs bieži vien tiek saglabāta informācija par lietotāju interesēm, lai personalizētu lietošanas iespējas. No lietotnēm iegūtā informācija par tēmām, kuras jūs interesē, var tikt glabāta arī operētājsistēmā Android.\n\nPiemēram, ja izmantojat lietotni, kas saistīta ar treniņiem maratonam, šajā lietotnē var tikt noteikts, ka jūs interesē skriešanas apavi. Vēlāk citā lietotnē jums var tikt parādīta skriešanas apavu reklāma, ko ieteikusi pirmā lietotne.\n\nOperētājsistēmā Android lietotņu ieteiktie dati regulāri tiek automātiski dzēsti. Ja atkārtoti izmantosiet lietotni, tā var tikt atkal parādīta sarakstā. Varat arī bloķēt konkrētu lietotni, lai tā nevarētu ieteikt jums rādāmās reklāmas.\n\nLietotnēs redzamās reklāmas var tikt personalizētas, ņemot vērā šo iestatījumu, reklāmu tēmu iestatījumu, jūsu reklamēšanas ID iestatījumus un to, vai attiecīgajā lietotnē tiek personalizētas reklāmas."</string>
+    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"Pieejamas jaunas reklāmu konfidencialitātes funkcijas"</string>
+    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Ar lietotnēm tiek kopīgota tikai ļoti ierobežota informācija, ko tās izmanto reklāmu veiktspējas novērtēšanai"</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Tiek izlaista jauna reklāmu konfidencialitātes funkcija, ko dēvē par reklāmu novērtēšanu. Operētājsistēma Android ar lietotnēm kopīgo ļoti ierobežotu informāciju (piemēram, kad jums tika parādīta reklāma), ko lietotnes izmanto reklāmu veiktspējas novērtēšanai."</string>
+    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Varat veikt izmaiņas reklāmu konfidencialitātes iestatījumos."</string>
+    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Jūsu izmantotās lietotnes var pieprasīt informāciju no operētājsistēmas Android, lai varētu efektīvāk novērtēt reklāmu veiktspēju šajās lietotnēs. Android atļauj lietotnēm vākt tikai ļoti ierobežotus datus."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Krāsaina ilustrācija ar simboliem, kas apzīmē interešu tēmas, piemēram, mūziku, ziņas un sportu"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Krāsaina ilustrācija ar slēdzeni aplī"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Maza melnbalta ilustrācija ar deviņiem kvadrātā izkārtotiem punktiem"</string>

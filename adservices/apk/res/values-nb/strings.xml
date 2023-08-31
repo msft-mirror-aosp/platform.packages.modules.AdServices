@@ -143,8 +143,8 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Opphev"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Interesser du har blokkert"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Tilbakestill alle interesser"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Ingen interesser å vise akkurat nå"</string>
-    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"Ingen emner å vise akkurat nå"</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"Ingen interesser å vise akkurat nå."</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"Ingen emner å vise akkurat nå.\nFinn ut mer om "<a href="https://support.google.com/android?p=ad_privacy">"annonseemner"</a></string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android-betaversjonen for annonsepersonvern har nye funksjoner som apper kan bruke for å vise deg annonser du kan være interessert i. Disse teknologiene bruker ikke enhetsidentifikatorer.\n\nAndroid kan anslå hvilke typer annonser du kan være interessert i, og lagre disse interessene midlertidig på enheten din. Dette gjør at apper kan vise deg relevante annonser uten å spore aktiviteten din på nettsteder og i apper fra andre utviklere."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Du har ingen blokkerte interesser"</string>
@@ -157,7 +157,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"Se blokkerte apper"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Tilbakestill interesser anslått av apper"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Ingen apper genererer interesser for deg akkurat nå"</string>
-    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"Ingen apper å vise akkurat nå"</string>
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"Ingen apper å vise akkurat nå. \nFinn ut mer om "<a href="https://support.google.com/android?p=ad_privacy">"annonser foreslått av apper"</a></string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android-betaversjonen for annonsepersonvern har nye funksjoner som apper kan bruke for å vise deg annonser du kan være interessert i. Disse teknologiene bruker ikke enhetsidentifikatorer.\n\nApper kan anslå hvilke typer annonser du kan være interessert i, og lagre disse interessene midlertidig på enheten din. Dette gjør at apper kan vise deg relevante annonser uten å spore aktiviteten din på nettsteder og i apper fra andre utviklere."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Du har ingen blokkerte apper"</string>
@@ -187,21 +187,32 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Vil du tilbakestille annonser foreslått av apper?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Data om annonseforslag fra appene i listen blir slettet, og appene foreslår nye annonser i fremtiden. Du kan fortsatt se noen relaterte annonser."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Appdataene er tilbakestilt"</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Vil du tilbakestille alle emner?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Vil du tilbakestille annonser foreslått av apper?"</string>
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Annonseemner er på"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android begynner å merke seg interessante emner, men det kan ta en stund før de første emnene dine vises."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Vil du slå av annonseemner?"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Denne emnelisten blir slettet. Android merker seg ikke interessante emner lenger, men det kan fortsatt hende du ser relevante annonser."</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Annonser foreslått av apper er slått på"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Apper kan begynne å foreslå annonser. Du ser en liste med apper når de begynner å foreslå annonser."</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Vil du slå av annonser foreslått av apper?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Alle data om annonseforslag blir slettet. Apper kan ikke foreslå annonser lenger, men det kan fortsatt hende du ser relevante annonser."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Annonsemåling er på"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android kan bare dele svært begrenset informasjon med apper for å la appene måle resultatene annonsene deres oppnår."</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Vil du slå av annonsemåling?"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"Alle ventende rapporter om annonsemåling blir slettet, og ingen nye rapporter blir generert eller delt."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Annonsepersonvern"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Annonseemner"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Annonser foreslått av apper"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android merker seg interessante emner basert på appene du har brukt i det siste, og hvor ofte du bruker dem."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Apper du bruker, kan også avgjøre hva du liker, basert på hvordan du bruker dem."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Apper du bruker, kan be Android om informasjon for å måle ytelsen til annonsene i dem. Android lar apper samle inn begrensede typer data."</string>
+    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916">"Finn ut mer om "<a href="https://support.google.com/android?p=ad_privacy">"annonsepersonvern på Android"</a></string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"På / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> emner"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{På / # emne}other{På / # emner}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"På / <xliff:g id="APPS_COUNT">%1$d</xliff:g> apper"</string>
     <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{På / # app}other{På / # apper}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"På"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Av"</string>
-    <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Interesseemner er basert på appene du har brukt nylig, og de brukes av apper for å vise deg personlig tilpassede annonser.\n\nDu kan blokkere emner du ikke vil at skal deles med apper. Android sletter også regelmessig emner automatisk"</string>
+    <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Interesseemner er basert på appene du har brukt nylig, og de brukes av apper for å vise deg personlig tilpassede annonser.\n\nDu kan blokkere emner du ikke vil at skal deles med apper. Android sletter også regelmessig emner automatisk."</string>
     <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"Tillat annonseemner"</string>
     <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"Annonseemner du har blokkert"</string>
     <string name="settingsUI_reset_topics_ga_title" msgid="5365554894399951300">"Tilbakestill alle annonseemner"</string>
@@ -211,6 +222,11 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Apper du har blokkert"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Tilbakestill dataene som er foreslått av apper"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Det er vanlig at apper du bruker, husker ting du er interessert i, for å gi deg en tilpasset opplevelse. Apper kan også lagre informasjon i Android om emnene dine.\n\nHvis du for eksempel bruker en app om maratontrening, kan appen fastslå at du er interessert i løpesko. Hvis du bruker en annen app senere, kan den appen vise deg en annonse for løpesko som ble foreslått av den første appen.\n\nAndroid sletter automatisk data fra appforslag regelmessig. Apper du bruker igjen, kan vises på listen igjen. Du kan også blokkere enkeltapper fra å foreslå annonser for deg.\n\nI apper kan annonser du ser, være personlig tilpasset avhengig av denne innstillingen, innstillingen for annonseemner, innstillingene for annonserings-ID og hvorvidt appen du bruker, har personlig tilpassede annonser."</string>
+    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"En ny funksjon for annonsepersonvern er tilgjengelig"</string>
+    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Bare veldig begrenset informasjon deles mellom apper for å bidra til å måle annonseresultater."</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Nå lanserer vi en funksjon for annonsepersonvern som kalles annonsemåling. Android deler bare veldig begrenset informasjon mellom apper, for eksempel når du så en annonse, for å hjelpe apper med å måle annonseresultater."</string>
+    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Du kan endre personverninnstillingene for annonser."</string>
+    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Apper du bruker, kan be Android om informasjon for å måle ytelsen til annonsene i dem. Android lar bare apper samle inn begrensede typer data."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Fargerik illustrasjon av symboler som representerer interessante emner som musikk, nyheter og sport"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Fargerik illustrasjon av en lås i en sirkel"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Liten illustrasjon i svart-hvitt av ni punkter som danner et kvadrat"</string>

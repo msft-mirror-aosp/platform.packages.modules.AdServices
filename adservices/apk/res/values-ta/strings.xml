@@ -143,8 +143,8 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"தடையை நீக்கு"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"நீங்கள் தடுத்த ஆர்வங்கள்"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"அனைத்துத் தலைப்புகளையும் மீட்டமை"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"தற்சமயம் காட்டுவதற்கு ஆர்வங்கள் எதுவும் இல்லை"</string>
-    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"தற்சமயம் காட்ட தலைப்புகள் எதுவுமில்லை"</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"தற்சமயம் காட்டுவதற்கு ஆர்வங்கள் எதுவுமில்லை."</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"தற்சமயம் காட்ட தலைப்புகள் எதுவுமில்லை.\n"<a href="https://support.google.com/android?p=ad_privacy">"விளம்பரத் தலைப்புகள்"</a>" குறித்து மேலும் அறிந்துகொள்ளுங்கள்"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"தனியுரிமை சாண்ட்பாக்ஸ்"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Androidன் விளம்பரத் தனியுரிமை பீட்டா பதிப்பு புதிய அம்சங்களை வழங்குகிறது. அவற்றைப் பயன்படுத்தி நீங்கள் விரும்பக்கூடிய விளம்பரங்களை ஆப்ஸால் வழங்க முடியும். இந்தத் தொழில்நுட்பங்கள் சாதன அடையாளங்காட்டிகளைப் பயன்படுத்தாது.\n\nAndroid நீங்கள் விரும்பக்கூடிய விளம்பர வகைகளை மதிப்பீடு செய்து அவற்றைத் தற்காலிகமாக உங்கள் சாதனத்தில் சேமித்து வைக்கும். இதன் மூலம், இணையதளங்களிலும் பிற டெவெலப்பர்களின் ஆப்ஸிலும் உங்கள் செயல்பாடுகளைக் கண்காணிக்காமலே தொடர்புடைய விளம்பரங்களை ஆப்ஸால் காட்ட முடியும்."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"தடுக்கப்பட்ட ஆர்வங்கள் எதுவுமில்லை"</string>
@@ -157,7 +157,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"தடைசெய்யப்பட்ட ஆப்ஸைக் காட்டு"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"ஆப்ஸால் மதிப்பீடு செய்யப்பட்ட ஆர்வங்களை மீட்டமை"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"தற்சமயம் எந்த ஆப்ஸும் உங்களுக்கான ஆர்வங்களைப் பரிந்துரைக்கவில்லை"</string>
-    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"தற்சமயம் காட்ட ஆப்ஸ் எதுவுமில்லை"</string>
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"தற்சமயம் காட்ட ஆப்ஸ் எதுவுமில்லை. \n"<a href="https://support.google.com/android?p=ad_privacy">"ஆப்ஸால் பரிந்துரைக்கப்படும் விளம்பரங்கள்"</a>" குறித்து மேலும் அறிந்துகொள்ளுங்கள்"</string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"தனியுரிமை சாண்ட்பாக்ஸ்"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Androidன் விளம்பரத் தனியுரிமை பீட்டா பதிப்பு புதிய அம்சங்களை வழங்குகிறது. அவற்றைப் பயன்படுத்தி நீங்கள் விரும்பக்கூடிய விளம்பரங்களை ஆப்ஸால் வழங்க முடியும். இந்தத் தொழில்நுட்பங்கள் சாதன அடையாளங்காட்டிகளைப் பயன்படுத்தாது.\n\nஆப்ஸ் நீங்கள் விரும்பக்கூடிய விளம்பர வகைகளை மதிப்பீடு செய்து அவற்றைத் தற்காலிகமாக உங்கள் சாதனத்தில் சேமித்து வைக்கும். இதன் மூலம், இணையதளங்களிலும் பிற டெவெலப்பர்களின் ஆப்ஸிலும் உங்கள் செயல்பாடுகளைக் கண்காணிக்காமலே தொடர்புடைய விளம்பரங்களை ஆப்ஸால் காட்ட முடியும்."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"தடுக்கப்பட்ட ஆப்ஸ் எதுவுமில்லை"</string>
@@ -187,14 +187,25 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"ஆப்ஸ் பரிந்துரைத்த விளம்பரங்களை ரீசெட் செய்யவா?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"உங்கள் பட்டியலில் உள்ள ஆப்ஸின் விளம்பரப் பரிந்துரைத் தரவு நீக்கப்படும், புதிய விளம்பரங்களை ஆப்ஸ் பரிந்துரைக்கும். எனினும், தொடர்புடைய சில விளம்பரங்களை நீங்கள் தொடர்ந்து பார்க்கக்கூடும்."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"ஆப்ஸ் தரவு ரீசெட் செய்யப்பட்டது"</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"அனைத்துத் தலைப்புகளையும் ரீசெட் செய்யவா?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"ஆப்ஸ் பரிந்துரைத்த விளம்பரங்களை மீட்டமைக்கவா?"</string>
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"\'விளம்பரத் தலைப்புகள்\' இயக்கப்பட்டுள்ளது"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"ஆர்வமுள்ள தலைப்புகளை Android குறித்துக்கொள்ளத் தொடங்கும். ஆனால் உங்கள் முதல் சில தலைப்புகள் தோன்றுவதற்குச் சிறிது நேரம் ஆகலாம்."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"\'விளம்பரத் தலைப்புகளை\' முடக்கவா?"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"இந்தத் தலைப்புகளின் பட்டியல் நீக்கப்படும். ஆர்வமுள்ள தலைப்புகளை Android இனி குறித்துக்கொள்ளாது. எனினும் தொடர்புடைய விளம்பரங்கள் உங்களுக்குக் காட்டப்படலாம்."</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"\'ஆப்ஸ் பரிந்துரைக்கும் விளம்பரங்கள்\' இயக்கப்பட்டுள்ளது"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"விளம்பரங்களை ஆப்ஸ் பரிந்துரைக்கத் தொடங்கலாம். விளம்பரங்களை ஆப்ஸ் பரிந்துரைக்கத் தொடங்கியதும் ஆப்ஸின் பட்டியலை நீங்கள் பார்ப்பீர்கள்."</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"\'ஆப்ஸால் பரிந்துரைக்கப்படும் விளம்பரங்களை\' முடக்கவா?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"விளம்பரப் பரிந்துரை தொடர்பான தரவு அனைத்தும் நீக்கப்படும். ஆப்ஸால் இனி விளம்பரங்களைப் பரிந்துரைக்க முடியாது. எனினும் தொடர்புடைய விளம்பரங்கள் உங்களுக்குக் காட்டப்படலாம்."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"விளம்பரம் தொடர்பான அளவீடு இயக்கப்பட்டுள்ளது"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"ஆப்ஸ் அதன் விளம்பரங்களின் செயல்திறனை அளவிட உதவ, மிகக் குறைவான தகவல்களை மட்டுமே ஆப்ஸுடன் Android பகிர முடியும்."</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"விளம்பரம் தொடர்பான அளவீட்டை முடக்கவா?"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"நிலுவையிலுள்ள \'விளம்பரம் தொடர்பான அளவீட்டு அறிக்கைகள்\' அனைத்தும் நீக்கப்படும். மேலும் புதிதாக எந்த அறிக்கைகளும் உருவாக்கப்படாது/பகிரப்படாது."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"விளம்பரத் தனியுரிமை"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"விளம்பரத் தலைப்புகள்"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"ஆப்ஸ் பரிந்துரைக்கும் விளம்பரங்கள்"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"நீங்கள் சமீபத்தில் பயன்படுத்திய ஆப்ஸின் அடிப்படையிலும் அந்த ஆப்ஸை எவ்வளவு கால இடைவெளியில் பயன்படுத்துகிறீர்கள் என்பதன் அடிப்படையிலும் உங்களுக்கு விருப்பமான தலைப்புகளை Android குறித்துக்கொள்ளும்."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"நீங்கள் ஆப்ஸை எப்படிப் பயன்படுத்துகிறீர்கள் என்பதன் அடிப்படையில், அந்த ஆப்ஸால் உங்கள் விருப்பங்களை அறிந்துகொள்ளவும் முடியும்."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"நீங்கள் பயன்படுத்தும் ஆப்ஸ், அவற்றின் விளம்பரங்களின் செயல்திறனை அளவிடுவதற்கான தகவல்களை வழங்கும்படி Androidஐக் கோரலாம். குறிப்பிட்ட வகையான தரவை மட்டுமே சேகரிக்க ஆப்ஸை Android அனுமதிக்கும்."</string>
+    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916"><a href="https://support.google.com/android?p=ad_privacy">"Androidல் விளம்பரங்கள் தொடர்பான தனியுரிமை"</a>" குறித்து மேலும் அறிந்துகொள்ளுங்கள்"</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"ஆன் / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> தலைப்புகள்"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{ஆன் / # தலைப்பு}other{ஆன் / # தலைப்புகள்}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"இயக்கப்பட்டுள்ளது / <xliff:g id="APPS_COUNT">%1$d</xliff:g> ஆப்ஸ்"</string>
@@ -211,6 +222,11 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"தடுக்கப்பட்ட ஆப்ஸ்"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"ஆப்ஸ் பரிந்துரைக்கும் தரவை ரீசெட் செய்"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"பொதுவாக, உங்கள் அனுபவத்தைப் பிரத்தியேகப்படுத்த நீங்கள் விரும்பும் விஷயங்களை ஆப்ஸ் நினைவில் வைத்துக்கொள்ளும். நீங்கள் விரும்பும் தலைப்புகள் தொடர்பான தகவல்களை ஆப்ஸால் Androidல் சேமிக்க முடியும்.\n\nஉதாரணமாக, மாரத்தான் பயிற்சி தொடர்பான ஆப்ஸை நீங்கள் பயன்படுத்தினால், உங்களுக்கு ஓட்டப் பயிற்சிக்கான ஷூக்களை வாங்க விருப்பம் இருப்பதாக ஆப்ஸ் கருதக்கூடும். பின்னர் நீங்கள் வேறொரு ஆப்ஸைப் பயன்படுத்தும்போது முதலில் பயன்படுத்திய ஆப்ஸின் பரிந்துரைப்படி ஓட்டப் பயிற்சி ஷூக்களுக்கான விளம்பரத்தை இந்த ஆப்ஸ் காட்டலாம்.\n\nஆப்ஸ் பரிந்துரைக்கும் தரவை அவ்வப்போது Android தானாகவே நீக்கிவிடும். நீங்கள் மீண்டும் ஓர் ஆப்ஸைப் பயன்படுத்தினால் அது திரும்பவும் பட்டியலில் காட்டப்படலாம். ஓர் ஆப்ஸ் உங்களுக்கு விளம்பரங்கள் காட்டுவதை நீங்கள் தடுக்கலாம்.\n\nஇந்த அமைப்பு, விளம்பரத் தலைப்புகளுக்கான அமைப்பு, உங்கள் விளம்பரப்படுத்தல் ஐடிக்கான அமைப்புகள் ஆகியவற்றைப் பொறுத்தும் நீங்கள் பயன்படுத்தும் ஆப்ஸ் விளம்பரங்களைப் பிரத்தியேகப்படுத்துகிறதா இல்லையா என்பதைப் பொறுத்தும் உங்கள் ஆப்ஸில் காட்டப்படும் விளம்பரங்கள் பிரத்தியேகப்படுத்தப்படலாம்."</string>
+    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"புதிய விளம்பரங்கள் தொடர்பான தனியுரிமை அம்சம் கிடைக்கிறது"</string>
+    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"விளம்பரச் செயல்திறனை அளவிட உதவ, ஆப்ஸுக்கிடையே குறைந்தளவிலான தகவல்கள் மட்டுமே பகிரப்பட்டுள்ளன"</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"விளம்பர அளவீடு எனும் புதிய விளம்பரத் தனியுரிமை அம்சத்தை வெளியிடுகிறோம். விளம்பரங்களின் செயல்திறனை அளவிட ஆப்ஸுக்கு உதவ, விளம்பரம் உங்களுக்குக் காட்டப்படும் நேரம் போன்ற குறைந்தளவிலான தகவல்களையே ஆப்ஸுக்கிடையே Android பகிர்கிறது."</string>
+    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"விளம்பரங்கள் தொடர்பான தனியுரிமை அமைப்புகளில் நீங்கள் மாற்றங்களைச் செய்யலாம்."</string>
+    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"நீங்கள் பயன்படுத்தும் ஆப்ஸ் அவற்றின் விளம்பரச் செயல்திறனை அளவிட உதவும் தகவல்களை வழங்கும்படி Androidஐக் கோரலாம். குறிப்பிட்ட வகையான தரவை மட்டுமே சேகரிக்க ஆப்ஸை Android அனுமதிக்கும்."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"இசை, செய்தி, விளையாட்டு போன்ற ஆர்வமுள்ள தலைப்புகளைக் குறிக்கும் சின்னங்களின் வண்ணமயமான விளக்கப்படம்"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"வட்டத்திற்குள் இருக்கும் பூட்டின் வண்ணமயமான விளக்கப்படம்"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"சதுரத்தை உருவாக்கும் ஒன்பது புள்ளிகளின் சிறிய கருப்பு வெள்ளை விளக்கப்படம்"</string>
