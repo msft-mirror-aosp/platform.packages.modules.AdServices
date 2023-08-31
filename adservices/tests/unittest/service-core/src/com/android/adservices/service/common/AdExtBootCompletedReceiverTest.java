@@ -17,6 +17,7 @@
 package com.android.adservices.service.common;
 
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
@@ -31,6 +32,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
 
+import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
@@ -57,6 +59,8 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
+
+import java.util.List;
 
 @SmallTest
 public class AdExtBootCompletedReceiverTest {
@@ -358,11 +362,40 @@ public class AdExtBootCompletedReceiverTest {
 
         JobScheduler mockScheduler = Mockito.mock(JobScheduler.class);
         when(mContext.getSystemService(JobScheduler.class)).thenReturn(mockScheduler);
-
+        when(mockScheduler.getAllPendingJobs()).thenReturn(getJobInfos());
+        doNothing().when(mockScheduler).cancel(anyInt());
         setCommonMocks(AD_SERVICES_APK_PKG_SUFFIX + TEST_PACKAGE_NAME);
 
         bootCompletedReceiver.disableScheduledBackgroundJobs(mContext);
-        verify(mockScheduler).cancelAll();
+        verify(mockScheduler).cancel(1);
+        verify(mockScheduler).cancel(3);
+        verify(mockScheduler, never()).cancel(2);
+        verify(mockScheduler, never()).cancelAll();
+    }
+
+    private static List<JobInfo> getJobInfos() {
+        return List.of(
+                new JobInfo.Builder(
+                                1,
+                                new ComponentName(
+                                        TEST_PACKAGE_NAME,
+                                        "com.android.adservices.service.measurement.attribution"
+                                                + ".AttributionJobService"))
+                        .build(),
+                new JobInfo.Builder(
+                                2,
+                                new ComponentName(
+                                        TEST_PACKAGE_NAME,
+                                        "com.android.extservice.common"
+                                                + ".AdServicesAppsearchDeleteSchedulerJobService"))
+                        .build(),
+                new JobInfo.Builder(
+                                3,
+                                new ComponentName(
+                                        TEST_PACKAGE_NAME,
+                                        "com.android.adservices.service.topics"
+                                                + ".EpochJobService"))
+                        .build());
     }
 
     @Test
@@ -372,11 +405,16 @@ public class AdExtBootCompletedReceiverTest {
 
         JobScheduler mockScheduler = Mockito.mock(JobScheduler.class);
         when(mContext.getSystemService(JobScheduler.class)).thenReturn(mockScheduler);
+        when(mockScheduler.getAllPendingJobs()).thenReturn(getJobInfos());
+        doNothing().when(mockScheduler).cancel(anyInt());
 
         setCommonMocks(TEST_PACKAGE_NAME);
 
         bootCompletedReceiver.disableScheduledBackgroundJobs(mContext);
-        verify(mockScheduler).cancelAll();
+        verify(mockScheduler).cancel(1);
+        verify(mockScheduler).cancel(3);
+        verify(mockScheduler, never()).cancel(2);
+        verify(mockScheduler, never()).cancelAll();
     }
 
     @Test
