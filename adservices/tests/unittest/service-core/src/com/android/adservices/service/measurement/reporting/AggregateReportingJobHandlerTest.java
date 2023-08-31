@@ -52,6 +52,7 @@ import com.android.adservices.service.measurement.aggregation.AggregateEncryptio
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSession;
 
@@ -98,6 +99,7 @@ public class AggregateReportingJobHandlerTest {
 
     @Mock EnrollmentDao mEnrollmentDao;
     @Mock Flags mMockFlags;
+    @Mock AdServicesLogger mLogger;
 
     AggregateReportingJobHandler mAggregateReportingJobHandler;
     AggregateReportingJobHandler mSpyAggregateReportingJobHandler;
@@ -142,7 +144,8 @@ public class AggregateReportingJobHandlerTest {
                         mDatastoreManager,
                         mockKeyManager,
                         ReportingStatus.UploadMethod.REGULAR,
-                        mMockFlags);
+                        mMockFlags,
+                        mLogger);
         mSpyAggregateReportingJobHandler = Mockito.spy(mAggregateReportingJobHandler);
         mSpyDebugAggregateReportingJobHandler =
                 Mockito.spy(
@@ -151,7 +154,8 @@ public class AggregateReportingJobHandlerTest {
                                         mDatastoreManager,
                                         mockKeyManager,
                                         ReportingStatus.UploadMethod.REGULAR,
-                                        mMockFlags)
+                                        mMockFlags,
+                                        mLogger)
                                 .setIsDebugInstance(true));
 
         mMockitoSession =
@@ -548,7 +552,8 @@ public class AggregateReportingJobHandlerTest {
                         new FakeDatasoreManager(),
                         mockKeyManager,
                         ReportingStatus.UploadMethod.REGULAR,
-                        mMockFlags);
+                        mMockFlags,
+                        mLogger);
         mSpyAggregateReportingJobHandler = Mockito.spy(mAggregateReportingJobHandler);
 
         assertTrue(
