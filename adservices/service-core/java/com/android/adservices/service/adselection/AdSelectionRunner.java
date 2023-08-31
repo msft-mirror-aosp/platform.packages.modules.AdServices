@@ -272,11 +272,15 @@ public abstract class AdSelectionRunner {
      *
      * @param inputParams containing {@link AdSelectionConfig} and {@code callerPackageName}
      * @param callback used to notify the result back to the calling seller
+     * @param devContext the dev context associated with the caller package.
+     * @param fullCallback used to notify the caller when all non-blocking background tasks after ad
+     *     selection are complete. This is used only for testing.
      */
     public void runAdSelection(
             @NonNull AdSelectionInput inputParams,
             @NonNull AdSelectionCallback callback,
-            @NonNull DevContext devContext) {
+            @NonNull DevContext devContext,
+            @Nullable AdSelectionCallback fullCallback) {
         final int traceCookie = Tracing.beginAsyncSection(Tracing.RUN_AD_SELECTION);
         Objects.requireNonNull(inputParams);
         Objects.requireNonNull(callback);
@@ -296,32 +300,45 @@ public abstract class AdSelectionRunner {
                             },
                             mLightweightExecutorService);
 
-            ListenableFuture<DBAdSelection> dbAdSelectionFuture =
-                    FluentFuture.from(filterAndValidateRequestFuture)
-                            .transformAsync(
-                                    ignoredVoid ->
-                                            orchestrateAdSelection(
-                                                    inputParams.getAdSelectionConfig(),
-                                                    inputParams.getCallerPackageName()),
-                                    mLightweightExecutorService)
-                            .transform(
-                                    this::closeSuccessfulAdSelection, mLightweightExecutorService)
-                            .catching(
-                                    RuntimeException.class,
-                                    this::closeFailedAdSelectionWithRuntimeException,
-                                    mLightweightExecutorService)
-                            .catching(
-                                    AdServicesException.class,
-                                    this::closeFailedAdSelectionWithAdServicesException,
-                                    mLightweightExecutorService);
+            ListenableFuture<Pair<DBAdSelection, AdSelectionOrchestrationResult>>
+                    dbAdSelectionFuture =
+                            FluentFuture.from(filterAndValidateRequestFuture)
+                                    .transformAsync(
+                                            ignoredVoid ->
+                                                    orchestrateAdSelection(
+                                                            inputParams.getAdSelectionConfig(),
+                                                            inputParams.getCallerPackageName()),
+                                            mLightweightExecutorService)
+                                    .transform(
+                                            this::closeSuccessfulAdSelection,
+                                            mLightweightExecutorService)
+                                    .catching(
+                                            RuntimeException.class,
+                                            this::closeFailedAdSelectionWithRuntimeException,
+                                            mLightweightExecutorService)
+                                    .catching(
+                                            AdServicesException.class,
+                                            this::closeFailedAdSelectionWithAdServicesException,
+                                            mLightweightExecutorService);
 
             Futures.addCallback(
                     dbAdSelectionFuture,
-                    new FutureCallback<DBAdSelection>() {
+                    new FutureCallback<Pair<DBAdSelection, AdSelectionOrchestrationResult>>() {
                         @Override
-                        public void onSuccess(DBAdSelection result) {
+                        public void onSuccess(
+                                Pair<DBAdSelection, AdSelectionOrchestrationResult>
+                                        adSelectionAndOrchestrationResultPair) {
                             Tracing.endAsyncSection(Tracing.RUN_AD_SELECTION, traceCookie);
-                            notifySuccessToCaller(result, callback);
+                            notifySuccessToCaller(
+                                    adSelectionAndOrchestrationResultPair.first, callback);
+                            if (mDebugReporting.isEnabled()) {
+                                sendDebugReports(
+                                        adSelectionAndOrchestrationResultPair.second, fullCallback);
+                            } else {
+                                if (Objects.nonNull(fullCallback)) {
+                                    notifyEmptySuccessToCaller(fullCallback);
+                                }
+                            }
                         }
 
                         @Override
@@ -375,7 +392,8 @@ public abstract class AdSelectionRunner {
     }
 
     @Nullable
-    private DBAdSelection closeFailedAdSelectionWithRuntimeException(RuntimeException e) {
+    private Pair<DBAdSelection, AdSelectionOrchestrationResult>
+            closeFailedAdSelectionWithRuntimeException(RuntimeException e) {
         sLogger.v("Close failed ad selection and rethrow the RuntimeException %s.", e.toString());
         int resultCode = AdServicesLoggerUtil.getResultCodeFromException(e);
         mAdSelectionExecutionLogger.close(resultCode);
@@ -383,7 +401,8 @@ public abstract class AdSelectionRunner {
     }
 
     @Nullable
-    private DBAdSelection closeFailedAdSelectionWithAdServicesException(AdServicesException e) {
+    private Pair<DBAdSelection, AdSelectionOrchestrationResult>
+            closeFailedAdSelectionWithAdServicesException(AdServicesException e) {
         int resultCode = AdServicesLoggerUtil.getResultCodeFromException(e);
         mAdSelectionExecutionLogger.close(resultCode);
         sLogger.v(
@@ -394,9 +413,10 @@ public abstract class AdSelectionRunner {
     }
 
     @NonNull
-    private DBAdSelection closeSuccessfulAdSelection(@NonNull DBAdSelection dbAdSelection) {
+    private Pair<DBAdSelection, AdSelectionOrchestrationResult> closeSuccessfulAdSelection(
+            @NonNull Pair<DBAdSelection, AdSelectionOrchestrationResult> dbAdSelection) {
         mAdSelectionExecutionLogger.close(AdServicesStatusUtils.STATUS_SUCCESS);
-        return dbAdSelection;
+        return Pair.create(dbAdSelection.first, dbAdSelection.second);
     }
 
     private void notifySuccessToCaller(
@@ -482,9 +502,10 @@ public abstract class AdSelectionRunner {
      *     Selection
      * @return {@link AdSelectionResponse}
      */
-    private ListenableFuture<DBAdSelection> orchestrateAdSelection(
-            @NonNull final AdSelectionConfig adSelectionConfig,
-            @NonNull final String callerPackageName) {
+    private ListenableFuture<Pair<DBAdSelection, AdSelectionOrchestrationResult>>
+            orchestrateAdSelection(
+                    @NonNull final AdSelectionConfig adSelectionConfig,
+                    @NonNull final String callerPackageName) {
         sLogger.v("Beginning Ad Selection Orchestration");
 
         AdSelectionConfig adSelectionConfigInput = adSelectionConfig;
@@ -515,28 +536,8 @@ public abstract class AdSelectionRunner {
                                 dbAdSelection,
                                 saveResultToPersistence,
                                 mLightweightExecutorService);
-
-        if (mDebugReporting.isEnabled()) {
-            Futures.addCallback(
-                    resultAfterPersistence,
-                    new FutureCallback<Pair<DBAdSelection, AdSelectionOrchestrationResult>>() {
-                        @Override
-                        public void onSuccess(
-                                Pair<DBAdSelection, AdSelectionOrchestrationResult> result) {
-                            // Send debug reports after persisting results in non critical path.
-                            sendDebugReports(result.second);
-                        }
-
-                        @Override
-                        public void onFailure(Throwable t) {
-                            sLogger.v("Failed to send debug reports");
-                        }
-                    },
-                    mLightweightExecutorService);
-        }
-
         return FluentFuture.from(resultAfterPersistence)
-                .transform(savedResultPair -> savedResultPair.first, mLightweightExecutorService)
+                .transform(savedResultPair -> savedResultPair, mLightweightExecutorService)
                 .withTimeout(
                         mFlags.getAdSelectionOverallTimeoutMs(),
                         TimeUnit.MILLISECONDS,
@@ -553,7 +554,8 @@ public abstract class AdSelectionRunner {
             @NonNull ListenableFuture<List<DBCustomAudience>> buyerCustomAudience);
 
     @Nullable
-    private DBAdSelection handleTimeoutError(TimeoutException e) {
+    private Pair<DBAdSelection, AdSelectionOrchestrationResult> handleTimeoutError(
+            TimeoutException e) {
         sLogger.e(e, "Ad Selection exceeded time limit");
         throw new UncheckedTimeoutException(AD_SELECTION_TIMED_OUT);
     }
@@ -693,7 +695,8 @@ public abstract class AdSelectionRunner {
                 .build();
     }
 
-    private void sendDebugReports(AdSelectionOrchestrationResult result) {
+    private void sendDebugReports(
+            AdSelectionOrchestrationResult result, @Nullable AdSelectionCallback callback) {
         AdScoringOutcome topScoringAd = result.mWinningOutcome;
         AdScoringOutcome secondScoringAd = result.mSecondHighestScoredOutcome;
         DebugReportSenderStrategy sender = mDebugReporting.getSenderStrategy();
@@ -701,7 +704,23 @@ public abstract class AdSelectionRunner {
                 DebugReportProcessor.getUrisFromAdAuction(
                         result.mDebugReports,
                         PostAuctionSignals.create(topScoringAd, secondScoringAd)));
-        sender.flush();
+        ListenableFuture<Void> future = sender.flush();
+        if (Objects.nonNull(callback)) {
+            Futures.addCallback(
+                    future,
+                    new FutureCallback<Void>() {
+                        @Override
+                        public void onSuccess(Void result) {
+                            notifyEmptySuccessToCaller(callback);
+                        }
+
+                        @Override
+                        public void onFailure(Throwable throwable) {
+                            notifyFailureToCaller(callback, throwable);
+                        }
+                    },
+                    mLightweightExecutorService);
+        }
     }
 
     static class AdSelectionOrchestrationResult {
