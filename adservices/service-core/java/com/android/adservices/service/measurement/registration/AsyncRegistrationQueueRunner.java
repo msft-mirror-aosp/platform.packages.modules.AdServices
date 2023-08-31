@@ -44,6 +44,7 @@ import com.android.adservices.service.measurement.attribution.TriggerContentProv
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
+import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -65,6 +66,7 @@ public class AsyncRegistrationQueueRunner {
     private final DebugReportApi mDebugReportApi;
     private final SourceNoiseHandler mSourceNoiseHandler;
     private final Flags mFlags;
+    private final AdServicesLogger mLogger;
 
     private AsyncRegistrationQueueRunner(Context context) {
         mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
@@ -74,6 +76,7 @@ public class AsyncRegistrationQueueRunner {
         mFlags = FlagsFactory.getFlags();
         mDebugReportApi = new DebugReportApi(context, mFlags);
         mSourceNoiseHandler = new SourceNoiseHandler(mFlags);
+        mLogger = AdServicesLoggerImpl.getInstance();
     }
 
     @VisibleForTesting
@@ -85,6 +88,27 @@ public class AsyncRegistrationQueueRunner {
             DebugReportApi debugReportApi,
             SourceNoiseHandler sourceNoiseHandler,
             Flags flags) {
+        this(
+                contentResolver,
+                asyncSourceFetcher,
+                asyncTriggerFetcher,
+                datastoreManager,
+                debugReportApi,
+                sourceNoiseHandler,
+                flags,
+                AdServicesLoggerImpl.getInstance());
+    }
+
+    @VisibleForTesting
+    public AsyncRegistrationQueueRunner(
+            ContentResolver contentResolver,
+            AsyncSourceFetcher asyncSourceFetcher,
+            AsyncTriggerFetcher asyncTriggerFetcher,
+            DatastoreManager datastoreManager,
+            DebugReportApi debugReportApi,
+            SourceNoiseHandler sourceNoiseHandler,
+            Flags flags,
+            AdServicesLogger logger) {
         mAsyncSourceFetcher = asyncSourceFetcher;
         mAsyncTriggerFetcher = asyncTriggerFetcher;
         mDatastoreManager = datastoreManager;
@@ -92,6 +116,7 @@ public class AsyncRegistrationQueueRunner {
         mDebugReportApi = debugReportApi;
         mSourceNoiseHandler = sourceNoiseHandler;
         mFlags = flags;
+        mLogger = logger;
     }
 
     /**
@@ -178,10 +203,7 @@ public class AsyncRegistrationQueueRunner {
         }
 
         FetcherUtil.emitHeaderMetrics(
-                FlagsFactory.getFlags(),
-                AdServicesLoggerImpl.getInstance(),
-                asyncRegistration,
-                asyncFetchStatus);
+                FlagsFactory.getFlags(), mLogger, asyncRegistration, asyncFetchStatus);
     }
 
     /** Visible only for testing. */
@@ -234,10 +256,7 @@ public class AsyncRegistrationQueueRunner {
         }
 
         FetcherUtil.emitHeaderMetrics(
-                FlagsFactory.getFlags(),
-                AdServicesLoggerImpl.getInstance(),
-                asyncRegistration,
-                asyncFetchStatus);
+                FlagsFactory.getFlags(), mLogger, asyncRegistration, asyncFetchStatus);
     }
 
     /** Visible only for testing. */

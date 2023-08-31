@@ -48,6 +48,7 @@ import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSession;
 
@@ -94,6 +95,7 @@ public class EventReportingJobHandlerTest {
     private StaticMockitoSession mMockitoSession;
 
     @Mock Flags mFlags;
+    @Mock AdServicesLogger mLogger;
 
     EventReportingJobHandler mEventReportingJobHandler;
     EventReportingJobHandler mSpyEventReportingJobHandler;
@@ -134,11 +136,13 @@ public class EventReportingJobHandlerTest {
         doReturn(false).when(mFlags).getMeasurementEnableReportingJobsThrowCryptoException();
         doReturn(false).when(mFlags).getMeasurementEnableReportingJobsThrowUnaccountedException();
         mEventReportingJobHandler =
-                new EventReportingJobHandler(mEnrollmentDao, mDatastoreManager, mFlags);
+                new EventReportingJobHandler(
+                        mEnrollmentDao, mDatastoreManager, null, mFlags, mLogger);
         mSpyEventReportingJobHandler = Mockito.spy(mEventReportingJobHandler);
         mSpyDebugEventReportingJobHandler =
                 Mockito.spy(
-                        new EventReportingJobHandler(mEnrollmentDao, mDatastoreManager, mFlags)
+                        new EventReportingJobHandler(
+                                        mEnrollmentDao, mDatastoreManager, null, mFlags, mLogger)
                                 .setIsDebugInstance(true));
     }
 
