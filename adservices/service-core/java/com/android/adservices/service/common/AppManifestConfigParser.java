@@ -34,11 +34,11 @@ import java.util.List;
 public class AppManifestConfigParser {
     private static final String TAG_AD_SERVICES_CONFIG = "ad-services-config";
     private static final String TAG_INCLUDES_SDK_LIBRARY = "includes-sdk-library";
-    private static final String TAG_ATTRIBUTION = "attribution";
-    private static final String TAG_CUSTOM_AUDIENCES = "custom-audiences";
-    private static final String TAG_TOPICS = "topics";
-    private static final String TAG_ADID = "adid";
-    private static final String TAG_APPSETID = "appsetid";
+    static final String TAG_ATTRIBUTION = "attribution";
+    static final String TAG_CUSTOM_AUDIENCES = "custom-audiences";
+    static final String TAG_TOPICS = "topics";
+    static final String TAG_ADID = "adid";
+    static final String TAG_APPSETID = "appsetid";
     private static final String ATTR_ALLOW_ALL_TO_ACCESS = "allowAllToAccess";
     private static final String ATTR_ALLOW_AD_PARTNERS_TO_ACCESS = "allowAdPartnersToAccess";
     private static final String ATTR_SDK_NAME = "name";

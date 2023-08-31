@@ -38,6 +38,8 @@ import org.xmlpull.v1.XmlPullParserException;
 @SmallTest
 public final class AppManifestConfigParserTest {
 
+    private static final String TAG = AppManifestConfigParserTest.class.getSimpleName();
+
     public @Rule final Expect expect = Expect.create();
 
     private final Context mContext = ApplicationProvider.getApplicationContext();
@@ -199,35 +201,40 @@ public final class AppManifestConfigParserTest {
                 .that(appManifestConfig)
                 .isNotNull();
 
-        expect.withMessage("getIncludesSdkLibraryConfig()")
-                .that(appManifestConfig.getIncludesSdkLibraryConfig())
-                .isNotNull();
+        AppManifestIncludesSdkLibraryConfig sdkLibrary =
+                appManifestConfig.getIncludesSdkLibraryConfig();
+        expect.withMessage("getIncludesSdkLibraryConfig()").that(sdkLibrary).isNotNull();
         expect.withMessage("getIncludesSdkLibraryConfig().getIncludesSdkLibraries()")
-                .that(appManifestConfig.getIncludesSdkLibraryConfig().getIncludesSdkLibraries())
+                .that(sdkLibrary.getIncludesSdkLibraries())
                 .isEmpty();
-        expect.withMessage("getAttributionConfig()")
-                .that(appManifestConfig.getAttributionConfig())
-                .isNull();
+
+        AppManifestAttributionConfig attributionConfig = appManifestConfig.getAttributionConfig();
+        expect.withMessage("getAttributionConfig()").that(attributionConfig).isNull();
         expect.withMessage("isAllowedAttributionAccess()")
                 .that(appManifestConfig.isAllowedAttributionAccess("not actually there"))
                 .isFalse();
-        expect.withMessage("getCustomAudiencesConfig()")
-                .that(appManifestConfig.getCustomAudiencesConfig())
-                .isNull();
+
+        AppManifestCustomAudiencesConfig customAudiencesConfig =
+                appManifestConfig.getCustomAudiencesConfig();
+        expect.withMessage("getCustomAudiencesConfig()").that(customAudiencesConfig).isNull();
         expect.withMessage("isAllowedCustomAudiencesAccess()")
                 .that(appManifestConfig.isAllowedCustomAudiencesAccess("not actually there"))
                 .isFalse();
-        expect.withMessage("getTopicsConfig()").that(appManifestConfig.getTopicsConfig()).isNull();
+
+        AppManifestTopicsConfig topicsConfig = appManifestConfig.getTopicsConfig();
+        expect.withMessage("getTopicsConfig()").that(topicsConfig).isNull();
         expect.withMessage("isAllowedTopicsAccess()")
                 .that(appManifestConfig.isAllowedTopicsAccess("not actually there"))
                 .isFalse();
-        expect.withMessage("getAdIdConfig()").that(appManifestConfig.getAdIdConfig()).isNull();
+
+        AppManifestAdIdConfig adIdConfig = appManifestConfig.getAdIdConfig();
+        expect.withMessage("getAdIdConfig()").that(adIdConfig).isNull();
         expect.withMessage("isAllowedAdIdAccess()")
                 .that(appManifestConfig.isAllowedAdIdAccess("not actually there"))
                 .isFalse();
-        expect.withMessage("getAppSetIdConfig()")
-                .that(appManifestConfig.getAppSetIdConfig())
-                .isNull();
+
+        AppManifestAppSetIdConfig appSetIdConfig = appManifestConfig.getAppSetIdConfig();
+        expect.withMessage("getAppSetIdConfig()").that(appSetIdConfig).isNull();
         expect.withMessage("isAllowedAppSetIdAccess()")
                 .that(appManifestConfig.isAllowedAppSetIdAccess("not actually there"))
                 .isFalse();
