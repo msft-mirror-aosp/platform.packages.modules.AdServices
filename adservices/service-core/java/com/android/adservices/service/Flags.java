@@ -3385,4 +3385,12 @@ public interface Flags {
     default boolean isU18UxDetentionChannelEnabled() {
         return IS_U18_UX_DETENTION_CHANNEL_ENABLED_DEFAULT;
     }
+
+    /** U18 supervised account flow is enabled by default. */
+    boolean IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT = true;
+
+    /** Returns whether the U18 supervised account is enabled. */
+    default boolean isU18SupervisedAccountEnabled() {
+        return IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT;
+    }
 }
