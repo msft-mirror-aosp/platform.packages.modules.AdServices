@@ -17,13 +17,19 @@
 package com.android.tests.sdksandbox;
 
 import android.Manifest;
+import android.app.sdksandbox.LoadSdkException;
+import android.app.sdksandbox.SdkSandboxManager;
+import android.app.sdksandbox.testutils.EmptyActivity;
+import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
+import android.os.Bundle;
 import android.os.UserHandle;
 
+import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.AdServicesCommon;
@@ -60,11 +66,18 @@ public class SdkSandboxSmallModuleTestApp {
     @Rule public final Expect mExpect = Expect.create();
 
     private Context mContext = InstrumentationRegistry.getInstrumentation().getContext();
+    private static final String SDK_NAME = "com.android.emptysdkprovider";
+    private SdkSandboxManager mSdkSandboxManager;
+
+    /** This rule is defined to start an activity in the foreground to call the sandbox APIs */
+    @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(EmptyActivity.class);
 
     @Before
     public void setup() {
         InstallUtils.adoptShellPermissionIdentity(
                 Manifest.permission.INSTALL_PACKAGES, Manifest.permission.DELETE_PACKAGES);
+        mSdkSandboxManager = mContext.getSystemService(SdkSandboxManager.class);
+        mRule.getScenario();
     }
 
     @After
@@ -95,7 +108,7 @@ public class SdkSandboxSmallModuleTestApp {
     }
 
     @Test
-    public void testVerifyAdServicesAreUnavailable_preSmallModuleInstall() throws Exception {
+    public void testVerifyAdServicesAreAvailable_preSmallModuleInstall() throws Exception {
         // Before small module is installed, all ad services should be available
         for (String service : AD_SERVICES) {
             mExpect.withMessage("%s is available", service)
@@ -106,12 +119,31 @@ public class SdkSandboxSmallModuleTestApp {
 
     @Test
     public void testVerifyAdServicesAreUnavailable_postSmallModuleInstall() throws Exception {
-        // Before small module is installed, all ad services should be unavailable
+        // After small module is installed, all ad services should be unavailable
         for (String service : AD_SERVICES) {
             mExpect.withMessage("%s is available", service)
                     .that(isAdServiceAvailable(service))
                     .isFalse();
         }
+    }
+
+    @Test
+    public void testLoadSdkWithAdServiceApk() {
+        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
+        callback.assertLoadSdkIsSuccessful();
+    }
+
+    @Test
+    public void testLoadSdkWithoutAdServiceApk() {
+        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
+        callback.assertLoadSdkIsUnsuccessful();
+
+        LoadSdkException loadSdkException = callback.getLoadSdkException();
+        mExpect.that(loadSdkException.getLoadSdkErrorCode())
+                .isEqualTo(SdkSandboxManager.LOAD_SDK_SDK_SANDBOX_DISABLED);
+        mExpect.that(loadSdkException.getMessage()).isEqualTo("SDK sandbox is disabled");
     }
 
     /** Query PackageManager for exported services from AdServices APK. */

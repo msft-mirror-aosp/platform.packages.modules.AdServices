@@ -111,10 +111,9 @@ public class AsyncSourceFetcher {
             Source.Builder builder,
             String enrollmentId)
             throws JSONException {
-        if (!hasRequiredParams(json)) {
-            throw new JSONException(
-                    String.format(
-                            "Expected %s and a destination", SourceHeaderContract.SOURCE_EVENT_ID));
+        if (json.isNull(SourceHeaderContract.DESTINATION)
+                && json.isNull(SourceHeaderContract.WEB_DESTINATION)) {
+            throw new JSONException("Expected a destination");
         }
         long sourceEventTime = asyncRegistration.getRequestTime();
         UnsignedLong eventId = new UnsignedLong(0L);
@@ -194,8 +193,8 @@ public class AsyncSourceFetcher {
                         extractValidNumberInRange(
                                 new UnsignedLong(json.getString(
                                         SourceHeaderContract.AGGREGATABLE_REPORT_WINDOW)),
-                                new UnsignedLong(
-                                        MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
+                                new UnsignedLong(mFlags
+                                        .getMeasurementMinimumAggregatableReportWindowInSeconds()),
                                 new UnsignedLong(
                                         MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS));
                 // Relies on aggregateReportWindowUnsigned not using the 64th bit.
@@ -694,11 +693,6 @@ public class AsyncSourceFetcher {
         }
     }
 
-    private static boolean hasRequiredParams(JSONObject json) {
-        return !json.isNull(SourceHeaderContract.DESTINATION)
-                || !json.isNull(SourceHeaderContract.WEB_DESTINATION);
-    }
-
     /** Provided a testing hook. */
     @NonNull
     @VisibleForTesting
@@ -718,6 +712,11 @@ public class AsyncSourceFetcher {
             AsyncRedirect asyncRedirect) {
         HttpURLConnection urlConnection = null;
         Map<String, List<String>> headers;
+        if (!asyncRegistration.getRegistrationUri().getScheme().equalsIgnoreCase("https")) {
+            LogUtil.d("Invalid scheme for registrationUri.");
+            asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.INVALID_URL);
+            return Optional.empty();
+        }
         // TODO(b/276825561): Fix code duplication between fetchSource & fetchTrigger request flow
         try {
             urlConnection =

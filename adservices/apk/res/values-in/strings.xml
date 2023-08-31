@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Mengizinkan aplikasi mengakses AdServices Consent API."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Akses ke Ad ID API"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Mengizinkan aplikasi mengakses Ad ID API."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"Akses ke AdServices Cobalt Upload API"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Mengizinkan aplikasi mengakses AdServices Cobalt Upload API."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Akses ke App Set ID API"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Mengizinkan aplikasi mengakses App Set ID API."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Akses ke Consent Service API"</string>
@@ -40,7 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Mengizinkan aplikasi mengakses enablement state API AdService."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Akses ke API AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Mengizinkan aplikasi mengakses API AdServicesManager."</string>
-    <string name="app_label" msgid="5985320129629013968">"Sistem Android"</string>
+    <string name="app_label" msgid="5844694701336604490">"Privasi Iklan"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Bergabung ke privasi iklan Android beta"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android sedang mengembangkan cara yang lebih pribadi bagi aplikasi untuk menampilkan iklan kepada Anda"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Pelajari lebih lanjut"</string>
@@ -304,7 +306,7 @@
     <string name="topic10071" msgid="1288722040962471254">"Mobil &amp; Kendaraan"</string>
     <string name="topic10072" msgid="9155509766616567261">"Truk &amp; Trailer Kargo"</string>
     <string name="topic10073" msgid="3748676231341513738">"Kendaraan Klasik"</string>
-    <string name="topic10074" msgid="2040911547161463227">"Kendaraan Modifikasi &amp; Sport"</string>
+    <string name="topic10074" msgid="2040911547161463227">"Kendaraan Modifikasi &amp; Performa Tinggi"</string>
     <string name="topic10075" msgid="1242538698445713796">"Harga Bahan Bakar &amp; Pengisian Bahan Bakar Kendaraan"</string>
     <string name="topic10076" msgid="8674225812339579627">"Kendaraan Bermotor (Menurut Jenis)"</string>
     <string name="topic10077" msgid="3577709810751953433">"Kendaraan Otonom"</string>

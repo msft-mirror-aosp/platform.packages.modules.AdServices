@@ -148,7 +148,7 @@
                 },
                 "attribution_config": [
                   {
-                    "source_network": "enrollment-id-www.ad-tech1.test",
+                    "source_network": "enrollment-id-ad-tech1.test",
                     "source_priority_range": {
                       "start": 1,
                       "end": 1000

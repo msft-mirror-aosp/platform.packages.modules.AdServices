@@ -16,9 +16,7 @@
 package com.android.adservices.service.measurement.registration;
 
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATABLE_TRIGGER_DATA;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_EVENT_TRIGGER_DATA;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_FILTERS;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_FILTER_MAPS_PER_FILTER_SET;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_VALUES_PER_ATTRIBUTION_FILTER;
@@ -244,7 +242,8 @@ public final class AsyncTriggerFetcherTest {
                                 APP_REGISTRATION_SURFACE_TYPE,
                                 SUCCESS_STATUS,
                                 UNKNOWN_REGISTRATION_FAILURE_TYPE,
-                                0)
+                                0,
+                                "")
                         .setAdTechDomain(null)
                         .build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
@@ -290,7 +289,8 @@ public final class AsyncTriggerFetcherTest {
                                 APP_REGISTRATION_SURFACE_TYPE,
                                 SUCCESS_STATUS,
                                 UNKNOWN_REGISTRATION_FAILURE_TYPE,
-                                0)
+                                0,
+                                "")
                         .setAdTechDomain(null)
                         .build();
         String wrappedFilters =
@@ -925,37 +925,6 @@ public final class AsyncTriggerFetcherTest {
     }
 
     // End tests for redirect types
-
-    @Test
-    public void testTriggerRequest_eventTriggerData_tooManyEntries() throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI);
-        StringBuilder tooManyEntries = new StringBuilder("[");
-        int i;
-        for (i = 0; i < MAX_ATTRIBUTION_EVENT_TRIGGER_DATA; i++) {
-            tooManyEntries.append("{\"trigger_data\": \"2\",\"priority\": \"101\"},");
-        }
-        tooManyEntries.append("{\"trigger_data\": \"2\",\"priority\": \"101\"}");
-        tooManyEntries.append("]");
-        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
-        when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mUrlConnection.getHeaderFields())
-                .thenReturn(
-                        Map.of(
-                                "Attribution-Reporting-Register-Trigger",
-                                List.of("{\"event_trigger_data\":" + tooManyEntries + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
-        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-        // Execution
-        Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
-        // Assertion
-        assertEquals(
-                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
-        assertFalse(fetch.isPresent());
-        verify(mUrlConnection, times(1)).setRequestMethod("POST");
-        verify(mFetcher, times(1)).openUrl(any());
-    }
 
     @Test
     public void fetchTrigger_eventTriggerDataNull_eventTriggerDataEqualsEmptyArray()
@@ -2930,6 +2899,21 @@ public final class AsyncTriggerFetcherTest {
     }
 
     @Test
+    public void registerTrigger_nonHttpsUrl_rejectsTrigger() throws Exception {
+        RegistrationRequest request = buildRequest(WebUtil.validUrl("http://foo.test"));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(
+                AsyncFetchStatus.ResponseStatus.INVALID_URL, asyncFetchStatus.getResponseStatus());
+        assertFalse(fetch.isPresent());
+    }
+
+    @Test
     public void testBadTriggerUrl() throws Exception {
         RegistrationRequest request = buildRequest(WebUtil.validUrl("bad-schema://foo.test"));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
@@ -3313,47 +3297,6 @@ public final class AsyncTriggerFetcherTest {
     }
 
     @Test
-    public void testBasicTriggerRequestWithAggregateTriggerData_rejectsTooManyDataKeys()
-            throws Exception {
-        StringBuilder tooManyKeys = new StringBuilder("[");
-        int i;
-        for (i = 0; i < 51; i++) {
-            tooManyKeys.append(
-                    String.format(
-                            "{\"key_piece\": \"0x15%1$s\",\"source_keys\":[\"campaign-%1$s\"]},",
-                            i));
-        }
-        tooManyKeys.append(
-                String.format(
-                        "{\"key_piece\": \"0x15%1$s\",\"source_keys\":[\"campaign-%1$s\"]}", i));
-        tooManyKeys.append("]");
-        RegistrationRequest request = buildRequest(TRIGGER_URI);
-        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
-        when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mUrlConnection.getHeaderFields())
-                .thenReturn(
-                        Map.of(
-                                "Attribution-Reporting-Register-Trigger",
-                                List.of(
-                                        "{"
-                                                + "\"aggregatable_trigger_data\": "
-                                                + tooManyKeys
-                                                + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
-        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-        // Execution
-        Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
-        // Assertion
-        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
-        assertEquals(
-                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
-        assertFalse(fetch.isPresent());
-        verify(mUrlConnection).setRequestMethod("POST");
-    }
-
-    @Test
     public void testBasicTriggerRequestWithAggregateValues() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         String aggregatableValues = "{\"campaignCounts\":32768,\"geoValue\":1644}";
@@ -3603,39 +3546,6 @@ public final class AsyncTriggerFetcherTest {
         // Execution
         Optional<Trigger> fetch = mFetcher.fetchTrigger(
                 appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
-        assertFalse(fetch.isPresent());
-        verify(mUrlConnection, times(1)).setRequestMethod("POST");
-        verify(mFetcher, times(1)).openUrl(any());
-    }
-
-    @Test
-    public void testTriggerRequestWithAggregateTriggerData_tooManyEntries() throws Exception {
-        StringBuilder tooManyEntries = new StringBuilder("[");
-        for (int i = 0; i < MAX_AGGREGATABLE_TRIGGER_DATA + 1; i++) {
-            tooManyEntries.append(
-                    String.format(
-                            "{\"key_piece\": \"0x15%1$s\",\"source_keys\":[\"campaign-%1$s\"]}",
-                            i));
-        }
-        tooManyEntries.append("]");
-        RegistrationRequest request = buildRequest(TRIGGER_URI);
-        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
-        when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mUrlConnection.getHeaderFields())
-                .thenReturn(
-                        Map.of(
-                                "Attribution-Reporting-Register-Trigger",
-                                List.of(
-                                        "{"
-                                                + "\"aggregatable_trigger_data\": "
-                                                + tooManyEntries
-                                                + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
-        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-        // Execution
-        Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
@@ -4785,7 +4695,8 @@ public final class AsyncTriggerFetcherTest {
                                 APP_REGISTRATION_SURFACE_TYPE,
                                 SUCCESS_STATUS,
                                 UNKNOWN_REGISTRATION_FAILURE_TYPE,
-                                0)
+                                0,
+                                "")
                         .setAdTechDomain(WebUtil.validUrl("https://foo.test"))
                         .build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));

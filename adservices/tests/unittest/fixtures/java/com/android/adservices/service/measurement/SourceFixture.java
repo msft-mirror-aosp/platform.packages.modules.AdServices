@@ -174,6 +174,17 @@ public final class SourceFixture {
         return new ReportSpec(triggerSpecsString, "3", getValidSource());
     }
 
+    public static ReportSpec getValidReportSpecCountBasedWithFewerState() throws JSONException {
+        String triggerSpecsString =
+                "[{\"trigger_data\": [1],"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": \"0\", "
+                        + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(2))
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": [1]}]";
+        return new ReportSpec(triggerSpecsString, "1", getValidSource());
+    }
+
     public static ReportSpec getValidReportSpecValueSum() throws JSONException {
         return new ReportSpec(getTriggerSpecValueSumEncodedJSONValidBaseline(), "3",
                 getValidSource());
@@ -185,6 +196,19 @@ public final class SourceFixture {
                     .setAttributedTriggers(new ArrayList<>())
                     .setFlexEventReportSpec(getValidReportSpecCountBased())
                     .setMaxEventLevelReports(getValidReportSpecCountBased().getMaxReports())
+                    .build();
+        } catch (JSONException e) {
+            return null;
+        }
+    }
+
+    public static Source getValidSourceWithFlexEventReportWithFewerState() {
+        try {
+            return getValidSourceBuilder()
+                    .setAttributedTriggers(new ArrayList<>())
+                    .setFlexEventReportSpec(getValidReportSpecCountBasedWithFewerState())
+                    .setMaxEventLevelReports(
+                            getValidReportSpecCountBasedWithFewerState().getMaxReports())
                     .build();
         } catch (JSONException e) {
             return null;

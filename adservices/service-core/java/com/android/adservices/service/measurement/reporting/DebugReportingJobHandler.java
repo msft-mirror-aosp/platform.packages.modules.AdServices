@@ -24,6 +24,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
+import com.android.adservices.service.Flags;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
@@ -33,16 +34,20 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 
 /** Class for handling debug reporting. */
 public class DebugReportingJobHandler {
 
     private final EnrollmentDao mEnrollmentDao;
     private final DatastoreManager mDatastoreManager;
+    private final Flags mFlags;
 
-    DebugReportingJobHandler(EnrollmentDao enrollmentDao, DatastoreManager datastoreManager) {
+    DebugReportingJobHandler(
+            EnrollmentDao enrollmentDao, DatastoreManager datastoreManager, Flags flags) {
         mEnrollmentDao = enrollmentDao;
         mDatastoreManager = datastoreManager;
+        mFlags = flags;
     }
 
     /** Finds all debug reports and attempts to upload them individually. */
@@ -98,8 +103,32 @@ public class DebugReportingJobHandler {
                 LogUtil.d("Sending debug report failed with http error");
                 return AdServicesStatusUtils.STATUS_IO_ERROR;
             }
+        } catch (IOException e) {
+            LogUtil.d(e, "Network error occurred when attempting to deliver debug report.");
+            // TODO(b/297579501): Log the error with ErrorLogUtil
+            return AdServicesStatusUtils.STATUS_IO_ERROR;
+        } catch (JSONException e) {
+            LogUtil.d(e, "Serialization error occurred at debug report delivery.");
+            // TODO(b/297579501): Log the error with ErrorLogUtil with the serialization error code
+            if (mFlags.getMeasurementEnableReportDeletionOnUnrecoverableException()) {
+                // Unrecoverable state - delete the report.
+                mDatastoreManager.runInTransaction(dao -> dao.deleteDebugReport(debugReportId));
+            }
+            if (mFlags.getMeasurementEnableReportingJobsThrowJsonException()
+                    && ThreadLocalRandom.current().nextFloat()
+                            < mFlags.getMeasurementThrowUnknownExceptionSamplingRate()) {
+                // JSONException is unexpected.
+                throw new IllegalStateException(
+                        "Serialization error occurred at event report delivery", e);
+            }
+            return AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } catch (Exception e) {
-            LogUtil.e(e, "Sending debug report error");
+            LogUtil.e(e, "Unexpected exception occurred when attempting to deliver debug report.");
+            if (mFlags.getMeasurementEnableReportingJobsThrowUnaccountedException()
+                    && ThreadLocalRandom.current().nextFloat()
+                            < mFlags.getMeasurementThrowUnknownExceptionSamplingRate()) {
+                throw e;
+            }
             return AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         }
     }

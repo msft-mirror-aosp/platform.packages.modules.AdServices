@@ -21,6 +21,29 @@ package android.adservices.appsetid {
 
 }
 
+package android.adservices.cobalt {
+
+  public abstract class AdServicesCobaltUploadService extends android.app.Service {
+    ctor public AdServicesCobaltUploadService();
+    method @Nullable public final android.os.IBinder onBind(@Nullable android.content.Intent);
+    method public abstract void onUploadEncryptedCobaltEnvelope(@NonNull android.adservices.cobalt.EncryptedCobaltEnvelopeParams);
+    field public static final String SERVICE_INTERFACE = "android.adservices.cobalt.AdServicesCobaltUploadService";
+  }
+
+  public final class EncryptedCobaltEnvelopeParams implements android.os.Parcelable {
+    ctor public EncryptedCobaltEnvelopeParams(int, @NonNull int, @NonNull byte[]);
+    method public int describeContents();
+    method @NonNull public byte[] getCipherText();
+    method @NonNull public int getEnvironment();
+    method @NonNull public int getKeyIndex();
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.cobalt.EncryptedCobaltEnvelopeParams> CREATOR;
+    field public static final int ENVIRONMENT_DEV = 1; // 0x1
+    field public static final int ENVIRONMENT_PROD = 0; // 0x0
+  }
+
+}
+
 package android.adservices.common {
 
   public class AdServicesCommonManager {
@@ -33,6 +56,7 @@ package android.adservices.common {
   public class AdServicesPermissions {
     field public static final String ACCESS_ADSERVICES_STATE = "android.permission.ACCESS_ADSERVICES_STATE";
     field public static final String ACCESS_ADSERVICES_STATE_COMPAT = "android.permission.ACCESS_ADSERVICES_STATE_COMPAT";
+    field public static final String ACCESS_PRIVILEGED_ADSERVICES_COBALT_UPLOAD = "android.permission.ACCESS_PRIVILEGED_AD_SERVICES_COBALT_UPLOAD";
     field public static final String ACCESS_PRIVILEGED_AD_ID = "android.permission.ACCESS_PRIVILEGED_AD_ID";
     field public static final String ACCESS_PRIVILEGED_APP_SET_ID = "android.permission.ACCESS_PRIVILEGED_APP_SET_ID";
     field public static final String MODIFY_ADSERVICES_STATE = "android.permission.MODIFY_ADSERVICES_STATE";

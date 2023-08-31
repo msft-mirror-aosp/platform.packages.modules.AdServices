@@ -27,6 +27,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -63,6 +64,7 @@ import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -159,6 +161,36 @@ public class AggregateReportingJobServiceTest {
                     // Verify logging methods are invoked.
                     verify(mSpyLogger).persistJobExecutionData(anyInt(), anyLong());
                     verify(mSpyLogger).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+                });
+    }
+
+    @Test
+    public void onStartJob_killSwitchOff_unlockingCheck() throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    disableKillSwitch();
+                    CountDownLatch countDownLatch = createCountDownLatch();
+
+                    // Execute
+                    mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+                    countDownLatch.await();
+                    // TODO (b/298021244): replace sleep() with a better approach
+                    Thread.sleep(WAIT_IN_MILLIS);
+                    countDownLatch = createCountDownLatch();
+                    boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+                    countDownLatch.await();
+                    // TODO (b/298021244): replace sleep() with a better approach
+                    Thread.sleep(WAIT_IN_MILLIS);
+
+                    // Validate
+                    assertTrue(result);
+
+                    // Verify the job ran successfully twice
+                    verify(mMockDatastoreManager, times(2)).runInTransactionWithResult(any());
+                    verify(mSpyService, times(2)).jobFinished(any(), anyBoolean());
+                    verify(mMockJobScheduler, never())
+                            .cancel(eq(MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID));
                 });
     }
 
@@ -403,8 +435,6 @@ public class AggregateReportingJobServiceTest {
             doReturn(Mockito.mock(Context.class)).when(mSpyService).getApplicationContext();
             ExtendedMockito.doReturn(TimeUnit.HOURS.toMillis(4))
                     .when(AdServicesConfig::getMeasurementAggregateMainReportingJobPeriodMs);
-            ExtendedMockito.doReturn("http://example.test")
-                    .when(AdServicesConfig::getMeasurementAggregateEncryptionKeyCoordinatorUrl);
             ExtendedMockito.doReturn(mock(EnrollmentDao.class))
                     .when(() -> EnrollmentDao.getInstance(any()));
             ExtendedMockito.doReturn(mMockDatastoreManager)
@@ -439,5 +469,16 @@ public class AggregateReportingJobServiceTest {
         ExtendedMockito.doReturn(value)
                 .when(mMockFlags)
                 .getMeasurementJobAggregateReportingKillSwitch();
+    }
+
+    private CountDownLatch createCountDownLatch() {
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        doAnswer(i -> countDown(countDownLatch)).when(mSpyService).jobFinished(any(), anyBoolean());
+        return countDownLatch;
+    }
+
+    private Object countDown(CountDownLatch countDownLatch) {
+        countDownLatch.countDown();
+        return null;
     }
 }

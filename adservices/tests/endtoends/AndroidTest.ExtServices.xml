@@ -54,12 +54,6 @@
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
         <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
     </target_preparer>
-    <target_preparer class="com.android.tradefed.targetprep.RebootTargetPreparer">
-        <option name="pre-reboot" value="true"/>
-    </target_preparer>
-    <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
-        <option name="run-command" value="am wait-for-broadcast-idle"/>
-    </target_preparer>
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
         <option name="hidden-api-checks" value="false" /> <!-- Allow hidden API uses -->

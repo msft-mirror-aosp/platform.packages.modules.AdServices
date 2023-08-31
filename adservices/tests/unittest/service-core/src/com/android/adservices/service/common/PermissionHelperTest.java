@@ -62,7 +62,12 @@ public class PermissionHelperTest {
         MockitoAnnotations.initMocks(this);
         PackageInfo packageInfoGrant = new PackageInfo();
         packageInfoGrant.requestedPermissions =
-                new String[] {ACCESS_ADSERVICES_AD_ID, ACCESS_ADSERVICES_ATTRIBUTION};
+                new String[] {
+                    ACCESS_ADSERVICES_TOPICS,
+                    ACCESS_ADSERVICES_AD_ID,
+                    ACCESS_ADSERVICES_ATTRIBUTION,
+                    ACCESS_ADSERVICES_CUSTOM_AUDIENCE
+                };
         doReturn(packageInfoGrant)
                 .when(mMockPackageManagerGrant)
                 .getPackageInfo(anyString(), eq(PackageManager.GET_PERMISSIONS));
@@ -119,7 +124,10 @@ public class PermissionHelperTest {
     @Test
     public void testHasPermission_notUseSandboxCheck() {
         Context mockContext = getMockContext(ACCESS_ADSERVICES_TOPICS, mMockPackageManagerGrant);
-        assertThat(PermissionHelper.hasTopicsPermission(mockContext, APP_CALLING_UID)).isTrue();
+        assertThat(
+                        PermissionHelper.hasTopicsPermission(
+                                mockContext, APP_PACKAGE_NAME, APP_CALLING_UID))
+                .isTrue();
         Context mockContext1 = getMockContext(ACCESS_ADSERVICES_AD_ID, mMockPackageManagerGrant);
         assertThat(
                         PermissionHelper.hasAdIdPermission(
@@ -131,20 +139,25 @@ public class PermissionHelperTest {
                 .isTrue();
         Context mockContext3 =
                 getMockContext(ACCESS_ADSERVICES_CUSTOM_AUDIENCE, mMockPackageManagerGrant);
-        assertThat(PermissionHelper.hasCustomAudiencesPermission(mockContext3)).isTrue();
+        assertThat(PermissionHelper.hasCustomAudiencesPermission(mockContext3, APP_PACKAGE_NAME))
+                .isTrue();
     }
 
     @Test
     public void testNotHasPermission() {
         Context mockContext = getMockContext(FAKE_PERMISSION, mMockPackageManagerDeny);
-        assertThat(PermissionHelper.hasTopicsPermission(mockContext, APP_CALLING_UID)).isFalse();
+        assertThat(
+                        PermissionHelper.hasTopicsPermission(
+                                mockContext, APP_PACKAGE_NAME, APP_CALLING_UID))
+                .isFalse();
         assertThat(
                         PermissionHelper.hasAdIdPermission(
                                 mockContext, APP_PACKAGE_NAME, APP_CALLING_UID))
                 .isFalse();
         assertThat(PermissionHelper.hasAttributionPermission(mockContext, APP_PACKAGE_NAME))
                 .isFalse();
-        assertThat(PermissionHelper.hasCustomAudiencesPermission(mockContext)).isFalse();
+        assertThat(PermissionHelper.hasCustomAudiencesPermission(mockContext, APP_PACKAGE_NAME))
+                .isFalse();
         assertThat(PermissionHelper.hasAccessAdServicesStatePermission(mockContext)).isFalse();
         assertThat(PermissionHelper.hasModifyAdServicesStatePermission(mockContext)).isFalse();
     }
@@ -165,7 +178,9 @@ public class PermissionHelperTest {
                 .thenReturn(PackageManager.PERMISSION_GRANTED);
 
         Context mockContext = getMockContext(ACCESS_ADSERVICES_TOPICS, mMockPackageManagerGrant);
-        assertThat(PermissionHelper.hasTopicsPermission(mockContext, SANDBOX_SDK_CALLING_UID))
+        assertThat(
+                        PermissionHelper.hasTopicsPermission(
+                                mockContext, APP_PACKAGE_NAME, SANDBOX_SDK_CALLING_UID))
                 .isTrue();
 
         // TODO(b/240718367): Check Sdk permission for adid.
@@ -199,7 +214,9 @@ public class PermissionHelperTest {
                 .thenReturn(PackageManager.PERMISSION_DENIED);
 
         Context mockContext = getMockContext(FAKE_PERMISSION, mMockPackageManagerDeny);
-        assertThat(PermissionHelper.hasTopicsPermission(mockContext, SANDBOX_SDK_CALLING_UID))
+        assertThat(
+                        PermissionHelper.hasTopicsPermission(
+                                mockContext, APP_PACKAGE_NAME, SANDBOX_SDK_CALLING_UID))
                 .isFalse();
 
         // TODO(b/240718367): Check Sdk permission for Adid.

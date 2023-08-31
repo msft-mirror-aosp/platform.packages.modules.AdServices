@@ -410,7 +410,7 @@ public final class ConsentManager {
     public boolean getFledgeDefaultConsent() {
         mReadWriteLock.readLock().lock();
         try {
-            Boolean fledgeDefaultConsent = mDatastore.get(DEFAULT_CONSENT);
+            Boolean fledgeDefaultConsent = mDatastore.get(FLEDGE_DEFAULT_CONSENT);
             return fledgeDefaultConsent != null ? fledgeDefaultConsent : false;
         } finally {
             mReadWriteLock.readLock().unlock();
@@ -425,7 +425,7 @@ public final class ConsentManager {
     public boolean getMeasurementDefaultConsent() {
         mReadWriteLock.readLock().lock();
         try {
-            Boolean measurementDefaultConsent = mDatastore.get(DEFAULT_CONSENT);
+            Boolean measurementDefaultConsent = mDatastore.get(MEASUREMENT_DEFAULT_CONSENT);
             return measurementDefaultConsent != null ? measurementDefaultConsent : false;
         } finally {
             mReadWriteLock.readLock().unlock();
