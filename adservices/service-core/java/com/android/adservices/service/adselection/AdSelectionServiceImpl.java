@@ -379,6 +379,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                         mFlags
                                                 ::getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount))
                         .build();
+        AuctionResultValidator auctionResultValidator =
+                new AuctionResultValidator(
+                        mFledgeAuthorizationFilter,
+                        BinderFlagReader.readFlag(mFlags::getDisableFledgeEnrollmentCheck));
         mLightweightExecutor.execute(
                 () -> {
                     PersistAdSelectionResultRunner runner =
@@ -397,7 +401,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     limits,
                                     mAdFilteringFeatureFactory.getAdCounterHistogramUpdater(
                                             mAdSelectionEntryDao,
-                                            auctionServerEnabledForUpdateHistogram));
+                                            auctionServerEnabledForUpdateHistogram),
+                                    auctionResultValidator);
                     runner.run(inputParams, callback);
                     Tracing.endAsyncSection(Tracing.PERSIST_AD_SELECTION_RESULT, traceCookie);
                 });
