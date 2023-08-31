@@ -3166,6 +3166,14 @@ public interface Flags {
         return MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION;
     }
 
+    /** Set the sampling rate to 100% for unknown exceptions to be re-thrown. */
+    float MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE = 1.0f;
+
+    /** Sampling rate to decide whether to throw unknown exceptions for measurement. */
+    default float getMeasurementThrowUnknownExceptionSamplingRate() {
+        return MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE;
+    }
+
     /** Default U18 UX feature flag.. */
     boolean DEFAULT_U18_UX_ENABLED = false;
 

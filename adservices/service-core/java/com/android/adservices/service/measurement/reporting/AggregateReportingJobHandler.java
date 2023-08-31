@@ -43,6 +43,7 @@ import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -258,7 +259,9 @@ public class AggregateReportingJobHandler {
                                         AggregateReport.Status.MARKED_TO_DELETE));
             }
 
-            if (mFlags.getMeasurementEnableReportingJobsThrowJsonException()) {
+            if (mFlags.getMeasurementEnableReportingJobsThrowJsonException()
+                    && ThreadLocalRandom.current().nextFloat()
+                            < mFlags.getMeasurementThrowUnknownExceptionSamplingRate()) {
                 // JSONException is unexpected.
                 throw new IllegalStateException(
                         "Serialization error occurred at aggregate report delivery", e);
@@ -268,14 +271,18 @@ public class AggregateReportingJobHandler {
             LogUtil.e(e, e.toString());
             // TODO(b/297579501): Update the atom and the status to indicate encryption error
             reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.UNKNOWN);
-            if (mFlags.getMeasurementEnableReportingJobsThrowCryptoException()) {
+            if (mFlags.getMeasurementEnableReportingJobsThrowCryptoException()
+                    && ThreadLocalRandom.current().nextFloat()
+                            < mFlags.getMeasurementThrowUnknownExceptionSamplingRate()) {
                 throw e;
             }
             return AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } catch (Exception e) {
             LogUtil.e(e, e.toString());
             reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.UNKNOWN);
-            if (mFlags.getMeasurementEnableReportingJobsThrowUnaccountedException()) {
+            if (mFlags.getMeasurementEnableReportingJobsThrowUnaccountedException()
+                    && ThreadLocalRandom.current().nextFloat()
+                            < mFlags.getMeasurementThrowUnknownExceptionSamplingRate()) {
                 throw e;
             }
             return AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
