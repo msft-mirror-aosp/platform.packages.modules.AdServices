@@ -1054,6 +1054,15 @@ public interface Flags {
                 && FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION;
     }
 
+    boolean FLEDGE_AUCTION_SERVER_ENABLE_AD_FILTER_IN_GET_AD_SELECTION_DATA = true;
+
+    /**
+     * @return whether to enable ad filtering in get ad selection data API.
+     */
+    default boolean getFledgeAuctionServerEnableAdFilterInGetAdSelectionData() {
+        return FLEDGE_AUCTION_SERVER_ENABLE_AD_FILTER_IN_GET_AD_SELECTION_DATA;
+    }
+
     ImmutableList<Integer> FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES =
             ImmutableList.of(0, 1024, 2048, 4096, 8192, 16384, 32768, 65536);
 

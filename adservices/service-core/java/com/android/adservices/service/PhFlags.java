@@ -2019,6 +2019,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeAuctionServerEnableAdFilterInGetAdSelectionData() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLE_AD_FILTER_IN_GET_AD_SELECTION_DATA,
+                FLEDGE_AUCTION_SERVER_ENABLE_AD_FILTER_IN_GET_AD_SELECTION_DATA);
+    }
+
+    @Override
     public String getFledgeAuctionServerAuctionKeyFetchUri() {
         return DeviceConfig.getString(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -3856,6 +3864,12 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION
                         + " = "
                         + getFledgeAuctionServerEnabledForSelectAdsMediation());
+        writer.println(
+                "\t"
+                        + FlagsConstants
+                                .KEY_FLEDGE_AUCTION_SERVER_ENABLE_AD_FILTER_IN_GET_AD_SELECTION_DATA
+                        + " = "
+                        + getFledgeAuctionServerEnableAdFilterInGetAdSelectionData());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI
