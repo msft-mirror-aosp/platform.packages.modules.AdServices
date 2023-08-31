@@ -206,6 +206,10 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1 =
             "measurement_enable_ara_deduplication_alignment_v1";
+    public static final String KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS =
+            "measurement_debug_reporting_fallback_job_period_ms";
+    public static final String KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS =
+            "measurement_verbose_debug_reporting_fallback_job_period_ms";
 
     public static final String KEY_MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING =
             "measurement_enable_app_package_name_logging";
@@ -353,10 +357,22 @@ public final class FlagsConstants {
     // Event-level debug reporting for Protected Audience.
     public static final String KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED =
             "fledge_event_level_debug_reporting_enabled";
+    public static final String KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORT_SEND_IMMEDIATELY =
+            "fledge_event_level_debug_report_send_immediately";
     public static final String KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_BATCH_DELAY_SECONDS =
             "fledge_event_level_debug_reporting_batch_delay_seconds";
     public static final String KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_MAX_ITEMS_PER_BATCH =
             "fledge_event_level_debug_reporting_max_items_per_batch";
+    public static final String KEY_FLEDGE_DEBUG_REPORTI_SENDER_JOB_NETWORK_CONNECT_TIMEOUT_MS =
+            "fledge_debug_report_sender_job_network_connect_timeout_ms";
+    public static final String KEY_FLEDGE_DEBUG_REPORTI_SENDER_JOB_NETWORK_READ_TIMEOUT_MS =
+            "fledge_debug_report_sender_job_network_read_timeout_ms";
+    public static final String KEY_FLEDGE_DEBUG_REPORTI_SENDER_JOB_MAX_TIMEOUT_MS =
+            "fledge_debug_report_sender_job_max_timeout_ms";
+    public static final String KEY_FLEDGE_DEBUG_REPORT_SENDER_JOB_PERIOD_MS =
+            "fledge_debug_report_sender_job_period_ms";
+    public static final String KEY_FLEDGE_DEBUG_REPORT_SENDER_JOB_FLEX_MS =
+            "fledge_debug_report_sender_job_flex_ms";
 
     // Server-auction flags for Protected Audience.
     public static final String KEY_FLEDGE_AUCTION_SERVER_ENABLED = "fledge_auction_server_enabled";
@@ -512,7 +528,16 @@ public final class FlagsConstants {
             "topics_on_device_classifier_kill_switch";
     public static final String KEY_MDD_BACKGROUND_TASK_KILL_SWITCH =
             "mdd_background_task_kill_switch";
+    public static final String KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH =
+            "measurement_debug_reporting_fallback_job_kill_switch";
+    public static final String KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH =
+            "measurement_verbose_debug_reporting_fallback_job_kill_switch";
     public static final String KEY_MDD_LOGGER_KILL_SWITCH = "mdd_logger_kill_switch";
+    public static final String KEY_MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH =
+            "measurement_job_debug_reporting_kill_switch";
+    public static final String KEY_MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH =
+            "measurement_job_verbose_debug_reporting_kill_switch";
+
     public static final String KEY_ADID_KILL_SWITCH = "adid_kill_switch";
     public static final String KEY_APPSETID_KILL_SWITCH = "appsetid_kill_switch";
     public static final String KEY_FLEDGE_SELECT_ADS_KILL_SWITCH = "fledge_select_ads_kill_switch";
@@ -795,4 +820,7 @@ public final class FlagsConstants {
     public static final String KEY_U18_UX_ENABLED = "u18_ux_enabled";
 
     public static final String KEY_ENABLE_AD_SERVICES_SYSTEM_API = "enable_ad_services_system_api";
+
+    public static final String KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED =
+            "is_u18_ux_detention_channel_enabled";
 }

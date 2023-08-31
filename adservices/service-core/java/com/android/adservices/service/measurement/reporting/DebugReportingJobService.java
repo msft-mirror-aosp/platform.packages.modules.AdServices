@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DEBUG_REPORT_API_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DEBUG_REPORT_JOB;
 
 import android.app.job.JobInfo;
@@ -25,7 +24,6 @@ import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
-import android.os.PersistableBundle;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -40,14 +38,11 @@ import java.util.concurrent.Executor;
 
 /**
  * Main service for scheduling debug reporting jobs. The actual job execution logic is part of
- * {@link DebugReportingJobHandler }, {@link EventReportingJobHandler } and {@link
- * AggregateReportingJobHandler}
+ * {@link EventReportingJobHandler } and {@link AggregateReportingJobHandler}
  */
 public final class DebugReportingJobService extends JobService {
-
-    public static final String EXTRA_BUNDLE_IS_DEBUG_REPORT_API =
-            "EXTRA_BUNDLE_IS_DEBUG_REPORT_API";
     private static final Executor sBlockingExecutor = AdServicesExecutors.getBlockingExecutor();
+    private static final int DEBUG_REPORT_JOB_ID = MEASUREMENT_DEBUG_REPORT_JOB.getJobId();
 
     @Override
     public boolean onStartJob(JobParameters params) {
@@ -64,13 +59,12 @@ public final class DebugReportingJobService extends JobService {
             LogUtil.e("DebugReportingJobService is disabled");
             return skipAndCancelBackgroundJob(params);
         }
-        boolean isDebugReportApi = params.getExtras().getBoolean(EXTRA_BUNDLE_IS_DEBUG_REPORT_API);
 
-        LogUtil.d("DebugReportingJobService.onStartJob: isDebugReportApi " + isDebugReportApi);
+        LogUtil.d("DebugReportingJobService.onStartJob");
         sBlockingExecutor.execute(
                 () -> {
-                    sendReports(isDebugReportApi);
-                    jobFinished(params, false);
+                    sendReports();
+                    jobFinished(params, /* wantsReschedule= */ false);
                 });
         return true;
     }
@@ -83,13 +77,12 @@ public final class DebugReportingJobService extends JobService {
 
     /** Schedules {@link DebugReportingJobService} */
     @VisibleForTesting
-    static void schedule(Context context, JobScheduler jobScheduler, boolean isDebugReportApi) {
+    static void schedule(Context context, JobScheduler jobScheduler) {
         final JobInfo job =
                 new JobInfo.Builder(
-                                getJobId(isDebugReportApi),
+                                DEBUG_REPORT_JOB_ID,
                                 new ComponentName(context, DebugReportingJobService.class))
-                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
-                        .setExtras(getBundle(isDebugReportApi))
+                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                         .build();
         jobScheduler.schedule(job);
     }
@@ -99,10 +92,8 @@ public final class DebugReportingJobService extends JobService {
      *
      * @param context the context
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
-     * @param isDebugReportApi flag to indicate whether caller is DebugReportAPI.
      */
-    public static void scheduleIfNeeded(
-            Context context, boolean forceSchedule, boolean isDebugReportApi) {
+    public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
         if (FlagsFactory.getFlags().getMeasurementJobDebugReportingKillSwitch()) {
             LogUtil.d("DebugReportingJobService is disabled, skip scheduling");
             return;
@@ -114,11 +105,11 @@ public final class DebugReportingJobService extends JobService {
             return;
         }
 
-        final JobInfo job = jobScheduler.getPendingJob(getJobId(isDebugReportApi));
+        final JobInfo job = jobScheduler.getPendingJob(DEBUG_REPORT_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
         if (job == null || forceSchedule) {
-            schedule(context, jobScheduler, isDebugReportApi);
-            LogUtil.d("Scheduled DebugReportingJobService: isDebugReportApi " + isDebugReportApi);
+            schedule(context, jobScheduler);
+            LogUtil.d("Scheduled DebugReportingJobService");
         } else {
             LogUtil.d("DebugReportingJobService already scheduled, skipping reschedule");
         }
@@ -127,47 +118,27 @@ public final class DebugReportingJobService extends JobService {
     private boolean skipAndCancelBackgroundJob(final JobParameters params) {
         final JobScheduler jobScheduler = this.getSystemService(JobScheduler.class);
         if (jobScheduler != null) {
-            jobScheduler.cancel(
-                    getJobId(params.getExtras().getBoolean(EXTRA_BUNDLE_IS_DEBUG_REPORT_API)));
+            jobScheduler.cancel(DEBUG_REPORT_JOB_ID);
         }
 
         // Tell the JobScheduler that the job has completed and does not need to be rescheduled.
-        jobFinished(params, false);
+        jobFinished(params, /* wantsReschedule= */ false);
 
         // Returning false means that this job has completed its work.
         return false;
     }
 
-    private void sendReports(boolean isDebugReportApi) {
+    private void sendReports() {
         EnrollmentDao enrollmentDao = EnrollmentDao.getInstance(getApplicationContext());
         DatastoreManager datastoreManager =
                 DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
-        if (isDebugReportApi) {
-            new DebugReportingJobHandler(enrollmentDao, datastoreManager, FlagsFactory.getFlags())
-                    .performScheduledPendingReports();
-        } else {
-            new EventReportingJobHandler(
-                            enrollmentDao, datastoreManager, ReportingStatus.UploadMethod.UNKNOWN)
-                    .setIsDebugInstance(true)
-                    .performScheduledPendingReportsInWindow(0, 0);
-            new AggregateReportingJobHandler(
-                            enrollmentDao, datastoreManager, ReportingStatus.UploadMethod.UNKNOWN)
-                    .setIsDebugInstance(true)
-                    .performScheduledPendingReportsInWindow(0, 0);
-        }
-    }
-
-    private static int getJobId(boolean isDebugReportApi) {
-        if (isDebugReportApi) {
-            return MEASUREMENT_DEBUG_REPORT_API_JOB.getJobId();
-        } else {
-            return MEASUREMENT_DEBUG_REPORT_JOB.getJobId();
-        }
-    }
-
-    private static PersistableBundle getBundle(boolean isDebugReportApi) {
-        PersistableBundle bundle = new PersistableBundle();
-        bundle.putBoolean(EXTRA_BUNDLE_IS_DEBUG_REPORT_API, isDebugReportApi);
-        return bundle;
+        new EventReportingJobHandler(
+                        enrollmentDao, datastoreManager, ReportingStatus.UploadMethod.UNKNOWN)
+                .setIsDebugInstance(true)
+                .performScheduledPendingReportsInWindow(0, 0);
+        new AggregateReportingJobHandler(
+                        enrollmentDao, datastoreManager, ReportingStatus.UploadMethod.UNKNOWN)
+                .setIsDebugInstance(true)
+                .performScheduledPendingReportsInWindow(0, 0);
     }
 }

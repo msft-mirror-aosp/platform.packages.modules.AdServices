@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.service.measurement.reporting.DebugReportingJobService.EXTRA_BUNDLE_IS_DEBUG_REPORT_API;
-import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DEBUG_REPORT_API_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DEBUG_REPORT_JOB;
 
 import static org.junit.Assert.assertFalse;
@@ -37,7 +35,6 @@ import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
 import android.content.Context;
-import android.os.PersistableBundle;
 
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
@@ -57,14 +54,10 @@ import org.mockito.quality.Strictness;
 
 import java.util.Optional;
 
-/**
- * Unit test for {@link DebugReportingJobService
- */
+/** Unit test for {@link DebugReportingJobService} */
 public class DebugReportingJobServiceTest {
     private static final int MEASUREMENT_DEBUG_REPORT_JOB_ID =
             MEASUREMENT_DEBUG_REPORT_JOB.getJobId();
-    private static final int MEASUREMENT_DEBUG_REPORT_API_JOB_ID =
-            MEASUREMENT_DEBUG_REPORT_API_JOB.getJobId();
 
     private static final long WAIT_IN_MILLIS = 1000L;
 
@@ -72,7 +65,7 @@ public class DebugReportingJobServiceTest {
     private JobScheduler mMockJobScheduler;
     private JobParameters mJobParameters;
     private DebugReportingJobService mSpyService;
-    private PersistableBundle mBundle;
+
 
     @Before
     public void setUp() {
@@ -80,7 +73,6 @@ public class DebugReportingJobServiceTest {
         mMockDatastoreManager = mock(DatastoreManager.class);
         mMockJobScheduler = mock(JobScheduler.class);
         mJobParameters = mock(JobParameters.class);
-        mBundle = new PersistableBundle();
     }
 
     @Test
@@ -90,8 +82,6 @@ public class DebugReportingJobServiceTest {
                     // Setup
                     enableKillSwitch();
 
-                    mBundle.putBoolean(EXTRA_BUNDLE_IS_DEBUG_REPORT_API, false);
-                    doReturn(mBundle).when(mJobParameters).getExtras();
                     // Execute
                     boolean result = mSpyService.onStartJob(mJobParameters);
 
@@ -106,43 +96,16 @@ public class DebugReportingJobServiceTest {
     }
 
     @Test
-    public void onStartJob_killSwitchOn_debugReportApi() throws Exception {
-        runWithMocks(
-                () -> {
-                    // Setup
-                    enableKillSwitch();
-
-                    mBundle.putBoolean(EXTRA_BUNDLE_IS_DEBUG_REPORT_API, true);
-                    doReturn(mBundle).when(mJobParameters).getExtras();
-                    // Execute
-                    boolean result = mSpyService.onStartJob(mJobParameters);
-
-                    // Validate
-                    assertFalse(result);
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
-                    verify(mMockDatastoreManager, never()).runInTransactionWithResult(any());
-                    verify(mSpyService, times(1)).jobFinished(any(), eq(false));
-                    verify(mMockJobScheduler, times(1))
-                            .cancel(eq(MEASUREMENT_DEBUG_REPORT_API_JOB_ID));
-                });
-    }
-
-    @Test
     public void onStartJob_killSwitchOff() throws Exception {
         runWithMocks(
                 () -> {
                     // Setup
                     disableKillSwitch();
-
-                    mBundle.putBoolean(EXTRA_BUNDLE_IS_DEBUG_REPORT_API, false);
-                    doReturn(mBundle).when(mJobParameters).getExtras();
-
                     ExtendedMockito.doNothing()
                             .when(
                                     () ->
                                             DebugReportingJobService.scheduleIfNeeded(
-                                                    any(), anyBoolean(), anyBoolean()));
+                                                    any(), anyBoolean()));
 
                     // Execute
                     boolean result = mSpyService.onStartJob(mJobParameters);
@@ -157,35 +120,6 @@ public class DebugReportingJobServiceTest {
                 });
     }
 
-    @Test
-    public void onStartJob_killSwitchOff_debugReportApi() throws Exception {
-        runWithMocks(
-                () -> {
-                    // Setup
-                    disableKillSwitch();
-
-                    mBundle.putBoolean(EXTRA_BUNDLE_IS_DEBUG_REPORT_API, true);
-                    doReturn(mBundle).when(mJobParameters).getExtras();
-
-                    ExtendedMockito.doNothing()
-                            .when(
-                                    () ->
-                                            DebugReportingJobService.scheduleIfNeeded(
-                                                    any(), anyBoolean(), anyBoolean()));
-
-                    // Execute
-                    boolean result = mSpyService.onStartJob(mJobParameters);
-
-                    // Validate
-                    assertTrue(result);
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
-                    verify(mMockDatastoreManager, times(1)).runInTransactionWithResult(any());
-                    verify(mSpyService, times(1)).jobFinished(any(), anyBoolean());
-                    verify(mMockJobScheduler, never())
-                            .cancel(eq(MEASUREMENT_DEBUG_REPORT_API_JOB_ID));
-                });
-    }
 
     @Test
     public void onStartJob_shouldDisableJobTrue() throws Exception {
@@ -198,8 +132,6 @@ public class DebugReportingJobServiceTest {
                                             ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
                                                     any(Context.class)));
 
-                    mBundle.putBoolean(EXTRA_BUNDLE_IS_DEBUG_REPORT_API, false);
-                    doReturn(mBundle).when(mJobParameters).getExtras();
                     // Execute
                     boolean result = mSpyService.onStartJob(mJobParameters);
 
@@ -221,7 +153,6 @@ public class DebugReportingJobServiceTest {
                 () -> {
                     // Setup
                     enableKillSwitch();
-
                     final Context mockContext = mock(Context.class);
                     doReturn(mMockJobScheduler)
                             .when(mockContext)
@@ -233,43 +164,13 @@ public class DebugReportingJobServiceTest {
 
                     // Execute
                     DebugReportingJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule = */ false, /*isDebugReportApi=*/ false);
+                            mockContext, /* forceSchedule = */ false);
 
                     // Validate
                     ExtendedMockito.verify(
-                            () -> DebugReportingJobService.schedule(any(), any(), anyBoolean()),
-                            never());
+                            () -> DebugReportingJobService.schedule(any(), any()), never());
                     verify(mMockJobScheduler, never())
                             .getPendingJob(eq(MEASUREMENT_DEBUG_REPORT_JOB_ID));
-                });
-    }
-
-    @Test
-    public void scheduleIfNeeded_killSwitchOn_dontSchedule_debugReportApi() throws Exception {
-        runWithMocks(
-                () -> {
-                    // Setup
-                    enableKillSwitch();
-
-                    final Context mockContext = mock(Context.class);
-                    doReturn(mMockJobScheduler)
-                            .when(mockContext)
-                            .getSystemService(JobScheduler.class);
-                    final JobInfo mockJobInfo = mock(JobInfo.class);
-                    doReturn(mockJobInfo)
-                            .when(mMockJobScheduler)
-                            .getPendingJob(eq(MEASUREMENT_DEBUG_REPORT_API_JOB_ID));
-
-                    // Execute
-                    DebugReportingJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule = */ false, /*isDebugReportApi=*/ true);
-
-                    // Validate
-                    ExtendedMockito.verify(
-                            () -> DebugReportingJobService.schedule(any(), any(), anyBoolean()),
-                            never());
-                    verify(mMockJobScheduler, never())
-                            .getPendingJob(eq(MEASUREMENT_DEBUG_REPORT_API_JOB_ID));
                 });
     }
 
@@ -280,7 +181,6 @@ public class DebugReportingJobServiceTest {
                 () -> {
                     // Setup
                     disableKillSwitch();
-
                     final Context mockContext = mock(Context.class);
                     doReturn(mMockJobScheduler)
                             .when(mockContext)
@@ -292,44 +192,13 @@ public class DebugReportingJobServiceTest {
 
                     // Execute
                     DebugReportingJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule = */ false, /*isDebugReportApi=*/ false);
+                            mockContext, /* forceSchedule = */ false);
 
                     // Validate
                     ExtendedMockito.verify(
-                            () -> DebugReportingJobService.schedule(any(), any(), anyBoolean()),
-                            never());
+                            () -> DebugReportingJobService.schedule(any(), any()), never());
                     verify(mMockJobScheduler, times(1))
                             .getPendingJob(eq(MEASUREMENT_DEBUG_REPORT_JOB_ID));
-                });
-    }
-
-    @Test
-    public void scheduleIfNeeded_previouslyExecuted_dontForceSchedule_dontSchedule_debugReportApi()
-            throws Exception {
-        runWithMocks(
-                () -> {
-                    // Setup
-                    disableKillSwitch();
-
-                    final Context mockContext = mock(Context.class);
-                    doReturn(mMockJobScheduler)
-                            .when(mockContext)
-                            .getSystemService(JobScheduler.class);
-                    final JobInfo mockJobInfo = mock(JobInfo.class);
-                    doReturn(mockJobInfo)
-                            .when(mMockJobScheduler)
-                            .getPendingJob(eq(MEASUREMENT_DEBUG_REPORT_API_JOB_ID));
-
-                    // Execute
-                    DebugReportingJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule = */ false, /*isDebugReportApi=*/ true);
-
-                    // Validate
-                    ExtendedMockito.verify(
-                            () -> DebugReportingJobService.schedule(any(), any(), anyBoolean()),
-                            never());
-                    verify(mMockJobScheduler, times(1))
-                            .getPendingJob(eq(MEASUREMENT_DEBUG_REPORT_API_JOB_ID));
                 });
     }
 
@@ -340,7 +209,6 @@ public class DebugReportingJobServiceTest {
                 () -> {
                     // Setup
                     disableKillSwitch();
-
                     final Context mockContext = mock(Context.class);
                     doReturn(mMockJobScheduler)
                             .when(mockContext)
@@ -352,44 +220,13 @@ public class DebugReportingJobServiceTest {
 
                     // Execute
                     DebugReportingJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule = */ true, /*isDebugReportApi=*/ false);
+                            mockContext, /* forceSchedule = */ true);
 
                     // Validate
                     ExtendedMockito.verify(
-                            () -> DebugReportingJobService.schedule(any(), any(), anyBoolean()),
-                            times(1));
+                            () -> DebugReportingJobService.schedule(any(), any()), times(1));
                     verify(mMockJobScheduler, times(1))
                             .getPendingJob(eq(MEASUREMENT_DEBUG_REPORT_JOB_ID));
-                });
-    }
-
-    @Test
-    public void scheduleIfNeeded_previouslyExecuted_forceSchedule_schedule_debugReportApi()
-            throws Exception {
-        runWithMocks(
-                () -> {
-                    // Setup
-                    disableKillSwitch();
-
-                    final Context mockContext = mock(Context.class);
-                    doReturn(mMockJobScheduler)
-                            .when(mockContext)
-                            .getSystemService(JobScheduler.class);
-                    final JobInfo mockJobInfo = mock(JobInfo.class);
-                    doReturn(mockJobInfo)
-                            .when(mMockJobScheduler)
-                            .getPendingJob(eq(MEASUREMENT_DEBUG_REPORT_API_JOB_ID));
-
-                    // Execute
-                    DebugReportingJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule = */ true, /*isDebugReportApi=*/ true);
-
-                    // Validate
-                    ExtendedMockito.verify(
-                            () -> DebugReportingJobService.schedule(any(), any(), anyBoolean()),
-                            times(1));
-                    verify(mMockJobScheduler, times(1))
-                            .getPendingJob(eq(MEASUREMENT_DEBUG_REPORT_API_JOB_ID));
                 });
     }
 
@@ -400,7 +237,6 @@ public class DebugReportingJobServiceTest {
                 () -> {
                     // Setup
                     disableKillSwitch();
-
                     final Context mockContext = mock(Context.class);
                     doReturn(mMockJobScheduler)
                             .when(mockContext)
@@ -411,43 +247,13 @@ public class DebugReportingJobServiceTest {
 
                     // Execute
                     DebugReportingJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule = */ false, /*isDebugReportApi=*/ false);
+                            mockContext, /* forceSchedule = */ false);
 
                     // Validate
                     ExtendedMockito.verify(
-                            () -> DebugReportingJobService.schedule(any(), any(), anyBoolean()),
-                            times(1));
+                            () -> DebugReportingJobService.schedule(any(), any()), times(1));
                     verify(mMockJobScheduler, times(1))
                             .getPendingJob(eq(MEASUREMENT_DEBUG_REPORT_JOB_ID));
-                });
-    }
-
-    @Test
-    public void scheduleIfNeeded_previouslyNotExecuted_dontForceSchedule_schedule_debugReportApi()
-            throws Exception {
-        runWithMocks(
-                () -> {
-                    // Setup
-                    disableKillSwitch();
-
-                    final Context mockContext = mock(Context.class);
-                    doReturn(mMockJobScheduler)
-                            .when(mockContext)
-                            .getSystemService(JobScheduler.class);
-                    doReturn(/* noJobInfo = */ null)
-                            .when(mMockJobScheduler)
-                            .getPendingJob(eq(MEASUREMENT_DEBUG_REPORT_API_JOB_ID));
-
-                    // Execute
-                    DebugReportingJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule = */ false, /*isDebugReportApi=*/ true);
-
-                    // Validate
-                    ExtendedMockito.verify(
-                            () -> DebugReportingJobService.schedule(any(), any(), anyBoolean()),
-                            times(1));
-                    verify(mMockJobScheduler, times(1))
-                            .getPendingJob(eq(MEASUREMENT_DEBUG_REPORT_API_JOB_ID));
                 });
     }
 
@@ -475,8 +281,7 @@ public class DebugReportingJobServiceTest {
                     .when(() -> EnrollmentDao.getInstance(any()));
             ExtendedMockito.doReturn(mMockDatastoreManager)
                     .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
-            ExtendedMockito.doNothing()
-                    .when(() -> DebugReportingJobService.schedule(any(), any(), anyBoolean()));
+            ExtendedMockito.doNothing().when(() -> DebugReportingJobService.schedule(any(), any()));
 
             // Execute
             execute.run();

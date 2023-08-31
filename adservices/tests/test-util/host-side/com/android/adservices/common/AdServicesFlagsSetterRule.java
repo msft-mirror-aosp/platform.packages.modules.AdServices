@@ -30,6 +30,11 @@ public final class AdServicesFlagsSetterRule
         return withDefaultLogcatTags().setGlobalKillSwitch(false);
     }
 
+    /** Factory method that enables the compat mode flags (if needed). */
+    public static AdServicesFlagsSetterRule forCompatModeEnabledTests() {
+        return forGlobalKillSwitchDisabledTests().setCompatModeFlags();
+    }
+
     @Override
     protected int getDeviceSdk() {
         return TestDeviceHelper.getApiLevel();

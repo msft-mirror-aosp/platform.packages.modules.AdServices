@@ -88,9 +88,7 @@ public class AttributionFallbackJobService extends JobService {
                                                     FlagsFactory.getFlags()))
                                     .performPendingAttributions();
                     DebugReportingJobService.scheduleIfNeeded(
-                            getApplicationContext(),
-                            /* forceSchedule */ true,
-                            /* isDebugReportApi */ false);
+                            getApplicationContext(), /* forceSchedule */ false);
 
                     AdservicesJobServiceLogger.getInstance(AttributionFallbackJobService.this)
                             .recordJobFinished(
@@ -120,7 +118,7 @@ public class AttributionFallbackJobService extends JobService {
         final JobInfo job =
                 new JobInfo.Builder(
                                 MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID,
-                                new ComponentName(context, AttributionJobService.class))
+                                new ComponentName(context, AttributionFallbackJobService.class))
                         .setPeriodic(
                                 FlagsFactory.getFlags()
                                         .getMeasurementAttributionFallbackJobPeriodMs())

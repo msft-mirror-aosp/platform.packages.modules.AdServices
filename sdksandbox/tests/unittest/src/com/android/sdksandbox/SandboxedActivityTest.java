@@ -158,7 +158,7 @@ public class SandboxedActivityTest {
     }
 
     @Test
-    public void testSandboxedActivityFinishIfHandlerNotifiedAlreadyAboutAnotherActivity() {
+    public void testMultipleSandboxedActivitiesForTheSameHandler() {
         SdkSandboxActivityHandler sdkSandboxActivityHandler = activity -> {};
         SdkSandboxActivityRegistry registry = SdkSandboxActivityRegistry.getInstance();
         IBinder token = registry.register("SDK_NAME", sdkSandboxActivityHandler);
@@ -181,11 +181,11 @@ public class SandboxedActivityTest {
 
                             SandboxedActivity sandboxedActivity2 =
                                     Mockito.spy(new SandboxedActivity());
-                            sandboxedActivity1.setIntent(intent);
+                            sandboxedActivity2.setIntent(intent);
                             sandboxedActivity2.notifySdkOnActivityCreation();
 
                             Mockito.verify(sandboxedActivity1, Mockito.never()).finish();
-                            Mockito.verify(sandboxedActivity2).finish();
+                            Mockito.verify(sandboxedActivity1, Mockito.never()).finish();
                         },
                         1000);
     }

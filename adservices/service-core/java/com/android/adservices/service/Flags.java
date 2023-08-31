@@ -1083,6 +1083,15 @@ public interface Flags {
         return FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED;
     }
 
+    boolean FLEDGE_EVENT_LEVEL_DEBUG_REPORT_SEND_IMMEDIATELY = false;
+
+    /**
+     * @return whether to call remote URLs for debug reporting.
+     */
+    default boolean getFledgeEventLevelDebugReportSendImmediately() {
+        return FLEDGE_EVENT_LEVEL_DEBUG_REPORT_SEND_IMMEDIATELY;
+    }
+
     int FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_BATCH_DELAY_SECONDS = 60 * 15;
 
     /**
@@ -1099,6 +1108,56 @@ public interface Flags {
      */
     default int getFledgeEventLevelDebugReportingMaxItemsPerBatch() {
         return FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_MAX_ITEMS_PER_BATCH;
+    }
+
+    int FLEDGE_DEBUG_REPORT_SENDER_JOB_NETWORK_CONNECT_TIMEOUT_MS = 5 * 1000; // 5 seconds
+
+    /**
+     * @return the maximum time in milliseconds allowed for a network call to open its initial
+     *     connection during the FLEDGE debug report sender job.
+     */
+    default int getFledgeDebugReportSenderJobNetworkConnectionTimeoutMs() {
+        return FLEDGE_DEBUG_REPORT_SENDER_JOB_NETWORK_CONNECT_TIMEOUT_MS;
+    }
+
+    int FLEDGE_DEBUG_REPORT_SENDER_JOB_NETWORK_READ_TIMEOUT_MS = 30 * 1000; // 30 seconds
+
+    /**
+     * @return the maximum time in milliseconds allowed for a network call to read a response from a
+     *     target server during the FLEDGE debug report sender job.
+     */
+    default int getFledgeDebugReportSenderJobNetworkReadTimeoutMs() {
+        return FLEDGE_DEBUG_REPORT_SENDER_JOB_NETWORK_READ_TIMEOUT_MS;
+    }
+
+    long FLEDGE_DEBUG_REPORT_SENDER_JOB_MAX_RUNTIME_MS = 10L * 60L * 1000L; // 5 minutes
+
+    /**
+     * @return the maximum amount of time (in milliseconds) each FLEDGE debug report sender job is
+     *     allowed to run.
+     */
+    default long getFledgeDebugReportSenderJobMaxRuntimeMs() {
+        return FLEDGE_DEBUG_REPORT_SENDER_JOB_MAX_RUNTIME_MS;
+    }
+
+    long FLEDGE_DEBUG_REPORT_SENDER_JOB_PERIOD_MS = TimeUnit.MINUTES.toMillis(10);
+
+    /**
+     * @return the best effort max time (in milliseconds) between each FLEDGE debug report sender
+     *     job run.
+     */
+    default long getFledgeDebugReportSenderJobPeriodMs() {
+        return FLEDGE_DEBUG_REPORT_SENDER_JOB_PERIOD_MS;
+    }
+
+    long FLEDGE_DEBUG_REPORT_SENDER_JOB_FLEX_MS = TimeUnit.MINUTES.toMillis(2);
+
+    /**
+     * @return the amount of flex (in milliseconds) around the end of each period to run each FLEDGE
+     *     debug report sender job.
+     */
+    default long getFledgeDebugReportSenderJobFlexMs() {
+        return FLEDGE_DEBUG_REPORT_SENDER_JOB_FLEX_MS;
     }
 
     boolean FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED = true;
@@ -1748,7 +1807,7 @@ public interface Flags {
     boolean MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH = false;
 
     /**
-     * Returns the kill switch value for Measurement Job Debug Reporting. The API will be disabled
+     * Returns the kill switch value for Measurement Job Debug Reporting. The Job will be disabled
      * if either the Global Kill Switch, Measurement Kill Switch, or the Measurement Job Debug
      * Reporting Kill Switch value is true.
      */
@@ -1757,6 +1816,83 @@ public interface Flags {
         return getGlobalKillSwitch()
                 || getMeasurementKillSwitch()
                 || MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH;
+    }
+
+    /**
+     * Measurement Debug Reporting Fallback Job kill Switch. The default value is false which means
+     * the job is enabled. This flag is used for emergency turning off the Debug Reporting Fallback
+     * Job.
+     */
+    boolean MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for the Measurement Debug Reporting Fallback Job. The API will
+     * be disabled if either the Global Kill Switch, Measurement Kill Switch, or the Measurement
+     * Debug Reporting Fallback Job kill switch value is true.
+     */
+    default boolean getMeasurementDebugReportingFallbackJobKillSwitch() {
+        // We check the Global Kill Switch first. As a result, it overrides all other kill Switches.
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH;
+    }
+
+    /**
+     * Measurement Verbose Debug Reporting Fallback Job kill Switch. The default value is false
+     * which means the job is enabled. This flag is used for emergency turning off the Verbose Debug
+     * Reporting Fallback Job.
+     */
+    boolean MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for the Measurement Debug Reporting Fallback Job. The API will
+     * be disabled if either the Global Kill Switch, Measurement Kill Switch, or the Measurement
+     * Debug Reporting Fallback Job kill switch value is true.
+     */
+    default boolean getMeasurementVerboseDebugReportingFallbackJobKillSwitch() {
+        // We check the Global Kill Switch first. As a result, it overrides all other kill Switches.
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH;
+    }
+
+    /**
+     * Returns the job period in millis for the Measurement Verbose Debug Reporting Fallback Job.
+     */
+    long MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(1);
+
+    /**
+     * Returns the job period in millis for the Measurement Verbose Debug Reporting Fallback Job.
+     */
+    default long getMeasurementVerboseDebugReportingFallbackJobPeriodMs() {
+        return MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS;
+    }
+
+    /** Returns the job period in millis for the Measurement Debug Reporting Fallback Job. */
+    long MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(1);
+
+    /** Returns the job period in millis for the Measurement Debug Reporting Fallback Job. */
+    default long getMeasurementDebugReportingFallbackJobPeriodMs() {
+        return MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS;
+    }
+
+    /*
+     * Measurement Job Verbose Debug Reporting Kill Switch. The default value is false which means
+     * the Verbose Debug Reporting Job is enabled. This flag is used for emergency turning off the
+     * Verbose Debug Reporting Job.
+     */
+    boolean MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Measurement Job Verbose Debug Reporting. The Job will be
+     * disabled if either the Global Kill Switch, Measurement Kill Switch, or the Measurement Job
+     * Verbose Debug Reporting Kill Switch value is true.
+     */
+    default boolean getMeasurementJobVerboseDebugReportingKillSwitch() {
+        // We check the Global Kill Switch first. As a result, it overrides all other kill Switches.
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH;
     }
 
     /**
@@ -3216,5 +3352,13 @@ public interface Flags {
      */
     default boolean getCobaltLoggingEnabled() {
         return !getGlobalKillSwitch() && COBALT_LOGGING_ENABLED;
+    }
+
+    /** U18 UX detention channel is enabled by default. */
+    boolean IS_U18_UX_DETENTION_CHANNEL_ENABLED_DEFAULT = true;
+
+    /** Returns whether the U18 UX detentional channel is enabled. */
+    default boolean isU18UxDetentionChannelEnabled() {
+        return IS_U18_UX_DETENTION_CHANNEL_ENABLED_DEFAULT;
     }
 }
