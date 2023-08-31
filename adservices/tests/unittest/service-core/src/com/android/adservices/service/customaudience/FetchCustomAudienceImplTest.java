@@ -81,6 +81,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.times;
 
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CallingAppUidSupplierProcessImpl;
@@ -125,8 +126,10 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.mockwebserver.Dispatcher;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
+import com.google.mockwebserver.RecordedRequest;
 
 import org.json.JSONObject;
 import org.junit.After;
@@ -146,6 +149,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @RunWith(MockitoJUnitRunner.class)
 public class FetchCustomAudienceImplTest {
@@ -821,6 +825,52 @@ public class FetchCustomAudienceImplTest {
                         FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
                         getValidDailyUpdateUriByBuyer(BUYER));
         verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_SUCCESS), anyInt());
+    }
+
+    @Test
+    public void testImpl_runNormally_differentResponsesToSameFetchUri() throws Exception {
+        // Respond with a complete custom audience including the request values as is.
+        JSONObject response1 = getFullSuccessfulJsonResponse(BUYER);
+        Uri differentDailyUpdateUri = CommonFixture.getUri(BUYER, "/differentUpdate");
+        JSONObject response2 =
+                getFullSuccessfulJsonResponse(BUYER)
+                        .put(DAILY_UPDATE_URI_KEY, differentDailyUpdateUri.toString());
+
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        new Dispatcher() {
+                            AtomicInteger mNumCalls = new AtomicInteger(0);
+
+                            @Override
+                            public MockResponse dispatch(RecordedRequest request) {
+                                if (mNumCalls.get() == 0) {
+                                    mNumCalls.addAndGet(1);
+                                    return new MockResponse().setBody(response1.toString());
+                                } else if (mNumCalls.get() == 1) {
+                                    mNumCalls.addAndGet(1);
+                                    return new MockResponse().setBody(response2.toString());
+                                } else {
+                                    throw new IllegalStateException("Expected only 2 calls!");
+                                }
+                            }
+                        });
+
+        FetchCustomAudienceTestCallback callback1 = callFetchCustomAudience(mInputBuilder.build());
+        assertTrue(callback1.mIsSuccess);
+        verify(mCustomAudienceDaoMock)
+                .insertOrOverwriteCustomAudience(
+                        FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
+                        getValidDailyUpdateUriByBuyer(BUYER));
+
+        FetchCustomAudienceTestCallback callback2 = callFetchCustomAudience(mInputBuilder.build());
+        assertTrue(callback2.mIsSuccess);
+        verify(mCustomAudienceDaoMock)
+                .insertOrOverwriteCustomAudience(
+                        FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
+                        differentDailyUpdateUri);
+
+        verify(mAdServicesLoggerMock, times(2))
                 .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_SUCCESS), anyInt());
     }
 
