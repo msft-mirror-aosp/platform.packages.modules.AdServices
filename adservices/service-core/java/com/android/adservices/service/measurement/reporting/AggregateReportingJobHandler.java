@@ -303,6 +303,12 @@ public class AggregateReportingJobHandler {
                 .setSourceDebugKey(aggregateReport.getSourceDebugKey())
                 .setTriggerDebugKey(aggregateReport.getTriggerDebugKey())
                 .setAggregationCoordinatorOrigin(aggregateReport.getAggregationCoordinatorOrigin())
+                .setDebugMode(
+                        mIsDebugInstance
+                                        && aggregateReport.getSourceDebugKey() != null
+                                        && aggregateReport.getTriggerDebugKey() != null
+                                ? "enabled"
+                                : null)
                 .build()
                 .toJson(key);
     }
