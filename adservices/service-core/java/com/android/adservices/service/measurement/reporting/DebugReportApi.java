@@ -412,8 +412,7 @@ public class DebugReportApi {
             LogUtil.e(e, "Failed to insert debug report %s", type);
         }
 
-        DebugReportingJobService.scheduleIfNeeded(
-                mContext, /*forceSchedule=*/ true, /*isDebugReportApi=*/ true);
+        VerboseDebugReportingJobService.scheduleIfNeeded(mContext, /*forceSchedule=*/ false);
     }
 
     /** Get AdIdPermission State from Source */

@@ -18,6 +18,8 @@ package com.android.adservices.service.adselection.encryption;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.adservices.common.CommonFixture;
+
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
@@ -35,6 +37,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 
 public class ObliviousHttpRequestContextMarshallerTest {
 
@@ -61,6 +64,7 @@ public class ObliviousHttpRequestContextMarshallerTest {
                     .getBytes(StandardCharsets.UTF_8);
     private EncryptionContextDao mEncryptionContextDao;
     private ObliviousHttpRequestContextMarshaller mObliviousHttpRequestContextMarshaller;
+    private Clock mClock;
 
     @Before
     public void setUp() {
@@ -73,6 +77,7 @@ public class ObliviousHttpRequestContextMarshallerTest {
 
         mObliviousHttpRequestContextMarshaller =
                 new ObliviousHttpRequestContextMarshaller(mEncryptionContextDao);
+        mClock = CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI;
     }
 
     @Test
@@ -122,6 +127,7 @@ public class ObliviousHttpRequestContextMarshallerTest {
                         .setEncryptionKeyType(
                                 EncryptionKeyConstants.EncryptionKeyType
                                         .ENCRYPTION_KEY_TYPE_AUCTION)
+                        .setCreationInstant(mClock.instant())
                         .setKeyConfig(STORED_KEY_CONFIG_WITH_SINGLE_ALGORITHM_BYTES)
                         .setSharedSecret(SHARED_SECRET_BYTES)
                         .setSeed(SEED_BYTES)

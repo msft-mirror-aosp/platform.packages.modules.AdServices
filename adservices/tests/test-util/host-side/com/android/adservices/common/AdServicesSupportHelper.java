@@ -23,15 +23,20 @@ public final class AdServicesSupportHelper {
 
     private static final String FEATURE_AUTOMOTIVE = "android.hardware.type.automotive";
     private static final String FEATURE_LEANBACK = "android.software.leanback";
-    private static final String FEATURE_RAM_LOW = "android.hardware.ram.low";
     private static final String FEATURE_WATCH = "android.hardware.type.watch";
 
-    private static final String SYSPROP_ADSERVICES_SUPPORTED = "debug.adservices.supported";
+    // Copied from RoSystemProperties
+    private static final String SYSTEM_PROPERTY_CONFIG_LOW_RAM = "ro.config.low_ram";
 
-    private static final ConsoleLogger sConsoleLogger =
-            new ConsoleLogger(AdServicesDeviceSupportedRule.class);
+    // TODO(b/295321663): 3 constants below should be static imported from AdServicesCommonConstants
+    private static final String SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX = "debug.adservices.";
+    private static final String SYSTEM_PROPERTY_FOR_DEBUGGING_SUPPORTED_ON_DEVICE =
+            SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + "supported";
+    private static final String SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW =
+            SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + "low_ram_device";
 
-    private static final Logger sLogger = new Logger(sConsoleLogger);
+    private static final Logger sLogger =
+            new Logger(ConsoleLogger.getInstance(), AdServicesDeviceSupportedRule.class);
 
     public static boolean isDebuggable(ITestDevice device) throws DeviceNotAvailableException {
         return "1".equals(device.getProperty("ro.debuggable"));
@@ -39,12 +44,15 @@ public final class AdServicesSupportHelper {
 
     public static boolean isDeviceSupported(ITestDevice device) throws DeviceNotAvailableException {
         if (isDebuggable(device)) {
-            String overriddenValue = device.getProperty(SYSPROP_ADSERVICES_SUPPORTED);
+            String overriddenValue =
+                    device.getProperty(SYSTEM_PROPERTY_FOR_DEBUGGING_SUPPORTED_ON_DEVICE);
             if (overriddenValue != null && !overriddenValue.isEmpty()) {
                 boolean supported = Boolean.valueOf(overriddenValue);
                 sLogger.i(
                         "isDeviceSupported(): returning %b as defined by system property %s (%s)",
-                        supported, SYSPROP_ADSERVICES_SUPPORTED, overriddenValue);
+                        supported,
+                        SYSTEM_PROPERTY_FOR_DEBUGGING_SUPPORTED_ON_DEVICE,
+                        overriddenValue);
                 return supported;
             }
         }
@@ -58,10 +66,31 @@ public final class AdServicesSupportHelper {
     // that gets system properties) so it can be used by device and host sides
     private static boolean isDeviceSupportedByDefault(ITestDevice device)
             throws DeviceNotAvailableException {
-        return !device.hasFeature(FEATURE_RAM_LOW) // Android Go
+        return !isLowRamDevice(device) // Android Go
                 && !device.hasFeature(FEATURE_WATCH)
                 && !device.hasFeature(FEATURE_AUTOMOTIVE)
                 && !device.hasFeature(FEATURE_LEANBACK);
+    }
+
+    /** Checks whether the device has low ram. */
+    public static boolean isLowRamDevice(ITestDevice device) throws DeviceNotAvailableException {
+        if (isDebuggable(device)) {
+            String overriddenValue =
+                    device.getProperty(SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW);
+            if (overriddenValue != null && !overriddenValue.isEmpty()) {
+                boolean isLowRamDevice = Boolean.valueOf(overriddenValue);
+                sLogger.i(
+                        "isLowRamDevice(): returning %b as defined by system property %s (%s)",
+                        isLowRamDevice,
+                        SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW,
+                        overriddenValue);
+                return isLowRamDevice;
+            }
+        }
+
+        boolean isLowRamDevice = "true".equals(device.getProperty(SYSTEM_PROPERTY_CONFIG_LOW_RAM));
+        sLogger.v("isLowRamDevice(): returning non-simulated value (%b)", isLowRamDevice);
+        return isLowRamDevice;
     }
 
     private AdServicesSupportHelper() {

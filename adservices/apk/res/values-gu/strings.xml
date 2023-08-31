@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"કોઈ ઍપ્લિકેશનને AdServices Consent API ઍક્સેસ કરવાની મંજૂરી આપે છે."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID APIનો ઍક્સેસ"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"ઍપ્લિકેશનને Ad ID API ઍક્સેસ કરવાની મંજૂરી આપે છે."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"AdServices Cobalt Upload APIને ઍક્સેસ કરો"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"ઍપ્લિકેશનને AdServices Cobalt Upload APIને ઍક્સેસ કરવાની મંજૂરી આપે છે."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"ઍપ સેટ ID APIનો ઍક્સેસ"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"ઍપ્લિકેશનને ઍપ સેટ ID API ઍક્સેસ કરવાની મંજૂરી આપે છે."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service APIનો ઍક્સેસ"</string>

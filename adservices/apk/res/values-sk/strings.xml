@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Umožňuje aplikácii prístup k rozhraniu AdServices Consent API."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Prístup k rozhraniu Ad ID API"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Umožňuje aplikácii prístup k rozhraniu Ad ID API."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"Prístup k rozhraniu AdServices Cobalt Upload API"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Umožnuje aplikácii prístup k rozhraniu AdServices Cobalt Upload API."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Prístup k rozhraniu App Set ID API"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Umožňuje aplikácii prístup k rozhraniu App Set ID API."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Prístup k rozhraniu Consent Service API"</string>
@@ -40,8 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Poskytuje aplikácii prístup k rozhraniu Enablement State API služby AdService."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Prístup k rozhraniam API služby AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Umožnuje aplikácii prístup k rozhraniam API služby AdServicesManager."</string>
-    <!-- no translation found for app_label (5844694701336604490) -->
-    <skip />
+    <string name="app_label" msgid="5844694701336604490">"Ochrana súkromia pri reklamách"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Pripojte sa k beta verzii ochrany súkromia pri reklamách v Androide"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android hľadá spôsoby, ako vám aplikácie môžu zobrazovať reklamy s vyššou ochranou súkromia"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Ďalšie informácie"</string>

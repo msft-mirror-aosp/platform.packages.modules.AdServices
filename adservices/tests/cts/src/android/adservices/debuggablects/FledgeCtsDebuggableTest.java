@@ -41,7 +41,6 @@ import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.AddAdSelectionFromOutcomesOverrideRequest;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
-import android.adservices.adselection.GetAdSelectionDataOutcome;
 import android.adservices.adselection.GetAdSelectionDataRequest;
 import android.adservices.adselection.PersistAdSelectionResultRequest;
 import android.adservices.adselection.ReportEventRequest;
@@ -362,7 +361,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     public void setup() throws InterruptedException {
         // Skip the test if it runs on unsupported platforms
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-        ShellUtils.runShellCommand("device_config put adservices enable_enrollment_test_seed true");
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         if (SdkLevel.isAtLeastT()) {
@@ -454,11 +452,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Reset the filtering flag
         PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(false);
         AdservicesTestHelper.killAdservicesProcess(sContext);
-        // Set consent source of truth to PPAPI_AND_SYSTEM_SERVER
-        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth null");
-        // Re-set disable enrollment test seed to true
-        ShellUtils.runShellCommand(
-                "device_config put adservices enable_enrollment_test_seed false");
 
         if (!SdkLevel.isAtLeastT()) {
             CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
@@ -3638,44 +3631,10 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 
-    // TODO(b/293022107): Remove ignore when overrides are implemented
-    @Ignore("Remove ignore when b/293022107 is resolved")
     @Test
-    public void testGetAdSelectionData_validInput_success()
+    public void testGetAdSelectionData_keyCouldntFetch_failure()
             throws ExecutionException, InterruptedException, TimeoutException {
-        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
-
-        PhFlagsFixture.overrideFledgeAdSelectionAuctionServerApisEnabled(false);
-
-        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
-        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
-
-        CustomAudience customAudience1 = createCustomAudience(BUYER_1, bidsForBuyer1);
-        CustomAudience customAudience2 = createCustomAudience(BUYER_2, bidsForBuyer2);
-        // Joining custom audiences, no result to do assertion on. Failures will generate an
-        // exception."
-        joinCustomAudience(customAudience1);
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-        joinCustomAudience(customAudience2);
-
-        GetAdSelectionDataRequest request =
-                new GetAdSelectionDataRequest.Builder().setSeller(SELLER).build();
-        GetAdSelectionDataOutcome outcome =
-                mAdSelectionClient
-                        .getAdSelectionData(request)
-                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-        Assert.assertNotEquals(
-                AdSelectionOutcome.UNSET_AD_SELECTION_ID, outcome.getAdSelectionId());
-        Assert.assertNotNull(outcome.getAdSelectionData());
-    }
-
-    // TODO(b/293022107): Remove ignore when overrides are implemented
-    @Ignore("Remove ignore when b/293022107 is resolved")
-    @Test
-    public void testPersistAdSelectionData_contextNotInDb_failure()
-            throws ExecutionException, InterruptedException, TimeoutException {
+        // TODO(b/293022107): Add success tests when encryption key fetch can be done in CTS
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
         PhFlagsFixture.overrideFledgeAdSelectionAuctionServerApisEnabled(false);
@@ -3692,19 +3651,42 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
         joinCustomAudience(customAudience2);
 
-        GetAdSelectionDataRequest request =
+        GetAdSelectionDataRequest failingRequest =
                 new GetAdSelectionDataRequest.Builder().setSeller(SELLER).build();
-        GetAdSelectionDataOutcome outcome =
-                mAdSelectionClient
-                        .getAdSelectionData(request)
-                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        Assert.assertNotEquals(
-                AdSelectionOutcome.UNSET_AD_SELECTION_ID, outcome.getAdSelectionId());
-        Assert.assertNotNull(outcome.getAdSelectionData());
+        ThrowingRunnable runnable =
+                () ->
+                        mAdSelectionClient
+                                .getAdSelectionData(failingRequest)
+                                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        Throwable thrown = Assert.assertThrows(ExecutionException.class, runnable);
+        Assert.assertTrue(thrown.getCause() instanceof IllegalStateException);
 
+        // TODO(b/293022107): Comment in when successful run can be achievable from CTS
+        //        GetAdSelectionDataOutcome outcome =
+        //                mAdSelectionClient
+        //                        .getAdSelectionData(request)
+        //                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        //
+        //        Assert.assertNotEquals(
+        //                AdSelectionOutcome.UNSET_AD_SELECTION_ID, outcome.getAdSelectionId());
+        //        Assert.assertNotNull(outcome.getAdSelectionData());
+    }
+
+    @Test
+    public void testPersistAdSelectionData_adSelectionIdDoesntExist_failure() {
+        // TODO(b/293022107): This test is currently using a placeholder ad selection id that cause
+        //  it to fail. Add success tests when encryption key fetch can be done in CTS
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+
+        PhFlagsFixture.overrideFledgeAdSelectionAuctionServerApisEnabled(false);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
+        long adSelectionId = 1234567L;
         PersistAdSelectionResultRequest failingRequest =
                 new PersistAdSelectionResultRequest.Builder()
-                        .setAdSelectionId(outcome.getAdSelectionId())
+                        .setAdSelectionId(adSelectionId)
                         .setSeller(SELLER)
                         .build();
         ThrowingRunnable runnable =
@@ -3713,7 +3695,8 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                                 .persistAdSelectionResult(failingRequest)
                                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         Throwable thrown = Assert.assertThrows(ExecutionException.class, runnable);
-        Assert.assertTrue(thrown.getCause() instanceof IllegalStateException);
+        Assert.assertTrue(thrown.getCause() instanceof IllegalArgumentException);
+        // TODO(b/293022107): Assert results when overrides are implemented
     }
 
     private String insertJsWait(long waitTime) {

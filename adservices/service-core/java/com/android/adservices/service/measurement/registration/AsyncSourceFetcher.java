@@ -193,8 +193,8 @@ public class AsyncSourceFetcher {
                         extractValidNumberInRange(
                                 new UnsignedLong(json.getString(
                                         SourceHeaderContract.AGGREGATABLE_REPORT_WINDOW)),
-                                new UnsignedLong(
-                                        MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
+                                new UnsignedLong(mFlags
+                                        .getMeasurementMinimumAggregatableReportWindowInSeconds()),
                                 new UnsignedLong(
                                         MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS));
                 // Relies on aggregateReportWindowUnsigned not using the 64th bit.
@@ -712,6 +712,11 @@ public class AsyncSourceFetcher {
             AsyncRedirect asyncRedirect) {
         HttpURLConnection urlConnection = null;
         Map<String, List<String>> headers;
+        if (!asyncRegistration.getRegistrationUri().getScheme().equalsIgnoreCase("https")) {
+            LogUtil.d("Invalid scheme for registrationUri.");
+            asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.INVALID_URL);
+            return Optional.empty();
+        }
         // TODO(b/276825561): Fix code duplication between fetchSource & fetchTrigger request flow
         try {
             urlConnection =

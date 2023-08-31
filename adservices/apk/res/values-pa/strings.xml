@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"ਐਪਲੀਕੇਸ਼ਨ ਨੂੰ AdServices Consent API ਤੱਕ ਪਹੁੰਚ ਕਰਨ ਦੀ ਆਗਿਆ ਮਿਲਦੀ ਹੈ।"</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID API ਤੱਕ ਪਹੁੰਚ ਮਿਲਦੀ ਹੈ"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"ਕਿਸੇ ਐਪਲੀਕੇਸ਼ਨ ਨੂੰ Ad ID API ਤੱਕ ਪਹੁੰਚ ਕਰਨ ਦੀ ਆਗਿਆ ਮਿਲਦੀ ਹੈ।"</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"AdServices Cobalt Upload API ਤੱਕ ਪਹੁੰਚ ਕਰੋ"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"ਐਪਲੀਕੇਸ਼ਨ ਨੂੰ AdServices Cobalt Upload API ਤੱਕ ਪਹੁੰਚ ਕਰਨ ਦੀ ਆਗਿਆ ਦਿੰਦੀ ਹੈ।"</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"App Set ID API ਤੱਕ ਪਹੁੰਚ ਮਿਲਦੀ ਹੈ"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"ਐਪਲੀਕੇਸ਼ਨ ਨੂੰ App Set ID API ਤੱਕ ਪਹੁੰਚ ਕਰਨ ਦੀ ਆਗਿਆ ਮਿਲਦੀ ਹੈ।"</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service API ਤੱਕ ਪਹੁੰਚ"</string>
@@ -40,8 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"ਇਸ ਨਾਲ ਕਿਸੇ ਐਪਲੀਕੇਸ਼ਨ ਨੂੰ AdService API ਨੂੰ ਚਾਲੂ ਜਾਂ ਬੰਦ ਕਰਨ ਦੀ ਸਥਿਤੀ ਤੱਕ ਪਹੁੰਚ ਕਰਨ ਦੀ ਆਗਿਆ ਮਿਲਦੀ ਹੈ।"</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManager ਦੇ API ਤੱਕ ਪਹੁੰਚ"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"ਐਪਲੀਕੇਸ਼ਨ ਨੂੰ AdServicesManager ਦੇ API ਤੱਕ ਪਹੁੰਚ ਕਰਨ ਦੀ ਆਗਿਆ ਦਿੰਦੀ ਹੈ।"</string>
-    <!-- no translation found for app_label (5844694701336604490) -->
-    <skip />
+    <string name="app_label" msgid="5844694701336604490">"ਵਿਗਿਆਪਨ ਪਰਦੇਦਾਰੀ"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Android ਦੇ ਵਿਗਿਆਪਨ ਪਰਦੇਦਾਰੀ ਸੰਬੰਧੀ ਬੀਟਾ ਵਰਜਨ ਵਿੱਚ ਸ਼ਾਮਲ ਹੋਵੋ"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android ਤੁਹਾਨੂੰ ਵਿਗਿਆਪਨ ਦਿਖਾਉਣ ਵਾਸਤੇ ਐਪਾਂ ਲਈ ਹੋਰ ਜ਼ਿਆਦਾ ਨਿੱਜੀ ਤਰੀਕਿਆਂ ਦੀ ਪੜਚੋਲ ਕਰ ਰਿਹਾ ਹੈ"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"ਹੋਰ ਜਾਣੋ"</string>

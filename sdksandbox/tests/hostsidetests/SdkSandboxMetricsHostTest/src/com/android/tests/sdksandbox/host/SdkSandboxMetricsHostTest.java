@@ -20,6 +20,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assume.assumeTrue;
 
+import android.app.sdksandbox.hosttestutils.DeviceSupportHostUtils;
+
 import com.android.modules.utils.build.testing.DeviceSdkLevel;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.targetprep.TargetSetupError;
@@ -37,10 +39,13 @@ public class SdkSandboxMetricsHostTest extends BaseHostJUnit4Test {
     private static final String METRICS_TEST_APP_PACKAGE = "com.android.tests.sdksandbox";
     private static final String METRICS_TEST_APP_APK = "SdkSandboxMetricsTestApp.apk";
 
+    private final DeviceSupportHostUtils mDeviceSupportUtils = new DeviceSupportHostUtils(this);
+
     private DeviceSdkLevel mDeviceSdkLevel;
 
     @Before
     public void setUp() throws DeviceNotAvailableException, TargetSetupError {
+        assumeTrue("Device supports SdkSandbox", mDeviceSupportUtils.isSdkSandboxSupported());
         mDeviceSdkLevel = new DeviceSdkLevel(getDevice());
         installPackage(METRICS_TEST_APP_APK);
     }

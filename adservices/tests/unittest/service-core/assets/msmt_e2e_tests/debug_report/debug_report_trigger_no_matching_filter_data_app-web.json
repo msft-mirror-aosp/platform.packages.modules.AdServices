@@ -1,7 +1,7 @@
 {
   "description": "A2W test: given trigger has debug_permission (ar_debug permission) enabled, source and trigger join key match. Expected source-success and trigger-no-matching-filter-data debug report",
   "phflags_override": {
-    "measurement_debug_join_key_enrollment_allowlist" : "enrollment-id-www.ad-tech1.test"
+    "measurement_debug_join_key_enrollment_allowlist" : "enrollment-id-ad-tech1.test"
   },
   "input": {
     "sources": [

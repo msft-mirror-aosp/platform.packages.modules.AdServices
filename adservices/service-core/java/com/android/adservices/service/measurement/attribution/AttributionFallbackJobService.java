@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.attribution;
 
+import static com.android.adservices.service.measurement.util.JobLockHolder.Type.ATTRIBUTION_PROCESSING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ATTRIBUTION_FALLBACK_JOB;
 
@@ -34,6 +35,7 @@ import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportingJobService;
+import com.android.adservices.service.measurement.util.JobLockHolder;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -79,26 +81,38 @@ public class AttributionFallbackJobService extends JobService {
         LogUtil.d("AttributionFallbackJobService.onStartJob");
         sBackgroundExecutor.execute(
                 () -> {
-                    boolean success =
-                            new AttributionJobHandler(
-                                            DatastoreManagerFactory.getDatastoreManager(
-                                                    getApplicationContext()),
-                                            new DebugReportApi(
-                                                    getApplicationContext(),
-                                                    FlagsFactory.getFlags()))
-                                    .performPendingAttributions();
+                    processPendingAttributions();
+
                     DebugReportingJobService.scheduleIfNeeded(
-                            getApplicationContext(),
-                            /* forceSchedule */ true,
-                            /* isDebugReportApi */ false);
+                            getApplicationContext(), /* forceSchedule */ false);
 
                     AdservicesJobServiceLogger.getInstance(AttributionFallbackJobService.this)
                             .recordJobFinished(
-                                    MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID, success, !success);
+                                    MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID,
+                                    /* isSuccessful */ true,
+                                    /* shouldRetry */ false);
 
-                    jobFinished(params, !success);
+                    jobFinished(params, /* wantsReschedule= */ false);
                 });
         return true;
+    }
+
+    private void processPendingAttributions() {
+        final JobLockHolder lock = JobLockHolder.getInstance(ATTRIBUTION_PROCESSING);
+        if (lock.tryLock()) {
+            try {
+                new AttributionJobHandler(
+                                DatastoreManagerFactory.getDatastoreManager(
+                                        getApplicationContext()),
+                                new DebugReportApi(
+                                        getApplicationContext(), FlagsFactory.getFlags()))
+                        .performPendingAttributions();
+                return;
+            } finally {
+                lock.unlock();
+            }
+        }
+        LogUtil.d("AttributionFallbackJobService did not acquire the lock");
     }
 
     @Override
@@ -120,7 +134,7 @@ public class AttributionFallbackJobService extends JobService {
         final JobInfo job =
                 new JobInfo.Builder(
                                 MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID,
-                                new ComponentName(context, AttributionJobService.class))
+                                new ComponentName(context, AttributionFallbackJobService.class))
                         .setPeriodic(
                                 FlagsFactory.getFlags()
                                         .getMeasurementAttributionFallbackJobPeriodMs())

@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Թույլ է տալիս հավելվածին օգտագործել AdServices Consent API-ը։"</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID API-ի օգտագործման թույլտվություն"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Թույլ է տալիս հավելվածին օգտագործել Ad ID API-ը։"</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"AdServices Cobalt Upload API-ի օգտագործման թույլտվություն"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Թույլ է տալիս հավելվածին օգտագործել AdServices Cobalt Upload API-ը։"</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"App Set ID API-ի օգտագործման թույլտվություն"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Թույլ է տալիս հավելվածին օգտագործել App Set ID API-ը։"</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service API-ի օգտագործման թույլտվություն"</string>
@@ -40,8 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Թույլ է տալիս հավելվածին օգտագործել AdService-ի ակտիվացման վիճակի API-ը։"</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManager API-ների հասանելիություն"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Թույլ է տալիս հավելվածին օգտագործել AdServicesManager API-ները։"</string>
-    <!-- no translation found for app_label (5844694701336604490) -->
-    <skip />
+    <string name="app_label" msgid="5844694701336604490">"Գովազդի գաղտնիություն"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Միացեք Android-ում գովազդի գաղտնիության բետա փորձարկմանը"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android-ն ավելի ապահով եղանակներ է փնտրում՝ ձեզ հավելվածներում գովազդ ցուցադրելու համար"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Իմանալ ավելին"</string>

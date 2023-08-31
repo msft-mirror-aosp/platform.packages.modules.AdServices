@@ -22,11 +22,14 @@ import static com.android.adservices.tests.ui.libs.UiConstants.ENTRY_POINT_ENABL
 import android.adservices.common.AdServicesCommonManager;
 import android.content.Context;
 
+import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.tests.ui.libs.AdservicesWorkflows;
+import com.android.adservices.tests.ui.libs.UiConstants;
 import com.android.adservices.tests.ui.libs.UiUtils;
 
 import org.junit.After;
@@ -79,53 +82,73 @@ public class GaUxNotificationTriggerTest {
      * displayed.
      */
     @Test
+    @FlakyTest(bugId = 297347345)
     public void testGaRowAdIdEnabled() throws Exception {
         UiUtils.setAsRowDevice();
         UiUtils.enableGa();
 
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
 
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, /* isGa */ true);
+        AdservicesWorkflows.verifyNotification(
+                sContext,
+                mDevice, /* isDisplayed */
+                true, /* isEuTest */
+                false, /* isGa */
+                UiConstants.UX.GA_UX);
     }
 
     /**
      * Verify that for GA, ROW devices with zeroed-out AdId, the GA EU notification is displayed.
      */
     @Test
+    @FlakyTest(bugId = 297347345)
     public void testGaRowAdIdDisabled() throws Exception {
         UiUtils.setAsRowDevice();
         UiUtils.enableGa();
 
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_DISABLED);
 
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ true);
+        AdservicesWorkflows.verifyNotification(
+                sContext,
+                mDevice, /* isDisplayed */
+                true, /* isEuTest */
+                true, /* isGa */
+                UiConstants.UX.GA_UX);
     }
 
     /**
      * Verify that for GA, EU devices with non zeroed-out AdId, the GA EU notification is displayed.
      */
     @Test
+    @FlakyTest(bugId = 297347345)
     public void testGaEuAdIdEnabled() throws Exception {
         UiUtils.setAsEuDevice();
         UiUtils.enableGa();
 
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
 
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ true);
+        AdservicesWorkflows.verifyNotification(
+                sContext,
+                mDevice, /* isDisplayed */
+                true, /* isEuTest */
+                true, /* isGa */
+                UiConstants.UX.GA_UX);
     }
 
     /** Verify that for GA, EU devices with zeroed-out AdId, the EU notification is displayed. */
     @Test
+    @FlakyTest(bugId = 297347345)
     public void testGaEuAdIdDisabled() throws Exception {
         UiUtils.setAsEuDevice();
         UiUtils.enableGa();
 
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_DISABLED);
 
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ true);
+        AdservicesWorkflows.verifyNotification(
+                sContext,
+                mDevice, /* isDisplayed */
+                true, /* isEuTest */
+                true, /* isGa */
+                UiConstants.UX.GA_UX);
     }
 }

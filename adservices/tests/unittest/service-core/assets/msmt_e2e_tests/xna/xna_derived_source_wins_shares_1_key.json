@@ -368,7 +368,7 @@
                 },
                 "attribution_config": [
                   {
-                    "source_network": "enrollment-id-www.ad-tech2.com",
+                    "source_network": "enrollment-id-ad-tech2.com",
                     "source_priority_range": {
                       "start": 1,
                       "end": 1000
@@ -386,7 +386,7 @@
                     "expiry": "172801"
                   },
                   {
-                    "source_network": "enrollment-id-www.ad-tech4.com",
+                    "source_network": "enrollment-id-ad-tech4.com",
                     "source_priority_range": {
                       "start": 1001,
                       "end": 2000

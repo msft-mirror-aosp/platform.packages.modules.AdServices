@@ -93,7 +93,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 measurementReportsStats.getResultCode(),
                 measurementReportsStats.getFailureType(),
                 measurementReportsStats.getUploadMethod(),
-                measurementReportsStats.getReportingDelay());
+                measurementReportsStats.getReportingDelay(),
+                measurementReportsStats.getSourceRegistrant());
     }
 
     /** log method for API call stats. */
@@ -137,7 +138,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 stats.getSurfaceType(),
                 stats.getRegistrationStatus(),
                 stats.getFailureType(),
-                stats.getRegistrationDelay());
+                stats.getRegistrationDelay(),
+                stats.getSourceRegistrant());
     }
 
     @Override
@@ -323,7 +325,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 stats.getAttributionType(),
                 stats.isMatched(),
                 stats.getDebugJoinKeyHashedValue(),
-                stats.getDebugJoinKeyHashLimit());
+                stats.getDebugJoinKeyHashLimit(),
+                stats.getSourceRegistrant());
     }
 
     @Override
@@ -334,7 +337,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 stats.getAttributionType(),
                 stats.isMatched(),
                 stats.getNumUniqueAdIds(),
-                stats.getNumUniqueAdIdsLimit());
+                stats.getNumUniqueAdIdsLimit(),
+                stats.getSourceRegistrant());
     }
 
     @Override
@@ -371,13 +375,16 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 measurementAttributionStats.getFailureType(),
                 measurementAttributionStats.isSourceDerived(),
                 measurementAttributionStats.isInstallAttribution(),
-                measurementAttributionStats.getAttributionDelay());
+                measurementAttributionStats.getAttributionDelay(),
+                measurementAttributionStats.getSourceRegistrant());
     }
 
     /** log method for measurement wipeout. */
     public void logMeasurementWipeoutStats(MeasurementWipeoutStats measurementWipeoutStats) {
         AdServicesStatsLog.write(
-                measurementWipeoutStats.getCode(), measurementWipeoutStats.getWipeoutType());
+                measurementWipeoutStats.getCode(),
+                measurementWipeoutStats.getWipeoutType(),
+                measurementWipeoutStats.getSourceRegistrant());
     }
 
     /** log method for measurement attribution. */
@@ -386,7 +393,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
         AdServicesStatsLog.write(
                 measurementDelayedSourceRegistrationStats.getCode(),
                 measurementDelayedSourceRegistrationStats.getRegistrationStatus(),
-                measurementDelayedSourceRegistrationStats.getRegistrationDelay());
+                measurementDelayedSourceRegistrationStats.getRegistrationDelay(),
+                measurementDelayedSourceRegistrationStats.getRegistrant());
     }
 
     /** log method for consent migrations. */

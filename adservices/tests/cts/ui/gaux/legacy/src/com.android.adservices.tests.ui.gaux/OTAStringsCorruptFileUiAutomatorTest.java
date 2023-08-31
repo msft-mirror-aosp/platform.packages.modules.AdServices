@@ -22,6 +22,7 @@ import android.adservices.common.AdServicesCommonManager;
 import android.content.Context;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
@@ -93,6 +94,7 @@ public class OTAStringsCorruptFileUiAutomatorTest {
     }
 
     @Test
+    @FlakyTest(bugId = 297347345)
     public void checkCorruptedARSCFile_OTAFailTest()
             throws UiObjectNotFoundException, InterruptedException {
         // download test OTA strings
@@ -104,6 +106,7 @@ public class OTAStringsCorruptFileUiAutomatorTest {
     }
 
     @Test
+    @FlakyTest(bugId = 297347345)
     public void checkXMLFile_OTAFailTest() throws UiObjectNotFoundException, InterruptedException {
         // download test OTA strings
         UiUtils.setupOTAStrings(sContext, sDevice, sCommonManager, XML_FIL_MDD_URL);

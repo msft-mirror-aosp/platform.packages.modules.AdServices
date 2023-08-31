@@ -18,7 +18,7 @@ package android.adservices.debuggablects;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.adservices.common.OutcomeReceiver;
+import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.MeasurementManager;
 import android.adservices.measurement.WebSourceParams;
@@ -33,6 +33,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.modules.utils.build.SdkLevel;
@@ -42,9 +43,9 @@ import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.RecordedRequest;
 
 import org.junit.AfterClass;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -103,10 +104,12 @@ public class MeasurementCtsDebuggableTest {
 
     private MeasurementManager mMeasurementManager;
 
+    @Rule
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
     @BeforeClass
     public static void setupDevicePropertiesAndInitializeClient() throws Exception {
-        // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
         setFlagsForMeasurement();
     }
 
@@ -381,7 +384,8 @@ public class MeasurementCtsDebuggableTest {
                     Uri.parse(path),
                     /* inputEvent= */ null,
                     CALLBACK_EXECUTOR,
-                    (OutcomeReceiver<Object, Exception>) result -> countDownLatch.countDown());
+                    (AdServicesOutcomeReceiver<Object, Exception>)
+                            result -> countDownLatch.countDown());
             assertThat(countDownLatch.await(TIMEOUT_IN_MS, TimeUnit.MILLISECONDS)).isTrue();
 
             sleep();
@@ -409,7 +413,8 @@ public class MeasurementCtsDebuggableTest {
             mMeasurementManager.registerTrigger(
                     Uri.parse(path),
                     CALLBACK_EXECUTOR,
-                    (OutcomeReceiver<Object, Exception>) result -> countDownLatch.countDown());
+                    (AdServicesOutcomeReceiver<Object, Exception>)
+                            result -> countDownLatch.countDown());
             assertThat(countDownLatch.await(TIMEOUT_IN_MS, TimeUnit.MILLISECONDS)).isTrue();
 
             sleep();
@@ -443,7 +448,8 @@ public class MeasurementCtsDebuggableTest {
             mMeasurementManager.registerWebSource(
                     request,
                     CALLBACK_EXECUTOR,
-                    (OutcomeReceiver<Object, Exception>) result -> countDownLatch.countDown());
+                    (AdServicesOutcomeReceiver<Object, Exception>)
+                            result -> countDownLatch.countDown());
             assertThat(countDownLatch.await(TIMEOUT_IN_MS, TimeUnit.MILLISECONDS)).isTrue();
 
             sleep();
@@ -476,7 +482,8 @@ public class MeasurementCtsDebuggableTest {
             mMeasurementManager.registerWebTrigger(
                     request,
                     CALLBACK_EXECUTOR,
-                    (OutcomeReceiver<Object, Exception>) result -> countDownLatch.countDown());
+                    (AdServicesOutcomeReceiver<Object, Exception>)
+                            result -> countDownLatch.countDown());
             assertThat(countDownLatch.await(TIMEOUT_IN_MS, TimeUnit.MILLISECONDS)).isTrue();
 
             sleep();
@@ -556,7 +563,8 @@ public class MeasurementCtsDebuggableTest {
             mMeasurementManager.deleteRegistrations(
                     deletionRequest,
                     CALLBACK_EXECUTOR,
-                    (OutcomeReceiver<Object, Exception>) result -> countDownLatch.countDown());
+                    (AdServicesOutcomeReceiver<Object, Exception>)
+                            result -> countDownLatch.countDown());
             assertThat(countDownLatch.await(TIMEOUT_IN_MS, TimeUnit.MILLISECONDS)).isTrue();
         } catch (InterruptedException e) {
             throw new IllegalStateException("Error while deleting registrations", e);

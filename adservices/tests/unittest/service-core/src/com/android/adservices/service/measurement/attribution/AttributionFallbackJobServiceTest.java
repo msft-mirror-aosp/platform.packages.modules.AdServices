@@ -73,6 +73,7 @@ public class AttributionFallbackJobServiceTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final int MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID =
             MEASUREMENT_ATTRIBUTION_FALLBACK_JOB.getJobId();
+    private static final long WAIT_IN_MILLIS = 1_000L;
     private DatastoreManager mMockDatastoreManager;
     private JobScheduler mMockJobScheduler;
 
@@ -157,6 +158,42 @@ public class AttributionFallbackJobServiceTest {
                     // Verify logging methods are invoked.
                     verify(mSpyLogger).persistJobExecutionData(anyInt(), anyLong());
                     verify(mSpyLogger).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+                });
+    }
+
+    @Test
+    public void onStartJob_killSwitchOff_unlockingCheck() throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    disableKillSwitch();
+                    CountDownLatch countDownLatch = createCountDownLatch();
+
+                    ExtendedMockito.doNothing()
+                            .when(
+                                    () ->
+                                            AttributionFallbackJobService.scheduleIfNeeded(
+                                                    any(), anyBoolean()));
+
+                    // Execute
+                    mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+                    countDownLatch.await();
+                    // TODO (b/298021244): replace sleep() with a better approach
+                    Thread.sleep(WAIT_IN_MILLIS);
+                    countDownLatch = createCountDownLatch();
+                    boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+                    countDownLatch.await();
+                    // TODO (b/298021244): replace sleep() with a better approach
+                    Thread.sleep(WAIT_IN_MILLIS);
+
+                    // Validate
+                    assertTrue(result);
+
+                    // Verify the job ran successfully twice
+                    verify(mMockDatastoreManager, times(2)).runInTransactionWithResult(any());
+                    verify(mSpyService, times(2)).jobFinished(any(), anyBoolean());
+                    verify(mMockJobScheduler, never())
+                            .cancel(eq(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID));
                 });
     }
 
@@ -467,5 +504,16 @@ public class AttributionFallbackJobServiceTest {
         ExtendedMockito.doReturn(value)
                 .when(mMockFlags)
                 .getMeasurementAttributionFallbackJobKillSwitch();
+    }
+
+    private CountDownLatch createCountDownLatch() {
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        doAnswer(i -> countDown(countDownLatch)).when(mSpyService).jobFinished(any(), anyBoolean());
+        return countDownLatch;
+    }
+
+    private Object countDown(CountDownLatch countDownLatch) {
+        countDownLatch.countDown();
+        return null;
     }
 }

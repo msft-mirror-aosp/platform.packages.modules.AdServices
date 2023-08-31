@@ -19,13 +19,17 @@ package com.android.adservices.service.signals;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME_1;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.common.AdTechUriValidator;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.SettableFuture;
@@ -37,13 +41,18 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.time.Instant;
+import java.util.concurrent.TimeUnit;
+
 @RunWith(MockitoJUnitRunner.class)
 public class FetchOrchestratorTest {
 
+    private static final long TEST_TIMEOUT_SECONDS = 10L;
     private static final Uri URI = Uri.parse("https://example.com");
     private static final String JSON = "{\"a\":\"b\"}";
     @Mock private UpdatesDownloader mUpdatesDownloader;
-    @Mock private UpdatesProcessor mUpdatesProcessor;
+    @Mock private UpdateProcessingOrchestrator mUpdateProcessingOrchestrator;
+    @Mock private AdTechUriValidator mAdTechUriValidator;
 
     private FetchOrchestrator mFetchOrchestrator;
 
@@ -53,7 +62,8 @@ public class FetchOrchestratorTest {
                 new FetchOrchestrator(
                         AdServicesExecutors.getBackgroundExecutor(),
                         mUpdatesDownloader,
-                        mUpdatesProcessor);
+                        mUpdateProcessingOrchestrator,
+                        mAdTechUriValidator);
     }
 
     @Test
@@ -63,9 +73,17 @@ public class FetchOrchestratorTest {
         FluentFuture<JSONObject> returnValue = FluentFuture.from(future);
         when(mUpdatesDownloader.getUpdateJson(URI, TEST_PACKAGE_NAME_1)).thenReturn(returnValue);
 
-        mFetchOrchestrator.orchestrateFetch(URI, TEST_PACKAGE_NAME_1);
+        mFetchOrchestrator
+                .orchestrateFetch(URI, CommonFixture.VALID_BUYER_1, TEST_PACKAGE_NAME_1)
+                .get(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         verify(mUpdatesDownloader).getUpdateJson(eq(URI), eq(TEST_PACKAGE_NAME_1));
-        verify(mUpdatesProcessor).processUpdates(any(JSONObject.class));
+        verify(mUpdateProcessingOrchestrator)
+                .processUpdates(
+                        any(AdTechIdentifier.class),
+                        anyString(),
+                        any(Instant.class),
+                        any(JSONObject.class));
+        verify(mAdTechUriValidator).addValidation(eq(URI), any());
     }
 }

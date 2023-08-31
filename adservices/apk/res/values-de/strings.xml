@@ -30,6 +30,10 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Ermöglicht einer App den Zugriff auf die AdServices Consent API."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Zugriff auf die Ad ID API"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Ermöglicht einer App den Zugriff auf die Ad ID API."</string>
+    <!-- no translation found for permlab_adServicesAccessAdServicesCobaltUpload (3305366770828562349) -->
+    <skip />
+    <!-- no translation found for permdesc_adServicesAccessAdServicesCobaltUpload (2584490228435633488) -->
+    <skip />
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Zugriff auf die App Set ID API"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Ermöglicht einer App den Zugriff auf die App Set ID API."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Zugriff auf die Consent Service API"</string>
@@ -40,8 +44,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Ermöglicht einer App den Zugriff auf die Enablement State API von Adservice."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Zugriff auf die APIs von AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Erlaubt einer App den Zugriff auf die APIs von AdServicesManager."</string>
-    <!-- no translation found for app_label (5844694701336604490) -->
-    <skip />
+    <string name="app_label" msgid="5844694701336604490">"Datenschutz bei Anzeigen"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Am Betaprogramm für Android-Datenschutz bei Anzeigen teilnehmen"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android testet privatere Möglichkeiten zum Anzeigen von Werbung"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Weitere Informationen"</string>
