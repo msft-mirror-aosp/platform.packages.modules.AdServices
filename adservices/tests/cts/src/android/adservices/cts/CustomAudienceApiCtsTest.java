@@ -123,8 +123,6 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
         PhFlagsFixture.overrideEnableEnrollmentSeed(true);
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
 
         // Kill AdServices process
         AdservicesTestHelper.killAdservicesProcess(sContext);
@@ -352,19 +350,7 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
                             ExecutionException.class,
                             () -> {
                                 joinCustomAudience(customAudience1);
-
-                                // TODO(b/266725238): Remove/modify once the API rate limit has been
-                                //  adjusted for FLEDGE
-                                CommonFixture.doSleep(
-                                        PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
                                 joinCustomAudience(customAudience2);
-
-                                // TODO(b/266725238): Remove/modify once the API rate limit has been
-                                //  adjusted for FLEDGE
-                                CommonFixture.doSleep(
-                                        PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
                                 joinCustomAudience(customAudience3);
                             });
             assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
@@ -398,19 +384,7 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
                             ExecutionException.class,
                             () -> {
                                 joinCustomAudience(customAudience1);
-
-                                // TODO(b/266725238): Remove/modify once the API rate limit has been
-                                //  adjusted for FLEDGE
-                                CommonFixture.doSleep(
-                                        PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
                                 joinCustomAudience(customAudience2);
-
-                                // TODO(b/266725238): Remove/modify once the API rate limit has been
-                                //  adjusted for FLEDGE
-                                CommonFixture.doSleep(
-                                        PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
                                 joinCustomAudience(customAudience3);
                             });
             assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
@@ -831,10 +805,6 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
             throws ExecutionException, InterruptedException, TimeoutException {
         try {
             for (Pair<AdTechIdentifier, String> map : mCustomAudiencesToCleanUp) {
-                // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted
-                //  for FLEDGE
-                CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
                 mClient.leaveCustomAudience(map.first, map.second).get(10, TimeUnit.SECONDS);
             }
         } finally {

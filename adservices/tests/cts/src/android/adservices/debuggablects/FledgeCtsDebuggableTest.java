@@ -355,7 +355,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     private String mPreviousAppAllowList;
 
     private final ArrayList<CustomAudience> mCustomAudiencesToCleanUp = new ArrayList<>();
-    private AtomicInteger mFrequencyCapKeyToFilter = new AtomicInteger(0);
+    private static final AtomicInteger sFrequencyCapKeyToFilter = new AtomicInteger(0);
 
     @Before
     public void setup() throws InterruptedException {
@@ -430,9 +430,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Make sure the flags are picked up cold
         AdservicesTestHelper.killAdservicesProcess(sContext);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
     }
 
     @After
@@ -457,9 +454,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
             CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
             CompatAdServicesTestUtils.resetFlagsToDefault();
         }
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
     }
 
     @Test
@@ -476,10 +470,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
@@ -562,10 +552,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
@@ -648,10 +634,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
@@ -729,10 +711,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         AdSelectionConfig adSelectionConfigWithSubdomains =
@@ -831,10 +809,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         String paramKey = "reportingUrl";
@@ -932,10 +906,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         BuyersDecisionLogic buyersDecisionLogic =
@@ -1077,8 +1047,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .overrideAdSelectionConfigRemoteInfo(addAdSelectionOverrideRequest)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
         Log.i(
                 TAG,
                 "Running ad selection with logic URI "
@@ -1130,10 +1098,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
@@ -1218,10 +1182,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mAdSelectionClient
                 .reportEvent(reportInteractionClickRequest)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         mAdSelectionClient
                 .reportEvent(reportInteractionHoverRequest)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -1240,10 +1200,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception.
         joinCustomAudience(customAudience);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudienceUpdate);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
@@ -1329,10 +1285,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
@@ -1414,10 +1366,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
@@ -1496,10 +1444,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
@@ -1571,10 +1515,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         String malformedScoringLogic = " This is an invalid javascript";
@@ -1639,10 +1579,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
@@ -1705,10 +1641,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         // Skip adding AdSelection override, no result to do assertion on. Failures will generate an
@@ -1776,10 +1708,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
@@ -1862,10 +1790,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Join the CA with early expiry first, to avoid waiting too long for another CA join
         joinCustomAudience(customAudienceEarlyExpiry);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudienceRegularExpiry);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
@@ -1939,10 +1863,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         String jsWaitMoreThanAllowedForBiddingPerCa = insertJsWait(5000);
@@ -2024,10 +1944,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         String jsWaitMoreThanAllowedForScoring = insertJsWait(10000);
@@ -2508,16 +2424,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .setAds(adsForBuyer2)
                         .build();
 
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
@@ -2648,16 +2557,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .setAds(adsForBuyer2)
                         .build();
 
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
@@ -2730,7 +2632,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Because frequency cap events are per-buyer and not per-CA, they cannot be cleared,
         // so to eliminate flakiness within a suite run, each test case will have its own unique key
-        final int keyToFilter = mFrequencyCapKeyToFilter.incrementAndGet();
+        final int keyToFilter = sFrequencyCapKeyToFilter.incrementAndGet();
 
         FrequencyCapFilters nonWinFilter =
                 new FrequencyCapFilters.Builder()
@@ -2787,16 +2689,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .setAds(ImmutableList.of(adWithoutFilters))
                         .build();
 
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         // Joining custom audiences, no result to do assertion on
         // Failures will generate an exception
         joinCustomAudience(customAudienceWithFrequencyCapFilters);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         // Joining custom audiences, no result to do assertion on
         // Failures will generate an exception
         joinCustomAudience(customAudienceWithoutFrequencyCapFilters);
@@ -2872,9 +2767,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .updateAdCounterHistogram(updateRequest)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         Log.i(
                 TAG,
                 "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
@@ -2911,7 +2803,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Because frequency cap events are per-buyer and not per-CA, they cannot be cleared,
         // so to eliminate flakiness within a suite run, each test case will have its own unique key
-        final int keyToFilter = mFrequencyCapKeyToFilter.incrementAndGet();
+        final int keyToFilter = sFrequencyCapKeyToFilter.incrementAndGet();
 
         FrequencyCapFilters nonWinFilter =
                 new FrequencyCapFilters.Builder()
@@ -2968,18 +2860,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .setAds(ImmutableList.of(adWithoutFilters))
                         .build();
 
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         // Joining custom audiences, no result to do assertion on
         // Failures will generate an exception
         joinCustomAudience(customAudienceWithFrequencyCapFilters);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
-        // Joining custom audiences, no result to do assertion on
-        // Failures will generate an exception
         joinCustomAudience(customAudienceWithoutFrequencyCapFilters);
 
         // Adding AdSelection override, no result to do assertion on
@@ -3053,9 +2936,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .updateAdCounterHistogram(updateRequest)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         Log.i(
                 TAG,
                 "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
@@ -3093,7 +2973,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Because frequency cap events are per-buyer and not per-CA, they cannot be cleared,
         // so to eliminate flakiness within a suite run, each test case will have its own unique key
-        final int keyToFilter = mFrequencyCapKeyToFilter.incrementAndGet();
+        final int keyToFilter = sFrequencyCapKeyToFilter.incrementAndGet();
         final int otherKeyNotFiltered = -1 * keyToFilter;
 
         FrequencyCapFilters nonWinFilterWithKeyToFilter =
@@ -3161,9 +3041,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                                         adWithFrequencyCapKeyToFilter, adWithOtherFrequencyCapKey))
                         .build();
 
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         // Joining custom audiences, no result to do assertion on
         // Failures will generate an exception
         joinCustomAudience(customAudienceWithFrequencyCapFilters);
@@ -3228,9 +3105,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .updateAdCounterHistogram(updateRequest)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         Log.i(
                 TAG,
                 "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
@@ -3267,7 +3141,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Because frequency cap events are per-buyer and not per-CA, they cannot be cleared,
         // so to eliminate flakiness within a suite run, each test case will have its own unique key
-        final int keyToFilter = mFrequencyCapKeyToFilter.incrementAndGet();
+        final int keyToFilter = sFrequencyCapKeyToFilter.incrementAndGet();
 
         FrequencyCapFilters nonWinFilter =
                 new FrequencyCapFilters.Builder()
@@ -3335,18 +3209,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .setAds(ImmutableList.of(adForBuyer2))
                         .build();
 
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         // Joining custom audiences, no result to do assertion on
         // Failures will generate an exception
         joinCustomAudience(customAudienceForBuyer1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
-        // Joining custom audiences, no result to do assertion on
-        // Failures will generate an exception
         joinCustomAudience(customAudienceForBuyer2);
 
         // Adding AdSelection override, no result to do assertion on
@@ -3419,9 +3284,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .updateAdCounterHistogram(updateRequest)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         Log.i(
                 TAG,
                 "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
@@ -3458,7 +3320,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Because frequency cap events are per-buyer and not per-CA, they cannot be cleared,
         // so to eliminate flakiness within a suite run, each test case will have its own unique key
-        final int keyToFilter = mFrequencyCapKeyToFilter.incrementAndGet();
+        final int keyToFilter = sFrequencyCapKeyToFilter.incrementAndGet();
 
         FrequencyCapFilters nonWinFilter =
                 new FrequencyCapFilters.Builder()
@@ -3515,18 +3377,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .setAds(ImmutableList.of(adWithoutFilters))
                         .build();
 
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         // Joining custom audiences, no result to do assertion on
         // Failures will generate an exception
         joinCustomAudience(customAudienceWithFrequencyCapFilters);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
-        // Joining custom audiences, no result to do assertion on
-        // Failures will generate an exception
         joinCustomAudience(customAudienceWithoutFrequencyCapFilters);
 
         // Adding AdSelection override, no result to do assertion on
@@ -3600,9 +3453,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .updateAdCounterHistogram(updateRequest)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         Log.i(
                 TAG,
                 "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
@@ -3647,8 +3497,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception.
         joinCustomAudience(customAudience1);
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
         joinCustomAudience(customAudience2);
 
         GetAdSelectionDataRequest failingRequest =
@@ -3679,9 +3527,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
         PhFlagsFixture.overrideFledgeAdSelectionAuctionServerApisEnabled(false);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
 
         long adSelectionId = 1234567L;
         PersistAdSelectionResultRequest failingRequest =
@@ -3865,10 +3710,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
             throws ExecutionException, InterruptedException, TimeoutException {
         try {
             for (CustomAudience customAudience : mCustomAudiencesToCleanUp) {
-                // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted
-                //  for FLEDGE
-                CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
                 mCustomAudienceClient
                         .leaveCustomAudience(
                                 customAudience.getBuyer(),
