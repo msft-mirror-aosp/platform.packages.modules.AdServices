@@ -143,8 +143,8 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"અનબ્લૉક કરો"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"તમે બ્લૉક કરેલી રુચિઓ"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"બધી રુચિઓ રીસેટ કરો"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"હમણાં બતાવવા માટે કોઈ રુચિ નથી"</string>
-    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"હમણાં બતાવવા માટે કોઈ વિષય નથી"</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"હમણાં બતાવવા માટે કોઈ રુચિ નથી."</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"હમણાં બતાવવા માટે કોઈ વિષય નથી.\n"<a href="https://support.google.com/android?p=ad_privacy">"જાહેરાતના વિષય"</a>" વિશે વધુ જાણો"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"પ્રાઇવસી સૅન્ડબૉક્સ"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Androidનું જાહેરાતો સંબંધિત પ્રાઇવસીનું બીટા વર્ઝન નવી સુવિધાઓ પ્રદાન કરે છે, જેનો ઉપયોગ ઍપ તમને ગમી શકે તેવી જાહેરાતો બતાવવા માટે કરી શકે છે. આ ટેક્નોલોજી ડિવાઇસ ઓળખકર્તાઓનો ઉપયોગ કરતી નથી.\n\nAndroid તમને કેવા પ્રકારની જાહેરાતોમાં રુચિ હોઈ શકે છે, તેનું અનુમાન લગાવી શકે છે અને તમારા ડિવાઇસ પર હંગામી રીતે આ રુચિઓને સાચવી શકે છે. આ અન્ય ડેવલપરની વેબસાઇટ અને ઍપ પરની તમારી પ્રવૃત્તિને ટ્રૅક કર્યા વિના, તમને સંબંધિત જાહેરાતો બતાવવા માટે ઍપને મંજૂરી આપે છે."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"બ્લૉક કરેલી કોઈ રુચિ તમે ધરાવતા નથી"</string>
@@ -157,7 +157,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"બ્લૉક કરેલી ઍપ જુઓ"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"ઍપ દ્વારા અનુમાનિત રુચિઓ રીસેટ કરો"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"અત્યારે કોઈપણ ઍપ તમારા માટે રુચિઓ જનરેટ કરી રહી નથી"</string>
-    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"હમણાં બતાવવા માટે કોઈ ઍપ નથી"</string>
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"હમણાં બતાવવા માટે કોઈ ઍપ નથી. \n"<a href="https://support.google.com/android?p=ad_privacy">"ઍપ દ્વારા સૂચવેલી જાહેરાતો"</a>" વિશે વધુ જાણો"</string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"પ્રાઇવસી સૅન્ડબૉક્સ"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Androidનું જાહેરાતો સંબંધિત પ્રાઇવસીનું બીટા વર્ઝન નવી સુવિધાઓ પ્રદાન કરે છે, જેનો ઉપયોગ ઍપ તમને ગમી શકે તેવી જાહેરાતો બતાવવા માટે કરી શકે છે. આ ટેક્નોલોજી ડિવાઇસ ઓળખકર્તાઓનો ઉપયોગ કરતી નથી.\n\nઍપ તમને કેવા પ્રકારની જાહેરાતોમાં રુચિ હોઈ શકે છે, તેનું અનુમાન લગાવી શકે છે અને તમારા ડિવાઇસ પર હંગામી રીતે આ રુચિઓને સાચવી શકે છે. આ અન્ય ડેવલપરની વેબસાઇટ અને ઍપ પરની તમારી પ્રવૃત્તિને ટ્રૅક કર્યા વિના, તમને સંબંધિત જાહેરાતો બતાવવા માટે ઍપને મંજૂરી આપે છે."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"બ્લૉક કરેલી કોઈ ઍપ તમે ધરાવતા નથી"</string>
@@ -187,14 +187,25 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"શું ઍપ દ્વારા સૂચવેલી જાહેરાતો રીસેટ કરીએ?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"તમારી સૂચિમાં શામેલ ઍપમાંથી જાહેરાતના સૂચન સંબંધિત ડેટા ડિલીટ કરવામાં આવશે અને ત્યાર પછીથી એ બધી ઍપ તમને નવી જાહેરાતો સૂચવશે. તમને હજી પણ કેટલીક સંબંધિત જાહેરાતો જોવા મળી શકે છે."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"ઍપનો ડેટા રીસેટ કર્યો"</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"બધા વિષયો રીસેટ કરીએ?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"ઍપ દ્વારા સુઝાવ અપાયેલી જાહેરાતો રીસેટ કરીએ?"</string>
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"જાહેરાતનો વિષય ચાલુ છે"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android રસપ્રદ વિષયોની નોંધ લેવાનું શરૂ કરશે, પણ તમારા પહેલા વિષય દેખાવામાં થોડી વાર લાગી શકે છે."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"જાહેરાતના વિષયો બંધ કરીએ?"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"વિષયોની આ સૂચિ ડિલીટ કરવામાં આવશે. Android હવેથી રસપ્રદ વિષયોની નોંધ લેશે નહીં, પણ તમને સંબંધિત જાહેરાતો જોવા મળી શકે છે."</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"ઍપ દ્વારા સૂચવેલી જાહેરાતો ચાલુ છે"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"ઍપ સૂચવેલી જાહેરાતો બતાવવાનું શરૂ કરી શકે. એકવાર જાહેરાતો સૂચવવાનું શરૂ કરે, પછી તમે ઍપની સૂચિ જોઈ શકશો."</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"ઍપ દ્વારા સૂચવેલી જાહેરાતો બંધ કરીએ?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"જાહેરાતના સૂચનનો બધો ડેટા ડિલીટ કરવામાં આવશે. ઍપ હવેથી કોઈ જાહેરાતો સૂચિત કરી શકશે નહીં, પણ તમે કદાચ સંબંધિત જાહેરાત જોઈ શકશો."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"જાહેરાતની માપણી ચાલુ છે"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android ઍપને તેમની જાહેરાતોના પર્ફોર્મન્સની માપણી કરવામાં સહાય કરવામાં ફક્ત મર્યાદિત માહિતી ઍપ સાથે શેર કરી શકે છે."</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"જાહેરાતની માપણી બંધ કરીએ?"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"જાહેરાતની માપણીના બધા બાકી રિપોર્ટ ડિલીટ કરવામાં આવશે અને કોઈ નવા રિપોર્ટ જનરેટ અથવા શેર કરાશે નહીં."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"જાહેરાત સંબંધી પ્રાઇવસી"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"જાહેરાતના વિષયો"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"ઍપ દ્વારા સૂચવેલી જાહેરાતો"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android, તાજેતરમાં તમે ઉપયોગમાં લીધી હોય એવી ઍપ અને તમે કેટલી વખત તેમનો ઉપયોગ કરો છો તેના આધારે તમારી રુચિના વિષયો નોંધે છે."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"તમે ઉપયોગ કરતા હો એ બધી ઍપ પણ તમે તેમનો ઉપયોગ કેવી રીતે કરો છો તેના આધારે તમને શું ગમે છે તે નક્કી કરી શકે છે."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"તમે ઉપયોગમાં લો એ બધી ઍપ તેમની જાહેરાતોનું પર્ફોર્મન્સ માપવામાં તેમને સહાય કરે એવી માહિતી Android પાસે માગી શકે છે. Android બધી ઍપને મર્યાદિત ડેટા એકત્રિત કરવાની મંજૂરી આપે છે."</string>
+    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916"><a href="https://support.google.com/android?p=ad_privacy">"Android પર જાહેરાત સંબંધિત પ્રાઇવસી"</a>" વિશે વધુ જાણો"</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"ચાલુ / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> વિષયો"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{ચાલુ / # વિષય}one{ચાલુ / # વિષય}other{ચાલુ / # વિષય}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"ચાલુ / <xliff:g id="APPS_COUNT">%1$d</xliff:g> ઍપ"</string>
@@ -211,6 +222,11 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"તમે બ્લૉક કરેલી ઍપ"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"ઍપ દ્વારા સૂચવેલા ડેટા રીસેટ કરો"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"તમારો અનુભવ મનગમતો બનાવવા માટે, તમે ઉપયોગમાં લો છો તે વિવિધ ઍપ દ્વારા તમે રુચિ ધરાવતા હો તેવી બાબતો યાદ રાખવી સામાન્ય વાત છે. ઍપ, તમારા વિષયો સંબંધિત માહિતી Androidની સહાયથી સ્ટોર પણ કરી શકે છે.\n\nઉદાહરણ તરીકે, જો તમે મેરેથોનના પ્રશિક્ષણ સંબંધિત કોઈ ઍપનો ઉપયોગ કરો, તો તે ઍપ નક્કી કરી શકે છે કે તમે દોડવા માટેના શૂઝમાં રુચિ ધરાવો છો. પછીથી, જો તમે બીજી કોઈ ઍપનો ઉપયોગ કરો તો તે ઍપ તમને પહેલી ઍપ દ્વારા સૂચવવામાં આવેલી દોડવાના શૂઝવાળી જાહેરાત બતાવી શકે છે.\n\nઍપ દ્વારા સૂચવેલી જાહેરાતો સંબંધિત ડેટાને Android નિયમિત, ઑટોમૅટિક રીતે ડિલીટ કરે છે. તમે ફરી ઉપયોગ કરો છો તે ઍપ સૂચિમાં ફરીથી દેખાઈ શકે છે. અથવા તમે કોઈ ઍપને તમને જાહેરાતોનું સૂચન આપવાથી બ્લૉક કરી શકો છો.\n\nતમારી ઍપમાં તમને જોવા મળતી જાહેરાત આ સેટિંગ, જાહેરાતના વિષયોના સેટિંગ, તમારા જાહેરાત IDના સેટિંગ અને તમે ઉપયોગમાં લઈ રહ્યાં હો તે ઍપ જાહેરાતોને મનગમતી બનાવે છે કે નહીં, તેના આધારે મનગમતી બનાવેલી હોઈ શકે છે."</string>
+    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"જાહેરાત સંબંધિત પ્રાઇવસીની નવી સુવિધા ઉપલબ્ધ છે"</string>
+    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"જાહેરાતનું પર્ફોર્મન્સ માપવામાં સહાય માટે ઍપ વચ્ચે ખૂબ જ મર્યાદિત માહિતી શેર કરવામાં આવે છે"</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"અમે જાહેરાતની માપણી નામની નવી જાહેરાત સંબંધિત પ્રાઇવસી સુવિધા લૉન્ચ કરી રહ્યાં છીએ. ઍપને જાહેરાતોનું પર્ફોર્મન્સ માપવામાં સહાય માટે, Android, ઍપ વચ્ચે ખૂબ જ મર્યાદિત માહિતી શેર કરે છે, જેમ કે તમને જાહેરાત ક્યારે બતાવવામાં આવી."</string>
+    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"તમે જાહેરાત સંબંધી પ્રાઇવસી સેટિંગમાં જઈને તેમાં ફેરફાર કરી શકો છો."</string>
+    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"તમે ઉપયોગમાં લો એ બધી ઍપ તેમની જાહેરાતોનું પર્ફોર્મન્સ માપવામાં તેમને સહાય કરે એવી માહિતી Android પાસે માગી શકે છે. Android બધી ઍપને ફક્ત મર્યાદિત ડેટા એકત્રિત કરવાની મંજૂરી આપે છે."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"મ્યુઝિક, સમાચાર અને રમતગમત જેવા રુચિના વિષયોનું પ્રતિનિધિત્વ કરતા પ્રતીકોનું રંગીન ચિત્ર"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"વર્તુળની અંદર લૉકનું રંગીન ચિત્ર"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"ચોરસ આકાર બનાવતા નવ ડોટનું નાનું બ્લૅક ઍન્ડ વ્હાઇટ ચિત્ર"</string>

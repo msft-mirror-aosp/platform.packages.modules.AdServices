@@ -65,7 +65,7 @@
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Privacy Sandbox de Android ofrece nuevas funciones que las apps pueden utilizar para mostrarte anuncios que podrían gustarte. Estas tecnologías no utilizan identificadores de dispositivos.\n\nAndroid y tus apps pueden estimar los tipos de anuncios que podrían interesarte y guardar los intereses temporalmente en tu dispositivo. Esto permite que las apps te muestren anuncios que podrían interesarte, sin rastrear tu actividad en sitios web ni apps de otros desarrolladores."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Personalización de anuncios con Privacy Sandbox"</string>
     <string name="notificationUI_how_it_works_expanded_text3" msgid="603165966360369018">"•  Intereses estimados por Android"</string>
-    <string name="notificationUI_how_it_works_expanded_text4" msgid="3910573920883580609">"Android estima periódicamente tus principales intereses en función de las apps que utilizas, por ejemplo, \"Deportes\" o \"Viajes\".\n\nMás adelante, una app puede pedirle a Android que utilice esos intereses para mostrarte anuncios más relevantes.\n\nPuedes ver la lista de intereses actuales en tu configuración de privacidad y bloquear los que no te gusten."</string>
+    <string name="notificationUI_how_it_works_expanded_text4" msgid="3910573920883580609">"Android estima periódicamente tus principales intereses en función de las apps que utilizas, por ejemplo, \"deportes\" o \"viajes\".\n\nMás adelante, una app puede pedirle a Android que utilice esos intereses para mostrarte anuncios más relevantes.\n\nPuedes ver la lista de intereses actuales en tu configuración de privacidad y bloquear los que no te gusten."</string>
     <string name="notificationUI_how_it_works_expanded_text5" msgid="7257714040472055781">"•  Intereses estimados por Android"</string>
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"Las apps pueden estimar tus intereses y guardarlos temporalmente con Android. Por ejemplo, una app que utilices para comprar zapatillas para correr puede estimar que tu interés es \"correr maratones\".\n\nMás tarde, basándose en este interés, otra app puede mostrarte un anuncio relacionado con maratones.\n\nEn tu configuración de privacidad, puedes administrar la lista de apps que tienen intereses guardados."</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"Nuevas funciones de privacidad en los anuncios"</string>
@@ -143,8 +143,8 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Desbloquear"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Intereses que bloqueaste"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Restablecer todos los intereses"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"No hay intereses para mostrar en este momento"</string>
-    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"No hay temas para mostrar en este momento"</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"No hay intereses para mostrar en este momento."</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"No hay temas para mostrar en este momento.\nObtén más información sobre "<a href="https://support.google.com/android?p=ad_privacy">"temas de anuncios"</a>"."</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"La versión beta de privacidad en los anuncios de Android ofrece nuevas funciones que las apps pueden usar para mostrarte anuncios que podrían interesarte. Estas tecnologías no utilizan identificadores de dispositivos.\n\nAndroid puede estimar los tipos de anuncios que podrían interesarte y guardar esos intereses temporalmente en tu dispositivo. Esto permite que las apps te muestren anuncios relevantes, sin rastrear tu actividad en sitios web ni apps de otros desarrolladores."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"No tienes intereses bloqueados"</string>
@@ -157,7 +157,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"Ver apps bloqueadas"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Restablecer los intereses estimados por apps"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"No hay apps que generen interés para ti en este momento"</string>
-    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"No hay apps para mostrar en este momento"</string>
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"No hay apps para mostrar en este momento. \nObtén más información sobre "<a href="https://support.google.com/android?p=ad_privacy">"anuncios sugeridos por apps"</a>"."</string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"La versión beta de privacidad en los anuncios de Android ofrece nuevas funciones que las apps pueden usar para mostrarte anuncios que podrían interesarte. Estas tecnologías no utilizan identificadores de dispositivos.\n\nLas apps pueden estimar los tipos de anuncios que podrían interesarte y guardar esos intereses temporalmente en tu dispositivo. Esto permite que las apps te muestren anuncios relevantes, sin rastrear tu actividad en sitios web ni apps de otros desarrolladores."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"No tienes ninguna app bloqueada"</string>
@@ -187,14 +187,25 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"¿Quieres restablecer los anuncios sugeridos por apps?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Se borrarán los datos de sugerencias de anuncios de las apps en tu lista. De ahora en más, las apps sugerirán nuevos anuncios. Es posible que aún veas anuncios relacionados."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Se restablecieron los datos de las apps"</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"¿Quieres restablecer todos los temas?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"¿Quieres restablecer los anuncios sugeridos por apps?"</string>
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Los temas de anuncios están activados"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android comenzará a registrar temas de interés, pero tus primeros temas podrían tardar en aparecer."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"¿Quieres desactivar los temas de anuncios?"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Se borrará esta lista de temas. Android ya no registrará temas de interés, pero puedes seguir viendo anuncios relevantes."</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Anuncios sugeridos por apps activados"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Es posible que las apps sugieran anuncios. Verás una lista de apps una vez que comiencen a sugerir anuncios."</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"¿Quieres desactivar los anuncios sugeridos por apps?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Se borrarán todos los datos de anuncios sugeridos. Las apps ya no podrán sugerir anuncios, pero puedes seguir viendo anuncios relevantes."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"La medición de anuncios está activada"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android solo comparte información muy limitada con apps para ayudarlas a medir el rendimiento de sus anuncios."</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"¿Quieres desactivar la medición de anuncios?"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"Todos los informes de medición de anuncios pendientes se borrarán y no se generarán ni compartirán informes nuevos."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Privacidad en los anuncios"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Temas de anuncios"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Anuncios sugeridos por apps"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android registra temas de interés según las apps que usaste recientemente y la frecuencia con que lo haces."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Las apps que usas también pueden determinar lo que te gusta en función de cómo las utilizas."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Las apps que uses pueden solicitarle información a Android para medir el rendimiento de sus anuncios. Android permite que las apps recopilen algunos tipos de datos."</string>
+    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916">"Más información sobre "<a href="https://support.google.com/android?p=ad_privacy">"privacidad en los anuncios en Android"</a></string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Activado/<xliff:g id="TOPICS_COUNT">%1$d</xliff:g> temas"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Activados/# tema}many{Activados/# de temas}other{Activados/# temas}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Activado/<xliff:g id="APPS_COUNT">%1$d</xliff:g> apps"</string>
@@ -211,6 +222,11 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Apps que bloqueaste"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Restablecer los datos sugeridos por apps"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Con frecuencia, las apps que usas recuerdan el contenido que te interesa para personalizar tu experiencia. Las apps también pueden usar Android para almacenar información sobre tus temas.\n\nPor ejemplo, si usas una app sobre entrenamiento para maratones, la app podría inferir que te interesan las zapatillas deportivas. Más adelante, si usas una app diferente, esta podría mostrarte un anuncio de zapatillas deportivas sugerido por la primera app.\n\nAndroid borra los datos sugeridos por apps regularmente de forma automática. Las apps que vuelvas a usar podrían volver a aparecer en la lista. Si quieres que esto no suceda, bloquea una app para que deje de sugerirte anuncios.\n\nEs posible que en tus apps se muestren anuncios personalizados dependiendo de los parámetros de configuración de anuncios personalizados, de tu ID de publicidad y de los temas de anuncios, y de si la app que usas personaliza anuncios."</string>
+    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"Nuevas funciones de privacidad en los anuncios disponibles"</string>
+    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Solo se comparte cierta información entre apps para medir el rendimiento de los anuncios"</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Lanzamos una nueva función de privacidad en los anuncios llamada medición de anuncios. Android solo comparte información muy limitada entre las apps, como cuándo se te mostró un anuncio, para ayudar a las apps a medir el rendimiento de los anuncios."</string>
+    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Puedes realizar cambios en la configuración de privacidad de los anuncios."</string>
+    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Las apps que usas pueden solicitarle información a Android para medir el rendimiento de sus anuncios. Android permite que las apps recopilen solo algunos tipos de datos."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Ilustración colorida de símbolos que representan temas de interés como música, noticias y deportes"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Ilustración colorida de una cerradura dentro de un círculo"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Ilustración pequeña en blanco y negro de nueve puntos que forman un cuadrado"</string>

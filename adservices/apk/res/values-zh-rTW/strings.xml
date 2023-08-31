@@ -137,14 +137,14 @@
     <string name="settingsUI_topics_title" msgid="5996189869721397937">"Android 推測的興趣喜好"</string>
     <string name="settingsUI_apps_title" msgid="2772289096915264175">"會推測興趣喜好的應用程式"</string>
     <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"廣告評估功能"</string>
-    <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"應用程式可以使用 Privacy Sandbox 評估廣告成效。為達成此目的，廣告客戶可以將你與其廣告和應用程式之間的互動資料，暫時儲存在 Android 系統中。可以儲存的資料量有限，且會定期遭到刪除。\n\n你隨時都可以關閉 Privacy Sandbox，藉此刪除這項資料。"</string>
+    <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"應用程式可以使用 Privacy Sandbox 評估廣告成效。為達成此目的，廣告主可以將你與其廣告和應用程式之間的互動資料，暫時儲存在 Android 系統中。可以儲存的資料量有限，且會定期遭到刪除。\n\n你隨時都可以關閉 Privacy Sandbox，藉此刪除這項資料。"</string>
     <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"Android 會定期根據你所用的應用程式，推測你最感興趣的類別。應用程式可以要求 Android 運用這些興趣喜好向你顯示更貼近需求的廣告。\n\n如果你封鎖某項興趣喜好，那麼除非你解除封鎖，否則該項興趣喜好不會再加入這份清單。請注意，你可能還是會看到某些相關的廣告。"</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"封鎖"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"解除封鎖"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"你已封鎖的興趣"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"重設所有興趣"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"目前沒有可顯示的興趣喜好"</string>
-    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"目前沒有可顯示的主題"</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"目前沒有可顯示的興趣喜好。"</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"目前沒有可顯示的主題。\n進一步瞭解"<a href="https://support.google.com/android?p=ad_privacy">"廣告主題"</a></string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android 廣告隱私權 Beta 版提供全新功能，可讓應用程式用來向你顯示可能喜歡的廣告。這些技術並未使用裝置 ID。\n\nAndroid 可以推測你可能感興趣的廣告類別，並在裝置上暫時儲存你的興趣喜好。這樣一來，應用程式不必追蹤你在其他開發商的網站和應用程式內的活動，也能向你顯示貼近需求的廣告。"</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"你沒有封鎖任何興趣喜好"</string>
@@ -157,13 +157,13 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"查看封鎖的應用程式"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"重設應用程式推測的興趣喜好"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"目前沒有任何應用程式推測你的興趣喜好"</string>
-    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"目前沒有可顯示的應用程式"</string>
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"目前沒有可顯示的應用程式。\n進一步瞭解"<a href="https://support.google.com/android?p=ad_privacy">"應用程式建議廣告"</a></string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android 廣告隱私權 Beta 版提供全新功能，可讓應用程式用來向你顯示可能喜歡的廣告。這些技術並未使用裝置 ID。\n\n應用程式可以推測你可能感興趣的廣告類別，並在裝置上暫時儲存你的興趣喜好。這樣一來，應用程式不必追蹤你在其他開發商的網站和應用程式內的活動，也能向你顯示貼近需求的廣告。"</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"你沒有封鎖任何應用程式"</string>
     <string name="settingsUI_no_blocked_apps_ga_text" msgid="7488680173653861943">"未封鎖任何應用程式"</string>
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"允許廣告評估"</string>
-    <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"應用程式和廣告客戶可要求 Android 提供相關資訊，以便評估所顯示廣告的成效。\n\n廣告評估資料會定期從你的裝置中刪除。"</string>
+    <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"應用程式和廣告主可要求 Android 提供相關資訊，以便評估所顯示廣告的成效。\n\n廣告評估資料會定期從你的裝置中刪除。"</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"重設評估資料"</string>
     <string name="settingsUI_measurement_view_footer_text" msgid="5978750159738729308">"Android 會限制應用程式之間可分享的資訊，藉此保護你的隱私。為保護你的身分資料，系統會延遲傳送報告。\n\n你的瀏覽器可能也有類似設定。如果 Android 和瀏覽器都開啟廣告評估功能，廣告技術公司或許就能在你使用的應用程式和造訪的網站上評估廣告成效差異。瀏覽記錄只會儲存在你的私人裝置上。\n\n想進一步瞭解 Android 如何保護你的資料，請參閱我們的《"<a href="https://policies.google.com/privacy">"隱私權政策"</a>"》。"</string>
     <string name="settingsUI_measurement_are_reset" msgid="4375330550418573499">"廣告評估資料已重設"</string>
@@ -187,14 +187,25 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"要重設應用程式建議的廣告嗎？"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"系統將刪除清單上來自應用程式的廣告建議資料，應用程式之後會建議新的廣告。請注意，您可能還是會看到一些相關廣告。"</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"已重設應用程式資料"</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"要重設所有主題嗎？"</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"要重設應用程式建議的廣告嗎？"</string>
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"廣告主題已開啟"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android 會開始記錄感興趣的主題，但可能需要一段時間，才會顯示你的第一個主題。"</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"要關閉廣告主題嗎？"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"系統會刪除這個主題清單。Android 不會再記錄興趣喜好主題，但你仍可能會看到相關廣告。"</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"應用程式建議廣告已開啟"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"應用程式可能會開始建議廣告。應用程式開始建議廣告後，就會列在應用程式清單中。"</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"要關閉應用程式建議廣告嗎？"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"系統會刪除所有廣告建議。應用程式無法再建議廣告，但你仍可能會看到相關廣告。"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"廣告評估已開啟"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android 只會將相當有限的資訊提供給應用程式，協助應用程式評估廣告成效。"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"要關閉廣告評估嗎？"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"系統會刪除所有待處理的廣告評估報告，不會再產生或提供新報告。"</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"廣告隱私權"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"廣告主題"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"應用程式建議的廣告"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android 會根據你最近使用的應用程式以及使用頻率，記錄你感興趣的主題。"</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"你使用的應用程式也能根據你的使用方式，判斷你喜愛的主題。"</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"你使用的應用程式可要求 Android 提供相關資訊，以便評估所顯示廣告的成效。Android 允許應用程式收集少數幾種資料。"</string>
+    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916">"進一步瞭解 "<a href="https://support.google.com/android?p=ad_privacy">"Android 上的廣告隱私權"</a></string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"已啟用/<xliff:g id="TOPICS_COUNT">%1$d</xliff:g> 個主題"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{已開啟/# 個主題}other{已開啟/# 個主題}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"已啟用/<xliff:g id="APPS_COUNT">%1$d</xliff:g> 個應用程式"</string>
@@ -211,6 +222,11 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"你封鎖的應用程式"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"重設應用程式建議的資料"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"你使用的應用程式往往會記住你感興趣的主題，以便提供個人化的使用體驗。此外，應用程式也可將主題相關資訊儲存在 Android。\n\n舉例來說，如果你使用有關馬拉松訓練的應用程式，該應用程式可能會判斷你對跑鞋感興趣。假如你之後使用其他應用程式，當中可能會顯示馬拉松訓練應用程式建議的跑鞋廣告。\n\nAndroid 會定期自動刪除應用程式建議的資料。你日後再度使用的應用程式可能會重新顯示在清單中。你也可以透過封鎖的方式禁止應用程式建議廣告。\n\n你可能會在應用程式中看到個人化廣告，這類廣告的顯示依據如下：這項設定、廣告主題設定、廣告 ID 設定，以及你使用的應用程式是否會顯示個人化廣告。"</string>
+    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"全新廣告隱私權功能已上線"</string>
+    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"評估廣告成效時，應用程式間只能分享有限的資料"</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"我們將推出「廣告評估」這項全新的廣告隱私權功能。Android 現在只會在應用程式間分享有限的資訊 (例如向使用者放送廣告的時段)，協助應用程式評估廣告成效。"</string>
+    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"你可以前往廣告隱私權設定進行變更。"</string>
+    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"你使用的應用程式可要求 Android 提供資訊，以便評估廣告成效。Android 僅允許應用程式收集少數幾種資料。"</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"這張彩色插圖中的符號代表音樂、新聞和體育賽事等興趣喜好主題"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"這張彩色插圖中的圓圈內有一個鎖頭"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"這張小型黑白插圖中有由九個圓點組成的正方形"</string>

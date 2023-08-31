@@ -143,8 +143,8 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Taka af bannlista"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Áhugasvið sem þú hefur lokað á"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Endurstilla öll áhugasvið"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Engin áhugasvið til að sýna sem stendur"</string>
-    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"Engin umfjöllunarefni til að birta eins og er"</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"Engin áhugasvið til að birta eins og er."</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"Engin umfjöllunarefni til að birta eins og er.\nNánar um "<a href="https://support.google.com/android?p=ad_privacy">"umfjöllunarefni auglýsinga"</a></string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Betaútgáfa persónuverndar Android-auglýsinga býður upp á nýja eiginleika sem forrit geta notað til að birta þér auglýsingar sem gætu höfðað til þín. Þessi tækni notar ekki auðkenni tækja.\n\nAndroid getur áætlað hvernig auglýsingar gætu höfðað til þín og vistað áhugasviðin tímabundið í tækinu þínu. Þetta gerir forritum kleift að birta þér viðeigandi auglýsingar án þess að rekja virkni þína á vefsvæðum eða í forritum annarra þróunaraðila."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Þú hefur ekki sett nein áhugasvið á bannlista"</string>
@@ -157,7 +157,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"Skoða forrit á bannlista"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Endurstilla áhugasvið sem forrit hafa áætlað"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Engin forrit áætla áhugasviðin þín eins og er"</string>
-    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"Engin forrit til að sýna eins og er"</string>
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"Engin forrit til að birta eins og er. \nNánar um "<a href="https://support.google.com/android?p=ad_privacy">"auglýsingatillögur forrita"</a></string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Betaútgáfa persónuverndar Android-auglýsinga býður upp á nýja eiginleika sem forrit geta notað til að birta þér auglýsingar sem gætu höfðað til þín. Þessi tækni notar ekki auðkenni tækja.\n\nForrit geta áætlað hvernig auglýsingar gætu höfðað til þín og vistað áhugasviðin tímabundið í tækinu þínu. Þetta gerir forritum kleift að birta þér viðeigandi auglýsingar án þess að rekja virkni þína á vefsvæðum eða í forritum annarra þróunaraðila."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Þú hefur ekki sett nein forrit á bannlista"</string>
@@ -187,14 +187,25 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Endurstilla auglýsingatillögur frá forritum?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Gögnum auglýsingatillagna frá forritum á listanum þínum verður eytt og forritin munu stinga upp á nýjum auglýsingum í framhaldinu. Þú gætir áfram séð tengdar auglýsingar."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Forritsgögn voru endurstillt"</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Endurstilla öll umfjöllunarefni?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Endurstilla auglýsingatillögur frá forritum?"</string>
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Kveikt er á umfjöllunarefnum auglýsinga"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android mun byrja að skrá áhugasvið umfjöllunarefna en nokkur tími getur liðið áður en fyrstu umfjöllunarefnin birtast."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Slökkva á umfjöllunarefnum auglýsinga?"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Þessum lista yfir umfjöllunarefni verður eytt. Android hættir að nota áhugasvið umfjöllunarefna en þú kannt að sjá viðeigandi auglýsingar áfram."</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Kveikt er á auglýsingatillögum forrita"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Forrit kunna að byrja að koma með auglýsingatillögur. Þú sérð lista yfir forrit um leið og þau byrja að koma með auglýsingatillögur."</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Slökkva á auglýsingatillögum forrita?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Öllum gögnum auglýsingatillaga verður eytt. Forrit hætta að geta komið með auglýsingatillögur en þú kannt áfram að sjá viðeigandi auglýsingar."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Kveikt er á auglýsingamælingum"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android getur aðeins deilt mjög takmörkuðum gögnum með forritum til að hjálpa þeim að mæla árangur auglýsinga."</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Slökkva á auglýsingamælingum?"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"Öllum auglýsingamælingaskýrslum í bið verður eytt og engar nýjar skýrslur verða búnar til eða þeim deilt."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Persónuvernd auglýsinga"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Umfjöllunarefni auglýsinga"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Auglýsingatillögur forrita"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android skráir áhugasvið umfjöllunarefna í samræmi við forritin sem þú hefur notað nýlega og hversu oft þú notar þau."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Forrit sem þú notar geta einnig áætlað hvað höfðar til þín út frá því hvernig þú notar þau."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Forrit sem þú notar geta beðið Android um upplýsingar til að hjálpa þeim að mæla árangur auglýsinga sinna. Android gerir forritum kleift að safna tilteknum gerðum gagna"</string>
+    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916">"Nánar um "<a href="https://support.google.com/android?p=ad_privacy">"persónuvernd auglýsinga í Android"</a></string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Kveikt / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> umfjöllunarefni"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Kveikt / # umfjöllunarefni}one{Kveikt / # umfjöllunarefni}other{Kveikt / # umfjöllunarefni}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Kveikt / <xliff:g id="APPS_COUNT">%1$d</xliff:g> forrit"</string>
@@ -207,10 +218,15 @@
     <string name="settingsUI_reset_topics_ga_title" msgid="5365554894399951300">"Endurstilla öll umfjöllunarefni auglýsinga"</string>
     <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Android skráir áhugasvið umfjöllunarefna í samræmi við forritin sem þú hefur notað undanfarnar vikur.\n\nSeinna getur forrit sem þú notar óskað eftir umfjöllunarefnunum þínum frá Android til að sérsníða auglýsingarnar sem birtast þér. Android deilir allt að 3 umfjöllunarefnum en verndar einnig auðkenni þitt og upplýsingar um notkun forrita.\n\nAndroid eyðir umfjöllunarefnum reglulega sjálfkrafa. Þegar þú heldur áfram að nota forrit getur umfjöllunarefni birst aftur á listanum. Þú getur einnig sett umfjöllunarefni sem þú vilt ekki að Android deili með forritum á bannlista.\n\nAuglýsing sem birtist í forriti kann að vera sérsniðin en það fer eftir þessari stillingu, stillingu fyrir auglýsingatillögur forrita, stillingum auglýsingakennis og því hvort forritið sem þú ert að nota sérsníði auglýsingar."</string>
     <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"Leyfa auglýsingatillögur forrita"</string>
-    <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"Forrit sem þú notar geta áætlað hvað höfðar til þín og komið svo með auglýsingartillögur í öðrum forritum.\n\nÞú getur lokað á að forrit komi með tillögur. Android eyðir einnig gögnum um tillögur forrita reglulega sjálfkrafa."</string>
+    <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"Forrit sem þú notar geta áætlað hvað höfðar til þín og komið svo með auglýsingatillögur í öðrum forritum.\n\nÞú getur lokað á að forrit komi með tillögur. Android eyðir einnig gögnum um tillögur forrita reglulega sjálfkrafa."</string>
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Forrit sem þú hefur sett á bannlista"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Endurstilla gögn um tillögur frá forritum"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Algengt er að forritin sem nú notar muni áhugasvið þín til að sérsníða upplifun þína. Forrit geta einnig vistað upplýsingar um umfjöllunarefnin þín hjá Android.\n\nEf þú notar til dæmis forrit um maraþonþjálfun gæti forritið áætlað að þú hafir áhuga á hlaupaskóm. Ef þú notar annað forrit seinna getur viðkomandi forrit sýnt þér auglýsingu fyrir hlaupaskó í samræmi við tillögu frá fyrsta forritinu.\n\nAndroid eyðir forritstillögugögnum reglulega sjálfkrafa. Forrit sem þú notar aftur gæti birst aftur á listanum Þú getur einnig lokað á að forrit stingi upp á auglýsingum fyrir þig.\n\nSérsniðnar auglýsingar kunna að birtast í forritum en það fer eftir þessari stillingu, stillingu fyrir umfjöllunarefni auglýsinga, stillingum auglýsingakennis og því hvort forritið sem þú ert að nota sérsníði auglýsingar."</string>
+    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"Nýr persónuverndareiginleiki auglýsinga í boði"</string>
+    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Aðeins mjög takmörkuðum upplýsingum er deilt á milli forrita til að mæla árangur auglýsinga"</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Við erum að gefa út nýjan persónuverndareiginleika auglýsinga sem kallast auglýsingamælingar. Android deilir aðeins mjög takmörkuðum upplýsingum á milli forrita til að hjálpa þeim að mæla árangur auglýsinga, t.d. hvenær auglýsing birtist þér."</string>
+    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Þú getur gert breytingar í persónuverndarstillingunum auglýsinga."</string>
+    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Forrit sem þú notar geta beðið Android um upplýsingar til að hjálpa þeim að mæla árangur auglýsinga sinna. Android gerir forritum aðeins kleift að safna tilteknum gerðum gagna."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Litrík myndskreyting af táknum fyrir áhugasvið á borð við tónlist, fréttir og íþróttir"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Litrík myndskreyting af lás innan hrings"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Lítil svarthvít myndskreyting af níu punktum sem mynda ferning"</string>
