@@ -44,7 +44,10 @@ public class AttributionStatus {
     public enum AttributionResult {
         UNKNOWN,
         SUCCESS,
-        FAILURE
+        NOT_ATTRIBUTED,
+        AGGREGATE_REPORT_GENERATED_SUCCESS_STATUS,
+        EVENT_REPORT_GENERATED_SUCCESS_STATUS,
+        AGGREGATE_AND_EVENT_REPORTS_GENERATED_SUCCESS_STATUS
     }
 
     public enum FailureType {
@@ -130,6 +133,24 @@ public class AttributionStatus {
 
     /** Set the result of attribution. */
     public void setAttributionResult(AttributionResult attributionResult) {
+        mAttributionResult = attributionResult;
+    }
+
+    /** Set the result of attribution base on the type of generated reports. */
+    public void setAttributionResult(
+            AttributionResult attributionResult,
+            boolean aggregateReportGenerated,
+            boolean eventReportGenerated) {
+        if (attributionResult == AttributionResult.SUCCESS) {
+            if (aggregateReportGenerated && !eventReportGenerated) {
+                attributionResult = AttributionResult.AGGREGATE_REPORT_GENERATED_SUCCESS_STATUS;
+            } else if (!aggregateReportGenerated && eventReportGenerated) {
+                attributionResult = AttributionResult.EVENT_REPORT_GENERATED_SUCCESS_STATUS;
+            } else if (aggregateReportGenerated && eventReportGenerated) {
+                attributionResult =
+                        AttributionResult.AGGREGATE_AND_EVENT_REPORTS_GENERATED_SUCCESS_STATUS;
+            }
+        }
         mAttributionResult = attributionResult;
     }
 
