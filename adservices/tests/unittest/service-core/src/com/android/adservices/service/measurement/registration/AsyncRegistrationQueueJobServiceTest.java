@@ -40,6 +40,7 @@ import static org.mockito.Mockito.verify;
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
+import android.content.ComponentName;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -50,6 +51,7 @@ import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
@@ -262,22 +264,91 @@ public class AsyncRegistrationQueueJobServiceTest {
                     // Setup
                     disableKillSwitch();
 
-                    final Context mockContext = mock(Context.class);
+                    final Context spyContext = spy(ApplicationProvider.getApplicationContext());
                     doReturn(mMockJobScheduler)
-                            .when(mockContext)
+                            .when(spyContext)
                             .getSystemService(JobScheduler.class);
-                    final JobInfo mockJobInfo = mock(JobInfo.class);
+                    long minDelay =
+                            SystemHealthParams.getMeasurementAsyncRegistrationJobQueueMinDelayMs();
+                    long maxDelay =
+                            SystemHealthParams.getMeasurementAsyncRegistrationJobQueueMaxDelayMs();
+                    final JobInfo mockJobInfo =
+                            new JobInfo.Builder(
+                                            MEASUREMENT_ASYNC_REGISTRATION_JOB_ID,
+                                            new ComponentName(
+                                                    spyContext,
+                                                    AsyncRegistrationQueueJobService.class))
+                                    .addTriggerContentUri(
+                                            new JobInfo.TriggerContentUri(
+                                                    AsyncRegistrationContentProvider.TRIGGER_URI,
+                                                    JobInfo.TriggerContentUri
+                                                            .FLAG_NOTIFY_FOR_DESCENDANTS))
+                                    .setTriggerContentUpdateDelay(minDelay)
+                                    .setTriggerContentMaxDelay(maxDelay)
+                                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                                    .setPersisted(false) // Can't call addTriggerContentUri() on a
+                                    // persisted job
+                                    .build();
                     doReturn(mockJobInfo)
                             .when(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
 
                     // Execute
                     AsyncRegistrationQueueJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule= */ false);
+                            spyContext, /* forceSchedule= */ false);
 
                     // Validate
                     ExtendedMockito.verify(
                             () -> AsyncRegistrationQueueJobService.schedule(any(), any()), never());
+                    verify(mMockJobScheduler, times(1))
+                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
+                });
+    }
+
+    @Test
+    public void scheduleIfNeeded_diffJobInfo_doesSchedule() throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    disableKillSwitch();
+
+                    final Context spyContext = spy(ApplicationProvider.getApplicationContext());
+                    doReturn(mMockJobScheduler)
+                            .when(spyContext)
+                            .getSystemService(JobScheduler.class);
+                    long minDelay =
+                            SystemHealthParams.getMeasurementAsyncRegistrationJobQueueMinDelayMs();
+                    long maxDelay =
+                            SystemHealthParams.getMeasurementAsyncRegistrationJobQueueMaxDelayMs();
+                    final JobInfo mockJobInfo =
+                            new JobInfo.Builder(
+                                            MEASUREMENT_ASYNC_REGISTRATION_JOB_ID,
+                                            new ComponentName(
+                                                    spyContext,
+                                                    AsyncRegistrationQueueJobService.class))
+                                    .addTriggerContentUri(
+                                            new JobInfo.TriggerContentUri(
+                                                    AsyncRegistrationContentProvider.TRIGGER_URI,
+                                                    JobInfo.TriggerContentUri
+                                                            .FLAG_NOTIFY_FOR_DESCENDANTS))
+                                    // different
+                                    .setTriggerContentUpdateDelay(minDelay - 1)
+                                    .setTriggerContentMaxDelay(maxDelay)
+                                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                                    .setPersisted(false) // Can't call addTriggerContentUri() on a
+                                    // persisted job
+                                    .build();
+                    doReturn(mockJobInfo)
+                            .when(mMockJobScheduler)
+                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
+
+                    // Execute
+                    AsyncRegistrationQueueJobService.scheduleIfNeeded(
+                            spyContext, /* forceSchedule= */ false);
+
+                    // Validate
+                    ExtendedMockito.verify(
+                            () -> AsyncRegistrationQueueJobService.schedule(any(), any()));
                     verify(mMockJobScheduler, times(1))
                             .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
                 });
