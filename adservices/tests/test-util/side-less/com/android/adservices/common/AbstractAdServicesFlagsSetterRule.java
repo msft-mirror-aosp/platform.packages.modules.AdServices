@@ -58,9 +58,15 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
 
     protected static final String LOGCAT_LEVEL_VERBOSE = "VERBOSE";
 
+    // TODO(b/295321663): move these constants (and those from LogFactory) to AdServicesCommon
     protected static final String LOGCAT_TAG_ADSERVICES = "adservices";
     protected static final String LOGCAT_TAG_ADSERVICES_SERVICE = LOGCAT_TAG_ADSERVICES + "-system";
     protected static final String LOGCAT_TAG_TOPICS = LOGCAT_TAG_ADSERVICES + ".topics";
+    protected static final String LOGCAT_TAG_FLEDGE = LOGCAT_TAG_ADSERVICES + ".fledge";
+    protected static final String LOGCAT_TAG_MEASUREMENT = LOGCAT_TAG_ADSERVICES + ".measurement";
+    protected static final String LOGCAT_TAG_UI = LOGCAT_TAG_ADSERVICES + ".ui";
+    protected static final String LOGCAT_TAG_ADID = LOGCAT_TAG_ADSERVICES + ".adid";
+    protected static final String LOGCAT_TAG_APPSETID = LOGCAT_TAG_ADSERVICES + ".appsetid";
 
     // TODO(b/294423183): make private once not used by subclass for legacy methods
     protected final DeviceConfigHelper mDeviceConfig;
@@ -448,7 +454,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     }
 
     /**
-     * Sets a {@code logcat} tags commons to all test.
+     * Sets the common AdServices {@code logcat} tags.
      *
      * <p>This method is usually set automatically by the factory methods, but should be set again
      * (on host-side tests) after reboot.
@@ -456,6 +462,22 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     public T setDefaultLogcatTags() {
         setLogcatTag(LOGCAT_TAG_ADSERVICES, LOGCAT_LEVEL_VERBOSE);
         setLogcatTag(LOGCAT_TAG_ADSERVICES_SERVICE, LOGCAT_LEVEL_VERBOSE);
+        return getThis();
+    }
+
+    /**
+     * Sets all AdServices {@code logcat} tags.
+     *
+     * <p>This method is usually set automatically by the factory methods, but should be set again
+     * (on host-side tests) after reboot.
+     */
+    public T setAllLogcatTags() {
+        setDefaultLogcatTags();
+        setLogcatTag(LOGCAT_TAG_TOPICS, LOGCAT_LEVEL_VERBOSE);
+        setLogcatTag(LOGCAT_TAG_FLEDGE, LOGCAT_LEVEL_VERBOSE);
+        setLogcatTag(LOGCAT_TAG_MEASUREMENT, LOGCAT_LEVEL_VERBOSE);
+        setLogcatTag(LOGCAT_TAG_ADID, LOGCAT_LEVEL_VERBOSE);
+        setLogcatTag(LOGCAT_TAG_APPSETID, LOGCAT_LEVEL_VERBOSE);
         return getThis();
     }
 
