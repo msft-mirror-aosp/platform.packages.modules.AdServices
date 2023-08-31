@@ -116,18 +116,7 @@ public class VerboseDebugReportingFallbackJobService extends JobService {
     }
 
     @VisibleForTesting
-    protected static void schedule(Context context, JobScheduler jobScheduler) {
-        final JobInfo job =
-                new JobInfo.Builder(
-                                MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_ID,
-                                new ComponentName(
-                                        context, VerboseDebugReportingFallbackJobService.class))
-                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                        .setPeriodic(
-                                FlagsFactory.getFlags()
-                                        .getMeasurementVerboseDebugReportingFallbackJobPeriodMs())
-                        .setPersisted(true)
-                        .build();
+    protected static void schedule(JobScheduler jobScheduler, JobInfo job) {
         jobScheduler.schedule(job);
     }
 
@@ -149,17 +138,30 @@ public class VerboseDebugReportingFallbackJobService extends JobService {
             return;
         }
 
-        final JobInfo job =
+        final JobInfo scheduledJob =
                 jobScheduler.getPendingJob(MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_ID);
+        JobInfo jobInfo = buildJobInfo(context);
         // Schedule if it hasn't been scheduled already or force rescheduling
-        if (job == null || forceSchedule) {
-            schedule(context, jobScheduler);
+        if (forceSchedule || !jobInfo.equals(scheduledJob)) {
+            schedule(jobScheduler, jobInfo);
             LogUtil.d("Scheduled VerboseDebugReportingFallbackJobService");
         } else {
             LogUtil.d(
                     "VerboseDebugReportingFallbackJobService already scheduled, skipping"
                             + " reschedule");
         }
+    }
+
+    private static JobInfo buildJobInfo(Context context) {
+        return new JobInfo.Builder(
+                        MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_ID,
+                        new ComponentName(context, VerboseDebugReportingFallbackJobService.class))
+                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                .setPeriodic(
+                        FlagsFactory.getFlags()
+                                .getMeasurementVerboseDebugReportingFallbackJobPeriodMs())
+                .setPersisted(true)
+                .build();
     }
 
     private boolean skipAndCancelBackgroundJob(

@@ -132,18 +132,7 @@ public final class AggregateReportingJobService extends JobService {
 
     /** Schedules {@link AggregateReportingJobService} */
     @VisibleForTesting
-    static void schedule(Context context, JobScheduler jobScheduler) {
-        final JobInfo job =
-                new JobInfo.Builder(
-                                MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID,
-                                new ComponentName(context, AggregateReportingJobService.class))
-                        .setRequiresDeviceIdle(true)
-                        .setRequiresBatteryNotLow(true)
-                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
-                        .setPeriodic(
-                                AdServicesConfig.getMeasurementAggregateMainReportingJobPeriodMs())
-                        .setPersisted(true)
-                        .build();
+    static void schedule(JobScheduler jobScheduler, JobInfo job) {
         jobScheduler.schedule(job);
     }
 
@@ -165,14 +154,31 @@ public final class AggregateReportingJobService extends JobService {
             return;
         }
 
-        final JobInfo job = jobScheduler.getPendingJob(MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID);
+        final JobInfo scheduledJobInfo =
+                jobScheduler.getPendingJob(MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID);
+        JobInfo jobInfo = buildJobInfo(context);
         // Schedule if it hasn't been scheduled already or force rescheduling
-        if (job == null || forceSchedule) {
-            schedule(context, jobScheduler);
+        if (forceSchedule || !jobInfo.equals(scheduledJobInfo)) {
+            schedule(jobScheduler, jobInfo);
             LogUtil.d("Scheduled AggregateReportingJobService");
         } else {
             LogUtil.d("AggregateReportingJobService already scheduled, skipping reschedule");
         }
+    }
+
+    private static JobInfo buildJobInfo(Context context) {
+        final JobInfo job =
+                new JobInfo.Builder(
+                                MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID,
+                                new ComponentName(context, AggregateReportingJobService.class))
+                        .setRequiresDeviceIdle(true)
+                        .setRequiresBatteryNotLow(true)
+                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
+                        .setPeriodic(
+                                AdServicesConfig.getMeasurementAggregateMainReportingJobPeriodMs())
+                        .setPersisted(true)
+                        .build();
+        return job;
     }
 
     private boolean skipAndCancelBackgroundJob(

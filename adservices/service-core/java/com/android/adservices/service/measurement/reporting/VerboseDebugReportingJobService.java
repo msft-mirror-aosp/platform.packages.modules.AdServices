@@ -48,8 +48,7 @@ import java.util.concurrent.Future;
 public final class VerboseDebugReportingJobService extends JobService {
     private static final ListeningExecutorService sBlockingExecutor =
             AdServicesExecutors.getBlockingExecutor();
-    private static final int VERBOSE_DEBUG_REPORT_JOB_ID =
-            MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB.getJobId();
+    static final int VERBOSE_DEBUG_REPORT_JOB_ID = MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB.getJobId();
 
     private Future mExecutorFuture;
 
@@ -101,14 +100,8 @@ public final class VerboseDebugReportingJobService extends JobService {
 
     /** Schedules {@link VerboseDebugReportingJobService} */
     @VisibleForTesting
-    static void schedule(Context context, JobScheduler jobScheduler) {
-        final JobInfo job =
-                new JobInfo.Builder(
-                                VERBOSE_DEBUG_REPORT_JOB_ID,
-                                new ComponentName(context, VerboseDebugReportingJobService.class))
-                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                        .build();
-        jobScheduler.schedule(job);
+    static void schedule(JobScheduler jobScheduler, JobInfo jobInfo) {
+        jobScheduler.schedule(jobInfo);
     }
 
     /**
@@ -129,14 +122,23 @@ public final class VerboseDebugReportingJobService extends JobService {
             return;
         }
 
-        final JobInfo job = jobScheduler.getPendingJob(VERBOSE_DEBUG_REPORT_JOB_ID);
+        final JobInfo scheduledJob = jobScheduler.getPendingJob(VERBOSE_DEBUG_REPORT_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
-        if (job == null || forceSchedule) {
-            schedule(context, jobScheduler);
+        JobInfo jobInfo = buildJobInfo(context);
+        if (forceSchedule || !jobInfo.equals(scheduledJob)) {
+            schedule(jobScheduler, jobInfo);
             LogUtil.d("Scheduled VerboseDebugReportingJobService");
         } else {
             LogUtil.d("VerboseDebugReportingJobService already scheduled, skipping reschedule");
         }
+    }
+
+    private static JobInfo buildJobInfo(Context context) {
+        return new JobInfo.Builder(
+                        VERBOSE_DEBUG_REPORT_JOB_ID,
+                        new ComponentName(context, VerboseDebugReportingJobService.class))
+                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                .build();
     }
 
     private boolean skipAndCancelBackgroundJob(final JobParameters params) {

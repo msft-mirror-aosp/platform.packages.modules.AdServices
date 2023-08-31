@@ -39,6 +39,7 @@ import static org.mockito.Mockito.verify;
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
+import android.content.ComponentName;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -262,18 +263,27 @@ public class AttributionFallbackJobServiceTest {
     }
 
     @Test
-    public void scheduleIfNeeded_killSwitchOff_previouslyExecuted_dontForceSchedule_dontSchedule()
-            throws Exception {
+    public void scheduleIfNeeded_sameJobInfoDontForceSchedule_dontSchedule() throws Exception {
         runWithMocks(
                 () -> {
                     // Setup
                     disableKillSwitch();
 
-                    final Context mockContext = mock(Context.class);
+                    final Context mockContext = spy(ApplicationProvider.getApplicationContext());
                     doReturn(mMockJobScheduler)
                             .when(mockContext)
                             .getSystemService(JobScheduler.class);
-                    final JobInfo mockJobInfo = mock(JobInfo.class);
+                    final JobInfo mockJobInfo =
+                            new JobInfo.Builder(
+                                            MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID,
+                                            new ComponentName(
+                                                    mockContext,
+                                                    AttributionFallbackJobService.class))
+                                    .setPeriodic(
+                                            FlagsFactory.getFlags()
+                                                    .getMeasurementAttributionFallbackJobPeriodMs())
+                                    .setPersisted(true)
+                                    .build();
                     doReturn(mockJobInfo)
                             .when(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID));
@@ -285,6 +295,45 @@ public class AttributionFallbackJobServiceTest {
                     // Validate
                     ExtendedMockito.verify(
                             () -> AttributionFallbackJobService.schedule(any(), any()), never());
+                    verify(mMockJobScheduler, times(1))
+                            .getPendingJob(eq(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID));
+                });
+    }
+
+    @Test
+    public void scheduleIfNeeded_sameJobInfoDontForceSchedule_doesSchedule() throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    disableKillSwitch();
+
+                    final Context mockContext = spy(ApplicationProvider.getApplicationContext());
+                    doReturn(mMockJobScheduler)
+                            .when(mockContext)
+                            .getSystemService(JobScheduler.class);
+                    long periodMs =
+                            FlagsFactory.getFlags().getMeasurementAttributionFallbackJobPeriodMs();
+                    final JobInfo mockJobInfo =
+                            new JobInfo.Builder(
+                                            MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID,
+                                            new ComponentName(
+                                                    mockContext,
+                                                    AttributionFallbackJobService.class))
+                                    // difference
+                                    .setPeriodic(periodMs - 1)
+                                    .setPersisted(true)
+                                    .build();
+                    doReturn(mockJobInfo)
+                            .when(mMockJobScheduler)
+                            .getPendingJob(eq(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID));
+
+                    // Execute
+                    AttributionFallbackJobService.scheduleIfNeeded(
+                            mockContext, /* forceSchedule = */ false);
+
+                    // Validate
+                    ExtendedMockito.verify(
+                            () -> AttributionFallbackJobService.schedule(any(), any()));
                     verify(mMockJobScheduler, times(1))
                             .getPendingJob(eq(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID));
                 });
@@ -351,13 +400,19 @@ public class AttributionFallbackJobServiceTest {
         runWithMocks(
                 () -> {
                     // Setup
+                    disableKillSwitch();
+                    Context spyContext = spy(CONTEXT);
                     final JobScheduler jobScheduler = mock(JobScheduler.class);
+                    doReturn(jobScheduler).when(spyContext).getSystemService(JobScheduler.class);
                     final ArgumentCaptor<JobInfo> captor = ArgumentCaptor.forClass(JobInfo.class);
+                    doReturn(null)
+                            .when(jobScheduler)
+                            .getPendingJob(eq(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID));
 
                     // Execute
                     ExtendedMockito.doCallRealMethod()
                             .when(() -> AttributionFallbackJobService.schedule(any(), any()));
-                    AttributionFallbackJobService.schedule(mock(Context.class), jobScheduler);
+                    AttributionFallbackJobService.scheduleIfNeeded(spyContext, true);
 
                     // Validate
                     verify(jobScheduler, times(1)).schedule(captor.capture());
