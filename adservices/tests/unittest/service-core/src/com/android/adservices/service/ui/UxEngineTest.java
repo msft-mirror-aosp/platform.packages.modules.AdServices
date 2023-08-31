@@ -18,6 +18,7 @@ package com.android.adservices.service.ui;
 
 import static com.android.adservices.service.PhFlags.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.PhFlags.KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_U18_UX_ENABLED;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.BETA_UX;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.GA_UX;
@@ -115,6 +116,7 @@ public class UxEngineTest {
         ExtendedMockito.doNothing().when(() -> UiStatsLogger.logEntryPointClicked(any()));
 
         doReturn(true).when(mUxStatesManager).getFlag(KEY_ADSERVICES_ENABLED);
+        doReturn(true).when(mUxStatesManager).getFlag(KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
 
         mUxEngine =
@@ -727,6 +729,51 @@ public class UxEngineTest {
         // U18 UX is set as the detention channel is available.
         verify(mConsentManager).setUx(U18_UX);
         verify(mConsentManager)
+                .setEnrollmentChannel(
+                        U18_UX, U18UxEnrollmentChannelCollection.U18_DETENTION_CHANNEL);
+    }
+
+    // Test the flow in which user is eligible for U18 detention.
+    @Test
+    public void startTest_u18DetentionDisabled() {
+        boolean entryPointEnabled = true;
+        boolean isU18Account = true;
+        boolean isAdultAccount = false;
+        boolean adIdEnabled = false;
+        AdServicesStates adServicesStates =
+                new AdServicesStates.Builder()
+                        .setAdIdEnabled(adIdEnabled)
+                        .setAdultAccount(isAdultAccount)
+                        .setU18Account(isU18Account)
+                        .setPrivacySandboxUiEnabled(entryPointEnabled)
+                        .setPrivacySandboxUiRequest(false)
+                        .build();
+
+        doReturn(adIdEnabled).when(mConsentManager).isAdIdEnabled();
+        doReturn(entryPointEnabled).when(mConsentManager).isEntryPointEnabled();
+        doReturn(isAdultAccount).when(mConsentManager).isAdultAccount();
+        doReturn(isU18Account).when(mConsentManager).isU18Account();
+        doReturn(false).when(mUxStatesManager).getFlag(KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED);
+        doReturn(true).when(mUxStatesManager).getFlag(KEY_U18_UX_ENABLED);
+        doReturn(true).when(mUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
+        // GA notice was already displayed.
+        doReturn(true).when(mConsentManager).wasGaUxNotificationDisplayed();
+
+        mUxEngine.start(adServicesStates);
+
+        verify(mUxStatesManager).persistAdServicesStates(adServicesStates);
+
+        // Unsupported UX logic.
+        verify(mUxStatesManager).getFlag(KEY_ADSERVICES_ENABLED);
+        verify(mConsentManager).isEntryPointEnabled();
+
+        // U18 UX logic.
+        verify(mUxStatesManager).getFlag(KEY_U18_UX_ENABLED);
+        verify(mConsentManager).isU18Account();
+
+        // Detention channel can not be selected as the channel flag is disabled.
+        verify(mConsentManager, never()).setUx(U18_UX);
+        verify(mConsentManager, never())
                 .setEnrollmentChannel(
                         U18_UX, U18UxEnrollmentChannelCollection.U18_DETENTION_CHANNEL);
     }

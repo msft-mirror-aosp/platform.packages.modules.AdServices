@@ -341,7 +341,8 @@ public abstract class E2EMockTest extends E2ETest {
                         sDatastoreManager,
                         reportTime - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
                         reportTime,
-                        true);
+                        true,
+                        mFlags);
 
         processActualDebugEventReports(
                 timestamp,
@@ -355,7 +356,8 @@ public abstract class E2EMockTest extends E2ETest {
                         sDatastoreManager,
                         reportTime - SystemHealthParams.MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS,
                         reportTime,
-                        true);
+                        true,
+                        mFlags);
 
         processActualDebugAggregateReports(
                 (List<AggregateReport>) aggregateCaptures[0],
@@ -407,7 +409,8 @@ public abstract class E2EMockTest extends E2ETest {
                         reportingJob.mTimestamp
                                 - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
                         reportingJob.mTimestamp,
-                        false);
+                        false,
+                        mFlags);
 
         processActualEventReports(
                 (List<EventReport>) eventCaptures[0],
@@ -428,7 +431,8 @@ public abstract class E2EMockTest extends E2ETest {
                         reportingJob.mTimestamp
                                 - SystemHealthParams.MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS,
                         reportingJob.mTimestamp,
-                        false);
+                        false,
+                        mFlags);
 
         processActualAggregateReports(
                 (List<AggregateReport>) aggregateCaptures[0],

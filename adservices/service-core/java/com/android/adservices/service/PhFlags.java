@@ -687,6 +687,29 @@ public final class PhFlags implements Flags {
 
     static final String KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG =
             "measurement_aggregate_report_delay_config";
+    static final String KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION =
+            "measurement_enable_reporting_jobs_throw_accounted_exception";
+
+    static final String KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_JSON_EXCEPTION =
+            "measurement_enable_reporting_jobs_throw_json_exception";
+
+    static final String KEY_MEASUREMENT_ENABLE_DELETE_REPORTS_ON_UNRECOVERABLE_EXCEPTION =
+            "measurement_enable_delete_reports_on_unrecoverable_exception";
+
+    static final String KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_CRYPTO_EXCEPTION =
+            "measurement_enable_reporting_jobs_throw_crypto_exception";
+
+    static final String KEY_MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION =
+            "measurement_enable_datastore_manager_throw_datastore_exception";
+
+    static final String KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS =
+            "measurement_debug_reporting_fallback_job_period_ms";
+    static final String KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS =
+            "measurement_verbose_debug_reporting_fallback_job_period_ms";
+    static final String KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH =
+            "measurement_debug_reporting_fallback_job_kill_switch";
+    static final String KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH =
+            "measurement_verbose_debug_reporting_fallback_job_kill_switch";
 
     static final String KEY_ENABLE_LOGGED_TOPIC = "enable_logged_topic";
 
@@ -3767,6 +3790,31 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING
                         + " = "
                         + getMeasurementEnableAppPackageNameLogging());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION
+                        + " = "
+                        + getMeasurementEnableReportingJobsThrowUnaccountedException());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_JSON_EXCEPTION
+                        + " = "
+                        + getMeasurementEnableReportingJobsThrowJsonException());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_DELETE_REPORTS_ON_UNRECOVERABLE_EXCEPTION
+                        + " = "
+                        + getMeasurementEnableReportDeletionOnUnrecoverableException());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_CRYPTO_EXCEPTION
+                        + " = "
+                        + getMeasurementEnableReportingJobsThrowCryptoException());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION
+                        + " = "
+                        + getMeasurementEnableDatastoreManagerThrowDatastoreException());
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
                 "\t" + KEY_FLEDGE_SELECT_ADS_KILL_SWITCH + " = " + getFledgeSelectAdsKillSwitch());
@@ -4504,6 +4552,7 @@ public final class PhFlags implements Flags {
         uxMap.put(KEY_EU_NOTIF_FLOW_CHANGE_ENABLED, getEuNotifFlowChangeEnabled());
         uxMap.put(KEY_U18_UX_ENABLED, getU18UxEnabled());
         uxMap.put(KEY_NOTIFICATION_DISMISSED_ON_CLICK, getNotificationDismissedOnClick());
+        uxMap.put(KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED, isU18UxDetentionChannelEnabled());
         return uxMap;
     }
 
@@ -4549,11 +4598,64 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableReportingJobsThrowUnaccountedException() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */
+                        KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION,
+                /* defaultValue */ MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION);
+    }
+
+    @Override
+    public boolean getMeasurementEnableReportingJobsThrowJsonException() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */
+                        KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_JSON_EXCEPTION,
+                /* defaultValue */ MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_JSON_EXCEPTION);
+    }
+
+    @Override
+    public boolean getMeasurementEnableReportDeletionOnUnrecoverableException() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */
+                        KEY_MEASUREMENT_ENABLE_DELETE_REPORTS_ON_UNRECOVERABLE_EXCEPTION,
+                /* defaultValue */ MEASUREMENT_ENABLE_DELETE_REPORTS_ON_UNRECOVERABLE_EXCEPTION);
+    }
+
+    @Override
+    public boolean getMeasurementEnableReportingJobsThrowCryptoException() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */
+                        KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_CRYPTO_EXCEPTION,
+                /* defaultValue */ MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_CRYPTO_EXCEPTION);
+    }
+
+    @Override
+    public boolean getMeasurementEnableDatastoreManagerThrowDatastoreException() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */
+                        KEY_MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION,
+                /* defaultValue */ MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION);
+    }
+
+    @Override
     public boolean getAdservicesConsentMigrationLoggingEnabled() {
         return DeviceConfig.getBoolean(
                 NAMESPACE_ADSERVICES,
                 /* flagName */ ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED,
                 /* defaultValue */ DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED);
+    }
+
+    @Override
+    public boolean isU18UxDetentionChannelEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED,
+                /* defaultValue */ IS_U18_UX_DETENTION_CHANNEL_ENABLED_DEFAULT);
     }
 
     /** Returns whether Measurement app package name logging is enabled. */
@@ -4563,5 +4665,37 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING,
                 /* defaultValue */ MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING);
+    }
+
+    @Override
+    public boolean getMeasurementDebugReportingFallbackJobKillSwitch() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH,
+                /* defaultValue */ MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH);
+    }
+
+    @Override
+    public boolean getMeasurementVerboseDebugReportingFallbackJobKillSwitch() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH,
+                /* defaultValue */ MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH);
+    }
+
+    @Override
+    public long getMeasurementDebugReportingFallbackJobPeriodMs() {
+        return DeviceConfig.getLong(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS,
+                /* defaultValue */ MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS);
+    }
+
+    @Override
+    public long getMeasurementVerboseDebugReportingFallbackJobPeriodMs() {
+        return DeviceConfig.getLong(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS,
+                /* defaultValue */ MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS);
     }
 }
