@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -115,6 +116,17 @@ public class EventReportingJobHandler {
 
         List<String> pendingEventReportIdsInWindow = pendingEventReportsInWindowOpt.get();
         for (String eventReportId : pendingEventReportIdsInWindow) {
+
+            // If the job service's requirements specified at runtime are no longer met, the job
+            // service will interrupt this thread.  If the thread has been interrupted, it will exit
+            // early.
+            if (Thread.currentThread().isInterrupted()) {
+                LogUtil.d(
+                        "EventReportingJobHandler performScheduledPendingReports "
+                                + "thread interrupted, exiting early.");
+                return true;
+            }
+
             // TODO: Use result to track rate of success vs retry vs failure
             ReportingStatus reportingStatus = new ReportingStatus();
             @AdServicesStatusUtils.StatusCode
@@ -231,7 +243,9 @@ public class EventReportingJobHandler {
                                         eventReportId, EventReport.Status.MARKED_TO_DELETE));
             }
 
-            if (mFlags.getMeasurementEnableReportingJobsThrowJsonException()) {
+            if (mFlags.getMeasurementEnableReportingJobsThrowJsonException()
+                    && ThreadLocalRandom.current().nextFloat()
+                            < mFlags.getMeasurementThrowUnknownExceptionSamplingRate()) {
                 // JSONException is unexpected.
                 throw new IllegalStateException(
                         "Serialization error occurred at event report delivery", e);
@@ -240,7 +254,9 @@ public class EventReportingJobHandler {
         } catch (Exception e) {
             LogUtil.e(e, "Unexpected exception occurred when attempting to deliver event report.");
             reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.UNKNOWN);
-            if (mFlags.getMeasurementEnableReportingJobsThrowUnaccountedException()) {
+            if (mFlags.getMeasurementEnableReportingJobsThrowUnaccountedException()
+                    && ThreadLocalRandom.current().nextFloat()
+                            < mFlags.getMeasurementThrowUnknownExceptionSamplingRate()) {
                 throw e;
             }
             return AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;

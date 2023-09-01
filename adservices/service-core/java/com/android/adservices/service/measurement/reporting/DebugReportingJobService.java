@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static com.android.adservices.service.measurement.util.JobLockHolder.Type.DEBUG_REPORTING;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DEBUG_REPORT_JOB;
 
 import android.app.job.JobInfo;
@@ -32,17 +33,23 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.service.measurement.util.JobLockHolder;
+import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
-import java.util.concurrent.Executor;
+import com.google.common.util.concurrent.ListeningExecutorService;
+
+import java.util.concurrent.Future;
 
 /**
  * Main service for scheduling debug reporting jobs. The actual job execution logic is part of
  * {@link EventReportingJobHandler } and {@link AggregateReportingJobHandler}
  */
 public final class DebugReportingJobService extends JobService {
-    private static final Executor sBlockingExecutor = AdServicesExecutors.getBlockingExecutor();
+    private static final ListeningExecutorService sBlockingExecutor =
+            AdServicesExecutors.getBlockingExecutor();
     private static final int DEBUG_REPORT_JOB_ID = MEASUREMENT_DEBUG_REPORT_JOB.getJobId();
+    private Future mExecutorFuture;
 
     @Override
     public boolean onStartJob(JobParameters params) {
@@ -55,24 +62,38 @@ public final class DebugReportingJobService extends JobService {
             return skipAndCancelBackgroundJob(params);
         }
 
+        AdservicesJobServiceLogger.getInstance(this).recordOnStartJob(DEBUG_REPORT_JOB_ID);
+
         if (FlagsFactory.getFlags().getMeasurementJobDebugReportingKillSwitch()) {
             LogUtil.e("DebugReportingJobService is disabled");
             return skipAndCancelBackgroundJob(params);
         }
 
         LogUtil.d("DebugReportingJobService.onStartJob");
-        sBlockingExecutor.execute(
-                () -> {
-                    sendReports();
-                    jobFinished(params, /* wantsReschedule= */ false);
-                });
+        mExecutorFuture =
+                sBlockingExecutor.submit(
+                        () -> {
+                            sendReports();
+                            AdservicesJobServiceLogger.getInstance(DebugReportingJobService.this)
+                                    .recordJobFinished(
+                                            DEBUG_REPORT_JOB_ID,
+                                            /* isSuccessful */ true,
+                                            /* shouldRetry*/ false);
+                            jobFinished(params, /* wantsReschedule= */ false);
+                        });
         return true;
     }
 
     @Override
     public boolean onStopJob(JobParameters params) {
         LogUtil.d("DebugReportingJobService.onStopJob");
-        return true;
+        boolean shouldRetry = true;
+        if (mExecutorFuture != null) {
+            shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
+        }
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordOnStopJob(params, DEBUG_REPORT_JOB_ID, shouldRetry);
+        return shouldRetry;
     }
 
     /** Schedules {@link DebugReportingJobService} */
@@ -128,17 +149,36 @@ public final class DebugReportingJobService extends JobService {
         return false;
     }
 
-    private void sendReports() {
-        EnrollmentDao enrollmentDao = EnrollmentDao.getInstance(getApplicationContext());
-        DatastoreManager datastoreManager =
-                DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
-        new EventReportingJobHandler(
-                        enrollmentDao, datastoreManager, ReportingStatus.UploadMethod.UNKNOWN)
-                .setIsDebugInstance(true)
-                .performScheduledPendingReportsInWindow(0, 0);
-        new AggregateReportingJobHandler(
-                        enrollmentDao, datastoreManager, ReportingStatus.UploadMethod.UNKNOWN)
-                .setIsDebugInstance(true)
-                .performScheduledPendingReportsInWindow(0, 0);
+    @VisibleForTesting
+    void sendReports() {
+        final JobLockHolder lock = JobLockHolder.getInstance(DEBUG_REPORTING);
+        if (lock.tryLock()) {
+            try {
+                EnrollmentDao enrollmentDao = EnrollmentDao.getInstance(getApplicationContext());
+                DatastoreManager datastoreManager =
+                        DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
+                new EventReportingJobHandler(
+                                enrollmentDao,
+                                datastoreManager,
+                                ReportingStatus.UploadMethod.UNKNOWN)
+                        .setIsDebugInstance(true)
+                        .performScheduledPendingReportsInWindow(0, 0);
+                new AggregateReportingJobHandler(
+                                enrollmentDao,
+                                datastoreManager,
+                                ReportingStatus.UploadMethod.UNKNOWN)
+                        .setIsDebugInstance(true)
+                        .performScheduledPendingReportsInWindow(0, 0);
+                return;
+            } finally {
+                lock.unlock();
+            }
+        }
+        LogUtil.d("DebugReportingJobService did not acquire the lock");
+    }
+
+    @VisibleForTesting
+    Future getFutureForTesting() {
+        return mExecutorFuture;
     }
 }

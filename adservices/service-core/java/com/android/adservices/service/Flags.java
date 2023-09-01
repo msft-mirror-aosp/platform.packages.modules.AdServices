@@ -2906,6 +2906,14 @@ public interface Flags {
         return DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_BLOCKLIST;
     }
 
+    /** Get mainline train version */
+    String DEFAULT_MAINLINE_TRAIN_VERSION = "000000";
+
+    /** Get mainline train version */
+    default String getMainlineTrainVersion() {
+        return DEFAULT_MAINLINE_TRAIN_VERSION;
+    }
+
     /** Default Determines whether EU notification flow change is enabled. */
     boolean DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED = true;
 
@@ -3106,6 +3114,14 @@ public interface Flags {
         return MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING;
     }
 
+    /** Default allowlist to enable app package name logging. */
+    String MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST = "";
+
+    /** Returns a list of app package names that allows logging. */
+    default String getMeasurementAppPackageNameLoggingAllowlist() {
+        return MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST;
+    }
+
     /** Disable measurement reporting jobs to throw unaccounted exceptions by default. */
     boolean MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION = false;
 
@@ -3156,6 +3172,14 @@ public interface Flags {
      */
     default boolean getMeasurementEnableDatastoreManagerThrowDatastoreException() {
         return MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION;
+    }
+
+    /** Set the sampling rate to 100% for unknown exceptions to be re-thrown. */
+    float MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE = 1.0f;
+
+    /** Sampling rate to decide whether to throw unknown exceptions for measurement. */
+    default float getMeasurementThrowUnknownExceptionSamplingRate() {
+        return MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE;
     }
 
     /** Default U18 UX feature flag.. */

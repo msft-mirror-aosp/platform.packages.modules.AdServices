@@ -22,7 +22,7 @@ public final class AdServicesFlagsSetterRule
         extends AbstractAdServicesFlagsSetterRule<AdServicesFlagsSetterRule> {
 
     private static AdServicesFlagsSetterRule withDefaultLogcatTags() {
-        return new AdServicesFlagsSetterRule().setDefaultLogcatTags();
+        return new AdServicesFlagsSetterRule().setAllLogcatTags();
     }
 
     /** Factory method that only disables the global kill switch. */

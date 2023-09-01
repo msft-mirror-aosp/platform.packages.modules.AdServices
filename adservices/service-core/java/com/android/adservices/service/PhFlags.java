@@ -35,7 +35,6 @@ import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
 
-
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,6 +48,14 @@ import java.util.stream.Collectors;
 // TODO(b/228037065): Add validation logics for Feature flags read from PH.
 public final class PhFlags implements Flags {
     private static final PhFlags sSingleton = new PhFlags();
+
+    // TODO(b/298090610): Move this flag to FlagsConstants after M10 is fully rolled out.
+    public static final String KEY_MAINLINE_TRAIN_VERSION = "mainline_train_version";
+    // TODO(b/298090610): Remove NAMESPACE_ADSERVICES after M10 is fully rolled out.
+    static final String NAMESPACE_ADSERVICES = "adservices";
+    // TODO(b/297089223): Move this flag to FlagsConstants after M10 is fully rolled out.
+    public static final String KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST =
+            "measurement_app_package_name_logging_allowlist";
 
     /** Returns the singleton instance of the PhFlags. */
     @NonNull
@@ -1524,6 +1531,14 @@ public final class PhFlags implements Flags {
                 /* flagName */ FlagsConstants
                         .KEY_MEASUREMENT_DEBUG_KEY_AD_ID_MATCHING_ENROLLMENT_BLOCKLIST,
                 /* defaultValue */ DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_BLOCKLIST);
+    }
+
+    @Override
+    public String getMainlineTrainVersion() {
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MAINLINE_TRAIN_VERSION,
+                /* defaultValue */ DEFAULT_MAINLINE_TRAIN_VERSION);
     }
 
     // ADID Killswitches
@@ -3359,6 +3374,7 @@ public final class PhFlags implements Flags {
                                 .KEY_MEASUREMENT_DEBUG_KEY_AD_ID_MATCHING_ENROLLMENT_BLOCKLIST
                         + " = "
                         + getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist());
+        writer.println("\t" + KEY_MAINLINE_TRAIN_VERSION + " = " + getMainlineTrainVersion());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED
@@ -3550,6 +3566,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING
                         + " = "
                         + getMeasurementEnableAppPackageNameLogging());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST
+                        + " = "
+                        + getMeasurementAppPackageNameLoggingAllowlist());
         writer.println(
                 "\t"
                         + FlagsConstants
@@ -4599,6 +4620,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public float getMeasurementThrowUnknownExceptionSamplingRate() {
+        return DeviceConfig.getFloat(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE,
+                /* defaultValue */ MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE);
+    }
+
+    @Override
     public boolean getAdservicesConsentMigrationLoggingEnabled() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -4691,5 +4720,11 @@ public final class PhFlags implements Flags {
                                         .KEY_MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH,
                                 /* defaultValue */
                                 MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH));
+    }
+
+    @Override
+    public String getMeasurementAppPackageNameLoggingAllowlist() {
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES, KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST, "");
     }
 }

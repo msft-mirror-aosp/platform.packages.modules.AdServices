@@ -39,6 +39,8 @@ import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.BuyerInput;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import com.google.protobuf.InvalidProtocolBufferException;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -66,6 +68,7 @@ public class BuyerInputGeneratorTest {
     private CustomAudienceDao mCustomAudienceDao;
     private AdFilterer mAdFiltererSpy;
     private BuyerInputGenerator mBuyerInputGenerator;
+    private AuctionServerDataCompressor mDataCompressor;
     private MockitoSession mStaticMockSession = null;
 
     @Before
@@ -87,6 +90,9 @@ public class BuyerInputGeneratorTest {
                         mFlags,
                         mLightweightExecutorService,
                         mBackgroundExecutorService);
+        mDataCompressor =
+                AuctionServerDataCompressorFactory.getDataCompressor(
+                        mFlags.getFledgeAuctionServerCompressionAlgorithmVersion());
 
         // Test applications don't have the required permissions to read config P/H flags, and
         // injecting mocked flags everywhere is annoying and non-trivial for static methods
@@ -107,7 +113,8 @@ public class BuyerInputGeneratorTest {
 
     @Test
     public void testBuyerInputGenerator_returnsBuyerInputs_success()
-            throws ExecutionException, InterruptedException, TimeoutException {
+            throws ExecutionException, InterruptedException, TimeoutException,
+                    InvalidProtocolBufferException {
         doReturn(mFlags).when(FlagsFactory::getFlags);
 
         Map<String, AdTechIdentifier> nameAndBuyersMap =
@@ -119,14 +126,16 @@ public class BuyerInputGeneratorTest {
         Map<String, DBCustomAudience> namesAndCustomAudiences =
                 createAndPersistDBCustomAudiences(nameAndBuyersMap);
 
-        Map<AdTechIdentifier, BuyerInput> buyerAndBuyerInputs =
+        Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerAndBuyerInputs =
                 mBuyerInputGenerator
-                        .createBuyerInputs()
+                        .createCompressedBuyerInputs()
                         .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.MILLISECONDS);
 
         Assert.assertEquals(buyers, buyerAndBuyerInputs.keySet());
         for (AdTechIdentifier buyer : buyerAndBuyerInputs.keySet()) {
-            BuyerInput buyerInput = buyerAndBuyerInputs.get(buyer);
+            BuyerInput buyerInput =
+                    BuyerInput.parseFrom(
+                            mDataCompressor.decompress(buyerAndBuyerInputs.get(buyer)).getData());
             for (BuyerInput.CustomAudience buyerInputsCA : buyerInput.getCustomAudiencesList()) {
                 String buyerInputsCAName = buyerInputsCA.getName();
                 Assert.assertTrue(namesAndCustomAudiences.containsKey(buyerInputsCAName));

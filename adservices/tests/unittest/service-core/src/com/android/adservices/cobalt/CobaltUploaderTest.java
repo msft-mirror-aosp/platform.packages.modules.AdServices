@@ -44,12 +44,10 @@ import com.google.cobalt.EncryptedMessage;
 import com.google.common.truth.Expect;
 import com.google.protobuf.ByteString;
 
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import org.mockito.MockitoAnnotations;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,11 +62,6 @@ public final class CobaltUploaderTest {
     @Rule
     public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
             new AdServicesExtendedMockitoRule.Builder(this).spyStatic(ErrorLogUtil.class).build();
-
-    @Before
-    public void setUp() {
-        MockitoAnnotations.initMocks(this);
-    }
 
     static class AdServicesCobaltUploadServiceStub extends IAdServicesCobaltUploadService.Stub {
         private final List<EncryptedCobaltEnvelopeParams> mParams;
@@ -173,6 +166,7 @@ public final class CobaltUploaderTest {
                         .build());
         verifyErrorLogUtilError(
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__COBALT_UPLOAD_API_REMOTE_EXCEPTION,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED);
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED,
+                /* numberOfInvocations= */ 1);
     }
 }

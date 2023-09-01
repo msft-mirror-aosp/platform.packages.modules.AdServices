@@ -18,11 +18,17 @@ package com.android.adservices.service.measurement.reporting;
 
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DEBUG_REPORT_JOB;
 
+import androidx.test.core.app.ApplicationProvider;
+
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -43,6 +49,9 @@ import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.service.stats.Clock;
+import com.android.adservices.service.stats.StatsdAdServicesLogger;
+import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -50,12 +59,17 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
+import org.mockito.internal.stubbing.answers.AnswersWithDelay;
+import org.mockito.internal.stubbing.answers.CallsRealMethods;
 import org.mockito.quality.Strictness;
 
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
 
 /** Unit test for {@link DebugReportingJobService} */
 public class DebugReportingJobServiceTest {
+    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
+
     private static final int MEASUREMENT_DEBUG_REPORT_JOB_ID =
             MEASUREMENT_DEBUG_REPORT_JOB.getJobId();
 
@@ -64,6 +78,7 @@ public class DebugReportingJobServiceTest {
     private DatastoreManager mMockDatastoreManager;
     private JobScheduler mMockJobScheduler;
     private JobParameters mJobParameters;
+    private AdservicesJobServiceLogger mSpyLogger;
     private DebugReportingJobService mSpyService;
 
 
@@ -73,6 +88,9 @@ public class DebugReportingJobServiceTest {
         mMockDatastoreManager = mock(DatastoreManager.class);
         mMockJobScheduler = mock(JobScheduler.class);
         mJobParameters = mock(JobParameters.class);
+        StatsdAdServicesLogger mockStatsdLogger = mock(StatsdAdServicesLogger.class);
+        mSpyLogger =
+                spy(new AdservicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mockStatsdLogger));
     }
 
     @Test
@@ -120,6 +138,39 @@ public class DebugReportingJobServiceTest {
                 });
     }
 
+    @Test
+    public void onStartJob_killSwitchOff_unlockingCheck() throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    disableKillSwitch();
+                    CountDownLatch countDownLatch = createCountDownLatch();
+                    ExtendedMockito.doNothing()
+                            .when(
+                                    () ->
+                                            DebugReportingJobService.scheduleIfNeeded(
+                                                    any(), anyBoolean()));
+
+                    // Execute
+                    mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+                    countDownLatch.await();
+                    // TODO (b/298021244): replace sleep() with a better approach
+                    Thread.sleep(WAIT_IN_MILLIS);
+                    countDownLatch = createCountDownLatch();
+                    boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+                    countDownLatch.await();
+                    // TODO (b/298021244): replace sleep() with a better approach
+                    Thread.sleep(WAIT_IN_MILLIS);
+
+                    // Validate
+                    assertTrue(result);
+
+                    // Verify the job ran successfully twice
+                    verify(mMockDatastoreManager, times(4)).runInTransactionWithResult(any());
+                    verify(mSpyService, times(2)).jobFinished(any(), anyBoolean());
+                    verify(mMockJobScheduler, never()).cancel(eq(MEASUREMENT_DEBUG_REPORT_JOB_ID));
+                });
+    }
 
     @Test
     public void onStartJob_shouldDisableJobTrue() throws Exception {
@@ -257,6 +308,28 @@ public class DebugReportingJobServiceTest {
                 });
     }
 
+    @Test
+    public void testOnStopJob_stopsExecutingThread() throws Exception {
+        runWithMocks(
+                () -> {
+                    disableKillSwitch();
+
+                    doAnswer(new AnswersWithDelay(WAIT_IN_MILLIS * 10, new CallsRealMethods()))
+                            .when(mSpyService)
+                            .sendReports();
+                    mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+                    Thread.sleep(WAIT_IN_MILLIS);
+
+                    assertNotNull(mSpyService.getFutureForTesting());
+
+                    boolean onStopJobResult =
+                            mSpyService.onStopJob(Mockito.mock(JobParameters.class));
+                    verify(mSpyService, times(0)).jobFinished(any(), anyBoolean());
+                    assertTrue(onStopJobResult);
+                    assertTrue(mSpyService.getFutureForTesting().isCancelled());
+                });
+    }
+
     private void runWithMocks(TestUtils.RunnableWithThrow execute) throws Exception {
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
@@ -265,6 +338,7 @@ public class DebugReportingJobServiceTest {
                         .spyStatic(EnrollmentDao.class)
                         .spyStatic(DebugReportingJobService.class)
                         .spyStatic(FlagsFactory.class)
+                        .spyStatic(AdservicesJobServiceLogger.class)
                         .mockStatic(ServiceCompatUtils.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
@@ -282,6 +356,13 @@ public class DebugReportingJobServiceTest {
             ExtendedMockito.doReturn(mMockDatastoreManager)
                     .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
             ExtendedMockito.doNothing().when(() -> DebugReportingJobService.schedule(any(), any()));
+
+            // Mock AdservicesJobServiceLogger to not actually log the stats to server
+            Mockito.doNothing()
+                    .when(mSpyLogger)
+                    .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+            ExtendedMockito.doReturn(mSpyLogger)
+                    .when(() -> AdservicesJobServiceLogger.getInstance(any(Context.class)));
 
             // Execute
             execute.run();
@@ -302,5 +383,16 @@ public class DebugReportingJobServiceTest {
         Flags mockFlags = Mockito.mock(Flags.class);
         ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
         ExtendedMockito.doReturn(value).when(mockFlags).getMeasurementJobDebugReportingKillSwitch();
+    }
+
+    private CountDownLatch createCountDownLatch() {
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        doAnswer(i -> countDown(countDownLatch)).when(mSpyService).jobFinished(any(), anyBoolean());
+        return countDownLatch;
+    }
+
+    private Object countDown(CountDownLatch countDownLatch) {
+        countDownLatch.countDown();
+        return null;
     }
 }

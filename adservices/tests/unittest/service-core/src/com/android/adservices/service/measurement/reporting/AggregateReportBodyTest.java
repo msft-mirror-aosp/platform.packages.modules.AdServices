@@ -86,6 +86,7 @@ public class AggregateReportBodyTest {
                 .setSourceDebugKey(SOURCE_DEBUG_KEY)
                 .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
                 .setAggregationCoordinatorOrigin(Uri.parse(COORDINATOR_ORIGIN))
+                .setDebugMode("enabled")
                 .build();
     }
 
@@ -101,6 +102,7 @@ public class AggregateReportBodyTest {
                 .setAggregationCoordinatorOrigin(Uri.parse(COORDINATOR_ORIGIN))
                 .setSourceDebugKey(null)
                 .setTriggerDebugKey(null)
+                .setDebugMode(null)
                 .build();
     }
 
@@ -115,6 +117,7 @@ public class AggregateReportBodyTest {
                 .setDebugCleartextPayload(DEBUG_CLEARTEXT_PAYLOAD)
                 .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
                 .setAggregationCoordinatorOrigin(Uri.parse(COORDINATOR_ORIGIN))
+                .setDebugMode(null)
                 .build();
     }
 
@@ -129,6 +132,7 @@ public class AggregateReportBodyTest {
                 .setDebugCleartextPayload(DEBUG_CLEARTEXT_PAYLOAD)
                 .setSourceDebugKey(SOURCE_DEBUG_KEY)
                 .setAggregationCoordinatorOrigin(Uri.parse(COORDINATOR_ORIGIN))
+                .setDebugMode(null)
                 .build();
     }
 
@@ -285,6 +289,25 @@ public class AggregateReportBodyTest {
         assertNull(aggregateServicePayloads.opt("debug_cleartext_payload"));
         assertEncodedDebugPayload(aggregateServicePayloads);
         assertEncryptedPayload(aggregateServicePayloads);
+    }
+
+    @Test
+    public void testAggregationServicePayloadsJsonSerializationWithDebugMode() throws Exception {
+        AggregateReportBody aggregateReport = createAggregateReportBodyExample1();
+
+        JSONObject sharedInfoJson = aggregateReport.sharedInfoToJson();
+
+        assertEquals("enabled", sharedInfoJson.get("debug_mode"));
+    }
+
+    @Test
+    public void testAggregationServicePayloadsJsonSerializationWithoutDebugMode() throws Exception {
+        AggregateReportBody aggregateReport =
+                createAggregateReportBodyExampleWithSingleSourceDebugKey();
+
+        JSONObject sharedInfoJson = aggregateReport.sharedInfoToJson();
+
+        assertNull(sharedInfoJson.opt("debug_mode"));
     }
 
     private void assertEncodedDebugPayload(JSONObject aggregateServicePayloads) throws Exception {

@@ -43,6 +43,7 @@ import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -132,6 +133,16 @@ public class AggregateReportingJobHandler {
 
             if (keys.size() == reportIds.size()) {
                 for (int i = 0; i < reportIds.size(); i++) {
+                    // If the job service's requirements specified at runtime are no longer met, the
+                    // job service will interrupt this thread.  If the thread has been interrupted,
+                    // it will exit early.
+                    if (Thread.currentThread().isInterrupted()) {
+                        LogUtil.d(
+                                "AggregateReportingJobHandler performScheduledPendingReports "
+                                        + "thread interrupted, exiting early.");
+                        return true;
+                    }
+
                     ReportingStatus reportingStatus = new ReportingStatus();
                     final String aggregateReportId = reportIds.get(i);
                     @AdServicesStatusUtils.StatusCode
@@ -258,7 +269,9 @@ public class AggregateReportingJobHandler {
                                         AggregateReport.Status.MARKED_TO_DELETE));
             }
 
-            if (mFlags.getMeasurementEnableReportingJobsThrowJsonException()) {
+            if (mFlags.getMeasurementEnableReportingJobsThrowJsonException()
+                    && ThreadLocalRandom.current().nextFloat()
+                            < mFlags.getMeasurementThrowUnknownExceptionSamplingRate()) {
                 // JSONException is unexpected.
                 throw new IllegalStateException(
                         "Serialization error occurred at aggregate report delivery", e);
@@ -268,14 +281,18 @@ public class AggregateReportingJobHandler {
             LogUtil.e(e, e.toString());
             // TODO(b/297579501): Update the atom and the status to indicate encryption error
             reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.UNKNOWN);
-            if (mFlags.getMeasurementEnableReportingJobsThrowCryptoException()) {
+            if (mFlags.getMeasurementEnableReportingJobsThrowCryptoException()
+                    && ThreadLocalRandom.current().nextFloat()
+                            < mFlags.getMeasurementThrowUnknownExceptionSamplingRate()) {
                 throw e;
             }
             return AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } catch (Exception e) {
             LogUtil.e(e, e.toString());
             reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.UNKNOWN);
-            if (mFlags.getMeasurementEnableReportingJobsThrowUnaccountedException()) {
+            if (mFlags.getMeasurementEnableReportingJobsThrowUnaccountedException()
+                    && ThreadLocalRandom.current().nextFloat()
+                            < mFlags.getMeasurementThrowUnknownExceptionSamplingRate()) {
                 throw e;
             }
             return AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
@@ -303,6 +320,12 @@ public class AggregateReportingJobHandler {
                 .setSourceDebugKey(aggregateReport.getSourceDebugKey())
                 .setTriggerDebugKey(aggregateReport.getTriggerDebugKey())
                 .setAggregationCoordinatorOrigin(aggregateReport.getAggregationCoordinatorOrigin())
+                .setDebugMode(
+                        mIsDebugInstance
+                                        && aggregateReport.getSourceDebugKey() != null
+                                        && aggregateReport.getTriggerDebugKey() != null
+                                ? "enabled"
+                                : null)
                 .build()
                 .toJson(key);
     }
