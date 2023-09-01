@@ -309,6 +309,8 @@ public interface Flags {
     long MEASUREMENT_DB_SIZE_LIMIT = (1024 * 1024) * 10; // 10 MBs
     int MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(5);
     int MEASUREMENT_NETWORK_READ_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(30);
+    int MEASUREMENT_REPORT_RETRY_LIMIT = 3;
+    boolean MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED = true;
 
     /**
      * Returns the window that an InputEvent has to be within for the system to register it as a
@@ -337,6 +339,16 @@ public interface Flags {
     /** Returns the DB size limit for measurement. */
     default long getMeasurementDbSizeLimit() {
         return MEASUREMENT_DB_SIZE_LIMIT;
+    }
+
+    /** Returns Whether to limit number of Retries for Measurement Reports */
+    default boolean getMeasurementReportingRetryLimitEnabled() {
+        return MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED;
+    }
+
+    /** Returns Maximum number of Retries for Measurement Reportss */
+    default int getMeasurementReportingRetryLimit() {
+        return MEASUREMENT_REPORT_RETRY_LIMIT;
     }
 
     /** Measurement manifest file url, used for MDD download. */
@@ -1660,7 +1672,7 @@ public interface Flags {
     boolean MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH = false;
 
     /**
-     * Returns the kill switch value for Measurement Job Debug Reporting. The API will be disabled
+     * Returns the kill switch value for Measurement Job Debug Reporting. The Job will be disabled
      * if either the Global Kill Switch, Measurement Kill Switch, or the Measurement Job Debug
      * Reporting Kill Switch value is true.
      */
@@ -1727,6 +1739,25 @@ public interface Flags {
     /** Returns the job period in millis for the Measurement Debug Reporting Fallback Job. */
     default long getMeasurementDebugReportingFallbackJobPeriodMs() {
         return MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS;
+    }
+
+    /*
+     * Measurement Job Verbose Debug Reporting Kill Switch. The default value is false which means
+     * the Verbose Debug Reporting Job is enabled. This flag is used for emergency turning off the
+     * Verbose Debug Reporting Job.
+     */
+    boolean MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Measurement Job Verbose Debug Reporting. The Job will be
+     * disabled if either the Global Kill Switch, Measurement Kill Switch, or the Measurement Job
+     * Verbose Debug Reporting Kill Switch value is true.
+     */
+    default boolean getMeasurementJobVerboseDebugReportingKillSwitch() {
+        // We check the Global Kill Switch first. As a result, it overrides all other kill Switches.
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH;
     }
 
     /**
@@ -2672,6 +2703,14 @@ public interface Flags {
         return DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_BLOCKLIST;
     }
 
+    /** Get mainline train version */
+    String DEFAULT_MAINLINE_TRAIN_VERSION = "000000";
+
+    /** Get mainline train version */
+    default String getMainlineTrainVersion() {
+        return DEFAULT_MAINLINE_TRAIN_VERSION;
+    }
+
     /** Default Determines whether EU notification flow change is enabled. */
     boolean DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED = true;
 
@@ -2872,6 +2911,14 @@ public interface Flags {
         return MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING;
     }
 
+    /** Default allowlist to enable app package name logging. */
+    String MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST = "";
+
+    /** Returns a list of app package names that allows logging. */
+    default String getMeasurementAppPackageNameLoggingAllowlist() {
+        return MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST;
+    }
+
     /** Disable measurement reporting jobs to throw unaccounted exceptions by default. */
     boolean MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION = false;
 
@@ -2922,6 +2969,14 @@ public interface Flags {
      */
     default boolean getMeasurementEnableDatastoreManagerThrowDatastoreException() {
         return MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION;
+    }
+
+    /** Set the sampling rate to 100% for unknown exceptions to be re-thrown. */
+    float MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE = 1.0f;
+
+    /** Sampling rate to decide whether to throw unknown exceptions for measurement. */
+    default float getMeasurementThrowUnknownExceptionSamplingRate() {
+        return MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE;
     }
 
     /** Default U18 UX feature flag.. */
@@ -3055,5 +3110,13 @@ public interface Flags {
     /** Returns whether the U18 UX detentional channel is enabled. */
     default boolean isU18UxDetentionChannelEnabled() {
         return IS_U18_UX_DETENTION_CHANNEL_ENABLED_DEFAULT;
+    }
+
+    /** U18 supervised account flow is enabled by default. */
+    boolean IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT = true;
+
+    /** Returns whether the U18 supervised account is enabled. */
+    default boolean isU18SupervisedAccountEnabled() {
+        return IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT;
     }
 }

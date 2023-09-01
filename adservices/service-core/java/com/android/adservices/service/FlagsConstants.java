@@ -126,6 +126,7 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_NETWORK_READ_TIMEOUT_MS =
             "measurement_network_read_timeout_ms";
     public static final String KEY_MEASUREMENT_DB_SIZE_LIMIT = "measurement_db_size_limit";
+
     public static final String KEY_MEASUREMENT_MANIFEST_FILE_URL =
             "mdd_measurement_manifest_file_url";
     public static final String KEY_MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS =
@@ -224,6 +225,9 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION =
             "measurement_enable_datastore_manager_throw_datastore_exception";
+
+    public static final String KEY_MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE =
+            "measurement_throw_unknown_exception_sampling_rate";
 
     // FLEDGE Custom Audience keys
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT =
@@ -513,6 +517,11 @@ public final class FlagsConstants {
     public static final String KEY_MDD_BACKGROUND_TASK_KILL_SWITCH =
             "mdd_background_task_kill_switch";
     public static final String KEY_MDD_LOGGER_KILL_SWITCH = "mdd_logger_kill_switch";
+    public static final String KEY_MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH =
+            "measurement_job_debug_reporting_kill_switch";
+    public static final String KEY_MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH =
+            "measurement_job_verbose_debug_reporting_kill_switch";
+
     public static final String KEY_ADID_KILL_SWITCH = "adid_kill_switch";
     public static final String KEY_APPSETID_KILL_SWITCH = "appsetid_kill_switch";
     public static final String KEY_FLEDGE_SELECT_ADS_KILL_SWITCH = "fledge_select_ads_kill_switch";
@@ -798,4 +807,7 @@ public final class FlagsConstants {
 
     public static final String KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED =
             "is_u18_ux_detention_channel_enabled";
+
+    public static final String KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED =
+            "is_u18_supervised_account_enabled";
 }

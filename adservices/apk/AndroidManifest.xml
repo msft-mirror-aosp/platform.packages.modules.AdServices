@@ -279,8 +279,14 @@
         </service>
 
         <!-- Measurement debug report upload job. -->
-        <service
-            android:name="com.android.adservices.service.measurement.reporting.DebugReportingJobService"
+        <service android:name=
+                     "com.android.adservices.service.measurement.reporting.DebugReportingJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- Measurement verbose debug report upload job. -->
+        <service android:name=
+              "com.android.adservices.service.measurement.reporting.VerboseDebugReportingJobService"
             android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
