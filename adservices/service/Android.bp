@@ -42,6 +42,7 @@ java_sdk_library {
         "error_prone_annotations",
     ],
     static_libs: [
+        "modules-utils-backgroundthread",
         "modules-utils-preconditions",
     ],
     defaults: [
