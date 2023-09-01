@@ -30,11 +30,11 @@ public class ProtectedSignalTest {
     public void testCreateProtectedSignal() {
         ProtectedSignal signal =
                 ProtectedSignal.builder()
-                        .setValue(VALUE)
+                        .setBase64EncodedValue(VALUE)
                         .setCreationTime(CommonFixture.FIXED_NOW)
                         .setPackageName(CommonFixture.TEST_PACKAGE_NAME_1)
                         .build();
-        assertEquals(VALUE, signal.getValue());
+        assertEquals(VALUE, signal.getBase64EncodedValue());
         assertEquals(CommonFixture.FIXED_NOW, signal.getCreationTime());
         assertEquals(CommonFixture.TEST_PACKAGE_NAME_1, signal.getPackageName());
     }
