@@ -4358,6 +4358,11 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED
                         + " = "
                         + getFledgeMeasurementReportAndRegisterEventApiFallbackEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED
+                        + " = "
+                        + isU18SupervisedAccountEnabled());
     }
 
     @VisibleForTesting
@@ -4560,6 +4565,9 @@ public final class PhFlags implements Flags {
         uxMap.put(
                 FlagsConstants.KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED,
                 isU18UxDetentionChannelEnabled());
+        uxMap.put(
+                FlagsConstants.KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED,
+                isU18SupervisedAccountEnabled());
         return uxMap;
     }
 
@@ -4759,5 +4767,13 @@ public final class PhFlags implements Flags {
     public String getMeasurementAppPackageNameLoggingAllowlist() {
         return DeviceConfig.getString(
                 NAMESPACE_ADSERVICES, KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST, "");
+    }
+
+    @Override
+    public boolean isU18SupervisedAccountEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED,
+                /* defaultValue */ IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT);
     }
 }
