@@ -51,34 +51,36 @@ public class EnqueueAsyncRegistration {
             Uri registrant,
             long requestTime,
             @Nullable Source.SourceType sourceType,
+            @Nullable String postBody,
             @NonNull DatastoreManager datastoreManager,
             @NonNull ContentResolver contentResolver) {
         Objects.requireNonNull(contentResolver);
         Objects.requireNonNull(datastoreManager);
         return datastoreManager.runInTransaction(
                 (dao) -> {
-                        if (isValid(registrationRequest)) {
-                            insertAsyncRegistration(
-                                    UUID.randomUUID().toString(),
-                                    registrationRequest.getRegistrationUri(),
-                                    /* mWebDestination */ null,
-                                    /* mOsDestination */ null,
-                                    registrant,
-                                    /* verifiedDestination */ null,
-                                    registrant,
-                                    registrationRequest.getRegistrationType()
-                                                    == RegistrationRequest.REGISTER_SOURCE
-                                            ? AsyncRegistration.RegistrationType.APP_SOURCE
-                                            : AsyncRegistration.RegistrationType.APP_TRIGGER,
-                                    sourceType,
-                                    requestTime,
-                                    false,
-                                    adIdPermission,
-                                    registrationRequest.getAdIdValue(),
-                                    UUID.randomUUID().toString(),
-                                    dao,
-                                    contentResolver);
-                        }
+                    if (isValid(registrationRequest)) {
+                        insertAsyncRegistration(
+                                UUID.randomUUID().toString(),
+                                registrationRequest.getRegistrationUri(),
+                                /* mWebDestination */ null,
+                                /* mOsDestination */ null,
+                                registrant,
+                                /* verifiedDestination */ null,
+                                registrant,
+                                registrationRequest.getRegistrationType()
+                                                == RegistrationRequest.REGISTER_SOURCE
+                                        ? AsyncRegistration.RegistrationType.APP_SOURCE
+                                        : AsyncRegistration.RegistrationType.APP_TRIGGER,
+                                sourceType,
+                                requestTime,
+                                false,
+                                adIdPermission,
+                                registrationRequest.getAdIdValue(),
+                                postBody,
+                                UUID.randomUUID().toString(),
+                                dao,
+                                contentResolver);
+                    }
                 });
     }
 
@@ -117,6 +119,7 @@ public class EnqueueAsyncRegistration {
                                     webSourceParams.isDebugKeyAllowed(),
                                     adIdPermission,
                                     /* adIdValue */ null, // null for web
+                                    /* postBody */ null,
                                     registrationId,
                                     dao,
                                     contentResolver);
@@ -159,6 +162,7 @@ public class EnqueueAsyncRegistration {
                                     webTriggerParams.isDebugKeyAllowed(),
                                     adIdPermission,
                                     /* adIdValue */ null, // null for web
+                                    /* postBody */ null,
                                     registrationId,
                                     dao,
                                     contentResolver);
@@ -181,6 +185,7 @@ public class EnqueueAsyncRegistration {
             boolean debugKeyAllowed,
             boolean adIdPermission,
             String platformAdIdValue,
+            String postBody,
             String registrationId,
             IMeasurementDao dao,
             ContentResolver contentResolver)
@@ -201,6 +206,7 @@ public class EnqueueAsyncRegistration {
                         .setDebugKeyAllowed(debugKeyAllowed)
                         .setAdIdPermission(adIdPermission)
                         .setPlatformAdId(platformAdIdValue)
+                        .setPostBody(postBody)
                         .setRegistrationId(registrationId)
                         .build();
 
