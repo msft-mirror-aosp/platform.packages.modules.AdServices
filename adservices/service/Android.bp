@@ -32,17 +32,20 @@ java_sdk_library {
     srcs: [":service-adservices-sources"],
     sdk_version: "system_server_current",
     min_sdk_version: "Tiramisu",
-    permitted_packages: ["com.android.server.adservices"],
+    permitted_packages: [
+        "com.android.server.adservices",
+        "com.google.errorprone.annotations",
+    ],
     libs: [
         "framework-configinfrastructure",
         "framework-adservices.impl",
         // Workaround for b/262282035. Needed to access the SdkSandboxManagerLocal.
         "service-sdksandbox.impl",
-        "modules-utils-shell-command-handler",
-        "error_prone_annotations",
     ],
     static_libs: [
         "modules-utils-preconditions",
+        "modules-utils-shell-command-handler",
+        "error_prone_annotations",
     ],
     defaults: [
         "framework-system-server-module-defaults",
