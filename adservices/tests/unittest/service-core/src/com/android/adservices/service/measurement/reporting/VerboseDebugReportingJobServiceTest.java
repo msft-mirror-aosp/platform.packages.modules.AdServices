@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.measurement.registration;
+package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
-import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB;
+import static com.android.adservices.service.measurement.reporting.VerboseDebugReportingJobService.VERBOSE_DEBUG_REPORT_JOB_ID;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -47,10 +47,10 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
+import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
-import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
@@ -68,93 +68,75 @@ import org.mockito.quality.Strictness;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 
-public class AsyncRegistrationFallbackJobServiceTest {
+/** Unit test for {@link VerboseDebugReportingJobService} */
+public class VerboseDebugReportingJobServiceTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
-    private static final int MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID =
-            MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB.getJobId();
-    private static final long WAIT_IN_MILLIS = 1_000L;
-    private JobScheduler mMockJobScheduler;
-    private AsyncRegistrationFallbackJobService mSpyService;
+    private static final int MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID =
+            MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB.getJobId();
+
+    private static final long WAIT_IN_MILLIS = 1000L;
+
     private DatastoreManager mMockDatastoreManager;
+    private JobScheduler mMockJobScheduler;
+    private JobParameters mJobParameters;
     private AdservicesJobServiceLogger mSpyLogger;
-    private Flags mMockFlags;
+    private VerboseDebugReportingJobService mSpyService;
 
     @Before
     public void setUp() {
-        mSpyService = spy(new AsyncRegistrationFallbackJobService());
+        mSpyService = spy(new VerboseDebugReportingJobService());
+        mMockDatastoreManager = mock(DatastoreManager.class);
         mMockJobScheduler = mock(JobScheduler.class);
-
+        mJobParameters = mock(JobParameters.class);
         StatsdAdServicesLogger mockStatsdLogger = mock(StatsdAdServicesLogger.class);
         mSpyLogger =
                 spy(new AdservicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mockStatsdLogger));
-        mMockFlags = mock(Flags.class);
     }
 
     @Test
-    public void onStartJob_killSwitchOn_withoutLogging() throws Exception {
+    public void onStartJob_killSwitchOn() throws Exception {
         runWithMocks(
                 () -> {
-                    // Logging killswitch is on.
-                    Mockito.doReturn(true).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+                    // Setup
+                    enableKillSwitch();
 
-                    onStartJob_killSwitchOn();
+                    // Execute
+                    boolean result = mSpyService.onStartJob(mJobParameters);
 
-                    // Verify logging methods are not invoked.
-                    verify(mSpyLogger, never()).persistJobExecutionData(anyInt(), anyLong());
-                    verify(mSpyLogger, never())
-                            .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+                    // Validate
+                    assertFalse(result);
+                    // Allow background thread to execute
+                    Thread.sleep(WAIT_IN_MILLIS);
+                    verify(mMockDatastoreManager, never()).runInTransactionWithResult(any());
+                    verify(mSpyService, times(1)).jobFinished(any(), eq(false));
+                    verify(mMockJobScheduler, times(1))
+                            .cancel(eq(MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID));
                 });
     }
 
     @Test
-    public void onStartJob_killSwitchOn_withLogging() throws Exception {
+    public void onStartJob_killSwitchOff() throws Exception {
         runWithMocks(
                 () -> {
-                    // Logging killswitch is off.
-                    Mockito.doReturn(false).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+                    // Setup
+                    disableKillSwitch();
+                    ExtendedMockito.doNothing()
+                            .when(
+                                    () ->
+                                            VerboseDebugReportingJobService.scheduleIfNeeded(
+                                                    any(), anyBoolean()));
 
-                    onStartJob_killSwitchOn();
+                    // Execute
+                    boolean result = mSpyService.onStartJob(mJobParameters);
 
-                    // Verify logging methods are invoked.
-                    verify(mSpyLogger).persistJobExecutionData(anyInt(), anyLong());
-                    verify(mSpyLogger)
-                            .logExecutionStats(
-                                    anyInt(),
-                                    anyLong(),
-                                    eq(
-                                            AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON),
-                                    anyInt());
-                });
-    }
-
-    @Test
-    public void onStartJob_killSwitchOff_withoutLogging() throws Exception {
-        runWithMocks(
-                () -> {
-                    // Logging killswitch is on.
-                    Mockito.doReturn(true).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
-
-                    onStartJob_killSwitchOff();
-
-                    // Verify logging methods are not invoked.
-                    verify(mSpyLogger, never()).persistJobExecutionData(anyInt(), anyLong());
-                    verify(mSpyLogger, never())
-                            .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
-                });
-    }
-
-    @Test
-    public void onStartJob_killSwitchOff_withLogging() throws Exception {
-        runWithMocks(
-                () -> {
-                    // Logging killswitch is off.
-                    Mockito.doReturn(false).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
-
-                    onStartJob_killSwitchOff();
-
-                    // Verify logging methods are invoked.
-                    verify(mSpyLogger).persistJobExecutionData(anyInt(), anyLong());
-                    verify(mSpyLogger).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+                    // Validate
+                    assertTrue(result);
+                    // Allow background thread to execute
+                    Thread.sleep(WAIT_IN_MILLIS);
+                    verify(mMockDatastoreManager, times(1)).runInTransactionWithResult(any());
+                    verify(mSpyService, times(1)).jobFinished(any(), anyBoolean());
+                    verify(mMockJobScheduler, never())
+                            .cancel(eq(MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID));
                 });
     }
 
@@ -168,7 +150,7 @@ public class AsyncRegistrationFallbackJobServiceTest {
                     ExtendedMockito.doNothing()
                             .when(
                                     () ->
-                                            AsyncRegistrationFallbackJobService.scheduleIfNeeded(
+                                            VerboseDebugReportingJobService.scheduleIfNeeded(
                                                     any(), anyBoolean()));
 
                     // Execute
@@ -186,42 +168,37 @@ public class AsyncRegistrationFallbackJobServiceTest {
                     assertTrue(result);
 
                     // Verify the job ran successfully twice
-                    ExtendedMockito.verify(mSpyService, times(2)).jobFinished(any(), anyBoolean());
+                    verify(mMockDatastoreManager, times(2)).runInTransactionWithResult(any());
+                    verify(mSpyService, times(2)).jobFinished(any(), anyBoolean());
                     verify(mMockJobScheduler, never())
-                            .cancel(eq(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID));
+                            .cancel(eq(MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID));
                 });
     }
 
     @Test
-    public void onStartJob_shouldDisableJobTrue_withoutLogging() throws Exception {
+    public void onStartJob_shouldDisableJobTrue() throws Exception {
         runWithMocks(
                 () -> {
-                    // Logging killswitch is on.
-                    ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-                    Mockito.doReturn(true).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+                    // Setup
+                    ExtendedMockito.doReturn(true)
+                            .when(
+                                    () ->
+                                            ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                                    any(Context.class)));
 
-                    onStartJob_shouldDisableJobTrue();
+                    // Execute
+                    boolean result = mSpyService.onStartJob(mJobParameters);
 
-                    // Verify logging method is not invoked.
-                    verify(mSpyLogger, never())
-                            .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
-                });
-    }
-
-    @Test
-    public void onStartJob_shouldDisableJobTrue_withLoggingEnabled() throws Exception {
-        runWithMocks(
-                () -> {
-                    // Logging killswitch is off.
-                    ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-                    Mockito.doReturn(false).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
-
-                    onStartJob_shouldDisableJobTrue();
-
-                    // Verify logging has not happened even though logging is enabled because this
-                    // field is not logged
-                    verify(mSpyLogger, never())
-                            .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+                    // Validate
+                    assertFalse(result);
+                    // Allow background thread to execute
+                    Thread.sleep(WAIT_IN_MILLIS);
+                    verify(mMockDatastoreManager, never()).runInTransactionWithResult(any());
+                    verify(mSpyService, times(1)).jobFinished(any(), eq(false));
+                    verify(mMockJobScheduler, times(1))
+                            .cancel(eq(MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID));
+                    ExtendedMockito.verifyZeroInteractions(
+                            ExtendedMockito.staticMockMarker(FlagsFactory.class));
                 });
     }
 
@@ -231,7 +208,6 @@ public class AsyncRegistrationFallbackJobServiceTest {
                 () -> {
                     // Setup
                     enableKillSwitch();
-
                     final Context mockContext = mock(Context.class);
                     doReturn(mMockJobScheduler)
                             .when(mockContext)
@@ -239,100 +215,88 @@ public class AsyncRegistrationFallbackJobServiceTest {
                     final JobInfo mockJobInfo = mock(JobInfo.class);
                     doReturn(mockJobInfo)
                             .when(mMockJobScheduler)
-                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID));
 
                     // Execute
-                    AsyncRegistrationFallbackJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule= */ false);
+                    VerboseDebugReportingJobService.scheduleIfNeeded(
+                            mockContext, /* forceSchedule = */ false);
 
                     // Validate
                     ExtendedMockito.verify(
-                            () -> AsyncRegistrationFallbackJobService.schedule(any(), any()),
-                            never());
+                            () -> VerboseDebugReportingJobService.schedule(any(), any()), never());
                     verify(mMockJobScheduler, never())
-                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID));
                 });
     }
 
     @Test
-    public void scheduleIfNeeded_sameJobInfoDontForceSchedule_dontSchedule() throws Exception {
+    public void scheduleIfNeeded_killSwitchOff_sameJobInfoDontForceSchedule_dontSchedule()
+            throws Exception {
         runWithMocks(
                 () -> {
                     // Setup
                     disableKillSwitch();
-
                     final Context mockContext = spy(ApplicationProvider.getApplicationContext());
                     doReturn(mMockJobScheduler)
                             .when(mockContext)
                             .getSystemService(JobScheduler.class);
                     final JobInfo mockJobInfo =
                             new JobInfo.Builder(
-                                            MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID,
+                                            VERBOSE_DEBUG_REPORT_JOB_ID,
                                             new ComponentName(
                                                     mockContext,
-                                                    AsyncRegistrationFallbackJobService.class))
-                                    .setRequiresBatteryNotLow(true)
-                                    .setPeriodic(
-                                            FlagsFactory.getFlags()
-                                                    .getAsyncRegistrationJobQueueIntervalMs())
+                                                    VerboseDebugReportingJobService.class))
                                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                                    .setPersisted(true)
                                     .build();
                     doReturn(mockJobInfo)
                             .when(mMockJobScheduler)
-                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID));
 
                     // Execute
-                    AsyncRegistrationFallbackJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule= */ false);
+                    VerboseDebugReportingJobService.scheduleIfNeeded(
+                            mockContext, /* forceSchedule = */ false);
 
                     // Validate
                     ExtendedMockito.verify(
-                            () -> AsyncRegistrationFallbackJobService.schedule(any(), any()),
-                            never());
+                            () -> VerboseDebugReportingJobService.schedule(any(), any()), never());
                     verify(mMockJobScheduler, times(1))
-                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID));
                 });
     }
 
     @Test
-    public void scheduleIfNeeded_diffJobInfoDontForceSchedule_doesSchedule() throws Exception {
+    public void scheduleIfNeeded_killSwitchOff_diffJobInfoDontForceSchedule_doesSchedule()
+            throws Exception {
         runWithMocks(
                 () -> {
                     // Setup
                     disableKillSwitch();
-
                     final Context mockContext = spy(ApplicationProvider.getApplicationContext());
                     doReturn(mMockJobScheduler)
                             .when(mockContext)
                             .getSystemService(JobScheduler.class);
                     final JobInfo mockJobInfo =
                             new JobInfo.Builder(
-                                            MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID,
+                                            VERBOSE_DEBUG_REPORT_JOB_ID,
                                             new ComponentName(
                                                     mockContext,
-                                                    AsyncRegistrationFallbackJobService.class))
+                                                    VerboseDebugReportingJobService.class))
                                     // Difference
-                                    .setRequiresBatteryNotLow(false)
-                                    .setPeriodic(
-                                            FlagsFactory.getFlags()
-                                                    .getAsyncRegistrationJobQueueIntervalMs())
-                                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                                    .setPersisted(true)
+                                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_CELLULAR)
                                     .build();
                     doReturn(mockJobInfo)
                             .when(mMockJobScheduler)
-                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID));
 
                     // Execute
-                    AsyncRegistrationFallbackJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule= */ false);
+                    VerboseDebugReportingJobService.scheduleIfNeeded(
+                            mockContext, /* forceSchedule = */ false);
 
                     // Validate
                     ExtendedMockito.verify(
-                            () -> AsyncRegistrationFallbackJobService.schedule(any(), any()));
+                            () -> VerboseDebugReportingJobService.schedule(any(), any()));
                     verify(mMockJobScheduler, times(1))
-                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID));
                 });
     }
 
@@ -343,7 +307,6 @@ public class AsyncRegistrationFallbackJobServiceTest {
                 () -> {
                     // Setup
                     disableKillSwitch();
-
                     final Context mockContext = mock(Context.class);
                     doReturn(mMockJobScheduler)
                             .when(mockContext)
@@ -351,18 +314,17 @@ public class AsyncRegistrationFallbackJobServiceTest {
                     final JobInfo mockJobInfo = mock(JobInfo.class);
                     doReturn(mockJobInfo)
                             .when(mMockJobScheduler)
-                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID));
 
                     // Execute
-                    AsyncRegistrationFallbackJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule= */ true);
+                    VerboseDebugReportingJobService.scheduleIfNeeded(
+                            mockContext, /* forceSchedule = */ true);
 
                     // Validate
                     ExtendedMockito.verify(
-                            () -> AsyncRegistrationFallbackJobService.schedule(any(), any()),
-                            times(1));
+                            () -> VerboseDebugReportingJobService.schedule(any(), any()), times(1));
                     verify(mMockJobScheduler, times(1))
-                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID));
                 });
     }
 
@@ -373,24 +335,23 @@ public class AsyncRegistrationFallbackJobServiceTest {
                 () -> {
                     // Setup
                     disableKillSwitch();
-
                     final Context mockContext = mock(Context.class);
                     doReturn(mMockJobScheduler)
                             .when(mockContext)
                             .getSystemService(JobScheduler.class);
-                    doReturn(/* noJobInfo= */ null)
+                    doReturn(/* noJobInfo = */ null)
                             .when(mMockJobScheduler)
-                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID));
 
                     // Execute
-                    AsyncRegistrationFallbackJobService.scheduleIfNeeded(mockContext, false);
+                    VerboseDebugReportingJobService.scheduleIfNeeded(
+                            mockContext, /* forceSchedule = */ false);
 
                     // Validate
                     ExtendedMockito.verify(
-                            () -> AsyncRegistrationFallbackJobService.schedule(any(), any()),
-                            times(1));
+                            () -> VerboseDebugReportingJobService.schedule(any(), any()), times(1));
                     verify(mMockJobScheduler, times(1))
-                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID));
                 });
     }
 
@@ -402,7 +363,7 @@ public class AsyncRegistrationFallbackJobServiceTest {
 
                     doAnswer(new AnswersWithDelay(WAIT_IN_MILLIS * 10, new CallsRealMethods()))
                             .when(mSpyService)
-                            .processAsyncRecords();
+                            .sendReports();
                     mSpyService.onStartJob(Mockito.mock(JobParameters.class));
                     Thread.sleep(WAIT_IN_MILLIS);
 
@@ -416,70 +377,13 @@ public class AsyncRegistrationFallbackJobServiceTest {
                 });
     }
 
-    private void onStartJob_shouldDisableJobTrue() throws Exception {
-        // Setup
-        ExtendedMockito.doReturn(true)
-                .when(
-                        () ->
-                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
-                                        any(Context.class)));
-
-        // Execute
-        boolean result = mSpyService.onStartJob(mock(JobParameters.class));
-
-        // Validate
-        assertFalse(result);
-        // Allow background thread to execute
-        Thread.sleep(WAIT_IN_MILLIS);
-        verify(mSpyService, times(1)).jobFinished(any(), eq(false));
-        verify(mMockJobScheduler, times(1))
-                .cancel(eq(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID));
-    }
-
-    private void onStartJob_killSwitchOn() throws Exception {
-        // Setup
-        enableKillSwitch();
-
-        // Execute
-        boolean result = mSpyService.onStartJob(mock(JobParameters.class));
-
-        // Validate
-        assertFalse(result);
-        // Allow background thread to execute
-        Thread.sleep(WAIT_IN_MILLIS);
-        verify(mSpyService, times(1)).jobFinished(any(), eq(false));
-        verify(mMockJobScheduler, times(1))
-                .cancel(eq(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID));
-    }
-
-    private void onStartJob_killSwitchOff() throws Exception {
-        // Setup
-        disableKillSwitch();
-        ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                AsyncRegistrationFallbackJobService.scheduleIfNeeded(
-                                        any(), anyBoolean()));
-
-        // Execute
-        boolean result = mSpyService.onStartJob(mock(JobParameters.class));
-
-        // Validate
-        assertTrue(result);
-        // Allow background thread to execute
-        Thread.sleep(WAIT_IN_MILLIS);
-        ExtendedMockito.verify(mSpyService, times(1)).jobFinished(any(), anyBoolean());
-        verify(mMockJobScheduler, never())
-                .cancel(eq(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID));
-    }
-
     private void runWithMocks(TestUtils.RunnableWithThrow execute) throws Exception {
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
-                        .spyStatic(AsyncRegistrationFallbackJobService.class)
-                        .spyStatic(AdServicesLoggerImpl.class)
+                        .spyStatic(AdServicesConfig.class)
                         .spyStatic(DatastoreManagerFactory.class)
                         .spyStatic(EnrollmentDao.class)
+                        .spyStatic(VerboseDebugReportingJobService.class)
                         .spyStatic(FlagsFactory.class)
                         .spyStatic(AdservicesJobServiceLogger.class)
                         .mockStatic(ServiceCompatUtils.class)
@@ -496,17 +400,10 @@ public class AsyncRegistrationFallbackJobServiceTest {
             doReturn(Mockito.mock(Context.class)).when(mSpyService).getApplicationContext();
             ExtendedMockito.doReturn(mock(EnrollmentDao.class))
                     .when(() -> EnrollmentDao.getInstance(any()));
-            ExtendedMockito.doReturn(mock(AdServicesLoggerImpl.class))
-                    .when(AdServicesLoggerImpl::getInstance);
-            ExtendedMockito.doNothing()
-                    .when(() -> AsyncRegistrationFallbackJobService.schedule(any(), any()));
             ExtendedMockito.doReturn(mMockDatastoreManager)
                     .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
-            ExtendedMockito.doReturn(false)
-                    .when(
-                            () ->
-                                    ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
-                                            any(Context.class)));
+            ExtendedMockito.doNothing()
+                    .when(() -> VerboseDebugReportingJobService.schedule(any(), any()));
 
             // Mock AdservicesJobServiceLogger to not actually log the stats to server
             Mockito.doNothing()
@@ -531,10 +428,11 @@ public class AsyncRegistrationFallbackJobServiceTest {
     }
 
     private void toggleKillSwitch(boolean value) {
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        Flags mockFlags = Mockito.mock(Flags.class);
+        ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
         ExtendedMockito.doReturn(value)
-                .when(mMockFlags)
-                .getAsyncRegistrationFallbackJobKillSwitch();
+                .when(mockFlags)
+                .getMeasurementJobVerboseDebugReportingKillSwitch();
     }
 
     private CountDownLatch createCountDownLatch() {
