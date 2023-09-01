@@ -25,11 +25,10 @@ import android.adservices.common.FledgeErrorResponse;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.annotation.RequiresApi;
 import android.net.Uri;
 import android.os.Build;
 import android.os.RemoteException;
-
-import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -80,6 +79,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 /** Runner class for ProcessAdSelectionResultRunner service */
+// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class PersistAdSelectionResultRunner {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -116,6 +116,8 @@ public class PersistAdSelectionResultRunner {
     @NonNull private AuctionServerPayloadExtractor mPayloadExtractor;
     @NonNull private AdCounterHistogramUpdater mAdCounterHistogramUpdater;
 
+    @NonNull private AuctionResultValidator mAuctionResultValidator;
+
     public PersistAdSelectionResultRunner(
             @NonNull final ObliviousHttpEncryptor obliviousHttpEncryptor,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
@@ -129,7 +131,8 @@ public class PersistAdSelectionResultRunner {
             final long overallTimeout,
             final boolean forceContinueOnAbsentOwner,
             @NonNull final ReportingRegistrationLimits reportingLimits,
-            @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater) {
+            @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
+            @NonNull final AuctionResultValidator auctionResultValidator) {
         Objects.requireNonNull(obliviousHttpEncryptor);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(customAudienceDao);
@@ -140,6 +143,7 @@ public class PersistAdSelectionResultRunner {
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(reportingLimits);
         Objects.requireNonNull(adCounterHistogramUpdater);
+        Objects.requireNonNull(auctionResultValidator);
 
         mObliviousHttpEncryptor = obliviousHttpEncryptor;
         mAdSelectionEntryDao = adSelectionEntryDao;
@@ -154,6 +158,7 @@ public class PersistAdSelectionResultRunner {
         mForceSearchOnAbsentOwner = forceContinueOnAbsentOwner;
         mReportingLimits = reportingLimits;
         mAdCounterHistogramUpdater = adCounterHistogramUpdater;
+        mAuctionResultValidator = auctionResultValidator;
     }
 
     /** Orchestrates PersistAdSelectionResultRunner process. */
@@ -348,7 +353,7 @@ public class PersistAdSelectionResultRunner {
     }
 
     private void validateAuctionResult(AuctionResult auctionResult) {
-        new AuctionResultValidator().validate(auctionResult);
+        mAuctionResultValidator.validate(auctionResult);
     }
 
     @Nullable
