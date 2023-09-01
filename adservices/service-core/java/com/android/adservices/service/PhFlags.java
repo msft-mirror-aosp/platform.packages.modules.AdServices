@@ -4552,7 +4552,6 @@ public final class PhFlags implements Flags {
         uxMap.put(KEY_EU_NOTIF_FLOW_CHANGE_ENABLED, getEuNotifFlowChangeEnabled());
         uxMap.put(KEY_U18_UX_ENABLED, getU18UxEnabled());
         uxMap.put(KEY_NOTIFICATION_DISMISSED_ON_CLICK, getNotificationDismissedOnClick());
-        uxMap.put(KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED, isU18UxDetentionChannelEnabled());
         uxMap.put(
                 FlagsConstants.KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED,
                 isU18UxDetentionChannelEnabled());
