@@ -22,26 +22,10 @@ public final class AdServicesHostSideDeviceSupportedRule
         extends AbstractAdServicesDeviceSupportedRule {
 
     public AdServicesHostSideDeviceSupportedRule() {
-        super(ConsoleLogger.getInstance());
+        super(ConsoleLogger.getInstance(), AdServicesHostSideSupportHelper.getInstance());
     }
 
     public void setDevice(ITestDevice device) {
         TestDeviceHelper.setTestDevice(device);
-    }
-
-    @Override
-    public boolean isAdServicesSupportedOnDevice() throws Exception {
-        boolean isSupported =
-                AdServicesHostSideSupportHelper.isDeviceSupported(TestDeviceHelper.getTestDevice());
-        mLog.v("isAdServicesSupportedOnDevice(): %b", isSupported);
-        return isSupported;
-    }
-
-    @Override
-    public boolean isLowRamDevice() throws Exception {
-        boolean isLowRamDevice =
-                AdServicesHostSideSupportHelper.isLowRamDevice(TestDeviceHelper.getTestDevice());
-        mLog.v("isLowRamDevice(): %b", isLowRamDevice);
-        return isLowRamDevice;
     }
 }

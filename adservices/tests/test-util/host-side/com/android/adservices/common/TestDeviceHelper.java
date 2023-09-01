@@ -74,27 +74,15 @@ public final class TestDeviceHelper {
     }
 
     public static int getApiLevel() {
-        try {
-            return getTestDevice().getApiLevel();
-        } catch (DeviceNotAvailableException e) {
-            throw new DeviceUnavailableException(e);
-        }
+        return call(device -> device.getApiLevel());
     }
 
     public static String getProperty(String name) {
-        try {
-            return getTestDevice().getProperty(name);
-        } catch (DeviceNotAvailableException e) {
-            throw new DeviceUnavailableException(e);
-        }
+        return call(device -> device.getProperty(name));
     }
 
     public static void setProperty(String name, String value) {
-        try {
-            getTestDevice().setProperty(name, value);
-        } catch (DeviceNotAvailableException e) {
-            throw new DeviceUnavailableException(e);
-        }
+        run(device -> device.setProperty(name, value));
     }
 
     public static void startActivity(String intent) {
@@ -112,6 +100,40 @@ public final class TestDeviceHelper {
         private DeviceUnavailableException(DeviceNotAvailableException cause) {
             super(cause);
         }
+    }
+
+    /**
+     * Runs the given command without throwing a checked exception.
+     *
+     * @throws DeviceUnavailableException if device is not available.
+     */
+    public static <T> T call(Command<T> command) {
+        try {
+            return command.run(getTestDevice());
+        } catch (DeviceNotAvailableException e) {
+            throw new DeviceUnavailableException(e);
+        }
+    }
+
+    /**
+     * Runs the given command without throwing a checked exception.
+     *
+     * @throws DeviceUnavailableException if device is not available.
+     */
+    public static void run(VoidCommand command) {
+        try {
+            command.run(getTestDevice());
+        } catch (DeviceNotAvailableException e) {
+            throw new DeviceUnavailableException(e);
+        }
+    }
+
+    interface Command<T> {
+        T run(ITestDevice device) throws DeviceNotAvailableException;
+    }
+
+    interface VoidCommand {
+        void run(ITestDevice device) throws DeviceNotAvailableException;
     }
 
     private TestDeviceHelper() {
