@@ -43,7 +43,12 @@ public class ProtectedSignalsArgumentUtil {
 
     @VisibleForTesting
     static String marshalToJson(Map<String, List<ProtectedSignal>> rawSignals) {
-        // TODO(b/298081186) Explore StringBuilder vs JSONObject for converting signals to JS arg
+
+        /**
+         * We analyzed various JSON building approaches, turns out using StringBuilder is
+         * orders of maginutude faster. Also, given the signals have base64 encoded strings
+         * initially fetched as JSON, using string builder is also a safe choice.
+         */
         StringBuilder sb = new StringBuilder();
         sb.append("[");
         for (Map.Entry<String, List<ProtectedSignal>> signalsPerKey : rawSignals.entrySet()) {

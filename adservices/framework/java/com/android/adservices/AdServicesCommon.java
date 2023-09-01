@@ -103,6 +103,9 @@ public class AdServicesCommon {
     public static final String SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW =
             SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + "low_ram_device";
 
+    /** Path name for Adservice class names */
+    public static final String ADSERVICES_CLASS_PATH_PREFIX = "com.android.adservices.";
+
     /** The package name of the active AdServices APK on this device. */
     public static ServiceInfo resolveAdServicesService(
             List<ResolveInfo> intentResolveInfos, String intentAction) {

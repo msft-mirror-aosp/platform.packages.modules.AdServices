@@ -153,11 +153,8 @@ public abstract class EventReporter {
                     LOGGING_API_NAME,
                     Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION,
                     mDevContext);
-            Preconditions.checkArgument(
-                    mAdSelectionEntryDao
-                            .doesAdSelectionMatchingCallerPackageNameExistInOnDeviceTable(
-                                    input.getAdSelectionId(), input.getCallerPackageName()),
-                    NO_MATCH_FOUND_IN_AD_SELECTION_DB);
+            validateAdSelectionIdAndCallerPackageNameExistence(
+                    input.getAdSelectionId(), input.getCallerPackageName());
             Preconditions.checkArgument(
                     input.getInteractionKey().getBytes(StandardCharsets.UTF_8).length
                             <= registeredAdBeaconsMaxInteractionKeySizeB,
@@ -283,6 +280,23 @@ public abstract class EventReporter {
                             .build());
         } catch (RemoteException e) {
             sLogger.e(e, "Unable to send failed result to the callback");
+        }
+    }
+
+    private void validateAdSelectionIdAndCallerPackageNameExistence(
+            long adSelectionId, String callerPackageName) {
+        if (mFlags.getFledgeAuctionServerEnabledForReportEvent()) {
+            Preconditions.checkArgument(
+                    mAdSelectionEntryDao.doesAdSelectionIdAndCallerPackageNameExists(
+                            adSelectionId, callerPackageName),
+                    NO_MATCH_FOUND_IN_AD_SELECTION_DB);
+
+        } else {
+            Preconditions.checkArgument(
+                    mAdSelectionEntryDao
+                            .doesAdSelectionMatchingCallerPackageNameExistInOnDeviceTable(
+                                    adSelectionId, callerPackageName),
+                    NO_MATCH_FOUND_IN_AD_SELECTION_DB);
         }
     }
 

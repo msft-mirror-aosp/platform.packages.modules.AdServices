@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.common.httpclient;
 
+import static android.adservices.exceptions.RetryableAdServicesNetworkException.DEFAULT_RETRY_AFTER_VALUE;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
@@ -791,6 +793,28 @@ public class AdServicesHttpsClientTest {
         assertThat(exception.getErrorCode())
                 .isEqualTo(AdServicesNetworkException.ERROR_TOO_MANY_REQUESTS);
         assertThat(exception.getRetryAfter()).isEqualTo(Duration.ofMillis(1000));
+    }
+
+    @Test
+    public void testFailedResponseWithStatusCodeAndRetryAfterWithNoRetryHeader() throws Exception {
+        MockResponse response = new MockResponse().setResponseCode(429);
+        MockWebServer server = mMockWebServerRule.startMockWebServer(ImmutableList.of(response));
+        URL url = server.getUrl(mFetchPayloadPath);
+
+        // Assert future chain throws an AdServicesNetworkException.
+        Exception wrapperException =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> fetchPayload(Uri.parse(url.toString()), DEV_CONTEXT_DISABLED));
+        assertThat(wrapperException.getCause())
+                .isInstanceOf(RetryableAdServicesNetworkException.class);
+
+        // Assert the expected RetryableAdServicesNetworkException is thrown.
+        RetryableAdServicesNetworkException exception =
+                (RetryableAdServicesNetworkException) wrapperException.getCause();
+        assertThat(exception.getErrorCode())
+                .isEqualTo(AdServicesNetworkException.ERROR_TOO_MANY_REQUESTS);
+        assertThat(exception.getRetryAfter()).isEqualTo(DEFAULT_RETRY_AFTER_VALUE);
     }
 
     @Test

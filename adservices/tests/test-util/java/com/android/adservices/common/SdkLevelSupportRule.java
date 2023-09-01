@@ -35,11 +35,12 @@ public final class SdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
      * Gets a rule that don't skip any test by default.
      *
      * <p>This rule is typically used when:
+     *
      * <ul>
      *   <li>Only a few tests require a specific SDK release - such tests will be annotated with a
-     *   {@code &#064;RequiresSdkLevel...} annotation.
-     *   <li>Some test methods (typically {@code &#064;Before}) needs to check for the SDK release inside
-     *   them - these tests call call rule methods such as {@code isAtLeastS()}.
+     *       {@code &#064;RequiresSdkLevel...} annotation.
+     *   <li>Some test methods (typically <code>&#064;Before</code>) need to check the SDK release
+     *       inside them - these tests call call rule methods such as {@code isAtLeastS()}.
      * </ul>
      */
     public static SdkLevelSupportRule forAnyLevel() {

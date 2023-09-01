@@ -2899,6 +2899,21 @@ public final class AsyncTriggerFetcherTest {
     }
 
     @Test
+    public void registerTrigger_nonHttpsUrl_rejectsTrigger() throws Exception {
+        RegistrationRequest request = buildRequest(WebUtil.validUrl("http://foo.test"));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(
+                AsyncFetchStatus.ResponseStatus.INVALID_URL, asyncFetchStatus.getResponseStatus());
+        assertFalse(fetch.isPresent());
+    }
+
+    @Test
     public void testBadTriggerUrl() throws Exception {
         RegistrationRequest request = buildRequest(WebUtil.validUrl("bad-schema://foo.test"));
         AsyncRedirect asyncRedirect = new AsyncRedirect();

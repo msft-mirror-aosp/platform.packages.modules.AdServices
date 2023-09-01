@@ -73,10 +73,18 @@ import java.util.stream.Stream;
 class MeasurementDao implements IMeasurementDao {
 
     private Supplier<Boolean> mDbFileMaxSizeLimitReachedSupplier;
+    private Supplier<Integer> mReportingRetryLimitSupplier;
+    private Supplier<Boolean> mReportingRetryLimitEnabledSupplier;
+
     private SQLTransaction mSQLTransaction;
 
-    MeasurementDao(@NonNull Supplier<Boolean> dbFileMaxSizeLimitReachedSupplier) {
+    MeasurementDao(
+            @NonNull Supplier<Boolean> dbFileMaxSizeLimitReachedSupplier,
+            @NonNull Supplier<Integer> reportingRetryLimitSupplier,
+            @NonNull Supplier<Boolean> reportingRetryLimitEnabledSupplier) {
         mDbFileMaxSizeLimitReachedSupplier = dbFileMaxSizeLimitReachedSupplier;
+        mReportingRetryLimitSupplier = reportingRetryLimitSupplier;
+        mReportingRetryLimitEnabledSupplier = reportingRetryLimitEnabledSupplier;
     }
 
     @Override
@@ -874,26 +882,10 @@ class MeasurementDao implements IMeasurementDao {
             throws DatastoreException {
         List<String> eventReports = new ArrayList<>();
         try (Cursor cursor =
-                mSQLTransaction
-                        .getDatabase()
-                        .query(
-                                MeasurementTables.EventReportContract.TABLE,
-                                /* columns= */ null,
-                                MeasurementTables.EventReportContract.REPORT_TIME
-                                        + " >= ? AND "
-                                        + MeasurementTables.EventReportContract.REPORT_TIME
-                                        + " <= ? AND "
-                                        + MeasurementTables.EventReportContract.STATUS
-                                        + " = ? ",
-                                new String[] {
-                                    String.valueOf(windowStartTime),
-                                    String.valueOf(windowEndTime),
-                                    String.valueOf(EventReport.Status.PENDING)
-                                },
-                                /* groupBy= */ null,
-                                /* having= */ null,
-                                /* orderBy= */ "RANDOM()",
-                                /* limit= */ null)) {
+                mReportingRetryLimitEnabledSupplier.get()
+                        ? pendingEventReportIdsInWindowCursorWithRetryLimit(
+                                windowStartTime, windowEndTime)
+                        : pendingEventReportIdsInWindowCursor(windowStartTime, windowEndTime)) {
             while (cursor.moveToNext()) {
                 eventReports.add(
                         cursor.getString(
@@ -903,23 +895,14 @@ class MeasurementDao implements IMeasurementDao {
         }
     }
 
+
     @Override
     public List<String> getPendingDebugEventReportIds() throws DatastoreException {
         List<String> eventReports = new ArrayList<>();
         try (Cursor cursor =
-                mSQLTransaction
-                        .getDatabase()
-                        .query(
-                                MeasurementTables.EventReportContract.TABLE,
-                                /* columns= */ null,
-                                MeasurementTables.EventReportContract.DEBUG_REPORT_STATUS + " = ? ",
-                                new String[] {
-                                    String.valueOf(EventReport.DebugReportStatus.PENDING)
-                                },
-                                /* groupBy= */ null,
-                                /* having= */ null,
-                                /* orderBy= */ "RANDOM()",
-                                /* limit= */ null)) {
+                mReportingRetryLimitEnabledSupplier.get()
+                        ? pendingDebugEventReportIdsLimitRetryCursor()
+                        : pendingDebugEventReportIdsCursor()) {
             while (cursor.moveToNext()) {
                 eventReports.add(
                         cursor.getString(
@@ -2207,29 +2190,11 @@ class MeasurementDao implements IMeasurementDao {
             long windowStartTime, long windowEndTime) throws DatastoreException {
         Map<String, List<String>> result = new HashMap<>();
         try (Cursor cursor =
-                mSQLTransaction
-                        .getDatabase()
-                        .query(
-                                MeasurementTables.AggregateReport.TABLE,
-                                /* columns= */ new String[] {
-                                    MeasurementTables.AggregateReport.ID,
-                                    MeasurementTables.AggregateReport.AGGREGATION_COORDINATOR_ORIGIN
-                                },
-                                MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME
-                                        + " >= ? AND "
-                                        + MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME
-                                        + " <= ? AND "
-                                        + MeasurementTables.AggregateReport.STATUS
-                                        + " = ? ",
-                                new String[] {
-                                    String.valueOf(windowStartTime),
-                                    String.valueOf(windowEndTime),
-                                    String.valueOf(AggregateReport.Status.PENDING)
-                                },
-                                /* groupBy= */ null,
-                                /* having= */ null,
-                                /* orderBy= */ "RANDOM()",
-                                /* limit= */ null)) {
+                mReportingRetryLimitEnabledSupplier.get()
+                        ? pendingAggregateReportIdsByCoordinatorInWindowLimitRetryCursor(
+                                windowStartTime, windowEndTime)
+                        : pendingAggregateReportIdsByCoordinatorInWindowCursor(
+                                windowStartTime, windowEndTime)) {
             while (cursor.moveToNext()) {
                 String coordinator =
                         cursor.getString(
@@ -2251,17 +2216,9 @@ class MeasurementDao implements IMeasurementDao {
     public List<String> getDebugReportIds() throws DatastoreException {
         List<String> debugReportIds = new ArrayList<>();
         try (Cursor cursor =
-                mSQLTransaction
-                        .getDatabase()
-                        .query(
-                                MeasurementTables.DebugReportContract.TABLE,
-                                /* columns= */ null,
-                                /* selection= */ null,
-                                /* selectionArgs= */ null,
-                                /* groupBy= */ null,
-                                /* having= */ null,
-                                /* orderBy= */ null,
-                                /* limit= */ null)) {
+                mReportingRetryLimitEnabledSupplier.get()
+                        ? debugReportIdsLimitRetryCursor()
+                        : debugReportIdsCursor()) {
             while (cursor.moveToNext()) {
                 debugReportIds.add(
                         cursor.getString(
@@ -2271,28 +2228,16 @@ class MeasurementDao implements IMeasurementDao {
         }
     }
 
+
     @Override
     public Map<String, List<String>> getPendingAggregateDebugReportIdsByCoordinator()
             throws DatastoreException {
         Map<String, List<String>> result = new HashMap<>();
         try (Cursor cursor =
-                mSQLTransaction
-                        .getDatabase()
-                        .query(
-                                MeasurementTables.AggregateReport.TABLE,
-                                /* columns= */ new String[] {
-                                    MeasurementTables.AggregateReport.ID,
-                                    MeasurementTables.AggregateReport
-                                            .AGGREGATION_COORDINATOR_ORIGIN,
-                                },
-                                MeasurementTables.AggregateReport.DEBUG_REPORT_STATUS + " = ? ",
-                                new String[] {
-                                    String.valueOf(AggregateReport.DebugReportStatus.PENDING)
-                                },
-                                /* groupBy= */ null,
-                                /* having= */ null,
-                                /* orderBy= */ "RANDOM()",
-                                /* limit= */ null)) {
+                mReportingRetryLimitEnabledSupplier.get()
+                        ? pendingAggregateDebugReportIdsByCoordinatorLimitRetryCursor()
+                        : pendingAggregateDebugReportIdsByCoordinatorCursor()) {
+
             while (cursor.moveToNext()) {
                 String coordinator =
                         cursor.getString(
@@ -2652,6 +2597,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.AsyncRegistrationContract.PLATFORM_AD_ID,
                 asyncRegistration.getPlatformAdId());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.REQUEST_POST_BODY,
+                asyncRegistration.getPostBody());
         long rowId =
                 mSQLTransaction
                         .getDatabase()
@@ -2788,6 +2736,19 @@ class MeasurementDao implements IMeasurementDao {
         if (rows != 1) {
             throw new DatastoreException("Retry Count update failed.");
         }
+    }
+
+    @Override
+    public void incrementReportingRetryCount(String id, DataType reportType)
+            throws DatastoreException {
+        KeyValueData eventRetry = getKeyValueData(id, reportType);
+        eventRetry.setReportRetryCount(eventRetry.getReportRetryCount() + 1);
+        insertOrUpdateKeyValueData(eventRetry);
+        LogUtil.d(
+                "Incrementing: "
+                        + reportType
+                        + " Retry Count: "
+                        + eventRetry.getReportRetryCount());
     }
 
     @Override
@@ -3035,5 +2996,320 @@ class MeasurementDao implements IMeasurementDao {
                         + MeasurementTables.TriggerContract.DESTINATION_TYPE
                         + " = ?"
                         + ")");
+    }
+
+    private Cursor pendingEventReportIdsInWindowCursor(long windowStartTime, long windowEndTime)
+            throws DatastoreException {
+        return mSQLTransaction
+                .getDatabase()
+                .query(
+                        MeasurementTables.EventReportContract.TABLE,
+                        /* columns= */ null,
+                        MeasurementTables.EventReportContract.REPORT_TIME
+                                + " >= ? AND "
+                                + MeasurementTables.EventReportContract.REPORT_TIME
+                                + " <= ? AND "
+                                + MeasurementTables.EventReportContract.STATUS
+                                + " = ? ",
+                        new String[] {
+                            String.valueOf(windowStartTime),
+                            String.valueOf(windowEndTime),
+                            String.valueOf(EventReport.Status.PENDING)
+                        },
+                        /* groupBy= */ null,
+                        /* having= */ null,
+                        /* orderBy= */ "RANDOM()",
+                        /* limit= */ null);
+    }
+
+    private Cursor pendingEventReportIdsInWindowCursorWithRetryLimit(
+            long windowStartTime, long windowEndTime) throws DatastoreException {
+        return mSQLTransaction
+                .getDatabase()
+                .rawQuery(
+                        "SELECT "
+                                + MeasurementTables.EventReportContract.ID
+                                + ", "
+                                + MeasurementTables.KeyValueDataContract.VALUE
+                                + " FROM "
+                                + MeasurementTables.EventReportContract.TABLE
+                                + " LEFT JOIN "
+                                + MeasurementTables.KeyValueDataContract.TABLE
+                                + " ON ("
+                                + MeasurementTables.EventReportContract.ID
+                                + " = "
+                                + MeasurementTables.KeyValueDataContract.KEY
+                                + ") "
+                                + "WHERE "
+                                + "(CAST("
+                                + MeasurementTables.KeyValueDataContract.VALUE
+                                + " AS INTEGER) < ?"
+                                + "OR "
+                                + MeasurementTables.KeyValueDataContract.VALUE
+                                + " IS NULL)"
+                                + " AND "
+                                + MeasurementTables.EventReportContract.STATUS
+                                + " = ? "
+                                + "AND "
+                                + MeasurementTables.EventReportContract.REPORT_TIME
+                                + " >= ?"
+                                + "AND "
+                                + MeasurementTables.EventReportContract.REPORT_TIME
+                                + " <= ?"
+                                + "AND ("
+                                + MeasurementTables.KeyValueDataContract.DATA_TYPE
+                                + " = ? "
+                                + "OR "
+                                + MeasurementTables.KeyValueDataContract.DATA_TYPE
+                                + " IS NULL)"
+                                + " ORDER BY RANDOM()",
+                        new String[] {
+                            String.valueOf(mReportingRetryLimitSupplier.get()),
+                            String.valueOf(EventReport.Status.PENDING),
+                            String.valueOf(windowStartTime),
+                            String.valueOf(windowEndTime),
+                            String.valueOf(DataType.EVENT_REPORT_RETRY_COUNT),
+                        });
+    }
+
+    private Cursor pendingDebugEventReportIdsCursor() throws DatastoreException {
+        return mSQLTransaction
+                .getDatabase()
+                .query(
+                        MeasurementTables.EventReportContract.TABLE,
+                        /* columns= */ null,
+                        MeasurementTables.EventReportContract.DEBUG_REPORT_STATUS + " = ? ",
+                        new String[] {String.valueOf(EventReport.DebugReportStatus.PENDING)},
+                        /* groupBy= */ null,
+                        /* having= */ null,
+                        /* orderBy= */ "RANDOM()",
+                        /* limit= */ null);
+    }
+
+    private Cursor pendingDebugEventReportIdsLimitRetryCursor() throws DatastoreException {
+        return mSQLTransaction
+                .getDatabase()
+                .rawQuery(
+                        "SELECT "
+                                + MeasurementTables.EventReportContract.ID
+                                + ", "
+                                + MeasurementTables.KeyValueDataContract.VALUE
+                                + " FROM "
+                                + MeasurementTables.EventReportContract.TABLE
+                                + " LEFT JOIN "
+                                + MeasurementTables.KeyValueDataContract.TABLE
+                                + " ON ("
+                                + MeasurementTables.EventReportContract.ID
+                                + " = "
+                                + MeasurementTables.KeyValueDataContract.KEY
+                                + ") "
+                                + " WHERE "
+                                + MeasurementTables.EventReportContract.DEBUG_REPORT_STATUS
+                                + " = ?"
+                                + " AND (CAST("
+                                + MeasurementTables.KeyValueDataContract.VALUE
+                                + " AS INTEGER) < ? "
+                                + " OR "
+                                + MeasurementTables.KeyValueDataContract.VALUE
+                                + " IS NULL)"
+                                + " AND ("
+                                + MeasurementTables.KeyValueDataContract.DATA_TYPE
+                                + " = ? "
+                                + " OR "
+                                + MeasurementTables.KeyValueDataContract.DATA_TYPE
+                                + " IS NULL)"
+                                + " ORDER BY RANDOM()",
+                        new String[] {
+                            String.valueOf(EventReport.DebugReportStatus.PENDING),
+                            String.valueOf(mReportingRetryLimitSupplier.get()),
+                            String.valueOf(DataType.EVENT_REPORT_RETRY_COUNT),
+                        });
+    }
+
+    private Cursor pendingAggregateReportIdsByCoordinatorInWindowCursor(
+            long windowStartTime, long windowEndTime) throws DatastoreException {
+        return mSQLTransaction
+                .getDatabase()
+                .query(
+                        MeasurementTables.AggregateReport.TABLE,
+                        /* columns= */ new String[] {
+                            MeasurementTables.AggregateReport.ID,
+                            MeasurementTables.AggregateReport.AGGREGATION_COORDINATOR_ORIGIN
+                        },
+                        MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME
+                                + " >= ? AND "
+                                + MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME
+                                + " <= ? AND "
+                                + MeasurementTables.AggregateReport.STATUS
+                                + " = ? ",
+                        new String[] {
+                            String.valueOf(windowStartTime),
+                            String.valueOf(windowEndTime),
+                            String.valueOf(AggregateReport.Status.PENDING)
+                        },
+                        /* groupBy= */ null,
+                        /* having= */ null,
+                        /* orderBy= */ "RANDOM()",
+                        /* limit= */ null);
+    }
+
+    private Cursor pendingAggregateReportIdsByCoordinatorInWindowLimitRetryCursor(
+            long windowStartTime, long windowEndTime) throws DatastoreException {
+        return mSQLTransaction
+                .getDatabase()
+                .rawQuery(
+                        "SELECT "
+                                + MeasurementTables.AggregateReport.ID
+                                + ", "
+                                + MeasurementTables.AggregateReport.AGGREGATION_COORDINATOR_ORIGIN
+                                + ", "
+                                + MeasurementTables.KeyValueDataContract.VALUE
+                                + " FROM "
+                                + MeasurementTables.AggregateReport.TABLE
+                                + " LEFT JOIN "
+                                + MeasurementTables.KeyValueDataContract.TABLE
+                                + " ON ("
+                                + MeasurementTables.AggregateReport.ID
+                                + " = "
+                                + MeasurementTables.KeyValueDataContract.KEY
+                                + ") "
+                                + " WHERE "
+                                + MeasurementTables.AggregateReport.STATUS
+                                + " = ? "
+                                + "AND (CAST("
+                                + MeasurementTables.KeyValueDataContract.VALUE
+                                + " AS INTEGER) < ? "
+                                + "OR "
+                                + MeasurementTables.KeyValueDataContract.VALUE
+                                + " IS NULL)"
+                                + " AND "
+                                + MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME
+                                + " >= ?"
+                                + " AND "
+                                + MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME
+                                + " <= ?"
+                                + "AND ("
+                                + MeasurementTables.KeyValueDataContract.DATA_TYPE
+                                + " = ? "
+                                + "OR "
+                                + MeasurementTables.KeyValueDataContract.DATA_TYPE
+                                + " IS NULL)"
+                                + " ORDER BY RANDOM()",
+                        new String[] {
+                            String.valueOf(AggregateReport.Status.PENDING),
+                            String.valueOf(mReportingRetryLimitSupplier.get()),
+                            String.valueOf(windowStartTime),
+                            String.valueOf(windowEndTime),
+                            String.valueOf(DataType.AGGREGATE_REPORT_RETRY_COUNT),
+                        });
+    }
+
+    private Cursor debugReportIdsCursor() throws DatastoreException {
+        return mSQLTransaction
+                .getDatabase()
+                .query(
+                        MeasurementTables.DebugReportContract.TABLE,
+                        /* columns= */ null,
+                        /* selection= */ null,
+                        /* selectionArgs= */ null,
+                        /* groupBy= */ null,
+                        /* having= */ null,
+                        /* orderBy= */ null,
+                        /* limit= */ null);
+    }
+
+    private Cursor debugReportIdsLimitRetryCursor() throws DatastoreException {
+        return mSQLTransaction
+                .getDatabase()
+                .rawQuery(
+                        "SELECT "
+                                + MeasurementTables.DebugReportContract.ID
+                                + ", "
+                                + MeasurementTables.KeyValueDataContract.VALUE
+                                + " FROM "
+                                + MeasurementTables.DebugReportContract.TABLE
+                                + " LEFT JOIN "
+                                + MeasurementTables.KeyValueDataContract.TABLE
+                                + " ON ("
+                                + MeasurementTables.DebugReportContract.ID
+                                + " = "
+                                + MeasurementTables.KeyValueDataContract.KEY
+                                + ") "
+                                + "WHERE (CAST("
+                                + MeasurementTables.KeyValueDataContract.VALUE
+                                + " AS INTEGER) < ? "
+                                + "OR "
+                                + MeasurementTables.KeyValueDataContract.VALUE
+                                + " IS NULL)"
+                                + "AND ("
+                                + MeasurementTables.KeyValueDataContract.DATA_TYPE
+                                + " = ? "
+                                + "OR "
+                                + MeasurementTables.KeyValueDataContract.DATA_TYPE
+                                + " IS NULL)",
+                        new String[] {
+                            String.valueOf(mReportingRetryLimitSupplier.get()),
+                            String.valueOf(DataType.DEBUG_REPORT_RETRY_COUNT.toString()),
+                        });
+    }
+
+    private Cursor pendingAggregateDebugReportIdsByCoordinatorCursor() throws DatastoreException {
+        return mSQLTransaction
+                .getDatabase()
+                .query(
+                        MeasurementTables.AggregateReport.TABLE,
+                        /* columns= */ new String[] {
+                            MeasurementTables.AggregateReport.ID,
+                            MeasurementTables.AggregateReport.AGGREGATION_COORDINATOR_ORIGIN,
+                        },
+                        MeasurementTables.AggregateReport.DEBUG_REPORT_STATUS + " = ? ",
+                        new String[] {String.valueOf(AggregateReport.DebugReportStatus.PENDING)},
+                        /* groupBy= */ null,
+                        /* having= */ null,
+                        /* orderBy= */ "RANDOM()",
+                        /* limit= */ null);
+    }
+
+    private Cursor pendingAggregateDebugReportIdsByCoordinatorLimitRetryCursor()
+            throws DatastoreException {
+        return mSQLTransaction
+                .getDatabase()
+                .rawQuery(
+                        "SELECT "
+                                + MeasurementTables.AggregateReport.ID
+                                + ", "
+                                + MeasurementTables.AggregateReport.AGGREGATION_COORDINATOR_ORIGIN
+                                + ", "
+                                + MeasurementTables.KeyValueDataContract.VALUE
+                                + " FROM "
+                                + MeasurementTables.AggregateReport.TABLE
+                                + " LEFT JOIN "
+                                + MeasurementTables.KeyValueDataContract.TABLE
+                                + " ON ("
+                                + MeasurementTables.AggregateReport.ID
+                                + " = "
+                                + MeasurementTables.KeyValueDataContract.KEY
+                                + ") "
+                                + " WHERE "
+                                + MeasurementTables.AggregateReport.DEBUG_REPORT_STATUS
+                                + " = ? "
+                                + "AND (CAST("
+                                + MeasurementTables.KeyValueDataContract.VALUE
+                                + " AS INTEGER) < ? "
+                                + "OR "
+                                + MeasurementTables.KeyValueDataContract.VALUE
+                                + " IS NULL)"
+                                + "AND ("
+                                + MeasurementTables.KeyValueDataContract.DATA_TYPE
+                                + " = ? "
+                                + "OR "
+                                + MeasurementTables.KeyValueDataContract.DATA_TYPE
+                                + " IS NULL)"
+                                + " ORDER BY RANDOM()",
+                        new String[] {
+                            String.valueOf(AggregateReport.DebugReportStatus.PENDING),
+                            String.valueOf(mReportingRetryLimitSupplier.get()),
+                            String.valueOf(DataType.AGGREGATE_REPORT_RETRY_COUNT),
+                        });
     }
 }

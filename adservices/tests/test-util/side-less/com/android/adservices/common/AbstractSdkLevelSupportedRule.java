@@ -43,6 +43,8 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
 
     private static final String TAG = "SdkLevelSupportRule";
 
+    // TODO(b/295269584): need to provide more flexible levels (min, max, range, etc..)
+
     private final AndroidSdkLevel mDefaultMinLevel;
     protected final Logger mLog;
 
@@ -66,6 +68,8 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
+                skipIfSdkLevelHigherThanMax(description);
+
                 String testName = description.getDisplayName();
                 MinimumLevelRequired minLevelRequired = getMinimumLevelRequired(description);
                 mLog.v("MinimumLevelRequired for %s: %s", testName, minLevelRequired);
@@ -104,6 +108,25 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
                 base.evaluate();
             }
         };
+    }
+
+    protected void skipIfSdkLevelHigherThanMax(Description description) throws Exception {
+        // TODO(b/295269584): for now it only supports (no pun intended) "lessThanT", but
+        // it should support others (in which case it would need explicit minLevel /
+        // maxLevel
+        RequiresSdkLevelLessThanT requiresLessThanT =
+                description.getAnnotation(RequiresSdkLevelLessThanT.class);
+        if (requiresLessThanT != null && isAtLeastT()) {
+            String testName = description.getDisplayName();
+            String reason = requiresLessThanT.reason();
+            String message =
+                    "Test annotated with @RequiresSdkLevelLessThanT "
+                            + (reason.isEmpty()
+                                    ? ""
+                                    : "(reason=" + requiresLessThanT.reason() + ")");
+            mLog.i("Skipping %s: %s", testName, message);
+            throw new AssumptionViolatedException(message);
+        }
     }
 
     private MinimumLevelRequired getMinimumLevelRequired(Description description) {
