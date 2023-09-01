@@ -148,7 +148,7 @@ public class PersistAdSelectionResultRunnerTest {
                                     .putInteractionReportingUrls(
                                             BUYER_INTERACTION_KEY, BUYER_INTERACTION_URI)
                                     .build())
-                    .setComponentSellerReportingUrls(
+                    .setTopLevelSellerReportingUrls(
                             ReportingUrls.newBuilder()
                                     .setReportingUrl(SELLER_REPORTING_URI)
                                     .putInteractionReportingUrls(
@@ -163,7 +163,7 @@ public class PersistAdSelectionResultRunnerTest {
                                     .putInteractionReportingUrls(
                                             BUYER_INTERACTION_KEY, BUYER_INTERACTION_URI)
                                     .build())
-                    .setComponentSellerReportingUrls(
+                    .setTopLevelSellerReportingUrls(
                             ReportingUrls.newBuilder()
                                     .setReportingUrl(SELLER_REPORTING_URI_DIFFERENT_SELLER)
                                     .putInteractionReportingUrls(
@@ -180,7 +180,7 @@ public class PersistAdSelectionResultRunnerTest {
                                             BUYER_INTERACTION_KEY,
                                             BUYER_INTERACTION_URI_DIFFERENT_BUYER)
                                     .build())
-                    .setComponentSellerReportingUrls(
+                    .setTopLevelSellerReportingUrls(
                             ReportingUrls.newBuilder()
                                     .setReportingUrl(SELLER_REPORTING_URI)
                                     .putInteractionReportingUrls(
@@ -196,7 +196,7 @@ public class PersistAdSelectionResultRunnerTest {
                                             BUYER_INTERACTION_KEY,
                                             BUYER_INTERACTION_URI_EXCEEDS_MAX)
                                     .build())
-                    .setComponentSellerReportingUrls(
+                    .setTopLevelSellerReportingUrls(
                             ReportingUrls.newBuilder()
                                     .setReportingUrl(SELLER_REPORTING_URI)
                                     .putInteractionReportingUrls(
