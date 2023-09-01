@@ -19,6 +19,7 @@ package com.android.adservices.service.measurement.reporting;
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
+import android.content.ComponentName;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -260,18 +261,71 @@ public class DebugReportingFallbackJobServiceTest {
                     // Setup
                     disableKillSwitch();
 
-                    final Context mockContext = mock(Context.class);
+                    final Context spyContext = spy(ApplicationProvider.getApplicationContext());
                     doReturn(mMockJobScheduler)
-                            .when(mockContext)
+                            .when(spyContext)
                             .getSystemService(JobScheduler.class);
-                    final JobInfo mockJobInfo = mock(JobInfo.class);
+                    long periodMs =
+                            FlagsFactory.getFlags()
+                                    .getMeasurementDebugReportingFallbackJobPeriodMs();
+                    final JobInfo mockJobInfo =
+                            new JobInfo.Builder(
+                                            MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID,
+                                            new ComponentName(
+                                                    spyContext,
+                                                    DebugReportingFallbackJobService.class))
+                                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                                    .setPeriodic(periodMs)
+                                    .setPersisted(true)
+                                    .build();
                     doReturn(mockJobInfo)
                             .when(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID));
 
                     // Execute
                     DebugReportingFallbackJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule= */ false);
+                            spyContext, /* forceSchedule= */ false);
+
+                    // Validate
+                    ExtendedMockito.verify(
+                            () -> DebugReportingFallbackJobService.schedule(any(), any()), never());
+                    verify(mMockJobScheduler, times(1))
+                            .getPendingJob(eq(MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID));
+                });
+    }
+
+    @Test
+    public void scheduleIfNeeded_diffJobInfo_doesSchedule() throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    disableKillSwitch();
+
+                    final Context spyContext = spy(ApplicationProvider.getApplicationContext());
+                    doReturn(mMockJobScheduler)
+                            .when(spyContext)
+                            .getSystemService(JobScheduler.class);
+                    long periodMs =
+                            FlagsFactory.getFlags()
+                                    .getMeasurementDebugReportingFallbackJobPeriodMs();
+                    final JobInfo mockJobInfo =
+                            new JobInfo.Builder(
+                                            MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID,
+                                            new ComponentName(
+                                                    spyContext,
+                                                    DebugReportingFallbackJobService.class))
+                                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                                    // Difference
+                                    .setPeriodic(periodMs - 1)
+                                    .setPersisted(true)
+                                    .build();
+                    doReturn(mockJobInfo)
+                            .when(mMockJobScheduler)
+                            .getPendingJob(eq(MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID));
+
+                    // Execute
+                    DebugReportingFallbackJobService.scheduleIfNeeded(
+                            spyContext, /* forceSchedule= */ false);
 
                     // Validate
                     ExtendedMockito.verify(

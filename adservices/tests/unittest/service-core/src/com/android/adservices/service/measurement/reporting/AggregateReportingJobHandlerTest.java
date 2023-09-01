@@ -859,7 +859,6 @@ public class AggregateReportingJobHandlerTest {
     public void performReport_throwsCryptoExceptionNoSampling_logsAndSwallowsException()
             throws DatastoreException, IOException, JSONException {
         AggregateReport aggregateReport = createASampleAggregateReport();
-        JSONObject aggregateReportBody = createASampleAggregateReportBody(aggregateReport);
 
         doReturn(true).when(mMockFlags).getMeasurementEnableReportingJobsThrowCryptoException();
         doReturn(0.0f).when(mMockFlags).getMeasurementThrowUnknownExceptionSamplingRate();
