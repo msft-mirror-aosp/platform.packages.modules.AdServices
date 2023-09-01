@@ -80,7 +80,7 @@ public class BetaUxNotificationTriggerTest {
 
     /** Verify no notification is displayed when the entry point is disabled for ROW devices. */
     @Test
-    @FlakyTest(bugId = 297347345)
+    @FlakyTest(bugId = 297119850)
     public void testBetaRowEntryPointDisabled() throws Exception {
         UiUtils.setAsRowDevice();
         UiUtils.enableBeta();
