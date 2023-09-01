@@ -362,7 +362,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         int callingUid = getCallingUid(apiName);
         final DevContext devContext = mDevContextFilter.createDevContext();
-        final long overallTimeout = mFlags.getFledgeAuctionServerOverallTimeoutMs();
+        final long overallTimeout =
+                BinderFlagReader.readFlag(mFlags::getFledgeAuctionServerOverallTimeoutMs);
         final boolean forceSearchOnAbsentOwner =
                 BinderFlagReader.readFlag(
                         mFlags::getFledgeAuctionServerForceSearchWhenOwnerIsAbsentEnabled);
