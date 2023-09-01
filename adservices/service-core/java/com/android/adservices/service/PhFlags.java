@@ -4833,7 +4833,7 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES, KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST, "");
     }
 
-    static final String KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED =
+    public static final String KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED =
             "is_u18_supervised_account_enabled";
 
     @Override
