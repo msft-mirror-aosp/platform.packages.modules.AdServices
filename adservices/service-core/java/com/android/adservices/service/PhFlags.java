@@ -827,6 +827,26 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getFledgeFetchCustomAudienceMinRetryAfterValueMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MIN_RETRY_AFTER_VALUE_MS,
+                /* defaultValue */ FLEDGE_FETCH_CUSTOM_AUDIENCE_MIN_RETRY_AFTER_VALUE_MS);
+    }
+
+    @Override
+    public long getFledgeFetchCustomAudienceMaxRetryAfterValueMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_RETRY_AFTER_VALUE_MS,
+                /* defaultValue */ FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_RETRY_AFTER_VALUE_MS);
+    }
+
+    @Override
     public boolean getFledgeBackgroundFetchEnabled() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getBoolean(
@@ -3751,6 +3771,16 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_CUSTOM_AUDIENCE_SIZE_B
                         + " = "
                         + getFledgeFetchCustomAudienceMaxCustomAudienceSizeB());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MIN_RETRY_AFTER_VALUE_MS
+                        + " = "
+                        + getFledgeFetchCustomAudienceMinRetryAfterValueMs());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_RETRY_AFTER_VALUE_MS
+                        + " = "
+                        + getFledgeFetchCustomAudienceMaxRetryAfterValueMs());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_FLEDGE_HTTP_CACHE_ENABLE
