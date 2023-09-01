@@ -41,7 +41,7 @@ import org.junit.runner.RunWith;
 
 /** Test for verifying user consent notification trigger behaviors. */
 @RunWith(AndroidJUnit4.class)
-public class BetaUxNotificationTriggerTest {
+public class BetaUxEuNotificationTriggerTest {
 
     private AdServicesCommonManager mCommonManager;
 
@@ -78,11 +78,10 @@ public class BetaUxNotificationTriggerTest {
         AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
-    /** Verify no notification is displayed when the entry point is disabled for ROW devices. */
+    /** Verify no notification is displayed when the entry point is disabled for EU devices. */
     @Test
-    @FlakyTest(bugId = 297347345)
-    public void testBetaRowEntryPointDisabled() throws Exception {
-        UiUtils.setAsRowDevice();
+    public void testBetaEuEntryPointDisabled() throws Exception {
+        UiUtils.setAsEuDevice();
         UiUtils.enableBeta();
 
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_DISABLED, AD_ID_ENABLED);
@@ -95,11 +94,10 @@ public class BetaUxNotificationTriggerTest {
                 /* isGa */ UiConstants.UX.BETA_UX);
     }
 
-    /** Verify that for ROW devices with zeroed-out AdId, the EU notification is displayed. */
+    /** Verify that for EU devices with zeroed-out AdId, the EU notification is displayed. */
     @Test
-    @FlakyTest(bugId = 297119850)
-    public void testBetaRowAdIdDisabled() throws Exception {
-        UiUtils.setAsRowDevice();
+    public void testBetaEuAdIdDisabled() throws Exception {
+        UiUtils.setAsEuDevice();
         UiUtils.enableBeta();
 
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_DISABLED);
@@ -112,11 +110,11 @@ public class BetaUxNotificationTriggerTest {
                 /* isGa */ UiConstants.UX.BETA_UX);
     }
 
-    /** Verify that for ROW devices with non zeroed-out AdId, the ROW notification is displayed. */
+    /** Verify that for EU devices with non zeroed-out AdId, the EU notification is displayed. */
     @Test
     @FlakyTest(bugId = 297119850)
-    public void testBetaRowAdIdEnabled() throws Exception {
-        UiUtils.setAsRowDevice();
+    public void testBetaEuAdIdEnabled() throws Exception {
+        UiUtils.setAsEuDevice();
         UiUtils.enableBeta();
 
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
@@ -125,7 +123,7 @@ public class BetaUxNotificationTriggerTest {
                 sContext,
                 mDevice,
                 /* isDisplayed */ true,
-                /* isEuTest */ false,
+                /* isEuTest */ true,
                 /* isGa */ UiConstants.UX.BETA_UX);
     }
 }
