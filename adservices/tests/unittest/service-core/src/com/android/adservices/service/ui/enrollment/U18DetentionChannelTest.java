@@ -16,7 +16,8 @@
 
 package com.android.adservices.service.ui.enrollment;
 
-import static com.android.adservices.service.PhFlags.KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED;
+
+import static com.android.adservices.service.FlagsConstants.KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
