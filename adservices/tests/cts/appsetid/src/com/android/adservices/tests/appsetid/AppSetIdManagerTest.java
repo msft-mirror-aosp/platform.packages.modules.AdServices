@@ -174,6 +174,7 @@ public class AppSetIdManagerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 298304610)
     @RequiresLowRamDevice
     @RequiresSdkLevelAtLeastS(reason = "OutcomeReceiver is not available on R")
     public void testAppSetIdManager_whenDeviceNotSupported() {
