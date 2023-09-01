@@ -204,6 +204,16 @@ class FetcherUtil {
         return true;
     }
 
+    static String getSourceRegistrantToLog(AsyncRegistration asyncRegistration) {
+        switch (asyncRegistration.getType()) {
+            case APP_SOURCE:
+            case WEB_SOURCE:
+                return asyncRegistration.getRegistrant().toString();
+            default:
+                return "";
+        }
+    }
+
     static void emitHeaderMetrics(
             Flags flags,
             AdServicesLogger logger,
@@ -232,7 +242,8 @@ class FetcherUtil {
                                 getSurfaceType(asyncRegistration),
                                 getStatus(asyncFetchStatus),
                                 getFailureType(asyncFetchStatus),
-                                asyncFetchStatus.getRegistrationDelay().get())
+                                asyncFetchStatus.getRegistrationDelay().get(),
+                                getSourceRegistrantToLog(asyncRegistration))
                         .setAdTechDomain(adTechDomain)
                         .build());
     }

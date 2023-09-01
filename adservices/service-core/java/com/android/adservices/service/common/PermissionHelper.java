@@ -89,13 +89,14 @@ public final class PermissionHelper {
                 context, appPackageName, AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION);
     }
 
-    /** @return {@code true} if the caller has the permission to invoke Custom Audiences APIs. */
-    public static boolean hasCustomAudiencesPermission(@NonNull Context context) {
+    /**
+     * @return {@code true} if the caller has the permission to invoke Custom Audiences APIs.
+     */
+    public static boolean hasCustomAudiencesPermission(
+            @NonNull Context context, @NonNull String appPackageName) {
         // TODO(b/236268316): Add check for SDK permission.
-        int status =
-                context.checkCallingOrSelfPermission(
-                        AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
-        return status == PackageManager.PERMISSION_GRANTED;
+        return hasPermission(
+                context, appPackageName, AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
     }
 
     /**

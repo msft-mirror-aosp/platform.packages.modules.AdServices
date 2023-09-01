@@ -26,8 +26,27 @@ import android.adservices.common.CommonFixture;
 import org.junit.Test;
 
 public class DBProtectedSignalTest {
+
     @Test
     public void testCreateSignal() {
+        DBProtectedSignal signal =
+                DBProtectedSignal.create(
+                        null,
+                        CommonFixture.VALID_BUYER_1,
+                        DBProtectedSignalFixture.KEY,
+                        DBProtectedSignalFixture.VALUE,
+                        CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
+                        CommonFixture.TEST_PACKAGE_NAME_1);
+        assertNull(signal.getId());
+        assertEquals(CommonFixture.VALID_BUYER_1, signal.getBuyer());
+        assertArrayEquals(DBProtectedSignalFixture.KEY, signal.getKey());
+        assertArrayEquals(DBProtectedSignalFixture.VALUE, signal.getValue());
+        assertEquals(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI, signal.getCreationTime());
+        assertEquals(CommonFixture.TEST_PACKAGE_NAME_1, signal.getPackageName());
+    }
+
+    @Test
+    public void testBuildSignal() {
         DBProtectedSignal signal =
                 DBProtectedSignal.builder()
                         .setId(null)
@@ -88,7 +107,7 @@ public class DBProtectedSignalTest {
                         .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                         .setPackageName(CommonFixture.TEST_PACKAGE_NAME_1)
                         .build();
-        assertNotEquals(signal1.hashCode(), signal2.hashCode());
+        assertNotEquals(signal1, signal2);
     }
 
     @Test

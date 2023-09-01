@@ -23,6 +23,7 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.BuyerInput;
 
 import com.google.common.base.Strings;
@@ -52,6 +53,8 @@ public class BuyerInputGenerator {
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
 
+    @NonNull private final AuctionServerDataCompressor mDataCompressor;
+
     public BuyerInputGenerator(
             @NonNull final CustomAudienceDao customAudienceDao,
             @NonNull final AdFilterer adFilterer,
@@ -70,6 +73,10 @@ public class BuyerInputGenerator {
         mFlags = flags;
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
+
+        mDataCompressor =
+                AuctionServerDataCompressorFactory.getDataCompressor(
+                        mFlags.getFledgeAuctionServerCompressionAlgorithmVersion());
     }
 
     /**
@@ -78,16 +85,27 @@ public class BuyerInputGenerator {
      *
      * @return a map of buyer name and {@link BuyerInput}
      */
-    public FluentFuture<Map<AdTechIdentifier, BuyerInput>> createBuyerInputs() {
+    public FluentFuture<Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData>>
+            createCompressedBuyerInputs() {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.CREATE_BUYER_INPUTS);
         sLogger.v("Starting create buyer input");
         return FluentFuture.from(getBuyersCustomAudience())
                 .transform(this::getFilteredCustomAudiences, mLightweightExecutorService)
                 .transform(
-                        this::generateBuyerInputFromDBCustomAudience, mLightweightExecutorService);
+                        dbCustomAudiences -> {
+                            Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData>
+                                    buyerInputFromCustomAudience =
+                                            generateCompressedBuyerInputFromDBCustomAudience(
+                                                    dbCustomAudiences);
+                            Tracing.endAsyncSection(Tracing.CREATE_BUYER_INPUTS, traceCookie);
+                            return buyerInputFromCustomAudience;
+                        },
+                        mLightweightExecutorService);
     }
 
-    private Map<AdTechIdentifier, BuyerInput> generateBuyerInputFromDBCustomAudience(
-            @NonNull final List<DBCustomAudience> dbCustomAudiences) {
+    private Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData>
+            generateCompressedBuyerInputFromDBCustomAudience(
+                    @NonNull final List<DBCustomAudience> dbCustomAudiences) {
         final Map<AdTechIdentifier, BuyerInput.Builder> buyerInputs = new HashMap<>();
         for (DBCustomAudience customAudience : dbCustomAudiences) {
             final AdTechIdentifier buyerName = customAudience.getBuyer();
@@ -102,10 +120,17 @@ public class BuyerInputGenerator {
 
         sLogger.v(String.format("Created BuyerInput proto for %s buyers", buyerInputs.size()));
         return buyerInputs.entrySet().stream()
-                .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().build()));
+                .collect(
+                        Collectors.toMap(
+                                e -> e.getKey(),
+                                e ->
+                                        mDataCompressor.compress(
+                                                AuctionServerDataCompressor.UncompressedData.create(
+                                                        e.getValue().build().toByteArray()))));
     }
 
     private ListenableFuture<List<DBCustomAudience>> getBuyersCustomAudience() {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.GET_BUYERS_CA);
         return mBackgroundExecutorService.submit(
                 () -> {
                     List<DBCustomAudience> allActiveCAs =
@@ -117,17 +142,22 @@ public class BuyerInputGenerator {
                     sLogger.v(
                             String.format(
                                     "Collected %s active CAs from device", numberOfCAsCollected));
+                    Tracing.endAsyncSection(Tracing.GET_BUYERS_CA, traceCookie);
                     return allActiveCAs;
                 });
     }
 
     private List<DBCustomAudience> getFilteredCustomAudiences(
             @NonNull final List<DBCustomAudience> dbCustomAudiences) {
-        return mAdFilterer.filterCustomAudiences(dbCustomAudiences).stream()
-                .filter(
-                        AuctionServerCustomAudienceFilterer
-                                ::isValidCustomAudienceForServerSideAuction)
-                .collect(Collectors.toList());
+        int tracingCookie = Tracing.beginAsyncSection(Tracing.GET_FILTERED_BUYERS_CA);
+        List<DBCustomAudience> filteredCustomAudiences =
+                mAdFilterer.filterCustomAudiences(dbCustomAudiences).stream()
+                        .filter(
+                                AuctionServerCustomAudienceFilterer
+                                        ::isValidCustomAudienceForServerSideAuction)
+                        .collect(Collectors.toList());
+        Tracing.endAsyncSection(Tracing.GET_FILTERED_BUYERS_CA, tracingCookie);
+        return filteredCustomAudiences;
     }
 
     private BuyerInput.CustomAudience buildCustomAudienceProtoFrom(
@@ -137,6 +167,7 @@ public class BuyerInputGenerator {
 
         return customAudienceBuilder
                 .setName(customAudience.getName())
+                .setOwner(customAudience.getOwner())
                 .setUserBiddingSignals(getUserBiddingSignals(customAudience))
                 .addAllBiddingSignalsKeys(getTrustedBiddingSignalKeys(customAudience))
                 .addAllAdRenderIds(getAdRenderIds(customAudience))

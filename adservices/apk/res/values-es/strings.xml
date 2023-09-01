@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Permite que una aplicación acceda a la API AdServices Consent."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Acceder a la API de ID de anuncio"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Permite que una aplicación acceda a la API de ID de anuncio."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"Acceder a la API de AdServices Cobalt Upload"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Permite que una aplicación acceda a la API de AdServices Cobalt Upload."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Acceder a la API de ID de conjunto de aplicaciones"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Permite que una aplicación acceda a la API de ID de conjunto de aplicaciones."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Acceso a la API Consent Service"</string>
@@ -210,7 +212,7 @@
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Activado: # tema}many{Activados: # temas}other{Activados: # temas}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Activado: <xliff:g id="APPS_COUNT">%1$d</xliff:g> aplicaciones"</string>
     <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{Activada: # aplicación}many{Activadas: # aplicaciones}other{Activadas: # aplicaciones}}"</string>
-    <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Activado"</string>
+    <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Activada"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Desactivado"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="2539452210063311377">"Los temas de interés se basan en las aplicaciones que has usado recientemente, y las aplicaciones los usan para mostrarte anuncios personalizados.\n\nPuedes bloquear los temas que no quieras compartir con aplicaciones. Android también elimina temas regularmente de forma automática.\n\nAunque esta función puede activarse, es posible que no veas una lista de temas hasta que la función esté totalmente disponible y las aplicaciones empiecen a usarla."</string>
     <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"Permitir temas de anuncios"</string>
@@ -226,7 +228,7 @@
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Solo se comparte información muy limitada entre aplicaciones para ayudar a medir el rendimiento de los anuncios"</string>
     <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Vamos a lanzar una nueva función de privacidad en la publicidad llamada \"medición de anuncios\". Android solo comparte información muy limitada entre aplicaciones, como cuándo se te ha mostrado un anuncio, para ayudar a las aplicaciones a medir el rendimiento de los anuncios."</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Puedes cambiarlo en la configuración de privacidad en la publicidad."</string>
-    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Las aplicaciones que usas le pueden pedir información a Android para medir el rendimiento de sus anuncios. Android solo permite que las aplicaciones recojan tipos de datos limitados."</string>
+    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Las aplicaciones que usas le pueden pedir información a Android para medir el rendimiento de sus anuncios. Android solo permite que las aplicaciones recojan tipos limitados de datos."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Ilustración a color de símbolos que representan temas de interés, como música, noticias y deportes"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Ilustración a color de un candado dentro de un círculo"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Ilustración pequeña en blanco o negro de nueve puntos formando un cuadrado"</string>

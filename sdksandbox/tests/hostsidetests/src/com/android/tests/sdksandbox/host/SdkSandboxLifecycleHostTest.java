@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assume.assumeTrue;
 
+import android.app.sdksandbox.hosttestutils.DeviceSupportHostUtils;
 import android.app.sdksandbox.hosttestutils.SecondaryUserUtils;
 
 import com.android.modules.utils.build.testing.DeviceSdkLevel;
@@ -65,12 +66,15 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
             APP_SHARED_2_PACKAGE + "_sdk_sandbox";
 
     private final SecondaryUserUtils mUserUtils = new SecondaryUserUtils(this);
+    private final DeviceSupportHostUtils mDeviceSupportUtils = new DeviceSupportHostUtils(this);
 
     private boolean mWasRoot;
     private DeviceSdkLevel mDeviceSdkLevel;
 
     @Before
     public void setUp() throws Exception {
+        assumeTrue("Device supports SdkSandbox", mDeviceSupportUtils.isSdkSandboxSupported());
+
         assertThat(getBuild()).isNotNull();
         assertThat(getDevice()).isNotNull();
 

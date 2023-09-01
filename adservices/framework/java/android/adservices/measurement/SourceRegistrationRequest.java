@@ -32,8 +32,6 @@ import java.util.Objects;
 
 /**
  * Class to hold input to measurement source registration calls.
- *
- * @hide
  */
 public final class SourceRegistrationRequest implements Parcelable {
     private static final int REGISTRATION_URIS_MAX_COUNT = 20;
@@ -42,7 +40,8 @@ public final class SourceRegistrationRequest implements Parcelable {
 
     /**
      * User Interaction {@link InputEvent} used by the AttributionReporting API to distinguish
-     * clicks from views.
+     * clicks from views. It will be an {@link InputEvent} object (for a click event) or null (for a
+     * view event).
      */
     @Nullable private final InputEvent mInputEvent;
 
@@ -87,7 +86,8 @@ public final class SourceRegistrationRequest implements Parcelable {
 
     /**
      * User Interaction {@link InputEvent} used by the AttributionReporting API to distinguish
-     * clicks from views.
+     * clicks from views. It will be an {@link InputEvent} object (for a click event) or null (for a
+     * view event)
      */
     @Nullable
     public InputEvent getInputEvent() {
@@ -139,7 +139,8 @@ public final class SourceRegistrationRequest implements Parcelable {
          * Setter corresponding to {@link #getInputEvent()}.
          *
          * @param inputEvent User Interaction {@link InputEvent} used by the AttributionReporting
-         *     API to distinguish clicks from views.
+         *     API to distinguish clicks from views. It will be an {@link InputEvent} object (for a
+         *     click event) or null (for a view event)
          * @return builder
          */
         @NonNull

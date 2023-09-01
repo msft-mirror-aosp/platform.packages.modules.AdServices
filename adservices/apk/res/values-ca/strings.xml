@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Permet que una aplicació accedeixi a l\'API AdServices Consent."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Accedir a l\'API Ad ID"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Permet que una aplicació accedeixi a l\'API Ad ID."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"Accedeix a l\'API AdServices Cobalt Upload"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Permet que una aplicació accedeixi a l\'API AdServices Cobalt Upload."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Accedir a l\'API App Set ID"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Permet que una aplicació accedeixi a l\'API App Set ID."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"accedir a l\'API Consent Service"</string>
@@ -40,8 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Permet que una aplicació accedeixi a l\'API d\'estat d\'activació d\'AdService."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Accés a les API d\'AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Permet que una aplicació accedeixi a les API d\'AdServicesManager."</string>
-    <!-- no translation found for app_label (5844694701336604490) -->
-    <skip />
+    <string name="app_label" msgid="5844694701336604490">"Privadesa d\'anuncis"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Uneix-te a la versió beta de la privadesa d\'anuncis d\'Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android està explorant maneres més privades perquè les aplicacions et mostrin anuncis"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Més informació"</string>
@@ -189,13 +190,13 @@
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Les dades de suggeriments d\'anuncis de les aplicacions de la llista se suprimiran i les aplicacions suggeriran anuncis nous a partir d\'aquest moment. Pot ser que continuïs veient alguns anuncis relacionats."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Les dades de l\'aplicació s\'han restablert"</string>
     <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Els temes d\'anuncis estan activats"</string>
-    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android començarà a prendre nota dels temes d\'interès, però és possible que els primers tardin una mica a aparèixer."</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android començarà a prendre nota dels temes d\'interès, però és possible que els primers tardin una mica a mostrar-se."</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Vols desactivar els temes d\'anuncis?"</string>
     <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Aquesta llista de temes se suprimirà. Android deixarà de prendre nota dels temes d\'interès, però és possible que encara vegis anuncis rellevants."</string>
     <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Els anuncis suggerits per aplicacions estan activats"</string>
     <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"És possible que les aplicacions comencin a suggerir anuncis. Veuràs una llista d\'aplicacions un cop comencin a suggerir anuncis."</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Vols desactivar els anuncis suggerits per aplicacions?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Totes les dades de suggeriment d\'anuncis se suprimiran. Les aplicacions ja no podran suggerir anuncis, però continuaràs veient anuncis rellevants."</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Totes les dades de suggeriment d\'anuncis se suprimiran. Les aplicacions ja no podran suggerir anuncis, però és possible que encara vegis anuncis rellevants."</string>
     <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"El mesurament d\'anuncis està activat"</string>
     <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android només pot compartir informació molt limitada amb les aplicacions per ajudar-les a mesurar el rendiment dels seus anuncis."</string>
     <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Vols desactivar el mesurament d\'anuncis?"</string>

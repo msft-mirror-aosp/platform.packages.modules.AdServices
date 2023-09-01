@@ -16,9 +16,7 @@
 package com.android.adservices.service.measurement.registration;
 
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATABLE_TRIGGER_DATA;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_EVENT_TRIGGER_DATA;
 
 import android.annotation.NonNull;
 import android.content.Context;
@@ -312,6 +310,11 @@ public class AsyncTriggerFetcher {
             AsyncRedirect asyncRedirect) {
         HttpURLConnection urlConnection = null;
         Map<String, List<String>> headers;
+        if (!asyncRegistration.getRegistrationUri().getScheme().equalsIgnoreCase("https")) {
+            LogUtil.d("Invalid scheme for registrationUri.");
+            asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.INVALID_URL);
+            return Optional.empty();
+        }
         // TODO(b/276825561): Fix code duplication between fetchSource & fetchTrigger request flow
         try {
             urlConnection =
@@ -378,12 +381,6 @@ public class AsyncTriggerFetcher {
     }
 
     private Optional<String> getValidEventTriggerData(JSONArray eventTriggerDataArr) {
-        if (eventTriggerDataArr.length() > MAX_ATTRIBUTION_EVENT_TRIGGER_DATA) {
-            LogUtil.d(
-                    "Event trigger data list has more entries than permitted. %s",
-                    eventTriggerDataArr.length());
-            return Optional.empty();
-        }
         JSONArray validEventTriggerData = new JSONArray();
         for (int i = 0; i < eventTriggerDataArr.length(); i++) {
             JSONObject validEventTriggerDatum = new JSONObject();
@@ -496,12 +493,6 @@ public class AsyncTriggerFetcher {
 
     private Optional<String> getValidAggregateTriggerData(JSONArray aggregateTriggerDataArr)
             throws JSONException {
-        if (aggregateTriggerDataArr.length() > MAX_AGGREGATABLE_TRIGGER_DATA) {
-            LogUtil.d(
-                    "Aggregate trigger data list has more entries than permitted. %s",
-                    aggregateTriggerDataArr.length());
-            return Optional.empty();
-        }
         JSONArray validAggregateTriggerData = new JSONArray();
         for (int i = 0; i < aggregateTriggerDataArr.length(); i++) {
             JSONObject aggregateTriggerData = aggregateTriggerDataArr.getJSONObject(i);

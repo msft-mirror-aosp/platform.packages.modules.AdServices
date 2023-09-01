@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.registration;
 
+import static com.android.adservices.service.measurement.util.JobLockHolder.Type.ASYNC_REGISTRATION_PROCESSING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ASYNC_REGISTRATION_JOB;
 
@@ -31,16 +32,20 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.SystemHealthParams;
+import com.android.adservices.service.measurement.util.JobLockHolder;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.concurrent.Future;
 
 /** Job Service for servicing queued registration requests */
 public class AsyncRegistrationQueueJobService extends JobService {
     private static final int MEASUREMENT_ASYNC_REGISTRATION_JOB_ID =
             MEASUREMENT_ASYNC_REGISTRATION_JOB.getJobId();
+
+    private Future mExecutorFuture;
 
     @Override
     public boolean onStartJob(JobParameters params) {
@@ -67,35 +72,51 @@ public class AsyncRegistrationQueueJobService extends JobService {
         Instant jobStartTime = Clock.systemUTC().instant();
         LogUtil.d(
                 "AsyncRegistrationQueueJobService.onStartJob " + "at %s", jobStartTime.toString());
-        AsyncRegistrationQueueRunner asyncQueueRunner =
-                AsyncRegistrationQueueRunner.getInstance(getApplicationContext());
 
-        AdServicesExecutors.getBackgroundExecutor()
-                .execute(
-                        () -> {
-                            asyncQueueRunner.runAsyncRegistrationQueueWorker();
+        mExecutorFuture =
+                AdServicesExecutors.getBlockingExecutor()
+                        .submit(
+                                () -> {
+                                    processAsyncRecords();
 
-                            boolean shouldRetry = false;
-                            AdservicesJobServiceLogger.getInstance(
-                                            AsyncRegistrationQueueJobService.this)
-                                    .recordJobFinished(
-                                            MEASUREMENT_ASYNC_REGISTRATION_JOB_ID,
-                                            /* isSuccessful */ true,
-                                            shouldRetry);
+                                    boolean shouldRetry = false;
+                                    AdservicesJobServiceLogger.getInstance(
+                                                    AsyncRegistrationQueueJobService.this)
+                                            .recordJobFinished(
+                                                    MEASUREMENT_ASYNC_REGISTRATION_JOB_ID,
+                                                    /* isSuccessful */ true,
+                                                    shouldRetry);
 
-                            jobFinished(params, shouldRetry);
-                            // jobFinished is asynchronous, so forcing scheduling avoiding
-                            // concurrency issue
-                            scheduleIfNeeded(this, /* forceSchedule */ true);
-                        });
+                                    jobFinished(params, shouldRetry);
+                                    // jobFinished is asynchronous, so forcing scheduling avoiding
+                                    // concurrency issue
+                                    scheduleIfNeeded(this, /* forceSchedule */ true);
+                                });
         return true;
+    }
+
+    @VisibleForTesting
+    void processAsyncRecords() {
+        final JobLockHolder lock = JobLockHolder.getInstance(ASYNC_REGISTRATION_PROCESSING);
+        if (lock.tryLock()) {
+            try {
+                AsyncRegistrationQueueRunner.getInstance(getApplicationContext())
+                        .runAsyncRegistrationQueueWorker();
+                return;
+            } finally {
+                lock.unlock();
+            }
+        }
+        LogUtil.d("AsyncRegistrationQueueJobService did not acquire the lock");
     }
 
     @Override
     public boolean onStopJob(JobParameters params) {
         LogUtil.d("AsyncRegistrationQueueJobService.onStopJob");
-        boolean shouldRetry = false;
-
+        boolean shouldRetry = true;
+        if (mExecutorFuture != null) {
+            shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
+        }
         AdservicesJobServiceLogger.getInstance(this)
                 .recordOnStopJob(params, MEASUREMENT_ASYNC_REGISTRATION_JOB_ID, shouldRetry);
         return shouldRetry;
@@ -167,5 +188,10 @@ public class AsyncRegistrationQueueJobService extends JobService {
 
         // Returning false to reschedule this job.
         return false;
+    }
+
+    @VisibleForTesting
+    Future getFutureForTesting() {
+        return mExecutorFuture;
     }
 }

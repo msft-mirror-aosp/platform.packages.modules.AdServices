@@ -18,6 +18,7 @@ package com.android.adservices.service.signals;
 
 import android.adservices.common.AdTechIdentifier;
 
+import java.util.List;
 import java.util.Map;
 
 interface SignalStorageManager {
@@ -25,8 +26,8 @@ interface SignalStorageManager {
      * Retrieves signals for a given buyer.
      *
      * @param buyer The buyer to retrieve signals for.
-     * @return A map from base 64 encoded signal strings to object with the signal's value, creation
-     *     time, and creator's package name.
+     * @return A map from base 64 encoded signal key strings to objects with the signals' value,
+     *     creation time, and creator's package name.
      */
-    Map<String, ProtectedSignal> getSignals(AdTechIdentifier buyer);
+    Map<String, List<ProtectedSignal>> getSignals(AdTechIdentifier buyer);
 }

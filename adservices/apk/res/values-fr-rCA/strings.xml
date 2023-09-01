@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Autorise une application à accéder à l\'API AdServices Consent."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"accès à l\'API Ad ID"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Autorise une application à accéder à l\'API Ad ID."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"Accéder à l\'API Cobalt Upload d\'AdServices"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Autorise une application à accéder à l\'API Cobalt Upload d\'AdServices."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"accès à l\'API App Set ID"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Autorise une application à accéder à l\'API App Set ID."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Accéder à l\'API Consent Service"</string>
@@ -40,8 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Autorise une application à accéder à l\'API d\'état d\'activation de AdService."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Accès aux API d\'AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Autoriser une application à accéder aux API d\'AdServicesManager."</string>
-    <!-- no translation found for app_label (5844694701336604490) -->
-    <skip />
+    <string name="app_label" msgid="5844694701336604490">"Confidentialité de l\'annonce"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Rejoindre la communauté de la version bêta des fonctionnalités de confidentialité des annonces sur Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android explore des façons plus privées pour les applications de vous montrer des annonces"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"En savoir plus"</string>
@@ -197,7 +198,7 @@
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Désactiver les annonces suggérées par les applications?"</string>
     <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Toutes les données relatives aux suggestions d\'annonces seront supprimées. Les applications ne pourront plus suggérer d\'annonces, mais vous pourrez toujours voir des annonces pertinentes."</string>
     <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"La mesure des annonces est activée"</string>
-    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android ne peut partager que des données très limitées avec les applications pour leur permettre de mesurer la performance de leurs annonces."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android ne peut partager que des renseignements très limités avec les applications pour leur permettre de mesurer la performance de leurs annonces."</string>
     <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Désactiver la mesure des annonces?"</string>
     <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"Tous les rapports de mesure des annonces en attente seront supprimés et aucun nouveau rapport ne sera généré ni partagé."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Confidentialité des annonces"</string>

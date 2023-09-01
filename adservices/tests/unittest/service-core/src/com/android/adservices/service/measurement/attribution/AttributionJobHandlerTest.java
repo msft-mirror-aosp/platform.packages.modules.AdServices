@@ -96,6 +96,9 @@ public class AttributionJobHandlerTest {
     public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
             new TestableDeviceConfig.TestableDeviceConfigRule();
 
+    private static final long SOURCE_TIME = 1690000000000L;
+    private static final long TRIGGER_TIME = 1690000001000L;
+    private static final long EXPIRY_TIME = 1692592000000L;
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Uri APP_DESTINATION = Uri.parse("android-app://com.example.app");
     private static final Uri WEB_DESTINATION = WebUtil.validUri("https://web.example.test");
@@ -123,6 +126,7 @@ public class AttributionJobHandlerTest {
     private static Trigger createAPendingTrigger() {
         return TriggerFixture.getValidTriggerBuilder()
                 .setId(TRIGGER_ID)
+                .setTriggerTime(TRIGGER_TIME)
                 .setStatus(Trigger.Status.PENDING)
                 .setEventTriggers(EVENT_TRIGGERS)
                 .build();
@@ -361,7 +365,7 @@ public class AttributionJobHandlerTest {
                         .setId("triggerId2")
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers("[{\"trigger_data\":\"0\"}]")
-                        .setTriggerTime(triggerTime + 1)
+                        .setTriggerTime(triggerTime + 1L)
                         .build();
         List<Trigger> triggers = new ArrayList<>();
         triggers.add(trigger1);
@@ -371,7 +375,8 @@ public class AttributionJobHandlerTest {
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setEventTime(eventTime)
-                        .setEventReportWindow(triggerTime)
+                        .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(30))
+                        .setEventReportWindow(triggerTime + 1L)
                         .build();
         matchingSourceList.add(source);
         when(mMeasurementDao.getPendingTriggerIds())
@@ -426,7 +431,7 @@ public class AttributionJobHandlerTest {
                         .setPriority(100L)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setEventTime(eventTime)
-                        .setEventReportWindow(triggerTime)
+                        .setEventReportWindow(triggerTime + 1L)
                         .build();
         // Second source has higher priority but the event report window ends before trigger time
         Source source2 =
@@ -517,6 +522,9 @@ public class AttributionJobHandlerTest {
         doReturn(3).when(mFlags).getMeasurementVtcConfigurableMaxEventReportsCount();
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventTime(SOURCE_TIME)
+                        .setExpiryTime(EXPIRY_TIME)
+                        .setAggregatableReportWindow(TRIGGER_TIME + 1L)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .build();
         doReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()))
@@ -647,6 +655,9 @@ public class AttributionJobHandlerTest {
         Trigger trigger = createAPendingTrigger();
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventTime(SOURCE_TIME)
+                        .setExpiryTime(EXPIRY_TIME)
+                        .setAggregatableReportWindow(TRIGGER_TIME + 1L)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .build();
         when(mMeasurementDao.getPendingTriggerIds())
@@ -688,6 +699,9 @@ public class AttributionJobHandlerTest {
         Trigger trigger = createAPendingTrigger();
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventTime(SOURCE_TIME)
+                        .setExpiryTime(EXPIRY_TIME)
+                        .setAggregatableReportWindow(TRIGGER_TIME + 1L)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .build();
         when(mMeasurementDao.getPendingTriggerIds())
@@ -885,6 +899,7 @@ public class AttributionJobHandlerTest {
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("1")
+                        .setTriggerTime(TRIGGER_TIME)
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers(EVENT_TRIGGERS)
                         .build();
@@ -893,6 +908,9 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getTrigger(anyString())).thenReturn(trigger);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventTime(SOURCE_TIME)
+                        .setExpiryTime(EXPIRY_TIME)
+                        .setAggregatableReportWindow(TRIGGER_TIME + 1L)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .build();
         List<Source> matchingSourceList = new ArrayList<>();
@@ -923,6 +941,7 @@ public class AttributionJobHandlerTest {
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("1")
+                        .setTriggerTime(TRIGGER_TIME)
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers(EVENT_TRIGGERS)
                         .build();
@@ -931,6 +950,9 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getTrigger(anyString())).thenReturn(trigger);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventTime(SOURCE_TIME)
+                        .setExpiryTime(EXPIRY_TIME)
+                        .setAggregatableReportWindow(TRIGGER_TIME + 1L)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .build();
         List<Source> matchingSourceList = new ArrayList<>();
@@ -962,6 +984,7 @@ public class AttributionJobHandlerTest {
         Trigger trigger1 =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
+                        .setTriggerTime(TRIGGER_TIME)
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers(
                                 "[\n"
@@ -975,6 +998,7 @@ public class AttributionJobHandlerTest {
         Trigger trigger2 =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId2")
+                        .setTriggerTime(TRIGGER_TIME + 1000L)
                         .setStatus(Trigger.Status.PENDING)
                         .setRegistrationOrigin(WebUtil.validUri("https://subdomain2.example.test"))
                         .setEventTriggers(
@@ -992,12 +1016,18 @@ public class AttributionJobHandlerTest {
         List<Source> matchingSourceList1 = new ArrayList<>();
         Source source1 =
                 SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventTime(SOURCE_TIME)
+                        .setExpiryTime(EXPIRY_TIME)
+                        .setAggregatableReportWindow(TRIGGER_TIME + 1L)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .build();
         matchingSourceList1.add(source1);
         List<Source> matchingSourceList2 = new ArrayList<>();
         Source source2 =
                 SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventTime(SOURCE_TIME + 500L)
+                        .setExpiryTime(EXPIRY_TIME)
+                        .setAggregatableReportWindow(TRIGGER_TIME + 1L)
                         .setRegistrationOrigin(WebUtil.validUri("https://subdomain2.example.test"))
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .build();
@@ -1079,8 +1109,8 @@ public class AttributionJobHandlerTest {
                         .setInstallAttributed(true)
                         .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(10))
                         .setEventTime(eventTime - TimeUnit.DAYS.toMillis(2))
-                        .setEventReportWindow(triggerTime)
-                        .setAggregatableReportWindow(triggerTime)
+                        .setEventReportWindow(triggerTime + 1L)
+                        .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
         Source source2 =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -1156,8 +1186,8 @@ public class AttributionJobHandlerTest {
                         .setInstallAttributed(true)
                         .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(3))
                         .setEventTime(eventTime - TimeUnit.DAYS.toMillis(2))
-                        .setEventReportWindow(triggerTime)
-                        .setAggregatableReportWindow(triggerTime)
+                        .setEventReportWindow(triggerTime + 1L)
+                        .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
         Source source2 =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -1166,7 +1196,7 @@ public class AttributionJobHandlerTest {
                         .setPriority(200L)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setEventTime(eventTime)
-                        .setEventReportWindow(triggerTime)
+                        .setEventReportWindow(triggerTime + 1L)
                         .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
@@ -1295,6 +1325,7 @@ public class AttributionJobHandlerTest {
         Trigger trigger1 =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
+                        .setTriggerTime(TRIGGER_TIME)
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers(
                                 "[\n"
@@ -1309,6 +1340,9 @@ public class AttributionJobHandlerTest {
         List<Source> matchingSourceList1 = new ArrayList<>();
         Source source1 =
                 SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventTime(SOURCE_TIME)
+                        .setExpiryTime(EXPIRY_TIME)
+                        .setAggregatableReportWindow(TRIGGER_TIME + 1L)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setRegistrationOrigin(WebUtil.validUri("https://source.example.test"))
                         .build();
@@ -1339,6 +1373,7 @@ public class AttributionJobHandlerTest {
         Trigger trigger1 =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
+                        .setTriggerTime(TRIGGER_TIME)
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers(
                                 "[\n"
@@ -1353,6 +1388,9 @@ public class AttributionJobHandlerTest {
         List<Source> matchingSourceList1 = new ArrayList<>();
         Source source1 =
                 SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventTime(SOURCE_TIME)
+                        .setExpiryTime(EXPIRY_TIME)
+                        .setAggregatableReportWindow(TRIGGER_TIME + 1L)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setRegistrationOrigin(WebUtil.validUri("https://source.example.test"))
                         .setAppDestinations(Collections.singletonList(APP_DESTINATION))
@@ -1417,9 +1455,9 @@ public class AttributionJobHandlerTest {
         verify(mMeasurementDao).insertAggregateReport(aggregateReportCaptor.capture());
 
         // Assert expected aggregate report time range
-        long lowerBound = reportMinDelay;
+        long lowerBound = TRIGGER_TIME + reportMinDelay;
         // Add slightly more delay to upper bound to account for execution.
-        long upperBound = reportMinDelay + reportDelaySpan + 1000;
+        long upperBound = TRIGGER_TIME + reportMinDelay + reportDelaySpan + 1000L;
         AggregateReport capturedReport = aggregateReportCaptor.getValue();
         assertTrue(capturedReport.getScheduledReportTime() > lowerBound
                 && capturedReport.getScheduledReportTime() < upperBound);
@@ -1450,10 +1488,10 @@ public class AttributionJobHandlerTest {
         verify(mMeasurementDao).insertAggregateReport(aggregateReportCaptor.capture());
 
         // Assert expected aggregate report time range
-        long lowerBound = PrivacyParams.AGGREGATE_REPORT_MIN_DELAY;
+        long lowerBound = TRIGGER_TIME + PrivacyParams.AGGREGATE_REPORT_MIN_DELAY;
         // Add slightly more delay to upper bound to account for execution.
-        long upperBound = PrivacyParams.AGGREGATE_REPORT_MIN_DELAY
-                + PrivacyParams.AGGREGATE_REPORT_DELAY_SPAN + 1000;
+        long upperBound = TRIGGER_TIME + PrivacyParams.AGGREGATE_REPORT_MIN_DELAY
+                + PrivacyParams.AGGREGATE_REPORT_DELAY_SPAN + 1000L;
         AggregateReport capturedReport = aggregateReportCaptor.getValue();
         assertTrue(capturedReport.getScheduledReportTime() > lowerBound
                 && capturedReport.getScheduledReportTime() < upperBound);
@@ -1487,10 +1525,10 @@ public class AttributionJobHandlerTest {
         verify(mMeasurementDao).insertAggregateReport(aggregateReportCaptor.capture());
 
         // Assert expected aggregate report time range
-        long lowerBound = PrivacyParams.AGGREGATE_REPORT_MIN_DELAY;
+        long lowerBound = TRIGGER_TIME + PrivacyParams.AGGREGATE_REPORT_MIN_DELAY;
         // Add slightly more delay to upper bound to account for execution.
-        long upperBound = PrivacyParams.AGGREGATE_REPORT_MIN_DELAY
-                + PrivacyParams.AGGREGATE_REPORT_DELAY_SPAN + 1000;
+        long upperBound = TRIGGER_TIME + PrivacyParams.AGGREGATE_REPORT_MIN_DELAY
+                + PrivacyParams.AGGREGATE_REPORT_DELAY_SPAN + 1000L;
         AggregateReport capturedReport = aggregateReportCaptor.getValue();
         assertTrue(capturedReport.getScheduledReportTime() > lowerBound
                 && capturedReport.getScheduledReportTime() < upperBound);
@@ -1524,10 +1562,10 @@ public class AttributionJobHandlerTest {
         verify(mMeasurementDao).insertAggregateReport(aggregateReportCaptor.capture());
 
         // Assert expected aggregate report time range
-        long lowerBound = PrivacyParams.AGGREGATE_REPORT_MIN_DELAY;
+        long lowerBound = TRIGGER_TIME + PrivacyParams.AGGREGATE_REPORT_MIN_DELAY;
         // Add slightly more delay to upper bound to account for execution.
-        long upperBound = PrivacyParams.AGGREGATE_REPORT_MIN_DELAY
-                + PrivacyParams.AGGREGATE_REPORT_DELAY_SPAN + 1000;
+        long upperBound = TRIGGER_TIME + PrivacyParams.AGGREGATE_REPORT_MIN_DELAY
+                + PrivacyParams.AGGREGATE_REPORT_DELAY_SPAN + 1000L;
         AggregateReport capturedReport = aggregateReportCaptor.getValue();
         assertTrue(capturedReport.getScheduledReportTime() > lowerBound
                 && capturedReport.getScheduledReportTime() < upperBound);
@@ -1561,10 +1599,10 @@ public class AttributionJobHandlerTest {
         verify(mMeasurementDao).insertAggregateReport(aggregateReportCaptor.capture());
 
         // Assert expected aggregate report time range
-        long lowerBound = PrivacyParams.AGGREGATE_REPORT_MIN_DELAY;
+        long lowerBound = TRIGGER_TIME + PrivacyParams.AGGREGATE_REPORT_MIN_DELAY;
         // Add slightly more delay to upper bound to account for execution.
-        long upperBound = PrivacyParams.AGGREGATE_REPORT_MIN_DELAY
-                + PrivacyParams.AGGREGATE_REPORT_DELAY_SPAN + 1000;
+        long upperBound = TRIGGER_TIME + PrivacyParams.AGGREGATE_REPORT_MIN_DELAY
+                + PrivacyParams.AGGREGATE_REPORT_DELAY_SPAN + 1000L;
         AggregateReport capturedReport = aggregateReportCaptor.getValue();
         assertTrue(capturedReport.getScheduledReportTime() > lowerBound
                 && capturedReport.getScheduledReportTime() < upperBound);
@@ -1586,6 +1624,7 @@ public class AttributionJobHandlerTest {
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
+                        .setTriggerTime(TRIGGER_TIME)
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers(
                                 "[\n"
@@ -1602,6 +1641,9 @@ public class AttributionJobHandlerTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setId("sourceId1")
+                        .setEventTime(SOURCE_TIME)
+                        .setExpiryTime(EXPIRY_TIME)
+                        .setAggregatableReportWindow(TRIGGER_TIME + 1L)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAggregateSource(
                                 "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
@@ -1675,6 +1717,7 @@ public class AttributionJobHandlerTest {
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
+                        .setTriggerTime(TRIGGER_TIME)
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers(
                                 "[\n"
@@ -1692,6 +1735,9 @@ public class AttributionJobHandlerTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setId("sourceId1")
+                        .setEventTime(SOURCE_TIME)
+                        .setExpiryTime(EXPIRY_TIME)
+                        .setAggregatableReportWindow(TRIGGER_TIME + 1L)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAggregateSource(
                                 "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
@@ -1760,6 +1806,7 @@ public class AttributionJobHandlerTest {
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
+                        .setTriggerTime(TRIGGER_TIME)
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers(
                                 "[\n"
@@ -1777,6 +1824,8 @@ public class AttributionJobHandlerTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setId("sourceId1")
+                        .setEventTime(SOURCE_TIME)
+                        .setAggregatableReportWindow(TRIGGER_TIME + 1L)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAggregateSource(
                                 "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
@@ -2104,6 +2153,7 @@ public class AttributionJobHandlerTest {
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
+                        .setTriggerTime(TRIGGER_TIME)
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers(
                                 "[\n"
@@ -2121,6 +2171,9 @@ public class AttributionJobHandlerTest {
                         .build();
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventTime(SOURCE_TIME)
+                        .setExpiryTime(EXPIRY_TIME)
+                        .setAggregatableReportWindow(TRIGGER_TIME + 1L)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setFilterData(
                                 "{\n"
@@ -2170,6 +2223,7 @@ public class AttributionJobHandlerTest {
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
+                        .setTriggerTime(TRIGGER_TIME)
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers(
                                 "[\n"
@@ -2187,6 +2241,9 @@ public class AttributionJobHandlerTest {
                         .build();
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventTime(SOURCE_TIME)
+                        .setExpiryTime(EXPIRY_TIME)
+                        .setAggregatableReportWindow(TRIGGER_TIME + 1L)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setFilterData(
                                 "{\n"
@@ -2235,6 +2292,7 @@ public class AttributionJobHandlerTest {
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
+                        .setTriggerTime(TRIGGER_TIME)
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers(
                                 "[\n"
@@ -2252,6 +2310,9 @@ public class AttributionJobHandlerTest {
                         .build();
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventTime(SOURCE_TIME)
+                        .setExpiryTime(EXPIRY_TIME)
+                        .setAggregatableReportWindow(TRIGGER_TIME + 1L)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setFilterData(
                                 "{\n"
@@ -2300,6 +2361,7 @@ public class AttributionJobHandlerTest {
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
+                        .setTriggerTime(TRIGGER_TIME)
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers(
                                 "[\n"
@@ -2317,6 +2379,9 @@ public class AttributionJobHandlerTest {
                         .build();
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventTime(SOURCE_TIME)
+                        .setExpiryTime(EXPIRY_TIME)
+                        .setAggregatableReportWindow(TRIGGER_TIME + 1L)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setFilterData(
                                 "{\n"
@@ -2365,6 +2430,7 @@ public class AttributionJobHandlerTest {
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
+                        .setTriggerTime(TRIGGER_TIME)
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers(
                                 "[\n"
@@ -2383,6 +2449,9 @@ public class AttributionJobHandlerTest {
                         .build();
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventTime(SOURCE_TIME)
+                        .setExpiryTime(EXPIRY_TIME)
+                        .setAggregatableReportWindow(TRIGGER_TIME + 1L)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setFilterData(
                                 "{\n"
@@ -2433,6 +2502,7 @@ public class AttributionJobHandlerTest {
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
+                        .setTriggerTime(TRIGGER_TIME)
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers(
                                 "[\n"
@@ -2450,6 +2520,9 @@ public class AttributionJobHandlerTest {
                         .build();
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventTime(SOURCE_TIME)
+                        .setExpiryTime(EXPIRY_TIME)
+                        .setAggregatableReportWindow(TRIGGER_TIME + 1L)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setFilterData(
                                 "{\n"
@@ -2500,6 +2573,7 @@ public class AttributionJobHandlerTest {
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
+                        .setTriggerTime(TRIGGER_TIME)
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers(
                                 "[\n"
@@ -2518,6 +2592,9 @@ public class AttributionJobHandlerTest {
                         .build();
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventTime(SOURCE_TIME)
+                        .setExpiryTime(EXPIRY_TIME)
+                        .setAggregatableReportWindow(TRIGGER_TIME + 1L)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setFilterData(
                                 "{\n"
@@ -2567,6 +2644,7 @@ public class AttributionJobHandlerTest {
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
+                        .setTriggerTime(TRIGGER_TIME)
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers(
                                 "[\n"
@@ -2584,6 +2662,9 @@ public class AttributionJobHandlerTest {
                         .build();
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventTime(SOURCE_TIME)
+                        .setExpiryTime(EXPIRY_TIME)
+                        .setAggregatableReportWindow(TRIGGER_TIME + 1L)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setFilterData(
                                 "{\n"
@@ -2630,6 +2711,7 @@ public class AttributionJobHandlerTest {
     public void performAttributions_eventLevelFilters_filterSet_attributeFirstMatchingTrigger()
             throws DatastoreException {
         // Setup
+        long triggerTime = 234324L;
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
@@ -2655,7 +2737,7 @@ public class AttributionJobHandlerTest {
                                         + "   }]\n"
                                         + "}"
                                         + "]\n")
-                        .setTriggerTime(234324L)
+                        .setTriggerTime(triggerTime)
                         .build();
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -2666,15 +2748,15 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
                         .setId("sourceId")
-                        .setEventReportWindow(234324L)
-                        .setAggregatableReportWindow(234324L)
+                        .setEventReportWindow(triggerTime + 1L)
+                        .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
         EventReport expectedEventReport =
                 new EventReport.Builder()
                         .setTriggerPriority(3L)
                         .setTriggerDedupKey(new UnsignedLong(3L))
                         .setTriggerData(new UnsignedLong(1L))
-                        .setTriggerTime(234324L)
+                        .setTriggerTime(triggerTime)
                         .setSourceEventId(source.getEventId())
                         .setStatus(EventReport.Status.PENDING)
                         .setAttributionDestinations(source.getAppDestinations())
@@ -2725,6 +2807,7 @@ public class AttributionJobHandlerTest {
     public void performAttributions_eventLevelFilters_attributeFirstMatchingTrigger()
             throws DatastoreException {
         // Setup
+        long triggerTime = 234324L;
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
@@ -2748,7 +2831,7 @@ public class AttributionJobHandlerTest {
                                         + "   }]\n"
                                         + "}"
                                         + "]\n")
-                        .setTriggerTime(234324L)
+                        .setTriggerTime(triggerTime)
                         .build();
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -2759,15 +2842,15 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
                         .setId("sourceId")
-                        .setEventReportWindow(234324L)
-                        .setAggregatableReportWindow(234324L)
+                        .setEventReportWindow(triggerTime + 1L)
+                        .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
         EventReport expectedEventReport =
                 new EventReport.Builder()
                         .setTriggerPriority(3L)
                         .setTriggerDedupKey(new UnsignedLong(3L))
                         .setTriggerData(new UnsignedLong(1L))
-                        .setTriggerTime(234324L)
+                        .setTriggerTime(triggerTime)
                         .setSourceEventId(source.getEventId())
                         .setStatus(EventReport.Status.PENDING)
                         .setAttributionDestinations(source.getAppDestinations())
@@ -2818,6 +2901,7 @@ public class AttributionJobHandlerTest {
     public void performAttributions_filterSet_eventLevelNotFilters_attributeFirstMatchingTrigger()
             throws DatastoreException {
         // Setup
+        long triggerTime = 234324L;
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
@@ -2843,7 +2927,7 @@ public class AttributionJobHandlerTest {
                                         + "   }]\n"
                                         + "}"
                                         + "]\n")
-                        .setTriggerTime(234324L)
+                        .setTriggerTime(triggerTime)
                         .build();
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -2854,15 +2938,15 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
                         .setId("sourceId")
-                        .setEventReportWindow(234324L)
-                        .setAggregatableReportWindow(234324L)
+                        .setEventReportWindow(triggerTime + 1L)
+                        .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
         EventReport expectedEventReport =
                 new EventReport.Builder()
                         .setTriggerPriority(3L)
                         .setTriggerDedupKey(new UnsignedLong(3L))
                         .setTriggerData(new UnsignedLong(1L))
-                        .setTriggerTime(234324L)
+                        .setTriggerTime(triggerTime)
                         .setSourceEventId(source.getEventId())
                         .setStatus(EventReport.Status.PENDING)
                         .setAttributionDestinations(source.getAppDestinations())
@@ -2913,6 +2997,7 @@ public class AttributionJobHandlerTest {
     public void performAttributions_eventLevelNotFilters_attributeFirstMatchingTrigger()
             throws DatastoreException {
         // Setup
+        long triggerTime = 234324L;
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
@@ -2936,7 +3021,7 @@ public class AttributionJobHandlerTest {
                                         + "   }]\n"
                                         + "}"
                                         + "]\n")
-                        .setTriggerTime(234324L)
+                        .setTriggerTime(triggerTime)
                         .build();
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -2947,15 +3032,15 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
                         .setId("sourceId")
-                        .setEventReportWindow(234324L)
-                        .setAggregatableReportWindow(234324L)
+                        .setEventReportWindow(triggerTime + 1L)
+                        .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
         EventReport expectedEventReport =
                 new EventReport.Builder()
                         .setTriggerPriority(3L)
                         .setTriggerDedupKey(new UnsignedLong(3L))
                         .setTriggerData(new UnsignedLong(1L))
-                        .setTriggerTime(234324L)
+                        .setTriggerTime(triggerTime)
                         .setSourceEventId(source.getEventId())
                         .setStatus(EventReport.Status.PENDING)
                         .setAttributionDestinations(source.getAppDestinations())
@@ -3006,6 +3091,7 @@ public class AttributionJobHandlerTest {
     public void performAttributions_eventLevelFiltersWithSourceType_attributeFirstMatchingTrigger()
             throws DatastoreException {
         // Setup
+        long triggerTime = 234324L;
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
@@ -3031,7 +3117,7 @@ public class AttributionJobHandlerTest {
                                         + "   }]\n"
                                         + "}"
                                         + "]\n")
-                        .setTriggerTime(234324L)
+                        .setTriggerTime(triggerTime)
                         .build();
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -3043,8 +3129,8 @@ public class AttributionJobHandlerTest {
                                         + "}\n")
                         .setId("sourceId")
                         .setSourceType(Source.SourceType.NAVIGATION)
-                        .setEventReportWindow(234324L)
-                        .setAggregatableReportWindow(234324L)
+                        .setEventReportWindow(triggerTime + 1L)
+                        .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
         EventReport expectedEventReport =
                 new EventReport.Builder()
@@ -3102,6 +3188,7 @@ public class AttributionJobHandlerTest {
     public void performAttributions_filterSet_eventLevelFiltersFailToMatch_aggregateReportOnly()
             throws DatastoreException, JSONException {
         // Setup
+        long triggerTime = 234324L;
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
@@ -3127,7 +3214,7 @@ public class AttributionJobHandlerTest {
                                         + "   }]\n"
                                         + "}"
                                         + "]\n")
-                        .setTriggerTime(234324L)
+                        .setTriggerTime(triggerTime)
                         .setAggregateTriggerData(buildAggregateTriggerData().toString())
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .build();
@@ -3140,8 +3227,8 @@ public class AttributionJobHandlerTest {
                                 "{\"product\":[\"1234\", \"2345\"],"
                                         + "\"key_1\": [\"value_1_y\", \"value_2_y\"]}")
                         .setId("sourceId")
-                        .setEventReportWindow(234324L)
-                        .setAggregatableReportWindow(234324L)
+                        .setEventReportWindow(triggerTime + 1L)
+                        .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
@@ -3174,6 +3261,7 @@ public class AttributionJobHandlerTest {
     public void performAttributions_eventLevelFiltersFailToMatch_generateAggregateReportOnly()
             throws DatastoreException, JSONException {
         // Setup
+        long triggerTime = 234324L;
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
@@ -3197,7 +3285,7 @@ public class AttributionJobHandlerTest {
                                         + "   }]\n"
                                         + "}"
                                         + "]\n")
-                        .setTriggerTime(234324L)
+                        .setTriggerTime(triggerTime)
                         .setAggregateTriggerData(buildAggregateTriggerData().toString())
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .build();
@@ -3210,8 +3298,8 @@ public class AttributionJobHandlerTest {
                                 "{\"product\":[\"1234\",\"2345\"], \"key_1\": "
                                         + "[\"value_1_y\", \"value_2_y\"]}")
                         .setId("sourceId")
-                        .setEventReportWindow(234324L)
-                        .setAggregatableReportWindow(234324L)
+                        .setEventReportWindow(triggerTime + 1L)
+                        .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
@@ -3241,6 +3329,7 @@ public class AttributionJobHandlerTest {
             performAttribution_aggregateReportsExceedsLimitPerDestination_insertsOnlyEventReport()
                     throws DatastoreException, JSONException {
         // Setup
+        long triggerTime = 234324L;
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
@@ -3258,7 +3347,7 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}]\n")
-                        .setTriggerTime(234324L)
+                        .setTriggerTime(triggerTime)
                         .setAggregateTriggerData(buildAggregateTriggerData().toString())
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .build();
@@ -3272,8 +3361,8 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
-                        .setEventReportWindow(234324L)
-                        .setAggregatableReportWindow(234324L)
+                        .setEventReportWindow(triggerTime + 1L)
+                        .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
@@ -3317,6 +3406,7 @@ public class AttributionJobHandlerTest {
         when(mFlags.getMeasurementEnableMaxAggregateReportsPerSource()).thenReturn(false);
         when(mFlags.getMeasurementMaxAggregateReportsPerSource()).thenReturn(20);
         // Setup
+        long triggerTime = 234324L;
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
@@ -3334,7 +3424,7 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}]\n")
-                        .setTriggerTime(234324L)
+                        .setTriggerTime(triggerTime)
                         .setAggregateTriggerData(buildAggregateTriggerData().toString())
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .build();
@@ -3348,8 +3438,8 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
-                        .setEventReportWindow(234324L)
-                        .setAggregatableReportWindow(234324L)
+                        .setEventReportWindow(triggerTime + 1L)
+                        .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
@@ -3392,6 +3482,7 @@ public class AttributionJobHandlerTest {
         when(mFlags.getMeasurementEnableMaxAggregateReportsPerSource()).thenReturn(true);
         when(mFlags.getMeasurementMaxAggregateReportsPerSource()).thenReturn(20);
         // Setup
+        long triggerTime = 234324L;
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
@@ -3409,7 +3500,7 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}]\n")
-                        .setTriggerTime(234324L)
+                        .setTriggerTime(triggerTime)
                         .setAggregateTriggerData(buildAggregateTriggerData().toString())
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .build();
@@ -3423,8 +3514,8 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
-                        .setEventReportWindow(234324L)
-                        .setAggregatableReportWindow(234324L)
+                        .setEventReportWindow(triggerTime + 1L)
+                        .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
@@ -3471,6 +3562,7 @@ public class AttributionJobHandlerTest {
     public void performAttribution_eventReportsExceedsLimit_insertsOnlyAggregateReport()
             throws DatastoreException, JSONException {
         // Setup
+        long triggerTime = 234324L;
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
@@ -3488,7 +3580,7 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}]\n")
-                        .setTriggerTime(234324L)
+                        .setTriggerTime(triggerTime)
                         .setAggregateTriggerData(buildAggregateTriggerData().toString())
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .build();
@@ -3502,8 +3594,8 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
-                        .setEventReportWindow(234324L)
-                        .setAggregatableReportWindow(234324L)
+                        .setEventReportWindow(triggerTime + 1L)
+                        .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
@@ -3540,6 +3632,7 @@ public class AttributionJobHandlerTest {
     public void performAttribution_aggregateAndEventReportsExceedsLimit_noReportInsertion()
             throws DatastoreException, JSONException {
         // Setup
+        long triggerTime = 234324L;
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
@@ -3557,7 +3650,7 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}]\n")
-                        .setTriggerTime(234324L)
+                        .setTriggerTime(triggerTime)
                         .setAggregateTriggerData(buildAggregateTriggerData().toString())
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .build();
@@ -3571,8 +3664,8 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
-                        .setEventReportWindow(234324L)
-                        .setAggregatableReportWindow(234324L)
+                        .setEventReportWindow(triggerTime + 1L)
+                        .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
@@ -3608,6 +3701,7 @@ public class AttributionJobHandlerTest {
     public void performAttribution_aggregateAndEventReportsDoNotExceedsLimit_ReportInsertion()
             throws DatastoreException, JSONException {
         // Setup
+        long triggerTime = 234324L;
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
@@ -3625,7 +3719,7 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}]\n")
-                        .setTriggerTime(234324L)
+                        .setTriggerTime(triggerTime)
                         .setAggregateTriggerData(buildAggregateTriggerData().toString())
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .build();
@@ -3639,8 +3733,8 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
-                        .setEventReportWindow(234324L)
-                        .setAggregatableReportWindow(234324L)
+                        .setEventReportWindow(triggerTime + 1L)
+                        .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
@@ -3974,6 +4068,7 @@ public class AttributionJobHandlerTest {
     public void performAttribution_flexEventReport_oneTriggerGenerateTwoReports()
             throws DatastoreException, JSONException {
         // Setup
+        long triggerTime = 234324L;
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
@@ -3992,7 +4087,7 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}]\n")
-                        .setTriggerTime(234324L)
+                        .setTriggerTime(triggerTime)
                         .setAggregateTriggerData(buildAggregateTriggerData().toString())
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .build();
@@ -4007,8 +4102,8 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
-                        .setEventReportWindow(234324L)
-                        .setAggregatableReportWindow(234324L)
+                        .setEventReportWindow(triggerTime + 1L)
+                        .setAggregatableReportWindow(triggerTime + 1L)
                         .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
@@ -4062,6 +4157,7 @@ public class AttributionJobHandlerTest {
     public void performAttribution_flexEventReport_triggerDataMismatch()
             throws DatastoreException, JSONException {
         // Setup
+        long triggerTime = 234324L;
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
@@ -4080,7 +4176,7 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}]\n")
-                        .setTriggerTime(234324L)
+                        .setTriggerTime(triggerTime)
                         .setAggregateTriggerData(buildAggregateTriggerData().toString())
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .build();
@@ -4095,8 +4191,8 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
-                        .setEventReportWindow(234324L)
-                        .setAggregatableReportWindow(234324L)
+                        .setEventReportWindow(triggerTime + 1L)
+                        .setAggregatableReportWindow(triggerTime + 1L)
                         .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
@@ -5349,6 +5445,7 @@ public class AttributionJobHandlerTest {
 
         return TriggerFixture.getValidTriggerBuilder()
                 .setId("triggerId1")
+                .setTriggerTime(TRIGGER_TIME)
                 .setStatus(Trigger.Status.PENDING)
                 .setEventTriggers(
                         "[\n"
@@ -5366,6 +5463,9 @@ public class AttributionJobHandlerTest {
     private static Source getAggregateSource() {
         return SourceFixture.getMinimalValidSourceBuilder()
                 .setId("sourceId1")
+                .setEventTime(SOURCE_TIME)
+                .setExpiryTime(EXPIRY_TIME)
+                .setAggregatableReportWindow(TRIGGER_TIME + 1L)
                 .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                 .setAggregateSource("{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
                 .setFilterData("{\"product\":[\"1234\",\"2345\"]}")

@@ -25,7 +25,11 @@ import android.net.Uri;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.EventReport;
+import com.android.adservices.service.measurement.KeyValueData;
+import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementReportsStats;
 import com.android.internal.annotations.VisibleForTesting;
@@ -37,6 +41,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -49,19 +54,37 @@ public class EventReportingJobHandler {
     private boolean mIsDebugInstance;
 
     private ReportingStatus.UploadMethod mUploadMethod;
+    private final Flags mFlags;
+    private final AdServicesLogger mLogger;
 
-    EventReportingJobHandler(EnrollmentDao enrollmentDao, DatastoreManager datastoreManager) {
-        mEnrollmentDao = enrollmentDao;
-        mDatastoreManager = datastoreManager;
+    EventReportingJobHandler(
+            EnrollmentDao enrollmentDao, DatastoreManager datastoreManager, Flags flags) {
+        this(enrollmentDao, datastoreManager, null, flags, AdServicesLoggerImpl.getInstance());
     }
 
     EventReportingJobHandler(
             EnrollmentDao enrollmentDao,
             DatastoreManager datastoreManager,
             ReportingStatus.UploadMethod uploadMethod) {
+        this(
+                enrollmentDao,
+                datastoreManager,
+                uploadMethod,
+                FlagsFactory.getFlags(),
+                AdServicesLoggerImpl.getInstance());
+    }
+
+    EventReportingJobHandler(
+            EnrollmentDao enrollmentDao,
+            DatastoreManager datastoreManager,
+            ReportingStatus.UploadMethod uploadMethod,
+            Flags flags,
+            AdServicesLogger logger) {
         mEnrollmentDao = enrollmentDao;
         mDatastoreManager = datastoreManager;
         mUploadMethod = uploadMethod;
+        mFlags = flags;
+        mLogger = logger;
     }
 
     /**
@@ -103,6 +126,17 @@ public class EventReportingJobHandler {
 
         List<String> pendingEventReportIdsInWindow = pendingEventReportsInWindowOpt.get();
         for (String eventReportId : pendingEventReportIdsInWindow) {
+
+            // If the job service's requirements specified at runtime are no longer met, the job
+            // service will interrupt this thread.  If the thread has been interrupted, it will exit
+            // early.
+            if (Thread.currentThread().isInterrupted()) {
+                LogUtil.d(
+                        "EventReportingJobHandler performScheduledPendingReports "
+                                + "thread interrupted, exiting early.");
+                return true;
+            }
+
             // TODO: Use result to track rate of success vs retry vs failure
             ReportingStatus reportingStatus = new ReportingStatus();
             @AdServicesStatusUtils.StatusCode
@@ -112,16 +146,38 @@ public class EventReportingJobHandler {
                 reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.SUCCESS);
             } else {
                 reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.FAILURE);
+                mDatastoreManager.runInTransaction(
+                        (dao) ->
+                                dao.incrementReportingRetryCount(
+                                        eventReportId,
+                                        KeyValueData.DataType.EVENT_REPORT_RETRY_COUNT));
             }
 
             if (mUploadMethod != null) {
                 reportingStatus.setUploadMethod(mUploadMethod);
             }
-            if (!mIsDebugInstance) {
-                logReportingStats(reportingStatus);
-            }
+            // Logged as UNKNOWN_UPLOAD_METHOD for debug reports
+            logReportingStats(reportingStatus);
         }
         return true;
+    }
+
+    private String getAppPackageName(EventReport eventReport) {
+        if (!mFlags.getMeasurementEnableAppPackageNameLogging()) {
+            return "";
+        }
+        if (eventReport.getSourceId() == null) {
+            LogUtil.d("SourceId is null on event report.");
+            return "";
+        }
+        Optional<String> sourceRegistrant =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) -> dao.getSourceRegistrant(eventReport.getSourceId()));
+        if (!sourceRegistrant.isPresent()) {
+            LogUtil.d("Source registrant not found");
+            return "";
+        }
+        return sourceRegistrant.get();
     }
 
     /**
@@ -140,7 +196,7 @@ public class EventReportingJobHandler {
             return AdServicesStatusUtils.STATUS_IO_ERROR;
         }
         EventReport eventReport = eventReportOpt.get();
-
+        reportingStatus.setSourceRegistrant(getAppPackageName(eventReport));
         if (mIsDebugInstance
                 && eventReport.getDebugReportStatus() != EventReport.DebugReportStatus.PENDING) {
             LogUtil.d("debugging status is not pending");
@@ -183,9 +239,41 @@ public class EventReportingJobHandler {
                 reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.NETWORK);
                 return AdServicesStatusUtils.STATUS_IO_ERROR;
             }
-        } catch (Exception e) {
-            LogUtil.e(e, e.toString());
+        } catch (IOException e) {
+            LogUtil.d(e, "Network error occurred when attempting to deliver event report.");
+            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.NETWORK);
+            // TODO(b/297579501): Log the error with ErrorLogUtil
+            return AdServicesStatusUtils.STATUS_IO_ERROR;
+        } catch (JSONException e) {
+            LogUtil.d(e, "Serialization error occurred at event report delivery.");
+            // TODO(b/297579501): Update the atom and the status to indicate serialization error
             reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.UNKNOWN);
+            // TODO(b/297579501): Log the error with ErrorLogUtil with the serialization error code
+
+            if (mFlags.getMeasurementEnableReportDeletionOnUnrecoverableException()) {
+                // Unrecoverable state - delete the report.
+                mDatastoreManager.runInTransaction(
+                        dao ->
+                                dao.markEventReportStatus(
+                                        eventReportId, EventReport.Status.MARKED_TO_DELETE));
+            }
+
+            if (mFlags.getMeasurementEnableReportingJobsThrowJsonException()
+                    && ThreadLocalRandom.current().nextFloat()
+                            < mFlags.getMeasurementThrowUnknownExceptionSamplingRate()) {
+                // JSONException is unexpected.
+                throw new IllegalStateException(
+                        "Serialization error occurred at event report delivery", e);
+            }
+            return AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
+        } catch (Exception e) {
+            LogUtil.e(e, "Unexpected exception occurred when attempting to deliver event report.");
+            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.UNKNOWN);
+            if (mFlags.getMeasurementEnableReportingJobsThrowUnaccountedException()
+                    && ThreadLocalRandom.current().nextFloat()
+                            < mFlags.getMeasurementThrowUnknownExceptionSamplingRate()) {
+                throw e;
+            }
             return AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         }
     }
@@ -226,15 +314,15 @@ public class EventReportingJobHandler {
         if (!reportingStatus.getReportingDelay().isPresent()) {
             reportingStatus.setReportingDelay(0L);
         }
-        AdServicesLoggerImpl.getInstance()
-                .logMeasurementReports(
-                        new MeasurementReportsStats.Builder()
-                                .setCode(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED)
-                                .setType(AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__EVENT)
-                                .setResultCode(reportingStatus.getUploadStatus().ordinal())
-                                .setFailureType(reportingStatus.getFailureStatus().ordinal())
-                                .setUploadMethod(reportingStatus.getUploadMethod().ordinal())
-                                .setReportingDelay(reportingStatus.getReportingDelay().get())
-                                .build());
+        mLogger.logMeasurementReports(
+                new MeasurementReportsStats.Builder()
+                        .setCode(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED)
+                        .setType(AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__EVENT)
+                        .setResultCode(reportingStatus.getUploadStatus().ordinal())
+                        .setFailureType(reportingStatus.getFailureStatus().ordinal())
+                        .setUploadMethod(reportingStatus.getUploadMethod().ordinal())
+                        .setReportingDelay(reportingStatus.getReportingDelay().get())
+                        .setSourceRegistrant(reportingStatus.getSourceRegistrant())
+                        .build());
     }
 }

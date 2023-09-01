@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Dozvoljava aplikaciji da pristupa AdServices Consent API-ju."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Pristup API-ju za ID oglasa"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Dozvoljava aplikaciji da pristupa API-ju za ID oglasa."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"Pristup API-ju za otpremanje usluga oglašavanja Cobalt"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Dozvoljava aplikaciji da pristupa API-ju za otpremanje usluga oglašavanja Cobalt."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Pristup API-ju za ID skupa aplikacija"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Dozvoljava aplikaciji da pristupa API-ju za ID skupa aplikacija."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Pristup Consent Service API-ju"</string>
@@ -196,9 +198,9 @@
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Želite da isključite oglase koje predlažu aplikacije?"</string>
     <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Svi podaci o predlozima će se izbrisati. Aplikacije više neće moći da predlažu oglase, ali i dalje mogu da vam se prikazuju relevantni oglasi."</string>
     <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Merenje oglasa je uključeno"</string>
-    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android može da deli samo veoma ograničene informacije sa aplikacijama da bi pomogao aplikacijama da mere učinak oglasa."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android može da deli samo veoma ograničene informacije sa aplikacijama kako bi pomogao aplikacijama da mere učinak oglasa."</string>
     <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Želite da isključite merenje oglasa?"</string>
-    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"Svi izveštaji o merenju oglasa na čekanju će biti izbrisani i novi izveštaji neće biti generisani ili deljeni."</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"Svi izveštaji o merenju oglasa na čekanju će biti izbrisani i novi izveštaji neće biti generisani ni deljeni."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Privatnost sa oglasima"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Teme oglasa"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Oglasi koje predlažu aplikacije"</string>

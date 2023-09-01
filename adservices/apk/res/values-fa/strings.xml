@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"‏به برنامه اجازه می‌دهد به میانای برنامه‌سازی کاربردی AdServices Consent دسترسی داشته باشد."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"‏دسترسی به میانای برنامه‌سازی کاربردی Ad ID"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"‏به برنامه اجازه می‌دهد به میانای برنامه‌سازی کاربردی Ad ID دسترسی داشته باشد."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"‏دسترسی به AdServices Cobalt Upload API"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"‏به برنامه اجازه می‌دهد به AdServices Cobalt Upload API دسترسی داشته باشند."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"‏دسترسی به میانای برنامه‌سازی کاربردی App Set ID"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"‏به برنامه اجازه می‌دهد به میانای برنامه‌سازی کاربردی App Set ID دسترسی داشته باشد."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"‏دسترسی به میانای برنامه‌سازی کاربردی Consent Service"</string>

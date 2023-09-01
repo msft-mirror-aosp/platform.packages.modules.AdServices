@@ -25,8 +25,10 @@ import static android.app.sdksandbox.SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__ADD_SDK_SANDBOX_LIFECYCLE_CALLBACK;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__REMOVE_SDK_SANDBOX_LIFECYCLE_CALLBACK;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE;
+import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SANDBOX;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SANDBOX_TO_SYSTEM_SERVER;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_SANDBOX_TO_APP;
+import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_APP;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_SANDBOX;
 import static com.android.server.wm.ActivityInterceptorCallback.MAINLINE_SDK_SANDBOX_ORDER_ID;
 
@@ -51,13 +53,13 @@ import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxLatencyInfo;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.SharedPreferencesUpdate;
-import android.app.sdksandbox.testutils.DeviceSupportUtils;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallbackBinder;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallbackBinder;
 import android.app.sdksandbox.testutils.FakeSdkSandboxManagerLocal;
 import android.app.sdksandbox.testutils.FakeSdkSandboxProcessDeathCallbackBinder;
 import android.app.sdksandbox.testutils.FakeSdkSandboxService;
 import android.app.sdksandbox.testutils.FakeSharedPreferencesSyncCallback;
+import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.app.sdksandbox.testutils.SdkSandboxStorageManagerUtility;
 import android.content.ComponentName;
 import android.content.Context;
@@ -104,6 +106,7 @@ import com.android.server.wm.ActivityInterceptorCallbackRegistry;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
@@ -143,6 +146,7 @@ public class SdkSandboxManagerServiceUnitTest {
     private SdkSandboxStorageManagerUtility mSdkSandboxStorageManagerUtility;
     private boolean mDisabledNetworkChecks;
     private boolean mDisabledForegroundCheck;
+    private SandboxLatencyInfo mSandboxLatencyInfo;
 
     @Mock private IBinder mAdServicesManager;
 
@@ -177,6 +181,7 @@ public class SdkSandboxManagerServiceUnitTest {
     private static final long TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_SANDBOX = 22;
     private static final long TIME_SYSTEM_SERVER_CALLED_APP = 23;
     private static final long TIME_SYSTEM_SERVER_COMPLETED_EXECUTION = 24;
+    private static final long TIME_APP_RECEIVED_CALL_FROM_SYSTEM_SERVER = 25;
 
     private static final String TEST_KEY = "key";
     private static final String TEST_VALUE = "value";
@@ -187,6 +192,14 @@ public class SdkSandboxManagerServiceUnitTest {
 
     private static final String PROPERTY_SERVICES_ALLOWLIST =
             "services_allowlist_per_targetSdkVersion";
+
+    private static final String PROPERTY_ACTIVITY_ALLOWLIST =
+            "sdksandbox_activity_allowlist_per_targetSdkVersion";
+    private String mInitialActivityAllowlistValue;
+
+    private static final String PROPERTY_NEXT_ACTIVITY_ALLOWLIST =
+            "sdksandbox_next_activity_allowlist";
+    private String mInitialNextActivityAllowlistValue;
 
     private static final String INTENT_ACTION = "action.test";
     private static final String PACKAGE_NAME = "packageName.test";
@@ -204,11 +217,11 @@ public class SdkSandboxManagerServiceUnitTest {
 
     private String mInitialEnforceRestrictions;
 
+    @Rule(order = 0)
+    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
+
     @Before
     public void setup() {
-        assumeTrue(
-                DeviceSupportUtils.isSdkSandboxSupported(
-                        InstrumentationRegistry.getInstrumentation().getContext()));
         StaticMockitoSessionBuilder mockitoSessionBuilder =
                 ExtendedMockito.mockitoSession()
                         .strictness(Strictness.LENIENT)
@@ -220,6 +233,7 @@ public class SdkSandboxManagerServiceUnitTest {
             mockitoSessionBuilder =
                     mockitoSessionBuilder.mockStatic(ActivityInterceptorCallbackRegistry.class);
         }
+
         mStaticMockSession = mockitoSessionBuilder.startMocking();
 
         if (SdkLevel.isAtLeastU()) {
@@ -287,6 +301,7 @@ public class SdkSandboxManagerServiceUnitTest {
         assertThat(sSdkSandboxSettingsListener).isNotNull();
 
         mClientAppUid = Process.myUid();
+        mSandboxLatencyInfo = new SandboxLatencyInfo();
 
         /** Save the initial value to reset the property to original configuration */
         mInitialApplyNextSdkSandboxRestrictions =
@@ -304,16 +319,19 @@ public class SdkSandboxManagerServiceUnitTest {
 
         mInitialServiceAllowlistValue =
                 DeviceConfig.getProperty(
-                        DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_NEXT_SERVICE_ALLOWLIST);
-        DeviceConfig.deleteProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_NEXT_SERVICE_ALLOWLIST);
+                        DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_SERVICES_ALLOWLIST);
+        DeviceConfig.deleteProperty(DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_SERVICES_ALLOWLIST);
+
+        mInitialActivityAllowlistValue =
+                DeviceConfig.getProperty(
+                        DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_ACTIVITY_ALLOWLIST);
+        DeviceConfig.deleteProperty(DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_ACTIVITY_ALLOWLIST);
 
         mInitialValueNextServiceAllowlist =
                 DeviceConfig.getProperty(
                         DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_NEXT_SERVICE_ALLOWLIST);
         DeviceConfig.deleteProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_NEXT_SERVICE_ALLOWLIST);
-
     }
 
     @After
@@ -321,6 +339,7 @@ public class SdkSandboxManagerServiceUnitTest {
         if (sSdkSandboxSettingsListener != null) {
             sSdkSandboxSettingsListener.unregisterPropertiesListener();
         }
+
         mStaticMockSession.finishMocking();
 
         resetDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, mInitialEnforceRestrictions);
@@ -330,6 +349,9 @@ public class SdkSandboxManagerServiceUnitTest {
                 mInitialApplyNextSdkSandboxRestrictions);
         resetDeviceConfigProperty(
                 PROPERTY_NEXT_SERVICE_ALLOWLIST, mInitialValueNextServiceAllowlist);
+        resetDeviceConfigProperty(PROPERTY_ACTIVITY_ALLOWLIST, mInitialActivityAllowlistValue);
+        resetDeviceConfigProperty(
+                PROPERTY_NEXT_ACTIVITY_ALLOWLIST, mInitialNextActivityAllowlistValue);
     }
 
     private void resetDeviceConfigProperty(String property, String value) {
@@ -458,6 +480,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 TEST_PACKAGE,
                 null,
                 SDK_NAME,
+                mSandboxLatencyInfo,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
                 callback);
@@ -474,6 +497,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 "does.not.exist",
                 null,
                 SDK_NAME,
+                mSandboxLatencyInfo,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
                 callback);
@@ -491,6 +515,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 SDK_PROVIDER_PACKAGE,
                 null,
                 SDK_NAME,
+                mSandboxLatencyInfo,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
                 callback);
@@ -510,6 +535,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 TEST_PACKAGE,
                 null,
                 "does.not.exist",
+                mSandboxLatencyInfo,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
                 callback);
@@ -532,6 +558,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 TEST_PACKAGE,
                 null,
                 SDK_NAME,
+                mSandboxLatencyInfo,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
                 callback);
@@ -550,6 +577,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 TEST_PACKAGE,
                 null,
                 SDK_NAME,
+                mSandboxLatencyInfo,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
                 callback);
@@ -571,6 +599,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 TEST_PACKAGE,
                 null,
                 SDK_NAME,
+                mSandboxLatencyInfo,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
                 callback);
@@ -593,6 +622,7 @@ public class SdkSandboxManagerServiceUnitTest {
                     TEST_PACKAGE,
                     null,
                     SDK_NAME,
+                    mSandboxLatencyInfo,
                     TIME_APP_CALLED_SYSTEM_SERVER,
                     new Bundle(),
                     callback);
@@ -608,6 +638,7 @@ public class SdkSandboxManagerServiceUnitTest {
                     TEST_PACKAGE,
                     null,
                     SDK_NAME,
+                    mSandboxLatencyInfo,
                     TIME_APP_CALLED_SYSTEM_SERVER,
                     new Bundle(),
                     callback);
@@ -631,6 +662,7 @@ public class SdkSandboxManagerServiceUnitTest {
                     TEST_PACKAGE,
                     null,
                     SDK_NAME,
+                    mSandboxLatencyInfo,
                     TIME_APP_CALLED_SYSTEM_SERVER,
                     new Bundle(),
                     callback);
@@ -643,6 +675,7 @@ public class SdkSandboxManagerServiceUnitTest {
                     TEST_PACKAGE,
                     null,
                     SDK_NAME,
+                    mSandboxLatencyInfo,
                     TIME_APP_CALLED_SYSTEM_SERVER,
                     new Bundle(),
                     callback);
@@ -666,6 +699,7 @@ public class SdkSandboxManagerServiceUnitTest {
                     TEST_PACKAGE,
                     null,
                     SDK_NAME,
+                    mSandboxLatencyInfo,
                     TIME_APP_CALLED_SYSTEM_SERVER,
                     new Bundle(),
                     callback);
@@ -689,6 +723,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 TEST_PACKAGE,
                 null,
                 SDK_NAME,
+                mSandboxLatencyInfo,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
                 callback);
@@ -747,6 +782,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 TEST_PACKAGE,
                 null,
                 SDK_NAME,
+                mSandboxLatencyInfo,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
                 callback);
@@ -811,6 +847,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 TEST_PACKAGE,
                 null,
                 SDK_NAME,
+                mSandboxLatencyInfo,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
                 callback);
@@ -898,6 +935,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 TEST_PACKAGE,
                 null,
                 SDK_NAME,
+                mSandboxLatencyInfo,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
                 callback);
@@ -954,6 +992,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 TEST_PACKAGE,
                 null,
                 SDK_NAME,
+                mSandboxLatencyInfo,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
                 callback);
@@ -1107,6 +1146,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 TEST_PACKAGE,
                 null,
                 SDK_NAME,
+                mSandboxLatencyInfo,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
                 callback);
@@ -1138,16 +1178,8 @@ public class SdkSandboxManagerServiceUnitTest {
 
     /** Tests that only allowed activities may be started from the sdk sandbox. */
     @Test
-    public void testEnforceAllowedToStartActivity_allowedValues() {
-        final ArrayList<String> allowedActions =
-                new ArrayList<>(
-                        Arrays.asList(
-                                Intent.ACTION_VIEW,
-                                Intent.ACTION_DIAL,
-                                Intent.ACTION_EDIT,
-                                Intent.ACTION_INSERT));
-
-        for (String action : allowedActions) {
+    public void testEnforceAllowedToStartActivity_defaultAllowedValues() {
+        for (String action : SdkSandboxManagerService.DEFAULT_ACTIVITY_ALLOWED_ACTIONS) {
             final Intent allowedIntent = new Intent(action);
             sSdkSandboxManagerLocal.enforceAllowedToStartActivity(allowedIntent);
         }
@@ -1162,12 +1194,110 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
+    public void testEnforceAllowedToStartActivity_restrictionsNotApplied() {
+        setDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, "false");
+        Intent intent = new Intent(Intent.ACTION_CALL);
+        sSdkSandboxManagerLocal.enforceAllowedToStartActivity(intent);
+    }
+
+    @Test
+    public void testEnforceAllowedToStartActivity_deviceConfigAllowlist() {
+        /** Allowlist: Intent.ACTION_CALL */
+        String encodedAllowedActivities = "CiAIIhIcChphbmRyb2lkLmludGVudC5hY3Rpb24uQ0FMTA==";
+        setDeviceConfigProperty(PROPERTY_ACTIVITY_ALLOWLIST, encodedAllowedActivities);
+
+        Intent intent = new Intent(Intent.ACTION_CALL);
+        sSdkSandboxManagerLocal.enforceAllowedToStartActivity(intent);
+
+        for (String action : SdkSandboxManagerService.DEFAULT_ACTIVITY_ALLOWED_ACTIONS) {
+            assertThrows(
+                    SecurityException.class,
+                    () ->
+                            sSdkSandboxManagerLocal.enforceAllowedToStartActivity(
+                                    new Intent(action)));
+        }
+    }
+
+    @Test
+    public void testEnforceAllowedToStartActivity_restrictionEnforcedDeviceConfigAllowlistNotSet() {
+        DeviceConfig.deleteProperty(DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_ACTIVITY_ALLOWLIST);
+        sSdkSandboxSettingsListener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        Map.of(PROPERTY_ACTIVITY_ALLOWLIST, "")));
+
+        for (String action : SdkSandboxManagerService.DEFAULT_ACTIVITY_ALLOWED_ACTIONS) {
+            sSdkSandboxManagerLocal.enforceAllowedToStartActivity(new Intent(action));
+        }
+
+        assertThrows(
+                SecurityException.class,
+                () ->
+                        sSdkSandboxManagerLocal.enforceAllowedToStartActivity(
+                                new Intent(Intent.ACTION_CALL)));
+    }
+
+    @Test
     public void testEnforceAllowedToStartActivity_restrictionsNotEnforced() {
         sSdkSandboxSettingsListener.onPropertiesChanged(
                 new DeviceConfig.Properties(
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         Map.of(PROPERTY_ENFORCE_RESTRICTIONS, "false")));
         sSdkSandboxManagerLocal.enforceAllowedToStartActivity(new Intent());
+    }
+
+    @Test
+    public void testEnforceAllowedToStartActivity_nextRestrictionsApplied() {
+        /** Allowlist: Intent.ACTION_CALL */
+        String encodedAllowedActivities = "CiAIIhIcChphbmRyb2lkLmludGVudC5hY3Rpb24uQ0FMTA==";
+        setDeviceConfigProperty(PROPERTY_ACTIVITY_ALLOWLIST, encodedAllowedActivities);
+
+        sSdkSandboxManagerLocal.enforceAllowedToStartActivity(new Intent(Intent.ACTION_CALL));
+        assertThrows(
+                SecurityException.class,
+                () ->
+                        sSdkSandboxManagerLocal.enforceAllowedToStartActivity(
+                                new Intent(Intent.ACTION_VIEW)));
+
+        /** Allowlist: Intent.ACTION_WEB_SEARCH */
+        String encodedNextAllowedActivities = "CiBhbmRyb2lkLmludGVudC5hY3Rpb24uV0VCX1NFQVJDSA==";
+        setDeviceConfigProperty(PROPERTY_NEXT_ACTIVITY_ALLOWLIST, encodedNextAllowedActivities);
+
+        setDeviceConfigProperty(PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS, "true");
+        sSdkSandboxManagerLocal.enforceAllowedToStartActivity(new Intent(Intent.ACTION_WEB_SEARCH));
+        assertThrows(
+                SecurityException.class,
+                () ->
+                        sSdkSandboxManagerLocal.enforceAllowedToStartActivity(
+                                new Intent(Intent.ACTION_CALL)));
+    }
+
+    @Test
+    public void testEnforceAllowedToStartActivity_nextRestrictionsAppliedButAllowlistNotSet() {
+        setDeviceConfigProperty(PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS, "true");
+        setDeviceConfigProperty(PROPERTY_NEXT_ACTIVITY_ALLOWLIST, "");
+
+        Intent intent = new Intent(Intent.ACTION_CALL);
+
+        assertThrows(
+                SecurityException.class,
+                () -> sSdkSandboxManagerLocal.enforceAllowedToStartActivity(intent));
+        for (String action : SdkSandboxManagerService.DEFAULT_ACTIVITY_ALLOWED_ACTIONS) {
+            sSdkSandboxManagerLocal.enforceAllowedToStartActivity(new Intent(action));
+        }
+
+        /** Allowlist: Intent.ACTION_CALL */
+        String encodedAllowedActivities = "CiAIIhIcChphbmRyb2lkLmludGVudC5hY3Rpb24uQ0FMTA==";
+        setDeviceConfigProperty(PROPERTY_ACTIVITY_ALLOWLIST, encodedAllowedActivities);
+
+        sSdkSandboxManagerLocal.enforceAllowedToStartActivity(intent);
+        for (String action : SdkSandboxManagerService.DEFAULT_ACTIVITY_ALLOWED_ACTIONS) {
+            assertThrows(
+                    SecurityException.class,
+                    () ->
+                            sSdkSandboxManagerLocal.enforceAllowedToStartActivity(
+                                    new Intent(action)));
+        }
     }
 
     @Test
@@ -1561,6 +1691,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 TEST_PACKAGE,
                 callback2.asBinder(),
                 SDK_NAME,
+                mSandboxLatencyInfo,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
                 callback2);
@@ -1589,6 +1720,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 TEST_PACKAGE,
                 null,
                 SDK_NAME,
+                mSandboxLatencyInfo,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
                 callback);
@@ -1607,6 +1739,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 TEST_PACKAGE,
                 callback2.asBinder(),
                 SDK_NAME,
+                mSandboxLatencyInfo,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
                 callback2);
@@ -1639,6 +1772,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 TEST_PACKAGE,
                 null,
                 SDK_NAME,
+                mSandboxLatencyInfo,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
                 callback);
@@ -2139,6 +2273,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 TEST_PACKAGE,
                 null,
                 SDK_NAME,
+                mSandboxLatencyInfo,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
                 callback);
@@ -2792,9 +2927,17 @@ public class SdkSandboxManagerServiceUnitTest {
                                 mClientAppUid));
     }
 
+    // TODO(b/287047664): move remaining stages to this test after latency logging is moved to
+    // SandboxLatencyInfo
     @Test
-    public void testLatencyMetrics_SystemServerSandboxToApp_LoadSdk() throws Exception {
-        loadSdk(SDK_NAME);
+    public void testLatencyMetrics_LoadSdk() throws Exception {
+        final SandboxLatencyInfo sandboxLatencyInfo =
+                new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_LOAD_SDK);
+        loadSdk(SDK_NAME, sandboxLatencyInfo);
+        mSdkSandboxService.sendLoadCodeSuccessfulWithSandboxLatencies(sandboxLatencyInfo);
+        sandboxLatencyInfo.setTimeAppReceivedCallFromSystemServer(
+                TIME_APP_RECEIVED_CALL_FROM_SYSTEM_SERVER);
+        mService.logLatencies(sandboxLatencyInfo);
 
         ExtendedMockito.verify(
                 () ->
@@ -2805,7 +2948,6 @@ public class SdkSandboxManagerServiceUnitTest {
                                 Mockito.eq(/*success=*/ true),
                                 Mockito.eq(SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_SANDBOX),
                                 Mockito.eq(mClientAppUid)));
-
         ExtendedMockito.verify(
                 () ->
                         SdkSandboxStatsLog.write(
@@ -2813,9 +2955,8 @@ public class SdkSandboxManagerServiceUnitTest {
                                 Mockito.eq(SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK),
                                 Mockito.anyInt(),
                                 Mockito.eq(/*success=*/ true),
-                                Mockito.eq(SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SANDBOX),
+                                Mockito.eq(SANDBOX_API_CALLED__STAGE__SANDBOX),
                                 Mockito.eq(mClientAppUid)));
-
         ExtendedMockito.verify(
                 () ->
                         SdkSandboxStatsLog.write(
@@ -2825,31 +2966,54 @@ public class SdkSandboxManagerServiceUnitTest {
                                 Mockito.eq(/*success=*/ true),
                                 Mockito.eq(SANDBOX_API_CALLED__STAGE__SANDBOX_TO_SYSTEM_SERVER),
                                 Mockito.eq(mClientAppUid)));
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                Mockito.eq(SdkSandboxStatsLog.SANDBOX_API_CALLED),
+                                Mockito.eq(SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK),
+                                Mockito.anyInt(),
+                                Mockito.eq(/*success=*/ true),
+                                Mockito.eq(SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_SANDBOX_TO_APP),
+                                Mockito.eq(mClientAppUid)));
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                Mockito.eq(SdkSandboxStatsLog.SANDBOX_API_CALLED),
+                                Mockito.eq(SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK),
+                                Mockito.anyInt(),
+                                Mockito.eq(/*success=*/ true),
+                                Mockito.eq(SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_APP),
+                                Mockito.eq(mClientAppUid)));
     }
 
     @Test
-    public void testLatencyMetrics_SystemServerSandboxToAppWithSandboxLatencyInfo_LoadSdk()
-            throws Exception {
+    public void testLatencyMetrics_LoadSdk_WithLatencies() throws Exception {
         disableNetworkPermissionChecks();
         disableForegroundCheck();
-
         Mockito.when(mInjector.getCurrentTime())
                 .thenReturn(
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
                         START_TIME_TO_LOAD_SANDBOX,
                         END_TIME_TO_LOAD_SANDBOX,
                         TIME_SYSTEM_SERVER_CALLS_SANDBOX,
-                        TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_SANDBOX);
-
+                        TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_SANDBOX,
+                        TIME_SYSTEM_SERVER_CALLED_APP);
+        SandboxLatencyInfo sandboxLatencyInfo =
+                new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_LOAD_SDK);
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+
         mService.loadSdk(
                 TEST_PACKAGE,
                 null,
                 SDK_NAME,
+                sandboxLatencyInfo,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
                 callback);
-        mSdkSandboxService.sendLoadCodeSuccessfulWithSandboxLatencies();
+        mSdkSandboxService.sendLoadCodeSuccessfulWithSandboxLatencies(sandboxLatencyInfo);
+        sandboxLatencyInfo.setTimeAppReceivedCallFromSystemServer(
+                TIME_APP_RECEIVED_CALL_FROM_SYSTEM_SERVER);
+        mService.logLatencies(sandboxLatencyInfo);
 
         ExtendedMockito.verify(
                 () ->
@@ -2900,6 +3064,29 @@ public class SdkSandboxManagerServiceUnitTest {
                                 /*success=*/ true,
                                 SANDBOX_API_CALLED__STAGE__SANDBOX_TO_SYSTEM_SERVER,
                                 mClientAppUid));
+
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
+                                (int)
+                                        (TIME_SYSTEM_SERVER_CALLED_APP
+                                                - TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_SANDBOX),
+                                /*success=*/ true,
+                                SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_SANDBOX_TO_APP,
+                                mClientAppUid));
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
+                                (int)
+                                        (TIME_APP_RECEIVED_CALL_FROM_SYSTEM_SERVER
+                                                - TIME_SYSTEM_SERVER_CALLED_APP),
+                                /*success=*/ true,
+                                SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_APP,
+                                mClientAppUid));
     }
 
     @Test
@@ -2926,6 +3113,7 @@ public class SdkSandboxManagerServiceUnitTest {
                     TEST_PACKAGE,
                     null,
                     SDK_NAME,
+                    mSandboxLatencyInfo,
                     TIME_APP_CALLED_SYSTEM_SERVER,
                     new Bundle(),
                     callback);
@@ -2939,6 +3127,7 @@ public class SdkSandboxManagerServiceUnitTest {
                     TEST_PACKAGE,
                     null,
                     SDK_NAME,
+                    mSandboxLatencyInfo,
                     TIME_APP_CALLED_SYSTEM_SERVER,
                     new Bundle(),
                     callback);
@@ -2973,6 +3162,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 TEST_PACKAGE,
                 null,
                 "RANDOM",
+                mSandboxLatencyInfo,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
                 callback);
@@ -3023,6 +3213,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 TEST_PACKAGE,
                 null,
                 SDK_NAME,
+                mSandboxLatencyInfo,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
                 callback);
@@ -3070,6 +3261,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 TEST_PACKAGE,
                 null,
                 SDK_NAME,
+                mSandboxLatencyInfo,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
                 callback);
@@ -3191,7 +3383,8 @@ public class SdkSandboxManagerServiceUnitTest {
                 new Bundle(),
                 surfacePackageCallback);
 
-        mSdkSandboxService.sendSurfacePackageReady(getFakedSandboxLatencies());
+        mSdkSandboxService.sendSurfacePackageReady(
+                getFakedSandboxLatencies(SandboxLatencyInfo.METHOD_REQUEST_SURFACE_PACKAGE));
 
         ExtendedMockito.verify(
                 () ->
@@ -3580,6 +3773,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 TEST_PACKAGE,
                 null,
                 SDK_NAME,
+                mSandboxLatencyInfo,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
                 callback);
@@ -3958,6 +4152,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 TEST_PACKAGE,
                 null,
                 SDK_NAME,
+                mSandboxLatencyInfo,
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
                 callback);
@@ -4239,24 +4434,39 @@ public class SdkSandboxManagerServiceUnitTest {
         return mInterceptorCallbackArgumentCaptor.getValue().onInterceptActivityLaunch(info);
     }
 
-    private SandboxLatencyInfo getFakedSandboxLatencies() {
-        final SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo();
+    private SandboxLatencyInfo getFakedSandboxLatencies(int method) {
+        final SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo(method);
         sandboxLatencyInfo.setTimeSystemServerCalledSandbox(TIME_SYSTEM_SERVER_CALLED_SANDBOX);
         sandboxLatencyInfo.setTimeSandboxReceivedCallFromSystemServer(
                 TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER);
         sandboxLatencyInfo.setTimeSandboxCalledSdk(TIME_SANDBOX_CALLED_SDK);
         sandboxLatencyInfo.setTimeSdkCallCompleted(TIME_SDK_CALL_COMPLETED);
         sandboxLatencyInfo.setTimeSandboxCalledSystemServer(TIME_SANDBOX_CALLED_SYSTEM_SERVER);
+        sandboxLatencyInfo.setTimeSystemServerReceivedCallFromSandbox(
+                TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_SANDBOX);
+        sandboxLatencyInfo.setTimeSystemServerCalledApp(TIME_SYSTEM_SERVER_CALLED_APP);
+        sandboxLatencyInfo.setTimeAppReceivedCallFromSystemServer(TIME_SYSTEM_SERVER_CALLED_APP);
 
         return sandboxLatencyInfo;
     }
 
     private void loadSdk(String sdkName) throws RemoteException {
+        loadSdk(sdkName, new SandboxLatencyInfo());
+    }
+
+    private void loadSdk(String sdkName, SandboxLatencyInfo sandboxLatencyInfo)
+            throws RemoteException {
         disableNetworkPermissionChecks();
         disableForegroundCheck();
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(
-                TEST_PACKAGE, null, sdkName, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
+                TEST_PACKAGE,
+                null,
+                sdkName,
+                sandboxLatencyInfo,
+                TIME_APP_CALLED_SYSTEM_SERVER,
+                new Bundle(),
+                callback);
         mSdkSandboxService.sendLoadCodeSuccessful();
         callback.assertLoadSdkIsSuccessful();
     }

@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"აპლიკაციას აძლევს წვდომას AdServices Consent API-ზე."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"წვდომა Ad ID API-ზე"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"აპლიკაციას აძლევს წვდომას Ad ID API-ზე."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"AdServices Cobalt Upload API-ზე წვდომა"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"აპლიკაციას ანიჭებს წვდომას AdServices Cobalt Upload API-ზე."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"წვდომა App Set ID API-ზე"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"აპლიკაციას აძლევს წვდომას App Set ID API-ზე."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service API-ზე წვდომა"</string>
@@ -193,7 +195,7 @@
     <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"თემების ეს სია წაიშლება. Android აღარ ჩაინიშნავს საინტერესო თემებს, მაგრამ თქვენ მაინც შეგიძლიათ ნახოთ შესაბამისი რეკლამები."</string>
     <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"აპის მიერ შემოთავაზებული რეკლამა ჩართულია"</string>
     <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"აპებმა შეიძლება დაიწყოს რეკლამის შეთავაზება. თქვენ იხილავთ აპების სიას, როგორც კი ისინი დაიწყებს რეკლამის შეთავაზებას."</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"გსურთ აპების მიერ შემოთავაზებული რეკლამების გამორთვა?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"გამოირთოს აპების შემოთავაზებული რეკლამები?"</string>
     <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"ყველა სარეკლამო შემოთავაზების მონაცემი წაიშლება. აპები ვეღარ შეძლებს რეკლამის შეთავაზებას, მაგრამ თქვენ მაინც შეგიძლიათ ნახოთ შესაბამისი რეკლამები."</string>
     <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"რეკლამის გაზომვა ჩართულია"</string>
     <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android-ს შეუძლია მხოლოდ ძალიან შეზღუდული ინფორმაციის გაზიარება აპებთან, რათა დაეხმაროს აპებს შეაფასონ თავიანთი რეკლამების ეფექტურობა."</string>
