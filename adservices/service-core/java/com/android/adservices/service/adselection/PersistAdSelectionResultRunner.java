@@ -441,7 +441,7 @@ public class PersistAdSelectionResultRunner {
                         SELLER_WIN_REPORTING_URI_FIELD_NAME,
                         Uri.parse(
                                 winReportingUrls
-                                        .getComponentSellerReportingUrls()
+                                        .getTopLevelSellerReportingUrls()
                                         .getReportingUrl()));
         AdSelectionInitialization adSelectionInitialization =
                 mAdSelectionEntryDao.getAdSelectionInitializationForId(adSelectionId);
@@ -513,7 +513,7 @@ public class PersistAdSelectionResultRunner {
                         seller.toString(),
                         SELLER_INTERACTION_REPORTING_URI_FIELD_NAME,
                         winReportingUrls
-                                .getComponentSellerReportingUrls()
+                                .getTopLevelSellerReportingUrls()
                                 .getInteractionReportingUrls());
         sLogger.v("Valid buyer interaction urls: %s", buyerInteractionReportingUrls);
         persistAdInteractionKeysAndUrls(
@@ -734,7 +734,7 @@ public class PersistAdSelectionResultRunner {
                 auctionResult.getWinReportingUrls().getBuyerReportingUrls().getReportingUrl(),
                 auctionResult
                         .getWinReportingUrls()
-                        .getComponentSellerReportingUrls()
+                        .getTopLevelSellerReportingUrls()
                         .getReportingUrl());
     }
 
