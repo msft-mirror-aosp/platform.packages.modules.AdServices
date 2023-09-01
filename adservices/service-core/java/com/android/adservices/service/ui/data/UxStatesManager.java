@@ -27,8 +27,8 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.consent.DeviceRegionProvider;
@@ -146,7 +146,7 @@ public class UxStatesManager {
         // don't have a capability for that, we will update this when we have the new capability.
         // TODO: when new capability is available, update with new capability.
         boolean isSupervisedAccountEnabled =
-                getFlag(FlagsConstants.KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED);
+                getFlag(PhFlags.KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED);
         boolean isSupervisedUser =
                 !mConsentManager.isU18Account() && !mConsentManager.isAdultAccount();
         // In case supervised account logging in second time and not able to set the ux to u18
