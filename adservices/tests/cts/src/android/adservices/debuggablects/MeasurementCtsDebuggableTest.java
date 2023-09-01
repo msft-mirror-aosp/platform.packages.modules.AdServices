@@ -675,10 +675,6 @@ public class MeasurementCtsDebuggableTest {
         getUiDevice().executeShellCommand(
                 "device_config set_sync_disabled_for_tests null");
 
-        // Reset consent
-        getUiDevice().executeShellCommand(
-                "setprop debug.adservices.consent_manager_debug_mode null");
-
         // Reset allowed packages.
         getUiDevice()
                 .executeShellCommand("device_config put adservices msmt_api_app_allow_list null");
