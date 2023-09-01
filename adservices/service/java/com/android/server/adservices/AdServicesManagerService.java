@@ -47,6 +47,7 @@ import android.util.Dumpable;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.modules.utils.BackgroundThread;
 import com.android.server.LocalManagerRegistry;
 import com.android.server.SystemService;
 import com.android.server.adservices.data.topics.TopicsDao;
@@ -139,9 +140,10 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         mContext = context;
         mUserInstanceManager = userInstanceManager;
 
+        // TODO(b/298635325): use AdServices shared background thread pool instead.
         DeviceConfig.addOnPropertiesChangedListener(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                mContext.getMainExecutor(),
+                BackgroundThread.getExecutor(),
                 mOnFlagsChangedListener);
 
         registerReceivers();
