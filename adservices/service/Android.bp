@@ -40,6 +40,7 @@ java_sdk_library {
         "service-sdksandbox.impl",
     ],
     static_libs: [
+        "modules-utils-backgroundthread",
         "modules-utils-preconditions",
     ],
     defaults: [
