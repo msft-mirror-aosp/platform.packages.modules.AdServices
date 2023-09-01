@@ -26,6 +26,8 @@ import java.util.Objects;
  */
 public abstract class AdServicesHostSideTestCase implements IDeviceTest {
 
+    protected final Logger mLog = new Logger(ConsoleLogger.getInstance(), getClass());
+
     protected ITestDevice mDevice;
 
     @Override

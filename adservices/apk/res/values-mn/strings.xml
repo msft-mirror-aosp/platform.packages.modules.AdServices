@@ -192,7 +192,7 @@
     <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Зарын сэдэв асаалттай байна"</string>
     <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android сонирхсон сэдвүүдийг тэмдэглэж эхлэх хэдий ч таны эхний сэдэв гарч ирэхэд хэсэг хугацаа зарцуулж магадгүй."</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Зарын сэдвүүдийг унтраах уу?"</string>
-    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Энэ сэвдүүдийн жагсаалтыг устгана. Android сонирхсон сэдвүүдийг тэмдэглэхээ болих хэдий ч та хамааралтай зар харсан хэвээр байж магадгүй."</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Энэ сэдвүүдийн жагсаалтыг устгана. Android сонирхсон сэдвүүдийг тэмдэглэхээ болих хэдий ч та хамааралтай зар харсан хэвээр байж магадгүй."</string>
     <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Аппын санал болгосон зар асаалттай байна"</string>
     <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Аппууд зар санал болгож эхэлж магадгүй. Аппууд зар санал болгож эхлэх үед та тэдгээрийн жагсаалтыг харна."</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Аппын санал болгосон зарыг унтраах уу?"</string>

@@ -296,8 +296,14 @@
         </service>
 
         <!-- Measurement debug report upload job. -->
-        <service
-            android:name="com.android.adservices.service.measurement.reporting.DebugReportingJobService"
+        <service android:name=
+                     "com.android.adservices.service.measurement.reporting.DebugReportingJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- Measurement verbose debug report upload job. -->
+        <service android:name=
+              "com.android.adservices.service.measurement.reporting.VerboseDebugReportingJobService"
             android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
@@ -348,6 +354,12 @@
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
+        <!-- FLEDGE Ad selection debug report sender Job -->
+        <service android:name=
+                     "com.android.adservices.service.adselection.DebugReportSenderJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
         <!-- Measurement Registration Job -->
         <service android:name=
                      "com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService"
@@ -358,6 +370,19 @@
                      "com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
+
+        <!-- Measurement Verbose Debug Reporting Fallback Job. -->
+        <service android:name=
+                     "com.android.adservices.service.measurement.reporting.VerboseDebugReportingFallbackJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- Measurement Debug Reporting Fallback Job. -->
+        <service android:name=
+                     "com.android.adservices.service.measurement.reporting.DebugReportingFallbackJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
         <!-- Cobalt Logging Job -->
         <service
             android:name="com.android.adservices.cobalt.CobaltJobService"

@@ -17,10 +17,8 @@ package com.android.adservices.common;
 
 import static com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel.R;
 import static com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel.S;
-import static com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel.S_V2;
 import static com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel.T;
 import static com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel.U;
-import static com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel.V;
 
 import com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel;
 
@@ -68,11 +66,6 @@ public final class FakeSdkLevelSupportedRuleTest
         }
 
         @Override
-        public boolean isAtLeastSv2() throws Exception {
-            return mDeviceLevel.isAtLeast(S_V2);
-        }
-
-        @Override
         public boolean isAtLeastT() throws Exception {
             return mDeviceLevel.isAtLeast(T);
         }
@@ -80,11 +73,6 @@ public final class FakeSdkLevelSupportedRuleTest
         @Override
         public boolean isAtLeastU() throws Exception {
             return mDeviceLevel.isAtLeast(U);
-        }
-
-        @Override
-        public boolean isAtLeastV() throws Exception {
-            return mDeviceLevel.isAtLeast(V);
         }
     }
 }

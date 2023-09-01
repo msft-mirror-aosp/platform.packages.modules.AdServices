@@ -16,10 +16,13 @@
 
 package com.android.adservices.service.adselection;
 
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FrequencyCapFilters;
 import android.annotation.NonNull;
 
 import com.android.adservices.data.adselection.DBAdSelection;
+import com.android.adservices.data.adselection.datahandlers.AdSelectionInitialization;
+import com.android.adservices.data.adselection.datahandlers.WinningCustomAudience;
 
 import java.time.Instant;
 
@@ -28,8 +31,23 @@ import java.time.Instant;
  * called.
  */
 public interface AdCounterHistogramUpdater {
-    /** Updates the ad counter histogram for the buyer and custom audience with a win event. */
+    /**
+     * Updates the ad counter histogram for the buyer and custom audience with a win event.
+     *
+     * <p>Works with on-device ad selection DB objects that are in process of being replaced in
+     * go/rb-rm-unified-adselection-dao-design
+     */
     void updateWinHistogram(@NonNull DBAdSelection dbAdSelection);
+
+    /**
+     * Updates the ad counter histogram for the buyer and custom audience with a win event.
+     *
+     * <p>Works with the new storage design in go/rb-rm-unified-adselection-dao-design
+     */
+    void updateWinHistogram(
+            @NonNull AdTechIdentifier buyer,
+            @NonNull AdSelectionInitialization adSelectionInitialization,
+            @NonNull WinningCustomAudience winningCustomAudience);
 
     /**
      * Updates the ad counter histogram for the ad associated with the given ad selection ID with a

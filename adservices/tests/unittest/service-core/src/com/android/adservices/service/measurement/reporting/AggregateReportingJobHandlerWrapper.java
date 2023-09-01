@@ -30,6 +30,7 @@ import com.android.adservices.service.measurement.aggregation.AggregateCryptoFix
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.stats.AdServicesLogger;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -49,13 +50,15 @@ public class AggregateReportingJobHandlerWrapper {
             DatastoreManager datastoreManager,
             long windowStartTime,
             long windowEndTime,
-            boolean isDebugInstance)
+            boolean isDebugInstance,
+            Flags flags)
             throws IOException, JSONException {
         // Setup encryption manager to return valid public keys
         ArgumentCaptor<Integer> captorNumberOfKeys = ArgumentCaptor.forClass(Integer.class);
         AggregateEncryptionKeyManager mockEncryptionManager =
                 Mockito.mock(AggregateEncryptionKeyManager.class);
         Flags mockFlags = Mockito.mock(Flags.class);
+        AdServicesLogger mockLogger = Mockito.mock(AdServicesLogger.class);
         when(mockEncryptionManager.getAggregateEncryptionKeys(any(), captorNumberOfKeys.capture()))
                 .thenAnswer(
                         invocation -> {
@@ -74,7 +77,8 @@ public class AggregateReportingJobHandlerWrapper {
                                         datastoreManager,
                                         mockEncryptionManager,
                                         ReportingStatus.UploadMethod.REGULAR,
-                                        mockFlags)
+                                        mockFlags,
+                                        mockLogger)
                                 .setIsDebugInstance(isDebugInstance));
         Mockito.doReturn(200).when(aggregateReportingJobHandler)
                 .makeHttpPostRequest(any(), any());

@@ -41,7 +41,6 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.profiling.Tracing;
-import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.BuyerInput;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAudienceInput;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.AdServicesStatsLog;
@@ -285,9 +284,10 @@ public class GetAdSelectionDataRunner {
         int traceCookie = Tracing.beginAsyncSection(Tracing.ORCHESTRATE_GET_AD_SELECTION_DATA);
         long keyFetchTimeout = mFlags.getFledgeAuctionServerAuctionKeyFetchTimeoutMs();
         return mBuyerInputGenerator
-                .createBuyerInputs()
+                .createCompressedBuyerInputs()
                 .transform(
-                        buyerInputs -> createPayload(buyerInputs, packageName, adSelectionId),
+                        compressedBuyerInputs ->
+                                createPayload(compressedBuyerInputs, packageName, adSelectionId),
                         mLightweightExecutorService)
                 .transformAsync(
                         formatted -> {
@@ -323,9 +323,9 @@ public class GetAdSelectionDataRunner {
     }
 
     private AuctionServerPayloadFormattedData createPayload(
-            Map<AdTechIdentifier, BuyerInput> buyerInputs, String packageName, long adSelectionId) {
-        Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedBuyerInput =
-                compressEachBuyerInput(buyerInputs);
+            Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedBuyerInput,
+            String packageName,
+            long adSelectionId) {
         ProtectedAudienceInput protectedAudienceInput =
                 composeProtectedAudienceInputBytes(
                         compressedBuyerInput, packageName, adSelectionId);
@@ -345,30 +345,13 @@ public class GetAdSelectionDataRunner {
                             AdSelectionInitialization.builder()
                                     .setSeller(seller)
                                     .setCallerPackageName(packageName)
+                                    .setCreationInstant(mClock.instant())
                                     .build();
                     mAdSelectionEntryDao.persistAdSelectionInitialization(
-                            adSelectionId, adSelectionInitialization, mClock.instant());
+                            adSelectionId, adSelectionInitialization);
                     Tracing.endAsyncSection(Tracing.PERSIST_AD_SELECTION_ID_REQUEST, traceCookie);
                     return encryptedBytes;
                 });
-    }
-
-    private Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData>
-            compressEachBuyerInput(Map<AdTechIdentifier, BuyerInput> buyerInputMap) {
-        // TODO(b/284302132): Move inside the BuyerInputGenerator
-        return buyerInputMap.entrySet().parallelStream()
-                .collect(
-                        Collectors.toMap(
-                                e -> e.getKey(),
-                                e -> {
-                                    sLogger.v(
-                                            String.format(
-                                                    "Compressing request for buyer %s",
-                                                    e.getKey().toString()));
-                                    return mDataCompressor.compress(
-                                            AuctionServerDataCompressor.UncompressedData.create(
-                                                    e.getValue().toByteArray()));
-                                }));
     }
 
     @VisibleForTesting

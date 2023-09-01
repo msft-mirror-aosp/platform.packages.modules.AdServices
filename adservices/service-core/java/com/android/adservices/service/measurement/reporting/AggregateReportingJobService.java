@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static com.android.adservices.service.measurement.util.JobLockHolder.Type.AGGREGATE_REPORTING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB;
 
@@ -34,10 +35,13 @@ import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.SystemHealthParams;
+import com.android.adservices.service.measurement.util.JobLockHolder;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
-import java.util.concurrent.Executor;
+import com.google.common.util.concurrent.ListeningExecutorService;
+
+import java.util.concurrent.Future;
 
 /**
  * Main service for scheduling aggregate reporting jobs. The actual job execution logic is part of
@@ -46,7 +50,10 @@ import java.util.concurrent.Executor;
 public final class AggregateReportingJobService extends JobService {
     private static final int MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID =
             MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB.getJobId();
-    private static final Executor sBlockingExecutor = AdServicesExecutors.getBlockingExecutor();
+    private static final ListeningExecutorService sBlockingExecutor =
+            AdServicesExecutors.getBlockingExecutor();
+
+    private Future mExecutorFuture;
 
     @Override
     public boolean onStartJob(JobParameters params) {
@@ -71,36 +78,53 @@ public final class AggregateReportingJobService extends JobService {
         }
 
         LogUtil.d("AggregateReportingJobService.onStartJob");
-        sBlockingExecutor.execute(
-                () -> {
-                    long maxAggregateReportUploadRetryWindowMs =
-                            SystemHealthParams.MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS;
-                    boolean success =
-                            new AggregateReportingJobHandler(
-                                            EnrollmentDao.getInstance(getApplicationContext()),
-                                            DatastoreManagerFactory.getDatastoreManager(
-                                                    getApplicationContext()),
-                                            ReportingStatus.UploadMethod.REGULAR)
-                                    .performScheduledPendingReportsInWindow(
-                                            System.currentTimeMillis()
-                                                    - maxAggregateReportUploadRetryWindowMs,
-                                            System.currentTimeMillis());
+        mExecutorFuture =
+                sBlockingExecutor.submit(
+                        () -> {
+                            processPendingReports();
 
-                    AdservicesJobServiceLogger.getInstance(AggregateReportingJobService.this)
-                            .recordJobFinished(
-                                    MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID, success, !success);
+                            AdservicesJobServiceLogger.getInstance(
+                                            AggregateReportingJobService.this)
+                                    .recordJobFinished(
+                                            MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID,
+                                            /* isSuccessful= */ true,
+                                            /* shouldRetry= */ false);
 
-                    jobFinished(params, !success);
-                });
-
+                            jobFinished(params, /* wantsReschedule= */ false);
+                        });
         return true;
+    }
+
+    @VisibleForTesting
+    void processPendingReports() {
+        final JobLockHolder lock = JobLockHolder.getInstance(AGGREGATE_REPORTING);
+        if (lock.tryLock()) {
+            try {
+                long maxAggregateReportUploadRetryWindowMs =
+                        SystemHealthParams.MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS;
+                new AggregateReportingJobHandler(
+                                EnrollmentDao.getInstance(getApplicationContext()),
+                                DatastoreManagerFactory.getDatastoreManager(
+                                        getApplicationContext()),
+                                ReportingStatus.UploadMethod.REGULAR)
+                        .performScheduledPendingReportsInWindow(
+                                System.currentTimeMillis() - maxAggregateReportUploadRetryWindowMs,
+                                System.currentTimeMillis());
+                return;
+            } finally {
+                lock.unlock();
+            }
+        }
+        LogUtil.d("AggregateReportingJobService did not acquire the lock");
     }
 
     @Override
     public boolean onStopJob(JobParameters params) {
         LogUtil.d("AggregateReportingJobService.onStopJob");
-        boolean shouldRetry = false;
-
+        boolean shouldRetry = true;
+        if (mExecutorFuture != null) {
+            shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
+        }
         AdservicesJobServiceLogger.getInstance(this)
                 .recordOnStopJob(params, MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID, shouldRetry);
         return shouldRetry;
@@ -168,5 +192,10 @@ public final class AggregateReportingJobService extends JobService {
 
         // Returning false means that this job has completed its work.
         return false;
+    }
+
+    @VisibleForTesting
+    Future getFutureForTesting() {
+        return mExecutorFuture;
     }
 }

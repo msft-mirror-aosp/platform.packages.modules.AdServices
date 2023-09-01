@@ -64,6 +64,7 @@ import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
+import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
@@ -203,6 +204,7 @@ public class AdSelectionFromOutcomesE2ETest {
     private AdFilteringFeatureFactory mAdFilteringFeatureFactory;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptor;
+    @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
 
     @Before
     public void setUp() throws Exception {
@@ -274,7 +276,8 @@ public class AdSelectionFromOutcomesE2ETest {
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor);
+                        mObliviousHttpEncryptor,
+                        mAdSelectionDebugReportDao);
 
         // Create a dispatcher that helps map a request -> response in mockWebServer
         mDispatcher =
@@ -401,7 +404,8 @@ public class AdSelectionFromOutcomesE2ETest {
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor);
+                        mObliviousHttpEncryptor,
+                        mAdSelectionDebugReportDao);
 
         AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback resultsCallback =
                 invokeSelectAdsFromOutcomes(adSelectionService, config, CALLER_PACKAGE_NAME);
@@ -684,6 +688,7 @@ public class AdSelectionFromOutcomesE2ETest {
                     AdSelectionInitialization.builder()
                             .setSeller(SAMPLE_SELLER)
                             .setCallerPackageName(CALLER_PACKAGE_NAME)
+                            .setCreationInstant(Instant.now())
                             .build();
             final AdSelectionResultBidAndUri idWithBidAndRenderUri =
                     AdSelectionResultBidAndUri.builder()
@@ -692,9 +697,7 @@ public class AdSelectionFromOutcomesE2ETest {
                             .setWinningAdRenderUri(renderUri)
                             .build();
             mAdSelectionEntryDaoSpy.persistAdSelectionInitialization(
-                    idWithBidAndRenderUri.getAdSelectionId(),
-                    adSelectionInitialization,
-                    Instant.now());
+                    idWithBidAndRenderUri.getAdSelectionId(), adSelectionInitialization);
         }
     }
 

@@ -17,11 +17,14 @@
 package com.android.adservices.data.signals;
 
 import android.adservices.common.AdTechIdentifier;
+import android.content.Context;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -63,12 +66,13 @@ public class EncoderLogicHandler {
     private final ImmutableSet<String> mDownloadRequestProperties =
             ImmutableSet.of(ENCODER_VERSION_RESPONSE_HEADER);
 
-    public EncoderLogicHandler(
-            EncoderPersistenceManager encoderPersistenceManager,
-            EncoderEndpointsDao encoderEndpointsDao,
-            EncoderLogicDao encoderLogicDao,
-            AdServicesHttpsClient httpsClient,
-            ListeningExecutorService backgroundExecutorService) {
+    @VisibleForTesting
+    EncoderLogicHandler(
+            @NonNull EncoderPersistenceManager encoderPersistenceManager,
+            @NonNull EncoderEndpointsDao encoderEndpointsDao,
+            @NonNull EncoderLogicDao encoderLogicDao,
+            @NonNull AdServicesHttpsClient httpsClient,
+            @NonNull ListeningExecutorService backgroundExecutorService) {
         Objects.requireNonNull(encoderPersistenceManager);
         Objects.requireNonNull(encoderEndpointsDao);
         Objects.requireNonNull(encoderLogicDao);
@@ -80,6 +84,17 @@ public class EncoderLogicHandler {
         mAdServicesHttpsClient = httpsClient;
         mBackgroundExecutorService = backgroundExecutorService;
         mBuyerTransactionLocks = new HashMap<>();
+    }
+
+    public EncoderLogicHandler(@NonNull Context context) {
+        this(
+                EncoderPersistenceManager.getInstance(context),
+                ProtectedSignalsDatabase.getInstance(context).getEncoderEndpointsDao(),
+                ProtectedSignalsDatabase.getInstance(context).getEncoderLogicDao(),
+                new AdServicesHttpsClient(
+                        AdServicesExecutors.getBlockingExecutor(),
+                        CacheProviderFactory.createNoOpCache()),
+                AdServicesExecutors.getBackgroundExecutor());
     }
 
     /**
@@ -161,6 +176,10 @@ public class EncoderLogicHandler {
                 sLogger.v(
                         "Update for encoding logic on persistence layer succeeded, updating entry");
                 mEncoderLogicDao.persistEncoder(encoderLogicEntry);
+            } else {
+                sLogger.e(
+                        "Update for encoding logic on persistence layer failed, skipping update"
+                                + " entry");
             }
             buyerLock.unlock();
         }

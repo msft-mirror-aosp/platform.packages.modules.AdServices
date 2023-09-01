@@ -32,6 +32,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
+import com.android.adservices.service.stats.AdServicesLogger;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -53,6 +54,7 @@ import java.util.Objects;
 public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbIntegrationTest {
     private final JSONObject mParam;
     private final EnrollmentDao mEnrollmentDao;
+    private final AdServicesLogger mLogger;
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> data() throws IOException, JSONException {
@@ -68,6 +70,7 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
         super(input, output);
         mParam = param;
         mEnrollmentDao = Mockito.mock(EnrollmentDao.class);
+        mLogger = Mockito.mock(AdServicesLogger.class);
     }
 
     public enum Action {
@@ -101,7 +104,8 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
                                 datastoreManager,
                                 mockKeyManager,
                                 ReportingStatus.UploadMethod.REGULAR,
-                                FlagsFactory.getFlagsForTest()));
+                                FlagsFactory.getFlagsForTest(),
+                                mLogger));
         try {
             Mockito.doReturn(returnCode)
                     .when(spyReportingService)

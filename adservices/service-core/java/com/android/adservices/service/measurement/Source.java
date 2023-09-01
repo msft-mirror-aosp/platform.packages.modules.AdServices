@@ -158,9 +158,21 @@ public class Source {
     @Nullable
     public static List<Pair<Long, Long>> parseEventReportWindows(
             @NonNull String eventReportWindows) {
-        List<Pair<Long, Long>> result = new ArrayList<>();
         try {
             JSONObject jsonObject = new JSONObject(eventReportWindows);
+            return parseEventReportWindows(jsonObject);
+        } catch (JSONException e) {
+            LogUtil.e(e, "Invalid JSON encountered: event_report_windows");
+            return null;
+        }
+    }
+
+    /** Parses the provided eventReportWindows. Returns null if parsing fails */
+    @Nullable
+    public static List<Pair<Long, Long>> parseEventReportWindows(
+            @NonNull JSONObject jsonObject) {
+        List<Pair<Long, Long>> result = new ArrayList<>();
+        try {
             long startDuration = 0;
             if (!jsonObject.isNull("start_time")) {
                 startDuration = jsonObject.getLong("start_time");

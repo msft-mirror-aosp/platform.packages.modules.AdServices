@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
@@ -27,6 +28,7 @@ import android.net.Uri;
 
 import com.android.adservices.data.signals.DBEncoderEndpoint;
 import com.android.adservices.data.signals.EncoderEndpointsDao;
+import com.android.adservices.data.signals.EncoderLogicHandler;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -37,10 +39,14 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+import java.time.Instant;
+
 public class UpdateEncoderEventHandlerTest {
 
     @Rule public MockitoRule mRule = MockitoJUnit.rule();
     @Mock private EncoderEndpointsDao mEncoderEndpointsDaoMock;
+
+    @Mock private EncoderLogicHandler mEncoderLogicHandlerMock;
 
     @Captor private ArgumentCaptor<DBEncoderEndpoint> mEndpointCaptor;
 
@@ -48,7 +54,8 @@ public class UpdateEncoderEventHandlerTest {
 
     @Before
     public void setup() {
-        mHandler = new UpdateEncoderEventHandler(mEncoderEndpointsDaoMock);
+        mHandler =
+                new UpdateEncoderEventHandler(mEncoderEndpointsDaoMock, mEncoderLogicHandlerMock);
     }
 
     @Test
@@ -62,7 +69,7 @@ public class UpdateEncoderEventHandlerTest {
                                     .setUpdateType(UpdateEncoderEvent.UpdateType.DELETE)
                                     .build());
                 });
-        verifyZeroInteractions(mEncoderEndpointsDaoMock);
+        verifyZeroInteractions(mEncoderEndpointsDaoMock, mEncoderLogicHandlerMock);
     }
 
     @Test
@@ -73,13 +80,37 @@ public class UpdateEncoderEventHandlerTest {
                 () -> {
                     mHandler.handle(buyer, null);
                 });
-        verifyZeroInteractions(mEncoderEndpointsDaoMock);
+        verifyZeroInteractions(mEncoderEndpointsDaoMock, mEncoderLogicHandlerMock);
     }
 
     @Test
     public void testUpdateEventRegister() {
         AdTechIdentifier buyer = CommonFixture.VALID_BUYER_1;
         Uri uri = CommonFixture.getUri(buyer, "/encoder");
+        when(mEncoderEndpointsDaoMock.getEndpoint(buyer)).thenReturn(null);
+        mHandler.handle(
+                buyer,
+                UpdateEncoderEvent.builder()
+                        .setUpdateType(UpdateEncoderEvent.UpdateType.REGISTER)
+                        .setEncoderEndpointUri(uri)
+                        .build());
+        verify(mEncoderEndpointsDaoMock).registerEndpoint(mEndpointCaptor.capture());
+        verify(mEncoderLogicHandlerMock).downloadAndUpdate(buyer);
+        assertEquals(uri, mEndpointCaptor.getValue().getDownloadUri());
+        assertEquals(buyer, mEndpointCaptor.getValue().getBuyer());
+    }
+
+    @Test
+    public void testUpdateEventRegisterSkipsNonFirstUpdate() {
+        AdTechIdentifier buyer = CommonFixture.VALID_BUYER_1;
+        Uri uri = CommonFixture.getUri(buyer, "/encoder");
+        when(mEncoderEndpointsDaoMock.getEndpoint(buyer))
+                .thenReturn(
+                        DBEncoderEndpoint.builder()
+                                .setDownloadUri(uri)
+                                .setCreationTime(Instant.now())
+                                .setBuyer(buyer)
+                                .build());
         mHandler.handle(
                 buyer,
                 UpdateEncoderEvent.builder()
@@ -89,6 +120,7 @@ public class UpdateEncoderEventHandlerTest {
         verify(mEncoderEndpointsDaoMock).registerEndpoint(mEndpointCaptor.capture());
         assertEquals(uri, mEndpointCaptor.getValue().getDownloadUri());
         assertEquals(buyer, mEndpointCaptor.getValue().getBuyer());
+        verifyZeroInteractions(mEncoderLogicHandlerMock);
     }
 
     @Test
@@ -103,6 +135,7 @@ public class UpdateEncoderEventHandlerTest {
                                     .setUpdateType(UpdateEncoderEvent.UpdateType.REGISTER)
                                     .build());
                 });
+        verifyZeroInteractions(mEncoderEndpointsDaoMock, mEncoderLogicHandlerMock);
     }
 
     @Test
@@ -114,5 +147,6 @@ public class UpdateEncoderEventHandlerTest {
                         .setUpdateType(UpdateEncoderEvent.UpdateType.DELETE)
                         .build());
         verify(mEncoderEndpointsDaoMock).deleteEncoderEndpoint(buyer);
+        verifyZeroInteractions(mEncoderLogicHandlerMock);
     }
 }
