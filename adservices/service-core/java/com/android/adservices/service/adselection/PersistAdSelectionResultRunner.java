@@ -247,6 +247,13 @@ public class PersistAdSelectionResultRunner {
                         auctionResult -> {
                             if (auctionResult.getIsChaff()) {
                                 sLogger.v("Result is chaff, truncating persistAdSelectionResult");
+                            } else if (auctionResult.getError().getCode() != 0) {
+                                String err =
+                                        String.format(
+                                                "AuctionResult has an error: %s",
+                                                auctionResult.getError().getMessage());
+                                sLogger.v(err);
+                                throw new IllegalArgumentException(err);
                             } else {
                                 validateAuctionResult(auctionResult);
                                 DBAdData winningAd = fetchAdWithRenderUri(auctionResult);
