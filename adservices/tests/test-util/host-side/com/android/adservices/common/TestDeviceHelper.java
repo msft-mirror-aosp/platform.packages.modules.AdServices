@@ -104,6 +104,10 @@ public final class TestDeviceHelper {
                 .doesNotContain("Error: Activity not started, unable to resolve Intent");
     }
 
+    public static void enableComponent(String packageName, String className) {
+        runShellCommand("pm enable %s/%s", packageName, className);
+    }
+
     private static final class DeviceUnavailableException extends IllegalStateException {
         private DeviceUnavailableException(DeviceNotAvailableException cause) {
             super(cause);
