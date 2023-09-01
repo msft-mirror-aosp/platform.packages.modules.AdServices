@@ -77,7 +77,7 @@ public class ProtectedSignalsArgumentUtil {
             jsonBuilder.append("{");
             jsonBuilder
                     .append("\"" + VALUE_KEY_NAME + "\":\"")
-                    .append(protectedSignal.getValue())
+                    .append(protectedSignal.getBase64EncodedValue())
                     .append("\",");
             jsonBuilder
                     .append("\"" + CREATION_TIME_KEY_NAME + "\":")
