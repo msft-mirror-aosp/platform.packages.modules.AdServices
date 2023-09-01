@@ -196,7 +196,7 @@
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Désactiver les annonces suggérées par les applications?"</string>
     <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Toutes les données relatives aux suggestions d\'annonces seront supprimées. Les applications ne pourront plus suggérer d\'annonces, mais vous pourrez toujours voir des annonces pertinentes."</string>
     <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"La mesure des annonces est activée"</string>
-    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android ne peut partager que des données très limitées avec les applications pour leur permettre de mesurer la performance de leurs annonces."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android ne peut partager que des renseignements très limités avec les applications pour leur permettre de mesurer la performance de leurs annonces."</string>
     <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Désactiver la mesure des annonces?"</string>
     <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"Tous les rapports de mesure des annonces en attente seront supprimés et aucun nouveau rapport ne sera généré ni partagé."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Confidentialité des annonces"</string>
