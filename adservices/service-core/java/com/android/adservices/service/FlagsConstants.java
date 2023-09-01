@@ -126,6 +126,7 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_NETWORK_READ_TIMEOUT_MS =
             "measurement_network_read_timeout_ms";
     public static final String KEY_MEASUREMENT_DB_SIZE_LIMIT = "measurement_db_size_limit";
+
     public static final String KEY_MEASUREMENT_MANIFEST_FILE_URL =
             "mdd_measurement_manifest_file_url";
     public static final String KEY_MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS =
@@ -826,4 +827,7 @@ public final class FlagsConstants {
 
     public static final String KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED =
             "is_u18_ux_detention_channel_enabled";
+
+    public static final String KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED =
+            "is_u18_supervised_account_enabled";
 }

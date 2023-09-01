@@ -308,6 +308,8 @@ public interface Flags {
     long MEASUREMENT_DB_SIZE_LIMIT = (1024 * 1024) * 10; // 10 MBs
     int MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(5);
     int MEASUREMENT_NETWORK_READ_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(30);
+    int MEASUREMENT_REPORT_RETRY_LIMIT = 3;
+    boolean MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED = true;
 
     /**
      * Returns the window that an InputEvent has to be within for the system to register it as a
@@ -336,6 +338,16 @@ public interface Flags {
     /** Returns the DB size limit for measurement. */
     default long getMeasurementDbSizeLimit() {
         return MEASUREMENT_DB_SIZE_LIMIT;
+    }
+
+    /** Returns Whether to limit number of Retries for Measurement Reports */
+    default boolean getMeasurementReportingRetryLimitEnabled() {
+        return MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED;
+    }
+
+    /** Returns Maximum number of Retries for Measurement Reportss */
+    default int getMeasurementReportingRetryLimit() {
+        return MEASUREMENT_REPORT_RETRY_LIMIT;
     }
 
     /** Measurement manifest file url, used for MDD download. */
@@ -3114,6 +3126,14 @@ public interface Flags {
         return MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING;
     }
 
+    /** Default allowlist to enable app package name logging. */
+    String MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST = "";
+
+    /** Returns a list of app package names that allows logging. */
+    default String getMeasurementAppPackageNameLoggingAllowlist() {
+        return MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST;
+    }
+
     /** Disable measurement reporting jobs to throw unaccounted exceptions by default. */
     boolean MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION = false;
 
@@ -3376,5 +3396,13 @@ public interface Flags {
     /** Returns whether the U18 UX detentional channel is enabled. */
     default boolean isU18UxDetentionChannelEnabled() {
         return IS_U18_UX_DETENTION_CHANNEL_ENABLED_DEFAULT;
+    }
+
+    /** U18 supervised account flow is enabled by default. */
+    boolean IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT = true;
+
+    /** Returns whether the U18 supervised account is enabled. */
+    default boolean isU18SupervisedAccountEnabled() {
+        return IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT;
     }
 }

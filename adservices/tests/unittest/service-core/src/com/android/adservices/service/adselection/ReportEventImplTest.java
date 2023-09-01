@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.adselection.DataHandlersFixture.AD_SELECTION_ID_2;
 import static android.adservices.common.AdServicesStatusUtils.RATE_LIMIT_REACHED_ERROR_MESSAGE;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
@@ -46,6 +47,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.never;
 
 import android.adservices.adselection.CustomAudienceSignalsFixture;
+import android.adservices.adselection.DataHandlersFixture;
 import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportInteractionCallback;
 import android.adservices.adselection.ReportInteractionInput;
@@ -69,6 +71,7 @@ import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
+import com.android.adservices.data.adselection.datahandlers.RegisteredAdInteraction;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
@@ -1096,6 +1099,78 @@ public class ReportEventImplTest {
         ReportInteractionTestCallback callback = callReportInteraction(inputParams);
 
         assertFalse(callback.mIsSuccess);
+        assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(STATUS_INVALID_ARGUMENT),
+                        anyInt());
+    }
+
+    @Test
+    public void testReportEventImplFailsWithUnknownAdSelectionId_serverAuctionEnabled()
+            throws Exception {
+        mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
+
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionBuyerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                BUYER_DESTINATION);
+
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionSellerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                SELLER_DESTINATION);
+
+        persistReportingArtifactsForServerAuction(AD_SELECTION_ID_2);
+
+        mMockWebServerRule.startMockWebServer(
+                new Dispatcher() {
+                    @Override
+                    public MockResponse dispatch(RecordedRequest request) {
+                        throw new IllegalStateException(
+                                "No calls should be made with invalid adselection id!");
+                    }
+                });
+
+        ReportInteractionInput inputParams =
+                new ReportInteractionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID_2 + 1)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .setInteractionKey(CLICK_EVENT)
+                        .setInteractionData(mInteractionData)
+                        .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
+                        .build();
+
+        Flags flags =
+                new Flags() {
+                    @Override
+                    public boolean getFledgeAuctionServerEnabledForReportEvent() {
+                        return true;
+                    }
+                };
+
+        // Re init interaction reporter
+        mEventReporter =
+                new ReportEventImpl(
+                        mAdSelectionEntryDao,
+                        mHttpClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mAdServicesLoggerMock,
+                        flags,
+                        mAdSelectionServiceFilterMock,
+                        MY_UID,
+                        mFledgeAuthorizationFilterMock,
+                        DevContext.createForDevOptionsDisabled());
+        ReportInteractionTestCallback callback = callReportInteraction(inputParams);
+
+        assertFalse(callback.mIsSuccess);
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INVALID_ARGUMENT);
 
         verify(mAdServicesLoggerMock)
@@ -1106,7 +1181,8 @@ public class ReportEventImplTest {
     }
 
     @Test
-    public void testImplSucceedsWhenNotFindingRegisteredAdInteractions() throws Exception {
+    public void testReportEventImplSucceedsWhenNotFindingRegisteredAdInteractions()
+            throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
 
         mMockWebServerRule.startMockWebServer(
@@ -1187,7 +1263,66 @@ public class ReportEventImplTest {
     }
 
     @Test
-    public void testImplFailsWhenInteractionKeyExceedsMaxSize() throws Exception {
+    public void test_idFoundInInitializationDb_registeredInteractionsReported() throws Exception {
+        persistReportingArtifactsForServerAuction(AD_SELECTION_ID);
+
+        Flags flags =
+                new Flags() {
+                    @Override
+                    public boolean getFledgeAuctionServerEnabledForReportEvent() {
+                        return true;
+                    }
+                };
+
+        // Re init interaction reporter
+        mEventReporter =
+                new ReportEventImpl(
+                        mAdSelectionEntryDao,
+                        mHttpClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mAdServicesLoggerMock,
+                        flags,
+                        mAdSelectionServiceFilterMock,
+                        MY_UID,
+                        mFledgeAuthorizationFilterMock,
+                        DevContext.createForDevOptionsDisabled());
+
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(new MockResponse(), new MockResponse()));
+
+        ReportInteractionInput inputParams =
+                new ReportInteractionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCallerPackageName(DataHandlersFixture.TEST_PACKAGE_NAME_1)
+                        .setInteractionKey(CLICK_EVENT)
+                        .setInteractionData(mInteractionData)
+                        .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
+                        .build();
+
+        // Count down callback + log interaction.
+        ReportInteractionTestCallback callback = callReportInteraction(inputParams, true);
+
+        assertTrue(callback.mIsSuccess);
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
+
+        List<String> notifications =
+                ImmutableList.of(server.takeRequest().getPath(), server.takeRequest().getPath());
+
+        assertThat(notifications)
+                .containsExactly(
+                        SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT,
+                        BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT);
+    }
+
+    @Test
+    public void testReportInteractionFailsWhenInteractionKeyExceedsMaxSize() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
                 AD_SELECTION_ID,
@@ -1280,6 +1415,40 @@ public class ReportEventImplTest {
         mEventReporter.reportInteraction(inputParams, callback);
         resultLatch.await();
         return callback;
+    }
+
+    private void persistReportingArtifactsForServerAuction(long adSelectionId) {
+        RegisteredAdInteraction buyerClick =
+                RegisteredAdInteraction.builder()
+                        .setInteractionKey(CLICK_EVENT)
+                        .setInteractionReportingUri(
+                                mMockWebServerRule.uriForPath(
+                                        BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT))
+                        .build();
+
+        RegisteredAdInteraction sellerClick =
+                RegisteredAdInteraction.builder()
+                        .setInteractionKey(CLICK_EVENT)
+                        .setInteractionReportingUri(
+                                mMockWebServerRule.uriForPath(
+                                        SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT))
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelectionInitialization(
+                adSelectionId, DataHandlersFixture.AD_SELECTION_INITIALIZATION_1);
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractionsForDestination(
+                adSelectionId,
+                BUYER_DESTINATION,
+                List.of(buyerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination);
+
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractionsForDestination(
+                adSelectionId,
+                SELLER_DESTINATION,
+                List.of(sellerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination);
     }
 
     static class ReportInteractionTestCallback extends ReportInteractionCallback.Stub {

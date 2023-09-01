@@ -140,7 +140,7 @@ public class TriggerSpec {
      * @param key key for the JSON Array
      * @return the parsed List<Long>
      */
-    public static List<Long> getLongArrayFromJSON(JSONObject json, String key)
+    public static List<Long> getLongListFromJSON(JSONObject json, String key)
             throws JSONException {
         List<Long> result = new ArrayList<>();
         JSONArray valueArray = json.getJSONArray(key);
@@ -191,7 +191,7 @@ public class TriggerSpec {
                                     ReportSpecUtil.FlexEventReportJsonKeys.START_TIME));
                 }
                 this.setEventReportWindowsEnd(
-                        getLongArrayFromJSON(
+                        getLongListFromJSON(
                                 jsonReportWindows,
                                 ReportSpecUtil.FlexEventReportJsonKeys.END_TIMES));
             }
@@ -208,7 +208,7 @@ public class TriggerSpec {
             }
             if (!jsonObject.isNull(ReportSpecUtil.FlexEventReportJsonKeys.SUMMARY_BUCKETS)) {
                 this.setSummaryBucket(
-                        getLongArrayFromJSON(
+                        getLongListFromJSON(
                                 jsonObject,
                                 ReportSpecUtil.FlexEventReportJsonKeys.SUMMARY_BUCKETS));
             }
@@ -237,7 +237,7 @@ public class TriggerSpec {
                 }
 
                 this.setEventReportWindowsEnd(
-                        getLongArrayFromJSON(
+                        getLongListFromJSON(
                                         jsonReportWindows,
                                         ReportSpecUtil.FlexEventReportJsonKeys.END_TIMES)
                                 .stream()
@@ -257,7 +257,7 @@ public class TriggerSpec {
             }
             if (!jsonObject.isNull(ReportSpecUtil.FlexEventReportJsonKeys.SUMMARY_BUCKETS)) {
                 this.setSummaryBucket(
-                        getLongArrayFromJSON(
+                        getLongListFromJSON(
                                 jsonObject,
                                 ReportSpecUtil.FlexEventReportJsonKeys.SUMMARY_BUCKETS));
             }

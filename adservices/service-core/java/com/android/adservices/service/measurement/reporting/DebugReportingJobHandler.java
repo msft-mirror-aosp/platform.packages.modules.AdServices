@@ -25,6 +25,7 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.measurement.KeyValueData;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
@@ -61,7 +62,24 @@ public class DebugReportingJobHandler {
 
         List<String> pendingDebugReportIdsInWindow = pendingDebugReports.get();
         for (String debugReportId : pendingDebugReportIdsInWindow) {
-            performReport(debugReportId);
+            // If the job service's requirements specified at runtime are no longer met, the job
+            // service will interrupt this thread.  If the thread has been interrupted, it will exit
+            // early.
+            if (Thread.currentThread().isInterrupted()) {
+                LogUtil.d(
+                        "DebugReportingJobHandler performScheduledPendingReports "
+                                + "thread interrupted, exiting early.");
+                return;
+            }
+
+            @AdServicesStatusUtils.StatusCode int result = performReport(debugReportId);
+            if (result != AdServicesStatusUtils.STATUS_SUCCESS) {
+                mDatastoreManager.runInTransaction(
+                        (dao) ->
+                                dao.incrementReportingRetryCount(
+                                        debugReportId,
+                                        KeyValueData.DataType.DEBUG_REPORT_RETRY_COUNT));
+            }
         }
     }
 

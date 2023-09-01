@@ -21,6 +21,7 @@ import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ASYNC_REG
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -61,6 +62,8 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
+import org.mockito.internal.stubbing.answers.AnswersWithDelay;
+import org.mockito.internal.stubbing.answers.CallsRealMethods;
 import org.mockito.quality.Strictness;
 
 import java.util.Optional;
@@ -374,6 +377,28 @@ public class AsyncRegistrationQueueJobServiceTest {
                     JobInfo job = jobInfoArgumentCaptor.getValue();
                     assertEquals(minDelay, job.getTriggerContentUpdateDelay());
                     assertEquals(maxDelay, job.getTriggerContentMaxDelay());
+                });
+    }
+
+    @Test
+    public void testOnStopJob_stopsExecutingThread() throws Exception {
+        runWithMocks(
+                () -> {
+                    disableKillSwitch();
+
+                    doAnswer(new AnswersWithDelay(WAIT_IN_MILLIS * 10, new CallsRealMethods()))
+                            .when(mSpyService)
+                            .processAsyncRecords();
+                    mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+                    Thread.sleep(WAIT_IN_MILLIS);
+
+                    assertNotNull(mSpyService.getFutureForTesting());
+
+                    boolean onStopJobResult =
+                            mSpyService.onStopJob(Mockito.mock(JobParameters.class));
+                    verify(mSpyService, times(0)).jobFinished(any(), anyBoolean());
+                    assertTrue(onStopJobResult);
+                    assertTrue(mSpyService.getFutureForTesting().isCancelled());
                 });
     }
 

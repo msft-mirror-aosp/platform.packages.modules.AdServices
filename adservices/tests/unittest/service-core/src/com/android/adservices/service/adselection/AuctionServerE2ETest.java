@@ -68,6 +68,7 @@ import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
+import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
@@ -201,6 +202,9 @@ public class AuctionServerE2ETest {
     private AuctionServerPayloadFormatter mPayloadFormatter;
     private AuctionServerPayloadExtractor mPayloadExtractor;
     private AuctionServerDataCompressor mDataCompressor;
+
+    @Mock AdSelectionEncryptionKeyManager mAdSelectionEncryptionKeyManagerMock;
+    @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
 
     @Before
     public void setUp() {
@@ -410,7 +414,8 @@ public class AuctionServerE2ETest {
                                         mLightweightExecutorService),
                                 mEncryptionContextDao,
                                 seedBytes,
-                                mLightweightExecutorService));
+                                mLightweightExecutorService),
+                        mAdSelectionDebugReportDao);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -533,7 +538,8 @@ public class AuctionServerE2ETest {
                                         mLightweightExecutorService),
                                 mEncryptionContextDao,
                                 seedBytes,
-                                mLightweightExecutorService));
+                                mLightweightExecutorService),
+                        mAdSelectionDebugReportDao);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -1078,7 +1084,8 @@ public class AuctionServerE2ETest {
                 mAdSelectionServiceFilterMock,
                 mAdFilteringFeatureFactory,
                 mConsentManagerMock,
-                mObliviousHttpEncryptorMock);
+                mObliviousHttpEncryptorMock,
+                mAdSelectionDebugReportDao);
     }
 
     private Map<AdTechIdentifier, BuyerInput> getBuyerInputMapFromDecryptedBytes(

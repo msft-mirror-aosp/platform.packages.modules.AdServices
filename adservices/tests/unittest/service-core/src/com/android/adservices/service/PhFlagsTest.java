@@ -188,6 +188,7 @@ import static com.android.adservices.service.Flags.ISOLATE_MAX_HEAP_SIZE_BYTES;
 import static com.android.adservices.service.Flags.IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED;
 import static com.android.adservices.service.Flags.IS_EEA_DEVICE;
 import static com.android.adservices.service.Flags.IS_EEA_DEVICE_FEATURE_ENABLED;
+import static com.android.adservices.service.Flags.IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT;
 import static com.android.adservices.service.Flags.IS_U18_UX_DETENTION_CHANNEL_ENABLED_DEFAULT;
 import static com.android.adservices.service.Flags.MAINTENANCE_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.MAINTENANCE_JOB_PERIOD_MS;
@@ -206,6 +207,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_API_REGISTER_TRIG
 import static com.android.adservices.service.Flags.MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_API_STATUS_KILL_SWITCH;
+import static com.android.adservices.service.Flags.MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST;
 import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
@@ -464,6 +466,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_ISOLATE_MAX_HEAP
 import static com.android.adservices.service.FlagsConstants.KEY_IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_IS_EEA_DEVICE;
 import static com.android.adservices.service.FlagsConstants.KEY_IS_EEA_DEVICE_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_MAINTENANCE_JOB_FLEX_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MAINTENANCE_JOB_PERIOD_MS;
@@ -609,6 +612,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_UI_FEATURE_TYPE_
 import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_TOGGLE_SPEED_BUMP_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_MAINLINE_TRAIN_VERSION;
+import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST;
+import static com.android.adservices.service.PhFlags.NAMESPACE_ADSERVICES;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -7525,5 +7530,36 @@ public class PhFlagsTest {
 
         assertThat(mPhFlags.getMeasurementJobVerboseDebugReportingKillSwitch())
                 .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetMeasurementAppPackageNameLoggingAllowlist() {
+        assertThat(mPhFlags.getMeasurementAppPackageNameLoggingAllowlist())
+                .isEqualTo(MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST);
+        String phOverridingValue = "test app package name";
+        DeviceConfig.setProperty(
+                NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST,
+                phOverridingValue,
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getMeasurementAppPackageNameLoggingAllowlist())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testU18SupervisedAccountEnabled() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.isU18SupervisedAccountEnabled())
+                .isEqualTo(IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT);
+
+        boolean phOverridingValue = !IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ !IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT);
+
+        assertThat(mPhFlags.isU18SupervisedAccountEnabled()).isEqualTo(phOverridingValue);
     }
 }

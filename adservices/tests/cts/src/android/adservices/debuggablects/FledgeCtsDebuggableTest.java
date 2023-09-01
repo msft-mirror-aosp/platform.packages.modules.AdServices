@@ -3659,7 +3659,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                                 .getAdSelectionData(failingRequest)
                                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         Throwable thrown = Assert.assertThrows(ExecutionException.class, runnable);
-        Assert.assertTrue(thrown.getCause() instanceof IllegalStateException);
+        assertThat(thrown).hasCauseThat().isInstanceOf(IllegalStateException.class);
 
         // TODO(b/293022107): Comment in when successful run can be achievable from CTS
         //        GetAdSelectionDataOutcome outcome =
@@ -3695,7 +3695,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                                 .persistAdSelectionResult(failingRequest)
                                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         Throwable thrown = Assert.assertThrows(ExecutionException.class, runnable);
-        Assert.assertTrue(thrown.getCause() instanceof IllegalArgumentException);
+        assertThat(thrown).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
         // TODO(b/293022107): Assert results when overrides are implemented
     }
 

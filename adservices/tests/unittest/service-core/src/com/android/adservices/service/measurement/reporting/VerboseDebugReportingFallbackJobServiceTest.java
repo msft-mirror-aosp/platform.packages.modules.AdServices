@@ -27,6 +27,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -59,6 +60,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
+import org.mockito.internal.stubbing.answers.AnswersWithDelay;
+import org.mockito.internal.stubbing.answers.CallsRealMethods;
 import org.mockito.quality.Strictness;
 
 import java.util.Optional;
@@ -335,6 +338,28 @@ public class VerboseDebugReportingFallbackJobServiceTest {
                             times(1));
                     verify(mMockJobScheduler, times(1))
                             .getPendingJob(eq(MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_ID));
+                });
+    }
+
+    @Test
+    public void testOnStopJob_stopsExecutingThread() throws Exception {
+        runWithMocks(
+                () -> {
+                    disableKillSwitch();
+
+                    doAnswer(new AnswersWithDelay(WAIT_IN_MILLIS * 10, new CallsRealMethods()))
+                            .when(mSpyService)
+                            .sendReports();
+                    mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+                    Thread.sleep(WAIT_IN_MILLIS);
+
+                    assertNotNull(mSpyService.getFutureForTesting());
+
+                    boolean onStopJobResult =
+                            mSpyService.onStopJob(Mockito.mock(JobParameters.class));
+                    verify(mSpyService, times(0)).jobFinished(any(), anyBoolean());
+                    assertTrue(onStopJobResult);
+                    assertTrue(mSpyService.getFutureForTesting().isCancelled());
                 });
     }
 

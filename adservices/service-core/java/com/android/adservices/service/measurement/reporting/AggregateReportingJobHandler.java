@@ -28,9 +28,11 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.exception.CryptoException;
+import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementReportsStats;
 import com.android.internal.annotations.VisibleForTesting;
@@ -58,6 +60,7 @@ public class AggregateReportingJobHandler {
     private boolean mIsDebugInstance;
     private final Flags mFlags;
     private ReportingStatus.UploadMethod mUploadMethod;
+    private final AdServicesLogger mLogger;
 
     AggregateReportingJobHandler(
             EnrollmentDao enrollmentDao,
@@ -68,7 +71,8 @@ public class AggregateReportingJobHandler {
                 datastoreManager,
                 new AggregateEncryptionKeyManager(datastoreManager),
                 uploadMethod,
-                FlagsFactory.getFlags());
+                FlagsFactory.getFlags(),
+                AdServicesLoggerImpl.getInstance());
     }
 
     @VisibleForTesting
@@ -77,12 +81,14 @@ public class AggregateReportingJobHandler {
             DatastoreManager datastoreManager,
             AggregateEncryptionKeyManager aggregateEncryptionKeyManager,
             ReportingStatus.UploadMethod uploadMethod,
-            Flags flags) {
+            Flags flags,
+            AdServicesLogger logger) {
         mEnrollmentDao = enrollmentDao;
         mDatastoreManager = datastoreManager;
         mAggregateEncryptionKeyManager = aggregateEncryptionKeyManager;
         mUploadMethod = uploadMethod;
         mFlags = flags;
+        mLogger = logger;
     }
 
     /**
@@ -133,6 +139,16 @@ public class AggregateReportingJobHandler {
 
             if (keys.size() == reportIds.size()) {
                 for (int i = 0; i < reportIds.size(); i++) {
+                    // If the job service's requirements specified at runtime are no longer met, the
+                    // job service will interrupt this thread.  If the thread has been interrupted,
+                    // it will exit early.
+                    if (Thread.currentThread().isInterrupted()) {
+                        LogUtil.d(
+                                "AggregateReportingJobHandler performScheduledPendingReports "
+                                        + "thread interrupted, exiting early.");
+                        return true;
+                    }
+
                     ReportingStatus reportingStatus = new ReportingStatus();
                     final String aggregateReportId = reportIds.get(i);
                     @AdServicesStatusUtils.StatusCode
@@ -142,6 +158,12 @@ public class AggregateReportingJobHandler {
                         reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.SUCCESS);
                     } else {
                         reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.FAILURE);
+                        mDatastoreManager.runInTransaction(
+                                (dao) ->
+                                        dao.incrementReportingRetryCount(
+                                                aggregateReportId,
+                                                KeyValueData.DataType
+                                                        .AGGREGATE_REPORT_RETRY_COUNT));
                     }
 
                     if (mUploadMethod != null) {
@@ -334,16 +356,15 @@ public class AggregateReportingJobHandler {
         if (!reportingStatus.getReportingDelay().isPresent()) {
             reportingStatus.setReportingDelay(0L);
         }
-        AdServicesLoggerImpl.getInstance()
-                .logMeasurementReports(
-                        new MeasurementReportsStats.Builder()
-                                .setCode(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED)
-                                .setType(AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__AGGREGATE)
-                                .setResultCode(reportingStatus.getUploadStatus().ordinal())
-                                .setFailureType(reportingStatus.getFailureStatus().ordinal())
-                                .setUploadMethod(reportingStatus.getUploadMethod().ordinal())
-                                .setReportingDelay(reportingStatus.getReportingDelay().get())
-                                .setSourceRegistrant(reportingStatus.getSourceRegistrant())
-                                .build());
+        mLogger.logMeasurementReports(
+                new MeasurementReportsStats.Builder()
+                        .setCode(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED)
+                        .setType(AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__AGGREGATE)
+                        .setResultCode(reportingStatus.getUploadStatus().ordinal())
+                        .setFailureType(reportingStatus.getFailureStatus().ordinal())
+                        .setUploadMethod(reportingStatus.getUploadMethod().ordinal())
+                        .setReportingDelay(reportingStatus.getReportingDelay().get())
+                        .setSourceRegistrant(reportingStatus.getSourceRegistrant())
+                        .build());
     }
 }

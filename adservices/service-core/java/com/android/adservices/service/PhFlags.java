@@ -35,7 +35,6 @@ import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
 
-
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,12 +47,21 @@ import java.util.stream.Collectors;
 /** Flags Implementation that delegates to DeviceConfig. */
 // TODO(b/228037065): Add validation logics for Feature flags read from PH.
 public final class PhFlags implements Flags {
+    // TODO b/298278031 Migrate Keys/Namespace to FlagConstants.
+    static final String KEY_MEASUREMENT_REPORT_RETRY_LIMIT = "measurement_report_retry_limit";
+    static final String KEY_MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED =
+            "measurement_report_retry_limit_enabled";
+
     private static final PhFlags sSingleton = new PhFlags();
 
     // TODO(b/298090610): Move this flag to FlagsConstants after M10 is fully rolled out.
     public static final String KEY_MAINLINE_TRAIN_VERSION = "mainline_train_version";
     // TODO(b/298090610): Remove NAMESPACE_ADSERVICES after M10 is fully rolled out.
     static final String NAMESPACE_ADSERVICES = "adservices";
+    // TODO(b/297089223): Move this flag to FlagsConstants after M10 is fully rolled out.
+    public static final String KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST =
+            "measurement_app_package_name_logging_allowlist";
+
     /** Returns the singleton instance of the PhFlags. */
     @NonNull
     public static PhFlags getInstance() {
@@ -456,6 +464,24 @@ public final class PhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_MEASUREMENT_DB_SIZE_LIMIT,
                 /* defaultValue */ MEASUREMENT_DB_SIZE_LIMIT);
+    }
+
+    @Override
+    public boolean getMeasurementReportingRetryLimitEnabled() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED,
+                /* defaultValue */ MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED);
+    }
+
+    @Override
+    public int getMeasurementReportingRetryLimit() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_REPORT_RETRY_LIMIT,
+                /* defaultValue */ MEASUREMENT_REPORT_RETRY_LIMIT);
     }
 
     @Override
@@ -3219,6 +3245,16 @@ public final class PhFlags implements Flags {
                         + getMeasurementDbSizeLimit());
         writer.println(
                 "\t"
+                        + KEY_MEASUREMENT_REPORT_RETRY_LIMIT
+                        + " = "
+                        + getMeasurementReportingRetryLimit());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED
+                        + " = "
+                        + getMeasurementReportingRetryLimitEnabled());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS
                         + " = "
                         + getMeasurementEventMainReportingJobPeriodMs());
@@ -3563,6 +3599,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING
                         + " = "
                         + getMeasurementEnableAppPackageNameLogging());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST
+                        + " = "
+                        + getMeasurementAppPackageNameLoggingAllowlist());
         writer.println(
                 "\t"
                         + FlagsConstants
@@ -4317,6 +4358,11 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED
                         + " = "
                         + getFledgeMeasurementReportAndRegisterEventApiFallbackEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED
+                        + " = "
+                        + isU18SupervisedAccountEnabled());
     }
 
     @VisibleForTesting
@@ -4519,6 +4565,9 @@ public final class PhFlags implements Flags {
         uxMap.put(
                 FlagsConstants.KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED,
                 isU18UxDetentionChannelEnabled());
+        uxMap.put(
+                FlagsConstants.KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED,
+                isU18SupervisedAccountEnabled());
         return uxMap;
     }
 
@@ -4712,5 +4761,19 @@ public final class PhFlags implements Flags {
                                         .KEY_MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH,
                                 /* defaultValue */
                                 MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH));
+    }
+
+    @Override
+    public String getMeasurementAppPackageNameLoggingAllowlist() {
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES, KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST, "");
+    }
+
+    @Override
+    public boolean isU18SupervisedAccountEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED,
+                /* defaultValue */ IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT);
     }
 }

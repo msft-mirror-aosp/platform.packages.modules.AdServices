@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.ui.data;
 
+import static com.android.adservices.service.FlagsConstants.KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -205,6 +206,9 @@ public class UxStatesManagerTest {
 
     @Test
     public void isEnrolledUserTest_gaNoticeDisplayed() {
+        Map<String, Boolean> testMap = new HashMap<String, Boolean>();
+        testMap.put(KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED, false);
+        doReturn(testMap).when(mMockFlags).getUxFlags();
         doReturn(true).when(mMockConsentManager).wasGaUxNotificationDisplayed();
 
         mUxStatesManager = new UxStatesManager(mContext, mMockFlags, mMockConsentManager);
@@ -216,6 +220,9 @@ public class UxStatesManagerTest {
         doReturn(true).when(mMockConsentManager).wasNotificationDisplayed();
         doReturn(true).when(mMockConsentManager).isU18Account();
 
+        Map<String, Boolean> testMap = new HashMap<String, Boolean>();
+        testMap.put(KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED, false);
+        doReturn(testMap).when(mMockFlags).getUxFlags();
         mUxStatesManager = new UxStatesManager(mContext, mMockFlags, mMockConsentManager);
         assertThat(mUxStatesManager.isEnrolledUser(mContext)).isTrue();
     }
@@ -231,6 +238,9 @@ public class UxStatesManagerTest {
 
     @Test
     public void isEnrolledUserTest_noNoticeDisplayed() {
+        Map<String, Boolean> testMap = new HashMap<String, Boolean>();
+        testMap.put(KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED, false);
+        doReturn(testMap).when(mMockFlags).getUxFlags();
         doReturn(false).when(mMockConsentManager).wasNotificationDisplayed();
         doReturn(false).when(mMockConsentManager).wasGaUxNotificationDisplayed();
         doReturn(false).when(mMockConsentManager).wasU18NotificationDisplayed();
@@ -242,11 +252,15 @@ public class UxStatesManagerTest {
 
     @Test
     public void isEnrolledUserTest_supervisedAccount() {
+        Map<String, Boolean> testMap = new HashMap<String, Boolean>();
+        testMap.put(KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED, true);
+        doReturn(testMap).when(mMockFlags).getUxFlags();
         doReturn(false).when(mMockConsentManager).wasNotificationDisplayed();
         doReturn(false).when(mMockConsentManager).wasGaUxNotificationDisplayed();
         doReturn(true).when(mMockConsentManager).wasU18NotificationDisplayed();
         doReturn(false).when(mMockConsentManager).isAdultAccount();
         doReturn(false).when(mMockConsentManager).isU18Account();
+
         doNothing().when(mMockConsentManager).setUx(any(PrivacySandboxUxCollection.class));
         doNothing().when(mMockConsentManager).setU18NotificationDisplayed(anyBoolean());
         doNothing()
@@ -263,11 +277,15 @@ public class UxStatesManagerTest {
 
     @Test
     public void isEnrolledUserTest_supervisedAccount_initial() {
+        Map<String, Boolean> testMap = new HashMap<String, Boolean>();
+        testMap.put(KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED, true);
+        doReturn(testMap).when(mMockFlags).getUxFlags();
         doReturn(false).when(mMockConsentManager).wasNotificationDisplayed();
         doReturn(false).when(mMockConsentManager).wasGaUxNotificationDisplayed();
         doReturn(false).when(mMockConsentManager).wasU18NotificationDisplayed();
         doReturn(false).when(mMockConsentManager).isAdultAccount();
         doReturn(false).when(mMockConsentManager).isU18Account();
+
         doNothing().when(mMockConsentManager).setUx(any(PrivacySandboxUxCollection.class));
         doNothing().when(mMockConsentManager).setU18NotificationDisplayed(anyBoolean());
         doNothing()
@@ -278,5 +296,30 @@ public class UxStatesManagerTest {
         verify(mMockConsentManager).setUx(any(PrivacySandboxUxCollection.class));
         verify(mMockConsentManager).setU18NotificationDisplayed(anyBoolean());
         verify(mMockConsentManager).enable(any(Context.class), any(AdServicesApiType.class));
+    }
+
+    @Test
+    public void isEnrolledUserTest_supervisedAccountFlagDisabled() {
+        Map<String, Boolean> testMap = new HashMap<String, Boolean>();
+        testMap.put(KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED, false);
+        doReturn(testMap).when(mMockFlags).getUxFlags();
+        doReturn(false).when(mMockConsentManager).wasNotificationDisplayed();
+        doReturn(false).when(mMockConsentManager).wasGaUxNotificationDisplayed();
+        doReturn(false).when(mMockConsentManager).wasU18NotificationDisplayed();
+        doReturn(false).when(mMockConsentManager).isAdultAccount();
+        doReturn(false).when(mMockConsentManager).isU18Account();
+
+        doNothing().when(mMockConsentManager).setUx(any(PrivacySandboxUxCollection.class));
+        doNothing().when(mMockConsentManager).setU18NotificationDisplayed(anyBoolean());
+        doNothing()
+                .when(mMockConsentManager)
+                .enable(any(Context.class), any(AdServicesApiType.class));
+        mUxStatesManager = new UxStatesManager(mContext, mMockFlags, mMockConsentManager);
+
+        assertThat(mUxStatesManager.isEnrolledUser(mContext)).isFalse();
+        verify(mMockConsentManager, never()).setUx(any(PrivacySandboxUxCollection.class));
+        verify(mMockConsentManager, never()).setU18NotificationDisplayed(anyBoolean());
+        verify(mMockConsentManager, never())
+                .enable(any(Context.class), any(AdServicesApiType.class));
     }
 }

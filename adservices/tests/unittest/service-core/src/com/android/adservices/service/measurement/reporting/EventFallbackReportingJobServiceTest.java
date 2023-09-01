@@ -16,9 +16,12 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static android.app.job.JobInfo.NETWORK_TYPE_ANY;
+
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -61,6 +64,8 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
+import org.mockito.internal.stubbing.answers.AnswersWithDelay;
+import org.mockito.internal.stubbing.answers.CallsRealMethods;
 import org.mockito.quality.Strictness;
 
 import java.util.Optional;
@@ -349,7 +354,7 @@ public class EventFallbackReportingJobServiceTest {
     }
 
     @Test
-    public void testSchedule_jobInfoIsPersisted() throws Exception {
+    public void testSchedule_jobInfoCheckParameters() throws Exception {
         runWithMocks(
                 () -> {
                     // Setup
@@ -363,8 +368,36 @@ public class EventFallbackReportingJobServiceTest {
 
                     // Validate
                     verify(jobScheduler, times(1)).schedule(captor.capture());
-                    assertNotNull(captor.getValue());
-                    assertTrue(captor.getValue().isPersisted());
+
+                    final JobInfo jobInfo = captor.getValue();
+                    assertNotNull(jobInfo);
+                    assertEquals(NETWORK_TYPE_ANY, jobInfo.getNetworkType());
+                    assertTrue(jobInfo.isRequireDeviceIdle());
+                    assertTrue(jobInfo.isRequireBatteryNotLow());
+                    assertTrue(jobInfo.isPeriodic());
+                    assertTrue(jobInfo.isPersisted());
+                });
+    }
+
+    @Test
+    public void testOnStopJob_stopsExecutingThread() throws Exception {
+        runWithMocks(
+                () -> {
+                    disableKillSwitch();
+
+                    doAnswer(new AnswersWithDelay(WAIT_IN_MILLIS * 10, new CallsRealMethods()))
+                            .when(mSpyService)
+                            .processPendingReports();
+                    mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+                    Thread.sleep(WAIT_IN_MILLIS);
+
+                    assertNotNull(mSpyService.getFutureForTesting());
+
+                    boolean onStopJobResult =
+                            mSpyService.onStopJob(Mockito.mock(JobParameters.class));
+                    verify(mSpyService, times(0)).jobFinished(any(), anyBoolean());
+                    assertTrue(onStopJobResult);
+                    assertTrue(mSpyService.getFutureForTesting().isCancelled());
                 });
     }
 
