@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static com.android.adservices.service.measurement.reporting.DebugReportingJobService.DEBUG_REPORT_JOB_ID;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DEBUG_REPORT_JOB;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -40,6 +41,7 @@ import static org.mockito.Mockito.verify;
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
+import android.content.ComponentName;
 import android.content.Context;
 
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -232,22 +234,61 @@ public class DebugReportingJobServiceTest {
                 () -> {
                     // Setup
                     disableKillSwitch();
-                    final Context mockContext = mock(Context.class);
+                    final Context spyContext = spy(ApplicationProvider.getApplicationContext());
                     doReturn(mMockJobScheduler)
-                            .when(mockContext)
+                            .when(spyContext)
                             .getSystemService(JobScheduler.class);
-                    final JobInfo mockJobInfo = mock(JobInfo.class);
+                    final JobInfo mockJobInfo =
+                            new JobInfo.Builder(
+                                            DEBUG_REPORT_JOB_ID,
+                                            new ComponentName(
+                                                    spyContext, DebugReportingJobService.class))
+                                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                                    .build();
                     doReturn(mockJobInfo)
                             .when(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_DEBUG_REPORT_JOB_ID));
 
                     // Execute
                     DebugReportingJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule = */ false);
+                            spyContext, /* forceSchedule = */ false);
 
                     // Validate
                     ExtendedMockito.verify(
                             () -> DebugReportingJobService.schedule(any(), any()), never());
+                    verify(mMockJobScheduler, times(1))
+                            .getPendingJob(eq(MEASUREMENT_DEBUG_REPORT_JOB_ID));
+                });
+    }
+
+    @Test
+    public void scheduleIfNeeded_withDifferentJobInfo_doesSchedule() throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    disableKillSwitch();
+                    final Context spyContext = spy(ApplicationProvider.getApplicationContext());
+                    doReturn(mMockJobScheduler)
+                            .when(spyContext)
+                            .getSystemService(JobScheduler.class);
+                    final JobInfo mockJobInfo =
+                            new JobInfo.Builder(
+                                            DEBUG_REPORT_JOB_ID,
+                                            new ComponentName(
+                                                    spyContext, DebugReportingJobService.class))
+                                    // Difference here
+                                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_CELLULAR)
+                                    .build();
+                    doReturn(mockJobInfo)
+                            .when(mMockJobScheduler)
+                            .getPendingJob(eq(MEASUREMENT_DEBUG_REPORT_JOB_ID));
+
+                    // Execute
+                    DebugReportingJobService.scheduleIfNeeded(
+                            spyContext, /* forceSchedule = */ false);
+
+                    // Validate
+                    ExtendedMockito.verify(() -> DebugReportingJobService.schedule(any(), any()));
                     verify(mMockJobScheduler, times(1))
                             .getPendingJob(eq(MEASUREMENT_DEBUG_REPORT_JOB_ID));
                 });

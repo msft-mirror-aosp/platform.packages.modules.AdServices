@@ -48,7 +48,7 @@ import java.util.concurrent.Future;
 public final class DebugReportingJobService extends JobService {
     private static final ListeningExecutorService sBlockingExecutor =
             AdServicesExecutors.getBlockingExecutor();
-    private static final int DEBUG_REPORT_JOB_ID = MEASUREMENT_DEBUG_REPORT_JOB.getJobId();
+    static final int DEBUG_REPORT_JOB_ID = MEASUREMENT_DEBUG_REPORT_JOB.getJobId();
     private Future mExecutorFuture;
 
     @Override
@@ -98,13 +98,7 @@ public final class DebugReportingJobService extends JobService {
 
     /** Schedules {@link DebugReportingJobService} */
     @VisibleForTesting
-    static void schedule(Context context, JobScheduler jobScheduler) {
-        final JobInfo job =
-                new JobInfo.Builder(
-                                DEBUG_REPORT_JOB_ID,
-                                new ComponentName(context, DebugReportingJobService.class))
-                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                        .build();
+    static void schedule(JobScheduler jobScheduler, JobInfo job) {
         jobScheduler.schedule(job);
     }
 
@@ -126,14 +120,23 @@ public final class DebugReportingJobService extends JobService {
             return;
         }
 
-        final JobInfo job = jobScheduler.getPendingJob(DEBUG_REPORT_JOB_ID);
+        final JobInfo scheduledJobInfo = jobScheduler.getPendingJob(DEBUG_REPORT_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
-        if (job == null || forceSchedule) {
-            schedule(context, jobScheduler);
+        JobInfo job = buildJobInfo(context);
+        if (forceSchedule || !job.equals(scheduledJobInfo)) {
+            schedule(jobScheduler, job);
             LogUtil.d("Scheduled DebugReportingJobService");
         } else {
             LogUtil.d("DebugReportingJobService already scheduled, skipping reschedule");
         }
+    }
+
+    private static JobInfo buildJobInfo(Context context) {
+        return new JobInfo.Builder(
+                        DEBUG_REPORT_JOB_ID,
+                        new ComponentName(context, DebugReportingJobService.class))
+                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                .build();
     }
 
     private boolean skipAndCancelBackgroundJob(final JobParameters params) {
