@@ -297,6 +297,14 @@ public final class FlagsConstants {
     public static final String KEY_FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B =
             "fledge_background_fetch_max_response_size_b";
 
+    // Protected Signals Periodic Encoding keys
+    public static final String KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED =
+            "protected_signals_periodic_encoding_enabled";
+    public static final String KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS =
+            "protected_signals_periodic_encoding_job_period_ms";
+    public static final String KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS =
+            "protected_signals_periodic_encoding_job_flex_ms";
+
     // FLEDGE Ad Selection keys
     public static final String KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT =
             "fledge_ad_selection_max_concurrent_bidding_count";

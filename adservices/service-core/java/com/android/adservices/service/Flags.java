@@ -832,6 +832,29 @@ public interface Flags {
         return FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS;
     }
 
+    boolean PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED = false;
+    long PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS = 1L * 60L * 60L * 1000L; // 1 hour
+    long PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS = 5L * 60L * 1000L; // 5 minutes
+
+    /** Returns {@code true} if the Periodic encoding of Protected Signals is enabled. */
+    default boolean getProtectedSignalsPeriodicEncodingEnabled() {
+        return PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED;
+    }
+
+    /**
+     * @return period of running periodic encoding in milliseconds
+     */
+    default long getProtectedSignalPeriodicEncodingJobPeriodMs() {
+        return PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS;
+    }
+
+    /**
+     * @return the flexible period of running periodic encoding in milliseconds
+     */
+    default long getProtectedSignalsPeriodicEncodingJobFlexMs() {
+        return PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS;
+    }
+
     int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT = 10_000;
     int FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_TOTAL_EVENT_COUNT = 9_500;
     int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT = 1_000;
@@ -981,7 +1004,7 @@ public interface Flags {
 
     /**
      * Returns the maximum size in bytes of {@link
-     * DBRegisteredAdInteraction#getInteractionReportingUri()}
+     * com.android.adservices.data.adselection.DBRegisteredAdInteraction#getInteractionReportingUri()}
      */
     default long getFledgeReportImpressionMaxInteractionReportingUriSizeB() {
         return FLEDGE_REPORT_IMPRESSION_MAX_INTERACTION_REPORTING_URI_SIZE_B;
