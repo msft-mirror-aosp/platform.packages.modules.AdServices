@@ -29,6 +29,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.KeyValueData;
+import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementReportsStats;
 import com.android.internal.annotations.VisibleForTesting;
@@ -54,28 +55,36 @@ public class EventReportingJobHandler {
 
     private ReportingStatus.UploadMethod mUploadMethod;
     private final Flags mFlags;
+    private final AdServicesLogger mLogger;
 
     EventReportingJobHandler(
             EnrollmentDao enrollmentDao, DatastoreManager datastoreManager, Flags flags) {
-        this(enrollmentDao, datastoreManager, null, flags);
+        this(enrollmentDao, datastoreManager, null, flags, AdServicesLoggerImpl.getInstance());
     }
 
     EventReportingJobHandler(
             EnrollmentDao enrollmentDao,
             DatastoreManager datastoreManager,
             ReportingStatus.UploadMethod uploadMethod) {
-        this(enrollmentDao, datastoreManager, uploadMethod, FlagsFactory.getFlags());
+        this(
+                enrollmentDao,
+                datastoreManager,
+                uploadMethod,
+                FlagsFactory.getFlags(),
+                AdServicesLoggerImpl.getInstance());
     }
 
     EventReportingJobHandler(
             EnrollmentDao enrollmentDao,
             DatastoreManager datastoreManager,
             ReportingStatus.UploadMethod uploadMethod,
-            Flags flags) {
+            Flags flags,
+            AdServicesLogger logger) {
         mEnrollmentDao = enrollmentDao;
         mDatastoreManager = datastoreManager;
         mUploadMethod = uploadMethod;
         mFlags = flags;
+        mLogger = logger;
     }
 
     /**
@@ -305,16 +314,15 @@ public class EventReportingJobHandler {
         if (!reportingStatus.getReportingDelay().isPresent()) {
             reportingStatus.setReportingDelay(0L);
         }
-        AdServicesLoggerImpl.getInstance()
-                .logMeasurementReports(
-                        new MeasurementReportsStats.Builder()
-                                .setCode(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED)
-                                .setType(AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__EVENT)
-                                .setResultCode(reportingStatus.getUploadStatus().ordinal())
-                                .setFailureType(reportingStatus.getFailureStatus().ordinal())
-                                .setUploadMethod(reportingStatus.getUploadMethod().ordinal())
-                                .setReportingDelay(reportingStatus.getReportingDelay().get())
-                                .setSourceRegistrant(reportingStatus.getSourceRegistrant())
-                                .build());
+        mLogger.logMeasurementReports(
+                new MeasurementReportsStats.Builder()
+                        .setCode(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED)
+                        .setType(AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__EVENT)
+                        .setResultCode(reportingStatus.getUploadStatus().ordinal())
+                        .setFailureType(reportingStatus.getFailureStatus().ordinal())
+                        .setUploadMethod(reportingStatus.getUploadMethod().ordinal())
+                        .setReportingDelay(reportingStatus.getReportingDelay().get())
+                        .setSourceRegistrant(reportingStatus.getSourceRegistrant())
+                        .build());
     }
 }

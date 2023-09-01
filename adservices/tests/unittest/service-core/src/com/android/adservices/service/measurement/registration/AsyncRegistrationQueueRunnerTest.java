@@ -1839,7 +1839,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 new FakeDatastoreManager(),
                                 mDebugReportApi,
                                 mSourceNoiseHandler,
-                                mFlags));
+                                mFlags,
+                                mLogger));
 
         // Execution
         when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
@@ -1879,7 +1880,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 new FakeDatastoreManager(),
                                 mDebugReportApi,
                                 mSourceNoiseHandler,
-                                mFlags));
+                                mFlags,
+                                mLogger));
 
         // Execution
         when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
@@ -1919,7 +1921,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 new FakeDatastoreManager(),
                                 mDebugReportApi,
                                 mSourceNoiseHandler,
-                                mFlags));
+                                mFlags,
+                                mLogger));
 
         // Execution
         when(mMeasurementDao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
@@ -1953,7 +1956,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 new FakeDatastoreManager(),
                                 mDebugReportApi,
                                 mSourceNoiseHandler,
-                                mFlags));
+                                mFlags,
+                                mLogger));
 
         // Execution
         doReturn((long) SystemHealthParams.getMaxSourcesPerPublisher())
@@ -1985,7 +1989,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 new FakeDatastoreManager(),
                                 mDebugReportApi,
                                 mSourceNoiseHandler,
-                                mFlags));
+                                mFlags,
+                                mLogger));
         // Execution
         when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
@@ -2024,7 +2029,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 new FakeDatastoreManager(),
                                 mDebugReportApi,
                                 mSourceNoiseHandler,
-                                mFlags));
+                                mFlags,
+                                mLogger));
 
         // Execution
         when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
@@ -2064,7 +2070,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 new FakeDatastoreManager(),
                                 mDebugReportApi,
                                 mSourceNoiseHandler,
-                                mFlags));
+                                mFlags,
+                                mLogger));
 
         // Execution
         when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
@@ -2103,7 +2110,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 new FakeDatastoreManager(),
                                 mDebugReportApi,
                                 mSourceNoiseHandler,
-                                mFlags));
+                                mFlags,
+                                mLogger));
         doReturn((long) SystemHealthParams.getMaxSourcesPerPublisher())
                 .when(mMeasurementDao)
                 .getNumSourcesPerPublisher(any(), anyInt());
@@ -2134,7 +2142,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 new FakeDatastoreManager(),
                                 mDebugReportApi,
                                 mSourceNoiseHandler,
-                                mFlags));
+                                mFlags,
+                                mLogger));
 
         doReturn((long) SystemHealthParams.getMaxSourcesPerPublisher())
                 .when(mMeasurementDao)
@@ -2165,7 +2174,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 new FakeDatastoreManager(),
                                 mDebugReportApi,
                                 mSourceNoiseHandler,
-                                mFlags));
+                                mFlags,
+                                mLogger));
 
         when(mMeasurementDao.getNumTriggersPerDestination(APP_DESTINATION, EventSurfaceType.APP))
                 .thenReturn(0L);
@@ -2239,7 +2249,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 datastoreManager,
                                 mDebugReportApi,
                                 mSourceNoiseHandler,
-                                mFlags));
+                                mFlags,
+                                mLogger));
         ArgumentCaptor<DatastoreManager.ThrowingCheckedConsumer> consumerArgCaptor =
                 ArgumentCaptor.forClass(DatastoreManager.ThrowingCheckedConsumer.class);
         EnqueueAsyncRegistration.webSourceRegistrationRequest(
@@ -2324,7 +2335,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 new FakeDatastoreManager(),
                                 mDebugReportApi,
                                 mSourceNoiseHandler,
-                                mFlags));
+                                mFlags,
+                                mLogger));
 
         // Execution
         when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
@@ -2395,7 +2407,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 new FakeDatastoreManager(),
                                 mDebugReportApi,
                                 mSourceNoiseHandler,
-                                mFlags));
+                                mFlags,
+                                mLogger));
 
         // Execution
         when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
@@ -2455,7 +2468,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 new FakeDatastoreManager(),
                                 mDebugReportApi,
                                 mSourceNoiseHandler,
-                                mFlags));
+                                mFlags,
+                                mLogger));
 
         // Execution
         when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
@@ -2514,7 +2528,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 new FakeDatastoreManager(),
                                 mDebugReportApi,
                                 mSourceNoiseHandler,
-                                mFlags));
+                                mFlags,
+                                mLogger));
 
         // Execution
         when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
@@ -2586,7 +2601,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 new FakeDatastoreManager(),
                                 mDebugReportApi,
                                 mSourceNoiseHandler,
-                                mFlags));
+                                mFlags,
+                                mLogger));
 
         // Execution
         when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
@@ -2657,7 +2673,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 new FakeDatastoreManager(),
                                 mDebugReportApi,
                                 mSourceNoiseHandler,
-                                mFlags));
+                                mFlags,
+                                mLogger));
 
         // Execution
         when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
@@ -2723,7 +2740,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 new FakeDatastoreManager(),
                                 mDebugReportApi,
                                 mSourceNoiseHandler,
-                                mFlags));
+                                mFlags,
+                                mLogger));
 
         // Execution
         when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
@@ -2864,7 +2882,8 @@ public class AsyncRegistrationQueueRunnerTest {
                         new FakeDatastoreManager(),
                         mDebugReportApi,
                         mSourceNoiseHandler,
-                        mFlags));
+                        mFlags,
+                        mLogger));
     }
 
     private static void emptyTables(SQLiteDatabase db) {
