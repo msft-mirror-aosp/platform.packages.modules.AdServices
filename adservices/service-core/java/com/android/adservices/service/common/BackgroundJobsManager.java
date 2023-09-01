@@ -33,6 +33,7 @@ import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DELETE_UN
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_EVENT_MAIN_REPORTING_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.PERIODIC_SIGNALS_ENCODING_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.TOPICS_EPOCH_JOB;
 
 import android.annotation.NonNull;
@@ -295,6 +296,7 @@ public class BackgroundJobsManager {
 
         jobScheduler.cancel(FLEDGE_BACKGROUND_FETCH_JOB.getJobId());
         jobScheduler.cancel(FLEDGE_AD_SELECTION_DEBUG_REPORT_SENDER_JOB.getJobId());
+        jobScheduler.cancel(PERIODIC_SIGNALS_ENCODING_JOB.getJobId());
     }
 
     /**
