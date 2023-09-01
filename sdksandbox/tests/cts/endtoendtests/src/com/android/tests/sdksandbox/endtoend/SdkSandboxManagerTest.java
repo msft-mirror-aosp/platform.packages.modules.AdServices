@@ -896,6 +896,29 @@ public final class SdkSandboxManagerTest {
         actionExecutor.openLandingPage();
     }
 
+    /**
+     * Ensure that SDK can finish the sandbox activity.
+     *
+     * @throws RemoteException
+     */
+    @Test
+    public void testSdkCanFinishSandboxActivity() throws RemoteException {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        ICtsSdkProviderApi sdk = loadSdk();
+
+        ActivityStarter sandboxActivityStarter = new ActivityStarter();
+        IActivityActionExecutor actionExecutor = startSandboxActivity(sdk, sandboxActivityStarter);
+        assertThat(mScenario.getState()).isIn(Arrays.asList(State.CREATED, State.STARTED));
+        assertThat(sandboxActivityStarter.isActivityResumed()).isTrue();
+
+        actionExecutor.finish();
+        assertTrue(
+                sUiDevice.wait(Until.hasObject(By.text("DEFAULT_SHOW_TEXT")), WAIT_FOR_TEXT_IN_MS));
+        assertThat(mScenario.getState()).isEqualTo(State.RESUMED);
+        assertThat(sandboxActivityStarter.isActivityResumed()).isFalse();
+    }
+
     // Helper method to load SDK_NAME_1
     private ICtsSdkProviderApi loadSdk() {
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
