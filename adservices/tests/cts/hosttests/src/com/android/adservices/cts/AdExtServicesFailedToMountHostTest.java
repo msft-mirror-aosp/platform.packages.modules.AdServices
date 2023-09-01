@@ -18,10 +18,10 @@ package com.android.adservices.cts;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
-import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.common.AdServicesHostSideFlagsSetterRule;
 import com.android.adservices.common.AdServicesHostSideTestCase;
+import com.android.adservices.common.HostSideSdkLevelSupportRule;
 import com.android.adservices.common.RequiresSdkLevelLessThanT;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.ddmlib.MultiLineReceiver;
 import com.android.tradefed.device.BackgroundDeviceAction;
 import com.android.tradefed.device.ITestDevice;
@@ -43,12 +43,12 @@ public class AdExtServicesFailedToMountHostTest extends AdServicesHostSideTestCa
     private static String sNoSuchString = "No such file or directory";
 
     @Rule(order = 0)
-    public SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAnyLevel();
+    public final HostSideSdkLevelSupportRule sdkLevel = HostSideSdkLevelSupportRule.forAnyLevel();
 
     // Sets flags used in the test (and automatically reset them at the end)
     @Rule(order = 1)
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forCompatModeEnabledTests();
+    public final AdServicesHostSideFlagsSetterRule flags =
+            AdServicesHostSideFlagsSetterRule.forCompatModeEnabledTests();
 
     @Test
     @RequiresSdkLevelLessThanT(reason = "Test is for ExtServices only")
