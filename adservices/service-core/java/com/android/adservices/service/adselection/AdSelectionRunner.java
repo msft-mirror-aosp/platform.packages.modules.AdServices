@@ -52,7 +52,6 @@ import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
-import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -120,13 +119,6 @@ public abstract class AdSelectionRunner {
     static final String ON_DEVICE_AUCTION_KILL_SWITCH_ENABLED =
             "On device auction kill switch enabled";
 
-    @VisibleForTesting
-    static final String JS_SANDBOX_IS_NOT_AVAILABLE =
-            String.format(
-                    AD_SELECTION_ERROR_PATTERN,
-                    ERROR_AD_SELECTION_FAILURE,
-                    "JS Sandbox is not available");
-
     @NonNull protected final CustomAudienceDao mCustomAudienceDao;
     @NonNull protected final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull protected final ListeningExecutorService mLightweightExecutorService;
@@ -184,10 +176,6 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(frequencyCapAdDataValidator);
         Objects.requireNonNull(adCounterHistogramUpdater);
         Objects.requireNonNull(debugReporting);
-
-        Preconditions.checkArgument(
-                JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable(),
-                JS_SANDBOX_IS_NOT_AVAILABLE);
         Objects.requireNonNull(adSelectionExecutionLogger);
 
         mCustomAudienceDao = customAudienceDao;
@@ -243,10 +231,6 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(frequencyCapAdDataValidator);
         Objects.requireNonNull(adCounterHistogramUpdater);
         Objects.requireNonNull(debugReporting);
-
-        Preconditions.checkArgument(
-                JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable(),
-                JS_SANDBOX_IS_NOT_AVAILABLE);
 
         mCustomAudienceDao = customAudienceDao;
         mAdSelectionEntryDao = adSelectionEntryDao;
