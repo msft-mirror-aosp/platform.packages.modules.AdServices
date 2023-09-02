@@ -39,7 +39,6 @@ import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.common.OutcomeReceiverForTests;
 import com.android.adservices.common.RequiresLowRamDevice;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.compatibility.common.util.ConnectivityUtils;
 import com.android.compatibility.common.util.ShellUtils;
@@ -174,9 +173,7 @@ public class AppSetIdManagerTest {
     }
 
     @Test
-    @FlakyTest(bugId = 298304610)
     @RequiresLowRamDevice
-    @RequiresSdkLevelAtLeastS(reason = "OutcomeReceiver is not available on R")
     public void testAppSetIdManager_whenDeviceNotSupported() {
         AppSetIdManager appSetIdManager = AppSetIdManager.get(sContext);
         assertWithMessage("appSetIdManager").that(appSetIdManager).isNotNull();
