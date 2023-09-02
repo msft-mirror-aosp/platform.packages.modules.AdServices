@@ -25,7 +25,6 @@ import android.net.Uri;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.stats.AdServicesLoggerImpl;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -43,10 +42,7 @@ public class DebugReportingJobHandlerWrapper {
         DebugReportingJobHandler debugReportingJobHandler =
                 Mockito.spy(
                         new DebugReportingJobHandler(
-                                enrollmentDao,
-                                datastoreManager,
-                                FlagsFactory.getFlags(),
-                                AdServicesLoggerImpl.getInstance()));
+                                enrollmentDao, datastoreManager, FlagsFactory.getFlags()));
         Mockito.doReturn(200).when(debugReportingJobHandler).makeHttpPostRequest(any(), any());
 
         debugReportingJobHandler.performScheduledPendingReports();

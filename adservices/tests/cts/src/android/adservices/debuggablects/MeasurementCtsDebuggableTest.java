@@ -18,7 +18,7 @@ package android.adservices.debuggablects;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.adservices.common.OutcomeReceiver;
+import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.MeasurementManager;
 import android.adservices.measurement.WebSourceParams;
@@ -33,6 +33,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.modules.utils.build.SdkLevel;
@@ -42,9 +43,9 @@ import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.RecordedRequest;
 
 import org.junit.AfterClass;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -87,8 +88,9 @@ public class MeasurementCtsDebuggableTest {
     private static final int ASYNC_REGISTRATION_QUEUE_JOB_ID = 20;
     private static final int AGGREGATE_REPORTING_JOB_ID = 7;
 
-    private static final String AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL =
-            SERVER_BASE_URI + ":" + KEYS_PORT + "/keys";
+    private static final String AGGREGATE_ENCRYPTION_KEY_COORDINATOR_ORIGIN =
+            SERVER_BASE_URI + ":" + KEYS_PORT;
+    private static final String AGGREGATE_ENCRYPTION_KEY_COORDINATOR_PATH = "keys";
     private static final String REGISTRATION_RESPONSE_SOURCE_HEADER =
             "Attribution-Reporting-Register-Source";
     private static final String REGISTRATION_RESPONSE_TRIGGER_HEADER =
@@ -102,10 +104,12 @@ public class MeasurementCtsDebuggableTest {
 
     private MeasurementManager mMeasurementManager;
 
+    @Rule
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
     @BeforeClass
     public static void setupDevicePropertiesAndInitializeClient() throws Exception {
-        // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
         setFlagsForMeasurement();
     }
 
@@ -380,7 +384,8 @@ public class MeasurementCtsDebuggableTest {
                     Uri.parse(path),
                     /* inputEvent= */ null,
                     CALLBACK_EXECUTOR,
-                    (OutcomeReceiver<Object, Exception>) result -> countDownLatch.countDown());
+                    (AdServicesOutcomeReceiver<Object, Exception>)
+                            result -> countDownLatch.countDown());
             assertThat(countDownLatch.await(TIMEOUT_IN_MS, TimeUnit.MILLISECONDS)).isTrue();
 
             sleep();
@@ -408,7 +413,8 @@ public class MeasurementCtsDebuggableTest {
             mMeasurementManager.registerTrigger(
                     Uri.parse(path),
                     CALLBACK_EXECUTOR,
-                    (OutcomeReceiver<Object, Exception>) result -> countDownLatch.countDown());
+                    (AdServicesOutcomeReceiver<Object, Exception>)
+                            result -> countDownLatch.countDown());
             assertThat(countDownLatch.await(TIMEOUT_IN_MS, TimeUnit.MILLISECONDS)).isTrue();
 
             sleep();
@@ -442,7 +448,8 @@ public class MeasurementCtsDebuggableTest {
             mMeasurementManager.registerWebSource(
                     request,
                     CALLBACK_EXECUTOR,
-                    (OutcomeReceiver<Object, Exception>) result -> countDownLatch.countDown());
+                    (AdServicesOutcomeReceiver<Object, Exception>)
+                            result -> countDownLatch.countDown());
             assertThat(countDownLatch.await(TIMEOUT_IN_MS, TimeUnit.MILLISECONDS)).isTrue();
 
             sleep();
@@ -475,7 +482,8 @@ public class MeasurementCtsDebuggableTest {
             mMeasurementManager.registerWebTrigger(
                     request,
                     CALLBACK_EXECUTOR,
-                    (OutcomeReceiver<Object, Exception>) result -> countDownLatch.countDown());
+                    (AdServicesOutcomeReceiver<Object, Exception>)
+                            result -> countDownLatch.countDown());
             assertThat(countDownLatch.await(TIMEOUT_IN_MS, TimeUnit.MILLISECONDS)).isTrue();
 
             sleep();
@@ -555,7 +563,8 @@ public class MeasurementCtsDebuggableTest {
             mMeasurementManager.deleteRegistrations(
                     deletionRequest,
                     CALLBACK_EXECUTOR,
-                    (OutcomeReceiver<Object, Exception>) result -> countDownLatch.countDown());
+                    (AdServicesOutcomeReceiver<Object, Exception>)
+                            result -> countDownLatch.countDown());
             assertThat(countDownLatch.await(TIMEOUT_IN_MS, TimeUnit.MILLISECONDS)).isTrue();
         } catch (InterruptedException e) {
             throw new IllegalStateException("Error while deleting registrations", e);
@@ -619,10 +628,17 @@ public class MeasurementCtsDebuggableTest {
                 + "measurement_enforce_foreground_status_register_trigger false");
 
         // Set aggregate key URL.
-        getUiDevice().executeShellCommand(
-                "device_config put adservices "
-                + "measurement_aggregate_encryption_key_coordinator_url "
-                + AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL);
+        getUiDevice()
+                .executeShellCommand(
+                        "device_config put adservices "
+                                + "measurement_default_aggregation_coordinator_origin"
+                                + AGGREGATE_ENCRYPTION_KEY_COORDINATOR_ORIGIN);
+
+        getUiDevice()
+                .executeShellCommand(
+                        "device_config put adservices "
+                                + "measurement_aggregation_coordinator_path"
+                                + AGGREGATE_ENCRYPTION_KEY_COORDINATOR_PATH);
 
         // Set reporting windows
         // Assume trigger registration can happen within 8 seconds of source registration.
@@ -698,9 +714,14 @@ public class MeasurementCtsDebuggableTest {
                 + "measurement_enforce_foreground_status_register_trigger null");
 
         // Reset aggregate key URL.
-        getUiDevice().executeShellCommand(
-                "device_config put adservices "
-                + "measurement_aggregate_encryption_key_coordinator_url null");
+        getUiDevice()
+                .executeShellCommand(
+                        "device_config put adservices "
+                                + "measurement_default_aggregation_coordinator_origin null");
+        getUiDevice()
+                .executeShellCommand(
+                        "device_config put adservices "
+                                + "measurement_aggregation_coordinator_path null");
 
         // Reset reporting windows
         // Assume trigger registration can happen within 8 seconds of source registration.

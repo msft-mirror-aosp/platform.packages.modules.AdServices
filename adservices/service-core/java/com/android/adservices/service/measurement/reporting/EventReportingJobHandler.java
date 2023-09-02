@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement.reporting;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__EVENT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MESUREMENT_REPORTS_UPLOADED;
 
 import android.adservices.common.AdServicesStatusUtils;
@@ -28,6 +29,7 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -53,40 +55,37 @@ public class EventReportingJobHandler {
     private final EnrollmentDao mEnrollmentDao;
     private final DatastoreManager mDatastoreManager;
     private boolean mIsDebugInstance;
+
+    private ReportingStatus.UploadMethod mUploadMethod;
     private final Flags mFlags;
     private final AdServicesLogger mLogger;
-    private ReportingStatus.ReportType mReportType;
-    private ReportingStatus.UploadMethod mUploadMethod;
 
-    @VisibleForTesting
     EventReportingJobHandler(
             EnrollmentDao enrollmentDao, DatastoreManager datastoreManager, Flags flags) {
-        this(enrollmentDao, datastoreManager, flags, AdServicesLoggerImpl.getInstance());
+        this(enrollmentDao, datastoreManager, null, flags, AdServicesLoggerImpl.getInstance());
     }
 
     EventReportingJobHandler(
             EnrollmentDao enrollmentDao,
             DatastoreManager datastoreManager,
-            Flags flags,
-            AdServicesLogger logger,
-            ReportingStatus.ReportType reportType,
             ReportingStatus.UploadMethod uploadMethod) {
-        mEnrollmentDao = enrollmentDao;
-        mDatastoreManager = datastoreManager;
-        mFlags = flags;
-        mLogger = logger;
-        mReportType = reportType;
-        mUploadMethod = uploadMethod;
+        this(
+                enrollmentDao,
+                datastoreManager,
+                uploadMethod,
+                FlagsFactory.getFlags(),
+                AdServicesLoggerImpl.getInstance());
     }
 
-    @VisibleForTesting
     EventReportingJobHandler(
             EnrollmentDao enrollmentDao,
             DatastoreManager datastoreManager,
+            ReportingStatus.UploadMethod uploadMethod,
             Flags flags,
             AdServicesLogger logger) {
         mEnrollmentDao = enrollmentDao;
         mDatastoreManager = datastoreManager;
+        mUploadMethod = uploadMethod;
         mFlags = flags;
         mLogger = logger;
     }
@@ -143,46 +142,25 @@ public class EventReportingJobHandler {
 
             // TODO: Use result to track rate of success vs retry vs failure
             ReportingStatus reportingStatus = new ReportingStatus();
-            if (mReportType != null) {
-                reportingStatus.setReportType(mReportType);
-            }
-            if (mUploadMethod != null) {
-                reportingStatus.setUploadMethod(mUploadMethod);
-            }
             @AdServicesStatusUtils.StatusCode
             int result = performReport(eventReportId, reportingStatus);
 
             if (result == AdServicesStatusUtils.STATUS_SUCCESS) {
                 reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.SUCCESS);
-                logReportingStats(reportingStatus);
             } else {
                 reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.FAILURE);
-                logReportingStats(reportingStatus);
-                boolean isMarkedForDeletionFlagEnabled =
-                        mFlags.getMeasurementEnableReportDeletionOnUnrecoverableException();
-                boolean isMarkedForDeletion =
-                        reportingStatus.getFailureStatus()
-                                        == ReportingStatus.FailureStatus.SERIALIZATION_ERROR
-                                && isMarkedForDeletionFlagEnabled;
                 mDatastoreManager.runInTransaction(
-                        (dao) -> {
-                            int retryCount =
-                                    dao.incrementAndGetReportingRetryCount(
-                                            eventReportId,
-                                            KeyValueData.DataType.EVENT_REPORT_RETRY_COUNT);
-                            if (retryCount >= mFlags.getMeasurementReportingRetryLimit()
-                                    && !isMarkedForDeletion) {
-                                reportingStatus.setFailureStatus(
-                                        ReportingStatus.FailureStatus.JOB_RETRY_LIMIT_REACHED);
-                            }
-                        });
+                        (dao) ->
+                                dao.incrementReportingRetryCount(
+                                        eventReportId,
+                                        KeyValueData.DataType.EVENT_REPORT_RETRY_COUNT));
             }
 
-            // log final attempt separately
-            if (reportingStatus.getFailureStatus()
-                    == ReportingStatus.FailureStatus.JOB_RETRY_LIMIT_REACHED) {
-                logReportingStats(reportingStatus);
+            if (mUploadMethod != null) {
+                reportingStatus.setUploadMethod(mUploadMethod);
             }
+            // Logged as UNKNOWN_UPLOAD_METHOD for debug reports
+            logReportingStats(reportingStatus);
         }
         return true;
     }
@@ -276,7 +254,7 @@ public class EventReportingJobHandler {
         } catch (JSONException e) {
             LogUtil.d(e, "Serialization error occurred at event report delivery.");
             // TODO(b/298330312): Indicate serialization error
-            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.SERIALIZATION_ERROR);
+            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.UNKNOWN);
             // TODO(b/298330312): Change to defined error codes
             ErrorLogUtil.e(
                     e,
@@ -353,10 +331,10 @@ public class EventReportingJobHandler {
         mLogger.logMeasurementReports(
                 new MeasurementReportsStats.Builder()
                         .setCode(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED)
-                        .setType(reportingStatus.getReportType().getValue())
-                        .setResultCode(reportingStatus.getUploadStatus().getValue())
-                        .setFailureType(reportingStatus.getFailureStatus().getValue())
-                        .setUploadMethod(reportingStatus.getUploadMethod().getValue())
+                        .setType(AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__EVENT)
+                        .setResultCode(reportingStatus.getUploadStatus().ordinal())
+                        .setFailureType(reportingStatus.getFailureStatus().ordinal())
+                        .setUploadMethod(reportingStatus.getUploadMethod().ordinal())
                         .setReportingDelay(reportingStatus.getReportingDelay().get())
                         .setSourceRegistrant(reportingStatus.getSourceRegistrant())
                         .build());

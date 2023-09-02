@@ -19,6 +19,8 @@ package com.android.adservices.service.adselection;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.annotation.NonNull;
 
+import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBidAndUri;
+
 import com.google.common.util.concurrent.FluentFuture;
 
 import java.util.List;
@@ -35,6 +37,6 @@ public interface AdOutcomeSelector {
      *     returns null
      */
     FluentFuture<Long> runAdOutcomeSelector(
-            @NonNull List<AdSelectionIdWithBidAndRenderUri> adSelectionIdWithBidAndRenderUris,
+            @NonNull List<AdSelectionResultBidAndUri> adSelectionIdWithBidAndRenderUris,
             @NonNull AdSelectionFromOutcomesConfig adSelectionFromOutcomesConfig);
 }

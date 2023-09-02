@@ -1301,6 +1301,8 @@ public class ConsentManager {
 
     // Perform a one-time migration to migrate existing PPAPI Consent
     @VisibleForTesting
+    // Suppress lint warning for context.getUser in R since this code is unused in R
+    @SuppressWarnings("NewApi")
     static void migratePpApiConsentToSystemService(
             @NonNull Context context,
             @NonNull BooleanFileDatastore datastore,

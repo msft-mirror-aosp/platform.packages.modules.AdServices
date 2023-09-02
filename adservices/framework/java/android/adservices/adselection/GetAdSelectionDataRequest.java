@@ -19,59 +19,18 @@ package android.adservices.adselection;
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
-import android.os.Parcel;
-import android.os.Parcelable;
-
-import java.util.Objects;
 
 /**
  * Represents a request containing the information to get ad selection data.
  *
  * <p>Instances of this class are created by SDKs to be provided as arguments to the {@link
  * AdSelectionManager#getAdSelectionData} methods in {@link AdSelectionManager}.
- *
- * @hide
  */
-public final class GetAdSelectionDataRequest implements Parcelable {
+public final class GetAdSelectionDataRequest {
     @Nullable private final AdTechIdentifier mSeller;
-
-    @NonNull
-    public static final Creator<GetAdSelectionDataRequest> CREATOR =
-            new Creator<>() {
-                @Override
-                public GetAdSelectionDataRequest createFromParcel(@NonNull Parcel in) {
-                    Objects.requireNonNull(in);
-
-                    return new GetAdSelectionDataRequest(in);
-                }
-
-                @Override
-                public GetAdSelectionDataRequest[] newArray(int size) {
-                    return new GetAdSelectionDataRequest[size];
-                }
-            };
 
     private GetAdSelectionDataRequest(@Nullable AdTechIdentifier seller) {
         this.mSeller = seller;
-    }
-
-    private GetAdSelectionDataRequest(@NonNull Parcel in) {
-        Objects.requireNonNull(in);
-
-        mSeller = AdTechIdentifier.CREATOR.createFromParcel(in);
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(@NonNull Parcel dest, int flags) {
-        Objects.requireNonNull(dest);
-        Objects.requireNonNull(mSeller);
-
-        mSeller.writeToParcel(dest, flags);
     }
 
     /**
@@ -82,23 +41,8 @@ public final class GetAdSelectionDataRequest implements Parcelable {
         return mSeller;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof GetAdSelectionDataRequest)) return false;
-        GetAdSelectionDataRequest that = (GetAdSelectionDataRequest) o;
-        return Objects.equals(mSeller, that.mSeller);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(mSeller);
-    }
-
     /**
      * Builder for {@link GetAdSelectionDataRequest} objects.
-     *
-     * @hide
      */
     public static final class Builder {
         @Nullable private AdTechIdentifier mSeller;
@@ -114,8 +58,6 @@ public final class GetAdSelectionDataRequest implements Parcelable {
 
         /**
          * Builds a {@link GetAdSelectionDataRequest} instance.
-         *
-         * @throws NullPointerException if the Seller is null
          */
         @NonNull
         public GetAdSelectionDataRequest build() {

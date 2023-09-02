@@ -19,20 +19,30 @@ package android.adservices.debuggablects;
 import static android.adservices.common.CommonFixture.INVALID_EMPTY_BUYER;
 
 import static com.android.adservices.service.adselection.AdSelectionScriptEngine.NUM_BITS_STOCHASTIC_ROUNDING;
+import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_OUTCOME_SELECTION_WATERFALL_MEDIATION_TRUNCATION;
+import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_FROM_OUTCOMES_USE_CASE;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_HIGHEST_BID_WINS;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_PREBUILT_SCHEMA;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_USE_CASE;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import android.Manifest;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
+import android.adservices.adselection.AdSelectionFromOutcomesConfig;
+import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
 import android.adservices.adselection.AdSelectionOutcome;
+import android.adservices.adselection.AddAdSelectionFromOutcomesOverrideRequest;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
+import android.adservices.adselection.GetAdSelectionDataRequest;
+import android.adservices.adselection.PersistAdSelectionResultRequest;
 import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.adselection.SetAppInstallAdvertisersRequest;
@@ -80,6 +90,7 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.function.ThrowingRunnable;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -105,6 +116,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     private static final int API_RESPONSE_LONGER_TIMEOUT_SECONDS = 120;
 
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
+    private static final AdTechIdentifier SELLER = AdSelectionConfigFixture.SELLER_1;
 
     private static final AdTechIdentifier BUYER_1 = AdSelectionConfigFixture.BUYER_1;
     private static final AdTechIdentifier BUYER_2 = AdSelectionConfigFixture.BUYER_2;
@@ -343,13 +355,12 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     private String mPreviousAppAllowList;
 
     private final ArrayList<CustomAudience> mCustomAudiencesToCleanUp = new ArrayList<>();
-    private AtomicInteger mFrequencyCapKeyToFilter = new AtomicInteger(0);
+    private static final AtomicInteger sFrequencyCapKeyToFilter = new AtomicInteger(0);
 
     @Before
     public void setup() throws InterruptedException {
         // Skip the test if it runs on unsupported platforms
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-        ShellUtils.runShellCommand("device_config put adservices enable_enrollment_test_seed true");
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         if (SdkLevel.isAtLeastT()) {
@@ -358,7 +369,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         } else {
             mPreviousAppAllowList =
                     CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
-                            sContext.getPackageName());
+                            String.format(
+                                    "%s,%s",
+                                    sContext.getPackageName(), "ad-selection-from-outcomes"));
             CompatAdServicesTestUtils.setFlags();
         }
 
@@ -408,15 +421,15 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Disable cpc billing by default
         PhFlagsFixture.overrideFledgeCpcBillingEnabled(false);
 
+        // Disable ad selection prebuilt by default
+        PhFlagsFixture.overrideFledgeAdSelectionPrebuiltUriEnabled(false);
+
         // Clear the buyer list with an empty call to setAppInstallAdvertisers
         mAdSelectionClient.setAppInstallAdvertisers(
                 new SetAppInstallAdvertisersRequest(Collections.EMPTY_SET));
 
         // Make sure the flags are picked up cold
         AdservicesTestHelper.killAdservicesProcess(sContext);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
     }
 
     @After
@@ -436,19 +449,11 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Reset the filtering flag
         PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(false);
         AdservicesTestHelper.killAdservicesProcess(sContext);
-        // Set consent source of truth to PPAPI_AND_SYSTEM_SERVER
-        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth null");
-        // Re-set disable enrollment test seed to true
-        ShellUtils.runShellCommand(
-                "device_config put adservices enable_enrollment_test_seed false");
 
         if (!SdkLevel.isAtLeastT()) {
             CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
             CompatAdServicesTestUtils.resetFlagsToDefault();
         }
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
     }
 
     @Test
@@ -465,10 +470,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
@@ -551,10 +552,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
@@ -637,10 +634,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
@@ -718,10 +711,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         AdSelectionConfig adSelectionConfigWithSubdomains =
@@ -820,10 +809,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         String paramKey = "reportingUrl";
@@ -921,10 +906,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         BuyersDecisionLogic buyersDecisionLogic =
@@ -1066,8 +1047,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .overrideAdSelectionConfigRemoteInfo(addAdSelectionOverrideRequest)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
         Log.i(
                 TAG,
                 "Running ad selection with logic URI "
@@ -1119,10 +1098,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
@@ -1207,10 +1182,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mAdSelectionClient
                 .reportEvent(reportInteractionClickRequest)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         mAdSelectionClient
                 .reportEvent(reportInteractionHoverRequest)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -1229,10 +1200,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception.
         joinCustomAudience(customAudience);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudienceUpdate);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
@@ -1318,10 +1285,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
@@ -1403,10 +1366,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
@@ -1485,10 +1444,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
@@ -1560,10 +1515,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         String malformedScoringLogic = " This is an invalid javascript";
@@ -1628,10 +1579,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
@@ -1694,10 +1641,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         // Skip adding AdSelection override, no result to do assertion on. Failures will generate an
@@ -1765,10 +1708,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
@@ -1851,10 +1790,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Join the CA with early expiry first, to avoid waiting too long for another CA join
         joinCustomAudience(customAudienceEarlyExpiry);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudienceRegularExpiry);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
@@ -1928,10 +1863,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         String jsWaitMoreThanAllowedForBiddingPerCa = insertJsWait(5000);
@@ -2013,10 +1944,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         String jsWaitMoreThanAllowedForScoring = insertJsWait(10000);
@@ -2071,6 +1998,369 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                                                 API_RESPONSE_LONGER_TIMEOUT_SECONDS,
                                                 TimeUnit.SECONDS));
         assertThat(selectAdsException.getCause()).isInstanceOf(TimeoutException.class);
+    }
+
+    @Test
+    public void testAdSelectionFromOutcomesFlow_overall_Success() throws Exception {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        // Perform ad selection to persist two results
+        double bid1 = 10.0, bid2 = 15.0;
+        AdSelectionOutcome outcome1 =
+                runAdSelectionAsPreSteps(bid1, BUYER_1, BUYER_1_BIDDING_LOGIC_JS);
+        AdSelectionOutcome outcome2 =
+                runAdSelectionAsPreSteps(bid2, BUYER_2, BUYER_2_BIDDING_LOGIC_JS);
+
+        // Inputs for outcome selection
+        AdSelectionSignals selectionSignals = AdSelectionSignals.EMPTY;
+        Uri selectionUri =
+                Uri.parse(
+                        String.format(
+                                "https://%s%s",
+                                AdSelectionConfigFixture.SELLER, SELLER_DECISION_LOGIC_URI_PATH));
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
+                        List.of(outcome1.getAdSelectionId(), outcome2.getAdSelectionId()),
+                        selectionSignals,
+                        selectionUri);
+
+        // Add overrides
+        String selectionLogicPickSmallestJs =
+                "function selectOutcome(outcomes, selection_signals) {\n"
+                        + "    outcomes.sort(function(a, b) { return b.bid - a.bid;});\n"
+                        + "    return {'status': 0, 'result': outcomes[0]};\n"
+                        + "}";
+        AddAdSelectionFromOutcomesOverrideRequest request =
+                new AddAdSelectionFromOutcomesOverrideRequest(
+                        config, selectionLogicPickSmallestJs, AdSelectionSignals.EMPTY);
+        mTestAdSelectionClient
+                .overrideAdSelectionFromOutcomesConfigRemoteInfo(request)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Run select ads from outcomes
+        AdSelectionOutcome selectionOutcome =
+                mAdSelectionClient
+                        .selectAds(config)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        assertTrue(selectionOutcome.hasOutcome());
+        assertEquals(outcome2.getAdSelectionId(), selectionOutcome.getAdSelectionId());
+    }
+
+    @Test
+    public void testAdSelectionFromOutcomesFlow_waterfallWithPrebuilt_returnsOutcomeSuccess()
+            throws Exception {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        // Enable prebuilt uri feature
+        PhFlagsFixture.overrideFledgeAdSelectionPrebuiltUriEnabled(true);
+
+        // Perform ad selection to persist two results
+        double bid1 = 10.0;
+        double bidFloor = 5;
+        AdSelectionOutcome outcome =
+                runAdSelectionAsPreSteps(bid1, BUYER_1, BUYER_1_BIDDING_LOGIC_JS);
+
+        // Inputs for outcome selection
+        String paramKey = "bidFloor";
+        String paramValue = "bid_floor";
+        Uri prebuiltSelectionUri =
+                Uri.parse(
+                        String.format(
+                                "%s://%s/%s/?%s=%s",
+                                AD_SELECTION_PREBUILT_SCHEMA,
+                                AD_SELECTION_FROM_OUTCOMES_USE_CASE,
+                                AD_OUTCOME_SELECTION_WATERFALL_MEDIATION_TRUNCATION,
+                                paramKey,
+                                paramValue));
+        AdSelectionSignals selectionSignals =
+                AdSelectionSignals.fromString(String.format("{%s: %s}", paramValue, bidFloor));
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
+                        AdSelectionConfigFixture.SELLER,
+                        List.of(outcome.getAdSelectionId()),
+                        selectionSignals,
+                        prebuiltSelectionUri);
+
+        // Skipping adding overrides since prebuilt uri is used
+
+        // Run select ads from outcomes
+        AdSelectionOutcome selectionOutcome =
+                mAdSelectionClient
+                        .selectAds(config)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        assertTrue(selectionOutcome.hasOutcome());
+        assertEquals(outcome.getAdSelectionId(), selectionOutcome.getAdSelectionId());
+    }
+
+    @Test
+    public void testAdSelectionFromOutcomesFlow_waterfallWithPrebuilt_returnsNoOutcomeSuccess()
+            throws Exception {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        // Enable prebuilt uri feature
+        PhFlagsFixture.overrideFledgeAdSelectionPrebuiltUriEnabled(true);
+
+        // Perform ad selection to persist two results
+        double bid1 = 10.0;
+        double bidFloor = 15;
+        AdSelectionOutcome outcome =
+                runAdSelectionAsPreSteps(bid1, BUYER_1, BUYER_1_BIDDING_LOGIC_JS);
+
+        // Inputs for outcome selection
+        String paramKey = "bidFloor";
+        String paramValue = "bid_floor";
+        Uri prebuiltSelectionUri =
+                Uri.parse(
+                        String.format(
+                                "%s://%s/%s/?%s=%s",
+                                AD_SELECTION_PREBUILT_SCHEMA,
+                                AD_SELECTION_FROM_OUTCOMES_USE_CASE,
+                                AD_OUTCOME_SELECTION_WATERFALL_MEDIATION_TRUNCATION,
+                                paramKey,
+                                paramValue));
+        AdSelectionSignals selectionSignals =
+                AdSelectionSignals.fromString(String.format("{%s: %s}", paramValue, bidFloor));
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
+                        AdSelectionConfigFixture.SELLER,
+                        List.of(outcome.getAdSelectionId()),
+                        selectionSignals,
+                        prebuiltSelectionUri);
+
+        // Skipping adding overrides since prebuilt uri is used
+
+        // Run select ads from outcomes
+        AdSelectionOutcome selectionOutcome =
+                mAdSelectionClient
+                        .selectAds(config)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        assertFalse(selectionOutcome.hasOutcome());
+    }
+
+    @Test
+    public void testAdSelectionFromOutcomesFlow_returnsNull_Success() throws Exception {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        // Perform ad selection to persist two results
+        double bid1 = 10.0, bid2 = 15.0;
+        AdSelectionOutcome outcome1 =
+                runAdSelectionAsPreSteps(bid1, BUYER_1, BUYER_1_BIDDING_LOGIC_JS);
+        AdSelectionOutcome outcome2 =
+                runAdSelectionAsPreSteps(bid2, BUYER_2, BUYER_2_BIDDING_LOGIC_JS);
+
+        // Inputs for outcome selection
+        AdSelectionSignals selectionSignals = AdSelectionSignals.EMPTY;
+        Uri selectionUri =
+                Uri.parse(
+                        String.format(
+                                "https://%s%s",
+                                AdSelectionConfigFixture.SELLER, SELLER_DECISION_LOGIC_URI_PATH));
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
+                        List.of(outcome1.getAdSelectionId(), outcome2.getAdSelectionId()),
+                        selectionSignals,
+                        selectionUri);
+
+        // Add overrides
+        String selectionLogicPickSmallestJs =
+                "function selectOutcome(outcomes, selection_signals) {\n"
+                        + "    return {'status': 0, 'result': null};\n"
+                        + "}";
+        AddAdSelectionFromOutcomesOverrideRequest request =
+                new AddAdSelectionFromOutcomesOverrideRequest(
+                        config, selectionLogicPickSmallestJs, AdSelectionSignals.EMPTY);
+        mTestAdSelectionClient
+                .overrideAdSelectionFromOutcomesConfigRemoteInfo(request)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Run select ads from outcomes
+        AdSelectionOutcome selectionOutcome =
+                mAdSelectionClient
+                        .selectAds(config)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        assertFalse(selectionOutcome.hasOutcome());
+        assertEquals(AdSelectionOutcome.NO_OUTCOME, selectionOutcome);
+    }
+
+    @Test
+    public void testAdSelectionFromOutcomesFlow_overallTimeout_failure() throws Exception {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        // Perform ad selection to persist two results
+        double bid1 = 10.0, bid2 = 15.0;
+        AdSelectionOutcome outcome1 =
+                runAdSelectionAsPreSteps(bid1, BUYER_1, BUYER_1_BIDDING_LOGIC_JS);
+        AdSelectionOutcome outcome2 =
+                runAdSelectionAsPreSteps(bid2, BUYER_2, BUYER_2_BIDDING_LOGIC_JS);
+
+        // Inputs for outcome selection
+        AdSelectionSignals selectionSignals = AdSelectionSignals.EMPTY;
+        Uri selectionUri =
+                Uri.parse(
+                        String.format(
+                                "https://%s%s",
+                                AdSelectionConfigFixture.SELLER, SELLER_DECISION_LOGIC_URI_PATH));
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
+                        List.of(outcome1.getAdSelectionId(), outcome2.getAdSelectionId()),
+                        selectionSignals,
+                        selectionUri);
+
+        // Add overrides
+        String jsWaitMoreThanAllowedForOutcomeSelection = insertJsWait(20000);
+        String selectionLogicPickSmallestJs =
+                "function selectOutcome(outcomes, selection_signals) {\n"
+                        + jsWaitMoreThanAllowedForOutcomeSelection
+                        + "    return {'status': 0, 'result': outcomes[0]};\n"
+                        + "}";
+        AddAdSelectionFromOutcomesOverrideRequest request =
+                new AddAdSelectionFromOutcomesOverrideRequest(
+                        config, selectionLogicPickSmallestJs, AdSelectionSignals.EMPTY);
+        mTestAdSelectionClient
+                .overrideAdSelectionFromOutcomesConfigRemoteInfo(request)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Running ad selection and asserting that the outcome is returned in < 10 seconds
+        Exception selectAdsException =
+                assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                mAdSelectionClient
+                                        .selectAds(config)
+                                        .get(
+                                                API_RESPONSE_LONGER_TIMEOUT_SECONDS,
+                                                TimeUnit.SECONDS));
+        assertThat(selectAdsException.getCause()).isInstanceOf(TimeoutException.class);
+    }
+
+    @Test
+    public void testAdSelectionFromOutcomesFlow_emptyAdSelectionIds_Failure() throws Exception {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        // Inputs for outcome selection
+        AdSelectionSignals selectionSignals = AdSelectionSignals.EMPTY;
+        Uri selectionUri = Uri.parse("https://test.com/url-wont-used");
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
+                        Collections.emptyList(), selectionSignals, selectionUri);
+
+        // Add overrides
+        String selectionLogicPickSmallestJs =
+                "function selectOutcome(outcomes, selection_signals) {\n"
+                        + "    return {'status': 0, 'result': null};\n"
+                        + "}";
+        AddAdSelectionFromOutcomesOverrideRequest request =
+                new AddAdSelectionFromOutcomesOverrideRequest(
+                        config, selectionLogicPickSmallestJs, AdSelectionSignals.EMPTY);
+        mTestAdSelectionClient
+                .overrideAdSelectionFromOutcomesConfigRemoteInfo(request)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Running ad selection and asserting that the outcome is returned in < 10 seconds
+        Exception selectAdsException =
+                assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                mAdSelectionClient
+                                        .selectAds(config)
+                                        .get(
+                                                API_RESPONSE_LONGER_TIMEOUT_SECONDS,
+                                                TimeUnit.SECONDS));
+        assertThat(selectAdsException.getCause()).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void testAdSelectionFromOutcomesFlow_nonExistingAdSelectionId_Failure()
+            throws Exception {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        // Inputs for outcome selection
+        long nonExistingAdSelectionId = 12345;
+        AdSelectionSignals selectionSignals = AdSelectionSignals.EMPTY;
+        Uri selectionUri = Uri.parse("https://test.com/url-wont-used");
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
+                        Collections.singletonList(nonExistingAdSelectionId),
+                        selectionSignals,
+                        selectionUri);
+
+        // Add overrides
+        String selectionLogicPickSmallestJs =
+                "function selectOutcome(outcomes, selection_signals) {\n"
+                        + "    return {'status': 0, 'result': null};\n"
+                        + "}";
+        AddAdSelectionFromOutcomesOverrideRequest request =
+                new AddAdSelectionFromOutcomesOverrideRequest(
+                        config, selectionLogicPickSmallestJs, AdSelectionSignals.EMPTY);
+        mTestAdSelectionClient
+                .overrideAdSelectionFromOutcomesConfigRemoteInfo(request)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Running ad selection and asserting that the outcome is returned in < 10 seconds
+        Exception selectAdsException =
+                assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                mAdSelectionClient
+                                        .selectAds(config)
+                                        .get(
+                                                API_RESPONSE_LONGER_TIMEOUT_SECONDS,
+                                                TimeUnit.SECONDS));
+        assertThat(selectAdsException.getCause()).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void testAdSelectionFromOutcomesFlow_malformedJs_failure() throws Exception {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        // Perform ad selection to persist two results
+        double bid1 = 10.0, bid2 = 15.0;
+        AdSelectionOutcome outcome1 =
+                runAdSelectionAsPreSteps(bid1, BUYER_1, BUYER_1_BIDDING_LOGIC_JS);
+        AdSelectionOutcome outcome2 =
+                runAdSelectionAsPreSteps(bid2, BUYER_2, BUYER_2_BIDDING_LOGIC_JS);
+
+        // Inputs for outcome selection
+        AdSelectionSignals selectionSignals = AdSelectionSignals.EMPTY;
+        Uri selectionUri =
+                Uri.parse(
+                        String.format(
+                                "https://%s%s",
+                                AdSelectionConfigFixture.SELLER, SELLER_DECISION_LOGIC_URI_PATH));
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
+                        List.of(outcome1.getAdSelectionId(), outcome2.getAdSelectionId()),
+                        selectionSignals,
+                        selectionUri);
+
+        // Add overrides
+        String selectionLogicPickSmallestJs = "malformed js";
+        AddAdSelectionFromOutcomesOverrideRequest request =
+                new AddAdSelectionFromOutcomesOverrideRequest(
+                        config, selectionLogicPickSmallestJs, AdSelectionSignals.EMPTY);
+        mTestAdSelectionClient
+                .overrideAdSelectionFromOutcomesConfigRemoteInfo(request)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Running ad selection and asserting that the outcome is returned in < 10 seconds
+        Exception selectAdsException =
+                assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                mAdSelectionClient
+                                        .selectAds(config)
+                                        .get(
+                                                API_RESPONSE_LONGER_TIMEOUT_SECONDS,
+                                                TimeUnit.SECONDS));
+        assertThat(selectAdsException.getCause()).isInstanceOf(IllegalStateException.class);
     }
 
     @Ignore
@@ -2134,16 +2424,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .setAds(adsForBuyer2)
                         .build();
 
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
@@ -2274,16 +2557,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .setAds(adsForBuyer2)
                         .build();
 
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         joinCustomAudience(customAudience1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
@@ -2356,7 +2632,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Because frequency cap events are per-buyer and not per-CA, they cannot be cleared,
         // so to eliminate flakiness within a suite run, each test case will have its own unique key
-        final int keyToFilter = mFrequencyCapKeyToFilter.incrementAndGet();
+        final int keyToFilter = sFrequencyCapKeyToFilter.incrementAndGet();
 
         FrequencyCapFilters nonWinFilter =
                 new FrequencyCapFilters.Builder()
@@ -2413,16 +2689,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .setAds(ImmutableList.of(adWithoutFilters))
                         .build();
 
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         // Joining custom audiences, no result to do assertion on
         // Failures will generate an exception
         joinCustomAudience(customAudienceWithFrequencyCapFilters);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         // Joining custom audiences, no result to do assertion on
         // Failures will generate an exception
         joinCustomAudience(customAudienceWithoutFrequencyCapFilters);
@@ -2498,9 +2767,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .updateAdCounterHistogram(updateRequest)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         Log.i(
                 TAG,
                 "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
@@ -2537,7 +2803,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Because frequency cap events are per-buyer and not per-CA, they cannot be cleared,
         // so to eliminate flakiness within a suite run, each test case will have its own unique key
-        final int keyToFilter = mFrequencyCapKeyToFilter.incrementAndGet();
+        final int keyToFilter = sFrequencyCapKeyToFilter.incrementAndGet();
 
         FrequencyCapFilters nonWinFilter =
                 new FrequencyCapFilters.Builder()
@@ -2594,18 +2860,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .setAds(ImmutableList.of(adWithoutFilters))
                         .build();
 
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         // Joining custom audiences, no result to do assertion on
         // Failures will generate an exception
         joinCustomAudience(customAudienceWithFrequencyCapFilters);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
-        // Joining custom audiences, no result to do assertion on
-        // Failures will generate an exception
         joinCustomAudience(customAudienceWithoutFrequencyCapFilters);
 
         // Adding AdSelection override, no result to do assertion on
@@ -2679,9 +2936,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .updateAdCounterHistogram(updateRequest)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         Log.i(
                 TAG,
                 "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
@@ -2719,7 +2973,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Because frequency cap events are per-buyer and not per-CA, they cannot be cleared,
         // so to eliminate flakiness within a suite run, each test case will have its own unique key
-        final int keyToFilter = mFrequencyCapKeyToFilter.incrementAndGet();
+        final int keyToFilter = sFrequencyCapKeyToFilter.incrementAndGet();
         final int otherKeyNotFiltered = -1 * keyToFilter;
 
         FrequencyCapFilters nonWinFilterWithKeyToFilter =
@@ -2787,9 +3041,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                                         adWithFrequencyCapKeyToFilter, adWithOtherFrequencyCapKey))
                         .build();
 
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         // Joining custom audiences, no result to do assertion on
         // Failures will generate an exception
         joinCustomAudience(customAudienceWithFrequencyCapFilters);
@@ -2854,9 +3105,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .updateAdCounterHistogram(updateRequest)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         Log.i(
                 TAG,
                 "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
@@ -2893,7 +3141,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Because frequency cap events are per-buyer and not per-CA, they cannot be cleared,
         // so to eliminate flakiness within a suite run, each test case will have its own unique key
-        final int keyToFilter = mFrequencyCapKeyToFilter.incrementAndGet();
+        final int keyToFilter = sFrequencyCapKeyToFilter.incrementAndGet();
 
         FrequencyCapFilters nonWinFilter =
                 new FrequencyCapFilters.Builder()
@@ -2961,18 +3209,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .setAds(ImmutableList.of(adForBuyer2))
                         .build();
 
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         // Joining custom audiences, no result to do assertion on
         // Failures will generate an exception
         joinCustomAudience(customAudienceForBuyer1);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
-        // Joining custom audiences, no result to do assertion on
-        // Failures will generate an exception
         joinCustomAudience(customAudienceForBuyer2);
 
         // Adding AdSelection override, no result to do assertion on
@@ -3045,9 +3284,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .updateAdCounterHistogram(updateRequest)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         Log.i(
                 TAG,
                 "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
@@ -3084,7 +3320,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Because frequency cap events are per-buyer and not per-CA, they cannot be cleared,
         // so to eliminate flakiness within a suite run, each test case will have its own unique key
-        final int keyToFilter = mFrequencyCapKeyToFilter.incrementAndGet();
+        final int keyToFilter = sFrequencyCapKeyToFilter.incrementAndGet();
 
         FrequencyCapFilters nonWinFilter =
                 new FrequencyCapFilters.Builder()
@@ -3141,18 +3377,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .setAds(ImmutableList.of(adWithoutFilters))
                         .build();
 
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         // Joining custom audiences, no result to do assertion on
         // Failures will generate an exception
         joinCustomAudience(customAudienceWithFrequencyCapFilters);
-
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
-        // Joining custom audiences, no result to do assertion on
-        // Failures will generate an exception
         joinCustomAudience(customAudienceWithoutFrequencyCapFilters);
 
         // Adding AdSelection override, no result to do assertion on
@@ -3226,9 +3453,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .updateAdCounterHistogram(updateRequest)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
         Log.i(
                 TAG,
                 "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
@@ -3255,6 +3479,699 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mAdSelectionClient
                 .reportImpression(reportImpressionRequest2)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    }
+
+    @Test
+    public void testFrequencyCapFiltering_WinEvent_FiltersAds() throws Exception {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+
+        PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(true);
+        AdservicesTestHelper.killAdservicesProcess(sContext);
+
+        // Because frequency cap events are per-buyer and not per-CA, they cannot be cleared,
+        // so to eliminate flakiness within a suite run, each test case will have its own unique key
+        final int keyToFilter = sFrequencyCapKeyToFilter.incrementAndGet();
+
+        FrequencyCapFilters winFilter =
+                new FrequencyCapFilters.Builder()
+                        .setKeyedFrequencyCapsForWinEvents(
+                                ImmutableList.of(
+                                        new KeyedFrequencyCap.Builder(
+                                                        keyToFilter, 1, Duration.ofSeconds(10))
+                                                .build()))
+                        .build();
+
+        AdData adWithWinFrequencyCapFilter =
+                new AdData.Builder()
+                        .setRenderUri(
+                                CommonFixture.getUri(BUYER_1, AD_URI_PREFIX + "/ad_with_filters"))
+                        .setMetadata("{\"result\":10}")
+                        .setAdCounterKeys(ImmutableSet.of(keyToFilter))
+                        .setAdFilters(
+                                new AdFilters.Builder().setFrequencyCapFilters(winFilter).build())
+                        .build();
+
+        AdData adWithoutFilters =
+                new AdData.Builder()
+                        .setRenderUri(
+                                CommonFixture.getUri(
+                                        BUYER_1, AD_URI_PREFIX + "/ad_without_filters"))
+                        .setMetadata("{\"result\":5}")
+                        .build();
+
+        CustomAudience.Builder sameCustomAudienceBuilder =
+                new CustomAudience.Builder()
+                        .setBuyer(BUYER_1)
+                        .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
+                        .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
+                        .setDailyUpdateUri(
+                                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1))
+                        .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                        .setTrustedBiddingData(
+                                TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(
+                                        BUYER_1))
+                        .setBiddingLogicUri(
+                                CommonFixture.getUri(BUYER_1, BUYER_BIDDING_LOGIC_URI_PATH));
+
+        CustomAudience customAudienceWithFrequencyCapFilters =
+                sameCustomAudienceBuilder
+                        .setName(keyToFilter + "_ca_with_filters")
+                        .setAds(ImmutableList.of(adWithWinFrequencyCapFilter))
+                        .build();
+
+        CustomAudience customAudienceWithoutFrequencyCapFilters =
+                sameCustomAudienceBuilder
+                        .setName(keyToFilter + "_ca_without_filters")
+                        .setAds(ImmutableList.of(adWithoutFilters))
+                        .build();
+
+        // Joining custom audiences, no result to do assertion on
+        // Failures will generate an exception
+        joinCustomAudience(customAudienceWithFrequencyCapFilters);
+        joinCustomAudience(customAudienceWithoutFrequencyCapFilters);
+
+        // Adding AdSelection override, no result to do assertion on
+        // Failures will generate an exception
+        AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
+                new AddAdSelectionOverrideRequest(
+                        AD_SELECTION_CONFIG, DEFAULT_DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
+
+        mTestAdSelectionClient
+                .overrideAdSelectionConfigRemoteInfo(addAdSelectionOverrideRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        AddCustomAudienceOverrideRequest addCustomAudienceWithFiltersOverrideRequest =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudienceWithFrequencyCapFilters.getBuyer())
+                        .setName(customAudienceWithFrequencyCapFilters.getName())
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+        AddCustomAudienceOverrideRequest addCustomAudienceWithoutFiltersOverrideRequest =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudienceWithoutFrequencyCapFilters.getBuyer())
+                        .setName(customAudienceWithoutFrequencyCapFilters.getName())
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+
+        // Adding Custom audience override, no result to do assertion on
+        // Failures will generate an exception
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudienceWithFiltersOverrideRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudienceWithoutFiltersOverrideRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        Log.i(
+                TAG,
+                "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
+        Log.i(
+                TAG,
+                "Decision logic URI domain is "
+                        + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
+
+        // Running ad selection and asserting that the outcome is returned in < 10 seconds
+        AdSelectionOutcome outcome1 =
+                mAdSelectionClient
+                        .selectAds(AD_SELECTION_CONFIG)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that the ad with filters won
+        assertThat(outcome1.getRenderUri()).isEqualTo(adWithWinFrequencyCapFilter.getRenderUri());
+
+        ReportImpressionRequest reportImpressionRequest1 =
+                new ReportImpressionRequest(outcome1.getAdSelectionId(), AD_SELECTION_CONFIG);
+
+        // Performing reporting, and asserting that no exception is thrown
+        mAdSelectionClient
+                .reportImpression(reportImpressionRequest1)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        Log.i(
+                TAG,
+                "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
+        Log.i(
+                TAG,
+                "Decision logic URI domain is "
+                        + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
+
+        // Running ad selection again and asserting that the outcome is returned in < 10 seconds
+        AdSelectionOutcome outcome2 =
+                mAdSelectionClient
+                        .selectAds(AD_SELECTION_CONFIG)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that the ad without filters won after updating the ad counter histogram
+        assertThat(outcome2.getRenderUri()).isEqualTo(adWithoutFilters.getRenderUri());
+
+        ReportImpressionRequest reportImpressionRequest2 =
+                new ReportImpressionRequest(outcome2.getAdSelectionId(), AD_SELECTION_CONFIG);
+
+        // Performing reporting, and asserting that no exception is thrown
+        mAdSelectionClient
+                .reportImpression(reportImpressionRequest2)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    }
+
+    @Test
+    public void testFrequencyCapFiltering_WinEventDifferentKey_IsNotFiltered() throws Exception {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+
+        PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(true);
+        AdservicesTestHelper.killAdservicesProcess(sContext);
+
+        // Because frequency cap events are per-buyer and not per-CA, they cannot be cleared,
+        // so to eliminate flakiness within a suite run, each test case will have its own unique key
+        final int keyToFilter = sFrequencyCapKeyToFilter.incrementAndGet();
+        final int otherKeyNotFiltered = -1 * keyToFilter;
+
+        FrequencyCapFilters winFilterWithKeyToFilter =
+                new FrequencyCapFilters.Builder()
+                        .setKeyedFrequencyCapsForWinEvents(
+                                ImmutableList.of(
+                                        new KeyedFrequencyCap.Builder(
+                                                        keyToFilter, 1, Duration.ofSeconds(10))
+                                                .build()))
+                        .build();
+
+        AdData adWithFrequencyCapKeyToFilter =
+                new AdData.Builder()
+                        .setRenderUri(
+                                CommonFixture.getUri(
+                                        BUYER_1, AD_URI_PREFIX + "/adWithFrequencyCapKeyToFilter"))
+                        .setMetadata("{\"result\":10}")
+                        .setAdCounterKeys(ImmutableSet.of(keyToFilter))
+                        .setAdFilters(
+                                new AdFilters.Builder()
+                                        .setFrequencyCapFilters(winFilterWithKeyToFilter)
+                                        .build())
+                        .build();
+
+        FrequencyCapFilters winFilterWithOtherKey =
+                new FrequencyCapFilters.Builder()
+                        .setKeyedFrequencyCapsForWinEvents(
+                                ImmutableList.of(
+                                        new KeyedFrequencyCap.Builder(
+                                                        otherKeyNotFiltered,
+                                                        1,
+                                                        Duration.ofSeconds(10))
+                                                .build()))
+                        .build();
+
+        AdData adWithOtherFrequencyCapKey =
+                new AdData.Builder()
+                        .setRenderUri(
+                                CommonFixture.getUri(
+                                        BUYER_1, AD_URI_PREFIX + "/adWithOtherFrequencyCapKey"))
+                        .setMetadata("{\"result\":5}")
+                        .setAdCounterKeys(ImmutableSet.of(otherKeyNotFiltered))
+                        .setAdFilters(
+                                new AdFilters.Builder()
+                                        .setFrequencyCapFilters(winFilterWithOtherKey)
+                                        .build())
+                        .build();
+
+        CustomAudience customAudienceWithFrequencyCapFilters =
+                new CustomAudience.Builder()
+                        .setBuyer(BUYER_1)
+                        .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
+                        .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
+                        .setDailyUpdateUri(
+                                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1))
+                        .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                        .setTrustedBiddingData(
+                                TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(
+                                        BUYER_1))
+                        .setBiddingLogicUri(
+                                CommonFixture.getUri(BUYER_1, BUYER_BIDDING_LOGIC_URI_PATH))
+                        .setName(keyToFilter + "_ca_with_filters")
+                        .setAds(
+                                ImmutableList.of(
+                                        adWithFrequencyCapKeyToFilter, adWithOtherFrequencyCapKey))
+                        .build();
+
+        // Joining custom audiences, no result to do assertion on
+        // Failures will generate an exception
+        joinCustomAudience(customAudienceWithFrequencyCapFilters);
+
+        // Adding AdSelection override, no result to do assertion on
+        // Failures will generate an exception
+        AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
+                new AddAdSelectionOverrideRequest(
+                        AD_SELECTION_CONFIG, DEFAULT_DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
+
+        mTestAdSelectionClient
+                .overrideAdSelectionConfigRemoteInfo(addAdSelectionOverrideRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        AddCustomAudienceOverrideRequest addCustomAudienceWithFiltersOverrideRequest =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudienceWithFrequencyCapFilters.getBuyer())
+                        .setName(customAudienceWithFrequencyCapFilters.getName())
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+
+        // Adding Custom audience override, no result to do assertion on
+        // Failures will generate an exception
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudienceWithFiltersOverrideRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        Log.i(
+                TAG,
+                "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
+        Log.i(
+                TAG,
+                "Decision logic URI domain is "
+                        + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
+
+        // Running ad selection and asserting that the outcome is returned in < 10 seconds
+        AdSelectionOutcome outcome1 =
+                mAdSelectionClient
+                        .selectAds(AD_SELECTION_CONFIG)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that the ad with filters won
+        assertThat(outcome1.getRenderUri()).isEqualTo(adWithFrequencyCapKeyToFilter.getRenderUri());
+
+        ReportImpressionRequest reportImpressionRequest1 =
+                new ReportImpressionRequest(outcome1.getAdSelectionId(), AD_SELECTION_CONFIG);
+
+        // Performing reporting, and asserting that no exception is thrown
+        mAdSelectionClient
+                .reportImpression(reportImpressionRequest1)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        Log.i(
+                TAG,
+                "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
+        Log.i(
+                TAG,
+                "Decision logic URI domain is "
+                        + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
+
+        // Running ad selection again and asserting that the outcome is returned in < 10 seconds
+        AdSelectionOutcome outcome2 =
+                mAdSelectionClient
+                        .selectAds(AD_SELECTION_CONFIG)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that the ad with a different key won after updating the ad counter histogram
+        assertThat(outcome2.getRenderUri()).isEqualTo(adWithOtherFrequencyCapKey.getRenderUri());
+
+        ReportImpressionRequest reportImpressionRequest2 =
+                new ReportImpressionRequest(outcome2.getAdSelectionId(), AD_SELECTION_CONFIG);
+
+        // Performing reporting, and asserting that no exception is thrown
+        mAdSelectionClient
+                .reportImpression(reportImpressionRequest2)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    }
+
+    @Test
+    public void testFrequencyCapFiltering_WinEventDifferentBuyer_IsNotFiltered() throws Exception {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+
+        PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(true);
+        AdservicesTestHelper.killAdservicesProcess(sContext);
+
+        // Because frequency cap events are per-buyer and not per-CA, they cannot be cleared,
+        // so to eliminate flakiness within a suite run, each test case will have its own unique key
+        final int keyToFilter = sFrequencyCapKeyToFilter.incrementAndGet();
+
+        FrequencyCapFilters winFilter =
+                new FrequencyCapFilters.Builder()
+                        .setKeyedFrequencyCapsForWinEvents(
+                                ImmutableList.of(
+                                        new KeyedFrequencyCap.Builder(
+                                                        keyToFilter, 1, Duration.ofSeconds(10))
+                                                .build()))
+                        .build();
+
+        AdData adForBuyer1ToFilter =
+                new AdData.Builder()
+                        .setRenderUri(
+                                CommonFixture.getUri(BUYER_1, AD_URI_PREFIX + "/ad_for_buyer1"))
+                        .setMetadata("{\"result\":10}")
+                        .setAdCounterKeys(ImmutableSet.of(keyToFilter))
+                        .setAdFilters(
+                                new AdFilters.Builder().setFrequencyCapFilters(winFilter).build())
+                        .build();
+
+        AdData adForBuyer2 =
+                new AdData.Builder()
+                        .setRenderUri(
+                                CommonFixture.getUri(BUYER_2, AD_URI_PREFIX + "/ad_for_buyer2"))
+                        .setMetadata("{\"result\":5}")
+                        .setAdCounterKeys(ImmutableSet.of(keyToFilter))
+                        .setAdFilters(
+                                new AdFilters.Builder().setFrequencyCapFilters(winFilter).build())
+                        .build();
+
+        CustomAudience.Builder sameCustomAudienceBuilder =
+                new CustomAudience.Builder()
+                        .setName(keyToFilter + "_ca_with_filters")
+                        .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
+                        .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
+                        .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
+
+        CustomAudience customAudienceForBuyer1 =
+                sameCustomAudienceBuilder
+                        .setBuyer(BUYER_1)
+                        .setDailyUpdateUri(
+                                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1))
+                        .setTrustedBiddingData(
+                                TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(
+                                        BUYER_1))
+                        .setBiddingLogicUri(
+                                CommonFixture.getUri(BUYER_1, BUYER_BIDDING_LOGIC_URI_PATH))
+                        .setAds(ImmutableList.of(adForBuyer1ToFilter))
+                        .build();
+
+        CustomAudience customAudienceForBuyer2 =
+                sameCustomAudienceBuilder
+                        .setBuyer(BUYER_2)
+                        .setDailyUpdateUri(
+                                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2))
+                        .setTrustedBiddingData(
+                                TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(
+                                        BUYER_2))
+                        .setBiddingLogicUri(
+                                CommonFixture.getUri(BUYER_2, BUYER_BIDDING_LOGIC_URI_PATH))
+                        .setAds(ImmutableList.of(adForBuyer2))
+                        .build();
+
+        // Joining custom audiences, no result to do assertion on
+        // Failures will generate an exception
+        joinCustomAudience(customAudienceForBuyer1);
+        joinCustomAudience(customAudienceForBuyer2);
+
+        // Adding AdSelection override, no result to do assertion on
+        // Failures will generate an exception
+        AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
+                new AddAdSelectionOverrideRequest(
+                        AD_SELECTION_CONFIG, DEFAULT_DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
+
+        mTestAdSelectionClient
+                .overrideAdSelectionConfigRemoteInfo(addAdSelectionOverrideRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        AddCustomAudienceOverrideRequest addCustomAudienceForBuyer1OverrideRequest =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudienceForBuyer1.getBuyer())
+                        .setName(customAudienceForBuyer1.getName())
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+        AddCustomAudienceOverrideRequest addCustomAudienceForBuyer2OverrideRequest =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudienceForBuyer2.getBuyer())
+                        .setName(customAudienceForBuyer2.getName())
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+
+        // Adding Custom audience override, no result to do assertion on
+        // Failures will generate an exception
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudienceForBuyer1OverrideRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudienceForBuyer2OverrideRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        Log.i(
+                TAG,
+                "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
+        Log.i(
+                TAG,
+                "Decision logic URI domain is "
+                        + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
+
+        // Running ad selection and asserting that the outcome is returned in < 10 seconds
+        AdSelectionOutcome outcome1 =
+                mAdSelectionClient
+                        .selectAds(AD_SELECTION_CONFIG)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that the ad with filters won
+        assertThat(outcome1.getRenderUri()).isEqualTo(adForBuyer1ToFilter.getRenderUri());
+
+        ReportImpressionRequest reportImpressionRequest1 =
+                new ReportImpressionRequest(outcome1.getAdSelectionId(), AD_SELECTION_CONFIG);
+
+        // Performing reporting, and asserting that no exception is thrown
+        mAdSelectionClient
+                .reportImpression(reportImpressionRequest1)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        Log.i(
+                TAG,
+                "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
+        Log.i(
+                TAG,
+                "Decision logic URI domain is "
+                        + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
+
+        // Running ad selection again and asserting that the outcome is returned in < 10 seconds
+        AdSelectionOutcome outcome2 =
+                mAdSelectionClient
+                        .selectAds(AD_SELECTION_CONFIG)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that the ad without filters won after updating the ad counter histogram
+        assertThat(outcome2.getRenderUri()).isEqualTo(adForBuyer2.getRenderUri());
+
+        ReportImpressionRequest reportImpressionRequest2 =
+                new ReportImpressionRequest(outcome2.getAdSelectionId(), AD_SELECTION_CONFIG);
+
+        // Performing reporting, and asserting that no exception is thrown
+        mAdSelectionClient
+                .reportImpression(reportImpressionRequest2)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    }
+
+    @Test
+    public void testFrequencyCapFiltering_WinEventSameBuyerDifferentCustomAudience_IsNotFiltered()
+            throws Exception {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+
+        PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(true);
+        AdservicesTestHelper.killAdservicesProcess(sContext);
+
+        // Because frequency cap events are per-buyer and not per-CA, they cannot be cleared,
+        // so to eliminate flakiness within a suite run, each test case will have its own unique key
+        final int keyToFilter = sFrequencyCapKeyToFilter.incrementAndGet();
+
+        FrequencyCapFilters winFilter =
+                new FrequencyCapFilters.Builder()
+                        .setKeyedFrequencyCapsForWinEvents(
+                                ImmutableList.of(
+                                        new KeyedFrequencyCap.Builder(
+                                                        keyToFilter, 1, Duration.ofSeconds(10))
+                                                .build()))
+                        .build();
+
+        AdData adForCustomAudience1ToFilter =
+                new AdData.Builder()
+                        .setRenderUri(
+                                CommonFixture.getUri(
+                                        BUYER_1, AD_URI_PREFIX + "/ad_for_CA1_to_filter"))
+                        .setMetadata("{\"result\":10}")
+                        .setAdCounterKeys(ImmutableSet.of(keyToFilter))
+                        .setAdFilters(
+                                new AdFilters.Builder().setFrequencyCapFilters(winFilter).build())
+                        .build();
+
+        AdData adForCustomAudience2 =
+                new AdData.Builder()
+                        .setRenderUri(CommonFixture.getUri(BUYER_1, AD_URI_PREFIX + "/ad_for_CA2"))
+                        .setMetadata("{\"result\":5}")
+                        .setAdCounterKeys(ImmutableSet.of(keyToFilter))
+                        .setAdFilters(
+                                new AdFilters.Builder().setFrequencyCapFilters(winFilter).build())
+                        .build();
+
+        CustomAudience.Builder sameCustomAudienceBuilder =
+                new CustomAudience.Builder()
+                        .setBuyer(BUYER_1)
+                        .setDailyUpdateUri(
+                                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1))
+                        .setTrustedBiddingData(
+                                TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(
+                                        BUYER_1))
+                        .setBiddingLogicUri(
+                                CommonFixture.getUri(BUYER_1, BUYER_BIDDING_LOGIC_URI_PATH))
+                        .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
+                        .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
+                        .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
+
+        CustomAudience customAudience1 =
+                sameCustomAudienceBuilder
+                        .setName(keyToFilter + "_ca_to_filter")
+                        .setAds(ImmutableList.of(adForCustomAudience1ToFilter))
+                        .build();
+
+        CustomAudience customAudience2 =
+                sameCustomAudienceBuilder
+                        .setName(keyToFilter + "_ca_to_not_filter")
+                        .setAds(ImmutableList.of(adForCustomAudience2))
+                        .build();
+
+        // Joining custom audiences, no result to do assertion on
+        // Failures will generate an exception
+        joinCustomAudience(customAudience1);
+        joinCustomAudience(customAudience2);
+
+        // Adding AdSelection override, no result to do assertion on
+        // Failures will generate an exception
+        AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
+                new AddAdSelectionOverrideRequest(
+                        AD_SELECTION_CONFIG, DEFAULT_DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
+
+        mTestAdSelectionClient
+                .overrideAdSelectionConfigRemoteInfo(addAdSelectionOverrideRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        AddCustomAudienceOverrideRequest addCustomAudience1OverrideRequest =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudience1.getBuyer())
+                        .setName(customAudience1.getName())
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+        AddCustomAudienceOverrideRequest addCustomAudience2OverrideRequest =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudience2.getBuyer())
+                        .setName(customAudience2.getName())
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+
+        // Adding Custom audience override, no result to do assertion on
+        // Failures will generate an exception
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudience1OverrideRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudience2OverrideRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        Log.i(
+                TAG,
+                "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
+        Log.i(
+                TAG,
+                "Decision logic URI domain is "
+                        + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
+
+        // Running ad selection and asserting that the outcome is returned in < 10 seconds
+        AdSelectionOutcome outcome1 =
+                mAdSelectionClient
+                        .selectAds(AD_SELECTION_CONFIG)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that the ad with filters won
+        assertThat(outcome1.getRenderUri()).isEqualTo(adForCustomAudience1ToFilter.getRenderUri());
+
+        ReportImpressionRequest reportImpressionRequest1 =
+                new ReportImpressionRequest(outcome1.getAdSelectionId(), AD_SELECTION_CONFIG);
+
+        // Performing reporting, and asserting that no exception is thrown
+        mAdSelectionClient
+                .reportImpression(reportImpressionRequest1)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        Log.i(
+                TAG,
+                "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
+        Log.i(
+                TAG,
+                "Decision logic URI domain is "
+                        + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
+
+        // Running ad selection again and asserting that the outcome is returned in < 10 seconds
+        AdSelectionOutcome outcome2 =
+                mAdSelectionClient
+                        .selectAds(AD_SELECTION_CONFIG)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that the ad without filters won after updating the ad counter histogram
+        assertThat(outcome2.getRenderUri()).isEqualTo(adForCustomAudience2.getRenderUri());
+
+        ReportImpressionRequest reportImpressionRequest2 =
+                new ReportImpressionRequest(outcome2.getAdSelectionId(), AD_SELECTION_CONFIG);
+
+        // Performing reporting, and asserting that no exception is thrown
+        mAdSelectionClient
+                .reportImpression(reportImpressionRequest2)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    }
+
+    @Test
+    public void testGetAdSelectionData_keyCouldntFetch_failure()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        // TODO(b/293022107): Add success tests when encryption key fetch can be done in CTS
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+
+        PhFlagsFixture.overrideFledgeAdSelectionAuctionServerApisEnabled(false);
+
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        CustomAudience customAudience1 = createCustomAudience(BUYER_1, bidsForBuyer1);
+        CustomAudience customAudience2 = createCustomAudience(BUYER_2, bidsForBuyer2);
+        // Joining custom audiences, no result to do assertion on. Failures will generate an
+        // exception.
+        joinCustomAudience(customAudience1);
+        joinCustomAudience(customAudience2);
+
+        GetAdSelectionDataRequest failingRequest =
+                new GetAdSelectionDataRequest.Builder().setSeller(SELLER).build();
+        ThrowingRunnable runnable =
+                () ->
+                        mAdSelectionClient
+                                .getAdSelectionData(failingRequest)
+                                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        Throwable thrown = Assert.assertThrows(ExecutionException.class, runnable);
+        assertThat(thrown).hasCauseThat().isInstanceOf(IllegalStateException.class);
+
+        // TODO(b/293022107): Comment in when successful run can be achievable from CTS
+        //        GetAdSelectionDataOutcome outcome =
+        //                mAdSelectionClient
+        //                        .getAdSelectionData(request)
+        //                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        //
+        //        Assert.assertNotEquals(
+        //                AdSelectionOutcome.UNSET_AD_SELECTION_ID, outcome.getAdSelectionId());
+        //        Assert.assertNotNull(outcome.getAdSelectionData());
+    }
+
+    @Test
+    public void testPersistAdSelectionData_adSelectionIdDoesntExist_failure() {
+        // TODO(b/293022107): This test is currently using a placeholder ad selection id that cause
+        //  it to fail. Add success tests when encryption key fetch can be done in CTS
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+
+        PhFlagsFixture.overrideFledgeAdSelectionAuctionServerApisEnabled(false);
+
+        long adSelectionId = 1234567L;
+        PersistAdSelectionResultRequest failingRequest =
+                new PersistAdSelectionResultRequest.Builder()
+                        .setAdSelectionId(adSelectionId)
+                        .setSeller(SELLER)
+                        .build();
+        ThrowingRunnable runnable =
+                () ->
+                        mAdSelectionClient
+                                .persistAdSelectionResult(failingRequest)
+                                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        Throwable thrown = Assert.assertThrows(ExecutionException.class, runnable);
+        assertThat(thrown).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+        // TODO(b/293022107): Assert results when overrides are implemented
     }
 
     private String insertJsWait(long waitTime) {
@@ -3414,6 +4331,12 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     private void joinCustomAudience(CustomAudience customAudience)
             throws ExecutionException, InterruptedException, TimeoutException {
         mCustomAudiencesToCleanUp.add(customAudience);
+        Log.i(
+                TAG,
+                "Joining custom audience "
+                        + customAudience.getName()
+                        + " for buyer"
+                        + customAudience.getBuyer());
         mCustomAudienceClient
                 .joinCustomAudience(customAudience)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -3423,10 +4346,12 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
             throws ExecutionException, InterruptedException, TimeoutException {
         try {
             for (CustomAudience customAudience : mCustomAudiencesToCleanUp) {
-                // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted
-                //  for FLEDGE
-                CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-
+                Log.i(
+                        TAG,
+                        "Cleanup: leaving custom audience "
+                                + customAudience.getName()
+                                + " for buyer"
+                                + customAudience.getBuyer());
                 mCustomAudienceClient
                         .leaveCustomAudience(
                                 customAudience.getBuyer(),
@@ -3436,5 +4361,58 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         } finally {
             mCustomAudiencesToCleanUp.clear();
         }
+    }
+
+    private AdSelectionOutcome runAdSelectionAsPreSteps(
+            double bid, AdTechIdentifier buyer, String buyerDecisionLogic) throws Exception {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+
+        List<Double> bidsForBuyer = ImmutableList.of(bid);
+        CustomAudience customAudience1 = createCustomAudience(buyer, bidsForBuyer);
+
+        // Joining custom audiences
+        joinCustomAudience(customAudience1);
+        AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest1 =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudience1.getBuyer())
+                        .setName(customAudience1.getName())
+                        .setBiddingLogicJs(buyerDecisionLogic)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+
+        // Adding Custom audience override
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        AdSelectionConfig adSelectionConfig =
+                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
+                        .setDecisionLogicUri(
+                                Uri.parse(
+                                        String.format(
+                                                "https://%s%s",
+                                                AdSelectionConfigFixture.SELLER,
+                                                SELLER_DECISION_LOGIC_URI_PATH)))
+                        .setTrustedScoringSignalsUri(
+                                Uri.parse(
+                                        String.format(
+                                                "https://%s%s",
+                                                AdSelectionConfigFixture.SELLER,
+                                                SELLER_TRUSTED_SIGNAL_URI_PATH)))
+                        .setCustomAudienceBuyers(Collections.singletonList(buyer))
+                        .build();
+
+        // Adding AdSelection override
+        mTestAdSelectionClient
+                .overrideAdSelectionConfigRemoteInfo(
+                        new AddAdSelectionOverrideRequest(
+                                adSelectionConfig,
+                                DEFAULT_DECISION_LOGIC_JS,
+                                TRUSTED_SCORING_SIGNALS))
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Running ad selection and asserting that the outcome is returned in < 10 seconds
+        return mAdSelectionClient
+                .selectAds(adSelectionConfig)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 }

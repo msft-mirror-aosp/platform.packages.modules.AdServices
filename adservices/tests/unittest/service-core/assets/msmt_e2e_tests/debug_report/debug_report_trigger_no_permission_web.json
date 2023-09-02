@@ -1,7 +1,7 @@
 {
   "description": "Trigger is a Web, no ar_debug permission, no trigger debug report can be generated",
   "phflags_override": {
-    "measurement_debug_join_key_enrollment_allowlist" : "enrollment-id-www.ad-tech1.com"
+    "measurement_debug_join_key_enrollment_allowlist" : "enrollment-id-ad-tech1.com"
   },
   "input": {
     "web_triggers": [

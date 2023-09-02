@@ -1,7 +1,7 @@
 {
   "description": "W2A test for trigger-aggregate-insufficient-budget debug report.",
   "phflags_override": {
-    "measurement_debug_join_key_enrollment_allowlist" : "enrollment-id-www.ad-tech1.test"
+    "measurement_debug_join_key_enrollment_allowlist" : "enrollment-id-ad-tech1.test"
   },
   "input": {
     "web_sources": [

@@ -303,21 +303,6 @@ public class AsyncRegistrationQueueRunner {
                     source, String.valueOf(numOfSourcesPerPublisher), dao);
             return false;
         }
-        int numOfOriginExcludingRegistrationOrigin =
-                dao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
-                        source.getRegistrationOrigin(),
-                        publisher.get(),
-                        publisherType,
-                        source.getEnrollmentId(),
-                        source.getEventTime(),
-                        PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW);
-        if (numOfOriginExcludingRegistrationOrigin > 0) {
-            LogUtil.d(
-                    "insertSources: Max limit of 1 reporting origin for publisher - %s and"
-                            + " enrollment - %s reached.",
-                    publisher, source.getEnrollmentId());
-            return false;
-        }
         if (source.getAppDestinations() != null
                 && !isDestinationWithinBounds(
                         debugReportApi,
@@ -345,6 +330,21 @@ public class AsyncRegistrationQueueRunner {
                         windowStartTime,
                         source.getEventTime(),
                         dao)) {
+            return false;
+        }
+        int numOfOriginExcludingRegistrationOrigin =
+                dao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+                        source.getRegistrationOrigin(),
+                        publisher.get(),
+                        publisherType,
+                        source.getEnrollmentId(),
+                        source.getEventTime(),
+                        PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW);
+        if (numOfOriginExcludingRegistrationOrigin > 0) {
+            LogUtil.d(
+                    "insertSources: Max limit of 1 reporting origin for publisher - %s and"
+                            + " enrollment - %s reached.",
+                    publisher, source.getEnrollmentId());
             return false;
         }
         if (!source.hasValidInformationGain(FlagsFactory.getFlags())) {

@@ -34,9 +34,7 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
-import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
 import com.android.adservices.service.measurement.util.JobLockHolder;
-import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -190,20 +188,13 @@ public class DebugReportingFallbackJobService extends JobService {
                 new EventReportingJobHandler(
                                 enrollmentDao,
                                 datastoreManager,
-                                FlagsFactory.getFlags(),
-                                AdServicesLoggerImpl.getInstance(),
-                                ReportingStatus.ReportType.DEBUG_EVENT,
-                                ReportingStatus.UploadMethod.FALLBACK)
+                                ReportingStatus.UploadMethod.UNKNOWN)
                         .setIsDebugInstance(true)
                         .performScheduledPendingReportsInWindow(0, 0);
                 new AggregateReportingJobHandler(
                                 enrollmentDao,
                                 datastoreManager,
-                                new AggregateEncryptionKeyManager(datastoreManager),
-                                FlagsFactory.getFlags(),
-                                AdServicesLoggerImpl.getInstance(),
-                                ReportingStatus.ReportType.DEBUG_AGGREGATE,
-                                ReportingStatus.UploadMethod.FALLBACK)
+                                ReportingStatus.UploadMethod.UNKNOWN)
                         .setIsDebugInstance(true)
                         .performScheduledPendingReportsInWindow(0, 0);
                 return;

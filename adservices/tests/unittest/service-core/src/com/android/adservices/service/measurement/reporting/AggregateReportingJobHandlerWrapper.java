@@ -76,6 +76,7 @@ public class AggregateReportingJobHandlerWrapper {
                                         enrollmentDao,
                                         datastoreManager,
                                         mockEncryptionManager,
+                                        ReportingStatus.UploadMethod.REGULAR,
                                         mockFlags,
                                         mockLogger)
                                 .setIsDebugInstance(isDebugInstance));

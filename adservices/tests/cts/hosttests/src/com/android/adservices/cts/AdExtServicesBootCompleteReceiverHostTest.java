@@ -16,16 +16,16 @@
 
 package com.android.adservices.cts;
 
-import static com.google.common.truth.Truth.assertThat;
+import static com.android.adservices.common.TestDeviceHelper.ADSERVICES_SETTINGS_INTENT;
+import static com.android.adservices.common.TestDeviceHelper.startActivity;
 
-import com.android.tradefed.device.DeviceNotAvailableException;
-import com.android.tradefed.device.ITestDevice;
+import com.android.adservices.common.AdServicesHostSideFlagsSetterRule;
+import com.android.adservices.common.AdServicesHostSideTestCase;
+import com.android.adservices.common.HostSideSdkLevelSupportRule;
+import com.android.adservices.common.RequiresSdkLevelLessThanT;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
-import com.android.tradefed.testtype.IDeviceTest;
 
-import org.junit.After;
-import org.junit.Assume;
-import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -37,57 +37,26 @@ import org.junit.runner.RunWith;
  * activities to enabled on Android S devices
  */
 @RunWith(DeviceJUnit4ClassRunner.class)
-public class AdExtServicesBootCompleteReceiverHostTest implements IDeviceTest {
+public class AdExtServicesBootCompleteReceiverHostTest extends AdServicesHostSideTestCase {
 
-    private ITestDevice mDevice;
+    @Rule(order = 0)
+    public final HostSideSdkLevelSupportRule sdkLevel = HostSideSdkLevelSupportRule.forAtLeastS();
 
-    @Override
-    public void setDevice(ITestDevice device) {
-        mDevice = device;
-    }
+    // Sets flags used in the test (and automatically reset them at the end)
+    @Rule(order = 1)
+    public final AdServicesHostSideFlagsSetterRule flags =
+            AdServicesHostSideFlagsSetterRule.forCompatModeEnabledTests();
 
-    @Override
-    public ITestDevice getDevice() {
-        return mDevice;
-    }
-
-    @Before
-    public void setUp() throws Exception {
-        overrideCompatFlags();
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        resetCompatFlags();
-    }
-
+    // TODO(b/295269584): improve rule to support range of versions.
     @Test
+    @RequiresSdkLevelLessThanT(reason = "It's for S only")
     public void testExtBootCompleteReceiver() throws Exception {
-        final int apiLevel = getDevice().getApiLevel();
-        Assume.assumeTrue(apiLevel == 31 || apiLevel == 32 /* Build.VERSION_CODES.S or S_V2 */);
-        ITestDevice device = getDevice();
-
         // reboot the device
-        device.reboot();
-        device.waitForDeviceAvailable();
-        // Sleep 30s to wait for AdBootCompletedReceiver execution
-        Thread.sleep(30 * 1000);
+        mDevice.reboot();
+        mDevice.waitForDeviceAvailable();
+        // Sleep 5 mins to wait for AdBootCompletedReceiver execution
+        Thread.sleep(300 * 1000);
 
-        String startActivityMsg =
-                getDevice().executeShellCommand("am start -a android.adservices.ui.SETTINGS");
-        assertThat(startActivityMsg)
-                .doesNotContain("Error: Activity not started, unable to resolve Intent");
-    }
-
-    private void overrideCompatFlags() throws DeviceNotAvailableException {
-        getDevice().executeShellCommand("device_config put adservices global_kill_switch false");
-        getDevice().executeShellCommand("device_config put adservices adservice_enabled true");
-        getDevice().executeShellCommand("device_config put adservices enable_back_compat true");
-    }
-
-    private void resetCompatFlags() throws DeviceNotAvailableException {
-        getDevice().executeShellCommand("device_config delete adservices global_kill_switch");
-        getDevice().executeShellCommand("device_config delete adservices adservice_enabled");
-        getDevice().executeShellCommand("device_config delete adservices enable_back_compat");
+        startActivity(ADSERVICES_SETTINGS_INTENT);
     }
 }

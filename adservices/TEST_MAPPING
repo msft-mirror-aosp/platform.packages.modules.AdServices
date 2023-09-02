@@ -26,11 +26,23 @@
     },
     {
       // Install com.google.android.adservices.apex and run AdServicesApkUISettingsGaOtaTests.
-      "name": "AdServicesApkUISettingsGaOtaTests[com.google.android.adservices.apex]"
+      "name": "AdServicesApkUISettingsGaOtaTests[com.google.android.adservices.apex]",
+            "options": [
+              {
+                // Exclude tests that are marked flaky
+                "exclude-annotation": "androidx.test.filters.FlakyTest"
+              }
+            ]
     },
     {
       // Install com.google.android.extservices.apex and run AdExtServicesApkUISettingsGaOtaTests.
-      "name": "AdExtServicesApkUISettingsGaOtaTests[com.google.android.extservices.apex]"
+      "name": "AdExtServicesApkUISettingsGaOtaTests[com.google.android.extservices.apex]",
+            "options": [
+              {
+                // Exclude tests that are marked flaky
+                "exclude-annotation": "androidx.test.filters.FlakyTest"
+              }
+            ]
     },
     {
       // Install com.google.android.adservices.apex and run AdServicesApkUnitTests.
@@ -173,8 +185,16 @@
       "name": "CtsAppSetIdEndToEndTest[com.google.android.adservices.apex]"
     },
     {
+      // Install com.google.android.adservices.apex and run CtsAdServicesCobaltTest.
+      "name": "CtsAdServicesCobaltTest[com.google.android.adservices.apex]"
+    },
+    {
       // Install com.google.android.extservices.apex and run CtsAdExtServicesAppSetIdEndToEndTest.
       "name": "CtsAdExtServicesAppSetIdEndToEndTest[com.google.android.extservices.apex]"
+    },
+    {
+      // Install com.google.android.extservices.apex and run CtsAdExtServicesAdServicesCobaltTest.
+      "name": "CtsAdExtServicesAdServicesCobaltTest[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run CtsAdServicesHostTests.
@@ -187,6 +207,33 @@
     {
       // Install com.google.android.extservices.apex and run AdExtServicesEndToEndTests.
       "name": "AdExtServicesEndToEndTests[com.google.android.extservices.apex]",
+      "options": [
+        {
+          // Exclude tests that are marked flaky
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "AdServicesBetaUxCtsRootTest[com.google.android.adservices.apex]",
+      "options": [
+        {
+          // Exclude tests that are marked flaky
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "LegacyAdServicesGaUxCtsRootTest[com.google.android.adservices.apex]",
+      "options": [
+        {
+          // Exclude tests that are marked flaky
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "AdServicesGaUxDebugChannelCtsRootTest[com.google.android.adservices.apex]",
       "options": [
         {
           // Exclude tests that are marked flaky
@@ -308,13 +355,34 @@
       ]
     },
     {
-      "name": "AdServicesBetaUxCtsRootTest"
+      "name": "CtsAdServicesCobaltTest"
     },
     {
-      "name": "LegacyAdServicesGaUxCtsRootTest"
+      "name": "AdServicesBetaUxCtsRootTest",
+      "options": [
+        {
+          // Exclude tests that are marked flaky
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
     },
     {
-      "name": "AdServicesGaUxDebugChannelCtsRootTest"
+      "name": "LegacyAdServicesGaUxCtsRootTest",
+      "options": [
+        {
+          // Exclude tests that are marked flaky
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "AdServicesGaUxDebugChannelCtsRootTest",
+      "options": [
+          {
+            // Exclude tests that are marked flaky
+            "exclude-annotation": "androidx.test.filters.FlakyTest"
+          }
+      ]
     }
   ],
   "postsubmit": [

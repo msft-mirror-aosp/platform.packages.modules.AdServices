@@ -115,8 +115,7 @@ public class EventReportWindowCalcDelegate {
     }
 
     private boolean isWithinWindow(long time, Pair<Long, Long> window) {
-        // TODO(b/290223297) Fix the conditions below: Should be start <= time and time < end
-        return window.first <= time && time <= window.second;
+        return window.first <= time && time < window.second;
     }
 
     /**

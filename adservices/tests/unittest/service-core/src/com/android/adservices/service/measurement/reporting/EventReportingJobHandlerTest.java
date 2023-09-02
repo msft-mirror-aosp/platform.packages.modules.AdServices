@@ -41,7 +41,6 @@ import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
-import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
@@ -125,7 +124,6 @@ public class EventReportingJobHandlerTest {
         mMockitoSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
-                        .spyStatic(ErrorLogUtil.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
         mMockFlags = mock(Flags.class);
@@ -137,16 +135,14 @@ public class EventReportingJobHandlerTest {
         doReturn(false).when(mFlags).getMeasurementEnableReportingJobsThrowJsonException();
         doReturn(false).when(mFlags).getMeasurementEnableReportingJobsThrowCryptoException();
         doReturn(false).when(mFlags).getMeasurementEnableReportingJobsThrowUnaccountedException();
-        ExtendedMockito.doNothing()
-                .when(() -> ErrorLogUtil.e(anyInt(), anyInt(), anyString(), anyString()));
-        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         mEventReportingJobHandler =
-                new EventReportingJobHandler(mEnrollmentDao, mDatastoreManager, mFlags, mLogger);
+                new EventReportingJobHandler(
+                        mEnrollmentDao, mDatastoreManager, null, mFlags, mLogger);
         mSpyEventReportingJobHandler = Mockito.spy(mEventReportingJobHandler);
         mSpyDebugEventReportingJobHandler =
                 Mockito.spy(
                         new EventReportingJobHandler(
-                                        mEnrollmentDao, mDatastoreManager, mFlags, mLogger)
+                                        mEnrollmentDao, mDatastoreManager, null, mFlags, mLogger)
                                 .setIsDebugInstance(true));
     }
 

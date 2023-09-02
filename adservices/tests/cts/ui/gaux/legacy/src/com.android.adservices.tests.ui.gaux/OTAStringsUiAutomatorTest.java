@@ -35,6 +35,7 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -93,6 +94,7 @@ public class OTAStringsUiAutomatorTest {
     }
 
     @Test
+    @Ignore("b/297347345")
     public void checkOTAStringsNotificationAndSettingsPageTest()
             throws UiObjectNotFoundException, InterruptedException {
         sCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);

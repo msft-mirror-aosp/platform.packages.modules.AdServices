@@ -16,7 +16,9 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.spe.AdservicesJobInfo.COBALT_LOGGING_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.CONSENT_NOTIFICATION_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.FLEDGE_AD_SELECTION_DEBUG_REPORT_SENDER_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MAINTENANCE_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB;
@@ -31,6 +33,7 @@ import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DELETE_UN
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_EVENT_MAIN_REPORTING_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.PERIODIC_SIGNALS_ENCODING_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.TOPICS_EPOCH_JOB;
 
 import android.annotation.NonNull;
@@ -40,9 +43,12 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import com.android.adservices.cobalt.CobaltJobService;
 import com.android.adservices.download.MddJobService;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
+import com.android.adservices.service.adselection.DebugReportSenderJobService;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.DeleteUninstalledJobService;
@@ -74,6 +80,7 @@ public class BackgroundJobsManager {
 
         scheduleTopicsBackgroundJobs(context);
 
+        // TODO(b/296146348): Remove MDD Background Jobs from scheduleAllBackgroundJobs
         scheduleMddBackgroundJobs(context);
 
         scheduleMeasurementBackgroundJobs(context);
@@ -127,8 +134,12 @@ public class BackgroundJobsManager {
      * @param context application context.
      */
     public static void scheduleFledgeBackgroundJobs(@NonNull Context context) {
-        if (!FlagsFactory.getFlags().getFledgeSelectAdsKillSwitch()) {
-            MaintenanceJobService.scheduleIfNeeded(context, false);
+        Flags flags = FlagsFactory.getFlags();
+        if (!flags.getFledgeSelectAdsKillSwitch()) {
+            MaintenanceJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
+            if (flags.getFledgeEventLevelDebugReportingEnabled()) {
+                DebugReportSenderJobService.scheduleIfNeeded(context, false);
+            }
         }
     }
 
@@ -141,15 +152,17 @@ public class BackgroundJobsManager {
      *   <li>{@link EpochJobService}
      *   <li>{@link MaintenanceJobService}
      *   <li>{@link MddJobService}
+     *   <li>{@link CobaltJobService}
      * </ul>
      *
      * @param context application context.
      */
     public static void scheduleTopicsBackgroundJobs(@NonNull Context context) {
         if (!FlagsFactory.getFlags().getTopicsKillSwitch()) {
-            EpochJobService.scheduleIfNeeded(context, false);
-            MaintenanceJobService.scheduleIfNeeded(context, false);
+            EpochJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
+            MaintenanceJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
             scheduleMddBackgroundJobs(context);
+            scheduleCobaltBackgroundJob(context);
         }
     }
 
@@ -207,6 +220,17 @@ public class BackgroundJobsManager {
     }
 
     /**
+     * Tries to schedule Cobalt logging related background jobs if the CobaltLoggingEnabled is true.
+     *
+     * @param context application context
+     */
+    public static void scheduleCobaltBackgroundJob(Context context) {
+        if (FlagsFactory.getFlags().getCobaltLoggingEnabled()) {
+            CobaltJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
+        }
+    }
+
+    /**
      * Tries to unschedule all the relevant background jobs.
      *
      * @param jobScheduler Job scheduler to cancel the jobs.
@@ -225,6 +249,8 @@ public class BackgroundJobsManager {
         jobScheduler.cancel(CONSENT_NOTIFICATION_JOB.getJobId());
 
         MddJobService.unscheduleAllJobs(jobScheduler);
+
+        unscheduleCobaltJob(jobScheduler);
     }
 
     /**
@@ -269,6 +295,8 @@ public class BackgroundJobsManager {
         Objects.requireNonNull(jobScheduler);
 
         jobScheduler.cancel(FLEDGE_BACKGROUND_FETCH_JOB.getJobId());
+        jobScheduler.cancel(FLEDGE_AD_SELECTION_DEBUG_REPORT_SENDER_JOB.getJobId());
+        jobScheduler.cancel(PERIODIC_SIGNALS_ENCODING_JOB.getJobId());
     }
 
     /**
@@ -280,5 +308,12 @@ public class BackgroundJobsManager {
         Objects.requireNonNull(jobScheduler);
 
         jobScheduler.cancel(MAINTENANCE_JOB.getJobId());
+    }
+
+    /** Tries to unschedule Cobalt background job. */
+    public static void unscheduleCobaltJob(@NonNull JobScheduler jobScheduler) {
+        Objects.requireNonNull(jobScheduler);
+
+        jobScheduler.cancel(COBALT_LOGGING_JOB.getJobId());
     }
 }

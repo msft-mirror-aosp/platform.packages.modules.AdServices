@@ -16,13 +16,12 @@
 
 package com.android.adservices.service.ui.enrollment.impl;
 
-import static com.android.adservices.service.PhFlags.KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED;
-
 import android.content.Context;
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
@@ -38,7 +37,7 @@ public class U18DetentionChannel implements PrivacySandboxEnrollmentChannel {
             PrivacySandboxUxCollection uxCollection,
             ConsentManager consentManager,
             UxStatesManager uxStatesManager) {
-        return uxStatesManager.getFlag(KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED)
+        return uxStatesManager.getFlag(FlagsConstants.KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED)
                 && uxCollection == PrivacySandboxUxCollection.U18_UX
                 && consentManager.wasGaUxNotificationDisplayed();
     }

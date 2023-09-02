@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Надає додатку доступ до AdServices Consent API."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"отримувати доступ до Ad ID API"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Надає додатку доступ до Ad ID API."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"Доступ до AdServices Cobalt Upload API"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Надає додатку доступ до AdServices Cobalt Upload API."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"отримувати доступ до App Set ID API"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Надає додатку доступ до App Set ID API."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"отримувати доступ до Consent Service API"</string>
@@ -40,7 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Надає додатку доступ до API стану ввімкнення AdService."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Доступ до AdServicesManager API"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Надає додатку доступ до AdServicesManager API."</string>
-    <string name="app_label" msgid="5985320129629013968">"Система Android"</string>
+    <string name="app_label" msgid="5844694701336604490">"Конфіденційність у рекламі"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Приєднуйтеся до тестування функцій конфіденційності в рекламі для Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android шукає більш захищені способи показу вам реклами в додатках"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Докладніше"</string>
@@ -190,11 +192,11 @@
     <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Теми оголошень увімкнено"</string>
     <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Система Android почне запам’ятовувати цікаві вам теми, але перш ніж ви побачите перші з них, може пройти певний час."</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Вимкнути теми оголошень?"</string>
-    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Список тем буде видалено. Система Android більше не запам’ятовуватиме цікаві вам теми, але, можливо, ви й надалі будете бачити релевантні оголошення."</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Список тем буде видалено. Система Android більше не запам’ятовуватиме цікаві вам теми, але реклама й далі може залишатися доречною."</string>
     <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Рекомендацію реклами в додатках увімкнено"</string>
     <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Додатки можуть почати пропонувати вам рекламу. Коли це станеться, ви побачите список додатків."</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Вимкнути рекомендацію реклами в додатках?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Усі дані щодо рекомендації реклами буде видалено. Додатки більше не зможуть пропонувати вам рекламу, але, можливо, ви й надалі будете бачити релевантні оголошення."</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Усі дані щодо рекомендації реклами буде видалено. Додатки більше не зможуть пропонувати вам рекламу, але вона й далі може залишатися доречною."</string>
     <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Вимірювання ефективності реклами ввімкнено"</string>
     <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Система Android передає додаткам лише певні типи інформації, яка допомагає їм оцінювати ефективність оголошень."</string>
     <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Вимкнути вимірювання ефективності реклами?"</string>
@@ -323,7 +325,7 @@
     <string name="topic10090" msgid="4478565601243447368">"Позашляховики та кросовери"</string>
     <string name="topic10091" msgid="3812668311830832874">"Кросовери"</string>
     <string name="topic10092" msgid="524130833813249539">"Фургони та мінівени"</string>
-    <string name="topic10093" msgid="8900143351472824542">"Буксирування й екстрена допомога на дорозі"</string>
+    <string name="topic10093" msgid="8900143351472824542">"Послуги евакуатора й технічна допомога на дорозі"</string>
     <string name="topic10094" msgid="6205146188176216038">"Безпека транспорту та дорожнього руху"</string>
     <string name="topic10095" msgid="7983070264654477553">"Запасні частини й аксесуари для транспортних засобів"</string>
     <string name="topic10096" msgid="8148747014459050804">"Ремонт і обслуговування транспортних засобів"</string>

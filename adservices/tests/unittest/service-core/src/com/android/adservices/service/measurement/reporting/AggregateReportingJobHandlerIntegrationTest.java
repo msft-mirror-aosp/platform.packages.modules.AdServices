@@ -103,6 +103,7 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
                                 mEnrollmentDao,
                                 datastoreManager,
                                 mockKeyManager,
+                                ReportingStatus.UploadMethod.REGULAR,
                                 FlagsFactory.getFlagsForTest(),
                                 mLogger));
         try {

@@ -99,26 +99,34 @@ public abstract class DBProtectedSignal {
                 .build();
     }
 
-    /** Builder for creating an instance of {@link DBProtectedSignal} */
     @AutoValue.Builder
-    abstract static class Builder {
-        abstract Builder setId(Long id);
+    public abstract static class Builder {
+        /** For more details see {@link #getId()} */
+        public abstract Builder setId(Long id);
 
+        /** For more details see {@link #getBuyer()} */
         @NonNull
-        abstract Builder setBuyer(@NonNull AdTechIdentifier buyer);
+        public abstract Builder setBuyer(@NonNull AdTechIdentifier buyer);
 
+        /** For more details see {@link #getKey()} */
         @NonNull
-        abstract Builder setKey(@NonNull byte[] key);
+        public abstract Builder setKey(@NonNull byte[] key);
 
+        /** For more details see {@link #getValue()} */
         @NonNull
-        abstract Builder setValue(@NonNull byte[] value);
+        public abstract Builder setValue(@NonNull byte[] value);
 
-        abstract Builder setCreationTime(@NonNull Instant creationTime);
+        /** For more details see {@link #getCreationTime()} */
+        public abstract Builder setCreationTime(@NonNull Instant creationTime);
 
+        /** For more details see {@link #getPackageName()} */
         @NonNull
-        abstract Builder setPackageName(@NonNull String packageName);
+        public abstract Builder setPackageName(@NonNull String packageName);
 
+        /**
+         * @return an instance of {@link DBProtectedSignal}
+         */
         @NonNull
-        abstract DBProtectedSignal build();
+        public abstract DBProtectedSignal build();
     }
 }

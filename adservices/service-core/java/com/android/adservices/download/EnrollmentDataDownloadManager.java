@@ -19,6 +19,10 @@ package com.android.adservices.download;
 import static com.android.adservices.service.enrollment.EnrollmentUtil.BUILD_ID;
 import static com.android.adservices.service.enrollment.EnrollmentUtil.ENROLLMENT_SHARED_PREF;
 import static com.android.adservices.service.enrollment.EnrollmentUtil.FILE_GROUP_STATUS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_INSERT_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__LOAD_MDD_FILE_GROUP_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -31,6 +35,7 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
@@ -138,8 +143,12 @@ public class EnrollmentDataDownloadManager {
             SharedPreferences.Editor editor = sharedPrefs.edit();
             editor.clear().putBoolean(fileGroupBuildId, true);
             if (!editor.commit()) {
-                // TODO(b/280579966): Add logging using CEL.
                 LogUtil.e("Saving to the enrollment file read status sharedpreference failed");
+                ErrorLogUtil.e(
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT,
+                        this.getClass().getSimpleName(),
+                        new Object() {}.getClass().getEnclosingMethod().getName());
             }
             LogUtil.d(
                     "Inserted new enrollment data build id = %s into DB. "
@@ -209,6 +218,10 @@ public class EnrollmentDataDownloadManager {
             }
             return true;
         } catch (IOException e) {
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_INSERT_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             return false;
         }
     }
@@ -248,6 +261,10 @@ public class EnrollmentDataDownloadManager {
 
         } catch (ExecutionException | InterruptedException e) {
             LogUtil.e(e, "Unable to load MDD file group.");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__LOAD_MDD_FILE_GROUP_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             return null;
         }
     }
@@ -266,10 +283,14 @@ public class EnrollmentDataDownloadManager {
         }
         if (buildId != null || fileGroupStatus != null) {
             if (!edit.commit()) {
-                // TODO(b/280579966): Add logging using CEL.
                 LogUtil.e(
                         "Saving shared preferences - %s , %s and %s failed",
                         ENROLLMENT_SHARED_PREF, BUILD_ID, FILE_GROUP_STATUS);
+                ErrorLogUtil.e(
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT,
+                        this.getClass().getSimpleName(),
+                        new Object() {}.getClass().getEnclosingMethod().getName());
             }
         }
     }

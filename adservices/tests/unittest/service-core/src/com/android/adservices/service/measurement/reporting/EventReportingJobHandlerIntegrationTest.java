@@ -81,7 +81,7 @@ public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrati
         EventReportingJobHandler spyReportingService =
                 Mockito.spy(
                         new EventReportingJobHandler(
-                                mEnrollmentDao, datastoreManager, mFlags, mLogger));
+                                mEnrollmentDao, datastoreManager, null, mFlags, mLogger));
         try {
             Mockito.doReturn(returnCode)
                     .when(spyReportingService)

@@ -207,6 +207,10 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1 =
             "measurement_enable_ara_deduplication_alignment_v1";
+    public static final String KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS =
+            "measurement_debug_reporting_fallback_job_period_ms";
+    public static final String KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS =
+            "measurement_verbose_debug_reporting_fallback_job_period_ms";
 
     public static final String KEY_MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING =
             "measurement_enable_app_package_name_logging";
@@ -266,6 +270,10 @@ public final class FlagsConstants {
             "fledge_fetch_custom_audience_max_custom_header_size_b";
     public static final String KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_CUSTOM_AUDIENCE_SIZE_B =
             "fledge_fetch_custom_audience_max_custom_audience_size_b";
+    public static final String KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MIN_RETRY_AFTER_VALUE_MS =
+            "fledge_fetch_custom_audience_min_retry_after_value_ms";
+    public static final String KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_RETRY_AFTER_VALUE_MS =
+            "fledge_fetch_custom_audience_max_retry_after_value_ms";
 
     // FLEDGE Background Fetch keys
     public static final String KEY_FLEDGE_BACKGROUND_FETCH_ENABLED =
@@ -288,6 +296,14 @@ public final class FlagsConstants {
             "fledge_background_fetch_network_read_timeout_ms";
     public static final String KEY_FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B =
             "fledge_background_fetch_max_response_size_b";
+
+    // Protected Signals Periodic Encoding keys
+    public static final String KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED =
+            "protected_signals_periodic_encoding_enabled";
+    public static final String KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS =
+            "protected_signals_periodic_encoding_job_period_ms";
+    public static final String KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS =
+            "protected_signals_periodic_encoding_job_flex_ms";
 
     // FLEDGE Ad Selection keys
     public static final String KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT =
@@ -357,10 +373,22 @@ public final class FlagsConstants {
     // Event-level debug reporting for Protected Audience.
     public static final String KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED =
             "fledge_event_level_debug_reporting_enabled";
+    public static final String KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORT_SEND_IMMEDIATELY =
+            "fledge_event_level_debug_report_send_immediately";
     public static final String KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_BATCH_DELAY_SECONDS =
             "fledge_event_level_debug_reporting_batch_delay_seconds";
     public static final String KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_MAX_ITEMS_PER_BATCH =
             "fledge_event_level_debug_reporting_max_items_per_batch";
+    public static final String KEY_FLEDGE_DEBUG_REPORTI_SENDER_JOB_NETWORK_CONNECT_TIMEOUT_MS =
+            "fledge_debug_report_sender_job_network_connect_timeout_ms";
+    public static final String KEY_FLEDGE_DEBUG_REPORTI_SENDER_JOB_NETWORK_READ_TIMEOUT_MS =
+            "fledge_debug_report_sender_job_network_read_timeout_ms";
+    public static final String KEY_FLEDGE_DEBUG_REPORTI_SENDER_JOB_MAX_TIMEOUT_MS =
+            "fledge_debug_report_sender_job_max_timeout_ms";
+    public static final String KEY_FLEDGE_DEBUG_REPORT_SENDER_JOB_PERIOD_MS =
+            "fledge_debug_report_sender_job_period_ms";
+    public static final String KEY_FLEDGE_DEBUG_REPORT_SENDER_JOB_FLEX_MS =
+            "fledge_debug_report_sender_job_flex_ms";
 
     // Server-auction flags for Protected Audience.
     public static final String KEY_FLEDGE_AUCTION_SERVER_ENABLED = "fledge_auction_server_enabled";
@@ -372,6 +400,8 @@ public final class FlagsConstants {
             "fledge_auction_server_enabled_for_update_histogram";
     public static final String KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION =
             "fledge_auction_server_enabled_for_select_ads_mediation";
+    public static final String KEY_FLEDGE_AUCTION_SERVER_ENABLE_AD_FILTER_IN_GET_AD_SELECTION_DATA =
+            "fledge_auction_server_enable_ad_filter_in_get_ad_selection_data";
     public static final String KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES =
             "fledge_auction_server_payload_bucket_sizes";
     public static final String KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI =
@@ -516,6 +546,10 @@ public final class FlagsConstants {
             "topics_on_device_classifier_kill_switch";
     public static final String KEY_MDD_BACKGROUND_TASK_KILL_SWITCH =
             "mdd_background_task_kill_switch";
+    public static final String KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH =
+            "measurement_debug_reporting_fallback_job_kill_switch";
+    public static final String KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH =
+            "measurement_verbose_debug_reporting_fallback_job_kill_switch";
     public static final String KEY_MDD_LOGGER_KILL_SWITCH = "mdd_logger_kill_switch";
     public static final String KEY_MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH =
             "measurement_job_debug_reporting_kill_switch";

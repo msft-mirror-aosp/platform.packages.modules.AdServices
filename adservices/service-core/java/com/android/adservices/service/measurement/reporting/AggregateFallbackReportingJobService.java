@@ -30,15 +30,12 @@ import android.content.Context;
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
-import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.SystemHealthParams;
-import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
 import com.android.adservices.service.measurement.util.JobLockHolder;
-import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -111,15 +108,10 @@ public final class AggregateFallbackReportingJobService extends JobService {
                         System.currentTimeMillis()
                                 - AdServicesConfig
                                         .getMeasurementAggregateMainReportingJobPeriodMs();
-                DatastoreManager datastoreManager =
-                        DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
                 new AggregateReportingJobHandler(
                                 EnrollmentDao.getInstance(getApplicationContext()),
-                                datastoreManager,
-                                new AggregateEncryptionKeyManager(datastoreManager),
-                                FlagsFactory.getFlags(),
-                                AdServicesLoggerImpl.getInstance(),
-                                ReportingStatus.ReportType.AGGREGATE,
+                                DatastoreManagerFactory.getDatastoreManager(
+                                        getApplicationContext()),
                                 ReportingStatus.UploadMethod.FALLBACK)
                         .performScheduledPendingReportsInWindow(windowStartTime, windowEndTime);
                 return;

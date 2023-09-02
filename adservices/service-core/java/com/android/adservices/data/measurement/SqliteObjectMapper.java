@@ -449,6 +449,10 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.AsyncRegistrationContract.PLATFORM_AD_ID,
                 builder::setPlatformAdId);
+        setTextColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.REQUEST_POST_BODY,
+                builder::setPostBody);
         return builder.build();
     }
 

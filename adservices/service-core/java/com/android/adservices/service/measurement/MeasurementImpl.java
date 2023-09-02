@@ -29,6 +29,7 @@ import android.adservices.measurement.WebSourceRegistrationRequestInternal;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.annotation.WorkerThread;
 import android.app.adservices.AdServicesManager;
 import android.content.ComponentName;
@@ -39,6 +40,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.SystemClock;
 import android.view.InputEvent;
 
 import androidx.annotation.RequiresApi;
@@ -60,6 +62,7 @@ import com.android.modules.utils.build.SdkLevel;
 import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -168,6 +171,7 @@ public final class MeasurementImpl {
                                             : getSourceType(
                                                     request.getInputEvent(),
                                                     request.getRequestTime()),
+                                    /* postBody */ null,
                                     mDatastoreManager,
                                     mContentResolver)
                             ? STATUS_SUCCESS
@@ -249,6 +253,49 @@ public final class MeasurementImpl {
 
                 return STATUS_IO_ERROR;
             }
+        } finally {
+            mReadWriteLock.readLock().unlock();
+        }
+    }
+
+    /** Implement a source registration request from a report event */
+    public int registerEvent(
+            @NonNull Uri registrationUri,
+            @NonNull String appPackageName,
+            @NonNull String sdkPackageName,
+            boolean isAdIdEnabled,
+            @Nullable String postBody,
+            @Nullable InputEvent inputEvent,
+            @Nullable String adIdValue) {
+        Objects.requireNonNull(registrationUri);
+        Objects.requireNonNull(appPackageName);
+        Objects.requireNonNull(sdkPackageName);
+
+        final long apiRequestTime = System.currentTimeMillis();
+        final RegistrationRequest.Builder builder =
+                new RegistrationRequest.Builder(
+                                RegistrationRequest.REGISTER_SOURCE,
+                                registrationUri,
+                                appPackageName,
+                                sdkPackageName)
+                        .setAdIdPermissionGranted(isAdIdEnabled)
+                        .setRequestTime(SystemClock.uptimeMillis())
+                        .setAdIdValue(adIdValue);
+        RegistrationRequest request = builder.build();
+
+        mReadWriteLock.readLock().lock();
+        try {
+            return EnqueueAsyncRegistration.appSourceOrTriggerRegistrationRequest(
+                            request,
+                            request.isAdIdPermissionGranted(),
+                            registrationUri,
+                            apiRequestTime,
+                            getSourceType(inputEvent, request.getRequestTime()),
+                            postBody,
+                            mDatastoreManager,
+                            mContentResolver)
+                    ? STATUS_SUCCESS
+                    : STATUS_IO_ERROR;
         } finally {
             mReadWriteLock.readLock().unlock();
         }
