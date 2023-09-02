@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.service.Flags.MEASUREMENT_REPORT_RETRY_LIMIT;
-
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -43,6 +41,7 @@ import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
@@ -126,6 +125,7 @@ public class EventReportingJobHandlerTest {
         mMockitoSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
+                        .spyStatic(ErrorLogUtil.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
         mMockFlags = mock(Flags.class);
@@ -137,6 +137,9 @@ public class EventReportingJobHandlerTest {
         doReturn(false).when(mFlags).getMeasurementEnableReportingJobsThrowJsonException();
         doReturn(false).when(mFlags).getMeasurementEnableReportingJobsThrowCryptoException();
         doReturn(false).when(mFlags).getMeasurementEnableReportingJobsThrowUnaccountedException();
+        ExtendedMockito.doNothing()
+                .when(() -> ErrorLogUtil.e(anyInt(), anyInt(), anyString(), anyString()));
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         mEventReportingJobHandler =
                 new EventReportingJobHandler(mEnrollmentDao, mDatastoreManager, mFlags, mLogger);
         mSpyEventReportingJobHandler = Mockito.spy(mEventReportingJobHandler);
@@ -645,94 +648,6 @@ public class EventReportingJobHandlerTest {
                 mSpyEventReportingJobHandler.performReport(
                         eventReport.getId(), new ReportingStatus()));
         verify(mMeasurementDao, never()).markEventReportStatus(anyString(), anyInt());
-        verify(mTransaction, times(1)).begin();
-        verify(mTransaction, times(1)).end();
-    }
-
-    @Test
-    public void performReport_notFinalRetryAttempt_reportStatusSetToNetworkError()
-            throws DatastoreException, IOException, JSONException {
-        EventReport eventReport =
-                new EventReport.Builder()
-                        .setId("eventReportId")
-                        .setSourceEventId(new UnsignedLong(1234L))
-                        .setAttributionDestinations(ATTRIBUTION_DESTINATIONS)
-                        .setStatus(EventReport.Status.PENDING)
-                        .setRegistrationOrigin(REPORTING_ORIGIN)
-                        .build();
-        JSONObject eventReportPayload =
-                new EventReportPayload.Builder()
-                        .setReportId(eventReport.getId())
-                        .setSourceEventId(eventReport.getSourceEventId())
-                        .setAttributionDestination(eventReport.getAttributionDestinations())
-                        .build()
-                        .toJson();
-        ReportingStatus reportingStatus = new ReportingStatus();
-
-        when(mMockFlags.getMeasurementReportingRetryLimitEnabled()).thenReturn(true);
-        when(mMockFlags.getMeasurementReportingRetryLimit())
-                .thenReturn(MEASUREMENT_REPORT_RETRY_LIMIT - 1);
-        when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
-        doThrow(new IOException())
-                .when(mSpyEventReportingJobHandler)
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
-        doReturn(eventReportPayload)
-                .when(mSpyEventReportingJobHandler)
-                .createReportJsonPayload(Mockito.any());
-
-        assertEquals(
-                AdServicesStatusUtils.STATUS_IO_ERROR,
-                mSpyEventReportingJobHandler.performReport(eventReport.getId(), reportingStatus));
-        assertEquals(ReportingStatus.FailureStatus.NETWORK, reportingStatus.getFailureStatus());
-
-        verify(mMeasurementDao, never()).markEventReportStatus(any(), anyInt());
-        verify(mSpyEventReportingJobHandler, times(1))
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
-        verify(mTransaction, times(1)).begin();
-        verify(mTransaction, times(1)).end();
-    }
-
-    @Test
-    public void performReport_finalRetryAttempt_reportStatusSetToRetryLimitExceededError()
-            throws DatastoreException, IOException, JSONException {
-        EventReport eventReport =
-                new EventReport.Builder()
-                        .setId("eventReportId")
-                        .setSourceEventId(new UnsignedLong(1234L))
-                        .setAttributionDestinations(ATTRIBUTION_DESTINATIONS)
-                        .setStatus(EventReport.Status.PENDING)
-                        .setRegistrationOrigin(REPORTING_ORIGIN)
-                        .build();
-        JSONObject eventReportPayload =
-                new EventReportPayload.Builder()
-                        .setReportId(eventReport.getId())
-                        .setSourceEventId(eventReport.getSourceEventId())
-                        .setAttributionDestination(eventReport.getAttributionDestinations())
-                        .build()
-                        .toJson();
-        ReportingStatus reportingStatus = new ReportingStatus();
-
-        when(mMockFlags.getMeasurementReportingRetryLimitEnabled()).thenReturn(true);
-        when(mMockFlags.getMeasurementReportingRetryLimit())
-                .thenReturn(MEASUREMENT_REPORT_RETRY_LIMIT);
-        when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
-        doThrow(new IOException())
-                .when(mSpyEventReportingJobHandler)
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
-        doReturn(eventReportPayload)
-                .when(mSpyEventReportingJobHandler)
-                .createReportJsonPayload(Mockito.any());
-
-        assertEquals(
-                AdServicesStatusUtils.STATUS_IO_ERROR,
-                mSpyEventReportingJobHandler.performReport(eventReport.getId(), reportingStatus));
-        assertEquals(
-                ReportingStatus.FailureStatus.JOB_RETRY_LIMIT_REACHED,
-                reportingStatus.getFailureStatus());
-
-        verify(mMeasurementDao, never()).markEventReportStatus(any(), anyInt());
-        verify(mSpyEventReportingJobHandler, times(1))
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
         verify(mTransaction, times(1)).begin();
         verify(mTransaction, times(1)).end();
     }
