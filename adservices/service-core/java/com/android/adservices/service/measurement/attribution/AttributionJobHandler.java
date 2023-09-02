@@ -175,8 +175,6 @@ class AttributionJobHandler {
                     Trigger trigger = measurementDao.getTrigger(triggerId);
 
                     if (trigger.getStatus() != Trigger.Status.PENDING) {
-                        attributionStatus.setAttributionResult(
-                                AttributionStatus.AttributionResult.FAILURE);
                         attributionStatus.setFailureTypeFromTriggerStatus(trigger.getStatus());
                         return;
                     }
@@ -195,7 +193,7 @@ class AttributionJobHandler {
                         mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
                                 trigger, measurementDao, Type.TRIGGER_NO_MATCHING_SOURCE);
                         attributionStatus.setAttributionResult(
-                                AttributionStatus.AttributionResult.FAILURE);
+                                AttributionStatus.AttributionResult.NOT_ATTRIBUTED);
                         attributionStatus.setFailureType(
                                 AttributionStatus.FailureType.NO_MATCHING_SOURCE);
                         ignoreTrigger(trigger, measurementDao);
@@ -215,7 +213,7 @@ class AttributionJobHandler {
 
                     if (!doTopLevelFiltersMatch(source, trigger, measurementDao)) {
                         attributionStatus.setAttributionResult(
-                                AttributionStatus.AttributionResult.FAILURE);
+                                AttributionStatus.AttributionResult.NOT_ATTRIBUTED);
                         attributionStatus.setFailureType(
                                 AttributionStatus.FailureType.TOP_LEVEL_FILTER_MATCH_FAILURE);
                         ignoreTrigger(trigger, measurementDao);
@@ -224,7 +222,7 @@ class AttributionJobHandler {
 
                     if (shouldAttributionBeBlockedByRateLimits(source, trigger, measurementDao)) {
                         attributionStatus.setAttributionResult(
-                                AttributionStatus.AttributionResult.FAILURE);
+                                AttributionStatus.AttributionResult.NOT_ATTRIBUTED);
                         attributionStatus.setFailureType(
                                 AttributionStatus.FailureType.RATE_LIMIT_EXCEEDED);
                         ignoreTrigger(trigger, measurementDao);
@@ -237,8 +235,12 @@ class AttributionJobHandler {
                     TriggeringStatus eventTriggeringStatus =
                             maybeGenerateEventReport(source, trigger, measurementDao);
 
-                    if (eventTriggeringStatus == TriggeringStatus.ATTRIBUTED
-                            || aggregateTriggeringStatus == TriggeringStatus.ATTRIBUTED) {
+                    boolean isEventTriggeringStatusAttributed =
+                            eventTriggeringStatus == TriggeringStatus.ATTRIBUTED;
+                    boolean isAggregateTriggeringStatusAttributed =
+                            aggregateTriggeringStatus == TriggeringStatus.ATTRIBUTED;
+                    if (isEventTriggeringStatusAttributed
+                            || isAggregateTriggeringStatusAttributed) {
                         ignoreCompetingSources(
                                 measurementDao,
                                 remainingMatchingSources,
@@ -247,10 +249,12 @@ class AttributionJobHandler {
                         long endTime = System.currentTimeMillis();
                         attributionStatus.setAttributionDelay(endTime - trigger.getTriggerTime());
                         attributionStatus.setAttributionResult(
-                                AttributionStatus.AttributionResult.SUCCESS);
+                                AttributionStatus.AttributionResult.SUCCESS,
+                                isAggregateTriggeringStatusAttributed,
+                                isEventTriggeringStatusAttributed);
                     } else {
                         attributionStatus.setAttributionResult(
-                                AttributionStatus.AttributionResult.FAILURE);
+                                AttributionStatus.AttributionResult.NOT_ATTRIBUTED);
                         attributionStatus.setFailureType(
                                 AttributionStatus.FailureType.NO_REPORTS_GENERATED);
                         ignoreTrigger(trigger, measurementDao);
