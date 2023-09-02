@@ -4840,7 +4840,7 @@ public final class PhFlags implements Flags {
     public boolean isU18SupervisedAccountEnabled() {
         return DeviceConfig.getBoolean(
                 NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants.KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED,
+                /* flagName */ KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED,
                 /* defaultValue */ IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT);
     }
 }
