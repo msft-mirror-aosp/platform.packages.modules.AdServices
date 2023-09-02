@@ -63,7 +63,10 @@ public class PermissionHelperTest {
         PackageInfo packageInfoGrant = new PackageInfo();
         packageInfoGrant.requestedPermissions =
                 new String[] {
-                    ACCESS_ADSERVICES_AD_ID, ACCESS_ADSERVICES_ATTRIBUTION, ACCESS_ADSERVICES_TOPICS
+                    ACCESS_ADSERVICES_TOPICS,
+                    ACCESS_ADSERVICES_AD_ID,
+                    ACCESS_ADSERVICES_ATTRIBUTION,
+                    ACCESS_ADSERVICES_CUSTOM_AUDIENCE
                 };
         doReturn(packageInfoGrant)
                 .when(mMockPackageManagerGrant)
@@ -136,7 +139,8 @@ public class PermissionHelperTest {
                 .isTrue();
         Context mockContext3 =
                 getMockContext(ACCESS_ADSERVICES_CUSTOM_AUDIENCE, mMockPackageManagerGrant);
-        assertThat(PermissionHelper.hasCustomAudiencesPermission(mockContext3)).isTrue();
+        assertThat(PermissionHelper.hasCustomAudiencesPermission(mockContext3, APP_PACKAGE_NAME))
+                .isTrue();
     }
 
     @Test
@@ -152,7 +156,8 @@ public class PermissionHelperTest {
                 .isFalse();
         assertThat(PermissionHelper.hasAttributionPermission(mockContext, APP_PACKAGE_NAME))
                 .isFalse();
-        assertThat(PermissionHelper.hasCustomAudiencesPermission(mockContext)).isFalse();
+        assertThat(PermissionHelper.hasCustomAudiencesPermission(mockContext, APP_PACKAGE_NAME))
+                .isFalse();
         assertThat(PermissionHelper.hasAccessAdServicesStatePermission(mockContext)).isFalse();
         assertThat(PermissionHelper.hasModifyAdServicesStatePermission(mockContext)).isFalse();
     }

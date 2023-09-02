@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Ļauj lietojumprogrammai piekļūt saskarnei AdServices Consent API."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"piekļuve saskarnei Ad ID API"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Ļauj lietojumprogrammai piekļūt saskarnei Ad ID API."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"Piekļuve saskarnei AdServices Cobalt Upload API"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Ļauj lietojumprogrammai piekļūt saskarnei AdServices Cobalt Upload API."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"piekļuve saskarnei App Set ID API"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Ļauj lietojumprogrammai piekļūt saskarnei App Set ID API."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Piekļuve saskarnei Consent Service API"</string>
@@ -40,8 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Ļauj lietojumprogrammai piekļūt AdService iespējošanas statusa API."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Piekļuve AdServicesManager saskarnēm API"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Ļauj lietojumprogrammai piekļūt AdServicesManager saskarnēm API."</string>
-    <!-- no translation found for app_label (5844694701336604490) -->
-    <skip />
+    <string name="app_label" msgid="5844694701336604490">"Reklāmu konfidencialitāte"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Pievienojieties Android reklāmu konfidencialitātes beta programmai"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Operētājsistēmā Android tiek izmēģināti citi reklāmu rādīšanas veidi, kas labāk aizsargā konfidencialitāti"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Uzzināt vairāk"</string>
@@ -195,7 +196,7 @@
     <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Lietotņu ieteiktas reklāmas ir ieslēgtas"</string>
     <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Lietotnēs var tikt sākta reklāmu ieteikšana. Kad tajās tiks sākta reklāmu ieteikšana, tiks parādīts lietotņu saraksts."</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Vai izslēgt lietotņu ieteiktas reklāmas?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Visi reklāmu ieteikumu dati tiks izdzēsti. Lietotnēs vairs nevarēs ieteikt reklāmas, taču jums joprojām var tikt rādītas atbilstošas reklāmas."</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Visi reklāmu ieteikumu dati tiks izdzēsti. Lietotnes vairs nevarēs ieteikt reklāmas, taču jums joprojām var tikt rādītas atbilstošas reklāmas."</string>
     <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Reklāmu novērtēšana ir ieslēgta"</string>
     <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Operētājsistēmā Android drīkst kopīgot ar lietotnēm tikai stingri ierobežotu informāciju, lai lietotnēs varētu efektīvāk mērīt attiecīgo lietotņu reklāmu veiktspēju."</string>
     <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Vai izslēgt reklāmu novērtēšanu?"</string>

@@ -101,6 +101,10 @@ public abstract class BaseActionDelegate implements UxSelector {
         recyclerView.setAdapter(adapter);
     }
 
+    <T> void configureNotifyAdapterDataChange(LiveData<T> liveData, RecyclerView.Adapter adapter) {
+        liveData.observe(mActivity, liveDataList -> adapter.notifyDataSetChanged());
+    }
+
     void showElements(int[] elements) {
         for (int element : elements) {
             showElement(element);

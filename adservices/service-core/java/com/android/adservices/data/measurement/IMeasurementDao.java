@@ -71,6 +71,14 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
+     * Queries and returns the {@link Source}.
+     *
+     * @param sourceId ID of the requested Source
+     * @return the source registrant from requested Source
+     */
+    String getSourceRegistrant(@NonNull String sourceId) throws DatastoreException;
+
+    /**
      * Queries and returns the {@link Trigger}.
      *
      * @param triggerId Id of the request Trigger
@@ -651,6 +659,14 @@ public interface IMeasurementDao {
      */
     void insertIgnoredSourceForEnrollment(@NonNull String sourceId, @NonNull String enrollmentId)
             throws DatastoreException;
+
+    /**
+     * Increments Retry Counter for EventReporting Records. This is used for Retry Limiting.
+     *
+     * @param id Primary key id of Record in Measurement Event Report Table.
+     * @param reportType KeyValueData.DataType corresponding with Record type being incremented.
+     */
+    void incrementReportingRetryCount(String id, DataType reportType) throws DatastoreException;
 
     /**
      * Returns the number of unique AdIds provided by an Ad Tech in web contexts to match with the

@@ -82,6 +82,12 @@
                 android:description="@string/permdesc_adServicesAccessAppSetId"
                 android:protectionLevel="signature"/>
 
+    <!-- Allows AdServices to access API for AdServices Cobalt upload. -->
+    <permission android:name="android.permission.ACCESS_PRIVILEGED_ADSERVICES_COBALT_UPLOAD"
+                android:label="@string/permlab_adServicesAccessAdServicesCobaltUpload"
+                android:description="@string/permdesc_adServicesAccessAdServicesCobaltUpload"
+                android:protectionLevel="signature"/>
+
     <!-- Allows the caller to modify AdService's state via Common Service. -->
     <permission android:name="android.permission.MODIFY_ADSERVICES_STATE"
                 android:label="@string/permlab_modifyAdServicesState"
@@ -105,6 +111,7 @@
 
     <uses-permission android:name="android.permission.ACCESS_PRIVILEGED_AD_ID"/>
     <uses-permission android:name="android.permission.ACCESS_PRIVILEGED_APP_SET_ID"/>
+    <uses-permission android:name="android.permission.ACCESS_PRIVILEGED_ADSERVICES_COBALT_UPLOAD" />
 
     <!-- Allows JobScheduler to persist jobs across reboot. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
@@ -211,6 +218,16 @@
             </intent-filter>
         </service>
 
+        <service android:name=
+                     "com.android.adservices.signals.ProtectedSignalsService"
+                 android:exported="true"
+                 android:visibleToInstantApps="false">
+            <intent-filter android:priority="1">
+                <action android:name=
+                            "android.adservices.signals.PROTECTED_SIGNALS_SERVICE"/>
+            </intent-filter>
+        </service>
+
         <service android:name="com.android.adservices.topics.TopicsService"
                  android:exported="true"
                  android:visibleToInstantApps="false">
@@ -279,8 +296,14 @@
         </service>
 
         <!-- Measurement debug report upload job. -->
-        <service
-            android:name="com.android.adservices.service.measurement.reporting.DebugReportingJobService"
+        <service android:name=
+                     "com.android.adservices.service.measurement.reporting.DebugReportingJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- Measurement verbose debug report upload job. -->
+        <service android:name=
+              "com.android.adservices.service.measurement.reporting.VerboseDebugReportingJobService"
             android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
@@ -331,6 +354,18 @@
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
+        <!-- FLEDGE Ad selection debug report sender Job -->
+        <service android:name=
+                     "com.android.adservices.service.adselection.DebugReportSenderJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- FLEDGE Protected Signals periodic encoding job -->
+        <service android:name=
+                     "com.android.adservices.service.signals.PeriodicEncodingJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
         <!-- Measurement Registration Job -->
         <service android:name=
                      "com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService"
@@ -340,6 +375,24 @@
         <service android:name=
                      "com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- Measurement Verbose Debug Reporting Fallback Job. -->
+        <service android:name=
+                     "com.android.adservices.service.measurement.reporting.VerboseDebugReportingFallbackJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- Measurement Debug Reporting Fallback Job. -->
+        <service android:name=
+                     "com.android.adservices.service.measurement.reporting.DebugReportingFallbackJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- Cobalt Logging Job -->
+        <service
+            android:name="com.android.adservices.cobalt.CobaltJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
         <receiver android:name="com.android.adservices.service.common.PackageChangedReceiver"

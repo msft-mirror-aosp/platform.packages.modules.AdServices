@@ -52,6 +52,8 @@ public class ReportingStatus {
 
     @Nullable private Long mReportingDelay;
 
+    private String mSourceRegistrant;
+
     public ReportingStatus() {
         mUploadStatus = UploadStatus.UNKNOWN;
         mFailureStatus = FailureStatus.UNKNOWN;
@@ -96,5 +98,15 @@ public class ReportingStatus {
     /** Set registration delay. */
     public void setReportingDelay(Long reportingDelay) {
         mReportingDelay = reportingDelay;
+    }
+
+    /** Get source registrant. */
+    public String getSourceRegistrant() {
+        return mSourceRegistrant;
+    }
+
+    /** Set source registrant. */
+    public void setSourceRegistrant(String sourceRegistrant) {
+        mSourceRegistrant = sourceRegistrant;
     }
 }

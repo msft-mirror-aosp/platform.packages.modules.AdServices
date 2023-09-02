@@ -36,6 +36,10 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 
 import android.adservices.measurement.DeletionRequest;
 import android.content.ContentValues;
@@ -80,12 +84,13 @@ import com.google.common.collect.ImmutableMultiset;
 
 import org.json.JSONException;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.quality.Strictness;
 
 import java.time.Instant;
@@ -109,6 +114,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+@RunWith(MockitoJUnitRunner.class)
 public class MeasurementDaoTest {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Uri APP_TWO_SOURCES = Uri.parse("android-app://com.example1.two-sources");
@@ -148,6 +154,8 @@ public class MeasurementDaoTest {
     private static final Uri APP_DESTINATION = Uri.parse("android-app://com.destination.example");
     private static final Uri REGISTRATION_ORIGIN =
             WebUtil.validUri("https://subdomain.example.test");
+    private static final List<Uri> ATTRIBUTION_DESTINATIONS =
+            List.of(Uri.parse("https://destination.test"));
 
     // Fake ID count for initializing triggers.
     private int mValueId = 1;
@@ -161,6 +169,7 @@ public class MeasurementDaoTest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
+                        .spyStatic(MeasurementDbHelper.class)
                         .strictness(Strictness.WARN)
                         .startMocking();
         ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
@@ -317,36 +326,26 @@ public class MeasurementDaoTest {
     private void insertSourceReachingDbSizeLimit(long dbSize, long dbSizeMaxLimit) {
         final Source validSource = SourceFixture.getValidSource();
 
-        final MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(MeasurementDbHelper.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
+        // Mocking that the DB file has a size of 100 bytes
+        final MeasurementDbHelper spyMeasurementDbHelper =
+                spy(MeasurementDbHelper.getInstance(sContext));
+        ExtendedMockito.doReturn(spyMeasurementDbHelper)
+                .when(() -> MeasurementDbHelper.getInstance(ArgumentMatchers.any()));
+        ExtendedMockito.doReturn(dbSize).when(spyMeasurementDbHelper).getDbFileSize();
 
-        try {
-            // Mocking that the DB file has a size of 100 bytes
-            final MeasurementDbHelper spyMeasurementDbHelper =
-                    Mockito.spy(MeasurementDbHelper.getInstance(sContext));
-            ExtendedMockito.doReturn(spyMeasurementDbHelper)
-                    .when(() -> MeasurementDbHelper.getInstance(ArgumentMatchers.any()));
-            ExtendedMockito.doReturn(dbSize).when(spyMeasurementDbHelper).getDbFileSize();
+        // Mocking that the flags return a max limit size of 100 bytes
+        Flags mockFlags = Mockito.mock(Flags.class);
+        ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(dbSizeMaxLimit).when(mockFlags).getMeasurementDbSizeLimit();
 
-            // Mocking that the flags return a max limit size of 100 bytes
-            Flags mockFlags = Mockito.mock(Flags.class);
-            ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
-            ExtendedMockito.doReturn(dbSizeMaxLimit).when(mockFlags).getMeasurementDbSizeLimit();
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction((dao) -> dao.insertSource(validSource));
 
-            DatastoreManagerFactory.getDatastoreManager(sContext)
-                    .runInTransaction((dao) -> dao.insertSource(validSource));
-
-            try (Cursor sourceCursor =
-                    MeasurementDbHelper.getInstance(sContext)
-                            .getReadableDatabase()
-                            .query(SourceContract.TABLE, null, null, null, null, null, null)) {
-                assertFalse(sourceCursor.moveToNext());
-            }
-        } finally {
-            session.finishMocking();
+        try (Cursor sourceCursor =
+                MeasurementDbHelper.getInstance(sContext)
+                        .getReadableDatabase()
+                        .query(SourceContract.TABLE, null, null, null, null, null, null)) {
+            assertFalse(sourceCursor.moveToNext());
         }
     }
 
@@ -395,36 +394,26 @@ public class MeasurementDaoTest {
     private void insertTriggerReachingDbSizeLimit(long dbSize, long dbSizeMaxLimit) {
         final Trigger validTrigger = TriggerFixture.getValidTrigger();
 
-        final MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(MeasurementDbHelper.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
+        // Mocking that the DB file has a size of 100 bytes
+        final MeasurementDbHelper spyMeasurementDbHelper =
+                spy(MeasurementDbHelper.getInstance(sContext));
+        ExtendedMockito.doReturn(spyMeasurementDbHelper)
+                .when(() -> MeasurementDbHelper.getInstance(ArgumentMatchers.any()));
+        ExtendedMockito.doReturn(dbSize).when(spyMeasurementDbHelper).getDbFileSize();
 
-        try {
-            // Mocking that the DB file has a size of 100 bytes
-            final MeasurementDbHelper spyMeasurementDbHelper =
-                    Mockito.spy(MeasurementDbHelper.getInstance(sContext));
-            ExtendedMockito.doReturn(spyMeasurementDbHelper)
-                    .when(() -> MeasurementDbHelper.getInstance(ArgumentMatchers.any()));
-            ExtendedMockito.doReturn(dbSize).when(spyMeasurementDbHelper).getDbFileSize();
+        // Mocking that the flags return a max limit size of 100 bytes
+        Flags mockFlags = Mockito.mock(Flags.class);
+        ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(dbSizeMaxLimit).when(mockFlags).getMeasurementDbSizeLimit();
 
-            // Mocking that the flags return a max limit size of 100 bytes
-            Flags mockFlags = Mockito.mock(Flags.class);
-            ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
-            ExtendedMockito.doReturn(dbSizeMaxLimit).when(mockFlags).getMeasurementDbSizeLimit();
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction((dao) -> dao.insertTrigger(validTrigger));
 
-            DatastoreManagerFactory.getDatastoreManager(sContext)
-                    .runInTransaction((dao) -> dao.insertTrigger(validTrigger));
-
-            try (Cursor sourceCursor =
-                    MeasurementDbHelper.getInstance(sContext)
-                            .getReadableDatabase()
-                            .query(TriggerContract.TABLE, null, null, null, null, null, null)) {
-                assertFalse(sourceCursor.moveToNext());
-            }
-        } finally {
-            session.finishMocking();
+        try (Cursor sourceCursor =
+                MeasurementDbHelper.getInstance(sContext)
+                        .getReadableDatabase()
+                        .query(TriggerContract.TABLE, null, null, null, null, null, null)) {
+            assertFalse(sourceCursor.moveToNext());
         }
     }
 
@@ -5126,6 +5115,51 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void testGetDebugReportIdsWithRetryLimit() {
+        // Mocking that the flags return a Max Retry of 1
+        Flags mockFlags = Mockito.mock(Flags.class);
+        ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(1).when(mockFlags).getMeasurementReportingRetryLimit();
+        ExtendedMockito.doReturn(true).when(mockFlags).getMeasurementReportingRetryLimitEnabled();
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        DebugReport debugReport = createDebugReport();
+
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.DebugReportContract.ID, debugReport.getId());
+        values.put(MeasurementTables.DebugReportContract.TYPE, debugReport.getType());
+        values.put(MeasurementTables.DebugReportContract.BODY, debugReport.getBody().toString());
+        values.put(
+                MeasurementTables.DebugReportContract.ENROLLMENT_ID, debugReport.getEnrollmentId());
+        values.put(
+                MeasurementTables.DebugReportContract.REGISTRATION_ORIGIN,
+                debugReport.getRegistrationOrigin().toString());
+        db.insert(MeasurementTables.DebugReportContract.TABLE, null, values);
+
+        long count =
+                DatabaseUtils.queryNumEntries(
+                        db, MeasurementTables.DebugReportContract.TABLE, /* selection */ null);
+        assertEquals(1, count);
+
+        assertTrue(
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransaction(
+                                measurementDao ->
+                                        assertEquals(
+                                                List.of(debugReport.getId()),
+                                                measurementDao.getDebugReportIds())));
+        assertTrue(
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransaction(
+                                measurementDao -> {
+                                    // Adds records to KeyValueData table for Retry Count.
+                                    measurementDao.incrementReportingRetryCount(
+                                            debugReport.getId(), DataType.DEBUG_REPORT_RETRY_COUNT);
+                                    assertTrue(measurementDao.getDebugReportIds().isEmpty());
+                                }));
+    }
+
+    @Test
     public void testDeleteExpiredRecordsForAsyncRegistrations() {
         SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
 
@@ -5977,6 +6011,7 @@ public class MeasurementDaoTest {
                     validAsyncRegistration.getDebugKeyAllowed());
             assertEquals(
                     asyncRegistration.getPlatformAdId(), validAsyncRegistration.getPlatformAdId());
+            assertEquals(asyncRegistration.getPostBody(), validAsyncRegistration.getPostBody());
         }
     }
 
@@ -6288,6 +6323,125 @@ public class MeasurementDaoTest {
                             assertEquals(source1WithoutDestinations, dao.getSource(sourceId1));
                             assertEquals(source2WithoutDestinations, dao.getSource(sourceId2));
                         });
+    }
+
+    @Test
+    public void getSourceRegistrant_fetchesMatchingSourceFromDb() {
+        // Setup - insert 2 sources with different IDs
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        String sourceId1 = "source1";
+        String registrant1 = "android-app://registrant.app1";
+        Source source1WithDestinations =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId(sourceId1)
+                        .setAppDestinations(null)
+                        .setWebDestinations(null)
+                        .setRegistrant(Uri.parse(registrant1))
+                        .build();
+        insertInDb(db, source1WithDestinations);
+
+        String sourceId2 = "source2";
+        String registrant2 = "android-app://registrant.app1";
+        Source source2WithDestinations =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId(sourceId2)
+                        .setAppDestinations(null)
+                        .setWebDestinations(null)
+                        .setRegistrant(Uri.parse(registrant2))
+                        .build();
+        insertInDb(db, source2WithDestinations);
+
+        // Execution
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        (dao) -> {
+                            assertEquals(registrant1, dao.getSourceRegistrant(sourceId1));
+                            assertEquals(registrant2, dao.getSourceRegistrant(sourceId2));
+                        });
+    }
+
+    @Test
+    public void getSource_nonExistingInDb_throwsException() {
+        // Setup - insert 2 sources with different IDs
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(true).when(mFlags).getMeasurementEnableDatastoreManagerThrowDatastoreException();
+        doReturn(1.0f).when(mFlags).getMeasurementThrowUnknownExceptionSamplingRate();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        String sourceId1 = "source1";
+        Source source1WithDestinations =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId(sourceId1)
+                        .setAppDestinations(null)
+                        .setWebDestinations(null)
+                        .build();
+        insertInDb(db, source1WithDestinations);
+
+        // Execution
+        try {
+            DatastoreManagerFactory.getDatastoreManager(sContext)
+                    .runInTransaction(
+                            (dao) -> {
+                                dao.getSource("random_source_id");
+                            });
+            fail();
+        } catch (IllegalStateException e) {
+            Throwable cause = e.getCause();
+            assertEquals(DatastoreException.class, cause.getClass());
+            assertEquals("Source retrieval failed. Id: random_source_id", cause.getMessage());
+        }
+    }
+
+    @Test
+    public void getSource_nonExistingInDbNoSampling_swallowException() {
+        // Setup - insert 2 sources with different IDs
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(true).when(mFlags).getMeasurementEnableDatastoreManagerThrowDatastoreException();
+        doReturn(0.0f).when(mFlags).getMeasurementThrowUnknownExceptionSamplingRate();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        String sourceId1 = "source1";
+        Source source1WithDestinations =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId(sourceId1)
+                        .setAppDestinations(null)
+                        .setWebDestinations(null)
+                        .build();
+        insertInDb(db, source1WithDestinations);
+
+        // Execution
+        assertFalse(
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransaction(
+                                (dao) -> {
+                                    dao.getSource("random_source_id");
+                                }));
+    }
+
+    @Test
+    public void getSource_nonExistingInDbThrowingDisabled_swallowException() {
+        // Setup - insert 2 sources with different IDs
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(false).when(mFlags).getMeasurementEnableDatastoreManagerThrowDatastoreException();
+        doReturn(1.0f).when(mFlags).getMeasurementThrowUnknownExceptionSamplingRate();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        String sourceId1 = "source1";
+        Source source1WithDestinations =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId(sourceId1)
+                        .setAppDestinations(null)
+                        .setWebDestinations(null)
+                        .build();
+        insertInDb(db, source1WithDestinations);
+
+        // Execution
+        assertFalse(
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransaction(
+                                (dao) -> {
+                                    dao.getSource("random_source_id");
+                                }));
     }
 
     @Test
@@ -7338,6 +7492,69 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void testUpdateSourceAggregateReportDedupKeys_acceptsUnsignedLongValue() {
+        Source validSource = SourceFixture.getValidSource();
+        assertTrue(validSource.getAggregateReportDedupKeys().equals(new ArrayList<UnsignedLong>()));
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction((dao) -> dao.insertSource(validSource));
+
+        String sourceId = getFirstSourceIdFromDatastore();
+        Source source =
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransactionWithResult(
+                                measurementDao -> measurementDao.getSource(sourceId))
+                        .get();
+
+        UnsignedLong dedupKeyValue = new UnsignedLong("17293822569102704640");
+        source.getAggregateReportDedupKeys().add(dedupKeyValue);
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction((dao) -> dao.updateSourceAggregateReportDedupKeys(source));
+
+        Source sourceAfterUpdate =
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransactionWithResult(
+                                measurementDao -> measurementDao.getSource(sourceId))
+                        .get();
+
+        assertEquals(1, sourceAfterUpdate.getAggregateReportDedupKeys().size());
+        assertEquals(dedupKeyValue, sourceAfterUpdate.getAggregateReportDedupKeys().get(0));
+    }
+
+    @Test
+    public void testPersistAndRetrieveSource_handlesPreExistingNegativeValues() {
+        // Setup
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Source validSource = SourceFixture.getValidSource();
+        ContentValues values = new ContentValues();
+        values.put(SourceContract.ID, validSource.getId());
+        values.put(SourceContract.EVENT_ID, validSource.getEventId().toString());
+        values.put(SourceContract.ENROLLMENT_ID, validSource.getEnrollmentId());
+        values.put(SourceContract.REGISTRANT, validSource.getRegistrant().toString());
+        values.put(SourceContract.PUBLISHER, validSource.getPublisher().toString());
+        values.put(
+                SourceContract.REGISTRATION_ORIGIN, validSource.getRegistrationOrigin().toString());
+        // Existing invalid values
+        Long val1 = -123L;
+        Long val2 = Long.MIN_VALUE;
+        values.put(
+                SourceContract.AGGREGATE_REPORT_DEDUP_KEYS,
+                val1.toString() + "," + val2.toString());
+        db.insert(SourceContract.TABLE, /* nullColumnHack */ null, values);
+        maybeInsertSourceDestinations(db, validSource, validSource.getId());
+
+        // Execution
+        Optional<Source> source =
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransactionWithResult(
+                                measurementDao -> measurementDao.getSource(validSource.getId()));
+        assertTrue(source.isPresent());
+        List<UnsignedLong> aggReportDedupKeys = source.get().getAggregateReportDedupKeys();
+        assertEquals(2, aggReportDedupKeys.size());
+        assertEquals(val1, (Long) aggReportDedupKeys.get(0).getValue());
+        assertEquals(val2, (Long) aggReportDedupKeys.get(1).getValue());
+    }
+
+    @Test
     public void fetchTriggerMatchingSourcesForXna_filtersSourcesCorrectly() {
         // Setup
         Uri matchingDestination = APP_ONE_DESTINATION;
@@ -8029,6 +8246,93 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void getPendingAggregateReportIdsByCoordinatorInWindowWithRetryLimit() {
+        // Mocking that the flags return a Max Retry of 1
+        Flags mockFlags = Mockito.mock(Flags.class);
+        ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(1).when(mockFlags).getMeasurementReportingRetryLimit();
+        ExtendedMockito.doReturn(true).when(mockFlags).getMeasurementReportingRetryLimitEnabled();
+
+        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
+        AggregateReport ar11 =
+                AggregateReportFixture.getValidAggregateReportBuilder()
+                        .setId("11")
+                        .setAggregationCoordinatorOrigin(Uri.parse("https://url1.test"))
+                        .build();
+        AggregateReport ar12 =
+                AggregateReportFixture.getValidAggregateReportBuilder()
+                        .setId("12")
+                        .setAggregationCoordinatorOrigin(Uri.parse("https://url1.test"))
+                        .build();
+        AggregateReport ar21 =
+                AggregateReportFixture.getValidAggregateReportBuilder()
+                        .setId("21")
+                        .setAggregationCoordinatorOrigin(Uri.parse("https://url2.test"))
+                        .build();
+        AggregateReport ar31 =
+                AggregateReportFixture.getValidAggregateReportBuilder()
+                        .setId("31")
+                        .setAggregationCoordinatorOrigin(Uri.parse("https://url3.test"))
+                        .build();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        AbstractDbIntegrationTest.insertToDb(ar11, db);
+        AbstractDbIntegrationTest.insertToDb(ar12, db);
+        AbstractDbIntegrationTest.insertToDb(ar21, db);
+        AbstractDbIntegrationTest.insertToDb(ar31, db);
+
+        Optional<Map<String, List<String>>> resOpt =
+                dm.runInTransactionWithResult(
+                        (dao) -> {
+                            return dao.getPendingAggregateReportIdsByCoordinatorInWindow(
+                                    AggregateReportFixture.ValidAggregateReportParams.TRIGGER_TIME,
+                                    AggregateReportFixture.ValidAggregateReportParams.TRIGGER_TIME
+                                            + TimeUnit.DAYS.toMillis(30));
+                        });
+        assertTrue(resOpt.isPresent());
+        Map<String, List<String>> res = resOpt.get();
+        assertEquals(3, res.size());
+
+        // URL 1
+        List<String> url1Ids = res.get("https://url1.test");
+        url1Ids.sort(String.CASE_INSENSITIVE_ORDER::compare);
+        assertEquals(2, url1Ids.size());
+        assertEquals("11", url1Ids.get(0));
+        assertEquals("12", url1Ids.get(1));
+        // URL 2
+        List<String> url2Ids = res.get("https://url2.test");
+        url2Ids.sort(String.CASE_INSENSITIVE_ORDER::compare);
+        assertEquals(1, url2Ids.size());
+        assertEquals("21", url2Ids.get(0));
+
+        resOpt =
+                dm.runInTransactionWithResult(
+                        (dao) -> {
+                            // Adds records to KeyValueData table for Retry Count.
+                            dao.incrementReportingRetryCount(
+                                    ar31.getId(), DataType.AGGREGATE_REPORT_RETRY_COUNT);
+                            return dao.getPendingAggregateReportIdsByCoordinatorInWindow(
+                                    AggregateReportFixture.ValidAggregateReportParams.TRIGGER_TIME,
+                                    AggregateReportFixture.ValidAggregateReportParams.TRIGGER_TIME
+                                            + TimeUnit.DAYS.toMillis(30));
+                        });
+        res = resOpt.get();
+
+        assertEquals(2, res.size());
+
+        // URL 1
+        url1Ids = res.get("https://url1.test");
+        url1Ids.sort(String.CASE_INSENSITIVE_ORDER::compare);
+        assertEquals(2, url1Ids.size());
+        assertEquals("11", url1Ids.get(0));
+        assertEquals("12", url1Ids.get(1));
+        // URL 2
+        url2Ids = res.get("https://url2.test");
+        url2Ids.sort(String.CASE_INSENSITIVE_ORDER::compare);
+        assertEquals(1, url2Ids.size());
+        assertEquals("21", url2Ids.get(0));
+    }
+
+    @Test
     public void getPendingAggregateDebugReportIdsByCoordinator() {
         DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
         AggregateReport ar11 =
@@ -8075,6 +8379,184 @@ public class MeasurementDaoTest {
         url2Ids.sort(String.CASE_INSENSITIVE_ORDER::compare);
         assertEquals(1, url2Ids.size());
         assertEquals("21", url2Ids.get(0));
+    }
+
+    @Test
+    public void getPendingAggregateDebugReportIdsByCoordinatorWithRetryLimit() {
+        // Mocking that the flags return a Max Retry of 1
+        Flags mockFlags = Mockito.mock(Flags.class);
+        ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(1).when(mockFlags).getMeasurementReportingRetryLimit();
+        ExtendedMockito.doReturn(true).when(mockFlags).getMeasurementReportingRetryLimitEnabled();
+
+        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
+        AggregateReport ar11 =
+                AggregateReportFixture.getValidAggregateReportBuilder()
+                        .setId("11")
+                        .setAggregationCoordinatorOrigin(Uri.parse("https://url1.test"))
+                        .setDebugReportStatus(AggregateReport.DebugReportStatus.PENDING)
+                        .build();
+        AggregateReport ar12 =
+                AggregateReportFixture.getValidAggregateReportBuilder()
+                        .setId("12")
+                        .setAggregationCoordinatorOrigin(Uri.parse("https://url1.test"))
+                        .setDebugReportStatus(AggregateReport.DebugReportStatus.PENDING)
+                        .build();
+        AggregateReport ar21 =
+                AggregateReportFixture.getValidAggregateReportBuilder()
+                        .setId("21")
+                        .setAggregationCoordinatorOrigin(Uri.parse("https://url2.test"))
+                        .setDebugReportStatus(AggregateReport.DebugReportStatus.PENDING)
+                        .build();
+        AggregateReport ar31 =
+                AggregateReportFixture.getValidAggregateReportBuilder()
+                        .setId("31")
+                        .setAggregationCoordinatorOrigin(Uri.parse("https://url3.test"))
+                        .setDebugReportStatus(AggregateReport.DebugReportStatus.PENDING)
+                        .build();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        AbstractDbIntegrationTest.insertToDb(ar11, db);
+        AbstractDbIntegrationTest.insertToDb(ar12, db);
+        AbstractDbIntegrationTest.insertToDb(ar21, db);
+        AbstractDbIntegrationTest.insertToDb(ar31, db);
+
+        Optional<Map<String, List<String>>> resOpt =
+                dm.runInTransactionWithResult(
+                        (dao) -> dao.getPendingAggregateDebugReportIdsByCoordinator());
+        assertTrue(resOpt.isPresent());
+        Map<String, List<String>> res = resOpt.get();
+        assertEquals(3, res.size());
+
+        resOpt =
+                dm.runInTransactionWithResult(
+                        (dao) -> {
+                            // Adds records to KeyValueData table for Retry Count.
+                            dao.incrementReportingRetryCount(
+                                    ar31.getId(), DataType.AGGREGATE_REPORT_RETRY_COUNT);
+                            return dao.getPendingAggregateDebugReportIdsByCoordinator();
+                        });
+        assertTrue(resOpt.isPresent());
+        res = resOpt.get();
+        assertEquals(2, res.size());
+
+        // URL 1
+        List<String> url1Ids = res.get("https://url1.test");
+        assertEquals(2, url1Ids.size());
+        url1Ids.sort(String.CASE_INSENSITIVE_ORDER::compare);
+        assertEquals("11", url1Ids.get(0));
+        assertEquals("12", url1Ids.get(1));
+        // URL 2
+        List<String> url2Ids = res.get("https://url2.test");
+        url2Ids.sort(String.CASE_INSENSITIVE_ORDER::compare);
+        assertEquals(1, url2Ids.size());
+        assertEquals("21", url2Ids.get(0));
+    }
+
+    @Test
+    public void getPendingEventReportIdsInWindowWithRetry() {
+        // Mocking that the flags return a Max Retry of 1
+        Flags mockFlags = Mockito.mock(Flags.class);
+        ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(1).when(mockFlags).getMeasurementReportingRetryLimit();
+        ExtendedMockito.doReturn(true).when(mockFlags).getMeasurementReportingRetryLimitEnabled();
+
+        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+
+        EventReport er1 =
+                generateMockEventReport(WebUtil.validUrl("https://destination-1.test"), 1);
+        EventReport er2 =
+                generateMockEventReport(WebUtil.validUrl("https://destination-2.test"), 2);
+        List.of(er1, er2)
+                .forEach(
+                        eventReport -> {
+                            ContentValues values = new ContentValues();
+                            values.put(
+                                    MeasurementTables.EventReportContract.ID, eventReport.getId());
+                            values.put(
+                                    MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
+                                    eventReport.getAttributionDestinations().get(0).toString());
+                            values.put(
+                                    EventReportContract.REPORT_TIME,
+                                    EventReportFixture.ValidEventReportParams.TRIGGER_TIME
+                                            + TimeUnit.DAYS.toMillis(15));
+                            values.put(EventReportContract.STATUS, EventReport.Status.PENDING);
+                            db.insert(MeasurementTables.EventReportContract.TABLE, null, values);
+                        });
+        Optional<List<String>> resOpt =
+                dm.runInTransactionWithResult(
+                        (dao) ->
+                                dao.getPendingEventReportIdsInWindow(
+                                        EventReportFixture.ValidEventReportParams.TRIGGER_TIME,
+                                        EventReportFixture.ValidEventReportParams.TRIGGER_TIME
+                                                + TimeUnit.DAYS.toMillis(30)));
+        assertTrue(resOpt.isPresent());
+        List<String> res = resOpt.get();
+        assertEquals(2, res.size());
+        assertTrue(res.containsAll(List.of("1", "2")));
+        resOpt =
+                dm.runInTransactionWithResult(
+                        (dao) -> {
+                            // Adds records to KeyValueData table for Retry Count.
+                            dao.incrementReportingRetryCount(
+                                    "1", DataType.EVENT_REPORT_RETRY_COUNT);
+                            return dao.getPendingEventReportIdsInWindow(
+                                    EventReportFixture.ValidEventReportParams.TRIGGER_TIME,
+                                    EventReportFixture.ValidEventReportParams.TRIGGER_TIME
+                                            + TimeUnit.DAYS.toMillis(30));
+                        });
+        res = resOpt.get();
+        assertEquals(1, res.size());
+        assertEquals(res, List.of("2"));
+    }
+
+    @Test
+    public void getPendingEventDebugReportIdsWithRetryLimit() {
+        // Mocking that the flags return a Max Retry of 1
+        Flags mockFlags = Mockito.mock(Flags.class);
+        ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(1).when(mockFlags).getMeasurementReportingRetryLimit();
+        ExtendedMockito.doReturn(true).when(mockFlags).getMeasurementReportingRetryLimitEnabled();
+
+        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+
+        EventReport er1 =
+                generateMockEventReport(WebUtil.validUrl("https://destination-1.test"), 1);
+        EventReport er2 =
+                generateMockEventReport(WebUtil.validUrl("https://destination-2.test"), 2);
+        List.of(er1, er2)
+                .forEach(
+                        eventReport -> {
+                            ContentValues values = new ContentValues();
+                            values.put(
+                                    MeasurementTables.EventReportContract.ID, eventReport.getId());
+                            values.put(
+                                    MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
+                                    eventReport.getAttributionDestinations().get(0).toString());
+                            values.put(
+                                    EventReportContract.DEBUG_REPORT_STATUS,
+                                    EventReport.DebugReportStatus.PENDING);
+                            db.insert(MeasurementTables.EventReportContract.TABLE, null, values);
+                        });
+
+        Optional<List<String>> resOpt =
+                dm.runInTransactionWithResult((dao) -> dao.getPendingDebugEventReportIds());
+        assertTrue(resOpt.isPresent());
+        List<String> res = resOpt.get();
+        assertEquals(2, res.size());
+        assertTrue(res.containsAll(List.of("1", "2")));
+        resOpt =
+                dm.runInTransactionWithResult(
+                        (dao) -> {
+                            // Adds records to KeyValueData table for Retry Count.
+                            dao.incrementReportingRetryCount(
+                                    "1", DataType.EVENT_REPORT_RETRY_COUNT);
+                            return dao.getPendingDebugEventReportIds();
+                        });
+        res = resOpt.get();
+        assertEquals(1, res.size());
+        assertEquals(res, List.of("2"));
     }
 
     @Test
@@ -8145,6 +8627,65 @@ public class MeasurementDaoTest {
         assertEquals(2, res2.size());
         assertEquals(ek21, res2.get(0));
         assertEquals(ek22, res2.get(1));
+    }
+
+    @Test
+    public void incrementReportRetry() {
+        final String eventId = "TestIdEvent";
+        final String aggregateId = "TestIdAggregate";
+        final String debugId = "TestIdDebug";
+
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        datastoreManager.runInTransaction(
+                (dao) -> {
+                    dao.incrementReportingRetryCount(eventId, DataType.EVENT_REPORT_RETRY_COUNT);
+                    dao.incrementReportingRetryCount(
+                            aggregateId, DataType.AGGREGATE_REPORT_RETRY_COUNT);
+                    dao.incrementReportingRetryCount(debugId, DataType.DEBUG_REPORT_RETRY_COUNT);
+                });
+        Optional<KeyValueData> eventCount =
+                datastoreManager.runInTransactionWithResult(
+                        (dao) -> dao.getKeyValueData(eventId, DataType.EVENT_REPORT_RETRY_COUNT));
+        Optional<KeyValueData> aggregateCount =
+                datastoreManager.runInTransactionWithResult(
+                        (dao) ->
+                                dao.getKeyValueData(
+                                        aggregateId, DataType.AGGREGATE_REPORT_RETRY_COUNT));
+        Optional<KeyValueData> debugCount =
+                datastoreManager.runInTransactionWithResult(
+                        (dao) -> dao.getKeyValueData(debugId, DataType.DEBUG_REPORT_RETRY_COUNT));
+
+        assertTrue(eventCount.isPresent());
+        assertEquals((eventCount.get().getReportRetryCount()), 1);
+        assertTrue(aggregateCount.isPresent());
+        assertEquals((aggregateCount.get().getReportRetryCount()), 1);
+        assertTrue(debugCount.isPresent());
+        assertEquals((debugCount.get().getReportRetryCount()), 1);
+
+        datastoreManager.runInTransaction(
+                (dao) -> {
+                    dao.incrementReportingRetryCount(eventId, DataType.EVENT_REPORT_RETRY_COUNT);
+                    dao.incrementReportingRetryCount(
+                            aggregateId, DataType.AGGREGATE_REPORT_RETRY_COUNT);
+                });
+        eventCount =
+                datastoreManager.runInTransactionWithResult(
+                        (dao) -> dao.getKeyValueData(eventId, DataType.EVENT_REPORT_RETRY_COUNT));
+        aggregateCount =
+                datastoreManager.runInTransactionWithResult(
+                        (dao) ->
+                                dao.getKeyValueData(
+                                        aggregateId, DataType.AGGREGATE_REPORT_RETRY_COUNT));
+        debugCount =
+                datastoreManager.runInTransactionWithResult(
+                        (dao) -> dao.getKeyValueData(debugId, DataType.DEBUG_REPORT_RETRY_COUNT));
+
+        assertTrue(eventCount.isPresent());
+        assertEquals((eventCount.get().getReportRetryCount()), 2);
+        assertTrue(aggregateCount.isPresent());
+        assertEquals((aggregateCount.get().getReportRetryCount()), 2);
+        assertTrue(debugCount.isPresent());
+        assertEquals((debugCount.get().getReportRetryCount()), 1);
     }
 
     private void queryAndAssertSourceEntries(
@@ -8338,7 +8879,7 @@ public class MeasurementDaoTest {
             values.put("registrant", trigger.getRegistrant().toString());
             values.put("attribution_destination", trigger.getAttributionDestination().toString());
             long row = db.insert("msmt_trigger", null, values);
-            Assert.assertNotEquals("Trigger insertion failed", -1, row);
+            assertNotEquals("Trigger insertion failed", -1, row);
         }
     }
 
@@ -8460,13 +9001,24 @@ public class MeasurementDaoTest {
             int destinationType,
             List<Integer> expectedCounts) {
         IntStream.range(0, attributionDestinations.size())
-                .forEach(i -> Assert.assertEquals(expectedCounts.get(i),
-                        DatastoreManagerFactory.getDatastoreManager(sContext)
-                                .runInTransactionWithResult(measurementDao ->
-                                        measurementDao.getNumAggregateReportsPerDestination(
-                                                Uri.parse(attributionDestinations.get(i)),
-                                                destinationType))
-                                .orElseThrow()));
+                .forEach(
+                        i -> {
+                            DatastoreManager.ThrowingCheckedFunction<Integer>
+                                    aggregateReportCountPerDestination =
+                                            measurementDao ->
+                                                    measurementDao
+                                                            .getNumAggregateReportsPerDestination(
+                                                                    Uri.parse(
+                                                                            attributionDestinations
+                                                                                    .get(i)),
+                                                                    destinationType);
+                            assertEquals(
+                                    expectedCounts.get(i),
+                                    DatastoreManagerFactory.getDatastoreManager(sContext)
+                                            .runInTransactionWithResult(
+                                                    aggregateReportCountPerDestination)
+                                            .orElseThrow());
+                        });
     }
 
     private void assertEventReportCount(
@@ -8474,13 +9026,22 @@ public class MeasurementDaoTest {
             int destinationType,
             List<Integer> expectedCounts) {
         IntStream.range(0, attributionDestinations.size())
-                .forEach(i -> Assert.assertEquals(expectedCounts.get(i),
-                        DatastoreManagerFactory.getDatastoreManager(sContext)
-                                .runInTransactionWithResult(measurementDao ->
-                                        measurementDao.getNumEventReportsPerDestination(
-                                                Uri.parse(attributionDestinations.get(i)),
-                                                destinationType))
-                                .orElseThrow()));
+                .forEach(
+                        i -> {
+                            DatastoreManager.ThrowingCheckedFunction<Integer>
+                                    numEventReportsPerDestination =
+                                            measurementDao ->
+                                                    measurementDao.getNumEventReportsPerDestination(
+                                                            Uri.parse(
+                                                                    attributionDestinations.get(i)),
+                                                            destinationType);
+                            assertEquals(
+                                    expectedCounts.get(i),
+                                    DatastoreManagerFactory.getDatastoreManager(sContext)
+                                            .runInTransactionWithResult(
+                                                    numEventReportsPerDestination)
+                                            .orElseThrow());
+                        });
     }
 
     private List<String> createAppDestinationVariants(int destinationNum) {

@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"કોઈ ઍપ્લિકેશનને AdServices Consent API ઍક્સેસ કરવાની મંજૂરી આપે છે."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID APIનો ઍક્સેસ"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"ઍપ્લિકેશનને Ad ID API ઍક્સેસ કરવાની મંજૂરી આપે છે."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"AdServices Cobalt Upload APIને ઍક્સેસ કરો"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"ઍપ્લિકેશનને AdServices Cobalt Upload APIને ઍક્સેસ કરવાની મંજૂરી આપે છે."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"ઍપ સેટ ID APIનો ઍક્સેસ"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"ઍપ્લિકેશનને ઍપ સેટ ID API ઍક્સેસ કરવાની મંજૂરી આપે છે."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service APIનો ઍક્સેસ"</string>
@@ -194,7 +196,7 @@
     <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"ઍપ દ્વારા સૂચવેલી જાહેરાતો ચાલુ છે"</string>
     <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"ઍપ સૂચવેલી જાહેરાતો બતાવવાનું શરૂ કરી શકે. એકવાર જાહેરાતો સૂચવવાનું શરૂ કરે, પછી તમે ઍપની સૂચિ જોઈ શકશો."</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"ઍપ દ્વારા સૂચવેલી જાહેરાતો બંધ કરીએ?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"જાહેરાતના સૂચનનો બધો ડેટા ડિલીટ કરવામાં આવશે. ઍપ હવેથી કોઈ જાહેરતો સૂચિત કરી શકશે નહીં, પણ તમે કદાચ સંબંધિત જાહેરાત જોઈ શકશો."</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"જાહેરાતના સૂચનનો બધો ડેટા ડિલીટ કરવામાં આવશે. ઍપ હવેથી કોઈ જાહેરાતો સૂચિત કરી શકશે નહીં, પણ તમે કદાચ સંબંધિત જાહેરાત જોઈ શકશો."</string>
     <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"જાહેરાતની માપણી ચાલુ છે"</string>
     <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android ઍપને તેમની જાહેરાતોના પર્ફોર્મન્સની માપણી કરવામાં સહાય કરવામાં ફક્ત મર્યાદિત માહિતી ઍપ સાથે શેર કરી શકે છે."</string>
     <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"જાહેરાતની માપણી બંધ કરીએ?"</string>

@@ -19,6 +19,7 @@ package com.android.adservices.service.topics;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_TOPICS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
@@ -91,6 +92,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.Clock;
+import com.android.adservices.service.topics.cobalt.TopicsCobaltLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -162,11 +164,12 @@ public class TopicsServiceImplTest {
     @Mock AdServicesLogger mLogger;
     @Mock AdServicesManager mMockAdServicesManager;
     @Mock AppSearchConsentManager mAppSearchConsentManager;
+    @Mock TopicsCobaltLogger mTopicsCobaltLogger;
 
     // We are not expecting to launch Topics API on Android R. Hence, skipping this test on
     // Android R since some tests require handling of unsupported PackageManager APIs.
     // TODO(b/290839573) - Remove rule if Topics is enabled on R in the future.
-    @Rule public final SdkLevelSupportRule sdkLevelRule = SdkLevelSupportRule.isAtLeastS();
+    @Rule public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() throws Exception {
@@ -191,7 +194,8 @@ public class TopicsServiceImplTest {
                         mLogger,
                         mBlockedTopicsManager,
                         new GlobalBlockedTopicsManager(
-                                /* globalBlockedTopicsManager= */ new HashSet<>()));
+                                /* globalBlockedTopicIds= */ new HashSet<>()),
+                        mTopicsCobaltLogger);
 
         AppUpdateManager appUpdateManager =
                 new AppUpdateManager(dbHelper, mTopicsDao, new Random(), mMockFlags);
@@ -273,6 +277,30 @@ public class TopicsServiceImplTest {
     @After
     public void tearDown() {
         mStaticMockitoSession.finishMocking();
+    }
+
+    @Test
+    public void checkEmptySdkNameRequests() throws Exception {
+        mockGetTopicsDisableDirectAppCalls(true);
+
+        GetTopicsParam request =
+                new GetTopicsParam.Builder()
+                        .setAppPackageName(TEST_APP_PACKAGE_NAME)
+                        .setSdkName("") // Empty SdkName implies the app calls Topic API directly.
+                        .setSdkPackageName(SDK_PACKAGE_NAME)
+                        .build();
+
+        invokeGetTopicsAndVerifyError(mSpyContext, STATUS_INVALID_ARGUMENT, request, false);
+    }
+
+    @Test
+    public void checkNoSdkNameRequests() throws Exception {
+        mockGetTopicsDisableDirectAppCalls(true);
+
+        GetTopicsParam request =
+                new GetTopicsParam.Builder().setAppPackageName(TEST_APP_PACKAGE_NAME).build();
+
+        invokeGetTopicsAndVerifyError(mSpyContext, STATUS_INVALID_ARGUMENT, request, false);
     }
 
     @Test
@@ -1085,6 +1113,10 @@ public class TopicsServiceImplTest {
         // Verify AdServicesLogger logs Preview API.
         assertThat(argument.getValue().getApiName())
                 .isEqualTo(AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS_PREVIEW_API);
+    }
+
+    private void mockGetTopicsDisableDirectAppCalls(boolean value) {
+        when(mMockFlags.getTopicsDisableDirectAppCalls()).thenReturn(value);
     }
 
     private void invokeGetTopicsAndVerifyError(

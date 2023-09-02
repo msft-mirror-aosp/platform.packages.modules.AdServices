@@ -113,7 +113,9 @@ public class EventReport {
                 && Objects.equals(mTriggerDebugKey, eventReport.mTriggerDebugKey)
                 && Objects.equals(mSourceId, eventReport.mSourceId)
                 && Objects.equals(mTriggerId, eventReport.mTriggerId)
-                && Objects.equals(mRegistrationOrigin, eventReport.mRegistrationOrigin);
+                && Objects.equals(mRegistrationOrigin, eventReport.mRegistrationOrigin)
+                && mTriggerValue == eventReport.mTriggerValue
+                && Objects.equals(mTriggerSummaryBucket, eventReport.mTriggerSummaryBucket);
     }
 
     @Override
@@ -135,7 +137,9 @@ public class EventReport {
                 mTriggerDebugKey,
                 mSourceId,
                 mTriggerId,
-                mRegistrationOrigin);
+                mRegistrationOrigin,
+                mTriggerValue,
+                mTriggerSummaryBucket);
     }
 
     /**

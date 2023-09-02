@@ -135,7 +135,7 @@ public class ReportSpec {
     }
 
     /** @return the number of states */
-    public int getNumberState() {
+    public long getNumberState() {
         return getPrivacyParams().getNumStates();
     }
 
@@ -400,7 +400,7 @@ public class ReportSpec {
     private class PrivacyComputationParams {
         private final int[] mPerTypeNumWindowList;
         private final int[] mPerTypeCapList;
-        private final int mNumStates;
+        private final long mNumStates;
         private final double mFlipProbability;
         private final double mInformationGain;
 
@@ -430,7 +430,7 @@ public class ReportSpec {
             return mFlipProbability;
         }
 
-        private int getNumStates() {
+        private long getNumStates() {
             return mNumStates;
         }
 

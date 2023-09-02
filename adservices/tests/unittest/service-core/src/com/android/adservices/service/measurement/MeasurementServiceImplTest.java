@@ -66,6 +66,7 @@ import androidx.test.filters.SmallTest;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.PermissionHelper;
 import com.android.adservices.service.common.Throttler;
@@ -100,7 +101,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 @SmallTest
 public final class MeasurementServiceImplTest {
 
-    private static final String ALLOW_ALL_PACKAGES = "*";
     private static final Uri APP_DESTINATION = Uri.parse("android-app://test.app-destination");
     private static final String APP_PACKAGE_NAME = "app.package.name";
     private static final Uri REGISTRATION_URI = WebUtil.validUri("https://registration-uri.test");
@@ -1402,12 +1402,14 @@ public final class MeasurementServiceImplTest {
     }
 
     private void updateAppPackageAccessResolverDenied(boolean denied) {
-        String allowList = denied ? "" : ALLOW_ALL_PACKAGES;
+        String allowList = denied ? AllowLists.ALLOW_NONE : AllowLists.ALLOW_ALL;
+        String blockList = AllowLists.ALLOW_NONE;
         when(mMockFlags.getMsmtApiAppAllowList()).thenReturn(allowList);
+        when(mMockFlags.getMsmtApiAppBlockList()).thenReturn(blockList);
     }
 
     private void updateAppPackageResolverWebAppDenied(boolean denied) {
-        String allowList = denied ? "" : ALLOW_ALL_PACKAGES;
+        String allowList = denied ? AllowLists.ALLOW_NONE : AllowLists.ALLOW_ALL;
         when(mMockFlags.getWebContextClientAppAllowList()).thenReturn(allowList);
     }
 
