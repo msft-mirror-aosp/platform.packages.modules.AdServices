@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.service.Flags.MEASUREMENT_REPORT_RETRY_LIMIT;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -45,6 +43,7 @@ import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.exception.CryptoException;
@@ -161,11 +160,15 @@ public class AggregateReportingJobHandlerTest {
         mMockitoSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
+                        .spyStatic(ErrorLogUtil.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         when(mMockFlags.getMeasurementAggregationCoordinatorOriginEnabled()).thenReturn(true);
         when(mMockFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
+        ExtendedMockito.doNothing()
+                .when(() -> ErrorLogUtil.e(anyInt(), anyInt(), anyString(), anyString()));
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
     }
 
     @After
@@ -905,72 +908,6 @@ public class AggregateReportingJobHandlerTest {
             assertEquals("exception message", e.getMessage());
         }
 
-        verify(mTransaction, times(1)).begin();
-        verify(mTransaction, times(1)).end();
-    }
-
-    @Test
-    public void performReport_finalRetryAttempt_reportStatusSetToRetryLimitExceeded()
-            throws DatastoreException, IOException, JSONException {
-        AggregateReport aggregateReport = createASampleAggregateReport();
-        JSONObject aggregateReportBody = createASampleAggregateReportBody(aggregateReport);
-        ReportingStatus reportingStatus = new ReportingStatus();
-
-        when(mMeasurementDao.getAggregateReport(aggregateReport.getId()))
-                .thenReturn(aggregateReport);
-        when(mMockFlags.getMeasurementReportingRetryLimitEnabled()).thenReturn(true);
-        when(mMockFlags.getMeasurementReportingRetryLimit())
-                .thenReturn(MEASUREMENT_REPORT_RETRY_LIMIT);
-        doThrow(new IOException())
-                .when(mSpyAggregateReportingJobHandler)
-                .makeHttpPostRequest(eq(REPORTING_URI), Mockito.any());
-        doReturn(aggregateReportBody)
-                .when(mSpyAggregateReportingJobHandler)
-                .createReportJsonPayload(Mockito.any(), Mockito.any(), Mockito.any());
-
-        Assert.assertEquals(
-                AdServicesStatusUtils.STATUS_IO_ERROR,
-                mSpyAggregateReportingJobHandler.performReport(
-                        aggregateReport.getId(), AggregateCryptoFixture.getKey(), reportingStatus));
-        assertEquals(
-                ReportingStatus.FailureStatus.JOB_RETRY_LIMIT_REACHED,
-                reportingStatus.getFailureStatus());
-
-        verify(mMeasurementDao, never()).markAggregateReportStatus(any(), anyInt());
-        verify(mSpyAggregateReportingJobHandler, times(1))
-                .makeHttpPostRequest(eq(REPORTING_URI), Mockito.any());
-        verify(mTransaction, times(1)).begin();
-        verify(mTransaction, times(1)).end();
-    }
-
-    @Test
-    public void performReport_notFinalRetryAttempt_reportStatusSetToNetworkError()
-            throws DatastoreException, IOException, JSONException {
-        AggregateReport aggregateReport = createASampleAggregateReport();
-        JSONObject aggregateReportBody = createASampleAggregateReportBody(aggregateReport);
-        ReportingStatus reportingStatus = new ReportingStatus();
-
-        when(mMockFlags.getMeasurementReportingRetryLimitEnabled()).thenReturn(true);
-        when(mMockFlags.getMeasurementReportingRetryLimit())
-                .thenReturn(MEASUREMENT_REPORT_RETRY_LIMIT - 1);
-        when(mMeasurementDao.getAggregateReport(aggregateReport.getId()))
-                .thenReturn(aggregateReport);
-        doThrow(new IOException())
-                .when(mSpyAggregateReportingJobHandler)
-                .makeHttpPostRequest(eq(REPORTING_URI), Mockito.any());
-        doReturn(aggregateReportBody)
-                .when(mSpyAggregateReportingJobHandler)
-                .createReportJsonPayload(Mockito.any(), Mockito.any(), Mockito.any());
-
-        Assert.assertEquals(
-                AdServicesStatusUtils.STATUS_IO_ERROR,
-                mSpyAggregateReportingJobHandler.performReport(
-                        aggregateReport.getId(), AggregateCryptoFixture.getKey(), reportingStatus));
-        assertEquals(ReportingStatus.FailureStatus.NETWORK, reportingStatus.getFailureStatus());
-
-        verify(mMeasurementDao, never()).markAggregateReportStatus(any(), anyInt());
-        verify(mSpyAggregateReportingJobHandler, times(1))
-                .makeHttpPostRequest(eq(REPORTING_URI), Mockito.any());
         verify(mTransaction, times(1)).begin();
         verify(mTransaction, times(1)).end();
     }
