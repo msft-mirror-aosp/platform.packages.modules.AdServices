@@ -362,7 +362,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         int callingUid = getCallingUid(apiName);
         final DevContext devContext = mDevContextFilter.createDevContext();
-        final long overallTimeout = mFlags.getFledgeAuctionServerOverallTimeoutMs();
+        final long overallTimeout =
+                BinderFlagReader.readFlag(mFlags::getFledgeAuctionServerOverallTimeoutMs);
         final boolean forceSearchOnAbsentOwner =
                 BinderFlagReader.readFlag(
                         mFlags::getFledgeAuctionServerForceSearchWhenOwnerIsAbsentEnabled);
@@ -388,6 +389,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                         mFlags
                                                 ::getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount))
                         .build();
+        AuctionResultValidator auctionResultValidator =
+                new AuctionResultValidator(
+                        mFledgeAuthorizationFilter,
+                        BinderFlagReader.readFlag(mFlags::getDisableFledgeEnrollmentCheck));
         mLightweightExecutor.execute(
                 () -> {
                     PersistAdSelectionResultRunner runner =
@@ -406,7 +411,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     limits,
                                     mAdFilteringFeatureFactory.getAdCounterHistogramUpdater(
                                             mAdSelectionEntryDao,
-                                            auctionServerEnabledForUpdateHistogram));
+                                            auctionServerEnabledForUpdateHistogram),
+                                    auctionResultValidator);
                     runner.run(inputParams, callback);
                     Tracing.endAsyncSection(Tracing.PERSIST_AD_SELECTION_RESULT, traceCookie);
                 });

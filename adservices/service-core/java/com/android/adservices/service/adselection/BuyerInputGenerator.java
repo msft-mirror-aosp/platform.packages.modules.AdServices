@@ -22,7 +22,6 @@ import android.annotation.NonNull;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.BuyerInput;
 
@@ -49,34 +48,36 @@ public class BuyerInputGenerator {
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
     @NonNull private final AdFilterer mAdFilterer;
     @NonNull private final Clock mClock;
-    @NonNull private final Flags mFlags;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
+    private final long mCustomAudienceActiveTimeWindowInMs;
+    private final boolean mEnableAdFilter;
 
     @NonNull private final AuctionServerDataCompressor mDataCompressor;
 
     public BuyerInputGenerator(
             @NonNull final CustomAudienceDao customAudienceDao,
             @NonNull final AdFilterer adFilterer,
-            @NonNull final Flags flags,
             @NonNull final ExecutorService lightweightExecutorService,
-            @NonNull final ExecutorService backgroundExecutorService) {
+            @NonNull final ExecutorService backgroundExecutorService,
+            long customAudienceActiveTimeWindowInMs,
+            boolean enableAdFilter,
+            @NonNull AuctionServerDataCompressor dataCompressor) {
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(adFilterer);
-        Objects.requireNonNull(flags);
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(backgroundExecutorService);
+        Objects.requireNonNull(dataCompressor);
 
         mCustomAudienceDao = customAudienceDao;
         mAdFilterer = adFilterer;
         mClock = Clock.systemUTC();
-        mFlags = flags;
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
 
-        mDataCompressor =
-                AuctionServerDataCompressorFactory.getDataCompressor(
-                        mFlags.getFledgeAuctionServerCompressionAlgorithmVersion());
+        mDataCompressor = dataCompressor;
+        mCustomAudienceActiveTimeWindowInMs = customAudienceActiveTimeWindowInMs;
+        mEnableAdFilter = enableAdFilter;
     }
 
     /**
@@ -135,8 +136,7 @@ public class BuyerInputGenerator {
                 () -> {
                     List<DBCustomAudience> allActiveCAs =
                             mCustomAudienceDao.getAllActiveCustomAudienceForServerSideAuction(
-                                    mClock.instant(),
-                                    mFlags.getFledgeCustomAudienceActiveTimeWindowInMs());
+                                    mClock.instant(), mCustomAudienceActiveTimeWindowInMs);
                     int numberOfCAsCollected =
                             (Objects.isNull(allActiveCAs) ? 0 : allActiveCAs.size());
                     sLogger.v(
@@ -151,11 +151,22 @@ public class BuyerInputGenerator {
             @NonNull final List<DBCustomAudience> dbCustomAudiences) {
         int tracingCookie = Tracing.beginAsyncSection(Tracing.GET_FILTERED_BUYERS_CA);
         List<DBCustomAudience> filteredCustomAudiences =
-                mAdFilterer.filterCustomAudiences(dbCustomAudiences).stream()
+                dbCustomAudiences.stream()
                         .filter(
                                 AuctionServerCustomAudienceFilterer
                                         ::isValidCustomAudienceForServerSideAuction)
                         .collect(Collectors.toList());
+        sLogger.v(
+                String.format(
+                        "After auction server filtering : %s active CAs from device",
+                        filteredCustomAudiences.size()));
+        if (mEnableAdFilter) {
+            filteredCustomAudiences = mAdFilterer.filterCustomAudiences(filteredCustomAudiences);
+            sLogger.v(
+                    String.format(
+                            "After ad filtering : %s active CAs from device",
+                            filteredCustomAudiences.size()));
+        }
         Tracing.endAsyncSection(Tracing.GET_FILTERED_BUYERS_CA, tracingCookie);
         return filteredCustomAudiences;
     }

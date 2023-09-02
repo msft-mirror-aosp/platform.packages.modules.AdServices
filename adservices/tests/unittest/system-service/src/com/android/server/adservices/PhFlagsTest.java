@@ -16,7 +16,9 @@
 
 package com.android.server.adservices;
 
+import static com.android.server.adservices.Flags.ADSERVICES_SHELL_COMMAND_ENABLED;
 import static com.android.server.adservices.Flags.ADSERVICES_SYSTEM_SERVICE_ENABLED;
+import static com.android.server.adservices.PhFlags.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
 import static com.android.server.adservices.PhFlags.KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED;
 
 import android.provider.DeviceConfig;
@@ -52,5 +54,23 @@ public final class PhFlagsTest {
                 /* makeDefault */ false);
 
         assertThat(mPhFlags.getAdServicesSystemServiceEnabled()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testAdServicesShellCommandEnabled() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getAdServicesSystemServiceEnabled())
+                .isEqualTo(ADSERVICES_SHELL_COMMAND_ENABLED);
+
+        // Now overriding with the value from PH.
+        boolean phOverridingValue = !ADSERVICES_SHELL_COMMAND_ENABLED;
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ADSERVICES_SHELL_COMMAND_ENABLED,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getAdServicesShellCommandEnabled()).isEqualTo(phOverridingValue);
     }
 }

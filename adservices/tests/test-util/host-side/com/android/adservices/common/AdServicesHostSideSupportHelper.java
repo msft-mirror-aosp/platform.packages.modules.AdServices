@@ -19,7 +19,7 @@ import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 
 /** Helper to check if AdServices is supported / enabled in a device. */
-public final class AdServicesSupportHelper {
+public final class AdServicesHostSideSupportHelper {
 
     private static final String FEATURE_AUTOMOTIVE = "android.hardware.type.automotive";
     private static final String FEATURE_LEANBACK = "android.software.leanback";
@@ -36,7 +36,7 @@ public final class AdServicesSupportHelper {
             SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + "low_ram_device";
 
     private static final Logger sLogger =
-            new Logger(ConsoleLogger.getInstance(), AdServicesDeviceSupportedRule.class);
+            new Logger(ConsoleLogger.getInstance(), AdServicesHostSideSupportHelper.class);
 
     public static boolean isDebuggable(ITestDevice device) throws DeviceNotAvailableException {
         return "1".equals(device.getProperty("ro.debuggable"));
@@ -93,7 +93,7 @@ public final class AdServicesSupportHelper {
         return isLowRamDevice;
     }
 
-    private AdServicesSupportHelper() {
+    private AdServicesHostSideSupportHelper() {
         throw new UnsupportedOperationException("Provides only static methods");
     }
 }

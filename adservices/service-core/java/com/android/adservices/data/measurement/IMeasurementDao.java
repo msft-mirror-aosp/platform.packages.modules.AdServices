@@ -661,6 +661,14 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
+     * Increments Retry Counter for EventReporting Records. This is used for Retry Limiting.
+     *
+     * @param id Primary key id of Record in Measurement Event Report Table.
+     * @param reportType KeyValueData.DataType corresponding with Record type being incremented.
+     */
+    void incrementReportingRetryCount(String id, DataType reportType) throws DatastoreException;
+
+    /**
      * Returns the number of unique AdIds provided by an Ad Tech in web contexts to match with the
      * platform AdID from app contexts for debug key population in reports. It counts distinct AdIDs
      * provided by the AdTech across sources and triggers in the DB.

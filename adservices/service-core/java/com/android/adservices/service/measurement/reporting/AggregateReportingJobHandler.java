@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__AGGREGATE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MESUREMENT_REPORTS_UPLOADED;
 
@@ -25,12 +27,15 @@ import android.net.Uri;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.exception.CryptoException;
+import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementReportsStats;
 import com.android.internal.annotations.VisibleForTesting;
@@ -58,6 +63,7 @@ public class AggregateReportingJobHandler {
     private boolean mIsDebugInstance;
     private final Flags mFlags;
     private ReportingStatus.UploadMethod mUploadMethod;
+    private final AdServicesLogger mLogger;
 
     AggregateReportingJobHandler(
             EnrollmentDao enrollmentDao,
@@ -68,7 +74,8 @@ public class AggregateReportingJobHandler {
                 datastoreManager,
                 new AggregateEncryptionKeyManager(datastoreManager),
                 uploadMethod,
-                FlagsFactory.getFlags());
+                FlagsFactory.getFlags(),
+                AdServicesLoggerImpl.getInstance());
     }
 
     @VisibleForTesting
@@ -77,12 +84,14 @@ public class AggregateReportingJobHandler {
             DatastoreManager datastoreManager,
             AggregateEncryptionKeyManager aggregateEncryptionKeyManager,
             ReportingStatus.UploadMethod uploadMethod,
-            Flags flags) {
+            Flags flags,
+            AdServicesLogger logger) {
         mEnrollmentDao = enrollmentDao;
         mDatastoreManager = datastoreManager;
         mAggregateEncryptionKeyManager = aggregateEncryptionKeyManager;
         mUploadMethod = uploadMethod;
         mFlags = flags;
+        mLogger = logger;
     }
 
     /**
@@ -152,6 +161,12 @@ public class AggregateReportingJobHandler {
                         reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.SUCCESS);
                     } else {
                         reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.FAILURE);
+                        mDatastoreManager.runInTransaction(
+                                (dao) ->
+                                        dao.incrementReportingRetryCount(
+                                                aggregateReportId,
+                                                KeyValueData.DataType
+                                                        .AGGREGATE_REPORT_RETRY_COUNT));
                     }
 
                     if (mUploadMethod != null) {
@@ -252,14 +267,20 @@ public class AggregateReportingJobHandler {
         } catch (IOException e) {
             LogUtil.d(e, "Network error occurred when attempting to deliver aggregate report.");
             reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.NETWORK);
-            // TODO(b/297579501): Add a new error code and log the error with ErrorLogUtil
+            // TODO(b/298330312): Change to defined error codes
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             return AdServicesStatusUtils.STATUS_IO_ERROR;
         } catch (JSONException e) {
             LogUtil.d(e, "Serialization error occurred at aggregate report delivery.");
-            // TODO(b/297579501): Update the atom and the status to indicate serialization error
+            // TODO(b/298330312): Change to defined error codes
             reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.UNKNOWN);
-            // TODO(b/297579501): Log the error with ErrorLogUtil with the serialization error code
-
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             if (mFlags.getMeasurementEnableReportDeletionOnUnrecoverableException()) {
                 // Unrecoverable state - delete the report.
                 mDatastoreManager.runInTransaction(
@@ -279,8 +300,12 @@ public class AggregateReportingJobHandler {
             return AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } catch (CryptoException e) {
             LogUtil.e(e, e.toString());
-            // TODO(b/297579501): Update the atom and the status to indicate encryption error
+            // TODO(b/298330312): Change to defined error codes
             reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.UNKNOWN);
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             if (mFlags.getMeasurementEnableReportingJobsThrowCryptoException()
                     && ThreadLocalRandom.current().nextFloat()
                             < mFlags.getMeasurementThrowUnknownExceptionSamplingRate()) {
@@ -290,6 +315,11 @@ public class AggregateReportingJobHandler {
         } catch (Exception e) {
             LogUtil.e(e, e.toString());
             reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.UNKNOWN);
+            // TODO(b/298330312): Change to defined error codes
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             if (mFlags.getMeasurementEnableReportingJobsThrowUnaccountedException()
                     && ThreadLocalRandom.current().nextFloat()
                             < mFlags.getMeasurementThrowUnknownExceptionSamplingRate()) {
@@ -344,16 +374,15 @@ public class AggregateReportingJobHandler {
         if (!reportingStatus.getReportingDelay().isPresent()) {
             reportingStatus.setReportingDelay(0L);
         }
-        AdServicesLoggerImpl.getInstance()
-                .logMeasurementReports(
-                        new MeasurementReportsStats.Builder()
-                                .setCode(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED)
-                                .setType(AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__AGGREGATE)
-                                .setResultCode(reportingStatus.getUploadStatus().ordinal())
-                                .setFailureType(reportingStatus.getFailureStatus().ordinal())
-                                .setUploadMethod(reportingStatus.getUploadMethod().ordinal())
-                                .setReportingDelay(reportingStatus.getReportingDelay().get())
-                                .setSourceRegistrant(reportingStatus.getSourceRegistrant())
-                                .build());
+        mLogger.logMeasurementReports(
+                new MeasurementReportsStats.Builder()
+                        .setCode(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED)
+                        .setType(AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__AGGREGATE)
+                        .setResultCode(reportingStatus.getUploadStatus().ordinal())
+                        .setFailureType(reportingStatus.getFailureStatus().ordinal())
+                        .setUploadMethod(reportingStatus.getUploadMethod().ordinal())
+                        .setReportingDelay(reportingStatus.getReportingDelay().get())
+                        .setSourceRegistrant(reportingStatus.getSourceRegistrant())
+                        .build());
     }
 }

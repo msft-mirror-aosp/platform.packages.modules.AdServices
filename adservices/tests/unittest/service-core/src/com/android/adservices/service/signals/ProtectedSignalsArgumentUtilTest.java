@@ -121,7 +121,7 @@ public class ProtectedSignalsArgumentUtilTest {
     public void handleEmptyValue() {
         ProtectedSignal signal =
                 ProtectedSignal.builder()
-                        .setValue("")
+                        .setBase64EncodedValue("")
                         .setCreationTime(FIXED_NOW)
                         .setPackageName(PACKAGE)
                         .build();
@@ -138,7 +138,7 @@ public class ProtectedSignalsArgumentUtilTest {
 
     private ProtectedSignal generateSignal(String value) {
         return ProtectedSignal.builder()
-                .setValue(value)
+                .setBase64EncodedValue(value)
                 .setCreationTime(FIXED_NOW)
                 .setPackageName(PACKAGE)
                 .build();

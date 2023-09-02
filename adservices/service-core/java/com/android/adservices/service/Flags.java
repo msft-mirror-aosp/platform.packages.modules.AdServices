@@ -308,6 +308,8 @@ public interface Flags {
     long MEASUREMENT_DB_SIZE_LIMIT = (1024 * 1024) * 10; // 10 MBs
     int MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(5);
     int MEASUREMENT_NETWORK_READ_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(30);
+    int MEASUREMENT_REPORT_RETRY_LIMIT = 3;
+    boolean MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED = true;
 
     /**
      * Returns the window that an InputEvent has to be within for the system to register it as a
@@ -336,6 +338,16 @@ public interface Flags {
     /** Returns the DB size limit for measurement. */
     default long getMeasurementDbSizeLimit() {
         return MEASUREMENT_DB_SIZE_LIMIT;
+    }
+
+    /** Returns Whether to limit number of Retries for Measurement Reports */
+    default boolean getMeasurementReportingRetryLimitEnabled() {
+        return MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED;
+    }
+
+    /** Returns Maximum number of Retries for Measurement Reportss */
+    default int getMeasurementReportingRetryLimit() {
+        return MEASUREMENT_REPORT_RETRY_LIMIT;
     }
 
     /** Measurement manifest file url, used for MDD download. */
@@ -565,6 +577,23 @@ public interface Flags {
     // Keeping TTL as long as expiry, could be reduced later as we get more fresh CAs with adoption
     long FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS = 60 * 24 * 60L * 60L * 1000; // 60 days
     long FLEDGE_ENCRYPTION_KEY_MAX_AGE_SECONDS = TimeUnit.DAYS.toSeconds(14);
+    long FLEDGE_FETCH_CUSTOM_AUDIENCE_MIN_RETRY_AFTER_VALUE_MS = 30 * 1000; // 30 seconds
+    long FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_RETRY_AFTER_VALUE_MS =
+            24 * 60 * 60 * 1000; // 24 hours in ms
+
+    /**
+     * Returns the minimum number of milliseconds before the same fetch CA request can be retried.
+     */
+    default long getFledgeFetchCustomAudienceMinRetryAfterValueMs() {
+        return FLEDGE_FETCH_CUSTOM_AUDIENCE_MIN_RETRY_AFTER_VALUE_MS;
+    }
+
+    /**
+     * Returns the maximum number of milliseconds before the same fetch CA request can be retried.
+     */
+    default long getFledgeFetchCustomAudienceMaxRetryAfterValueMs() {
+        return FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_RETRY_AFTER_VALUE_MS;
+    }
 
     /** Returns the maximum number of custom audience can stay in the storage. */
     default long getFledgeCustomAudienceMaxCount() {
@@ -803,6 +832,29 @@ public interface Flags {
         return FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS;
     }
 
+    boolean PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED = false;
+    long PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS = 1L * 60L * 60L * 1000L; // 1 hour
+    long PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS = 5L * 60L * 1000L; // 5 minutes
+
+    /** Returns {@code true} if the Periodic encoding of Protected Signals is enabled. */
+    default boolean getProtectedSignalsPeriodicEncodingEnabled() {
+        return PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED;
+    }
+
+    /**
+     * @return period of running periodic encoding in milliseconds
+     */
+    default long getProtectedSignalPeriodicEncodingJobPeriodMs() {
+        return PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS;
+    }
+
+    /**
+     * @return the flexible period of running periodic encoding in milliseconds
+     */
+    default long getProtectedSignalsPeriodicEncodingJobFlexMs() {
+        return PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS;
+    }
+
     int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT = 10_000;
     int FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_TOTAL_EVENT_COUNT = 9_500;
     int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT = 1_000;
@@ -952,7 +1004,7 @@ public interface Flags {
 
     /**
      * Returns the maximum size in bytes of {@link
-     * DBRegisteredAdInteraction#getInteractionReportingUri()}
+     * com.android.adservices.data.adselection.DBRegisteredAdInteraction#getInteractionReportingUri()}
      */
     default long getFledgeReportImpressionMaxInteractionReportingUriSizeB() {
         return FLEDGE_REPORT_IMPRESSION_MAX_INTERACTION_REPORTING_URI_SIZE_B;
@@ -1052,6 +1104,15 @@ public interface Flags {
     default boolean getFledgeAuctionServerEnabledForSelectAdsMediation() {
         return getFledgeAuctionServerEnabled()
                 && FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION;
+    }
+
+    boolean FLEDGE_AUCTION_SERVER_ENABLE_AD_FILTER_IN_GET_AD_SELECTION_DATA = true;
+
+    /**
+     * @return whether to enable ad filtering in get ad selection data API.
+     */
+    default boolean getFledgeAuctionServerEnableAdFilterInGetAdSelectionData() {
+        return FLEDGE_AUCTION_SERVER_ENABLE_AD_FILTER_IN_GET_AD_SELECTION_DATA;
     }
 
     ImmutableList<Integer> FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES =
@@ -3384,5 +3445,13 @@ public interface Flags {
     /** Returns whether the U18 UX detentional channel is enabled. */
     default boolean isU18UxDetentionChannelEnabled() {
         return IS_U18_UX_DETENTION_CHANNEL_ENABLED_DEFAULT;
+    }
+
+    /** U18 supervised account flow is enabled by default. */
+    boolean IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT = true;
+
+    /** Returns whether the U18 supervised account is enabled. */
+    default boolean isU18SupervisedAccountEnabled() {
+        return IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT;
     }
 }

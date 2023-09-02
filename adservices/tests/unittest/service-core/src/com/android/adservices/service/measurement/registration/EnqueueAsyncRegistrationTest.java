@@ -91,6 +91,8 @@ public class EnqueueAsyncRegistrationTest {
 
     private static final String PLATFORM_AD_ID_VALUE = "PLATFORM_AD_ID_VALUE";
 
+    private static final String POST_BODY = "{\"ad_location\":\"bottom_right\"}";
+
     static {
         sSourceParamsList.add(INPUT_SOURCE_REGISTRATION_1);
         sSourceParamsList.add(INVALID_SOURCE_REGISTRATION);
@@ -164,6 +166,7 @@ public class EnqueueAsyncRegistrationTest {
                         Uri.parse("android-app://test.destination"),
                         System.currentTimeMillis(),
                         Source.SourceType.EVENT,
+                        null,
                         datastoreManager,
                         mContentResolver));
 
@@ -201,6 +204,7 @@ public class EnqueueAsyncRegistrationTest {
                         Uri.parse("android-app://test.destination"),
                         System.currentTimeMillis(),
                         Source.SourceType.EVENT,
+                        null,
                         datastoreManager,
                         mContentResolver));
 
@@ -257,6 +261,7 @@ public class EnqueueAsyncRegistrationTest {
                         Uri.parse("android-app://test.destination"),
                         System.currentTimeMillis(),
                         Source.SourceType.NAVIGATION,
+                        null,
                         datastoreManager,
                         mContentResolver));
 
@@ -314,6 +319,7 @@ public class EnqueueAsyncRegistrationTest {
                         Uri.parse("android-app://test.destination"),
                         System.currentTimeMillis(),
                         null,
+                        null,
                         datastoreManager,
                         mContentResolver));
 
@@ -350,6 +356,7 @@ public class EnqueueAsyncRegistrationTest {
                         DEFAULT_AD_ID_PERMISSION,
                         Uri.parse("android-app://test.destination"),
                         System.currentTimeMillis(),
+                        null,
                         null,
                         datastoreManager,
                         mContentResolver));
@@ -404,6 +411,7 @@ public class EnqueueAsyncRegistrationTest {
                         Uri.parse("android-app://test.destination"),
                         System.currentTimeMillis(),
                         null,
+                        null,
                         datastoreManager,
                         mContentResolver));
 
@@ -425,6 +433,51 @@ public class EnqueueAsyncRegistrationTest {
             Assert.assertTrue(asyncRegistration.hasAdIdPermission());
             Assert.assertNotNull(asyncRegistration.getPlatformAdId());
             Assert.assertEquals(PLATFORM_AD_ID_VALUE, asyncRegistration.getPlatformAdId());
+        }
+    }
+
+    @Test
+    public void testAppRegistrationRequestWithPostBody_isValid() {
+        DatastoreManager datastoreManager =
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
+        RegistrationRequest registrationRequest =
+                new RegistrationRequest.Builder(
+                                RegistrationRequest.REGISTER_TRIGGER,
+                                Uri.parse("https://baz.test"),
+                                sDefaultContext.getPackageName(),
+                                SDK_PACKAGE_NAME)
+                        .setAdIdPermissionGranted(true)
+                        .build();
+
+        Assert.assertTrue(
+                EnqueueAsyncRegistration.appSourceOrTriggerRegistrationRequest(
+                        registrationRequest,
+                        registrationRequest.isAdIdPermissionGranted(),
+                        Uri.parse("android-app://test.destination"),
+                        System.currentTimeMillis(),
+                        null,
+                        POST_BODY,
+                        datastoreManager,
+                        mContentResolver));
+
+        try (Cursor cursor =
+                DbTestUtil.getMeasurementDbHelperForTest()
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.AsyncRegistrationContract.TABLE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null)) {
+            Assert.assertTrue(cursor.moveToNext());
+            AsyncRegistration asyncRegistration =
+                    SqliteObjectMapper.constructAsyncRegistration(cursor);
+            Assert.assertNotNull(asyncRegistration);
+            Assert.assertTrue(asyncRegistration.hasAdIdPermission());
+            Assert.assertNotNull(asyncRegistration.getPostBody());
+            Assert.assertEquals(POST_BODY, asyncRegistration.getPostBody());
         }
     }
 
@@ -631,6 +684,7 @@ public class EnqueueAsyncRegistrationTest {
                 Uri.parse("android-app://test.destination"),
                 System.currentTimeMillis(),
                 Source.SourceType.EVENT,
+                null,
                 datastoreManager,
                 mContentResolver);
 

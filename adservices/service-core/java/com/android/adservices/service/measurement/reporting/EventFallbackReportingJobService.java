@@ -136,19 +136,8 @@ public final class EventFallbackReportingJobService extends JobService {
 
     /** Schedules {@link EventFallbackReportingJobService} */
     @VisibleForTesting
-    static void schedule(Context context, JobScheduler jobScheduler) {
-        final JobInfo job =
-                new JobInfo.Builder(
-                                MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID,
-                                new ComponentName(context, EventFallbackReportingJobService.class))
-                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                        .setRequiresDeviceIdle(true)
-                        .setRequiresBatteryNotLow(true)
-                        .setPeriodic(
-                                AdServicesConfig.getMeasurementEventFallbackReportingJobPeriodMs())
-                        .setPersisted(true)
-                        .build();
-        jobScheduler.schedule(job);
+    static void schedule(JobScheduler jobScheduler, JobInfo jobInfo) {
+        jobScheduler.schedule(jobInfo);
     }
 
     /**
@@ -169,14 +158,28 @@ public final class EventFallbackReportingJobService extends JobService {
             return;
         }
 
-        final JobInfo job = jobScheduler.getPendingJob(MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID);
+        final JobInfo scheduledJob =
+                jobScheduler.getPendingJob(MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
-        if (job == null || forceSchedule) {
-            schedule(context, jobScheduler);
+        JobInfo jobInfo = buildJobInfo(context);
+        if (forceSchedule || !jobInfo.equals(scheduledJob)) {
+            schedule(jobScheduler, jobInfo);
             LogUtil.d("Scheduled EventFallbackReportingJobService");
         } else {
             LogUtil.d("EventFallbackReportingJobService already scheduled, skipping reschedule");
         }
+    }
+
+    private static JobInfo buildJobInfo(Context context) {
+        return new JobInfo.Builder(
+                        MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID,
+                        new ComponentName(context, EventFallbackReportingJobService.class))
+                .setRequiresDeviceIdle(true)
+                .setRequiresBatteryNotLow(true)
+                .setPeriodic(AdServicesConfig.getMeasurementEventFallbackReportingJobPeriodMs())
+                .setPersisted(true)
+                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                .build();
     }
 
     private boolean skipAndCancelBackgroundJob(

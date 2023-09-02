@@ -155,7 +155,7 @@ public class AuctionServerE2ETest {
             WinReportingUrls.newBuilder()
                     .setBuyerReportingUrls(
                             ReportingUrls.newBuilder().setReportingUrl(BUYER_REPORTING_URI).build())
-                    .setComponentSellerReportingUrls(
+                    .setTopLevelSellerReportingUrls(
                             ReportingUrls.newBuilder()
                                     .setReportingUrl(SELLER_REPORTING_URI)
                                     .build())

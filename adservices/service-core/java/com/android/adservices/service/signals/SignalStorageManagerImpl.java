@@ -29,7 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Reads signals from Signals DB and collects them into an in memory map */
+/** Reads signals from Signals DB and collects them into a map with base64 encoded String keys */
 public class SignalStorageManagerImpl implements SignalStorageManager {
 
     @NonNull private ProtectedSignalsDao mProtectedSignalsDao;
@@ -45,17 +45,18 @@ public class SignalStorageManagerImpl implements SignalStorageManager {
         Map<String, List<ProtectedSignal>> signalsMap = new HashMap<>();
 
         for (DBProtectedSignal dbSignal : dbSignals) {
-            String key = Base64.getEncoder().encodeToString(dbSignal.getKey());
+            String base64EncodedKey = Base64.getEncoder().encodeToString(dbSignal.getKey());
 
             ProtectedSignal protectedSignal =
                     ProtectedSignal.builder()
-                            .setValue(Base64.getEncoder().encodeToString(dbSignal.getValue()))
+                            .setBase64EncodedValue(
+                                    Base64.getEncoder().encodeToString(dbSignal.getValue()))
                             .setPackageName(dbSignal.getPackageName())
                             .setCreationTime(dbSignal.getCreationTime())
                             .build();
 
-            signalsMap.putIfAbsent(key, new ArrayList<>());
-            signalsMap.get(key).add(protectedSignal);
+            signalsMap.putIfAbsent(base64EncodedKey, new ArrayList<>());
+            signalsMap.get(base64EncodedKey).add(protectedSignal);
         }
         return signalsMap;
     }

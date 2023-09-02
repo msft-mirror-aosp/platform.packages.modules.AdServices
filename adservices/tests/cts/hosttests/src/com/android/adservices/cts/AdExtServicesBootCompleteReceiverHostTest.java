@@ -19,10 +19,10 @@ package com.android.adservices.cts;
 import static com.android.adservices.common.TestDeviceHelper.ADSERVICES_SETTINGS_INTENT;
 import static com.android.adservices.common.TestDeviceHelper.startActivity;
 
-import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.common.AdServicesHostSideFlagsSetterRule;
 import com.android.adservices.common.AdServicesHostSideTestCase;
+import com.android.adservices.common.HostSideSdkLevelSupportRule;
 import com.android.adservices.common.RequiresSdkLevelLessThanT;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 
 import org.junit.Rule;
@@ -40,12 +40,12 @@ import org.junit.runner.RunWith;
 public class AdExtServicesBootCompleteReceiverHostTest extends AdServicesHostSideTestCase {
 
     @Rule(order = 0)
-    public SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+    public final HostSideSdkLevelSupportRule sdkLevel = HostSideSdkLevelSupportRule.forAtLeastS();
 
     // Sets flags used in the test (and automatically reset them at the end)
     @Rule(order = 1)
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forCompatModeEnabledTests();
+    public final AdServicesHostSideFlagsSetterRule flags =
+            AdServicesHostSideFlagsSetterRule.forCompatModeEnabledTests();
 
     // TODO(b/295269584): improve rule to support range of versions.
     @Test

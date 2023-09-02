@@ -72,6 +72,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
+import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
@@ -90,6 +91,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
 import org.mockito.internal.stubbing.answers.AnswersWithDelay;
@@ -148,7 +150,7 @@ public class PersistAdSelectionResultRunnerTest {
                                     .putInteractionReportingUrls(
                                             BUYER_INTERACTION_KEY, BUYER_INTERACTION_URI)
                                     .build())
-                    .setComponentSellerReportingUrls(
+                    .setTopLevelSellerReportingUrls(
                             ReportingUrls.newBuilder()
                                     .setReportingUrl(SELLER_REPORTING_URI)
                                     .putInteractionReportingUrls(
@@ -163,7 +165,7 @@ public class PersistAdSelectionResultRunnerTest {
                                     .putInteractionReportingUrls(
                                             BUYER_INTERACTION_KEY, BUYER_INTERACTION_URI)
                                     .build())
-                    .setComponentSellerReportingUrls(
+                    .setTopLevelSellerReportingUrls(
                             ReportingUrls.newBuilder()
                                     .setReportingUrl(SELLER_REPORTING_URI_DIFFERENT_SELLER)
                                     .putInteractionReportingUrls(
@@ -180,7 +182,7 @@ public class PersistAdSelectionResultRunnerTest {
                                             BUYER_INTERACTION_KEY,
                                             BUYER_INTERACTION_URI_DIFFERENT_BUYER)
                                     .build())
-                    .setComponentSellerReportingUrls(
+                    .setTopLevelSellerReportingUrls(
                             ReportingUrls.newBuilder()
                                     .setReportingUrl(SELLER_REPORTING_URI)
                                     .putInteractionReportingUrls(
@@ -196,7 +198,7 @@ public class PersistAdSelectionResultRunnerTest {
                                             BUYER_INTERACTION_KEY,
                                             BUYER_INTERACTION_URI_EXCEEDS_MAX)
                                     .build())
-                    .setComponentSellerReportingUrls(
+                    .setTopLevelSellerReportingUrls(
                             ReportingUrls.newBuilder()
                                     .setReportingUrl(SELLER_REPORTING_URI)
                                     .putInteractionReportingUrls(
@@ -336,6 +338,8 @@ public class PersistAdSelectionResultRunnerTest {
     private AuctionServerPayloadFormatter mPayloadFormatter;
     private AuctionServerDataCompressor mDataCompressor;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
+
+    @Mock private FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
     private PersistAdSelectionResultRunner mPersistAdSelectionResultRunner;
     private long mOverallTimeout;
     private boolean mForceContinueOnAbsentOwner;
@@ -343,6 +347,8 @@ public class PersistAdSelectionResultRunnerTest {
     private final AdCounterHistogramUpdater mAdCounterHistogramUpdaterSpy =
             spy(new AdCounterHistogramUpdaterNoOpImpl());
     private MockitoSession mStaticMockSession = null;
+
+    private AuctionResultValidator mAuctionResultValidator;
 
     @Before
     public void setup() throws InvalidKeySpecException, UnsupportedHpkeAlgorithmException {
@@ -387,6 +393,11 @@ public class PersistAdSelectionResultRunnerTest {
                                 mFlags
                                         .getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount())
                         .build();
+        mAuctionResultValidator =
+                new AuctionResultValidator(
+                        mFledgeAuthorizationFilterMock, false
+                        /** disableFledgeEnrollmentCheck */
+                        );
         mPersistAdSelectionResultRunner =
                 new PersistAdSelectionResultRunner(
                         mObliviousHttpEncryptorMock,
@@ -401,7 +412,8 @@ public class PersistAdSelectionResultRunnerTest {
                         mOverallTimeout,
                         mForceContinueOnAbsentOwner,
                         mReportingLimits,
-                        mAdCounterHistogramUpdaterSpy);
+                        mAdCounterHistogramUpdaterSpy,
+                        mAuctionResultValidator);
     }
 
     @After
@@ -409,6 +421,27 @@ public class PersistAdSelectionResultRunnerTest {
         if (mStaticMockSession != null) {
             mStaticMockSession.finishMocking();
         }
+    }
+
+    @Test
+    public void testRunner_buyerNotEnrolled_throwsIAE() throws Exception {
+        Mockito.doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
+                .when(mFledgeAuthorizationFilterMock)
+                .assertAdTechEnrolled(
+                        WINNER_BUYER,
+                        AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN);
+        PersistAdSelectionResultInput inputParams =
+                new PersistAdSelectionResultInput.Builder()
+                        .setSeller(SELLER)
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionResult(CIPHER_TEXT_BYTES)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+        PersistAdSelectionResultTestCallback callback =
+                invokePersistAdSelectionResult(mPersistAdSelectionResultRunner, inputParams);
+        Assert.assertFalse(callback.mIsSuccess);
+        assertNotNull(callback.mFledgeErrorResponse);
+        assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
     }
 
     @Test
@@ -625,7 +658,8 @@ public class PersistAdSelectionResultRunnerTest {
                         mOverallTimeout,
                         forceSearchOnAbsentOwner,
                         mReportingLimits,
-                        mAdCounterHistogramUpdaterSpy);
+                        mAdCounterHistogramUpdaterSpy,
+                        mAuctionResultValidator);
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
@@ -674,7 +708,8 @@ public class PersistAdSelectionResultRunnerTest {
                         mOverallTimeout,
                         forceSearchOnAbsentOwner,
                         mReportingLimits,
-                        mAdCounterHistogramUpdaterSpy);
+                        mAdCounterHistogramUpdaterSpy,
+                        mAuctionResultValidator);
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
@@ -768,7 +803,8 @@ public class PersistAdSelectionResultRunnerTest {
                         mOverallTimeout,
                         mForceContinueOnAbsentOwner,
                         mReportingLimits,
-                        mAdCounterHistogramUpdaterSpy);
+                        mAdCounterHistogramUpdaterSpy,
+                        mAuctionResultValidator);
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
@@ -951,7 +987,8 @@ public class PersistAdSelectionResultRunnerTest {
                         mOverallTimeout,
                         mForceContinueOnAbsentOwner,
                         reportingLimits,
-                        mAdCounterHistogramUpdaterSpy);
+                        mAdCounterHistogramUpdaterSpy,
+                        mAuctionResultValidator);
         PersistAdSelectionResultTestCallback callback =
                 invokePersistAdSelectionResult(persistAdSelectionResultRunner, inputParams);
 
