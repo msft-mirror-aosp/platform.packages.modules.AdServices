@@ -16,9 +16,10 @@
 
 package com.android.adservices.service.signals;
 
-import static com.android.adservices.service.signals.ProtectedSignalsArgumentUtil.SIGNAL_FIELD_NAME;
+import static com.android.adservices.service.signals.ProtectedSignalsArgumentUtil.INVALID_BASE64_SIGNAL;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import android.adservices.common.CommonFixture;
@@ -28,10 +29,12 @@ import com.android.adservices.service.js.JSScriptArgument;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 
+import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.time.Instant;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +42,7 @@ import java.util.Map;
 public class ProtectedSignalsArgumentUtilTest {
 
     public static final String PACKAGE = CommonFixture.TEST_PACKAGE_NAME_1;
+    public static final String SIGNAL_FIELD_NAME = "signals";
     public static final Instant FIXED_NOW = CommonFixture.FIXED_NOW;
     private Map<String, List<ProtectedSignal>> mSignals;
 
@@ -48,19 +52,21 @@ public class ProtectedSignalsArgumentUtilTest {
     }
 
     @Test
-    public void testJSArgument() {
+    public void testJSArgument() throws JSONException {
         ProtectedSignal signal = generateSignal("signal1");
-        mSignals.put("test_key", List.of(signal));
+        mSignals.put(getBase64String("test_key"), List.of(signal));
 
-        JSScriptArgument argument = ProtectedSignalsArgumentUtil.asScriptArgument(mSignals);
+        JSScriptArgument argument =
+                ProtectedSignalsArgumentUtil.asScriptArgument(SIGNAL_FIELD_NAME, mSignals);
 
         assertEquals(SIGNAL_FIELD_NAME, argument.name());
 
         String expectedVariable =
-                "const signals = \"[{\"test_key\":[{\"val\":\"signal1\","
+                "const signals = [{\"746573745F6B6579\":"
+                        + "[{\"val\":\"7369676E616C31\","
                         + "\"time\":"
                         + FIXED_NOW.getEpochSecond()
-                        + ",\"app\":\"android.adservices.tests1\"}]}]\";";
+                        + ",\"app\":\"android.adservices.tests1\"}]}];";
 
         String actualVariable = argument.variableDeclaration();
         assertEquals(expectedVariable, actualVariable);
@@ -75,11 +81,12 @@ public class ProtectedSignalsArgumentUtilTest {
     @Test
     public void testSingleSignal() {
         ProtectedSignal signal = generateSignal("signal1");
-        mSignals.put("test_key", List.of(signal));
+        mSignals.put(getBase64String("test_key"), List.of(signal));
 
         String expectedJSON =
-                "[{\"test_key\":"
-                        + "[{\"val\":\"signal1\",\"time\":"
+                "[{\"746573745F6B6579\":"
+                        + "[{\"val\":\"7369676E616C31\","
+                        + "\"time\":"
                         + FIXED_NOW.getEpochSecond()
                         + ",\"app\":\"android.adservices.tests1\"}]}]";
         String actualJSON = ProtectedSignalsArgumentUtil.marshalToJson(mSignals);
@@ -89,28 +96,44 @@ public class ProtectedSignalsArgumentUtilTest {
     }
 
     @Test
+    public void testHandleInvalidBase64Signal() {
+        ProtectedSignal signal = generateSignal("signal1");
+        mSignals.put("non_base64_string", List.of(signal));
+
+        IllegalStateException exception =
+                assertThrows(
+                        IllegalStateException.class,
+                        () -> {
+                            ProtectedSignalsArgumentUtil.marshalToJson(mSignals);
+                        });
+        assertEquals(INVALID_BASE64_SIGNAL, exception.getMessage());
+    }
+
+    @Test
     public void testMultipleSignals() {
         ProtectedSignal signalA1 = generateSignal("signalA1");
         ProtectedSignal signalA2 = generateSignal("signalA1");
         ProtectedSignal signalB1 = generateSignal("signalB1");
 
-        mSignals.put("test_key_A", List.of(signalA1, signalA2));
-        mSignals.put("test_key_B", List.of(signalB1));
+        mSignals.put(getBase64String("test_key_A"), List.of(signalA1, signalA2));
+        mSignals.put(getBase64String("test_key_B"), List.of(signalB1));
 
         String expectedJSON =
-                "["
-                        + "{\"test_key_B\":"
-                        + "[{\"val\":\"signalB1\",\"time\":"
+                "[{\"746573745F6B65795F42\":"
+                        + "[{\"val\":\"7369676E616C4231\","
+                        + "\"time\":"
                         + FIXED_NOW.getEpochSecond()
                         + ",\"app\":\"android.adservices.tests1\"}]},"
-                        + "{\"test_key_A\":"
-                        + "[{\"val\":\"signalA1\",\"time\":"
+                        + "{\"746573745F6B65795F41\":"
+                        + "[{\"val\":\"7369676E616C4131\","
+                        + "\"time\":"
                         + FIXED_NOW.getEpochSecond()
                         + ",\"app\":\"android.adservices.tests1\"},"
-                        + "{\"val\":\"signalA1\",\"time\":"
+                        + "{\"val\":\"7369676E616C4131\","
+                        + "\"time\":"
                         + FIXED_NOW.getEpochSecond()
-                        + ",\"app\":\"android.adservices.tests1\"}]}"
-                        + "]";
+                        + ",\"app\":\"android"
+                        + ".adservices.tests1\"}]}]";
         String actualJSON = ProtectedSignalsArgumentUtil.marshalToJson(mSignals);
 
         assertEquals(expectedJSON, actualJSON);
@@ -121,13 +144,15 @@ public class ProtectedSignalsArgumentUtilTest {
     public void handleEmptyValue() {
         ProtectedSignal signal =
                 ProtectedSignal.builder()
-                        .setBase64EncodedValue("")
+                        .setBase64EncodedValue(getBase64String(""))
                         .setCreationTime(FIXED_NOW)
                         .setPackageName(PACKAGE)
                         .build();
-        mSignals.put("test_key", List.of(signal));
+        mSignals.put(getBase64String("test_key"), List.of(signal));
         String expectedJSON =
-                "[{\"test_key\":[{\"val\":\"\",\"time\":"
+                "[{\"746573745F6B6579\":"
+                        + "[{\"val\":\"\","
+                        + "\"time\":"
                         + FIXED_NOW.getEpochSecond()
                         + ",\"app\":\"android.adservices.tests1\"}]}]";
         String actualJSON = ProtectedSignalsArgumentUtil.marshalToJson(mSignals);
@@ -138,7 +163,7 @@ public class ProtectedSignalsArgumentUtilTest {
 
     private ProtectedSignal generateSignal(String value) {
         return ProtectedSignal.builder()
-                .setBase64EncodedValue(value)
+                .setBase64EncodedValue(getBase64String(value))
                 .setCreationTime(FIXED_NOW)
                 .setPackageName(PACKAGE)
                 .build();
@@ -152,5 +177,9 @@ public class ProtectedSignalsArgumentUtilTest {
         } catch (JsonSyntaxException e) {
             return false;
         }
+    }
+
+    private static String getBase64String(String str) {
+        return Base64.getEncoder().encodeToString(str.getBytes());
     }
 }
