@@ -43,7 +43,6 @@ import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
-import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.exception.CryptoException;
@@ -144,6 +143,7 @@ public class AggregateReportingJobHandlerTest {
                         mEnrollmentDao,
                         mDatastoreManager,
                         mockKeyManager,
+                        ReportingStatus.UploadMethod.REGULAR,
                         mMockFlags,
                         mLogger);
         mSpyAggregateReportingJobHandler = Mockito.spy(mAggregateReportingJobHandler);
@@ -153,6 +153,7 @@ public class AggregateReportingJobHandlerTest {
                                         mEnrollmentDao,
                                         mDatastoreManager,
                                         mockKeyManager,
+                                        ReportingStatus.UploadMethod.REGULAR,
                                         mMockFlags,
                                         mLogger)
                                 .setIsDebugInstance(true));
@@ -160,15 +161,11 @@ public class AggregateReportingJobHandlerTest {
         mMockitoSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
-                        .spyStatic(ErrorLogUtil.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         when(mMockFlags.getMeasurementAggregationCoordinatorOriginEnabled()).thenReturn(true);
         when(mMockFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
-        ExtendedMockito.doNothing()
-                .when(() -> ErrorLogUtil.e(anyInt(), anyInt(), anyString(), anyString()));
-        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
     }
 
     @After
@@ -554,6 +551,7 @@ public class AggregateReportingJobHandlerTest {
                         mEnrollmentDao,
                         new FakeDatasoreManager(),
                         mockKeyManager,
+                        ReportingStatus.UploadMethod.REGULAR,
                         mMockFlags,
                         mLogger);
         mSpyAggregateReportingJobHandler = Mockito.spy(mAggregateReportingJobHandler);

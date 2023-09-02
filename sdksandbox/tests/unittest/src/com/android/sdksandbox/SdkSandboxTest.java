@@ -29,6 +29,7 @@ import android.app.sdksandbox.SdkSandboxLocalSingleton;
 import android.app.sdksandbox.SharedPreferencesKey;
 import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.app.sdksandbox.sdkprovider.SdkSandboxActivityRegistry;
+import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.app.sdksandbox.testutils.StubSdkToServiceLink;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -55,6 +56,7 @@ import dalvik.system.PathClassLoader;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -144,6 +146,9 @@ public class SdkSandboxTest {
             return sSdkSandboxActivityRegistry;
         }
     }
+
+    @Rule
+    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
 
     @BeforeClass
     public static void setupClass() {
@@ -529,7 +534,7 @@ public class SdkSandboxTest {
                 SANDBOX_LATENCY_INFO);
         loadSdkCallback.assertLoadSdkIsSuccessful();
 
-        assertThat(loadSdkCallback.mSandboxLatencyInfo.getLatencySystemServerToSandbox())
+        assertThat(loadSdkCallback.mSandboxLatencyInfo.getSystemServerToSandboxLatency())
                 .isEqualTo(
                         (int)
                                 (TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER
@@ -643,7 +648,7 @@ public class SdkSandboxTest {
                         callback);
         assertThat(surfaceLatch.await(1, TimeUnit.MINUTES)).isTrue();
         assertThat(callback.mSurfacePackage).isNotNull();
-        assertThat(callback.mSandboxLatencyInfo.getLatencySystemServerToSandbox())
+        assertThat(callback.mSandboxLatencyInfo.getSystemServerToSandboxLatency())
                 .isEqualTo(
                         (int)
                                 (TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER

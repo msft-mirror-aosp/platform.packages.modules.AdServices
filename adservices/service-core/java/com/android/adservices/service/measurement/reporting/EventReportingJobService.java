@@ -36,7 +36,6 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.measurement.util.JobLockHolder;
-import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -106,9 +105,6 @@ public final class EventReportingJobService extends JobService {
                                 EnrollmentDao.getInstance(getApplicationContext()),
                                 DatastoreManagerFactory.getDatastoreManager(
                                         getApplicationContext()),
-                                FlagsFactory.getFlags(),
-                                AdServicesLoggerImpl.getInstance(),
-                                ReportingStatus.ReportType.EVENT,
                                 ReportingStatus.UploadMethod.REGULAR)
                         .performScheduledPendingReportsInWindow(
                                 System.currentTimeMillis() - maxEventReportUploadRetryWindowMs,

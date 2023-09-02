@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 import android.net.Uri;
 
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
-
+import com.android.adservices.service.devapi.DevContext;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -44,7 +44,8 @@ public class JsVersionHelperTest {
                         URI,
                         ImmutableMap.of(
                                 JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS, VERSION),
-                        false);
+                        false,
+                        DevContext.createForDevOptionsDisabled());
 
         assertEquals(request.getUri(), URI);
         assertEquals(request.getRequestProperties().size(), 1);

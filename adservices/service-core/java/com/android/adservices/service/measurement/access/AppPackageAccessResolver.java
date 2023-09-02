@@ -26,16 +26,19 @@ import com.android.adservices.service.common.AllowLists;
 public class AppPackageAccessResolver implements IAccessResolver {
     private static final String ERROR_MESSAGE = "Package %s is not allowed to call the API.";
     private final String mAllowList;
+    private final String mBlockList;
     private final String mPackageName;
 
-    public AppPackageAccessResolver(@NonNull String allowList, @NonNull String packageName) {
-        mAllowList = allowList;
+    public AppPackageAccessResolver(
+            String allowList, String blockList, @NonNull String packageName) {
+        mAllowList = allowList == null ? AllowLists.ALLOW_NONE : allowList;
+        mBlockList = blockList == null ? AllowLists.ALLOW_NONE : blockList;
         mPackageName = packageName;
     }
 
     @Override
     public boolean isAllowed(@NonNull Context context) {
-        return AllowLists.isPackageAllowListed(mAllowList, mPackageName);
+        return AllowLists.isPackageAllowListed(mAllowList, mPackageName) && !isBlocked();
     }
 
     @NonNull
@@ -49,5 +52,10 @@ public class AppPackageAccessResolver implements IAccessResolver {
     @Override
     public String getErrorMessage() {
         return String.format(ERROR_MESSAGE, mPackageName);
+    }
+
+    private boolean isBlocked() {
+        // Allowlist is misnomer in this case. isBlocked method for code clarity.
+        return AllowLists.isPackageAllowListed(mBlockList, mPackageName);
     }
 }

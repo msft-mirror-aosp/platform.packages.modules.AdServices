@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Veitir forriti aðgang að forritaskilum samþykkja AdServices"</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Aðgangur að forritaskilum auglýsingaauðkennis."</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Veitir forriti aðgang að forritaskilum auglýsingaauðkennis."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"Aðgangur að forritaskilum AdServices Cobalt Upload"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Veitir forriti aðgang að forritaskilum AdServices Cobalt Upload."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Aðgangur að forritaskilum kennis forritahóps."</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Veitir forriti aðgang að forritaskilum kennis forritahóps."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Aðgangur að forritaskilum samþykkjaþjónustu"</string>
@@ -40,7 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Veitir forriti aðgang að virknistöðuforritaskilum AdService."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Aðgangur að forritaskilum AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Veitir forriti aðgang að forritaskilum AdServicesManager."</string>
-    <string name="app_label" msgid="5985320129629013968">"Android kerfið"</string>
+    <string name="app_label" msgid="5844694701336604490">"Persónuvernd auglýsinga"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Taktu þátt í betaútgáfu persónuverndar Android-auglýsinga"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android kannar lokaðri leiðir fyrir forrit til að birta þér auglýsingar."</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Nánar"</string>

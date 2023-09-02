@@ -16,15 +16,10 @@
 
 package com.android.adservices.service.common;
 
-import android.annotation.NonNull;
-
 import java.util.List;
 
 /** Custom Audiences part of the app manifest config (<ad-services-config>). */
-public class AppManifestCustomAudiencesConfig {
-    private final boolean mAllowAllToAccess;
-    private final List<String> mAllowAdPartnersToAccess;
-
+public final class AppManifestCustomAudiencesConfig extends AppManifestApiConfig {
     /**
      * Constructor.
      *
@@ -32,21 +27,8 @@ public class AppManifestCustomAudiencesConfig {
      * @param allowAdPartnersToAccess corresponds to the list in the config.
      */
     public AppManifestCustomAudiencesConfig(
-            boolean allowAllToAccess, @NonNull List<String> allowAdPartnersToAccess) {
-        mAllowAllToAccess = allowAllToAccess;
-        mAllowAdPartnersToAccess = allowAdPartnersToAccess;
-    }
-
-    /** Getter for allowAllToAccess. */
-    @NonNull
-    public boolean getAllowAllToAccess() {
-        return mAllowAllToAccess;
-    }
-
-    /** Getter for allowAdPartnersToAccess. */
-    @NonNull
-    public List<String> getAllowAdPartnersToAccess() {
-        return mAllowAdPartnersToAccess;
+            boolean allowAllToAccess, List<String> allowAdPartnersToAccess) {
+        super(allowAllToAccess, allowAdPartnersToAccess);
     }
 
     // TODO(b/237445006): Add app install related fields.

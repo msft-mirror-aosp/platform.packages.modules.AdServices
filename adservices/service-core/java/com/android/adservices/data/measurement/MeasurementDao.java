@@ -2597,6 +2597,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.AsyncRegistrationContract.PLATFORM_AD_ID,
                 asyncRegistration.getPlatformAdId());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.REQUEST_POST_BODY,
+                asyncRegistration.getPostBody());
         long rowId =
                 mSQLTransaction
                         .getDatabase()
@@ -2736,14 +2739,16 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public int incrementAndGetReportingRetryCount(String id, DataType reportType)
+    public void incrementReportingRetryCount(String id, DataType reportType)
             throws DatastoreException {
         KeyValueData eventRetry = getKeyValueData(id, reportType);
         eventRetry.setReportRetryCount(eventRetry.getReportRetryCount() + 1);
         insertOrUpdateKeyValueData(eventRetry);
-        int retryCount = eventRetry.getReportRetryCount();
-        LogUtil.d("Incrementing: " + reportType + " Retry Count: " + retryCount);
-        return retryCount;
+        LogUtil.d(
+                "Incrementing: "
+                        + reportType
+                        + " Retry Count: "
+                        + eventRetry.getReportRetryCount());
     }
 
     @Override

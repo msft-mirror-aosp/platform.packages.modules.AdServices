@@ -53,6 +53,8 @@ public class TestAdSelectionManager {
         mAdSelectionManager = adSelectionManager;
     }
 
+    // TODO(b/289362476): Add override APIs for server auction key fetch
+
     /**
      * Overrides the AdSelection API for a given {@link AdSelectionConfig} to avoid fetching data
      * from remote servers and use the data provided in {@link AddAdSelectionOverrideRequest}
@@ -75,7 +77,8 @@ public class TestAdSelectionManager {
         Objects.requireNonNull(receiver);
 
         try {
-            final AdSelectionService service = mAdSelectionManager.getService();
+            final AdSelectionService service =
+                    mAdSelectionManager.getServiceProvider().getService();
             service.overrideAdSelectionConfigRemoteInfo(
                     request.getAdSelectionConfig(),
                     request.getDecisionLogicJs(),
@@ -128,7 +131,8 @@ public class TestAdSelectionManager {
         Objects.requireNonNull(receiver);
 
         try {
-            final AdSelectionService service = mAdSelectionManager.getService();
+            final AdSelectionService service =
+                    mAdSelectionManager.getServiceProvider().getService();
             service.removeAdSelectionConfigRemoteInfoOverride(
                     request.getAdSelectionConfig(),
                     new AdSelectionOverrideCallback.Stub() {
@@ -174,7 +178,8 @@ public class TestAdSelectionManager {
         Objects.requireNonNull(receiver);
 
         try {
-            final AdSelectionService service = mAdSelectionManager.getService();
+            final AdSelectionService service =
+                    mAdSelectionManager.getServiceProvider().getService();
             service.resetAllAdSelectionConfigRemoteOverrides(
                     new AdSelectionOverrideCallback.Stub() {
                         @Override
@@ -213,7 +218,6 @@ public class TestAdSelectionManager {
      * @throws IllegalStateException if this API is not enabled for the caller
      *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
      *     Exception} indicates the error.
-     * @hide
      */
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void overrideAdSelectionFromOutcomesConfigRemoteInfo(
@@ -225,7 +229,8 @@ public class TestAdSelectionManager {
         Objects.requireNonNull(receiver);
 
         try {
-            final AdSelectionService service = mAdSelectionManager.getService();
+            final AdSelectionService service =
+                    mAdSelectionManager.getServiceProvider().getService();
             service.overrideAdSelectionFromOutcomesConfigRemoteInfo(
                     request.getAdSelectionFromOutcomesConfig(),
                     request.getOutcomeSelectionLogicJs(),
@@ -266,7 +271,6 @@ public class TestAdSelectionManager {
      * @throws IllegalStateException if this API is not enabled for the caller
      *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
      *     Exception} indicates the error.
-     * @hide
      */
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void removeAdSelectionFromOutcomesConfigRemoteInfoOverride(
@@ -278,7 +282,8 @@ public class TestAdSelectionManager {
         Objects.requireNonNull(receiver);
 
         try {
-            final AdSelectionService service = mAdSelectionManager.getService();
+            final AdSelectionService service =
+                    mAdSelectionManager.getServiceProvider().getService();
             service.removeAdSelectionFromOutcomesConfigRemoteInfoOverride(
                     request.getAdSelectionFromOutcomesConfig(),
                     new AdSelectionOverrideCallback.Stub() {
@@ -315,7 +320,6 @@ public class TestAdSelectionManager {
      * @throws IllegalStateException if this API is not enabled for the caller
      *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
      *     Exception} indicates the error.
-     * @hide
      */
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void resetAllAdSelectionFromOutcomesConfigRemoteOverrides(
@@ -325,7 +329,8 @@ public class TestAdSelectionManager {
         Objects.requireNonNull(receiver);
 
         try {
-            final AdSelectionService service = mAdSelectionManager.getService();
+            final AdSelectionService service =
+                    mAdSelectionManager.getServiceProvider().getService();
             service.resetAllAdSelectionFromOutcomesConfigRemoteOverrides(
                     new AdSelectionOverrideCallback.Stub() {
                         @Override
@@ -377,7 +382,7 @@ public class TestAdSelectionManager {
 
         try {
             final AdSelectionService service =
-                    Objects.requireNonNull(mAdSelectionManager.getService());
+                    Objects.requireNonNull(mAdSelectionManager.getServiceProvider().getService());
             service.setAdCounterHistogramOverride(
                     new SetAdCounterHistogramOverrideInput.Builder()
                             .setAdEventType(setRequest.getAdEventType())
@@ -437,7 +442,7 @@ public class TestAdSelectionManager {
 
         try {
             final AdSelectionService service =
-                    Objects.requireNonNull(mAdSelectionManager.getService());
+                    Objects.requireNonNull(mAdSelectionManager.getServiceProvider().getService());
             service.removeAdCounterHistogramOverride(
                     new RemoveAdCounterHistogramOverrideInput.Builder()
                             .setAdEventType(removeRequest.getAdEventType())
@@ -492,7 +497,7 @@ public class TestAdSelectionManager {
 
         try {
             final AdSelectionService service =
-                    Objects.requireNonNull(mAdSelectionManager.getService());
+                    Objects.requireNonNull(mAdSelectionManager.getServiceProvider().getService());
             service.resetAllAdCounterHistogramOverrides(
                     new AdSelectionOverrideCallback.Stub() {
                         @Override

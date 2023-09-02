@@ -166,7 +166,6 @@ public final class AppImportanceFilterTest {
                 .hasResultCode(AdServicesStatusUtils.STATUS_BACKGROUND_CALLER)
                 .hasSdkPackageName(SDK_NAME)
                 .hasAppPackageName(APP_PACKAGE_NAME);
-
         verifyZeroInteractions(mPackageManager);
     }
 
@@ -281,6 +280,39 @@ public final class AppImportanceFilterTest {
         assertThrows(
                 IllegalStateException.class,
                 () -> mAppImportanceFilter.assertCallerIsInForeground(APP_UID, API_NAME, SDK_NAME));
+    }
+
+    @Test
+    public void
+            testSecurityExceptionTryingToRetrievePackageImportanceFromUid_throwsWrongCallingApplicationStateException() {
+        mockIsAtLeastT(true);
+        mockGetUidImportance(APP_UID, new SecurityException("No can do"));
+
+        WrongCallingApplicationStateException thrown =
+                assertThrows(
+                        WrongCallingApplicationStateException.class,
+                        () ->
+                                mAppImportanceFilter.assertCallerIsInForeground(
+                                        APP_UID, API_NAME, SDK_NAME));
+
+        assertWithMessage("exception message")
+                .that(thrown)
+                .hasMessageThat()
+                .contains(
+                        AdServicesStatusUtils
+                                .SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_TO_CROSS_USER_BOUNDARIES);
+
+        verify(mAdServiceLogger).logApiCallStats(mApiCallStatsArgumentCaptor.capture());
+        assertWithMessage("")
+                .about(apiCallStats())
+                .that(mApiCallStatsArgumentCaptor.getValue())
+                .hasCode(AD_SERVICES_API_CALLED)
+                .hasApiName(API_NAME)
+                .hasApiClass(API_CLASS)
+                .hasResultCode(
+                        AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_TO_CROSS_USER_BOUNDARIES)
+                .hasSdkPackageName(SDK_NAME)
+                .hasAppPackageName(AppImportanceFilter.UNKNOWN_APP_PACKAGE_NAME);
     }
 
     private void mockGetUidImportance(int uid, int result) {

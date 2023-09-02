@@ -16,6 +16,7 @@
 
 package com.android.adservices.cobalt;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
@@ -38,6 +39,7 @@ import java.util.concurrent.ExecutorService;
 final class CobaltDataServiceFactory {
     private static final String DB_NAME = FileCompatUtils.getAdservicesFilename("cobalt_db");
 
+    @SuppressLint("NewAdServicesFile")
     static DataService createDataService(
             @NonNull Context context, @NonNull ExecutorService executorService) {
         Objects.requireNonNull(context);

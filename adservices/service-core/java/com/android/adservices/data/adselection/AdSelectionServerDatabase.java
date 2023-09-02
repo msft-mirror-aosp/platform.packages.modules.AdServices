@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.adselection;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
@@ -43,10 +44,11 @@ import java.util.Objects;
         version = AdSelectionServerDatabase.DATABASE_VERSION,
         autoMigrations = {
             @AutoMigration(from = 1, to = 2),
+            @AutoMigration(from = 2, to = 3),
         })
 @TypeConverters({FledgeRoomConverters.class})
 public abstract class AdSelectionServerDatabase extends RoomDatabase {
-    public static final int DATABASE_VERSION = 2;
+    public static final int DATABASE_VERSION = 3;
     public static final String DATABASE_NAME =
             FileCompatUtils.getAdservicesFilename("adselectionserver.db");
 
@@ -56,6 +58,7 @@ public abstract class AdSelectionServerDatabase extends RoomDatabase {
     private static AdSelectionServerDatabase sSingleton = null;
 
     /** Returns an instance of the AdSelectionEncryptionDatabase given a context. */
+    @SuppressLint("NewAdServicesFile")
     public static AdSelectionServerDatabase getInstance(@NonNull Context context) {
         Objects.requireNonNull(context, "Context must be present.");
         synchronized (SINGLETON_LOCK) {

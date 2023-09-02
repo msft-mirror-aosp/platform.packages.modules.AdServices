@@ -44,10 +44,12 @@ public final class PermissionHelper {
     /**
      * @return {@code true} if the caller has the permission to invoke Topics APIs.
      */
-    public static boolean hasTopicsPermission(@NonNull Context context, int callingUid) {
+    public static boolean hasTopicsPermission(
+            @NonNull Context context, @NonNull String appPackageName, int callingUid) {
         boolean callerPerm =
-                context.checkCallingOrSelfPermission(AdServicesPermissions.ACCESS_ADSERVICES_TOPICS)
-                        == PackageManager.PERMISSION_GRANTED;
+                hasPermission(
+                        context, appPackageName, AdServicesPermissions.ACCESS_ADSERVICES_TOPICS);
+
         // Note: Checking permission declared by Sdk Sandbox package is only for accounting
         // purposes and should not be used as a security measure.
         if (ProcessCompatUtils.isSdkSandboxUid(callingUid)) {
@@ -87,13 +89,14 @@ public final class PermissionHelper {
                 context, appPackageName, AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION);
     }
 
-    /** @return {@code true} if the caller has the permission to invoke Custom Audiences APIs. */
-    public static boolean hasCustomAudiencesPermission(@NonNull Context context) {
+    /**
+     * @return {@code true} if the caller has the permission to invoke Custom Audiences APIs.
+     */
+    public static boolean hasCustomAudiencesPermission(
+            @NonNull Context context, @NonNull String appPackageName) {
         // TODO(b/236268316): Add check for SDK permission.
-        int status =
-                context.checkCallingOrSelfPermission(
-                        AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
-        return status == PackageManager.PERMISSION_GRANTED;
+        return hasPermission(
+                context, appPackageName, AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
     }
 
     /**
@@ -129,6 +132,9 @@ public final class PermissionHelper {
             final PackageInfo packageInfo =
                     context.getPackageManager()
                             .getPackageInfo(packageName, PackageManager.GET_PERMISSIONS);
+            if (packageInfo == null || packageInfo.requestedPermissions == null) {
+                return false;
+            }
 
             for (String requestedPermission : packageInfo.requestedPermissions) {
                 if (requestedPermission.equals(permission)) {

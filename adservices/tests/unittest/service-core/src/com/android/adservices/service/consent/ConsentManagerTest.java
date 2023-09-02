@@ -32,7 +32,9 @@ import static com.android.adservices.service.consent.ConsentManager.resetSharedP
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_WHILE_GET_CONSENT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PRIVACY_SANDBOX_SAVE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX;
+import static com.android.adservices.spe.AdservicesJobInfo.COBALT_LOGGING_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.CONSENT_NOTIFICATION_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.FLEDGE_AD_SELECTION_DEBUG_REPORT_SENDER_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MAINTENANCE_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
@@ -51,6 +53,7 @@ import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DELETE_UN
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_EVENT_MAIN_REPORTING_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.PERIODIC_SIGNALS_ENCODING_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.TOPICS_EPOCH_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyBoolean;
@@ -98,6 +101,7 @@ import androidx.test.core.content.pm.ApplicationInfoBuilder;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.AdServicesCommon;
+import com.android.adservices.cobalt.CobaltJobService;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
@@ -245,6 +249,7 @@ public class ConsentManagerTest {
                         .spyStatic(FlagsFactory.class)
                         .spyStatic(MaintenanceJobService.class)
                         .spyStatic(MddJobService.class)
+                        .spyStatic(CobaltJobService.class)
                         .spyStatic(UiStatsLogger.class)
                         .spyStatic(StatsdAdServicesLogger.class)
                         .mockStatic(PackageManagerCompatUtils.class)
@@ -309,6 +314,7 @@ public class ConsentManagerTest {
         doReturn(true).when(() -> MaintenanceJobService.scheduleIfNeeded(any(), anyBoolean()));
         doNothing()
                 .when(() -> AsyncRegistrationQueueJobService.scheduleIfNeeded(any(), anyBoolean()));
+        doReturn(true).when(() -> CobaltJobService.scheduleIfNeeded(any(), anyBoolean()));
         doNothing().when(() -> UiStatsLogger.logOptInSelected(any()));
         doNothing().when(() -> UiStatsLogger.logOptOutSelected(any()));
         doNothing().when(() -> UiStatsLogger.logOptInSelected(any(), any()));
@@ -521,6 +527,7 @@ public class ConsentManagerTest {
         doReturn(false).when(mMockFlags).getFledgeSelectAdsKillSwitch();
         doReturn(false).when(mMockFlags).getMeasurementKillSwitch();
         doReturn(false).when(mMockFlags).getMddBackgroundTaskKillSwitch();
+        doReturn(true).when(mMockFlags).getCobaltLoggingEnabled();
 
         mConsentManager.enable(mContextSpy);
 
@@ -560,6 +567,7 @@ public class ConsentManagerTest {
                 () ->
                         AsyncRegistrationQueueJobService.scheduleIfNeeded(
                                 any(Context.class), eq(false)));
+        verify(() -> CobaltJobService.scheduleIfNeeded(any(Context.class), eq(false)));
     }
 
     @Test
@@ -568,6 +576,7 @@ public class ConsentManagerTest {
         doReturn(true).when(mMockFlags).getFledgeSelectAdsKillSwitch();
         doReturn(true).when(mMockFlags).getMeasurementKillSwitch();
         doReturn(true).when(mMockFlags).getMddBackgroundTaskKillSwitch();
+        doReturn(false).when(mMockFlags).getCobaltLoggingEnabled();
 
         mConsentManager.enable(mContextSpy);
 
@@ -625,6 +634,7 @@ public class ConsentManagerTest {
                         AsyncRegistrationQueueJobService.scheduleIfNeeded(
                                 any(Context.class), eq(false)),
                 never());
+        verify(() -> CobaltJobService.scheduleIfNeeded(any(Context.class), eq(false)), never());
     }
 
     @Test
@@ -650,11 +660,14 @@ public class ConsentManagerTest {
                 .cancel(MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(FLEDGE_BACKGROUND_FETCH_JOB.getJobId());
+        verify(mJobSchedulerMock).cancel(FLEDGE_AD_SELECTION_DEBUG_REPORT_SENDER_JOB.getJobId());
+        verify(mJobSchedulerMock).cancel(PERIODIC_SIGNALS_ENCODING_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(CONSENT_NOTIFICATION_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(MDD_MAINTENANCE_PERIODIC_TASK_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(MDD_CHARGING_PERIODIC_TASK_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId());
+        verify(mJobSchedulerMock).cancel(COBALT_LOGGING_JOB.getJobId());
 
         verifyNoMoreInteractions(mJobSchedulerMock);
     }

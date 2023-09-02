@@ -349,6 +349,8 @@ public class AppSearchConsentManager {
      * @return whether migration should occur.
      */
     @VisibleForTesting
+    // Suppress lint warning for context.getUser in R since this code is unused in R
+    @SuppressWarnings("NewApi")
     boolean shouldInitConsentDataFromAppSearch(
             Context context,
             SharedPreferences sharedPreferences,

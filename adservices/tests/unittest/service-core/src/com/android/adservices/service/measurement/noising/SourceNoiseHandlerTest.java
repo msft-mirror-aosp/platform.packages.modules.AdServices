@@ -94,7 +94,7 @@ public class SourceNoiseHandlerTest {
 
     @Test
     public void fakeReports_flexEventReport_generatesFromStaticReportStates() {
-        Source source = SourceFixture.getValidSourceWithFlexEventReport();
+        Source source = SourceFixture.getValidSourceWithFlexEventReportWithFewerState();
         // Force increase the probability of random attribution.
         doReturn(0.50D).when(mSourceNoiseHandler).getRandomAttributionProbability(source);
         int falseCount = 0;

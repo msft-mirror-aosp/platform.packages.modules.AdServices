@@ -17,6 +17,7 @@
 package com.android.adservices.service.adselection;
 
 import static com.android.adservices.data.customaudience.DBTrustedBiddingData.QUERY_PARAM_KEYS;
+import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_BIDDING_KEY;
 
 import android.adservices.common.AdSelectionSignals;
 import android.annotation.NonNull;
@@ -26,12 +27,15 @@ import android.util.Pair;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
+import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -52,16 +56,19 @@ public class TrustedBiddingDataFetcher {
     @NonNull private final DevContext mDevContext;
     @NonNull private final CustomAudienceDevOverridesHelper mCustomAudienceDevOverridesHelper;
     @NonNull private final ExecutorService mLightweightExecutorService;
+    private final boolean mDataVersionHeaderEnabled;
 
     public TrustedBiddingDataFetcher(
             AdServicesHttpsClient adServicesHttpsClient,
             DevContext devContext,
             CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper,
-            ExecutorService lightweightExecutorService) {
+            ExecutorService lightweightExecutorService,
+            boolean dataVersionHeaderEnabled) {
         mAdServicesHttpsClient = adServicesHttpsClient;
         mDevContext = devContext;
         mCustomAudienceDevOverridesHelper = customAudienceDevOverridesHelper;
         mLightweightExecutorService = lightweightExecutorService;
+        mDataVersionHeaderEnabled = dataVersionHeaderEnabled;
     }
 
     /**
@@ -97,7 +104,7 @@ public class TrustedBiddingDataFetcher {
      * @param customAudiences the custom audiences from the same buyer.
      * @return trusted bidding data per base uri.
      */
-    public FluentFuture<Map<Uri, JSONObject>> getTrustedBiddingDataForBuyer(
+    public FluentFuture<Map<Uri, TrustedBiddingResponse>> getTrustedBiddingDataForBuyer(
             List<DBCustomAudience> customAudiences) {
         List<DBCustomAudience> customAudiencesWithoutOverride;
         if (mDevContext.getDevOptionsEnabled()) {
@@ -152,10 +159,10 @@ public class TrustedBiddingDataFetcher {
                         mLightweightExecutorService);
     }
 
-    private FluentFuture<JSONObject> getTrustedBiddingDataByBatch(
+    private FluentFuture<TrustedBiddingResponse> getTrustedBiddingDataByBatch(
             final Uri trustedBiddingUrl, final Set<String> keys) {
         Uri trustedBiddingUriWithKeys = getTrustedBiddingUriWithKeys(trustedBiddingUrl, keys);
-        return FluentFuture.from(mAdServicesHttpsClient.fetchPayload(trustedBiddingUriWithKeys))
+        return FluentFuture.from(fetchTrustedBiddingData(trustedBiddingUriWithKeys))
                 .catching(
                         Exception.class,
                         e -> {
@@ -166,18 +173,7 @@ public class TrustedBiddingDataFetcher {
                         },
                         mLightweightExecutorService)
                 .transform(
-                        s ->
-                                Optional.ofNullable(s.getResponseBody())
-                                        .map(
-                                                r -> {
-                                                    try {
-                                                        sLogger.v("Keys are: %s", r);
-                                                        return new JSONObject(r);
-                                                    } catch (JSONException e) {
-                                                        return null;
-                                                    }
-                                                })
-                                        .orElse(null),
+                        TrustedBiddingDataFetcher::extractTrustedBiddingResponseIntoJSON,
                         mLightweightExecutorService)
                 .catching(
                         Exception.class,
@@ -190,12 +186,51 @@ public class TrustedBiddingDataFetcher {
                         mLightweightExecutorService);
     }
 
+    private ListenableFuture<AdServicesHttpClientResponse> fetchTrustedBiddingData(Uri uri) {
+        if (mDataVersionHeaderEnabled) {
+            return mAdServicesHttpsClient.fetchPayload(
+                    uri, ImmutableSet.of(DATA_VERSION_HEADER_BIDDING_KEY), mDevContext);
+        } else {
+            return mAdServicesHttpsClient.fetchPayload(uri, mDevContext);
+        }
+    }
+
     private Uri getTrustedBiddingUriWithKeys(
             Uri trustedBiddingUri, final Set<String> trustedBiddingKeys) {
         final String keysQueryParams = String.join(",", trustedBiddingKeys);
         return Uri.parse(trustedBiddingUri.toString())
                 .buildUpon()
                 .appendQueryParameter(QUERY_PARAM_KEYS, keysQueryParams)
+                .build();
+    }
+
+    private static TrustedBiddingResponse extractTrustedBiddingResponseIntoJSON(
+            AdServicesHttpClientResponse response) {
+        JSONObject trustedBiddingResponse =
+                Optional.ofNullable(response.getResponseBody())
+                        .map(
+                                r -> {
+                                    try {
+                                        sLogger.v("Keys are: %s", r);
+                                        return new JSONObject(r);
+                                    } catch (JSONException e) {
+                                        return null;
+                                    }
+                                })
+                        .orElse(null);
+
+        JSONObject trustedBiddingHeaders =
+                Optional.ofNullable(response.getResponseHeaders())
+                        .map(
+                                h -> {
+                                    sLogger.v("Headers are: %s", h);
+                                    return new JSONObject(h);
+                                })
+                        .orElse(null);
+
+        return TrustedBiddingResponse.builder()
+                .setBody(trustedBiddingResponse)
+                .setHeaders(trustedBiddingHeaders)
                 .build();
     }
 }

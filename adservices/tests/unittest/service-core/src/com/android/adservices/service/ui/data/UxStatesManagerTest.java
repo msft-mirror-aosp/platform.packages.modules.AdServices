@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.ui.data;
 
-import static com.android.adservices.service.PhFlags.KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED;
 
 import static com.google.common.truth.Truth.assertThat;
 

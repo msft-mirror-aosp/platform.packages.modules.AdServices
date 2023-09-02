@@ -24,7 +24,8 @@ import android.cts.statsdatom.lib.AtomTestUtils;
 import android.cts.statsdatom.lib.ConfigUtils;
 import android.cts.statsdatom.lib.ReportUtils;
 
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdServicesHostSideDeviceSupportedRule;
+import com.android.adservices.common.HostSideSdkLevelSupportRule;
 import com.android.internal.os.StatsdConfigProto.StatsdConfig;
 import com.android.os.AtomsProto;
 import com.android.os.AtomsProto.AdServicesSettingsUsageReported;
@@ -64,14 +65,15 @@ public final class UiApiLoggingHostTest implements IDeviceTest {
     private static final String TARGET_EXT_ADSERVICES_PACKAGE_AOSP = "com.android.ext.services";
     private static final int PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH = 2;
     private static final int APPSEARCH_ONLY = 3;
-    private static final int ANDROID_T_API_LEVEL = 33;
-    private int mApiLevel;
     private String mTargetPackage;
     private String mTargetPackageAosp;
 
     @Rule(order = 0)
-    public AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesDeviceSupportedRule();
+    public final HostSideSdkLevelSupportRule sdkLevel = HostSideSdkLevelSupportRule.forAnyLevel();
+
+    @Rule(order = 1)
+    public final AdServicesHostSideDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesHostSideDeviceSupportedRule();
 
     @Rule(order = 1)
     public TestMetrics metricsRule = new TestMetrics();
@@ -82,6 +84,7 @@ public final class UiApiLoggingHostTest implements IDeviceTest {
     public void setDevice(ITestDevice device) {
         mDevice = device;
         adServicesDeviceSupportedRule.setDevice(device);
+        sdkLevel.setDevice(device);
     }
 
     @Override
@@ -96,11 +99,10 @@ public final class UiApiLoggingHostTest implements IDeviceTest {
         disableGlobalKillSwitch();
         disableMddBackgroundTasks(true);
         overrideDisableTopicsEnrollmentCheck(/* enrolmentCheckFlag */ "1");
-        stopPacakageAPI();
-        mApiLevel = getDevice().getApiLevel();
+        stopPackageAPI();
 
         // Set flags for test to run on devices with api level lower than 33 (S-)
-        if (mApiLevel < ANDROID_T_API_LEVEL) {
+        if (!sdkLevel.isAtLeastT()) {
             mTargetPackage = TARGET_EXT_ADSERVICES_PACKAGE;
             mTargetPackageAosp = TARGET_EXT_ADSERVICES_PACKAGE_AOSP;
             setFlags();
@@ -113,10 +115,10 @@ public final class UiApiLoggingHostTest implements IDeviceTest {
     @After
     public void tearDown() throws Exception {
         disableMddBackgroundTasks(false);
-        if (mApiLevel < ANDROID_T_API_LEVEL) {
+        if (!sdkLevel.isAtLeastT()) {
             resetFlagsToDefault();
         }
-        stopPacakageAPI();
+        stopPackageAPI();
         ConfigUtils.removeConfig(getDevice());
         ReportUtils.clearReports(getDevice());
     }
@@ -156,12 +158,12 @@ public final class UiApiLoggingHostTest implements IDeviceTest {
     }
 
     private void rebootIfSMinus() throws DeviceNotAvailableException, InterruptedException {
-        if (mApiLevel < ANDROID_T_API_LEVEL) {
+        if (!sdkLevel.isAtLeastT()) {
             ITestDevice device = getDevice();
             device.reboot();
             device.waitForDeviceAvailable();
-            // Sleep 30s to wait for AdExtBootCompletedReceiver execution
-            Thread.sleep(30000 /* ms */);
+            // Sleep 5 mins to wait for AdExtBootCompletedReceiver execution
+            Thread.sleep(300 * 1000 /* ms */);
         }
     }
 
@@ -206,7 +208,7 @@ public final class UiApiLoggingHostTest implements IDeviceTest {
         device.executeShellCommand("am start -n " + packageName + "/" + CLASS);
     }
 
-    public void stopPacakageAPI() throws DeviceNotAvailableException {
+    public void stopPackageAPI() throws DeviceNotAvailableException {
         getDevice().executeShellCommand("am force-stop " + mTargetPackage);
         getDevice().executeShellCommand("am force-stop " + mTargetPackageAosp);
     }
