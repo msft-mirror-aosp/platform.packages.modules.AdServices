@@ -111,10 +111,6 @@ public final class CustomAudienceManagerTest {
             CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
             CompatAdServicesTestUtils.resetFlagsToDefault();
         }
-        // TODO(b/294423183): remove adoptShellPermission call once using AdServicesFlagsSetterRule
-        InstrumentationRegistry.getInstrumentation()
-                .getUiAutomation()
-                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
         PhFlagsFixture.overrideEnableEnrollmentSeed(false);
     }
 

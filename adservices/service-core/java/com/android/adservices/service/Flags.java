@@ -308,6 +308,8 @@ public interface Flags {
     long MEASUREMENT_DB_SIZE_LIMIT = (1024 * 1024) * 10; // 10 MBs
     int MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(5);
     int MEASUREMENT_NETWORK_READ_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(30);
+    int MEASUREMENT_REPORT_RETRY_LIMIT = 3;
+    boolean MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED = true;
 
     /**
      * Returns the window that an InputEvent has to be within for the system to register it as a
@@ -336,6 +338,16 @@ public interface Flags {
     /** Returns the DB size limit for measurement. */
     default long getMeasurementDbSizeLimit() {
         return MEASUREMENT_DB_SIZE_LIMIT;
+    }
+
+    /** Returns Whether to limit number of Retries for Measurement Reports */
+    default boolean getMeasurementReportingRetryLimitEnabled() {
+        return MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED;
+    }
+
+    /** Returns Maximum number of Retries for Measurement Reportss */
+    default int getMeasurementReportingRetryLimit() {
+        return MEASUREMENT_REPORT_RETRY_LIMIT;
     }
 
     /** Measurement manifest file url, used for MDD download. */
@@ -565,6 +577,23 @@ public interface Flags {
     // Keeping TTL as long as expiry, could be reduced later as we get more fresh CAs with adoption
     long FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS = 60 * 24 * 60L * 60L * 1000; // 60 days
     long FLEDGE_ENCRYPTION_KEY_MAX_AGE_SECONDS = TimeUnit.DAYS.toSeconds(14);
+    long FLEDGE_FETCH_CUSTOM_AUDIENCE_MIN_RETRY_AFTER_VALUE_MS = 30 * 1000; // 30 seconds
+    long FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_RETRY_AFTER_VALUE_MS =
+            24 * 60 * 60 * 1000; // 24 hours in ms
+
+    /**
+     * Returns the minimum number of milliseconds before the same fetch CA request can be retried.
+     */
+    default long getFledgeFetchCustomAudienceMinRetryAfterValueMs() {
+        return FLEDGE_FETCH_CUSTOM_AUDIENCE_MIN_RETRY_AFTER_VALUE_MS;
+    }
+
+    /**
+     * Returns the maximum number of milliseconds before the same fetch CA request can be retried.
+     */
+    default long getFledgeFetchCustomAudienceMaxRetryAfterValueMs() {
+        return FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_RETRY_AFTER_VALUE_MS;
+    }
 
     /** Returns the maximum number of custom audience can stay in the storage. */
     default long getFledgeCustomAudienceMaxCount() {
@@ -803,6 +832,29 @@ public interface Flags {
         return FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS;
     }
 
+    boolean PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED = false;
+    long PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS = 1L * 60L * 60L * 1000L; // 1 hour
+    long PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS = 5L * 60L * 1000L; // 5 minutes
+
+    /** Returns {@code true} if the Periodic encoding of Protected Signals is enabled. */
+    default boolean getProtectedSignalsPeriodicEncodingEnabled() {
+        return PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED;
+    }
+
+    /**
+     * @return period of running periodic encoding in milliseconds
+     */
+    default long getProtectedSignalPeriodicEncodingJobPeriodMs() {
+        return PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS;
+    }
+
+    /**
+     * @return the flexible period of running periodic encoding in milliseconds
+     */
+    default long getProtectedSignalsPeriodicEncodingJobFlexMs() {
+        return PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS;
+    }
+
     int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT = 10_000;
     int FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_TOTAL_EVENT_COUNT = 9_500;
     int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT = 1_000;
@@ -952,7 +1004,7 @@ public interface Flags {
 
     /**
      * Returns the maximum size in bytes of {@link
-     * DBRegisteredAdInteraction#getInteractionReportingUri()}
+     * com.android.adservices.data.adselection.DBRegisteredAdInteraction#getInteractionReportingUri()}
      */
     default long getFledgeReportImpressionMaxInteractionReportingUriSizeB() {
         return FLEDGE_REPORT_IMPRESSION_MAX_INTERACTION_REPORTING_URI_SIZE_B;
@@ -1054,6 +1106,15 @@ public interface Flags {
                 && FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION;
     }
 
+    boolean FLEDGE_AUCTION_SERVER_ENABLE_AD_FILTER_IN_GET_AD_SELECTION_DATA = true;
+
+    /**
+     * @return whether to enable ad filtering in get ad selection data API.
+     */
+    default boolean getFledgeAuctionServerEnableAdFilterInGetAdSelectionData() {
+        return FLEDGE_AUCTION_SERVER_ENABLE_AD_FILTER_IN_GET_AD_SELECTION_DATA;
+    }
+
     ImmutableList<Integer> FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES =
             ImmutableList.of(0, 1024, 2048, 4096, 8192, 16384, 32768, 65536);
 
@@ -1083,6 +1144,15 @@ public interface Flags {
         return FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED;
     }
 
+    boolean FLEDGE_EVENT_LEVEL_DEBUG_REPORT_SEND_IMMEDIATELY = false;
+
+    /**
+     * @return whether to call remote URLs for debug reporting.
+     */
+    default boolean getFledgeEventLevelDebugReportSendImmediately() {
+        return FLEDGE_EVENT_LEVEL_DEBUG_REPORT_SEND_IMMEDIATELY;
+    }
+
     int FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_BATCH_DELAY_SECONDS = 60 * 15;
 
     /**
@@ -1099,6 +1169,56 @@ public interface Flags {
      */
     default int getFledgeEventLevelDebugReportingMaxItemsPerBatch() {
         return FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_MAX_ITEMS_PER_BATCH;
+    }
+
+    int FLEDGE_DEBUG_REPORT_SENDER_JOB_NETWORK_CONNECT_TIMEOUT_MS = 5 * 1000; // 5 seconds
+
+    /**
+     * @return the maximum time in milliseconds allowed for a network call to open its initial
+     *     connection during the FLEDGE debug report sender job.
+     */
+    default int getFledgeDebugReportSenderJobNetworkConnectionTimeoutMs() {
+        return FLEDGE_DEBUG_REPORT_SENDER_JOB_NETWORK_CONNECT_TIMEOUT_MS;
+    }
+
+    int FLEDGE_DEBUG_REPORT_SENDER_JOB_NETWORK_READ_TIMEOUT_MS = 30 * 1000; // 30 seconds
+
+    /**
+     * @return the maximum time in milliseconds allowed for a network call to read a response from a
+     *     target server during the FLEDGE debug report sender job.
+     */
+    default int getFledgeDebugReportSenderJobNetworkReadTimeoutMs() {
+        return FLEDGE_DEBUG_REPORT_SENDER_JOB_NETWORK_READ_TIMEOUT_MS;
+    }
+
+    long FLEDGE_DEBUG_REPORT_SENDER_JOB_MAX_RUNTIME_MS = 10L * 60L * 1000L; // 5 minutes
+
+    /**
+     * @return the maximum amount of time (in milliseconds) each FLEDGE debug report sender job is
+     *     allowed to run.
+     */
+    default long getFledgeDebugReportSenderJobMaxRuntimeMs() {
+        return FLEDGE_DEBUG_REPORT_SENDER_JOB_MAX_RUNTIME_MS;
+    }
+
+    long FLEDGE_DEBUG_REPORT_SENDER_JOB_PERIOD_MS = TimeUnit.MINUTES.toMillis(10);
+
+    /**
+     * @return the best effort max time (in milliseconds) between each FLEDGE debug report sender
+     *     job run.
+     */
+    default long getFledgeDebugReportSenderJobPeriodMs() {
+        return FLEDGE_DEBUG_REPORT_SENDER_JOB_PERIOD_MS;
+    }
+
+    long FLEDGE_DEBUG_REPORT_SENDER_JOB_FLEX_MS = TimeUnit.MINUTES.toMillis(2);
+
+    /**
+     * @return the amount of flex (in milliseconds) around the end of each period to run each FLEDGE
+     *     debug report sender job.
+     */
+    default long getFledgeDebugReportSenderJobFlexMs() {
+        return FLEDGE_DEBUG_REPORT_SENDER_JOB_FLEX_MS;
     }
 
     boolean FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED = true;
@@ -1180,6 +1300,12 @@ public interface Flags {
 
     default long getFledgeAuctionServerAuctionKeyFetchTimeoutMs() {
         return FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_TIMEOUT_MS;
+    }
+
+    long FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS = 5000;
+
+    default long getFledgeAuctionServerOverallTimeoutMs() {
+        return FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS;
     }
 
     boolean FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_ENABLED = false;
@@ -1742,7 +1868,7 @@ public interface Flags {
     boolean MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH = false;
 
     /**
-     * Returns the kill switch value for Measurement Job Debug Reporting. The API will be disabled
+     * Returns the kill switch value for Measurement Job Debug Reporting. The Job will be disabled
      * if either the Global Kill Switch, Measurement Kill Switch, or the Measurement Job Debug
      * Reporting Kill Switch value is true.
      */
@@ -1751,6 +1877,83 @@ public interface Flags {
         return getGlobalKillSwitch()
                 || getMeasurementKillSwitch()
                 || MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH;
+    }
+
+    /**
+     * Measurement Debug Reporting Fallback Job kill Switch. The default value is false which means
+     * the job is enabled. This flag is used for emergency turning off the Debug Reporting Fallback
+     * Job.
+     */
+    boolean MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for the Measurement Debug Reporting Fallback Job. The API will
+     * be disabled if either the Global Kill Switch, Measurement Kill Switch, or the Measurement
+     * Debug Reporting Fallback Job kill switch value is true.
+     */
+    default boolean getMeasurementDebugReportingFallbackJobKillSwitch() {
+        // We check the Global Kill Switch first. As a result, it overrides all other kill Switches.
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH;
+    }
+
+    /**
+     * Measurement Verbose Debug Reporting Fallback Job kill Switch. The default value is false
+     * which means the job is enabled. This flag is used for emergency turning off the Verbose Debug
+     * Reporting Fallback Job.
+     */
+    boolean MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for the Measurement Debug Reporting Fallback Job. The API will
+     * be disabled if either the Global Kill Switch, Measurement Kill Switch, or the Measurement
+     * Debug Reporting Fallback Job kill switch value is true.
+     */
+    default boolean getMeasurementVerboseDebugReportingFallbackJobKillSwitch() {
+        // We check the Global Kill Switch first. As a result, it overrides all other kill Switches.
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH;
+    }
+
+    /**
+     * Returns the job period in millis for the Measurement Verbose Debug Reporting Fallback Job.
+     */
+    long MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(1);
+
+    /**
+     * Returns the job period in millis for the Measurement Verbose Debug Reporting Fallback Job.
+     */
+    default long getMeasurementVerboseDebugReportingFallbackJobPeriodMs() {
+        return MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS;
+    }
+
+    /** Returns the job period in millis for the Measurement Debug Reporting Fallback Job. */
+    long MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(1);
+
+    /** Returns the job period in millis for the Measurement Debug Reporting Fallback Job. */
+    default long getMeasurementDebugReportingFallbackJobPeriodMs() {
+        return MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS;
+    }
+
+    /*
+     * Measurement Job Verbose Debug Reporting Kill Switch. The default value is false which means
+     * the Verbose Debug Reporting Job is enabled. This flag is used for emergency turning off the
+     * Verbose Debug Reporting Job.
+     */
+    boolean MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Measurement Job Verbose Debug Reporting. The Job will be
+     * disabled if either the Global Kill Switch, Measurement Kill Switch, or the Measurement Job
+     * Verbose Debug Reporting Kill Switch value is true.
+     */
+    default boolean getMeasurementJobVerboseDebugReportingKillSwitch() {
+        // We check the Global Kill Switch first. As a result, it overrides all other kill Switches.
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH;
     }
 
     /**
@@ -2764,6 +2967,14 @@ public interface Flags {
         return DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_BLOCKLIST;
     }
 
+    /** Get mainline train version */
+    String DEFAULT_MAINLINE_TRAIN_VERSION = "000000";
+
+    /** Get mainline train version */
+    default String getMainlineTrainVersion() {
+        return DEFAULT_MAINLINE_TRAIN_VERSION;
+    }
+
     /** Default Determines whether EU notification flow change is enabled. */
     boolean DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED = true;
 
@@ -2954,6 +3165,82 @@ public interface Flags {
     /** Returns whether Measurement ARA deduplication alignment v1 feature is enabled. */
     default boolean getMeasurementEnableAraDeduplicationAlignmentV1() {
         return MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1;
+    }
+
+    /** Default Measurement app package name logging flag. */
+    boolean MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING = true;
+
+    /** Returns whether Measurement app package name logging is enabled. */
+    default boolean getMeasurementEnableAppPackageNameLogging() {
+        return MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING;
+    }
+
+    /** Default allowlist to enable app package name logging. */
+    String MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST = "";
+
+    /** Returns a list of app package names that allows logging. */
+    default String getMeasurementAppPackageNameLoggingAllowlist() {
+        return MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST;
+    }
+
+    /** Disable measurement reporting jobs to throw unaccounted exceptions by default. */
+    boolean MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION = false;
+
+    /**
+     * If enabled, measurement reporting jobs will throw unaccounted e.g. unexpected unchecked
+     * exceptions.
+     */
+    default boolean getMeasurementEnableReportingJobsThrowUnaccountedException() {
+        return MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION;
+    }
+
+    /**
+     * Disable measurement reporting jobs to throw {@link org.json.JSONException} exception by
+     * default.
+     */
+    boolean MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_JSON_EXCEPTION = false;
+
+    /** If enabled, measurement reporting jobs will throw {@link org.json.JSONException}. */
+    default boolean getMeasurementEnableReportingJobsThrowJsonException() {
+        return MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_JSON_EXCEPTION;
+    }
+
+    /** Disable measurement report to be deleted if any unrecoverable exception occurs. */
+    boolean MEASUREMENT_ENABLE_DELETE_REPORTS_ON_UNRECOVERABLE_EXCEPTION = false;
+
+    /** If enabled, measurement reports will get deleted if any unrecoverable exception occurs. */
+    default boolean getMeasurementEnableReportDeletionOnUnrecoverableException() {
+        return MEASUREMENT_ENABLE_DELETE_REPORTS_ON_UNRECOVERABLE_EXCEPTION;
+    }
+
+    /** Disable measurement aggregate reporting jobs to throw {@code CryptoException} by default. */
+    boolean MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_CRYPTO_EXCEPTION = false;
+
+    /** If enabled, measurement aggregate reporting job will throw {@code CryptoException}. */
+    default boolean getMeasurementEnableReportingJobsThrowCryptoException() {
+        return MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_CRYPTO_EXCEPTION;
+    }
+
+    /**
+     * Disable measurement datastore to throw {@link
+     * com.android.adservices.data.measurement.DatastoreException} when it occurs by default.
+     */
+    boolean MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION = false;
+
+    /**
+     * If enabled, measurement DatastoreManager can throw DatastoreException wrapped in an unchecked
+     * exception.
+     */
+    default boolean getMeasurementEnableDatastoreManagerThrowDatastoreException() {
+        return MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION;
+    }
+
+    /** Set the sampling rate to 100% for unknown exceptions to be re-thrown. */
+    float MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE = 1.0f;
+
+    /** Sampling rate to decide whether to throw unknown exceptions for measurement. */
+    default float getMeasurementThrowUnknownExceptionSamplingRate() {
+        return MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE;
     }
 
     /** Default U18 UX feature flag.. */
@@ -3150,5 +3437,21 @@ public interface Flags {
      */
     default boolean getCobaltLoggingEnabled() {
         return !getGlobalKillSwitch() && COBALT_LOGGING_ENABLED;
+    }
+
+    /** U18 UX detention channel is enabled by default. */
+    boolean IS_U18_UX_DETENTION_CHANNEL_ENABLED_DEFAULT = true;
+
+    /** Returns whether the U18 UX detentional channel is enabled. */
+    default boolean isU18UxDetentionChannelEnabled() {
+        return IS_U18_UX_DETENTION_CHANNEL_ENABLED_DEFAULT;
+    }
+
+    /** U18 supervised account flow is enabled by default. */
+    boolean IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT = true;
+
+    /** Returns whether the U18 supervised account is enabled. */
+    default boolean isU18SupervisedAccountEnabled() {
+        return IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT;
     }
 }

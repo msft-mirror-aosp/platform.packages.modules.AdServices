@@ -52,6 +52,7 @@ import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.appsearch.AppSearchConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.topics.cobalt.TopicsCobaltLogger;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
@@ -90,6 +91,7 @@ public class TopicsWorkerTest {
     @Mock AdServicesLogger mLogger;
     @Mock AdServicesManager mMockAdServicesManager;
     @Mock AppSearchConsentManager mAppSearchConsentManager;
+    @Mock TopicsCobaltLogger mTopicsCobaltLogger;
 
     @Before
     public void setup() {
@@ -121,7 +123,8 @@ public class TopicsWorkerTest {
                         mLogger,
                         mBlockedTopicsManager,
                         new GlobalBlockedTopicsManager(
-                                /* globalBlockedTopicsManager= */ new HashSet<>()));
+                                /* globalBlockedTopicIds= */ new HashSet<>()),
+                        mTopicsCobaltLogger);
         AppUpdateManager appUpdateManager =
                 new AppUpdateManager(mDbHelper, mTopicsDao, new Random(), mMockFlags);
 

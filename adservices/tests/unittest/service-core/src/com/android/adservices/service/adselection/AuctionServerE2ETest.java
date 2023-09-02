@@ -47,10 +47,14 @@ import android.adservices.adselection.PersistAdSelectionResultInput;
 import android.adservices.adselection.PersistAdSelectionResultResponse;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
+import android.adservices.adselection.UpdateAdCounterHistogramCallback;
+import android.adservices.adselection.UpdateAdCounterHistogramInput;
+import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CallingAppUidSupplierProcessImpl;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
+import android.adservices.common.FrequencyCapFilters;
 import android.adservices.http.MockWebServerRule;
 import android.content.Context;
 import android.net.Uri;
@@ -64,6 +68,7 @@ import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
+import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
@@ -113,6 +118,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
@@ -149,7 +155,7 @@ public class AuctionServerE2ETest {
             WinReportingUrls.newBuilder()
                     .setBuyerReportingUrls(
                             ReportingUrls.newBuilder().setReportingUrl(BUYER_REPORTING_URI).build())
-                    .setComponentSellerReportingUrls(
+                    .setTopLevelSellerReportingUrls(
                             ReportingUrls.newBuilder()
                                     .setReportingUrl(SELLER_REPORTING_URI)
                                     .build())
@@ -187,7 +193,7 @@ public class AuctionServerE2ETest {
     private CustomAudienceDao mCustomAudienceDaoSpy;
     private AdSelectionEntryDao mAdSelectionEntryDao;
     private AppInstallDao mAppInstallDao;
-    private FrequencyCapDao mFrequencyCapDao;
+    private FrequencyCapDao mFrequencyCapDaoSpy;
     private EncryptionKeyDao mEncryptionKeyDao;
     private EncryptionContextDao mEncryptionContextDao;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptorMock;
@@ -196,6 +202,9 @@ public class AuctionServerE2ETest {
     private AuctionServerPayloadFormatter mPayloadFormatter;
     private AuctionServerPayloadExtractor mPayloadExtractor;
     private AuctionServerDataCompressor mDataCompressor;
+
+    @Mock AdSelectionEncryptionKeyManager mAdSelectionEncryptionKeyManagerMock;
+    @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
 
     @Before
     public void setUp() {
@@ -228,13 +237,13 @@ public class AuctionServerE2ETest {
                 Room.inMemoryDatabaseBuilder(mContext, SharedStorageDatabase.class).build();
 
         mAppInstallDao = sharedDb.appInstallDao();
-        mFrequencyCapDao = sharedDb.frequencyCapDao();
+        mFrequencyCapDaoSpy = spy(sharedDb.frequencyCapDao());
         AdSelectionServerDatabase serverDb =
                 Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class).build();
         mEncryptionContextDao = serverDb.encryptionContextDao();
         mEncryptionKeyDao = serverDb.encryptionKeyDao();
         mAdFilteringFeatureFactory =
-                new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mFlags);
+                new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDaoSpy, mFlags);
         when(ConsentManager.getInstance(mContext)).thenReturn(mConsentManagerMock);
         when(AppImportanceFilter.create(any(), anyInt(), any()))
                 .thenReturn(mAppImportanceFilterMock);
@@ -381,7 +390,7 @@ public class AuctionServerE2ETest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDaoSpy,
-                        mFrequencyCapDao,
+                        mFrequencyCapDaoSpy,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mAdServicesHttpsClientMock,
@@ -405,7 +414,8 @@ public class AuctionServerE2ETest {
                                         mLightweightExecutorService),
                                 mEncryptionContextDao,
                                 seedBytes,
-                                mLightweightExecutorService));
+                                mLightweightExecutorService),
+                        mAdSelectionDebugReportDao);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -504,7 +514,7 @@ public class AuctionServerE2ETest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDaoSpy,
-                        mFrequencyCapDao,
+                        mFrequencyCapDaoSpy,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mAdServicesHttpsClientMock,
@@ -528,7 +538,8 @@ public class AuctionServerE2ETest {
                                         mLightweightExecutorService),
                                 mEncryptionContextDao,
                                 seedBytes,
-                                mLightweightExecutorService));
+                                mLightweightExecutorService),
+                        mAdSelectionDebugReportDao);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -883,6 +894,158 @@ public class AuctionServerE2ETest {
                 .getAndReadNothing(eq(Uri.parse(BUYER_REPORTING_URI)), any());
     }
 
+    @Test
+    public void testPersistAdSelectionResult_withoutDecrypt_savesWinEventsSuccess()
+            throws Exception {
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        mAdFilteringFeatureFactory =
+                new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDaoSpy, mFlags);
+        mAdSelectionService = createAdSelectionService();
+
+        when(mObliviousHttpEncryptorMock.encryptBytes(any(byte[].class), anyLong(), anyLong()))
+                .thenAnswer(
+                        invocation ->
+                                FluentFuture.from(immediateFuture(invocation.getArgument(0))));
+        when(mObliviousHttpEncryptorMock.decryptBytes(any(byte[].class), anyLong()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(
+                DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(
+                                BUYER_1, CUSTOM_AUDIENCE_NAME, CUSTOM_AUDIENCE_OWNER)
+                        .setAds(DBAdDataFixture.getValidDbAdDataListByBuyerWithAdRenderId(BUYER_1))
+                        .build(),
+                Uri.EMPTY);
+
+        GetAdSelectionDataInput input =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+
+        GetAdSelectionDataTestCallback getAdSelectionDataTestCallback =
+                invokeGetAdSelectionData(mAdSelectionService, input);
+        long adSelectionId =
+                getAdSelectionDataTestCallback.mGetAdSelectionDataResponse.getAdSelectionId();
+
+        PersistAdSelectionResultInput persistAdSelectionResultInput =
+                new PersistAdSelectionResultInput.Builder()
+                        .setAdSelectionId(adSelectionId)
+                        .setSeller(SELLER)
+                        .setAdSelectionResult(prepareAuctionResultBytes())
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+
+        PersistAdSelectionResultTestCallback persistAdSelectionResultTestCallback =
+                invokePersistAdSelectionResult(mAdSelectionService, persistAdSelectionResultInput);
+
+        // Assert fcap win reporting
+        ArgumentCaptor<HistogramEvent> histogramEventArgumentCaptor =
+                ArgumentCaptor.forClass(HistogramEvent.class);
+        verify(mFrequencyCapDaoSpy, times(AdDataFixture.getAdCounterKeys().size()))
+                .insertHistogramEvent(
+                        histogramEventArgumentCaptor.capture(),
+                        anyInt(),
+                        anyInt(),
+                        anyInt(),
+                        anyInt());
+        List<HistogramEvent> capturedHistogramEventList =
+                histogramEventArgumentCaptor.getAllValues();
+        Assert.assertEquals(
+                FrequencyCapFilters.AD_EVENT_TYPE_WIN,
+                capturedHistogramEventList.get(0).getAdEventType());
+        Assert.assertEquals(
+                AdDataFixture.getAdCounterKeys(),
+                capturedHistogramEventList.stream()
+                        .map(HistogramEvent::getAdCounterKey)
+                        .collect(Collectors.toSet()));
+    }
+
+    @Test
+    public void testPersistAdSelectionResult_withoutDecrypt_savesNonWinEventsSuccess()
+            throws Exception {
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        mAdFilteringFeatureFactory =
+                new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDaoSpy, mFlags);
+        mAdSelectionService = createAdSelectionService();
+
+        when(mObliviousHttpEncryptorMock.encryptBytes(any(byte[].class), anyLong(), anyLong()))
+                .thenAnswer(
+                        invocation ->
+                                FluentFuture.from(immediateFuture(invocation.getArgument(0))));
+        when(mObliviousHttpEncryptorMock.decryptBytes(any(byte[].class), anyLong()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(
+                DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(
+                                BUYER_1, CUSTOM_AUDIENCE_NAME, CUSTOM_AUDIENCE_OWNER)
+                        .setAds(DBAdDataFixture.getValidDbAdDataListByBuyerWithAdRenderId(BUYER_1))
+                        .build(),
+                Uri.EMPTY);
+
+        GetAdSelectionDataInput input =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+
+        GetAdSelectionDataTestCallback getAdSelectionDataTestCallback =
+                invokeGetAdSelectionData(mAdSelectionService, input);
+        long adSelectionId =
+                getAdSelectionDataTestCallback.mGetAdSelectionDataResponse.getAdSelectionId();
+
+        PersistAdSelectionResultInput persistAdSelectionResultInput =
+                new PersistAdSelectionResultInput.Builder()
+                        .setAdSelectionId(adSelectionId)
+                        .setSeller(SELLER)
+                        .setAdSelectionResult(prepareAuctionResultBytes())
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+
+        PersistAdSelectionResultTestCallback persistAdSelectionResultTestCallback =
+                invokePersistAdSelectionResult(mAdSelectionService, persistAdSelectionResultInput);
+
+        // Assert fcap non-win reporting
+        UpdateAdCounterHistogramInput updateHistogramInput =
+                new UpdateAdCounterHistogramInput.Builder(
+                                adSelectionId,
+                                FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
+                                SELLER,
+                                CALLER_PACKAGE_NAME)
+                        .build();
+        UpdateAdCounterHistogramTestCallback updateHistogramCallback =
+                invokeUpdateAdCounterHistogram(mAdSelectionService, updateHistogramInput);
+
+        int numOfKeys = AdDataFixture.getAdCounterKeys().size();
+        ArgumentCaptor<HistogramEvent> histogramEventArgumentCaptor =
+                ArgumentCaptor.forClass(HistogramEvent.class);
+        Assert.assertTrue(updateHistogramCallback.mIsSuccess);
+        verify(
+                        mFrequencyCapDaoSpy,
+                        // Each key is reported twice; WIN and VIEW events
+                        times(2 * numOfKeys))
+                .insertHistogramEvent(
+                        histogramEventArgumentCaptor.capture(),
+                        anyInt(),
+                        anyInt(),
+                        anyInt(),
+                        anyInt());
+        List<HistogramEvent> capturedHistogramEventList =
+                histogramEventArgumentCaptor.getAllValues();
+        Assert.assertEquals(
+                FrequencyCapFilters.AD_EVENT_TYPE_WIN,
+                capturedHistogramEventList.get(0).getAdEventType());
+        Assert.assertEquals(
+                FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
+                capturedHistogramEventList.get(numOfKeys).getAdEventType());
+        Assert.assertEquals(
+                AdDataFixture.getAdCounterKeys(),
+                capturedHistogramEventList.subList(numOfKeys, 2 * numOfKeys).stream()
+                        .map(HistogramEvent::getAdCounterKey)
+                        .collect(Collectors.toSet()));
+    }
+
     /**
      * Asserts if a {@link BuyerInput.CustomAudience} and {@link DBCustomAudience} objects are
      * equal.
@@ -905,7 +1068,7 @@ public class AuctionServerE2ETest {
                 mAdSelectionEntryDao,
                 mAppInstallDao,
                 mCustomAudienceDaoSpy,
-                mFrequencyCapDao,
+                mFrequencyCapDaoSpy,
                 mEncryptionContextDao,
                 mEncryptionKeyDao,
                 mAdServicesHttpsClientMock,
@@ -921,7 +1084,8 @@ public class AuctionServerE2ETest {
                 mAdSelectionServiceFilterMock,
                 mAdFilteringFeatureFactory,
                 mConsentManagerMock,
-                mObliviousHttpEncryptorMock);
+                mObliviousHttpEncryptorMock,
+                mAdSelectionDebugReportDao);
     }
 
     private Map<AdTechIdentifier, BuyerInput> getBuyerInputMapFromDecryptedBytes(
@@ -1007,6 +1171,17 @@ public class AuctionServerE2ETest {
         return callback;
     }
 
+    public UpdateAdCounterHistogramTestCallback invokeUpdateAdCounterHistogram(
+            AdSelectionService service, UpdateAdCounterHistogramInput input)
+            throws RemoteException, InterruptedException {
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        UpdateAdCounterHistogramTestCallback callback =
+                new UpdateAdCounterHistogramTestCallback(countDownLatch);
+        service.updateAdCounterHistogram(input, callback);
+        callback.mCountDownLatch.await();
+        return callback;
+    }
+
     public ReportImpressionTestCallback invokeReportImpression(
             AdSelectionService service, ReportImpressionInput input)
             throws RemoteException, InterruptedException {
@@ -1074,6 +1249,31 @@ public class AuctionServerE2ETest {
         }
     }
 
+    static class UpdateAdCounterHistogramTestCallback
+            extends UpdateAdCounterHistogramCallback.Stub {
+        final CountDownLatch mCountDownLatch;
+        boolean mIsSuccess = false;
+        FledgeErrorResponse mFledgeErrorResponse;
+
+        UpdateAdCounterHistogramTestCallback(CountDownLatch countDownLatch) {
+            mCountDownLatch = countDownLatch;
+            mFledgeErrorResponse = null;
+        }
+
+        @Override
+        public void onSuccess() throws RemoteException {
+            mIsSuccess = true;
+            mCountDownLatch.countDown();
+        }
+
+        @Override
+        public void onFailure(FledgeErrorResponse fledgeErrorResponse) throws RemoteException {
+            mIsSuccess = false;
+            mFledgeErrorResponse = fledgeErrorResponse;
+            mCountDownLatch.countDown();
+        }
+    }
+
     static class ReportImpressionTestCallback extends ReportImpressionCallback.Stub {
         final CountDownLatch mCountDownLatch;
         boolean mIsSuccess = false;
@@ -1107,6 +1307,16 @@ public class AuctionServerE2ETest {
 
         AuctionServerE2ETestFlags(boolean fledgeAuctionServerKillSwitch) {
             mFledgeAuctionServerKillSwitch = fledgeAuctionServerKillSwitch;
+        }
+
+        @Override
+        public boolean getFledgeAdSelectionFilteringEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeAuctionServerEnabledForUpdateHistogram() {
+            return true;
         }
 
         @Override

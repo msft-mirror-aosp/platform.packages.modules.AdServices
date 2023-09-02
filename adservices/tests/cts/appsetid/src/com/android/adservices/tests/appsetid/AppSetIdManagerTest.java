@@ -15,7 +15,10 @@
  */
 package com.android.adservices.tests.appsetid;
 
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import android.adservices.appsetid.AppSetId;
@@ -34,6 +37,9 @@ import androidx.test.runner.AndroidJUnit4;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.adservices.common.OutcomeReceiverForTests;
+import com.android.adservices.common.RequiresLowRamDevice;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.compatibility.common.util.ConnectivityUtils;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
@@ -64,7 +70,12 @@ public class AppSetIdManagerTest {
 
     private static String sPreviousAppAllowList;
 
-    @Rule
+    // Ignore tests when device is not at least S
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    // Ignore tests when device is not supported
+    @Rule(order = 1)
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
             new AdServicesDeviceSupportedRule();
 
@@ -158,6 +169,23 @@ public class AppSetIdManagerTest {
                 (System.currentTimeMillis() - nowInMillis) < (1_000 / requestPerSecond);
         if (executedInLessThanOneSec) {
             assertTrue(reachedLimit);
+        }
+    }
+
+    @Test
+    @RequiresLowRamDevice
+    public void testAppSetIdManager_whenDeviceNotSupported() {
+        AppSetIdManager appSetIdManager = AppSetIdManager.get(sContext);
+        assertWithMessage("appSetIdManager").that(appSetIdManager).isNotNull();
+        OutcomeReceiverForTests<AppSetId> receiver = new OutcomeReceiverForTests<>();
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> appSetIdManager.getAppSetId(CALLBACK_EXECUTOR, receiver));
+
+        // TODO(b/295235571): remove assertThrows above and instead check the callback:
+        if (false) {
+            receiver.assertFailure(IllegalStateException.class);
         }
     }
 

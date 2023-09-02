@@ -19,9 +19,9 @@ import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 
 /** See {@link AbstractSdkLevelSupportedRule}. */
-public final class SdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
+public final class HostSideSdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
 
-    private SdkLevelSupportRule(AndroidSdkLevel level) {
+    private HostSideSdkLevelSupportRule(AndroidSdkLevel level) {
         super(ConsoleLogger.getInstance(), level);
     }
 
@@ -30,41 +30,34 @@ public final class SdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
     }
 
     /**
-     * Gets a rule that ensures test is executed on every Android version, unless the test is
-     * explicitly annotated with a {@code RequiresSdkLevel...} annotation.
+     * Gets a rule that don't skip any test by default.
+     *
+     * <p>This rule is typically used when:
+     *
+     * <ul>
+     *   <li>Only a few tests require a specific SDK release - such tests will be annotated with a
+     *       <code>@RequiresSdkLevel...</code> annotation.
+     *   <li>Some test methods (typically <code>&#064;Before</code>) need to check the SDK release
+     *       inside them - these tests call call rule methods such as {@code isAtLeastS()}.
+     * </ul>
      */
-    public static SdkLevelSupportRule forAnyLevel() {
-        return new SdkLevelSupportRule(AndroidSdkLevel.ANY);
-    }
-
-    /** Gets a rule that ensures test is executed on Android R+. Skips test otherwise. */
-    public static SdkLevelSupportRule forAtLeastR() {
-        return new SdkLevelSupportRule(AndroidSdkLevel.R);
+    public static HostSideSdkLevelSupportRule forAnyLevel() {
+        return new HostSideSdkLevelSupportRule(AndroidSdkLevel.ANY);
     }
 
     /** Gets a rule that ensures test is executed on Android S+. Skips test otherwise. */
-    public static SdkLevelSupportRule forAtLeastS() {
-        return new SdkLevelSupportRule(AndroidSdkLevel.S);
-    }
-
-    /** Gets a rule that ensures test is executed on Android S+. Skips test otherwise. */
-    public static SdkLevelSupportRule forAtLeastSv2() {
-        return new SdkLevelSupportRule(AndroidSdkLevel.S_V2);
+    public static HostSideSdkLevelSupportRule forAtLeastS() {
+        return new HostSideSdkLevelSupportRule(AndroidSdkLevel.S);
     }
 
     /** Gets a rule that ensures test is executed on Android T+. Skips test otherwise. */
-    public static SdkLevelSupportRule forAtLeastT() {
-        return new SdkLevelSupportRule(AndroidSdkLevel.T);
+    public static HostSideSdkLevelSupportRule forAtLeastT() {
+        return new HostSideSdkLevelSupportRule(AndroidSdkLevel.T);
     }
 
     /** Gets a rule that ensures test is executed on Android U+. Skips test otherwise. */
-    public static SdkLevelSupportRule forAtLeastU() {
-        return new SdkLevelSupportRule(AndroidSdkLevel.U);
-    }
-
-    /** Gets a rule that ensures test is executed on Android V+. Skips test otherwise. */
-    public static SdkLevelSupportRule forAtLeastV() {
-        return new SdkLevelSupportRule(AndroidSdkLevel.V);
+    public static HostSideSdkLevelSupportRule forAtLeastU() {
+        return new HostSideSdkLevelSupportRule(AndroidSdkLevel.U);
     }
 
     @Override
@@ -78,11 +71,6 @@ public final class SdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
     }
 
     @Override
-    public boolean isAtLeastSv2() throws DeviceNotAvailableException {
-        return isDeviceApiLevelAtLeast(AndroidSdkLevel.S_V2);
-    }
-
-    @Override
     public boolean isAtLeastT() throws DeviceNotAvailableException {
         return isDeviceApiLevelAtLeast(AndroidSdkLevel.T);
     }
@@ -90,11 +78,6 @@ public final class SdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
     @Override
     public boolean isAtLeastU() throws DeviceNotAvailableException {
         return isDeviceApiLevelAtLeast(AndroidSdkLevel.U);
-    }
-
-    @Override
-    public boolean isAtLeastV() throws DeviceNotAvailableException {
-        return isDeviceApiLevelAtLeast(AndroidSdkLevel.V);
     }
 
     private boolean isDeviceApiLevelAtLeast(AndroidSdkLevel level)

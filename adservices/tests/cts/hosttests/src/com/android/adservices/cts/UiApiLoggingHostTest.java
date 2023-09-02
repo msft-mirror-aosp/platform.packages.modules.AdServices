@@ -24,8 +24,8 @@ import android.cts.statsdatom.lib.AtomTestUtils;
 import android.cts.statsdatom.lib.ConfigUtils;
 import android.cts.statsdatom.lib.ReportUtils;
 
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesHostSideDeviceSupportedRule;
+import com.android.adservices.common.HostSideSdkLevelSupportRule;
 import com.android.internal.os.StatsdConfigProto.StatsdConfig;
 import com.android.os.AtomsProto;
 import com.android.os.AtomsProto.AdServicesSettingsUsageReported;
@@ -69,11 +69,11 @@ public final class UiApiLoggingHostTest implements IDeviceTest {
     private String mTargetPackageAosp;
 
     @Rule(order = 0)
-    public SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastR();
+    public final HostSideSdkLevelSupportRule sdkLevel = HostSideSdkLevelSupportRule.forAnyLevel();
 
     @Rule(order = 1)
-    public AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesDeviceSupportedRule();
+    public final AdServicesHostSideDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesHostSideDeviceSupportedRule();
 
     @Rule(order = 1)
     public TestMetrics metricsRule = new TestMetrics();

@@ -218,6 +218,14 @@ public final class PhFlagsFixture {
                 false);
     }
 
+    public static void overrideFledgeEventLevelDebugReportSendImmediately(boolean enable) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORT_SEND_IMMEDIATELY,
+                Boolean.toString(enable),
+                false);
+    }
+
     public static void overrideFledgeEventLevelDebugReportingBatchDelay(int batchDelayInSeconds) {
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -232,6 +240,47 @@ public final class PhFlagsFixture {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 FlagsConstants.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_MAX_ITEMS_PER_BATCH,
                 Integer.toString(maxItemsPerBatch),
+                false);
+    }
+
+    public static void overrideFledgeDebugReportSenderJobNetworkConnectionTimeoutMs(
+            int phOverrideValue) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_FLEDGE_DEBUG_REPORTI_SENDER_JOB_NETWORK_CONNECT_TIMEOUT_MS,
+                Integer.toString(phOverrideValue),
+                false);
+    }
+
+    public static void overrideFledgeDebugReportSenderJobNetworkReadTimeoutMs(int phOverrideValue) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_FLEDGE_DEBUG_REPORTI_SENDER_JOB_NETWORK_READ_TIMEOUT_MS,
+                Integer.toString(phOverrideValue),
+                false);
+    }
+
+    public static void overrideFledgeDebugReportSenderJobMaxRuntimeMs(long phOverrideValue) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_FLEDGE_DEBUG_REPORTI_SENDER_JOB_MAX_TIMEOUT_MS,
+                Long.toString(phOverrideValue),
+                false);
+    }
+
+    public static void overrideFledgeDebugReportSenderJobPeriodicMs(long phOverrideValue) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_FLEDGE_DEBUG_REPORT_SENDER_JOB_PERIOD_MS,
+                Long.toString(phOverrideValue),
+                false);
+    }
+
+    public static void overrideFledgeDebugReportSenderJobFlexMs(long phOverrideValue) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_FLEDGE_DEBUG_REPORT_SENDER_JOB_FLEX_MS,
+                Long.toString(phOverrideValue),
                 false);
     }
 

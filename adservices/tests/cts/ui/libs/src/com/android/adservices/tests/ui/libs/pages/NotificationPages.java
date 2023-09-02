@@ -22,7 +22,6 @@ import static com.android.adservices.tests.ui.libs.UiUtils.PRIMITIVE_UI_OBJECTS_
 import static com.android.adservices.tests.ui.libs.UiUtils.SCROLL_WAIT_TIME;
 import static com.android.adservices.tests.ui.libs.UiUtils.getElement;
 import static com.android.adservices.tests.ui.libs.UiUtils.getString;
-import static com.android.adservices.tests.ui.libs.UiUtils.getUiElement;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -43,7 +42,8 @@ public class NotificationPages {
             UiDevice device,
             boolean isDisplayed,
             boolean isEuTest,
-            UiConstants.UX ux)
+            UiConstants.UX ux,
+            boolean isV2)
             throws Exception {
         device.openNotification();
         Thread.sleep(LAUNCH_TIMEOUT_MS);
@@ -55,7 +55,9 @@ public class NotificationPages {
                 notificationTitle =
                         isEuTest
                                 ? R.string.notificationUI_notification_ga_title_eu
-                                : R.string.notificationUI_notification_ga_title;
+                                : isV2
+                                        ? R.string.notificationUI_notification_ga_title_v2
+                                        : R.string.notificationUI_notification_ga_title;
                 notificationHeader =
                         isEuTest
                                 ? R.string.notificationUI_header_ga_title_eu
@@ -96,7 +98,7 @@ public class NotificationPages {
 
         notificationCard.click();
         Thread.sleep(LAUNCH_TIMEOUT_MS);
-        UiObject title = getUiElement(device, context, notificationHeader);
+        UiObject title = getElement(context, device, notificationHeader);
         assertThat(title.exists()).isTrue();
     }
 
@@ -116,31 +118,21 @@ public class NotificationPages {
                 isEuDevice
                         ? R.string.notificationUI_right_control_button_text_eu
                         : R.string.notificationUI_right_control_button_text;
+
+        goThroughNotificationPage(context, device, leftButtonResId, rightButtonResId);
         UiObject leftControlButton = getElement(context, device, leftButtonResId);
         UiObject rightControlButton = getElement(context, device, rightButtonResId);
-        UiObject moreButton = getElement(context, device, R.string.notificationUI_more_button_text);
-        assertThat(leftControlButton.exists()).isFalse();
-        assertThat(rightControlButton.exists()).isFalse();
-        assertThat(moreButton.exists()).isTrue();
-
-        int clickCount = 10;
-        while (moreButton.exists() && clickCount-- > 0) {
-            moreButton.click();
-            Thread.sleep(SCROLL_WAIT_TIME);
-        }
-
-        leftControlButton = getElement(context, device, leftButtonResId);
-        rightControlButton = getElement(context, device, rightButtonResId);
-
-        assertThat(leftControlButton.exists()).isTrue();
-        assertThat(rightControlButton.exists()).isTrue();
-        assertThat(moreButton.exists()).isFalse();
 
         if (isEuDevice) {
             if (!isOptin) {
                 leftControlButton.click();
             } else {
                 rightControlButton.click();
+                Thread.sleep(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+                UiObject acceptedTitle =
+                        getElement(
+                                context, device, R.string.notificationUI_confirmation_accept_title);
+                assertThat(acceptedTitle.exists()).isTrue();
             }
         } else {
             if (isGoSettings) {
@@ -156,7 +148,6 @@ public class NotificationPages {
             Context context, UiDevice device, boolean isGoSettings)
             throws UiObjectNotFoundException, InterruptedException {
         int leftButtonResId = R.string.notificationUI_confirmation_left_control_button_text;
-
         int rightButtonResId = R.string.notificationUI_confirmation_right_control_button_text;
 
         UiObject leftControlButton = getElement(context, device, leftButtonResId);
@@ -171,76 +162,47 @@ public class NotificationPages {
     }
 
     public static void euNotificationLandingPageMsmtAndFledgePage(
-            Context context, UiDevice device, boolean isGoSettings)
+            Context context, UiDevice device, boolean isGoSettings, boolean isFlip)
             throws UiObjectNotFoundException, InterruptedException {
-        UiObject leftControlButton =
-                getElement(
-                        context,
-                        device,
-                        R.string.notificationUI_confirmation_left_control_button_text);
-        UiObject rightControlButton =
-                getElement(
-                        context,
-                        device,
-                        R.string.notificationUI_confirmation_right_control_button_text);
-        UiObject moreButton = getElement(context, device, R.string.notificationUI_more_button_text);
-        assertThat(leftControlButton.exists()).isFalse();
-        assertThat(rightControlButton.exists()).isFalse();
-        assertThat(moreButton.exists()).isTrue();
-
-        int clickCount = 10;
-        while (moreButton.exists() && clickCount-- > 0) {
-            moreButton.click();
-            Thread.sleep(SCROLL_WAIT_TIME);
-        }
-        leftControlButton =
-                getElement(
-                        context,
-                        device,
-                        R.string.notificationUI_confirmation_left_control_button_text);
-        rightControlButton =
-                getElement(
-                        context,
-                        device,
-                        R.string.notificationUI_confirmation_right_control_button_text);
-        assertThat(leftControlButton.exists()).isTrue();
-        assertThat(rightControlButton.exists()).isTrue();
-        assertThat(moreButton.exists()).isFalse();
+        int leftButtonResId = R.string.notificationUI_left_control_button_text;
+        int rightButtonResId = R.string.notificationUI_right_control_button_text;
+        goThroughNotificationPage(context, device, leftButtonResId, rightButtonResId);
+        UiObject leftControlButton = getElement(context, device, leftButtonResId);
+        UiObject rightControlButton = getElement(context, device, rightButtonResId);
         if (isGoSettings) {
             leftControlButton.click();
         } else {
             rightControlButton.click();
+
+            if (isFlip) {
+                UiObject title2 =
+                        getElement(context, device, R.string.notificationUI_header_ga_title_eu_v2);
+                assertThat(title2.exists()).isTrue();
+            }
         }
         Thread.sleep(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
     }
 
     public static void euNotificationLandingPageTopicsPage(
-            Context context, UiDevice device, boolean isOptin)
+            Context context, UiDevice device, boolean isOptin, boolean isFlip)
             throws UiObjectNotFoundException, InterruptedException {
-        UiObject leftControlButton =
-                getElement(context, device, R.string.notificationUI_left_control_button_text_eu);
-        UiObject rightControlButton =
-                getElement(
-                        context, device, R.string.notificationUI_right_control_button_ga_text_eu);
-        UiObject moreButton = getElement(context, device, R.string.notificationUI_more_button_text);
-        assertThat(leftControlButton.exists()).isFalse();
-        assertThat(rightControlButton.exists()).isFalse();
-        assertThat(moreButton.exists()).isTrue();
-        int clickCount = 10;
-        while (moreButton.exists() && clickCount-- > 0) {
-            moreButton.click();
-            Thread.sleep(SCROLL_WAIT_TIME);
-        }
-        leftControlButton =
-                getElement(context, device, R.string.notificationUI_left_control_button_text_eu);
-        rightControlButton =
-                getElement(
-                        context, device, R.string.notificationUI_right_control_button_ga_text_eu);
-        assertThat(leftControlButton.exists()).isTrue();
-        assertThat(rightControlButton.exists()).isTrue();
-        assertThat(moreButton.exists()).isFalse();
+        int leftButtonResId = R.string.notificationUI_left_control_button_text_eu;
+        int rightButtonResId =
+                isFlip
+                        ? R.string.notificationUI_right_control_button_ga_text_eu_v2
+                        : R.string.notificationUI_right_control_button_ga_text_eu;
+        goThroughNotificationPage(context, device, leftButtonResId, rightButtonResId);
+        UiObject leftControlButton = getElement(context, device, leftButtonResId);
+        UiObject rightControlButton = getElement(context, device, rightButtonResId);
         if (isOptin) {
             rightControlButton.click();
+            if (!isFlip) {
+                Thread.sleep(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+                UiObject acceptedTitle =
+                        getElement(
+                                context, device, R.string.notificationUI_fledge_measurement_title);
+                assertThat(acceptedTitle.exists()).isTrue();
+            }
         } else {
             leftControlButton.click();
         }
@@ -249,31 +211,60 @@ public class NotificationPages {
     public static void rowNotificationLandingPage(
             Context context, UiDevice device, boolean isGoSettings)
             throws UiObjectNotFoundException, InterruptedException {
-        UiObject leftControlButton =
-                getElement(context, device, R.string.notificationUI_left_control_button_text);
-        UiObject rightControlButton =
-                getElement(context, device, R.string.notificationUI_right_control_button_text);
-        UiObject moreButton = getElement(context, device, R.string.notificationUI_more_button_text);
-        assertThat(leftControlButton.exists()).isFalse();
-        assertThat(rightControlButton.exists()).isFalse();
-        assertThat(moreButton.exists()).isTrue();
-        int clickCount = 10;
-        while (moreButton.exists() && clickCount-- > 0) {
-            moreButton.click();
-            Thread.sleep(SCROLL_WAIT_TIME);
-        }
-        leftControlButton =
-                getElement(context, device, R.string.notificationUI_left_control_button_text);
-        rightControlButton =
-                getElement(context, device, R.string.notificationUI_right_control_button_text);
-        assertThat(leftControlButton.exists()).isTrue();
-        assertThat(rightControlButton.exists()).isTrue();
-        assertThat(moreButton.exists()).isFalse();
+        int leftButtonResId = R.string.notificationUI_left_control_button_text;
+        int rightButtonResId = R.string.notificationUI_right_control_button_text;
+        goThroughNotificationPage(context, device, leftButtonResId, rightButtonResId);
+        UiObject leftControlButton = getElement(context, device, leftButtonResId);
+        UiObject rightControlButton = getElement(context, device, rightButtonResId);
         if (isGoSettings) {
             leftControlButton.click();
         } else {
             rightControlButton.click();
         }
         Thread.sleep(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+    }
+
+    public static void u18NotifiacitonLandingPage(
+            Context context, UiDevice device, boolean isGoSettings)
+            throws UiObjectNotFoundException, InterruptedException {
+        int leftButtonResId = R.string.notificationUI_u18_left_control_button_text;
+        int rightButtonResId = R.string.notificationUI_u18_right_control_button_text;
+        goThroughNotificationPage(context, device, leftButtonResId, rightButtonResId);
+        UiObject leftControlButton = getElement(context, device, leftButtonResId);
+        UiObject rightControlButton = getElement(context, device, rightButtonResId);
+        if (isGoSettings) {
+            leftControlButton.click();
+        } else {
+            rightControlButton.click();
+        }
+        Thread.sleep(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        UiObject topicTitle = getElement(context, device, R.string.settingsUI_topics_ga_title);
+        assertThat((topicTitle.exists())).isFalse();
+    }
+
+    public static void goThroughNotificationPage(
+            Context context, UiDevice device, int leftButtonResId, int rightButtonResId)
+            throws UiObjectNotFoundException, InterruptedException {
+        UiObject leftControlButton = getElement(context, device, leftButtonResId);
+        UiObject rightControlButton = getElement(context, device, rightButtonResId);
+        UiObject moreButton = getElement(context, device, R.string.notificationUI_more_button_text);
+        UiObject scrollView =
+                device.findObject(new UiSelector().className("android.widget.ScrollView"));
+        if (scrollView.isScrollable()) {
+            assertThat(leftControlButton.exists()).isFalse();
+            assertThat(rightControlButton.exists()).isFalse();
+            assertThat(moreButton.exists()).isTrue();
+            int clickCount = 10;
+            while (moreButton.exists() && clickCount-- > 0) {
+                moreButton.click();
+                Thread.sleep(SCROLL_WAIT_TIME);
+            }
+        } else {
+            leftControlButton = getElement(context, device, leftButtonResId);
+            rightControlButton = getElement(context, device, rightButtonResId);
+            assertThat(leftControlButton.exists()).isTrue();
+            assertThat(rightControlButton.exists()).isTrue();
+            assertThat(moreButton.exists()).isFalse();
+        }
     }
 }

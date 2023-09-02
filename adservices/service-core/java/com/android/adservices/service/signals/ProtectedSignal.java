@@ -25,9 +25,9 @@ import java.time.Instant;
 public abstract class ProtectedSignal {
 
     /**
-     * @return The value of this signal in the form of base 64 encoded binary
+     * @return The value of this signal in the form of base 64 encoded string
      */
-    public abstract String getValue();
+    public abstract String getBase64EncodedValue();
 
     /**
      * @return The time the signal was creation
@@ -45,7 +45,7 @@ public abstract class ProtectedSignal {
 
     @AutoValue.Builder
     abstract static class Builder {
-        abstract Builder setValue(String value);
+        abstract Builder setBase64EncodedValue(String value);
 
         abstract Builder setCreationTime(Instant creationTime);
 
