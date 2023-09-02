@@ -30,7 +30,7 @@ import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.KeyValueData;
-import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementReportsStats;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -50,23 +50,27 @@ public class DebugReportingJobHandler {
     private final DatastoreManager mDatastoreManager;
     private final Flags mFlags;
     private ReportingStatus.UploadMethod mUploadMethod;
+    private AdServicesLogger mLogger;
 
     @VisibleForTesting
     DebugReportingJobHandler(
-            EnrollmentDao enrollmentDao, DatastoreManager datastoreManager, Flags flags) {
-        mEnrollmentDao = enrollmentDao;
-        mDatastoreManager = datastoreManager;
-        mFlags = flags;
+            EnrollmentDao enrollmentDao,
+            DatastoreManager datastoreManager,
+            Flags flags,
+            AdServicesLogger logger) {
+        this(enrollmentDao, datastoreManager, flags, logger, ReportingStatus.UploadMethod.UNKNOWN);
     }
 
     DebugReportingJobHandler(
             EnrollmentDao enrollmentDao,
             DatastoreManager datastoreManager,
             Flags flags,
+            AdServicesLogger logger,
             ReportingStatus.UploadMethod uploadMethod) {
         mEnrollmentDao = enrollmentDao;
         mDatastoreManager = datastoreManager;
         mFlags = flags;
+        mLogger = logger;
         mUploadMethod = uploadMethod;
     }
 
@@ -254,16 +258,15 @@ public class DebugReportingJobHandler {
         if (!reportingStatus.getReportingDelay().isPresent()) {
             reportingStatus.setReportingDelay(0L);
         }
-        AdServicesLoggerImpl.getInstance()
-                .logMeasurementReports(
-                        new MeasurementReportsStats.Builder()
-                                .setCode(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED)
-                                .setType(reportingStatus.getReportType().getValue())
-                                .setResultCode(reportingStatus.getUploadStatus().getValue())
-                                .setFailureType(reportingStatus.getFailureStatus().getValue())
-                                .setUploadMethod(reportingStatus.getUploadMethod().getValue())
-                                .setReportingDelay(reportingStatus.getReportingDelay().get())
-                                .setSourceRegistrant(reportingStatus.getSourceRegistrant())
-                                .build());
+        mLogger.logMeasurementReports(
+                new MeasurementReportsStats.Builder()
+                        .setCode(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED)
+                        .setType(reportingStatus.getReportType().getValue())
+                        .setResultCode(reportingStatus.getUploadStatus().getValue())
+                        .setFailureType(reportingStatus.getFailureStatus().getValue())
+                        .setUploadMethod(reportingStatus.getUploadMethod().getValue())
+                        .setReportingDelay(reportingStatus.getReportingDelay().get())
+                        .setSourceRegistrant(reportingStatus.getSourceRegistrant())
+                        .build());
     }
 }
