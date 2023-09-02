@@ -3518,6 +3518,7 @@ public final class PhFlags implements Flags {
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS
+                        + PhFlags.KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS
                         + " = "
                         + getMeasurementEventMainReportingJobPeriodMs());
         writer.println(
@@ -4832,14 +4833,14 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES, KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST, "");
     }
 
-    static final String KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED =
+    public static final String KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED =
             "is_u18_supervised_account_enabled";
 
     @Override
     public boolean isU18SupervisedAccountEnabled() {
         return DeviceConfig.getBoolean(
                 NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants.KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED,
+                /* flagName */ KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED,
                 /* defaultValue */ IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT);
     }
 }
