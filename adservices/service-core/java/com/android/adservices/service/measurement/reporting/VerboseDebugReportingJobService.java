@@ -34,6 +34,7 @@ import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.util.JobLockHolder;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -166,6 +167,7 @@ public final class VerboseDebugReportingJobService extends JobService {
                                 enrollmentDao,
                                 datastoreManager,
                                 FlagsFactory.getFlags(),
+                                AdServicesLoggerImpl.getInstance(),
                                 ReportingStatus.UploadMethod.REGULAR)
                         .performScheduledPendingReports();
                 return;
