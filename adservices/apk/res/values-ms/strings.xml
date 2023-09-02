@@ -190,7 +190,7 @@
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Data cadangan iklan daripada apl pada senarai anda akan dipadamkan dan apl akan mencadangkan iklan baharu pada masa akan datang. Anda mungkin masih akan melihat beberapa iklan yang berkaitan."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Data apl telah ditetapkan semula"</string>
     <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Topik iklan dihidupkan"</string>
-    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android akan mula mengetahui topik yang anda minati tetapi perkara ini mungkin mengambil sedikit masa sehingga topik pertama anda dapat dipaparkan."</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android akan mula mengetahui topik yang anda minati tetapi sedikit masa mungkin diperlukan untuk memaparkan topik pertama anda."</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Matikan ciri topik iklan?"</string>
     <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Senarai topik ini akan dipadamkan. Android tidak akan mengetahui topik yang anda minati lagi tetapi anda masih boleh melihat iklan yang berkaitan."</string>
     <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Iklan yang dicadangkan oleh apl dihidupkan"</string>

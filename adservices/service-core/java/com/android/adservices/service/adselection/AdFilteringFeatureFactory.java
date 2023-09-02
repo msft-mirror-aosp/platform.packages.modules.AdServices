@@ -120,7 +120,8 @@ public final class AdFilteringFeatureFactory {
      *     enabled, or a {@link AdCounterHistogramUpdaterNoOpImpl} instance otherwise
      */
     public AdCounterHistogramUpdater getAdCounterHistogramUpdater(
-            @NonNull AdSelectionEntryDao adSelectionEntryDao) {
+            @NonNull AdSelectionEntryDao adSelectionEntryDao,
+            boolean auctionServerEnabledForUpdateHistogram) {
         Objects.requireNonNull(adSelectionEntryDao);
 
         if (mIsFledgeAdSelectionFilteringEnabled) {
@@ -130,7 +131,8 @@ public final class AdFilteringFeatureFactory {
                     mHistogramAbsoluteMaxTotalEventCount,
                     mHistogramLowerMaxTotalEventCount,
                     mHistogramAbsoluteMaxPerBuyerEventCount,
-                    mHistogramLowerMaxPerBuyerEventCount);
+                    mHistogramLowerMaxPerBuyerEventCount,
+                    auctionServerEnabledForUpdateHistogram);
         } else {
             return new AdCounterHistogramUpdaterNoOpImpl();
         }

@@ -118,7 +118,10 @@ public class ProtectedSignalsManager {
 
     /**
      * The fetchSignalUpdates API will retrieve a JSON from the URI that describes which signals to
-     * add or remove. The top level keys for the JSON must correspond to one of 4 commands:
+     * add or remove. This API also allows registering or deleting the encoder endpoint. The
+     * endpoint is used to download an encoding logic, which enables encoding the signals.
+     *
+     * <p>The top level keys for the JSON must correspond to one of 5 commands:
      *
      * <p>"put" - Adds a new signal, overwriting any existing signals with the same key. The value
      * for this is a JSON object where the keys are base 64 strings corresponding to the key to put
@@ -142,6 +145,22 @@ public class ProtectedSignalsManager {
      * <p>"remove" - Removes the signal for a key. The value of this is a list of base 64 strings
      * corresponding to the keys of signals that should be deleted.
      *
+     * <p>"update_encoder" - Provides an action to update the endpoint, and a URI which can be used
+     * to retrieve an encoding logic. The sub-key for providing an update action is "action" and the
+     * values currently supported are:
+     *
+     * <ol>
+     *   <li>"REGISTER" : Registers the encoder endpoint if provided for the first time or
+     *       overwrites the existing one with the newly provided endpoint. Providing the "endpoint"
+     *       is required for the "REGISTER" action.
+     *   <li>"DELETE" : Deletes the encoder endpoint if already registered, also deletes the
+     *       persisted encoding logic, if any. Providing the "endpoint" is not required for the
+     *       "DELETE" action.
+     * </ol>
+     *
+     * <p>The sub-key for providing an encoder endpoint is "endpoint" and the value is the URI
+     * string for the endpoint.
+     *
      * <p>Key may only be operated on by one command per JSON. If two command attempt to operate on
      * the same key, this method will through an {@link IllegalArgumentException}
      *
@@ -156,7 +175,7 @@ public class ProtectedSignalsManager {
      *
      * <ol>
      *   <li>The JSON retrieved from the server is not valid.
-     *   <li>The provided Uri is invalid.
+     *   <li>The provided URI is invalid.
      * </ol>
      *
      * <p>This call fails with {@link LimitExceededException} if the calling package exceeds the

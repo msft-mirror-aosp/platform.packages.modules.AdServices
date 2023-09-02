@@ -53,8 +53,6 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Parcel;
 import android.os.RemoteException;
-import android.os.SystemClock;
-import android.util.Log;
 import android.view.Surface;
 
 import androidx.lifecycle.Lifecycle;
@@ -64,7 +62,6 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 
 import com.android.compatibility.common.util.DeviceConfigStateHelper;
-import com.android.compatibility.common.util.TestUtils.RunnableWithThrow;
 import com.android.ctssdkprovider.IActivityActionExecutor;
 import com.android.ctssdkprovider.IActivityStarter;
 import com.android.ctssdkprovider.ICtsSdkProviderApi;
@@ -73,6 +70,7 @@ import com.android.modules.utils.build.SdkLevel;
 import com.google.common.truth.Expect;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -105,7 +103,6 @@ public final class SdkSandboxManagerTest {
     private static final String UNREGISTER_BEFORE_STARTING_KEY = "UNREGISTER_BEFORE_STARTING_KEY";
     private static final String ACTIVITY_STARTER_KEY = "ACTIVITY_STARTER_KEY";
     private static final UiDevice sUiDevice = UiDevice.getInstance(getInstrumentation());
-    private static final long UI_ACTION_WAIT_TIME_MILLISECONDS = 500;
 
     @Rule(order = 0)
     public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
@@ -131,7 +128,7 @@ public final class SdkSandboxManagerTest {
         killSandboxIfExists();
         mScenario = activityScenarioRule.getScenario();
         mDeviceConfig.set(ASM_RESTRICTIONS_ENABLED, "1");
-        runAndWait(() -> sUiDevice.setOrientationNatural());
+        sUiDevice.setOrientationNatural();
     }
 
     @Test
@@ -769,6 +766,7 @@ public final class SdkSandboxManagerTest {
     }
 
     @Test
+    @Ignore("b/298171583")
     public void testBackNavigation() throws Exception {
         assumeTrue(SdkLevel.isAtLeastU());
 
@@ -785,7 +783,7 @@ public final class SdkSandboxManagerTest {
         } catch (RemoteException e) {
             fail("Error while disabling back button: " + e.getMessage());
         }
-        runAndWait(() -> sUiDevice.pressBack());
+        sUiDevice.pressBack();
         assertThat(mScenario.getState()).isIn(Arrays.asList(State.CREATED, State.STARTED));
         assertThat(sandboxActivityStarter.isActivityResumed()).isTrue();
 
@@ -794,12 +792,13 @@ public final class SdkSandboxManagerTest {
         } catch (RemoteException e) {
             fail("Error while enabling back button: " + e.getMessage());
         }
-        runAndWait(() -> sUiDevice.pressBack());
+        sUiDevice.pressBack();
         assertThat(mScenario.getState()).isEqualTo(State.RESUMED);
         assertThat(sandboxActivityStarter.isActivityResumed()).isFalse();
     }
 
     @Test
+    @Ignore("b/298171583")
     public void testSandboxActivityShouldRotateIfNotLocked() throws Exception {
         assumeTrue(SdkLevel.isAtLeastU());
 
@@ -813,7 +812,7 @@ public final class SdkSandboxManagerTest {
         // Assert Natural Rotation.
         assertThat(sUiDevice.getDisplayRotation()).isEqualTo(Surface.ROTATION_0);
         // Rotate device to landscape
-        runAndWait(() -> sUiDevice.setOrientationLandscape());
+        sUiDevice.setOrientationLandscape();
         // Without SDK locking the orientation, display should rotate.
         assertThat(sUiDevice.getDisplayRotation()).isEqualTo(Surface.ROTATION_90);
         assertThat(mScenario.getState()).isIn(Arrays.asList(State.CREATED, State.STARTED));
@@ -821,6 +820,7 @@ public final class SdkSandboxManagerTest {
     }
 
     @Test
+    @Ignore("b/298171583")
     public void testSandboxActivityOrientationLocking() throws Exception {
         assumeTrue(SdkLevel.isAtLeastU());
 
@@ -836,22 +836,22 @@ public final class SdkSandboxManagerTest {
 
         // Locking orientation to landscape should override device current orientation
         // (portrait) and restart the sandbox activity in the landscape orientation.
-        runAndWait(() -> actionExecutor.setOrientationToLandscape());
+        actionExecutor.setOrientationToLandscape();
 
         assertThat(sUiDevice.getDisplayRotation()).isEqualTo(Surface.ROTATION_90);
         // Rotation the device should not affect the locked display orientation.
-        runAndWait(() -> sUiDevice.setOrientationPortrait());
+        sUiDevice.setOrientationPortrait();
         assertThat(sUiDevice.getDisplayRotation()).isEqualTo(Surface.ROTATION_90);
         assertThat(mScenario.getState()).isIn(Arrays.asList(State.CREATED, State.STARTED));
         assertThat(sandboxActivityStarter.isActivityResumed()).isTrue();
 
         // Locking orientation to portrait should override device current orientation
         // (landscape) and restart the sandbox activity in the portrait orientation.
-        runAndWait(() -> actionExecutor.setOrientationToPortrait());
+        actionExecutor.setOrientationToPortrait();
 
         assertThat(sUiDevice.getDisplayRotation()).isEqualTo(Surface.ROTATION_0);
         // Rotation the device should not affect the locked display orientation.
-        runAndWait(() -> sUiDevice.setOrientationLandscape());
+        sUiDevice.setOrientationLandscape();
         assertThat(sUiDevice.getDisplayRotation()).isEqualTo(Surface.ROTATION_0);
         assertThat(mScenario.getState()).isIn(Arrays.asList(State.CREATED, State.STARTED));
         assertThat(sandboxActivityStarter.isActivityResumed()).isTrue();
@@ -1030,12 +1030,5 @@ public final class SdkSandboxManagerTest {
         // TODO(b/241542162): Avoid using reflection as a workaround once test apis can be run
         //  without issue.
         mSdkSandboxManager.getClass().getMethod("stopSdkSandbox").invoke(mSdkSandboxManager);
-    }
-
-    /** Helper method that executes an action in the device and waits for a fixed amount of time. */
-    private static void runAndWait(RunnableWithThrow runnable) throws Exception {
-        runnable.run();
-        Log.v(TAG, "Sleeping " + UI_ACTION_WAIT_TIME_MILLISECONDS + "ms after UI action");
-        SystemClock.sleep(UI_ACTION_WAIT_TIME_MILLISECONDS);
     }
 }

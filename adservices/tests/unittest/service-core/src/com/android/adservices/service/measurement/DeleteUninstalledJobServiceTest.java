@@ -38,6 +38,7 @@ import static org.mockito.Mockito.verify;
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
+import android.content.ComponentName;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -206,18 +207,27 @@ public class DeleteUninstalledJobServiceTest {
     }
 
     @Test
-    public void scheduleIfNeeded_killSwitchOff_previouslyExecuted_dontForceSchedule_dontSchedule()
-            throws Exception {
+    public void scheduleIfNeeded_sameJobInfo_dontSchedule() throws Exception {
         runWithMocks(
                 () -> {
                     // Setup
                     disableKillSwitch();
 
-                    final Context mockContext = mock(Context.class);
+                    final Context mockContext = spy(ApplicationProvider.getApplicationContext());
                     doReturn(mMockJobScheduler)
                             .when(mockContext)
                             .getSystemService(JobScheduler.class);
-                    final JobInfo mockJobInfo = mock(JobInfo.class);
+                    final JobInfo mockJobInfo =
+                            new JobInfo.Builder(
+                                            MEASUREMENT_DELETE_UNINSTALLED_JOB_ID,
+                                            new ComponentName(
+                                                    mockContext, DeleteUninstalledJobService.class))
+                                    .setRequiresDeviceIdle(true)
+                                    .setPeriodic(
+                                            AdServicesConfig
+                                                    .getMeasurementDeleteExpiredJobPeriodMs())
+                                    .setPersisted(true)
+                                    .build();
                     doReturn(mockJobInfo)
                             .when(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_DELETE_UNINSTALLED_JOB_ID));
@@ -229,6 +239,44 @@ public class DeleteUninstalledJobServiceTest {
                     // Validate
                     ExtendedMockito.verify(
                             () -> DeleteUninstalledJobService.schedule(any(), any()), never());
+                    verify(mMockJobScheduler, times(1))
+                            .getPendingJob(eq(MEASUREMENT_DELETE_UNINSTALLED_JOB_ID));
+                });
+    }
+
+    @Test
+    public void scheduleIfNeeded_diffJobInfo_doesSchedule() throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    disableKillSwitch();
+
+                    final Context mockContext = spy(ApplicationProvider.getApplicationContext());
+                    doReturn(mMockJobScheduler)
+                            .when(mockContext)
+                            .getSystemService(JobScheduler.class);
+                    long periodMs = AdServicesConfig.getMeasurementDeleteExpiredJobPeriodMs();
+                    final JobInfo mockJobInfo =
+                            new JobInfo.Builder(
+                                            MEASUREMENT_DELETE_UNINSTALLED_JOB_ID,
+                                            new ComponentName(
+                                                    mockContext, DeleteUninstalledJobService.class))
+                                    .setRequiresDeviceIdle(true)
+                                    // Difference
+                                    .setPeriodic(periodMs - 1)
+                                    .setPersisted(true)
+                                    .build();
+                    doReturn(mockJobInfo)
+                            .when(mMockJobScheduler)
+                            .getPendingJob(eq(MEASUREMENT_DELETE_UNINSTALLED_JOB_ID));
+
+                    // Execute
+                    DeleteUninstalledJobService.scheduleIfNeeded(
+                            mockContext, /* forceSchedule = */ false);
+
+                    // Validate
+                    ExtendedMockito.verify(
+                            () -> DeleteUninstalledJobService.schedule(any(), any()));
                     verify(mMockJobScheduler, times(1))
                             .getPendingJob(eq(MEASUREMENT_DELETE_UNINSTALLED_JOB_ID));
                 });
@@ -291,18 +339,29 @@ public class DeleteUninstalledJobServiceTest {
     }
 
     @Test
-    public void testSchedule_jobInfoIsPersisted() {
+    public void testSchedule_jobInfoIsPersisted() throws Exception {
         // Setup
-        final JobScheduler jobScheduler = mock(JobScheduler.class);
-        final ArgumentCaptor<JobInfo> captor = ArgumentCaptor.forClass(JobInfo.class);
+        runWithMocks(
+                () -> {
+                    disableKillSwitch();
+                    Context spyContext = spy(CONTEXT);
+                    final JobScheduler jobScheduler = mock(JobScheduler.class);
+                    doReturn(jobScheduler).when(spyContext).getSystemService(JobScheduler.class);
+                    final ArgumentCaptor<JobInfo> captor = ArgumentCaptor.forClass(JobInfo.class);
+                    doReturn(null)
+                            .when(jobScheduler)
+                            .getPendingJob(eq(MEASUREMENT_DELETE_UNINSTALLED_JOB_ID));
 
-        // Execute
-        DeleteUninstalledJobService.schedule(mock(Context.class), jobScheduler);
+                    // Execute
+                    ExtendedMockito.doCallRealMethod()
+                            .when(() -> DeleteUninstalledJobService.schedule(any(), any()));
+                    DeleteUninstalledJobService.scheduleIfNeeded(spyContext, true);
 
-        // Validate
-        verify(jobScheduler, times(1)).schedule(captor.capture());
-        assertNotNull(captor.getValue());
-        assertTrue(captor.getValue().isPersisted());
+                    // Validate
+                    verify(jobScheduler, times(1)).schedule(captor.capture());
+                    assertNotNull(captor.getValue());
+                    assertTrue(captor.getValue().isPersisted());
+                });
     }
 
     private void onStartJob_killSwitchOn() throws Exception {

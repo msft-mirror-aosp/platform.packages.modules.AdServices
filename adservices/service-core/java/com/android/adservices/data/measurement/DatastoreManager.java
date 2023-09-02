@@ -22,9 +22,11 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Abstract class for Datastore management.
@@ -100,6 +102,14 @@ public abstract class DatastoreManager {
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_DATASTORE_FAILURE,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             transaction.rollback();
+
+            if (FlagsFactory.getFlags()
+                            .getMeasurementEnableDatastoreManagerThrowDatastoreException()
+                    && ThreadLocalRandom.current().nextFloat()
+                            < FlagsFactory.getFlags()
+                                    .getMeasurementThrowUnknownExceptionSamplingRate()) {
+                throw new IllegalStateException(ex);
+            }
         } catch (Exception ex) {
             // Catch all exceptions for rollback
             safePrintDataStoreVersion();

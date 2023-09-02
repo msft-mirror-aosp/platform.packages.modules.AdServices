@@ -113,7 +113,7 @@ public class MobileDataDownloadTest {
 
     // Production enrollment data.
     private static final String PRODUCTION_ENROLLMENT_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/2215/42c38a4e7cbe3f16f19d16f86b1c99aaa1e7ebe6";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/2324/3927729583a9dbfdb9a3eaa84ddcef3d9b46c3c7";
 
     // Prod Test Bed enrollment manifest URL
     private static final String PTB_ENROLLMENT_MANIFEST_FILE_URL =
@@ -123,7 +123,7 @@ public class MobileDataDownloadTest {
     private static final String UI_OTA_STRINGS_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-ui-ota-strings/1360/d428721d225582922a7fe9d5ad6db7b09cb03209";
 
-    private static final int PRODUCTION_ENROLLMENT_ENTRIES = 17;
+    private static final int PRODUCTION_ENROLLMENT_ENTRIES = 29;
     private static final int PTB_ENROLLMENT_ENTRIES = 1;
     private static final int OEM_ENROLLMENT_ENTRIES = 114;
 

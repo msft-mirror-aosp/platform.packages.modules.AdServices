@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.customaudience;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SERVER_RATE_LIMIT_REACHED;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_ACTIVATION_TIME;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_DELAYED_ACTIVATION_TIME;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_EXPIRATION_TIME;
@@ -185,6 +186,9 @@ public class CustomAudienceServiceEndToEndTest {
     private final AdServicesLogger mAdServicesLogger = AdServicesLoggerImpl.getInstance();
     private Uri mFetchUri;
 
+    private CustomAudienceQuantityChecker mCustomAudienceQuantityChecker;
+    private CustomAudienceValidator mCustomAudienceValidator;
+
     @Before
     public void setup() {
         // Test applications don't have the required permissions to read config P/H flags, and
@@ -214,10 +218,10 @@ public class CustomAudienceServiceEndToEndTest {
         AdSelectionServerDatabase serverDb =
                 Room.inMemoryDatabaseBuilder(CONTEXT, AdSelectionServerDatabase.class).build();
 
-        CustomAudienceQuantityChecker customAudienceQuantityChecker =
+        mCustomAudienceQuantityChecker =
                 new CustomAudienceQuantityChecker(mCustomAudienceDao, CommonFixture.FLAGS_FOR_TEST);
 
-        CustomAudienceValidator customAudienceValidator =
+        mCustomAudienceValidator =
                 new CustomAudienceValidator(
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                         CommonFixture.FLAGS_FOR_TEST,
@@ -238,8 +242,8 @@ public class CustomAudienceServiceEndToEndTest {
                         CONTEXT,
                         new CustomAudienceImpl(
                                 mCustomAudienceDao,
-                                customAudienceQuantityChecker,
-                                customAudienceValidator,
+                                mCustomAudienceQuantityChecker,
+                                mCustomAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 CommonFixture.FLAGS_FOR_TEST),
                         mFledgeAuthorizationFilterSpy,
@@ -532,6 +536,117 @@ public class CustomAudienceServiceEndToEndTest {
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         VALID_OWNER, LOCALHOST_BUYER, VALID_NAME);
         assertEquals(VALID_ACTIVATION_TIME, persistedCustomAudience.getActivationTime());
+    }
+
+    @Test
+    public void testFetchAndJoinCustomAudience_FirstJoinsQuarantineTableSecondIsFiltered()
+            throws Exception {
+        assertFalse(mCustomAudienceDao.doesCustomAudienceQuarantineExist(VALID_OWNER, BUYER_1));
+
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(new MockResponse().setResponseCode(429)));
+
+        FetchAndJoinCustomAudienceInput input =
+                new FetchAndJoinCustomAudienceInput.Builder(mFetchUri, VALID_OWNER)
+                        .setName(VALID_NAME)
+                        .setActivationTime(VALID_DELAYED_ACTIVATION_TIME)
+                        .setExpirationTime(VALID_EXPIRATION_TIME)
+                        .setUserBiddingSignals(VALID_USER_BIDDING_SIGNALS)
+                        .build();
+        CountDownLatch resultLatch1 = new CountDownLatch(1);
+        FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback fetchAndJoinCallback1 =
+                new FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback(resultLatch1);
+        mService.fetchAndJoinCustomAudience(input, fetchAndJoinCallback1);
+        resultLatch1.await();
+        assertEquals(1, mockWebServer.getRequestCount());
+        assertFalse(fetchAndJoinCallback1.mIsSuccess);
+        assertEquals(
+                STATUS_SERVER_RATE_LIMIT_REACHED,
+                fetchAndJoinCallback1.mFledgeErrorResponse.getStatusCode());
+        assertTrue(
+                mCustomAudienceDao.doesCustomAudienceQuarantineExist(VALID_OWNER, LOCALHOST_BUYER));
+
+        // Try to make the same request again, should fail with STATUS_SERVER_RATE_LIMIT_REACHED but
+        // should not request the server
+        CountDownLatch resultLatch2 = new CountDownLatch(1);
+        FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback fetchAndJoinCallback2 =
+                new FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback(resultLatch2);
+        mService.fetchAndJoinCustomAudience(input, fetchAndJoinCallback2);
+        resultLatch2.await();
+        // Assert a new request was not made
+        assertEquals(1, mockWebServer.getRequestCount());
+        assertFalse(fetchAndJoinCallback2.mIsSuccess);
+        assertEquals(
+                STATUS_SERVER_RATE_LIMIT_REACHED,
+                fetchAndJoinCallback2.mFledgeErrorResponse.getStatusCode());
+    }
+
+    @Test
+    public void testFetchAndJoinCustomAudience_FirstJoinsQuarantineTableSecondPasses()
+            throws Exception {
+        Flags flagsWithZeroMinRetry =
+                new CustomAudienceServiceE2ETestFlags() {
+                    @Override
+                    public long getFledgeFetchCustomAudienceMinRetryAfterValueMs() {
+                        return 0;
+                    }
+                };
+
+        reInitServiceWithFlags(flagsWithZeroMinRetry);
+
+        assertFalse(mCustomAudienceDao.doesCustomAudienceQuarantineExist(VALID_OWNER, BUYER_1));
+
+        // Start server that returns 429 with 1 ms before expiration in first call, and allows the
+        // second call
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse().setResponseCode(429).setHeader("Retry-After", 1),
+                                new MockResponse()
+                                        .setBody(
+                                                getFullSuccessfulJsonResponseString(
+                                                        LOCALHOST_BUYER))));
+
+        FetchAndJoinCustomAudienceInput input =
+                new FetchAndJoinCustomAudienceInput.Builder(mFetchUri, VALID_OWNER)
+                        .setName(VALID_NAME)
+                        .setActivationTime(VALID_DELAYED_ACTIVATION_TIME)
+                        .setExpirationTime(VALID_EXPIRATION_TIME)
+                        .setUserBiddingSignals(VALID_USER_BIDDING_SIGNALS)
+                        .build();
+        CountDownLatch resultLatch1 = new CountDownLatch(1);
+        FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback fetchAndJoinCallback1 =
+                new FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback(resultLatch1);
+        mService.fetchAndJoinCustomAudience(input, fetchAndJoinCallback1);
+        resultLatch1.await();
+        assertEquals(1, mockWebServer.getRequestCount());
+        assertFalse(fetchAndJoinCallback1.mIsSuccess);
+        assertEquals(
+                STATUS_SERVER_RATE_LIMIT_REACHED,
+                fetchAndJoinCallback1.mFledgeErrorResponse.getStatusCode());
+        assertTrue(
+                mCustomAudienceDao.doesCustomAudienceQuarantineExist(VALID_OWNER, LOCALHOST_BUYER));
+
+        // Try to make the same request again, should pass this time
+        CountDownLatch resultLatch2 = new CountDownLatch(1);
+        FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback fetchAndJoinCallback2 =
+                new FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback(resultLatch2);
+        mService.fetchAndJoinCustomAudience(input, fetchAndJoinCallback2);
+        resultLatch2.await();
+        // Assert a new request was not made
+        assertEquals(2, mockWebServer.getRequestCount());
+        assertTrue(fetchAndJoinCallback2.mIsSuccess);
+
+        // Assert entry was cleared
+        assertFalse(
+                mCustomAudienceDao.doesCustomAudienceQuarantineExist(VALID_OWNER, LOCALHOST_BUYER));
+
+        // Assert persisted custom audience's activation time is from the fetched custom audience.
+        DBCustomAudience persistedCustomAudience =
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, VALID_NAME);
+        assertEquals(VALID_DELAYED_ACTIVATION_TIME, persistedCustomAudience.getActivationTime());
     }
 
     @Test
@@ -1464,6 +1579,107 @@ public class CustomAudienceServiceEndToEndTest {
         @Override
         public IBinder asBinder() {
             throw new RuntimeException("Should not be called.");
+        }
+    }
+
+    private void reInitServiceWithFlags(Flags flags) {
+        mService =
+                new CustomAudienceServiceImpl(
+                        CONTEXT,
+                        new CustomAudienceImpl(
+                                mCustomAudienceDao,
+                                mCustomAudienceQuantityChecker,
+                                mCustomAudienceValidator,
+                                CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                                flags),
+                        mFledgeAuthorizationFilterSpy,
+                        mConsentManagerMock,
+                        mDevContextFilter,
+                        MoreExecutors.newDirectExecutorService(),
+                        mAdServicesLogger,
+                        mAppImportanceFilter,
+                        flags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        new CustomAudienceServiceFilter(
+                                CONTEXT,
+                                mConsentManagerMock,
+                                flags,
+                                mAppImportanceFilter,
+                                new FledgeAuthorizationFilter(
+                                        CONTEXT.getPackageManager(),
+                                        EnrollmentDao.getInstance(CONTEXT),
+                                        mAdServicesLogger),
+                                new FledgeAllowListsFilter(flags, mAdServicesLogger),
+                                mMockThrottler),
+                        new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, flags));
+    }
+
+    private static class CustomAudienceServiceE2ETestFlags implements Flags {
+        // Using tolerant timeouts for tests to avoid flakiness.
+        // Tests that need to validate timeout behaviours will override these values too.
+        @Override
+        public long getAdSelectionBiddingTimeoutPerCaMs() {
+            return 10000;
+        }
+
+        @Override
+        public long getAdSelectionScoringTimeoutMs() {
+            return 10000;
+        }
+
+        @Override
+        public long getAdSelectionOverallTimeoutMs() {
+            return 600000;
+        }
+
+        @Override
+        public boolean getEnforceIsolateMaxHeapSize() {
+            return false;
+        }
+
+        @Override
+        public boolean getDisableFledgeEnrollmentCheck() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeRegisterAdBeaconEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeAdSelectionFilteringEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeFetchCustomAudienceEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getMeasurementFlexibleEventReportingApiEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getEnableLoggedTopic() {
+            return true;
+        }
+
+        @Override
+        public boolean getEnableDatabaseSchemaVersion8() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeAuctionServerEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeEventLevelDebugReportingEnabled() {
+            return true;
         }
     }
 }

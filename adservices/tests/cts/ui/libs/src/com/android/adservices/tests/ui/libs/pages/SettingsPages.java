@@ -17,7 +17,7 @@
 package com.android.adservices.tests.ui.libs.pages;
 
 import static com.android.adservices.tests.ui.libs.UiUtils.PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT;
-import static com.android.adservices.tests.ui.libs.UiUtils.scrollAndClickButton;
+import static com.android.adservices.tests.ui.libs.UiUtils.scrollToAndClick;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -55,24 +55,29 @@ public class SettingsPages {
                 flipConsent(device, isOptin, flipConsent);
                 break;
             case U18_UX:
-                enterMsmtConsentPage(context, device);
+                enterU18ConsentPage(context, device);
                 flipConsent(device, isOptin, flipConsent);
         }
     }
 
     public static void enterTopicsConsentPage(Context context, UiDevice device)
             throws UiObjectNotFoundException, InterruptedException {
-        scrollAndClickButton(context, device, R.string.settingsUI_topics_ga_title);
+        scrollToAndClick(context, device, R.string.settingsUI_topics_ga_title);
     }
 
     public static void enterMsmtConsentPage(Context context, UiDevice device)
             throws UiObjectNotFoundException, InterruptedException {
-        scrollAndClickButton(context, device, R.string.settingsUI_measurement_view_title);
+        scrollToAndClick(context, device, R.string.settingsUI_measurement_view_title);
+    }
+
+    public static void enterU18ConsentPage(Context context, UiDevice device)
+            throws UiObjectNotFoundException, InterruptedException {
+        scrollToAndClick(context, device, R.string.settingsUI_u18_measurement_view_title);
     }
 
     public static void enterFledgeConsentPage(Context context, UiDevice device)
             throws UiObjectNotFoundException, InterruptedException {
-        scrollAndClickButton(context, device, R.string.settingsUI_apps_ga_title);
+        scrollToAndClick(context, device, R.string.settingsUI_apps_ga_title);
     }
 
     public static void flipConsent(UiDevice device, boolean isOptin, boolean flipConsent)

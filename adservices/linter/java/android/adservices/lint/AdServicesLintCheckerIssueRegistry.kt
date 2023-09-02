@@ -26,7 +26,8 @@ import com.google.auto.service.AutoService
 class AdServicesLintCheckerIssueRegistry : IssueRegistry() {
     override val issues = listOf(
             BackCompatAndroidProcessDetector.ISSUE,
-            BackCompatJobServiceDetector.ISSUE
+            BackCompatJobServiceDetector.ISSUE,
+            BackCompatNewFileDetector.ISSUE
     )
 
     override val api: Int

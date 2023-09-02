@@ -17,6 +17,8 @@ package com.android.adservices.tests.adid;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import static org.junit.Assert.fail;
+
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdManager;
 import android.content.Context;
@@ -28,6 +30,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.OutcomeReceiverForTests;
+import com.android.adservices.common.RequiresLowRamDevice;
 import com.android.adservices.common.SdkLevelSupportRule;
 
 import org.junit.Before;
@@ -46,9 +49,9 @@ public final class AdIdManagerTest {
     private static final Executor sCallbackExecutor = Executors.newCachedThreadPool();
     private static final Context sContext = ApplicationProvider.getApplicationContext();
 
-    // Ignore tests when device is not at least S
+    // Ignore tests when device is not at least  (requires android.os.OutcomeReceiver)
     @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevelRule = SdkLevelSupportRule.forAtLeastS();
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     // Ignore tests when device is not supported
     @Rule(order = 1)
@@ -139,6 +142,30 @@ public final class AdIdManagerTest {
                         + error);
 
         return error instanceof LimitExceededException;
+    }
+
+    @Test
+    @RequiresLowRamDevice
+    public void testAdIdManager_whenDeviceNotSupported() {
+        AdIdManager adIdManager = AdIdManager.get(sContext);
+        assertWithMessage("adIdManager").that(adIdManager).isNotNull();
+        OutcomeReceiverForTests<AdId> receiver = new OutcomeReceiverForTests<>();
+
+        // TODO(b/295235571): remove whole if block below once fixed
+        if (true) {
+            // NOTE: cannot use assertThrows() as it would cause a NoSuchClassException on R (as
+            // JUnit somehow scans the whole class)
+            try {
+                adIdManager.getAdId(sCallbackExecutor, receiver);
+                fail("getAdId() should have thrown IllegalStateException");
+            } catch (IllegalStateException e) {
+                // expected
+            }
+            return;
+        }
+
+        adIdManager.getAdId(sCallbackExecutor, receiver);
+        receiver.assertFailure(IllegalStateException.class);
     }
 
     private static String toString(AdId adId) {

@@ -30,6 +30,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.service.PhFlags;
 
+// TODO(b/297248322): move this class to sideless as the logic is duplicated on hostside
 /** Helper to check if AdServices is supported / enabled in a device. */
 public final class AdServicesSupportHelper {
 
@@ -39,11 +40,18 @@ public final class AdServicesSupportHelper {
             InstrumentationRegistry.getInstrumentation().getTargetContext();
 
     private static boolean isDeviceSupportedByDefault(Context context) {
+        return isPhone(context) && !isLowRamDevice(context);
+    }
+
+    private static boolean isPhone(Context context) {
         PackageManager pm = context.getPackageManager();
-        return !isLowRamDevice(context) // Android Go Devices
-                && !pm.hasSystemFeature(PackageManager.FEATURE_WATCH)
-                && !pm.hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE)
-                && !pm.hasSystemFeature(PackageManager.FEATURE_LEANBACK);
+        // TODO(b/284744130): need to figure out how to filter out tablets
+        boolean isIt =
+                !pm.hasSystemFeature(PackageManager.FEATURE_WATCH)
+                        && !pm.hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE)
+                        && !pm.hasSystemFeature(PackageManager.FEATURE_LEANBACK);
+        Log.v(TAG, "isPhone(): returning " + isIt);
+        return isIt;
     }
 
     /** Checks whether AdServices is supported by the device / form factor. */
@@ -71,6 +79,7 @@ public final class AdServicesSupportHelper {
         return supported;
     }
 
+    // TODO(b/297408848): rename to isAdservicesLiteDevice() or something like that
     /** Checks whether the device has low ram. */
     public static boolean isLowRamDevice() {
         return isLowRamDevice(sContext);
@@ -96,8 +105,17 @@ public final class AdServicesSupportHelper {
         }
 
         boolean isLowRamDevice = context.getSystemService(ActivityManager.class).isLowRamDevice();
-        Log.v(TAG, "isLowRamDevice(): returning non-simulated value (" + isLowRamDevice + ")");
-        return isLowRamDevice;
+        boolean isPhone = isPhone(context);
+        boolean isIt = isPhone && isLowRamDevice;
+        Log.v(
+                TAG,
+                "isLowRamDevice(): returning non-simulated value "
+                        + isIt
+                        + " when isPhone="
+                        + isPhone
+                        + " and isLowRamDevice="
+                        + isLowRamDevice);
+        return isIt;
     }
 
     /** Gets the value of AdServices global kill switch. */

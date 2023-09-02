@@ -4,7 +4,7 @@
     "arbitrary": "yes"
   },
   "trusted_bidding_data": {
-    "trusted_bidding_uri": "https://js.example.com/bidding/trusted",
+    "trusted_bidding_uri": "<buyer-trusted-signal-uri>",
     "trusted_bidding_keys": [
       "key1",
       "key2"
@@ -12,13 +12,13 @@
   },
   "ads": [
     {
-      "render_uri": "https://js.example.com/render/ad1",
+      "render_uri": "<ad-render-uri-1>",
       "metadata": {
         "valid": 1
       }
     },
     {
-      "render_uri": "https://js.example.com/render/ad2",
+      "render_uri": "<ad-render-uri-2>",
       "metadata": {
         "valid": 2
       }

@@ -17,6 +17,8 @@
 package com.android.adservices.service.common;
 
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.FIRST_ENTRY_REQUEST_TIMESTAMP;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__LOAD_MDD_FILE_GROUP_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX;
 import static com.android.adservices.spe.AdservicesJobInfo.CONSENT_NOTIFICATION_JOB;
 
 import android.app.job.JobInfo;
@@ -36,6 +38,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.download.MddJobService;
 import com.android.adservices.download.MobileDataDownloadFactory;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
@@ -324,6 +327,10 @@ public class ConsentNotificationJobService extends JobService {
             }
         } catch (InterruptedException | ExecutionException e) {
             LogUtil.e("Error while fetching clientFileGroup: " + e.getMessage());
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__LOAD_MDD_FILE_GROUP_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
         }
         LogUtil.d("OTA strings are not yet downloaded.");
         return;

@@ -17,18 +17,19 @@
 package android.adservices.test.scenario.adservices.measurement;
 
 import android.Manifest;
-import android.adservices.clients.measurement.MeasurementClient;
+import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.measurement.MeasurementManager;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
-import android.os.OutcomeReceiver;
 import android.platform.test.rule.CleanPackageRule;
 import android.platform.test.rule.DropCachesRule;
 import android.platform.test.rule.KillAppsRule;
 import android.provider.DeviceConfig;
 import android.util.Log;
+import android.view.InputEvent;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -36,6 +37,7 @@ import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.base.Stopwatch;
@@ -45,6 +47,7 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.rules.RuleChain;
 
+import java.lang.reflect.Method;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -55,11 +58,6 @@ public class AbstractMeasurementLatencyTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final String SERVER_BASE_URI = "https://rb-measurement.com";
     private static final String SOURCE_PATH = "/source";
-    protected static final MeasurementClient MEASUREMENT_CLIENT =
-            new MeasurementClient.Builder()
-                    .setContext(CONTEXT)
-                    .setExecutor(CALLBACK_EXECUTOR)
-                    .build();
 
     protected static final MeasurementManager MEASUREMENT_MANAGER =
             (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
@@ -88,48 +86,78 @@ public class AbstractMeasurementLatencyTest {
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
     }
 
-    protected void runRegisterSource(String testClassName, String testName) {
+    protected void runRegisterSource(String testClassName, String testName) throws Exception {
         final String path = SERVER_BASE_URI + SOURCE_PATH;
 
         Stopwatch timer = Stopwatch.createStarted();
 
-        MEASUREMENT_MANAGER.registerSource(
-                Uri.parse(path),
-                /* inputEvent */ null,
-                CALLBACK_EXECUTOR,
-                new OutcomeReceiver<Object, Exception>() {
-                    @Override
-                    public void onResult(@NonNull Object ignoredResult) {
-                        timer.stop();
-                    }
+        if (SdkLevel.isAtLeastS()) {
+            MEASUREMENT_MANAGER.registerSource(
+                    Uri.parse(path),
+                    /* inputEvent */ null,
+                    CALLBACK_EXECUTOR,
+                    new android.os.OutcomeReceiver<Object, Exception>() {
+                        @Override
+                        public void onResult(@NonNull Object ignoredResult) {
+                            timer.stop();
+                        }
 
-                    @Override
-                    public void onError(@NonNull Exception error) {
-                        timer.stop();
-                        Assert.fail();
-                    }
-                });
+                        @Override
+                        public void onError(@NonNull Exception error) {
+                            timer.stop();
+                            Assert.fail();
+                        }
+                    });
+        } else {
+            // TODO (b/298437332): Remove API access via reflection once APIs are unhidden.
+            Method registerSourceMethod =
+                    MeasurementManager.class.getMethod(
+                            "registerSource",
+                            Uri.class,
+                            InputEvent.class,
+                            Executor.class,
+                            AdServicesOutcomeReceiver.class);
+            registerSourceMethod.invoke(
+                    MEASUREMENT_MANAGER,
+                    Uri.parse(path),
+                    null,
+                    CALLBACK_EXECUTOR,
+                    constructAdServicesReceiver(timer));
+        }
 
         Log.i(TAG, generateLogLabel(testClassName, testName, timer.elapsed(TimeUnit.MILLISECONDS)));
     }
 
-    protected void runGetMeasurementApiStatus(String testClassName, String testName) {
+    protected void runGetMeasurementApiStatus(String testClassName, String testName)
+            throws Exception {
         Stopwatch timer = Stopwatch.createStarted();
 
-        MEASUREMENT_MANAGER.getMeasurementApiStatus(
-                CALLBACK_EXECUTOR,
-                new OutcomeReceiver<Integer, Exception>() {
-                    @Override
-                    public void onResult(@NonNull Integer ignoredResult) {
-                        timer.stop();
-                    }
+        if (SdkLevel.isAtLeastS()) {
+            MEASUREMENT_MANAGER.getMeasurementApiStatus(
+                    CALLBACK_EXECUTOR,
+                    new android.os.OutcomeReceiver<Integer, Exception>() {
+                        @Override
+                        public void onResult(@NonNull Integer ignoredResult) {
+                            timer.stop();
+                        }
 
-                    @Override
-                    public void onError(@NonNull Exception error) {
-                        timer.stop();
-                        Assert.fail();
-                    }
-                });
+                        @Override
+                        public void onError(@NonNull Exception error) {
+                            timer.stop();
+                            Assert.fail();
+                        }
+                    });
+
+        } else {
+            // TODO (b/298437332): Remove API access via reflection once APIs are unhidden.
+            Method registerSourceMethod =
+                    MeasurementManager.class.getMethod(
+                            "getMeasurementApiStatus",
+                            Executor.class,
+                            AdServicesOutcomeReceiver.class);
+            registerSourceMethod.invoke(
+                    MEASUREMENT_MANAGER, CALLBACK_EXECUTOR, constructAdServicesReceiver(timer));
+        }
 
         Log.i(TAG, generateLogLabel(testClassName, testName, timer.elapsed(TimeUnit.MILLISECONDS)));
     }
@@ -147,19 +175,57 @@ public class AbstractMeasurementLatencyTest {
 
     protected void warmupAdServices() throws Exception {
         final String path = SERVER_BASE_URI + SOURCE_PATH;
-        MEASUREMENT_MANAGER.registerSource(
-                Uri.parse(path),
-                /* inputEvent */ null,
-                CALLBACK_EXECUTOR,
-                new OutcomeReceiver<Object, Exception>() {
-                    @Override
-                    public void onResult(@NonNull Object ignoredResult) {}
 
-                    @Override
-                    public void onError(@NonNull Exception error) {
-                        Assert.fail();
-                    }
-                });
+        if (SdkLevel.isAtLeastS()) {
+            MEASUREMENT_MANAGER.registerSource(
+                    Uri.parse(path),
+                    /* inputEvent */ null,
+                    CALLBACK_EXECUTOR,
+                    new android.os.OutcomeReceiver<Object, Exception>() {
+                        @Override
+                        public void onResult(@NonNull Object ignoredResult) {}
+
+                        @Override
+                        public void onError(@NonNull Exception error) {
+                            Assert.fail();
+                        }
+                    });
+        } else {
+            // TODO (b/298437332): Remove API access via reflection once APIs are unhidden.
+            Method registerSourceMethod =
+                    MeasurementManager.class.getMethod(
+                            "registerSource",
+                            Uri.class,
+                            InputEvent.class,
+                            Executor.class,
+                            AdServicesOutcomeReceiver.class);
+            registerSourceMethod.invoke(
+                    MEASUREMENT_MANAGER,
+                    Uri.parse(path),
+                    null,
+                    CALLBACK_EXECUTOR,
+                    constructAdServicesReceiver(null));
+        }
+    }
+
+    private static AdServicesOutcomeReceiver<Object, Exception> constructAdServicesReceiver(
+            @Nullable Stopwatch timer) {
+        return new AdServicesOutcomeReceiver<>() {
+            @Override
+            public void onResult(@NonNull Object ignoredResult) {
+                if (timer != null) {
+                    timer.stop();
+                }
+            }
+
+            @Override
+            public void onError(@NonNull Exception error) {
+                if (timer != null) {
+                    timer.stop();
+                }
+                Assert.fail();
+            }
+        };
     }
 
     private static UiDevice getUiDevice() {
@@ -170,6 +236,15 @@ public class AbstractMeasurementLatencyTest {
     }
 
     protected static void setFlagsForMeasurement() throws Exception {
+        if (SdkLevel.isAtLeastS()) {
+            // Only supported on Android S+
+            ShellUtils.runShellCommand("device_config set_sync_disabled_for_tests persistent");
+        } else {
+            // Enable airplane mode to disable flag sync as an alternative solution on Android R-.
+            ShellUtils.runShellCommand("settings put global airplane_mode_on 1");
+            ShellUtils.runShellCommand("am broadcast -a android.intent.action.AIRPLANE_MODE");
+        }
+
         // Override consent manager behavior to give user consent.
         getUiDevice()
                 .executeShellCommand("setprop debug.adservices.consent_manager_debug_mode true");

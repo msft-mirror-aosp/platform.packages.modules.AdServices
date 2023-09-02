@@ -23,6 +23,7 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.os.Build;
 import android.os.RemoteException;
 
@@ -40,7 +41,6 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.profiling.Tracing;
-import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.BuyerInput;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAudienceInput;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.AdServicesStatsLog;
@@ -52,6 +52,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.protobuf.ByteString;
 
 import java.security.SecureRandom;
@@ -59,12 +60,20 @@ import java.time.Clock;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 /** Runner class for GetAdSelectionData service */
 @RequiresApi(Build.VERSION_CODES.S)
 public class GetAdSelectionDataRunner {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+
+    @VisibleForTesting
+    static final String GET_AD_SELECTION_DATA_TIMED_OUT =
+            "GetAdSelectionData exceeded allowed time limit";
+
     @VisibleForTesting static final int REVOKED_CONSENT_RANDOM_DATA_SIZE = 1024;
     @NonNull private final ObliviousHttpEncryptor mObliviousHttpEncryptor;
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
@@ -72,6 +81,7 @@ public class GetAdSelectionDataRunner {
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
+    @NonNull private final ScheduledThreadPoolExecutor mScheduledExecutor;
     @NonNull private final Flags mFlags;
     private final int mCallerUid;
 
@@ -90,6 +100,7 @@ public class GetAdSelectionDataRunner {
             @NonNull final AdFilterer adFilterer,
             @NonNull final ExecutorService backgroundExecutorService,
             @NonNull final ExecutorService lightweightExecutorService,
+            @NonNull final ScheduledThreadPoolExecutor scheduledExecutor,
             @NonNull final Flags flags,
             final int callerUid,
             @NonNull final DevContext devContext) {
@@ -100,6 +111,7 @@ public class GetAdSelectionDataRunner {
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(lightweightExecutorService);
+        Objects.requireNonNull(scheduledExecutor);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(devContext);
 
@@ -109,6 +121,7 @@ public class GetAdSelectionDataRunner {
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
+        mScheduledExecutor = scheduledExecutor;
         mFlags = flags;
         mCallerUid = callerUid;
         mDevContext = devContext;
@@ -119,9 +132,12 @@ public class GetAdSelectionDataRunner {
                 new BuyerInputGenerator(
                         mCustomAudienceDao,
                         adFilterer,
-                        mFlags,
                         mLightweightExecutorService,
-                        mBackgroundExecutorService);
+                        mBackgroundExecutorService,
+                        mFlags.getFledgeCustomAudienceActiveTimeWindowInMs(),
+                        mFlags.getFledgeAuctionServerEnableAdFilterInGetAdSelectionData(),
+                        AuctionServerDataCompressorFactory.getDataCompressor(
+                                mFlags.getFledgeAuctionServerCompressionAlgorithmVersion()));
         mDataCompressor =
                 AuctionServerDataCompressorFactory.getDataCompressor(
                         mFlags.getFledgeAuctionServerCompressionAlgorithmVersion());
@@ -140,6 +156,7 @@ public class GetAdSelectionDataRunner {
             @NonNull final AdFilterer adFilterer,
             @NonNull final ExecutorService backgroundExecutorService,
             @NonNull final ExecutorService lightweightExecutorService,
+            @NonNull final ScheduledThreadPoolExecutor scheduledExecutor,
             @NonNull final Flags flags,
             final int callerUid,
             @NonNull final DevContext devContext,
@@ -151,6 +168,7 @@ public class GetAdSelectionDataRunner {
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(lightweightExecutorService);
+        Objects.requireNonNull(scheduledExecutor);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(clock);
@@ -161,6 +179,7 @@ public class GetAdSelectionDataRunner {
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
+        mScheduledExecutor = scheduledExecutor;
         mFlags = flags;
         mCallerUid = callerUid;
         mDevContext = devContext;
@@ -171,9 +190,12 @@ public class GetAdSelectionDataRunner {
                 new BuyerInputGenerator(
                         mCustomAudienceDao,
                         adFilterer,
-                        mFlags,
                         mLightweightExecutorService,
-                        mBackgroundExecutorService);
+                        mBackgroundExecutorService,
+                        mFlags.getFledgeCustomAudienceActiveTimeWindowInMs(),
+                        mFlags.getFledgeAuctionServerEnableAdFilterInGetAdSelectionData(),
+                        AuctionServerDataCompressorFactory.getDataCompressor(
+                                mFlags.getFledgeAuctionServerCompressionAlgorithmVersion()));
         mDataCompressor =
                 AuctionServerDataCompressorFactory.getDataCompressor(
                         mFlags.getFledgeAuctionServerCompressionAlgorithmVersion());
@@ -268,9 +290,10 @@ public class GetAdSelectionDataRunner {
         int traceCookie = Tracing.beginAsyncSection(Tracing.ORCHESTRATE_GET_AD_SELECTION_DATA);
         long keyFetchTimeout = mFlags.getFledgeAuctionServerAuctionKeyFetchTimeoutMs();
         return mBuyerInputGenerator
-                .createBuyerInputs()
+                .createCompressedBuyerInputs()
                 .transform(
-                        buyerInputs -> createPayload(buyerInputs, packageName, adSelectionId),
+                        compressedBuyerInputs ->
+                                createPayload(compressedBuyerInputs, packageName, adSelectionId),
                         mLightweightExecutorService)
                 .transformAsync(
                         formatted -> {
@@ -288,13 +311,27 @@ public class GetAdSelectionDataRunner {
                                     Tracing.ORCHESTRATE_GET_AD_SELECTION_DATA, traceCookie);
                             return encryptedBytes;
                         },
+                        mLightweightExecutorService)
+                .withTimeout(
+                        mFlags.getFledgeAuctionServerOverallTimeoutMs(),
+                        TimeUnit.MILLISECONDS,
+                        mScheduledExecutor)
+                .catching(
+                        TimeoutException.class,
+                        this::handleTimeoutError,
                         mLightweightExecutorService);
     }
 
+    @Nullable
+    private byte[] handleTimeoutError(TimeoutException e) {
+        sLogger.e(e, GET_AD_SELECTION_DATA_TIMED_OUT);
+        throw new UncheckedTimeoutException(GET_AD_SELECTION_DATA_TIMED_OUT);
+    }
+
     private AuctionServerPayloadFormattedData createPayload(
-            Map<AdTechIdentifier, BuyerInput> buyerInputs, String packageName, long adSelectionId) {
-        Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedBuyerInput =
-                compressEachBuyerInput(buyerInputs);
+            Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedBuyerInput,
+            String packageName,
+            long adSelectionId) {
         ProtectedAudienceInput protectedAudienceInput =
                 composeProtectedAudienceInputBytes(
                         compressedBuyerInput, packageName, adSelectionId);
@@ -314,30 +351,13 @@ public class GetAdSelectionDataRunner {
                             AdSelectionInitialization.builder()
                                     .setSeller(seller)
                                     .setCallerPackageName(packageName)
+                                    .setCreationInstant(mClock.instant())
                                     .build();
                     mAdSelectionEntryDao.persistAdSelectionInitialization(
-                            adSelectionId, adSelectionInitialization, mClock.instant());
+                            adSelectionId, adSelectionInitialization);
                     Tracing.endAsyncSection(Tracing.PERSIST_AD_SELECTION_ID_REQUEST, traceCookie);
                     return encryptedBytes;
                 });
-    }
-
-    private Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData>
-            compressEachBuyerInput(Map<AdTechIdentifier, BuyerInput> buyerInputMap) {
-        // TODO(b/284302132): Move inside the BuyerInputGenerator
-        return buyerInputMap.entrySet().parallelStream()
-                .collect(
-                        Collectors.toMap(
-                                e -> e.getKey(),
-                                e -> {
-                                    sLogger.v(
-                                            String.format(
-                                                    "Compressing request for buyer %s",
-                                                    e.getKey().toString()));
-                                    return mDataCompressor.compress(
-                                            AuctionServerDataCompressor.UncompressedData.create(
-                                                    e.getValue().toByteArray()));
-                                }));
     }
 
     @VisibleForTesting
