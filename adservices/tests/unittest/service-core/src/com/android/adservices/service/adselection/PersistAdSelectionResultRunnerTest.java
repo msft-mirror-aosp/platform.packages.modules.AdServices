@@ -306,6 +306,14 @@ public class PersistAdSelectionResultRunnerTest {
 
     private static final AuctionResult CHAFF_AUCTION_RESULT =
             AuctionResult.newBuilder().setIsChaff(true).build();
+    private static final AuctionResult AUCTION_RESULT_WITH_ERROR =
+            AuctionResult.newBuilder()
+                    .setError(
+                            AuctionResult.Error.newBuilder()
+                                    .setCode(-1)
+                                    .setMessage("AuctionServerError: Bad things happened!")
+                                    .build())
+                    .build();
     private static final byte[] CIPHER_TEXT_BYTES =
             "encrypted-cipher-for-auction-result".getBytes();
     private static final long AD_SELECTION_ID = 12345L;
@@ -776,6 +784,33 @@ public class PersistAdSelectionResultRunnerTest {
     }
 
     @Test
+    public void testRunner_persistAdSelectionResultError_noResultPersisted() throws Exception {
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        doReturn(prepareDecryptedAuctionResultWithError())
+                .when(mObliviousHttpEncryptorMock)
+                .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
+
+        mAdSelectionEntryDaoSpy.persistAdSelectionInitialization(
+                AD_SELECTION_ID, INITIALIZATION_DATA);
+
+        PersistAdSelectionResultInput inputParams =
+                new PersistAdSelectionResultInput.Builder()
+                        .setSeller(SELLER)
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionResult(CIPHER_TEXT_BYTES)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+        PersistAdSelectionResultTestCallback callback =
+                invokePersistAdSelectionResult(mPersistAdSelectionResultRunner, inputParams);
+
+        Assert.assertFalse(callback.mIsSuccess);
+        Assert.assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
+        verify(mObliviousHttpEncryptorMock, times(1))
+                .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
+    }
+
+    @Test
     public void testRunner_persistAdSelectionResult_timeoutFailure() throws Exception {
         doReturn(mFlags).when(FlagsFactory::getFlags);
 
@@ -1023,6 +1058,18 @@ public class PersistAdSelectionResultRunnerTest {
 
     private byte[] prepareDecryptedChaffAuctionResult() {
         byte[] auctionResultBytes = CHAFF_AUCTION_RESULT.toByteArray();
+        AuctionServerDataCompressor.CompressedData compressedData =
+                mDataCompressor.compress(
+                        AuctionServerDataCompressor.UncompressedData.create(auctionResultBytes));
+        AuctionServerPayloadFormattedData formattedData =
+                mPayloadFormatter.apply(
+                        AuctionServerPayloadUnformattedData.create(compressedData.getData()),
+                        AuctionServerDataCompressorGzip.VERSION);
+        return formattedData.getData();
+    }
+
+    private byte[] prepareDecryptedAuctionResultWithError() {
+        byte[] auctionResultBytes = AUCTION_RESULT_WITH_ERROR.toByteArray();
         AuctionServerDataCompressor.CompressedData compressedData =
                 mDataCompressor.compress(
                         AuctionServerDataCompressor.UncompressedData.create(auctionResultBytes));
