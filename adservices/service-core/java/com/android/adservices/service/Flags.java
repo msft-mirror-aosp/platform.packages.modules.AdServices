@@ -1237,7 +1237,7 @@ public interface Flags {
     }
 
     String FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI =
-            "https://d38za9ovyr65qt.cloudfront.net/v1alpha/publicKeys";
+            "https://publickeyservice-test1.bas-kms.xyz/v1alpha/publicKeys";
 
     /**
      * @return Uri to fetch auction encryption key for fledge ad selection.
