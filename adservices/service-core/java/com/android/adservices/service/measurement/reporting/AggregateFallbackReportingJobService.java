@@ -137,21 +137,20 @@ public final class AggregateFallbackReportingJobService extends JobService {
 
     /** Schedules {@link AggregateFallbackReportingJobService} */
     @VisibleForTesting
-    static void schedule(Context context, JobScheduler jobScheduler) {
-        final JobInfo job =
-                new JobInfo.Builder(
-                                MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID,
-                                new ComponentName(
-                                        context, AggregateFallbackReportingJobService.class))
-                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                        .setRequiresDeviceIdle(true)
-                        .setRequiresBatteryNotLow(true)
-                        .setPeriodic(
-                                AdServicesConfig
-                                        .getMeasurementAggregateFallbackReportingJobPeriodMs())
-                        .setPersisted(true)
-                        .build();
-        jobScheduler.schedule(job);
+    static void schedule(JobScheduler jobScheduler, JobInfo jobInfo) {
+        jobScheduler.schedule(jobInfo);
+    }
+
+    private static JobInfo buildJobInfo(Context context) {
+        return new JobInfo.Builder(
+                        MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID,
+                        new ComponentName(context, AggregateFallbackReportingJobService.class))
+                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                .setRequiresDeviceIdle(true)
+                .setRequiresBatteryNotLow(true)
+                .setPeriodic(AdServicesConfig.getMeasurementAggregateFallbackReportingJobPeriodMs())
+                .setPersisted(true)
+                .build();
     }
 
     /**
@@ -172,11 +171,12 @@ public final class AggregateFallbackReportingJobService extends JobService {
             return;
         }
 
-        final JobInfo job =
+        final JobInfo scheduledJob =
                 jobScheduler.getPendingJob(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
-        if (job == null || forceSchedule) {
-            schedule(context, jobScheduler);
+        JobInfo jobInfo = buildJobInfo(context);
+        if (forceSchedule || !jobInfo.equals(scheduledJob)) {
+            schedule(jobScheduler, jobInfo);
             LogUtil.d("Scheduled AggregateFallbackReportingJobService");
         } else {
             LogUtil.d(

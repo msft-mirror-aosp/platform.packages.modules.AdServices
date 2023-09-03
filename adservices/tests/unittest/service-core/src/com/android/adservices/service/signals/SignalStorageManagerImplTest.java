@@ -81,7 +81,7 @@ public class SignalStorageManagerImplTest {
                 mSignalStorage.getSignals(BUYER).get(generateKey(seed));
 
         Assert.assertEquals(NOW, protectedSignals.get(0).getCreationTime());
-        Assert.assertEquals(generateValue(seed), protectedSignals.get(0).getValue());
+        Assert.assertEquals(generateValue(seed), protectedSignals.get(0).getBase64EncodedValue());
         Assert.assertEquals(generatePackageName(seed), protectedSignals.get(0).getPackageName());
     }
 

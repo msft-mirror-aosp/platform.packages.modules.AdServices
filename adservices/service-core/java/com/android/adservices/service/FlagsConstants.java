@@ -297,6 +297,14 @@ public final class FlagsConstants {
     public static final String KEY_FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B =
             "fledge_background_fetch_max_response_size_b";
 
+    // Protected Signals Periodic Encoding keys
+    public static final String KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED =
+            "protected_signals_periodic_encoding_enabled";
+    public static final String KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS =
+            "protected_signals_periodic_encoding_job_period_ms";
+    public static final String KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS =
+            "protected_signals_periodic_encoding_job_flex_ms";
+
     // FLEDGE Ad Selection keys
     public static final String KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT =
             "fledge_ad_selection_max_concurrent_bidding_count";
@@ -392,6 +400,8 @@ public final class FlagsConstants {
             "fledge_auction_server_enabled_for_update_histogram";
     public static final String KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION =
             "fledge_auction_server_enabled_for_select_ads_mediation";
+    public static final String KEY_FLEDGE_AUCTION_SERVER_ENABLE_AD_FILTER_IN_GET_AD_SELECTION_DATA =
+            "fledge_auction_server_enable_ad_filter_in_get_ad_selection_data";
     public static final String KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES =
             "fledge_auction_server_payload_bucket_sizes";
     public static final String KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI =

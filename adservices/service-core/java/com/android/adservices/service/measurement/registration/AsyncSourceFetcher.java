@@ -56,10 +56,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -763,6 +766,17 @@ public class AsyncSourceFetcher {
                     SourceRequestContract.SOURCE_INFO,
                     asyncRegistration.getSourceType().toString());
             urlConnection.setInstanceFollowRedirects(false);
+            String body = asyncRegistration.getPostBody();
+            if (mFlags.getFledgeMeasurementReportAndRegisterEventApiEnabled() && body != null) {
+                urlConnection.setRequestProperty("Content-Type", "text/plain");
+                urlConnection.setDoOutput(true);
+                OutputStream os = urlConnection.getOutputStream();
+                OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8);
+                osw.write(body);
+                osw.flush();
+                osw.close();
+            }
+
             headers = urlConnection.getHeaderFields();
             asyncFetchStatus.setResponseSize(FetcherUtil.calculateHeadersCharactersLength(headers));
             int responseCode = urlConnection.getResponseCode();

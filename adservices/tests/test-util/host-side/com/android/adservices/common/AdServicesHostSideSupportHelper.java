@@ -66,12 +66,20 @@ public final class AdServicesHostSideSupportHelper {
     // that gets system properties) so it can be used by device and host sides
     private static boolean isDeviceSupportedByDefault(ITestDevice device)
             throws DeviceNotAvailableException {
-        return !isLowRamDevice(device) // Android Go
-                && !device.hasFeature(FEATURE_WATCH)
-                && !device.hasFeature(FEATURE_AUTOMOTIVE)
-                && !device.hasFeature(FEATURE_LEANBACK);
+        return isPhone(device) && !isLowRamDevice(device);
     }
 
+    private static boolean isPhone(ITestDevice device) throws DeviceNotAvailableException {
+        boolean isIt =
+                !device.hasFeature(FEATURE_WATCH)
+                        && !device.hasFeature(FEATURE_AUTOMOTIVE)
+                        && !device.hasFeature(FEATURE_LEANBACK);
+        // TODO(b/284744130): need to figure out how to filter out tablets
+        sLogger.v("isPhone(): returning %b", isIt);
+        return isIt;
+    }
+
+    // TODO(b/297408848): rename to isAdservicesLiteDevice() or something like that
     /** Checks whether the device has low ram. */
     public static boolean isLowRamDevice(ITestDevice device) throws DeviceNotAvailableException {
         if (isDebuggable(device)) {
@@ -89,8 +97,13 @@ public final class AdServicesHostSideSupportHelper {
         }
 
         boolean isLowRamDevice = "true".equals(device.getProperty(SYSTEM_PROPERTY_CONFIG_LOW_RAM));
-        sLogger.v("isLowRamDevice(): returning non-simulated value (%b)", isLowRamDevice);
-        return isLowRamDevice;
+        boolean isPhone = isPhone(device);
+        boolean isIt = isPhone && isLowRamDevice;
+        sLogger.v(
+                "isLowRamDevice(): returning non-simulated value %b when isPhone=%b and"
+                        + " isLowRamDevice=%b",
+                isIt, isPhone, isLowRamDevice);
+        return isIt;
     }
 
     private AdServicesHostSideSupportHelper() {

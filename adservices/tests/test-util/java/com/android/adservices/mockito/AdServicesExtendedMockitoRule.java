@@ -17,7 +17,6 @@
 package com.android.adservices.mockito;
 
 import com.android.modules.utils.testing.AbstractExtendedMockitoRule;
-import com.android.modules.utils.testing.AbstractExtendedMockitoRule.AbstractBuilder;
 import com.android.modules.utils.testing.ExtendedMockitoRule;
 import com.android.modules.utils.testing.StaticMockFixture;
 

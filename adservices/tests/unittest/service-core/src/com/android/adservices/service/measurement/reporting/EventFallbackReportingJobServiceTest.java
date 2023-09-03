@@ -42,6 +42,7 @@ import static org.mockito.Mockito.verify;
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
+import android.content.ComponentName;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -274,11 +275,24 @@ public class EventFallbackReportingJobServiceTest {
                     // Setup
                     disableKillSwitch();
 
-                    final Context mockContext = mock(Context.class);
+                    final Context mockContext = spy(ApplicationProvider.getApplicationContext());
                     doReturn(mMockJobScheduler)
                             .when(mockContext)
                             .getSystemService(JobScheduler.class);
-                    final JobInfo mockJobInfo = mock(JobInfo.class);
+                    long periodMs =
+                            AdServicesConfig.getMeasurementEventFallbackReportingJobPeriodMs();
+                    final JobInfo mockJobInfo =
+                            new JobInfo.Builder(
+                                            MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID,
+                                            new ComponentName(
+                                                    mockContext,
+                                                    EventFallbackReportingJobService.class))
+                                    .setRequiresDeviceIdle(true)
+                                    .setRequiresBatteryNotLow(true)
+                                    .setPeriodic(periodMs)
+                                    .setPersisted(true)
+                                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                                    .build();
                     doReturn(mockJobInfo)
                             .when(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID));
@@ -290,6 +304,47 @@ public class EventFallbackReportingJobServiceTest {
                     // Validate
                     ExtendedMockito.verify(
                             () -> EventFallbackReportingJobService.schedule(any(), any()), never());
+                    verify(mMockJobScheduler, times(1))
+                            .getPendingJob(eq(MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID));
+                });
+    }
+
+    @Test
+    public void scheduleIfNeeded_diffJobInfo_doesSchedule() throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    disableKillSwitch();
+
+                    final Context mockContext = spy(ApplicationProvider.getApplicationContext());
+                    doReturn(mMockJobScheduler)
+                            .when(mockContext)
+                            .getSystemService(JobScheduler.class);
+                    long periodMs =
+                            AdServicesConfig.getMeasurementEventFallbackReportingJobPeriodMs();
+                    final JobInfo mockJobInfo =
+                            new JobInfo.Builder(
+                                            MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID,
+                                            new ComponentName(
+                                                    mockContext,
+                                                    EventFallbackReportingJobService.class))
+                                    .setRequiresDeviceIdle(true)
+                                    .setRequiresBatteryNotLow(true)
+                                    // difference
+                                    .setPeriodic(periodMs - 1)
+                                    .setPersisted(true)
+                                    .build();
+                    doReturn(mockJobInfo)
+                            .when(mMockJobScheduler)
+                            .getPendingJob(eq(MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID));
+
+                    // Execute
+                    EventFallbackReportingJobService.scheduleIfNeeded(
+                            mockContext, /* forceSchedule = */ false);
+
+                    // Validate
+                    ExtendedMockito.verify(
+                            () -> EventFallbackReportingJobService.schedule(any(), any()));
                     verify(mMockJobScheduler, times(1))
                             .getPendingJob(eq(MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID));
                 });
@@ -358,13 +413,19 @@ public class EventFallbackReportingJobServiceTest {
         runWithMocks(
                 () -> {
                     // Setup
+                    disableKillSwitch();
+                    Context spyContext = spy(CONTEXT);
                     final JobScheduler jobScheduler = mock(JobScheduler.class);
                     final ArgumentCaptor<JobInfo> captor = ArgumentCaptor.forClass(JobInfo.class);
+                    doReturn(jobScheduler).when(spyContext).getSystemService(JobScheduler.class);
+                    doReturn(null)
+                            .when(jobScheduler)
+                            .getPendingJob(eq(MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID));
 
                     // Execute
                     ExtendedMockito.doCallRealMethod()
                             .when(() -> EventFallbackReportingJobService.schedule(any(), any()));
-                    EventFallbackReportingJobService.schedule(mock(Context.class), jobScheduler);
+                    EventFallbackReportingJobService.scheduleIfNeeded(spyContext, true);
 
                     // Validate
                     verify(jobScheduler, times(1)).schedule(captor.capture());
