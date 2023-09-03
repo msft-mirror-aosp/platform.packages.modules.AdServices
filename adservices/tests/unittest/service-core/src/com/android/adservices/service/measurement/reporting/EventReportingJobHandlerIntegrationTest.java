@@ -24,6 +24,8 @@ import com.android.adservices.data.measurement.AbstractDbIntegrationTest;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DbState;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.stats.AdServicesLogger;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -42,6 +44,8 @@ import java.util.Objects;
 public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrationTest {
     private final JSONObject mParam;
     private final EnrollmentDao mEnrollmentDao;
+    private final Flags mFlags;
+    private final AdServicesLogger mLogger;
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> data() throws IOException, JSONException {
@@ -57,6 +61,8 @@ public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrati
         super(input, output);
         mParam = param;
         mEnrollmentDao = Mockito.mock(EnrollmentDao.class);
+        mFlags = Mockito.mock(Flags.class);
+        mLogger = Mockito.mock(AdServicesLogger.class);
     }
 
     public enum Action {
@@ -73,7 +79,9 @@ public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrati
         DatastoreManager datastoreManager =
                 new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
         EventReportingJobHandler spyReportingService =
-                Mockito.spy(new EventReportingJobHandler(mEnrollmentDao, datastoreManager));
+                Mockito.spy(
+                        new EventReportingJobHandler(
+                                mEnrollmentDao, datastoreManager, null, mFlags, mLogger));
         try {
             Mockito.doReturn(returnCode)
                     .when(spyReportingService)

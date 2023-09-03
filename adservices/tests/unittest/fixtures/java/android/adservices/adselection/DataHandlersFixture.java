@@ -89,7 +89,6 @@ public class DataHandlersFixture {
 
     public static AdSelectionInitialization AD_SELECTION_INITIALIZATION_1 =
             getAdSelectionInitialization(SELLER_1, TEST_PACKAGE_NAME_1);
-
     public static DBAdSelectionInitialization DB_AD_SELECTION_INITIALIZATION_1 =
             DBAdSelectionInitialization.builder()
                     .setAdSelectionId(AD_SELECTION_ID_1)
@@ -193,7 +192,7 @@ public class DataHandlersFixture {
 
     public static AdSelectionInitialization getAdSelectionInitialization(
             AdTechIdentifier seller, String callerPackageName) {
-        return AdSelectionInitialization.create(seller, callerPackageName);
+        return AdSelectionInitialization.create(seller, callerPackageName, CREATION_INSTANT_1);
     }
 
     public static AdSelectionResultBidAndUri getAdSelectionResultBidAndUri(

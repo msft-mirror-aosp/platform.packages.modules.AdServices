@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.registration;
 
+import static com.android.adservices.service.measurement.util.JobLockHolder.Type.ASYNC_REGISTRATION_PROCESSING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB;
 
@@ -30,16 +31,20 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.service.measurement.util.JobLockHolder;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.concurrent.Future;
 
 /** Fallback Job Service for servicing queued registration requests */
 public class AsyncRegistrationFallbackJobService extends JobService {
     private static final int MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID =
             MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB.getJobId();
+
+    private Future mExecutorFuture;
 
     @Override
     public boolean onStartJob(JobParameters params) {
@@ -67,32 +72,48 @@ public class AsyncRegistrationFallbackJobService extends JobService {
         LogUtil.d(
                 "AsyncRegistrationFallbackJobService.onStartJob " + "at %s",
                 jobStartTime.toString());
-        AsyncRegistrationQueueRunner asyncQueueRunner =
-                AsyncRegistrationQueueRunner.getInstance(getApplicationContext());
 
-        AdServicesExecutors.getBackgroundExecutor()
-                .execute(
-                        () -> {
-                            asyncQueueRunner.runAsyncRegistrationQueueWorker();
+        mExecutorFuture =
+                AdServicesExecutors.getBlockingExecutor()
+                        .submit(
+                                () -> {
+                                    processAsyncRecords();
 
-                            boolean shouldRetry = false;
-                            AdservicesJobServiceLogger.getInstance(
-                                            AsyncRegistrationFallbackJobService.this)
-                                    .recordJobFinished(
-                                            MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID,
-                                            /* isSuccessful */ true,
-                                            shouldRetry);
+                                    boolean shouldRetry = false;
+                                    AdservicesJobServiceLogger.getInstance(
+                                                    AsyncRegistrationFallbackJobService.this)
+                                            .recordJobFinished(
+                                                    MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID,
+                                                    /* isSuccessful */ true,
+                                                    shouldRetry);
 
-                            jobFinished(params, false);
-                        });
+                                    jobFinished(params, false);
+                                });
         return true;
+    }
+
+    @VisibleForTesting
+    void processAsyncRecords() {
+        final JobLockHolder lock = JobLockHolder.getInstance(ASYNC_REGISTRATION_PROCESSING);
+        if (lock.tryLock()) {
+            try {
+                AsyncRegistrationQueueRunner.getInstance(getApplicationContext())
+                        .runAsyncRegistrationQueueWorker();
+                return;
+            } finally {
+                lock.unlock();
+            }
+        }
+        LogUtil.d("AsyncRegistrationFallbackQueueJobService did not acquire the lock");
     }
 
     @Override
     public boolean onStopJob(JobParameters params) {
         LogUtil.d("AsyncRegistrationFallbackJobService.onStopJob");
-        boolean shouldRetry = false;
-
+        boolean shouldRetry = true;
+        if (mExecutorFuture != null) {
+            shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
+        }
         AdservicesJobServiceLogger.getInstance(this)
                 .recordOnStopJob(
                         params, MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID, shouldRetry);
@@ -100,19 +121,8 @@ public class AsyncRegistrationFallbackJobService extends JobService {
     }
 
     @VisibleForTesting
-    protected static void schedule(Context context, JobScheduler jobScheduler) {
-        final JobInfo job =
-                new JobInfo.Builder(
-                                MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID,
-                                new ComponentName(
-                                        context, AsyncRegistrationFallbackJobService.class))
-                        .setRequiresBatteryNotLow(true)
-                        .setPeriodic(
-                                FlagsFactory.getFlags().getAsyncRegistrationJobQueueIntervalMs())
-                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                        .setPersisted(true)
-                        .build();
-        jobScheduler.schedule(job);
+    protected static void schedule(JobScheduler jobScheduler, JobInfo jobInfo) {
+        jobScheduler.schedule(jobInfo);
     }
     /**
      * Schedule Fallback Async Registration Job Service if it is not already scheduled
@@ -132,15 +142,27 @@ public class AsyncRegistrationFallbackJobService extends JobService {
             return;
         }
 
-        final JobInfo job =
+        final JobInfo scheduledJob =
                 jobScheduler.getPendingJob(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
-        if (job == null || forceSchedule) {
-            schedule(context, jobScheduler);
+        final JobInfo jobInfo = buildJobInfo(context);
+        if (forceSchedule || !jobInfo.equals(scheduledJob)) {
+            schedule(jobScheduler, jobInfo);
             LogUtil.d("Scheduled AsyncRegistrationFallbackJobService");
         } else {
             LogUtil.d("AsyncRegistrationFallbackJobService already scheduled, skipping reschedule");
         }
+    }
+
+    private static JobInfo buildJobInfo(Context context) {
+        return new JobInfo.Builder(
+                        MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID,
+                        new ComponentName(context, AsyncRegistrationFallbackJobService.class))
+                .setRequiresBatteryNotLow(true)
+                .setPeriodic(FlagsFactory.getFlags().getAsyncRegistrationJobQueueIntervalMs())
+                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                .setPersisted(true)
+                .build();
     }
 
     private boolean skipAndCancelBackgroundJob(
@@ -160,5 +182,10 @@ public class AsyncRegistrationFallbackJobService extends JobService {
 
         // Returning false to reschedule this job.
         return false;
+    }
+
+    @VisibleForTesting
+    Future getFutureForTesting() {
+        return mExecutorFuture;
     }
 }

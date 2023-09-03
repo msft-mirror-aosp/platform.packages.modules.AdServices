@@ -20,7 +20,7 @@ import com.android.modules.utils.build.SdkLevel;
 
 /** Utility class for handling file names in a backward-compatible manner */
 public final class FileCompatUtils {
-    private static final String ADSERVICES_PREFIX = "adservices_";
+    private static final String ADSERVICES_PREFIX = "adservices";
 
     private FileCompatUtils() {
         // prevent instantiation
@@ -32,6 +32,16 @@ public final class FileCompatUtils {
      * check only for "adservices" so files that begin with this already do not need to be updated
      */
     public static String getAdservicesFilename(String basename) {
-        return SdkLevel.isAtLeastT() ? basename : ADSERVICES_PREFIX + basename;
+        if (SdkLevel.isAtLeastT()
+                || ADSERVICES_PREFIX.regionMatches(
+                        /* ignoreCase= */ true,
+                        /* toffset= */ 0,
+                        basename,
+                        /* ooffset= */ 0,
+                        /* len= */ ADSERVICES_PREFIX.length())) {
+            return basename;
+        }
+
+        return ADSERVICES_PREFIX + "_" + basename;
     }
 }

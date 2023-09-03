@@ -507,6 +507,34 @@ public class CustomAudienceDaoTest {
                     .setTrustedBiddingData(TRUSTED_BIDDING_OVERRIDE_DATA_1)
                     .build();
 
+    private static final DBCustomAudienceQuarantine DB_CUSTOM_AUDIENCE_QUARANTINE_1 =
+            DBCustomAudienceQuarantine.builder()
+                    .setOwner(OWNER_1)
+                    .setBuyer(BUYER_1)
+                    .setQuarantineExpirationTime(ACTIVATION_TIME_1)
+                    .build();
+
+    private static final DBCustomAudienceQuarantine DB_CUSTOM_AUDIENCE_QUARANTINE_2 =
+            DBCustomAudienceQuarantine.builder()
+                    .setOwner(OWNER_2)
+                    .setBuyer(BUYER_2)
+                    .setQuarantineExpirationTime(ACTIVATION_TIME_1)
+                    .build();
+
+    private static final DBCustomAudienceQuarantine DB_CUSTOM_AUDIENCE_QUARANTINE_EXPIRED_1 =
+            DBCustomAudienceQuarantine.builder()
+                    .setOwner(OWNER_1)
+                    .setBuyer(BUYER_1)
+                    .setQuarantineExpirationTime(CREATION_TIME_MINUS_THREE_DAYS)
+                    .build();
+
+    private static final DBCustomAudienceQuarantine DB_CUSTOM_AUDIENCE_QUARANTINE_EXPIRED_2 =
+            DBCustomAudienceQuarantine.builder()
+                    .setOwner(OWNER_3)
+                    .setBuyer(BUYER_3)
+                    .setQuarantineExpirationTime(CREATION_TIME_MINUS_THREE_DAYS)
+                    .build();
+
     private MockitoSession mStaticMockSession = null;
     private CustomAudienceDao mCustomAudienceDao;
 
@@ -533,6 +561,129 @@ public class CustomAudienceDaoTest {
         if (mStaticMockSession != null) {
             mStaticMockSession.finishMocking();
         }
+    }
+
+    @Test
+    public void testPersistCustomAudienceQuarantine() {
+        // Assert table is empty
+        assertFalse(mCustomAudienceDao.doesCustomAudienceQuarantineExist(OWNER_1, BUYER_1));
+        assertFalse(
+                mCustomAudienceDao.doesCustomAudienceQuarantineExist(
+                        OWNER_2, CommonFixture.VALID_BUYER_2));
+
+        mCustomAudienceDao.persistCustomAudienceQuarantineData(DB_CUSTOM_AUDIENCE_QUARANTINE_1);
+
+        // Assert only first object is persisted
+        assertTrue(mCustomAudienceDao.doesCustomAudienceQuarantineExist(OWNER_1, BUYER_1));
+        assertFalse(
+                mCustomAudienceDao.doesCustomAudienceQuarantineExist(
+                        OWNER_2, CommonFixture.VALID_BUYER_2));
+    }
+
+    @Test
+    public void testGetTotalNumberCustomAudienceQuarantine() {
+        // Assert table is empty
+        assertEquals(0, mCustomAudienceDao.getTotalNumCustomAudienceQuarantineEntries());
+
+        mCustomAudienceDao.persistCustomAudienceQuarantineData(DB_CUSTOM_AUDIENCE_QUARANTINE_1);
+        assertEquals(1, mCustomAudienceDao.getTotalNumCustomAudienceQuarantineEntries());
+
+        mCustomAudienceDao.persistCustomAudienceQuarantineData(DB_CUSTOM_AUDIENCE_QUARANTINE_2);
+        assertEquals(2, mCustomAudienceDao.getTotalNumCustomAudienceQuarantineEntries());
+    }
+
+    @Test
+    public void testSafelyInsertCustomAudienceQuarantineEntries() {
+        // Assert table is empty
+        assertFalse(mCustomAudienceDao.doesCustomAudienceQuarantineExist(OWNER_1, BUYER_1));
+        assertFalse(
+                mCustomAudienceDao.doesCustomAudienceQuarantineExist(
+                        OWNER_2, CommonFixture.VALID_BUYER_2));
+
+        mCustomAudienceDao.safelyInsertCustomAudienceQuarantine(DB_CUSTOM_AUDIENCE_QUARANTINE_1, 1);
+        assertThrows(
+                IllegalStateException.class,
+                () ->
+                        mCustomAudienceDao.safelyInsertCustomAudienceQuarantine(
+                                DB_CUSTOM_AUDIENCE_QUARANTINE_2, 1));
+
+        // Assert only first object is persisted
+        assertTrue(mCustomAudienceDao.doesCustomAudienceQuarantineExist(OWNER_1, BUYER_1));
+        assertFalse(
+                mCustomAudienceDao.doesCustomAudienceQuarantineExist(
+                        OWNER_2, CommonFixture.VALID_BUYER_2));
+    }
+
+    @Test
+    public void testClearExpiredCustomAudienceQuarantineEntries() {
+        mCustomAudienceDao.persistCustomAudienceQuarantineData(DB_CUSTOM_AUDIENCE_QUARANTINE_1);
+        mCustomAudienceDao.persistCustomAudienceQuarantineData(
+                DB_CUSTOM_AUDIENCE_QUARANTINE_EXPIRED_2);
+
+        assertTrue(mCustomAudienceDao.doesCustomAudienceQuarantineExist(OWNER_1, BUYER_1));
+        assertTrue(mCustomAudienceDao.doesCustomAudienceQuarantineExist(OWNER_3, BUYER_3));
+
+        int numCleared = mCustomAudienceDao.deleteAllExpiredQuarantineEntries(CREATION_TIME_1);
+
+        // Assert only second object was cleared
+        assertEquals(1, numCleared);
+        assertTrue(mCustomAudienceDao.doesCustomAudienceQuarantineExist(OWNER_1, BUYER_1));
+        assertFalse(mCustomAudienceDao.doesCustomAudienceQuarantineExist(OWNER_3, BUYER_3));
+    }
+
+    @Test
+    public void testOverwritesCustomAudienceQuarantineEntry() {
+        // Persist expired entry
+        mCustomAudienceDao.persistCustomAudienceQuarantineData(
+                DB_CUSTOM_AUDIENCE_QUARANTINE_EXPIRED_1);
+
+        assertTrue(mCustomAudienceDao.doesCustomAudienceQuarantineExist(OWNER_1, BUYER_1));
+
+        int numCleared1 = mCustomAudienceDao.deleteAllExpiredQuarantineEntries(CREATION_TIME_1);
+        // Assert entry was cleared
+        assertEquals(1, numCleared1);
+        assertFalse(mCustomAudienceDao.doesCustomAudienceQuarantineExist(OWNER_1, BUYER_1));
+
+        // Persist expired entry again
+        mCustomAudienceDao.persistCustomAudienceQuarantineData(
+                DB_CUSTOM_AUDIENCE_QUARANTINE_EXPIRED_1);
+
+        // Overwrite expired entry with non expired time
+        mCustomAudienceDao.persistCustomAudienceQuarantineData(DB_CUSTOM_AUDIENCE_QUARANTINE_1);
+
+        assertTrue(mCustomAudienceDao.doesCustomAudienceQuarantineExist(OWNER_1, BUYER_1));
+
+        int numCleared2 = mCustomAudienceDao.deleteAllExpiredQuarantineEntries(CREATION_TIME_1);
+        // Assert entry was not cleared
+        assertEquals(0, numCleared2);
+        assertTrue(mCustomAudienceDao.doesCustomAudienceQuarantineExist(OWNER_1, BUYER_1));
+    }
+
+    @Test
+    public void getCustomAudienceQuarantineExpiration() {
+        assertNull(mCustomAudienceDao.getCustomAudienceQuarantineExpiration(OWNER_1, BUYER_1));
+
+        mCustomAudienceDao.persistCustomAudienceQuarantineData(DB_CUSTOM_AUDIENCE_QUARANTINE_1);
+
+        assertEquals(
+                ACTIVATION_TIME_1,
+                mCustomAudienceDao.getCustomAudienceQuarantineExpiration(OWNER_1, BUYER_1));
+    }
+
+    @Test
+    public void testDeletesSingleCustomAudienceQuarantineEntry() {
+        mCustomAudienceDao.persistCustomAudienceQuarantineData(DB_CUSTOM_AUDIENCE_QUARANTINE_1);
+        mCustomAudienceDao.persistCustomAudienceQuarantineData(DB_CUSTOM_AUDIENCE_QUARANTINE_2);
+
+        assertTrue(mCustomAudienceDao.doesCustomAudienceQuarantineExist(OWNER_1, BUYER_1));
+        assertTrue(mCustomAudienceDao.doesCustomAudienceQuarantineExist(OWNER_2, BUYER_2));
+
+        int numDeleted = mCustomAudienceDao.deleteQuarantineEntry(OWNER_1, BUYER_1);
+
+        assertEquals(1, numDeleted);
+
+        assertFalse(mCustomAudienceDao.doesCustomAudienceQuarantineExist(OWNER_1, BUYER_1));
+        assertTrue(mCustomAudienceDao.doesCustomAudienceQuarantineExist(OWNER_2, BUYER_2));
     }
 
     @Test

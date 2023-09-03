@@ -58,6 +58,9 @@ import java.util.Objects;
  * public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
  *     new AdServicesDeviceSupportedRule();
  * </pre>
+ *
+ * <p><b>NOTE: </b>this class should NOT be used as {@code ClassRule}, as it would result in a "no
+ * tests run" scenario if it throws a {@link AssumptionViolatedException}.
  */
 public abstract class AbstractAdServicesDeviceSupportedRule implements TestRule {
 
@@ -77,6 +80,11 @@ public abstract class AbstractAdServicesDeviceSupportedRule implements TestRule 
 
     @Override
     public Statement apply(Statement base, Description description) {
+        if (!description.isTest()) {
+            throw new IllegalStateException(
+                    "This rule can only be applied to individual tests, it cannot be used as"
+                            + " @ClassRule or in a test suite");
+        }
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {

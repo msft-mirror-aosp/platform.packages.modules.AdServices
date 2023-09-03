@@ -40,7 +40,7 @@ public final class AdServicesFlagsSetterRule
     private AdServicesFlagsSetterRule(boolean usedByLegacyHelper) {
         super(
                 AndroidLogger.getInstance(),
-                namespace -> new DeviceSideDeviceConfigHelper(namespace),
+                namespace -> new DeviceSideDeviceConfigHelper(namespace, usedByLegacyHelper),
                 new DeviceSideSystemPropertiesHelper());
         mUsedByLegacyHelper = usedByLegacyHelper;
     }
@@ -159,9 +159,7 @@ public final class AdServicesFlagsSetterRule
     }
 
     @Override
-    protected void assertCalledByLegacyHelper() {
-        if (!mUsedByLegacyHelper) {
-            throw new UnsupportedOperationException("Only available for legacy helpers");
-        }
+    protected boolean isCalledByLegacyHelper() {
+        return mUsedByLegacyHelper;
     }
 }

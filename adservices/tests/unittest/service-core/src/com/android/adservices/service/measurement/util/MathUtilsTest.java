@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
+
 public class MathUtilsTest {
     @Test
     public void extractValidNumberInRange_success() {
