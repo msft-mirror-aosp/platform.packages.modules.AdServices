@@ -80,6 +80,7 @@ public class BetaUxEuNotificationTriggerTest {
 
     /** Verify no notification is displayed when the entry point is disabled for EU devices. */
     @Test
+    @FlakyTest(bugId = 297119850)
     public void testBetaEuEntryPointDisabled() throws Exception {
         UiUtils.setAsEuDevice();
         UiUtils.enableBeta();
@@ -96,6 +97,7 @@ public class BetaUxEuNotificationTriggerTest {
 
     /** Verify that for EU devices with zeroed-out AdId, the EU notification is displayed. */
     @Test
+    @FlakyTest(bugId = 297119850)
     public void testBetaEuAdIdDisabled() throws Exception {
         UiUtils.setAsEuDevice();
         UiUtils.enableBeta();

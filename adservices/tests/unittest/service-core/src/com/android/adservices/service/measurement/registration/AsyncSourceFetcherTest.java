@@ -82,6 +82,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
@@ -154,6 +155,7 @@ public final class AsyncSourceFetcherTest {
     private static final int UNKNOWN_REGISTRATION_FAILURE_TYPE = 0;
     private static final String PLATFORM_AD_ID_VALUE = "SAMPLE_PLATFORM_AD_ID_VALUE";
     private static final String DEBUG_AD_ID_VALUE = "SAMPLE_DEBUG_AD_ID_VALUE";
+    private static final String POST_BODY = "{\"ad_location\":\"bottom_right\"}";
     AsyncSourceFetcher mFetcher;
 
     @Mock HttpsURLConnection mUrlConnection;
@@ -7230,6 +7232,137 @@ public final class AsyncSourceFetcherTest {
         assertFalse(fetch.isPresent());
     }
 
+    @Test
+    public void fetchSource_postBody_success() throws Exception {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        when(mFlags.getFledgeMeasurementReportAndRegisterEventApiEnabled()).thenReturn(true);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getOutputStream()).thenReturn(outputStream);
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "\"source_event_id\":\"35\"}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequestWithPostBody(request, POST_BODY),
+                        asyncFetchStatus,
+                        asyncRedirect);
+        // Assertion
+        assertEquals(POST_BODY, outputStream.toString());
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void fetchSource_postBodyNull_success() throws Exception {
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        when(mFlags.getFledgeMeasurementReportAndRegisterEventApiEnabled()).thenReturn(true);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "\"source_event_id\":\"35\"}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequestWithPostBody(request, null),
+                        asyncFetchStatus,
+                        asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void fetchSource_postBodyEmpty_success() throws Exception {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        when(mFlags.getFledgeMeasurementReportAndRegisterEventApiEnabled()).thenReturn(true);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getOutputStream()).thenReturn(outputStream);
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "\"source_event_id\":\"35\"}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        String emptyPostBody = "";
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequestWithPostBody(request, emptyPostBody),
+                        asyncFetchStatus,
+                        asyncRedirect);
+        // Assertion
+        assertEquals(emptyPostBody, outputStream.toString());
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void fetchSource_requestBodyDisabled_success() throws Exception {
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        when(mFlags.getFledgeMeasurementReportAndRegisterEventApiEnabled()).thenReturn(false);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "\"source_event_id\":\"35\"}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequestWithPostBody(request, POST_BODY),
+                        asyncFetchStatus,
+                        asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
     private RegistrationRequest buildRequest(String registrationUri) {
         return buildRequest(registrationUri, null);
     }
@@ -7265,6 +7398,7 @@ public final class AsyncSourceFetcherTest {
                 UUID.randomUUID().toString(),
                 false,
                 false,
+                null,
                 null);
     }
 
@@ -7287,7 +7421,31 @@ public final class AsyncSourceFetcherTest {
                 UUID.randomUUID().toString(),
                 false,
                 true,
-                PLATFORM_AD_ID_VALUE);
+                PLATFORM_AD_ID_VALUE,
+                null);
+    }
+
+    public static AsyncRegistration appSourceRegistrationRequestWithPostBody(
+            RegistrationRequest registrationRequest, String postBody) {
+        return createAsyncRegistration(
+                UUID.randomUUID().toString(),
+                registrationRequest.getRegistrationUri(),
+                null,
+                Uri.parse(DEFAULT_DESTINATION),
+                Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + sContext.getPackageName()),
+                null,
+                Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + sContext.getPackageName()),
+                registrationRequest.getRegistrationType() == RegistrationRequest.REGISTER_SOURCE
+                        ? AsyncRegistration.RegistrationType.APP_SOURCE
+                        : AsyncRegistration.RegistrationType.APP_TRIGGER,
+                getSourceType(registrationRequest.getInputEvent()),
+                System.currentTimeMillis(),
+                0,
+                UUID.randomUUID().toString(),
+                false,
+                true,
+                null,
+                postBody);
     }
 
     private static AsyncRegistration webSourceRegistrationRequest(
@@ -7317,6 +7475,7 @@ public final class AsyncSourceFetcherTest {
                     UUID.randomUUID().toString(),
                     arDebugPermission,
                     false,
+                    null,
                     null);
         }
         return null;
@@ -7337,7 +7496,8 @@ public final class AsyncSourceFetcherTest {
             String registrationId,
             boolean debugKeyAllowed,
             boolean adIdPermission,
-            String adIdValue) {
+            String adIdValue,
+            String postBody) {
         return new AsyncRegistration.Builder()
                 .setId(iD)
                 .setRegistrationUri(registrationUri)
@@ -7359,6 +7519,7 @@ public final class AsyncSourceFetcherTest {
                 .setDebugKeyAllowed(debugKeyAllowed)
                 .setAdIdPermission(adIdPermission)
                 .setPlatformAdId(adIdValue)
+                .setPostBody(postBody)
                 .build();
     }
 

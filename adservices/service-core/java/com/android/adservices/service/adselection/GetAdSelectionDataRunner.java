@@ -132,9 +132,12 @@ public class GetAdSelectionDataRunner {
                 new BuyerInputGenerator(
                         mCustomAudienceDao,
                         adFilterer,
-                        mFlags,
                         mLightweightExecutorService,
-                        mBackgroundExecutorService);
+                        mBackgroundExecutorService,
+                        mFlags.getFledgeCustomAudienceActiveTimeWindowInMs(),
+                        mFlags.getFledgeAuctionServerEnableAdFilterInGetAdSelectionData(),
+                        AuctionServerDataCompressorFactory.getDataCompressor(
+                                mFlags.getFledgeAuctionServerCompressionAlgorithmVersion()));
         mDataCompressor =
                 AuctionServerDataCompressorFactory.getDataCompressor(
                         mFlags.getFledgeAuctionServerCompressionAlgorithmVersion());
@@ -187,9 +190,12 @@ public class GetAdSelectionDataRunner {
                 new BuyerInputGenerator(
                         mCustomAudienceDao,
                         adFilterer,
-                        mFlags,
                         mLightweightExecutorService,
-                        mBackgroundExecutorService);
+                        mBackgroundExecutorService,
+                        mFlags.getFledgeCustomAudienceActiveTimeWindowInMs(),
+                        mFlags.getFledgeAuctionServerEnableAdFilterInGetAdSelectionData(),
+                        AuctionServerDataCompressorFactory.getDataCompressor(
+                                mFlags.getFledgeAuctionServerCompressionAlgorithmVersion()));
         mDataCompressor =
                 AuctionServerDataCompressorFactory.getDataCompressor(
                         mFlags.getFledgeAuctionServerCompressionAlgorithmVersion());
