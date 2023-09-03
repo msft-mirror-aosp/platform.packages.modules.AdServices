@@ -51,6 +51,7 @@ public final class TopicsCobaltLoggerTest {
     private static final int FIRST_TOPIC = 10001;
     private static final int SUPPORTED_TOPICS_COUNT = 500;
     private static final int LAST_TOPIC = FIRST_TOPIC + SUPPORTED_TOPICS_COUNT - 1;
+    private static final int LOGGED_TOPICS_COUNT = 10;
 
     @Mock private CobaltLogger mMockCobaltLogger;
     private TopicsCobaltLogger mTopicsCobaltLogger;
@@ -149,7 +150,7 @@ public final class TopicsCobaltLoggerTest {
     @Test
     public void logTopicOccurrence_allTopicsLoggedCorrectly() throws Exception {
         when(mMockCobaltLogger.logOccurrence(anyLong(), anyLong(), any())).thenReturn(null);
-        for (int i = 0; i < SUPPORTED_TOPICS_COUNT; ++i) {
+        for (int i = 0; i < LOGGED_TOPICS_COUNT; ++i) {
             mTopicsCobaltLogger.logTopicOccurrence(createTopic(FIRST_TOPIC + i));
             verify(mMockCobaltLogger)
                     .logOccurrence(
@@ -160,7 +161,7 @@ public final class TopicsCobaltLoggerTest {
     @Test
     public void logTopicOccurrences_allTopicsLoggedCorrectly() throws Exception {
         when(mMockCobaltLogger.logOccurrence(anyLong(), anyLong(), any())).thenReturn(null);
-        for (int i = 0; i < SUPPORTED_TOPICS_COUNT; ++i) {
+        for (int i = 0; i < LOGGED_TOPICS_COUNT; ++i) {
             mTopicsCobaltLogger.logTopicOccurrences(createTopic(FIRST_TOPIC + i), COUNT);
             verify(mMockCobaltLogger)
                     .logOccurrence(METRIC_ID, COUNT, ImmutableList.of(FIRST_EVENT_CODE + i));

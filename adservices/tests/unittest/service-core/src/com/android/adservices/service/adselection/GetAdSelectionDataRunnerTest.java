@@ -218,8 +218,8 @@ public class GetAdSelectionDataRunnerTest {
                         AdSelectionInitialization.builder()
                                 .setSeller(SELLER)
                                 .setCallerPackageName(CALLER_PACKAGE_NAME)
-                                .build(),
-                        AD_SELECTION_INITIALIZATION_INSTANT);
+                                .setCreationInstant(AD_SELECTION_INITIALIZATION_INSTANT)
+                                .build());
         verify(mAdFiltererSpy).filterCustomAudiences(any());
     }
 

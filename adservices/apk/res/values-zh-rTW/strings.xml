@@ -139,7 +139,7 @@
     <string name="settingsUI_topics_title" msgid="5996189869721397937">"Android 推測的興趣喜好"</string>
     <string name="settingsUI_apps_title" msgid="2772289096915264175">"會推測興趣喜好的應用程式"</string>
     <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"廣告評估功能"</string>
-    <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"應用程式可以使用 Privacy Sandbox 評估廣告成效。為達成此目的，廣告客戶可以將你與其廣告和應用程式之間的互動資料，暫時儲存在 Android 系統中。可以儲存的資料量有限，且會定期遭到刪除。\n\n你隨時都可以關閉 Privacy Sandbox，藉此刪除這項資料。"</string>
+    <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"應用程式可以使用 Privacy Sandbox 評估廣告成效。為達成此目的，廣告主可以將你與其廣告和應用程式之間的互動資料，暫時儲存在 Android 系統中。可以儲存的資料量有限，且會定期遭到刪除。\n\n你隨時都可以關閉 Privacy Sandbox，藉此刪除這項資料。"</string>
     <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"Android 會定期根據你所用的應用程式，推測你最感興趣的類別。應用程式可以要求 Android 運用這些興趣喜好向你顯示更貼近需求的廣告。\n\n如果你封鎖某項興趣喜好，那麼除非你解除封鎖，否則該項興趣喜好不會再加入這份清單。請注意，你可能還是會看到某些相關的廣告。"</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"封鎖"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"解除封鎖"</string>
@@ -165,7 +165,7 @@
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"你沒有封鎖任何應用程式"</string>
     <string name="settingsUI_no_blocked_apps_ga_text" msgid="7488680173653861943">"未封鎖任何應用程式"</string>
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"允許廣告評估"</string>
-    <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"應用程式和廣告客戶可要求 Android 提供相關資訊，以便評估所顯示廣告的成效。\n\n廣告評估資料會定期從你的裝置中刪除。"</string>
+    <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"應用程式和廣告主可要求 Android 提供相關資訊，以便評估所顯示廣告的成效。\n\n廣告評估資料會定期從你的裝置中刪除。"</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"重設評估資料"</string>
     <string name="settingsUI_measurement_view_footer_text" msgid="5978750159738729308">"Android 會限制應用程式之間可分享的資訊，藉此保護你的隱私。為保護你的身分資料，系統會延遲傳送報告。\n\n你的瀏覽器可能也有類似設定。如果 Android 和瀏覽器都開啟廣告評估功能，廣告技術公司或許就能在你使用的應用程式和造訪的網站上評估廣告成效差異。瀏覽記錄只會儲存在你的私人裝置上。\n\n想進一步瞭解 Android 如何保護你的資料，請參閱我們的《"<a href="https://policies.google.com/privacy">"隱私權政策"</a>"》。"</string>
     <string name="settingsUI_measurement_are_reset" msgid="4375330550418573499">"廣告評估資料已重設"</string>

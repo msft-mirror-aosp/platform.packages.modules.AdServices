@@ -25,19 +25,25 @@ import org.junit.runners.model.Statement;
 
 import java.util.Objects;
 
-// TODO(b/295269584): move to module-utils
+// TODO(b/295269584): move to module-utils?
 // TODO(b/295269584): add examples
 // TODO(b/295269584): add unit tests
+// TODO(b/295269584): rename to AbstractSdkLevelSupportRule
 
 /**
  * Rule used to skip a test when it's not supported by the device's SDK version.
  *
  * <p>This rule is abstract so subclass can define what a "feature" means. It also doesn't have any
  * dependency on Android code, so it can be used both on device-side and host-side tests.
+ *
+ * <p><b>NOTE: </b>this class should NOT be used as {@code ClassRule}, as it would result in a "no
+ * tests run" scenario if it throws a {@link AssumptionViolatedException}.
  */
 abstract class AbstractSdkLevelSupportedRule implements TestRule {
 
-    private static final String TAG = "SdkLevelSupportedRule";
+    private static final String TAG = "SdkLevelSupportRule";
+
+    // TODO(b/295269584): need to provide more flexible levels (min, max, range, etc..)
 
     private final AndroidSdkLevel mDefaultMinLevel;
     protected final Logger mLog;
@@ -54,9 +60,16 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
 
     @Override
     public final Statement apply(Statement base, Description description) {
+        if (!description.isTest()) {
+            throw new IllegalStateException(
+                    "This rule can only be applied to individual tests, it cannot be used as"
+                            + " @ClassRule or in a test suite");
+        }
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
+                skipIfSdkLevelHigherThanMax(description);
+
                 String testName = description.getDisplayName();
                 MinimumLevelRequired minLevelRequired = getMinimumLevelRequired(description);
                 mLog.v("MinimumLevelRequired for %s: %s", testName, minLevelRequired);
@@ -71,17 +84,11 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
                     case S:
                         skip = !isAtLeastS();
                         break;
-                    case S_V2:
-                        skip = !isAtLeastSv2();
-                        break;
-                    case T:
-                        skip = !isAtLeastT();
-                        break;
                     case U:
                         skip = !isAtLeastU();
                         break;
-                    case V:
-                        skip = !isAtLeastV();
+                    case T:
+                        skip = !isAtLeastT();
                         break;
                     default:
                         // Shouldn't happen
@@ -103,12 +110,26 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
         };
     }
 
-    private MinimumLevelRequired getMinimumLevelRequired(Description description) {
-        RequiresSdkLevelAtLeastV atLeastV =
-                description.getAnnotation(RequiresSdkLevelAtLeastV.class);
-        if (atLeastV != null) {
-            return new MinimumLevelRequired(AndroidSdkLevel.V, atLeastV.reason());
+    protected void skipIfSdkLevelHigherThanMax(Description description) throws Exception {
+        // TODO(b/295269584): for now it only supports (no pun intended) "lessThanT", but
+        // it should support others (in which case it would need explicit minLevel /
+        // maxLevel
+        RequiresSdkLevelLessThanT requiresLessThanT =
+                description.getAnnotation(RequiresSdkLevelLessThanT.class);
+        if (requiresLessThanT != null && isAtLeastT()) {
+            String testName = description.getDisplayName();
+            String reason = requiresLessThanT.reason();
+            String message =
+                    "Test annotated with @RequiresSdkLevelLessThanT "
+                            + (reason.isEmpty()
+                                    ? ""
+                                    : "(reason=" + requiresLessThanT.reason() + ")");
+            mLog.i("Skipping %s: %s", testName, message);
+            throw new AssumptionViolatedException(message);
         }
+    }
+
+    private MinimumLevelRequired getMinimumLevelRequired(Description description) {
         RequiresSdkLevelAtLeastU atLeastU =
                 description.getAnnotation(RequiresSdkLevelAtLeastU.class);
         if (atLeastU != null) {
@@ -118,11 +139,6 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
                 description.getAnnotation(RequiresSdkLevelAtLeastT.class);
         if (atLeastT != null) {
             return new MinimumLevelRequired(AndroidSdkLevel.T, atLeastT.reason());
-        }
-        RequiresSdkLevelAtLeastSv2 atLeastSv2 =
-                description.getAnnotation(RequiresSdkLevelAtLeastSv2.class);
-        if (atLeastSv2 != null) {
-            return new MinimumLevelRequired(AndroidSdkLevel.S_V2, atLeastSv2.reason());
         }
         RequiresSdkLevelAtLeastS atLeastS =
                 description.getAnnotation(RequiresSdkLevelAtLeastS.class);
@@ -159,33 +175,19 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
     /** Gets whether the device supports at least Android {@code S}. */
     public abstract boolean isAtLeastS() throws Exception;
 
-    /** Gets whether the device supports at least Android {@code S_V2}. */
-    public abstract boolean isAtLeastSv2() throws Exception;
-
     /** Gets whether the device supports at least Android {@code T}. */
     public abstract boolean isAtLeastT() throws Exception;
 
     /** Gets whether the device supports at least Android {@code U}. */
     public abstract boolean isAtLeastU() throws Exception;
 
-    /** Gets whether the device supports at least Android {@code V}. */
-    public abstract boolean isAtLeastV() throws Exception;
-
-    // This must match Build.VERSION_CODES.CUR_DEVELOPMENT
-    private static final int CUR_DEVELOPMENT = 10_000;
-
     // NOTE: calling it AndroidSdkLevel to avoid conflict with SdkLevel
     protected enum AndroidSdkLevel {
         ANY(Integer.MIN_VALUE),
         R(30),
         S(31),
-        S_V2(32),
         T(33),
-        U(34),
-        // TODO(b/295269584): figure out if there is a way to avoid CUR_DEVELOPMENT (for example,
-        // by checking the release name), or remove support for unreleased versions (as for now the
-        // only "client" is AdServices, which don't need that)
-        V(CUR_DEVELOPMENT);
+        U(34);
 
         private final int mLevel;
 

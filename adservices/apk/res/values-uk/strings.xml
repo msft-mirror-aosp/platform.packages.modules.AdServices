@@ -192,11 +192,11 @@
     <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Теми оголошень увімкнено"</string>
     <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Система Android почне запам’ятовувати цікаві вам теми, але перш ніж ви побачите перші з них, може пройти певний час."</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Вимкнути теми оголошень?"</string>
-    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Список тем буде видалено. Система Android більше не запам’ятовуватиме цікаві вам теми, але, можливо, ви й надалі будете бачити релевантні оголошення."</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Список тем буде видалено. Система Android більше не запам’ятовуватиме цікаві вам теми, але реклама й далі може залишатися доречною."</string>
     <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Рекомендацію реклами в додатках увімкнено"</string>
     <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Додатки можуть почати пропонувати вам рекламу. Коли це станеться, ви побачите список додатків."</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Вимкнути рекомендацію реклами в додатках?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Усі дані щодо рекомендації реклами буде видалено. Додатки більше не зможуть пропонувати вам рекламу, але, можливо, ви й надалі будете бачити релевантні оголошення."</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Усі дані щодо рекомендації реклами буде видалено. Додатки більше не зможуть пропонувати вам рекламу, але вона й далі може залишатися доречною."</string>
     <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Вимірювання ефективності реклами ввімкнено"</string>
     <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Система Android передає додаткам лише певні типи інформації, яка допомагає їм оцінювати ефективність оголошень."</string>
     <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Вимкнути вимірювання ефективності реклами?"</string>

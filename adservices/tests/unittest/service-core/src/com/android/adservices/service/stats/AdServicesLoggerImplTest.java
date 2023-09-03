@@ -100,6 +100,7 @@ import org.mockito.MockitoAnnotations;
 /** Unit tests for {@link AdServicesLoggerImpl}. */
 public class AdServicesLoggerImplTest {
     @Mock StatsdAdServicesLogger mStatsdLoggerMock;
+    private static final String SOURCE_REGISTRANT = "android-app://com.registrant";
 
     @Before
     public void setUp() {
@@ -488,6 +489,7 @@ public class AdServicesLoggerImplTest {
                                 AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB)
                         .setDebugJoinKeyHashedValue(hashedValue)
                         .setDebugJoinKeyHashLimit(hashLimit)
+                        .setSourceRegistrant(SOURCE_REGISTRANT)
                         .build();
         AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
         adServicesLogger.logMeasurementDebugKeysMatch(stats);
@@ -510,6 +512,7 @@ public class AdServicesLoggerImplTest {
                                 AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB)
                         .setNumUniqueAdIds(uniqueAdIds)
                         .setNumUniqueAdIdsLimit(uniqueAdIdLimit)
+                        .setSourceRegistrant(SOURCE_REGISTRANT)
                         .build();
 
         AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);

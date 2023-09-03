@@ -66,6 +66,9 @@ public class ContentValueFixtures {
 
         // Added in V13.
         public static final String PLATFORM_AD_ID = "sample_platform_ad_id";
+
+        // Added in V24
+        public static final String POST_BODY = "{\"ad_location\":\"bottom_right\"}";
     }
 
     public static class SourceValues {
@@ -454,6 +457,38 @@ public class ContentValueFixtures {
 
     public static ContentValues generateAsyncRegistrationContentValuesV17() {
         return generateAsyncRegistrationContentValuesV16();
+    }
+
+    public static ContentValues generateAsyncRegistrationContentValuesV18() {
+        return generateAsyncRegistrationContentValuesV17();
+    }
+
+    public static ContentValues generateAsyncRegistrationContentValuesV19() {
+        return generateAsyncRegistrationContentValuesV18();
+    }
+
+    public static ContentValues generateAsyncRegistrationContentValuesV20() {
+        return generateAsyncRegistrationContentValuesV19();
+    }
+
+    public static ContentValues generateAsyncRegistrationContentValuesV21() {
+        return generateAsyncRegistrationContentValuesV20();
+    }
+
+    public static ContentValues generateAsyncRegistrationContentValuesV22() {
+        return generateAsyncRegistrationContentValuesV21();
+    }
+
+    public static ContentValues generateAsyncRegistrationContentValuesV23() {
+        return generateAsyncRegistrationContentValuesV22();
+    }
+
+    public static ContentValues generateAsyncRegistrationContentValuesV24() {
+        ContentValues asyncRegistration = generateAsyncRegistrationContentValuesV23();
+        asyncRegistration.put(
+                MeasurementTables.AsyncRegistrationContract.REQUEST_POST_BODY,
+                AsyncRegistrationValues.POST_BODY);
+        return asyncRegistration;
     }
 
     public static ContentValues generateSourceContentValuesV1() {

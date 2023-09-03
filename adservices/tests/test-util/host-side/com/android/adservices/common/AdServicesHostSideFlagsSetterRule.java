@@ -18,16 +18,22 @@ package com.android.adservices.common;
 import com.android.tradefed.device.ITestDevice;
 
 /** See {@link AbstractAdServicesFlagsSetterRule}. */
-public final class AdServicesFlagsSetterRule
-        extends AbstractAdServicesFlagsSetterRule<AdServicesFlagsSetterRule> {
+public final class AdServicesHostSideFlagsSetterRule
+        extends AbstractAdServicesFlagsSetterRule<AdServicesHostSideFlagsSetterRule> {
 
-    private static AdServicesFlagsSetterRule withDefaultLogcatTags() {
-        return new AdServicesFlagsSetterRule().setDefaultLogcatTags();
+    /** Factory method that only sets the AdServices logcat tags. */
+    private static AdServicesHostSideFlagsSetterRule withAllLogcatTags() {
+        return new AdServicesHostSideFlagsSetterRule().setAllLogcatTags();
     }
 
-    /** Factory method that only disables the global kill switch. */
-    public static AdServicesFlagsSetterRule forGlobalKillSwitchDisabledTests() {
-        return withDefaultLogcatTags().setGlobalKillSwitch(false);
+    /** Factory method that disables the global kill switch. */
+    public static AdServicesHostSideFlagsSetterRule forGlobalKillSwitchDisabledTests() {
+        return withAllLogcatTags().setGlobalKillSwitch(false);
+    }
+
+    /** Factory method that enables the compat mode flags (if needed). */
+    public static AdServicesHostSideFlagsSetterRule forCompatModeEnabledTests() {
+        return forGlobalKillSwitchDisabledTests().setCompatModeFlags();
     }
 
     @Override
@@ -39,7 +45,7 @@ public final class AdServicesFlagsSetterRule
         TestDeviceHelper.setTestDevice(device);
     }
 
-    private AdServicesFlagsSetterRule() {
+    private AdServicesHostSideFlagsSetterRule() {
         super(
                 ConsoleLogger.getInstance(),
                 namespace -> new HostSideDeviceConfigHelper(namespace),

@@ -48,6 +48,7 @@ public final class ReportInteractionInput implements Parcelable {
     private final int mReportingDestinations; // buyer, seller, or both
     @Nullable private final InputEvent mInputEvent;
     @Nullable private final String mAdId;
+    @Nullable private final String mCallerSdkName;
 
     @NonNull
     public static final Creator<ReportInteractionInput> CREATOR =
@@ -72,7 +73,8 @@ public final class ReportInteractionInput implements Parcelable {
             @NonNull String callerPackageName,
             int reportingDestinations,
             @Nullable InputEvent inputEvent,
-            @Nullable String adId) {
+            @Nullable String adId,
+            @Nullable String callerSdkName) {
         Objects.requireNonNull(interactionKey);
         Objects.requireNonNull(interactionData);
         Objects.requireNonNull(callerPackageName);
@@ -84,6 +86,7 @@ public final class ReportInteractionInput implements Parcelable {
         this.mReportingDestinations = reportingDestinations;
         this.mInputEvent = inputEvent;
         this.mAdId = adId;
+        this.mCallerSdkName = callerSdkName;
     }
 
     private ReportInteractionInput(@NonNull Parcel in) {
@@ -96,6 +99,9 @@ public final class ReportInteractionInput implements Parcelable {
                 AdServicesParcelableUtil.readNullableFromParcel(
                         in, InputEvent.CREATOR::createFromParcel);
         this.mAdId =
+                AdServicesParcelableUtil.readNullableFromParcel(
+                        in, (sourceParcel -> in.readString()));
+        this.mCallerSdkName =
                 AdServicesParcelableUtil.readNullableFromParcel(
                         in, (sourceParcel -> in.readString()));
     }
@@ -119,6 +125,7 @@ public final class ReportInteractionInput implements Parcelable {
                 (targetParcel, sourceInputEvent) ->
                         sourceInputEvent.writeToParcel(targetParcel, flags));
         AdServicesParcelableUtil.writeNullableToParcel(dest, mAdId, Parcel::writeString);
+        AdServicesParcelableUtil.writeNullableToParcel(dest, mCallerSdkName, Parcel::writeString);
     }
 
     /** Returns the adSelectionId, the primary identifier of an ad selection process. */
@@ -181,6 +188,12 @@ public final class ReportInteractionInput implements Parcelable {
         return mAdId;
     }
 
+    /** Returns the caller's sdk name. */
+    @Nullable
+    public String getCallerSdkName() {
+        return mCallerSdkName;
+    }
+
     /**
      * Builder for {@link ReportInteractionInput} objects.
      *
@@ -191,6 +204,7 @@ public final class ReportInteractionInput implements Parcelable {
         @Nullable private String mInteractionKey;
         @Nullable private String mInteractionData;
         @Nullable private String mCallerPackageName;
+        @Nullable private String mCallerSdkName;
         private int mReportingDestinations = UNSET_REPORTING_DESTINATIONS;
         @Nullable private InputEvent mInputEvent;
         @Nullable private String mAdId;
@@ -228,7 +242,7 @@ public final class ReportInteractionInput implements Parcelable {
                 @NonNull String callerPackageName) {
             Objects.requireNonNull(callerPackageName);
 
-            this.mCallerPackageName = callerPackageName;
+            mCallerPackageName = callerPackageName;
             return this;
         }
 
@@ -257,6 +271,13 @@ public final class ReportInteractionInput implements Parcelable {
             return this;
         }
 
+        /** Sets the caller's sdk name. */
+        @NonNull
+        public ReportInteractionInput.Builder setCallerSdkName(@Nullable String callerSdkName) {
+            mCallerSdkName = callerSdkName;
+            return this;
+        }
+
         /** Builds a {@link ReportInteractionInput} instance. */
         @NonNull
         public ReportInteractionInput build() {
@@ -277,7 +298,8 @@ public final class ReportInteractionInput implements Parcelable {
                     mCallerPackageName,
                     mReportingDestinations,
                     mInputEvent,
-                    mAdId);
+                    mAdId,
+                    mCallerSdkName);
         }
     }
 }

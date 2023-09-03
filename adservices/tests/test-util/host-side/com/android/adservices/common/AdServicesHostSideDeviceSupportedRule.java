@@ -18,9 +18,10 @@ package com.android.adservices.common;
 import com.android.tradefed.device.ITestDevice;
 
 /** See {@link AbstractAdServicesDeviceSupportedRule}. */
-public final class AdServicesDeviceSupportedRule extends AbstractAdServicesDeviceSupportedRule {
+public final class AdServicesHostSideDeviceSupportedRule
+        extends AbstractAdServicesDeviceSupportedRule {
 
-    public AdServicesDeviceSupportedRule() {
+    public AdServicesHostSideDeviceSupportedRule() {
         super(ConsoleLogger.getInstance());
     }
 
@@ -31,7 +32,7 @@ public final class AdServicesDeviceSupportedRule extends AbstractAdServicesDevic
     @Override
     public boolean isAdServicesSupportedOnDevice() throws Exception {
         boolean isSupported =
-                AdServicesSupportHelper.isDeviceSupported(TestDeviceHelper.getTestDevice());
+                AdServicesHostSideSupportHelper.isDeviceSupported(TestDeviceHelper.getTestDevice());
         mLog.v("isAdServicesSupportedOnDevice(): %b", isSupported);
         return isSupported;
     }
@@ -39,7 +40,7 @@ public final class AdServicesDeviceSupportedRule extends AbstractAdServicesDevic
     @Override
     public boolean isLowRamDevice() throws Exception {
         boolean isLowRamDevice =
-                AdServicesSupportHelper.isLowRamDevice(TestDeviceHelper.getTestDevice());
+                AdServicesHostSideSupportHelper.isLowRamDevice(TestDeviceHelper.getTestDevice());
         mLog.v("isLowRamDevice(): %b", isLowRamDevice);
         return isLowRamDevice;
     }

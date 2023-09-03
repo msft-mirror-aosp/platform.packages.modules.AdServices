@@ -192,11 +192,11 @@
     <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Ad topics is on"</string>
     <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android will start noting topics of interest, but it may take a while for your first topics to appear."</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Turn off ad topics?"</string>
-    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"This list of topics will be deleted. Android won’t note topics of interest anymore, but you may still see relevant ads."</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"This list of topics will be deleted. Android won’t note topics of interest any more, but you may still see relevant ads."</string>
     <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"App-suggested ads is on"</string>
     <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Apps may start suggesting ads. You’ll see a list of apps once they start suggesting ads."</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Turn off app-suggested ads?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"All ad suggestion data will be deleted. Apps won’t be able to suggest ads anymore, but you may still see relevant ads."</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"All ad suggestion data will be deleted. Apps won’t be able to suggest ads any more, but you may still see relevant ads."</string>
     <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Ad measurement is on"</string>
     <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android can share only very limited information with apps to help apps measure the performance of their ads."</string>
     <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Turn off ad measurement?"</string>

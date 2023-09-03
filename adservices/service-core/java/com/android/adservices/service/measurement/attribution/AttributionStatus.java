@@ -44,7 +44,10 @@ public class AttributionStatus {
     public enum AttributionResult {
         UNKNOWN,
         SUCCESS,
-        FAILURE
+        NOT_ATTRIBUTED,
+        AGGREGATE_REPORT_GENERATED_SUCCESS_STATUS,
+        EVENT_REPORT_GENERATED_SUCCESS_STATUS,
+        AGGREGATE_AND_EVENT_REPORTS_GENERATED_SUCCESS_STATUS
     }
 
     public enum FailureType {
@@ -65,6 +68,7 @@ public class AttributionStatus {
     private boolean mIsSourceDerived;
     private boolean mIsInstallAttribution;
     @Nullable private Long mAttributionDelay;
+    private String mSourceRegistrant;
 
     public AttributionStatus() {
         mSourceType = SourceType.UNKNOWN;
@@ -73,6 +77,7 @@ public class AttributionStatus {
         mFailureType = FailureType.UNKNOWN;
         mIsSourceDerived = false;
         mIsInstallAttribution = false;
+        mSourceRegistrant = "";
     }
 
     /** Get the type of the source that is getting attributed. */
@@ -131,6 +136,24 @@ public class AttributionStatus {
         mAttributionResult = attributionResult;
     }
 
+    /** Set the result of attribution base on the type of generated reports. */
+    public void setAttributionResult(
+            AttributionResult attributionResult,
+            boolean aggregateReportGenerated,
+            boolean eventReportGenerated) {
+        if (attributionResult == AttributionResult.SUCCESS) {
+            if (aggregateReportGenerated && !eventReportGenerated) {
+                attributionResult = AttributionResult.AGGREGATE_REPORT_GENERATED_SUCCESS_STATUS;
+            } else if (!aggregateReportGenerated && eventReportGenerated) {
+                attributionResult = AttributionResult.EVENT_REPORT_GENERATED_SUCCESS_STATUS;
+            } else if (aggregateReportGenerated && eventReportGenerated) {
+                attributionResult =
+                        AttributionResult.AGGREGATE_AND_EVENT_REPORTS_GENERATED_SUCCESS_STATUS;
+            }
+        }
+        mAttributionResult = attributionResult;
+    }
+
     /** Get failure type. */
     public FailureType getFailureType() {
         return mFailureType;
@@ -180,5 +203,15 @@ public class AttributionStatus {
     /** Set attribution delay. */
     public void setAttributionDelay(Long attributionDelay) {
         mAttributionDelay = attributionDelay;
+    }
+
+    /** Get source registrant. */
+    public String getSourceRegistrant() {
+        return mSourceRegistrant;
+    }
+
+    /** Set source registrant. */
+    public void setSourceRegistrant(String sourceRegistrant) {
+        mSourceRegistrant = sourceRegistrant;
     }
 }
