@@ -60,11 +60,14 @@ import android.os.Binder;
 import android.os.Build;
 import android.os.RemoteException;
 
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
+import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
+import com.android.adservices.data.adselection.AdSelectionDebugReportingDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
@@ -143,6 +146,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @NonNull private final ConsentManager mConsentManager;
     @NonNull private final AdRenderIdValidator mAdRenderIdValidator;
     @NonNull private final ObliviousHttpEncryptor mObliviousHttpEncryptor;
+    @NonNull private final AdSelectionDebugReportDao mAdSelectionDebugReportDao;
 
     private static final String API_NOT_AUTHORIZED_MSG =
             "This API is not enabled for the given app because either dev options are disabled or"
@@ -169,7 +173,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull AdFilteringFeatureFactory adFilteringFeatureFactory,
             @NonNull ConsentManager consentManager,
-            @NonNull ObliviousHttpEncryptor obliviousHttpEncryptor) {
+            @NonNull ObliviousHttpEncryptor obliviousHttpEncryptor,
+            @NonNull AdSelectionDebugReportDao adSelectionDebugReportDao) {
         Objects.requireNonNull(context, "Context must be provided.");
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(appInstallDao);
@@ -187,6 +192,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         Objects.requireNonNull(adFilteringFeatureFactory);
         Objects.requireNonNull(consentManager);
         Objects.requireNonNull(obliviousHttpEncryptor);
+        Objects.requireNonNull(adSelectionDebugReportDao);
 
         mAdSelectionEntryDao = adSelectionEntryDao;
         mAppInstallDao = appInstallDao;
@@ -210,6 +216,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         // No support for renderId on device
         mAdRenderIdValidator = AdRenderIdValidator.AD_RENDER_ID_VALIDATOR_NO_OP;
         mObliviousHttpEncryptor = obliviousHttpEncryptor;
+        mAdSelectionDebugReportDao = adSelectionDebugReportDao;
     }
 
     /** Creates a new instance of {@link AdSelectionServiceImpl}. */
@@ -268,7 +275,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                                 context, FlagsFactory.getFlags())),
                                 AdServicesExecutors.getLightWeightExecutor()),
                         AdSelectionServerDatabase.getInstance(context).encryptionContextDao(),
-                        AdServicesExecutors.getLightWeightExecutor()));
+                        AdServicesExecutors.getLightWeightExecutor()),
+                AdSelectionDebugReportingDatabase.getInstance(context)
+                        .getAdSelectionDebugReportDao());
     }
 
     @Override
@@ -353,7 +362,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         int callingUid = getCallingUid(apiName);
         final DevContext devContext = mDevContextFilter.createDevContext();
-        final long overallTimeout = mFlags.getFledgeAuctionServerOverallTimeoutMs();
+        final long overallTimeout =
+                BinderFlagReader.readFlag(mFlags::getFledgeAuctionServerOverallTimeoutMs);
         final boolean forceSearchOnAbsentOwner =
                 BinderFlagReader.readFlag(
                         mFlags::getFledgeAuctionServerForceSearchWhenOwnerIsAbsentEnabled);
@@ -379,6 +389,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                         mFlags
                                                 ::getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount))
                         .build();
+        AuctionResultValidator auctionResultValidator =
+                new AuctionResultValidator(
+                        mFledgeAuthorizationFilter,
+                        BinderFlagReader.readFlag(mFlags::getDisableFledgeEnrollmentCheck));
         mLightweightExecutor.execute(
                 () -> {
                     PersistAdSelectionResultRunner runner =
@@ -397,7 +411,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     limits,
                                     mAdFilteringFeatureFactory.getAdCounterHistogramUpdater(
                                             mAdSelectionEntryDao,
-                                            auctionServerEnabledForUpdateHistogram));
+                                            auctionServerEnabledForUpdateHistogram),
+                                    auctionResultValidator);
                     runner.run(inputParams, callback);
                     Tracing.endAsyncSection(Tracing.PERSIST_AD_SELECTION_RESULT, traceCookie);
                 });
@@ -409,6 +424,19 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull AdSelectionInput inputParams,
             @NonNull CallerMetadata callerMetadata,
             @NonNull AdSelectionCallback callback) {
+        selectAds(inputParams, callerMetadata, callback, null);
+    }
+
+    /**
+     * This method takes an extra callback which is triggered once all background tasks for ad
+     * selection are complete. Only required for testing.
+     */
+    @VisibleForTesting
+    public void selectAds(
+            @NonNull AdSelectionInput inputParams,
+            @NonNull CallerMetadata callerMetadata,
+            @NonNull AdSelectionCallback partialCallback,
+            @Nullable AdSelectionCallback fullCallback) {
         final AdSelectionExecutionLogger adSelectionExecutionLogger =
                 new AdSelectionExecutionLogger(
                         callerMetadata, Clock.SYSTEM_CLOCK, mContext, mAdServicesLogger);
@@ -416,7 +444,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         try {
             Objects.requireNonNull(inputParams);
-            Objects.requireNonNull(callback);
+            Objects.requireNonNull(partialCallback);
         } catch (NullPointerException exception) {
             int overallLatencyMs = adSelectionExecutionLogger.getRunAdSelectionOverallLatencyInMs();
             sLogger.v(
@@ -445,20 +473,22 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         runOffDeviceAdSelection(
                                 devContext,
                                 inputParams,
-                                callback,
+                                partialCallback,
                                 adSelectionExecutionLogger,
                                 mAdSelectionServiceFilter,
                                 callingUid,
-                                auctionServerEnabledForUpdateHistogram);
+                                auctionServerEnabledForUpdateHistogram,
+                                fullCallback);
                     } else {
                         runOnDeviceAdSelection(
                                 devContext,
                                 inputParams,
-                                callback,
+                                partialCallback,
                                 adSelectionExecutionLogger,
                                 mAdSelectionServiceFilter,
                                 callingUid,
-                                auctionServerEnabledForUpdateHistogram);
+                                auctionServerEnabledForUpdateHistogram,
+                                fullCallback);
                     }
                 });
     }
@@ -470,7 +500,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull AdSelectionExecutionLogger adSelectionExecutionLogger,
             @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
             final int callerUid,
-            final boolean auctionServerEnabledForUpdateHistogram) {
+            final boolean auctionServerEnabledForUpdateHistogram,
+            @Nullable AdSelectionCallback fullCallback) {
         OnDeviceAdSelectionRunner runner =
                 new OnDeviceAdSelectionRunner(
                         mContext,
@@ -490,9 +521,13 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAdFilteringFeatureFactory.getAdCounterHistogramUpdater(
                                 mAdSelectionEntryDao, auctionServerEnabledForUpdateHistogram),
                         mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
-                        new DebugReporting(mFlags, mAdServicesHttpsClient, devContext),
+                        new DebugReporting(
+                                mFlags,
+                                mAdServicesHttpsClient,
+                                devContext,
+                                mAdSelectionDebugReportDao),
                         callerUid);
-        runner.runAdSelection(inputParams, callback, devContext);
+        runner.runAdSelection(inputParams, callback, devContext, fullCallback);
     }
 
     private void runOffDeviceAdSelection(
@@ -502,7 +537,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull AdSelectionExecutionLogger adSelectionExecutionLogger,
             @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
             int callerUid,
-            boolean auctionServerEnabledForUpdateHistogram) {
+            boolean auctionServerEnabledForUpdateHistogram,
+            @Nullable AdSelectionCallback fullCallback) {
         TrustedServerAdSelectionRunner runner =
                 new TrustedServerAdSelectionRunner(
                         mContext,
@@ -522,9 +558,13 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAdFilteringFeatureFactory.getAdCounterHistogramUpdater(
                                 mAdSelectionEntryDao, auctionServerEnabledForUpdateHistogram),
                         mAdRenderIdValidator,
-                        new DebugReporting(mFlags, mAdServicesHttpsClient, devContext),
+                        new DebugReporting(
+                                mFlags,
+                                mAdServicesHttpsClient,
+                                devContext,
+                                mAdSelectionDebugReportDao),
                         callerUid);
-        runner.runAdSelection(inputParams, callback, devContext);
+        runner.runAdSelection(inputParams, callback, devContext, fullCallback);
     }
 
     /**

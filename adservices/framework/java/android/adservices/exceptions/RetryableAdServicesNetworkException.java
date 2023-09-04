@@ -36,10 +36,14 @@ public class RetryableAdServicesNetworkException extends AdServicesNetworkExcept
     public static final Duration UNSET_RETRY_AFTER_VALUE = Duration.ZERO;
 
     /** @hide */
+    public static final Duration DEFAULT_RETRY_AFTER_VALUE = Duration.ofMillis(30 * 1000);
+
+    /** @hide */
     public static final String INVALID_RETRY_AFTER_MESSAGE =
             "Retry-after time duration must be strictly greater than zero.";
 
-    private final Duration mRetryAfter;
+    // TODO: (b/298100114) make this final again
+    private Duration mRetryAfter;
 
     /**
      * Constructs an {@link RetryableAdServicesNetworkException} that is caused by a failed HTTP
@@ -57,6 +61,20 @@ public class RetryableAdServicesNetworkException extends AdServicesNetworkExcept
                 retryAfter.compareTo(UNSET_RETRY_AFTER_VALUE) > 0, INVALID_RETRY_AFTER_MESSAGE);
 
         mRetryAfter = retryAfter;
+    }
+
+    /**
+     * If {@link #mRetryAfter} < {@code defaultDuration}, it gets set to {@code defaultDuration}. If
+     * {@link #mRetryAfter} > {@code maxDuration}, it gets set to {@code maxDuration}. If it falls
+     * in the range of both numbers, it stays the same.
+     *
+     * @hide
+     */
+    public void setRetryAfterToValidDuration(long defaultDuration, long maxDuration) {
+        // TODO: (b/298100114) this is a hack! this method should be removed after resolving the bug
+        mRetryAfter =
+                Duration.ofMillis(
+                        Math.min(Math.max(mRetryAfter.toMillis(), defaultDuration), maxDuration));
     }
 
     /**

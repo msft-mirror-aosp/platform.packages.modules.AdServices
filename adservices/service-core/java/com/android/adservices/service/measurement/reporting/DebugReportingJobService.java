@@ -34,17 +34,22 @@ import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.util.JobLockHolder;
+import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
-import java.util.concurrent.Executor;
+import com.google.common.util.concurrent.ListeningExecutorService;
+
+import java.util.concurrent.Future;
 
 /**
  * Main service for scheduling debug reporting jobs. The actual job execution logic is part of
  * {@link EventReportingJobHandler } and {@link AggregateReportingJobHandler}
  */
 public final class DebugReportingJobService extends JobService {
-    private static final Executor sBlockingExecutor = AdServicesExecutors.getBlockingExecutor();
-    private static final int DEBUG_REPORT_JOB_ID = MEASUREMENT_DEBUG_REPORT_JOB.getJobId();
+    private static final ListeningExecutorService sBlockingExecutor =
+            AdServicesExecutors.getBlockingExecutor();
+    static final int DEBUG_REPORT_JOB_ID = MEASUREMENT_DEBUG_REPORT_JOB.getJobId();
+    private Future mExecutorFuture;
 
     @Override
     public boolean onStartJob(JobParameters params) {
@@ -57,35 +62,43 @@ public final class DebugReportingJobService extends JobService {
             return skipAndCancelBackgroundJob(params);
         }
 
+        AdservicesJobServiceLogger.getInstance(this).recordOnStartJob(DEBUG_REPORT_JOB_ID);
+
         if (FlagsFactory.getFlags().getMeasurementJobDebugReportingKillSwitch()) {
             LogUtil.e("DebugReportingJobService is disabled");
             return skipAndCancelBackgroundJob(params);
         }
 
         LogUtil.d("DebugReportingJobService.onStartJob");
-        sBlockingExecutor.execute(
-                () -> {
-                    sendReports();
-                    jobFinished(params, /* wantsReschedule= */ false);
-                });
+        mExecutorFuture =
+                sBlockingExecutor.submit(
+                        () -> {
+                            sendReports();
+                            AdservicesJobServiceLogger.getInstance(DebugReportingJobService.this)
+                                    .recordJobFinished(
+                                            DEBUG_REPORT_JOB_ID,
+                                            /* isSuccessful */ true,
+                                            /* shouldRetry*/ false);
+                            jobFinished(params, /* wantsReschedule= */ false);
+                        });
         return true;
     }
 
     @Override
     public boolean onStopJob(JobParameters params) {
         LogUtil.d("DebugReportingJobService.onStopJob");
-        return true;
+        boolean shouldRetry = true;
+        if (mExecutorFuture != null) {
+            shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
+        }
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordOnStopJob(params, DEBUG_REPORT_JOB_ID, shouldRetry);
+        return shouldRetry;
     }
 
     /** Schedules {@link DebugReportingJobService} */
     @VisibleForTesting
-    static void schedule(Context context, JobScheduler jobScheduler) {
-        final JobInfo job =
-                new JobInfo.Builder(
-                                DEBUG_REPORT_JOB_ID,
-                                new ComponentName(context, DebugReportingJobService.class))
-                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                        .build();
+    static void schedule(JobScheduler jobScheduler, JobInfo job) {
         jobScheduler.schedule(job);
     }
 
@@ -107,14 +120,23 @@ public final class DebugReportingJobService extends JobService {
             return;
         }
 
-        final JobInfo job = jobScheduler.getPendingJob(DEBUG_REPORT_JOB_ID);
+        final JobInfo scheduledJobInfo = jobScheduler.getPendingJob(DEBUG_REPORT_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
-        if (job == null || forceSchedule) {
-            schedule(context, jobScheduler);
+        JobInfo job = buildJobInfo(context);
+        if (forceSchedule || !job.equals(scheduledJobInfo)) {
+            schedule(jobScheduler, job);
             LogUtil.d("Scheduled DebugReportingJobService");
         } else {
             LogUtil.d("DebugReportingJobService already scheduled, skipping reschedule");
         }
+    }
+
+    private static JobInfo buildJobInfo(Context context) {
+        return new JobInfo.Builder(
+                        DEBUG_REPORT_JOB_ID,
+                        new ComponentName(context, DebugReportingJobService.class))
+                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                .build();
     }
 
     private boolean skipAndCancelBackgroundJob(final JobParameters params) {
@@ -130,7 +152,8 @@ public final class DebugReportingJobService extends JobService {
         return false;
     }
 
-    private void sendReports() {
+    @VisibleForTesting
+    void sendReports() {
         final JobLockHolder lock = JobLockHolder.getInstance(DEBUG_REPORTING);
         if (lock.tryLock()) {
             try {
@@ -155,5 +178,10 @@ public final class DebugReportingJobService extends JobService {
             }
         }
         LogUtil.d("DebugReportingJobService did not acquire the lock");
+    }
+
+    @VisibleForTesting
+    Future getFutureForTesting() {
+        return mExecutorFuture;
     }
 }

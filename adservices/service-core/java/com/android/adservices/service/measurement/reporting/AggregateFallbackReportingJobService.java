@@ -39,7 +39,9 @@ import com.android.adservices.service.measurement.util.JobLockHolder;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
-import java.util.concurrent.Executor;
+import com.google.common.util.concurrent.ListeningExecutorService;
+
+import java.util.concurrent.Future;
 
 /**
  * Main service for scheduling aggregate reporting jobs. The actual job execution logic is part of
@@ -49,7 +51,10 @@ public final class AggregateFallbackReportingJobService extends JobService {
     private static final int MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID =
             MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB.getJobId();
 
-    private static final Executor sBlockingExecutor = AdServicesExecutors.getBlockingExecutor();
+    private static final ListeningExecutorService sBlockingExecutor =
+            AdServicesExecutors.getBlockingExecutor();
+
+    private Future mExecutorFuture;
 
     @Override
     public boolean onStartJob(JobParameters params) {
@@ -74,23 +79,25 @@ public final class AggregateFallbackReportingJobService extends JobService {
         }
 
         LogUtil.d("AggregateFallbackReportingJobService.onStartJob");
-        sBlockingExecutor.execute(
-                () -> {
-                    processPendingReports();
+        mExecutorFuture =
+                sBlockingExecutor.submit(
+                        () -> {
+                            processPendingReports();
 
-                    AdservicesJobServiceLogger.getInstance(
-                                    AggregateFallbackReportingJobService.this)
-                            .recordJobFinished(
-                                    MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID,
-                                    /* isSuccessful= */ true,
-                                    /* shouldRetry= */ false);
+                            AdservicesJobServiceLogger.getInstance(
+                                            AggregateFallbackReportingJobService.this)
+                                    .recordJobFinished(
+                                            MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID,
+                                            /* isSuccessful= */ true,
+                                            /* shouldRetry= */ false);
 
-                    jobFinished(params, /* wantsReschedule= */ false);
-                });
+                            jobFinished(params, /* wantsReschedule= */ false);
+                        });
         return true;
     }
 
-    private void processPendingReports() {
+    @VisibleForTesting
+    void processPendingReports() {
         final JobLockHolder lock = JobLockHolder.getInstance(AGGREGATE_REPORTING);
         if (lock.tryLock()) {
             try {
@@ -118,8 +125,10 @@ public final class AggregateFallbackReportingJobService extends JobService {
     @Override
     public boolean onStopJob(JobParameters params) {
         LogUtil.d("AggregateFallbackReportingJobService.onStopJob");
-        boolean shouldRetry = false;
-
+        boolean shouldRetry = true;
+        if (mExecutorFuture != null) {
+            shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
+        }
         AdservicesJobServiceLogger.getInstance(this)
                 .recordOnStopJob(
                         params, MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID, shouldRetry);
@@ -128,20 +137,20 @@ public final class AggregateFallbackReportingJobService extends JobService {
 
     /** Schedules {@link AggregateFallbackReportingJobService} */
     @VisibleForTesting
-    static void schedule(Context context, JobScheduler jobScheduler) {
-        final JobInfo job =
-                new JobInfo.Builder(
-                                MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID,
-                                new ComponentName(
-                                        context, AggregateFallbackReportingJobService.class))
-                        .setRequiresDeviceIdle(true)
-                        .setRequiresBatteryNotLow(true)
-                        .setPeriodic(
-                                AdServicesConfig
-                                        .getMeasurementAggregateFallbackReportingJobPeriodMs())
-                        .setPersisted(true)
-                        .build();
-        jobScheduler.schedule(job);
+    static void schedule(JobScheduler jobScheduler, JobInfo jobInfo) {
+        jobScheduler.schedule(jobInfo);
+    }
+
+    private static JobInfo buildJobInfo(Context context) {
+        return new JobInfo.Builder(
+                        MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID,
+                        new ComponentName(context, AggregateFallbackReportingJobService.class))
+                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                .setRequiresDeviceIdle(true)
+                .setRequiresBatteryNotLow(true)
+                .setPeriodic(AdServicesConfig.getMeasurementAggregateFallbackReportingJobPeriodMs())
+                .setPersisted(true)
+                .build();
     }
 
     /**
@@ -162,11 +171,12 @@ public final class AggregateFallbackReportingJobService extends JobService {
             return;
         }
 
-        final JobInfo job =
+        final JobInfo scheduledJob =
                 jobScheduler.getPendingJob(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
-        if (job == null || forceSchedule) {
-            schedule(context, jobScheduler);
+        JobInfo jobInfo = buildJobInfo(context);
+        if (forceSchedule || !jobInfo.equals(scheduledJob)) {
+            schedule(jobScheduler, jobInfo);
             LogUtil.d("Scheduled AggregateFallbackReportingJobService");
         } else {
             LogUtil.d(
@@ -191,5 +201,10 @@ public final class AggregateFallbackReportingJobService extends JobService {
 
         // Returning false means that this job has completed its work.
         return false;
+    }
+
+    @VisibleForTesting
+    Future getFutureForTesting() {
+        return mExecutorFuture;
     }
 }

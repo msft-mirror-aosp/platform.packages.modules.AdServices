@@ -14,38 +14,34 @@
  * limitations under the License.
  */
 
-const simulateDelay =
-    (ms) => {
-      var start = new Date().getTime();
-      var end = start;
-      while (end < start + ms) {
-        end = new Date().getTime();
-      }
-    }
+const simulateDelay = (ms) => {
+  var start = new Date().getTime();
+  var end = start;
+  while(end < start + ms) {
+      end = new Date().getTime();
+  }
+}
 
 
 /**
  * Trivial scoring function -- scores each ad with the value of its bid.
+ * If bid_floor is present in seller_signals and the bid is smaller, then
+ * the bid_floor changes the score to -1
  */
-function scoreAd(
-    ad, bid, auction_config, seller_signals, trusted_scoring_signals,
-    contextual_signal, custom_audience_signal) {
+function scoreAd(ad, bid, auction_config, seller_signals, trusted_scoring_signals,
+  contextual_signal, custom_audience_signal) {
   simulateDelay(0);
-  return {'status': 0, 'score': bid};
+  if ('bid_floor' in seller_signals && bid < seller_signals.bid_floor) {
+      bid = -1;
+  }
+  return {'status': 0, 'score': bid };
 }
 
 
-function reportResult(
-    ad_selection_config, render_uri, bid, contextual_signals) {
-  // Add the address of your reporting server here
-  let reporting_address = 'https://reporting.example.com';
+function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {
+  let reporting_address = '<seller-reporting-uri>';
   simulateDelay(0);
-  return {
-    'status': 0,
-    'results': {
-      'signals_for_buyer': '{"signals_for_buyer" : 1}',
-      'reporting_uri':
-          reporting_address + '?render_uri=' + render_uri + '?bid=' + bid
-    }
-  };
+  return {'status': 0, 'results': {'signals_for_buyer': '{"signals_for_buyer" : 1}'
+          , 'reporting_uri': reporting_address + '?render_uri='
+              + render_uri + '?bid=' + bid } };
 }

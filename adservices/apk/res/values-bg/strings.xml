@@ -193,9 +193,9 @@
     <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android ще започне да отбелязва теми, които ви интересуват, но показването на първите няколко може да отнеме известно време."</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Искате ли да изключите рекламните теми?"</string>
     <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Този списък с теми ще бъде изтрит. Android повече няма да отбелязва теми, които ви интересуват, но е възможно да продължите да виждате уместни реклами."</string>
-    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Функцията за предлагани от приложенията реклами е включена"</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Функцията за предлагани от приложенията реклами е вкл."</string>
     <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Приложенията може да започнат да предлагат реклами. В такъв случай ще видите списък с приложения."</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Искате ли да изключите функцията за предлагани от приложенията реклами?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Изключване на предлаганите от приложенията реклами?"</string>
     <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Всички данни за предложени реклами ще бъдат изтрити. Приложенията повече няма да правят предложения, но е възможно да продължите да виждате уместни реклами."</string>
     <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Измерването на рекламите е включено"</string>
     <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android може да споделя само много ограничена информация с приложенията, за да им помага да измерват ефективността на рекламите си."</string>

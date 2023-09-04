@@ -318,7 +318,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                                     mCustomAudienceServiceFilter,
                                     new AdServicesHttpsClient(
                                             AdServicesExecutors.getBlockingExecutor(),
-                                            CacheProviderFactory.create(mContext, mFlags)),
+                                            CacheProviderFactory.createNoOpCache()),
                                     mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
                                     AdRenderIdValidator.createInstance(mFlags),
                                     AdDataConversionStrategyFactory.getAdDataConversionStrategy(

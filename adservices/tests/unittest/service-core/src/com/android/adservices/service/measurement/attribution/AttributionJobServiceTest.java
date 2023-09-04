@@ -39,6 +39,7 @@ import static org.mockito.Mockito.verify;
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
+import android.content.ComponentName;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -48,6 +49,7 @@ import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.measurement.reporting.DebugReportingJobService;
 import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
@@ -60,6 +62,8 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
+import org.mockito.internal.stubbing.answers.AnswersWithDelay;
+import org.mockito.internal.stubbing.answers.CallsRealMethods;
 import org.mockito.quality.Strictness;
 
 import java.util.Optional;
@@ -262,18 +266,31 @@ public class AttributionJobServiceTest {
     }
 
     @Test
-    public void scheduleIfNeeded_killSwitchOff_previouslyExecuted_dontForceSchedule_dontSchedule()
-            throws Exception {
+    public void scheduleIfNeeded_sameJobInfoDontForceSchedule_dontSchedule() throws Exception {
         runWithMocks(
                 () -> {
                     // Setup
                     disableKillSwitch();
 
-                    final Context mockContext = mock(Context.class);
+                    final Context mockContext = spy(ApplicationProvider.getApplicationContext());
                     doReturn(mMockJobScheduler)
                             .when(mockContext)
                             .getSystemService(JobScheduler.class);
-                    final JobInfo mockJobInfo = mock(JobInfo.class);
+                    final JobInfo mockJobInfo =
+                            new JobInfo.Builder(
+                                            MEASUREMENT_ATTRIBUTION_JOB_ID,
+                                            new ComponentName(
+                                                    mockContext, AttributionJobService.class))
+                                    .addTriggerContentUri(
+                                            new JobInfo.TriggerContentUri(
+                                                    TriggerContentProvider.TRIGGER_URI,
+                                                    JobInfo.TriggerContentUri
+                                                            .FLAG_NOTIFY_FOR_DESCENDANTS))
+                                    .setTriggerContentUpdateDelay(
+                                            SystemHealthParams.ATTRIBUTION_JOB_TRIGGERING_DELAY_MS)
+                                    .setPersisted(false) // Can't call addTriggerContentUri() on a
+                                    // persisted job
+                                    .build();
                     doReturn(mockJobInfo)
                             .when(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_ATTRIBUTION_JOB_ID));
@@ -285,6 +302,49 @@ public class AttributionJobServiceTest {
                     // Validate
                     ExtendedMockito.verify(
                             () -> AttributionJobService.schedule(any(), any()), never());
+                    verify(mMockJobScheduler, times(1))
+                            .getPendingJob(eq(MEASUREMENT_ATTRIBUTION_JOB_ID));
+                });
+    }
+
+    @Test
+    public void scheduleIfNeeded_diffJobInfoDontForceSchedule_doesSchedule() throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    disableKillSwitch();
+
+                    final Context mockContext = spy(ApplicationProvider.getApplicationContext());
+                    doReturn(mMockJobScheduler)
+                            .when(mockContext)
+                            .getSystemService(JobScheduler.class);
+                    final JobInfo mockJobInfo =
+                            new JobInfo.Builder(
+                                            MEASUREMENT_ATTRIBUTION_JOB_ID,
+                                            new ComponentName(
+                                                    mockContext, AttributionJobService.class))
+                                    .addTriggerContentUri(
+                                            new JobInfo.TriggerContentUri(
+                                                    TriggerContentProvider.TRIGGER_URI,
+                                                    JobInfo.TriggerContentUri
+                                                            .FLAG_NOTIFY_FOR_DESCENDANTS))
+                                    // Difference
+                                    .setTriggerContentUpdateDelay(
+                                            SystemHealthParams.ATTRIBUTION_JOB_TRIGGERING_DELAY_MS
+                                                    + 1)
+                                    .setPersisted(false) // Can't call addTriggerContentUri() on a
+                                    // persisted job
+                                    .build();
+                    doReturn(mockJobInfo)
+                            .when(mMockJobScheduler)
+                            .getPendingJob(eq(MEASUREMENT_ATTRIBUTION_JOB_ID));
+
+                    // Execute
+                    AttributionJobService.scheduleIfNeeded(
+                            mockContext, /* forceSchedule = */ false);
+
+                    // Validate
+                    ExtendedMockito.verify(() -> AttributionJobService.schedule(any(), any()));
                     verify(mMockJobScheduler, times(1))
                             .getPendingJob(eq(MEASUREMENT_ATTRIBUTION_JOB_ID));
                 });
@@ -346,18 +406,51 @@ public class AttributionJobServiceTest {
     }
 
     @Test
-    public void testSchedule_jobInfoIsPersisted() {
-        // Setup
-        final JobScheduler jobScheduler = mock(JobScheduler.class);
-        final ArgumentCaptor<JobInfo> captor = ArgumentCaptor.forClass(JobInfo.class);
+    public void testSchedule_jobInfoIsPersisted() throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    disableKillSwitch();
+                    Context context = spy(ApplicationProvider.getApplicationContext());
+                    final JobScheduler jobScheduler = mock(JobScheduler.class);
+                    final ArgumentCaptor<JobInfo> captor = ArgumentCaptor.forClass(JobInfo.class);
+                    doReturn(jobScheduler).when(context).getSystemService(JobScheduler.class);
+                    doReturn(null)
+                            .when(jobScheduler)
+                            .getPendingJob(eq(MEASUREMENT_ATTRIBUTION_JOB_ID));
 
-        // Execute
-        AttributionJobService.schedule(mock(Context.class), jobScheduler);
+                    // Execute
+                    ExtendedMockito.doCallRealMethod()
+                            .when(() -> AttributionJobService.schedule(any(), any()));
+                    AttributionJobService.scheduleIfNeeded(context, true);
 
-        // Validate
-        verify(jobScheduler, times(1)).schedule(captor.capture());
-        assertNotNull(captor.getValue());
-        assertFalse(captor.getValue().isPersisted());
+                    // Validate
+                    verify(jobScheduler, times(1)).schedule(captor.capture());
+                    assertNotNull(captor.getValue());
+                    assertFalse(captor.getValue().isPersisted());
+                });
+    }
+
+    @Test
+    public void testOnStopJob_stopsExecutingThread() throws Exception {
+        runWithMocks(
+                () -> {
+                    disableKillSwitch();
+
+                    doAnswer(new AnswersWithDelay(WAIT_IN_MILLIS * 10, new CallsRealMethods()))
+                            .when(mSpyService)
+                            .processPendingAttributions();
+                    mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+                    Thread.sleep(WAIT_IN_MILLIS);
+
+                    assertNotNull(mSpyService.getFutureForTesting());
+
+                    boolean onStopJobResult =
+                            mSpyService.onStopJob(Mockito.mock(JobParameters.class));
+                    verify(mSpyService, times(0)).jobFinished(any(), anyBoolean());
+                    assertTrue(onStopJobResult);
+                    assertTrue(mSpyService.getFutureForTesting().isCancelled());
+                });
     }
 
     private void onStartJob_killSwitchOn() throws Exception {

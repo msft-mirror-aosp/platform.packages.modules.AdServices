@@ -38,9 +38,11 @@ import com.android.adservices.service.measurement.util.JobLockHolder;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.util.concurrent.ListeningExecutorService;
+
 import java.time.Clock;
 import java.time.Instant;
-import java.util.concurrent.Executor;
+import java.util.concurrent.Future;
 
 /**
  * Fallback service for scheduling debug reporting jobs. This runs periodically to handle any
@@ -52,7 +54,10 @@ public class DebugReportingFallbackJobService extends JobService {
     private static final int MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID =
             MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB.getJobId();
 
-    private static final Executor sBlockingExecutor = AdServicesExecutors.getBlockingExecutor();
+    private static final ListeningExecutorService sBlockingExecutor =
+            AdServicesExecutors.getBlockingExecutor();
+
+    private Future mExecutorFuture;
 
     @Override
     public boolean onStartJob(JobParameters params) {
@@ -79,41 +84,36 @@ public class DebugReportingFallbackJobService extends JobService {
         Instant jobStartTime = Clock.systemUTC().instant();
         LogUtil.d(
                 "DebugReportingFallbackJobService.onStartJob " + "at %s", jobStartTime.toString());
-        sBlockingExecutor.execute(
-                () -> {
-                    sendReports();
-                    boolean shouldRetry = false;
-                    AdservicesJobServiceLogger.getInstance(DebugReportingFallbackJobService.this)
-                            .recordJobFinished(
-                                    MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID, /* isSuccessful */
-                                    true,
-                                    shouldRetry);
-                    jobFinished(params, false);
-                });
+        mExecutorFuture =
+                sBlockingExecutor.submit(
+                        () -> {
+                            sendReports();
+                            boolean shouldRetry = false;
+                            AdservicesJobServiceLogger.getInstance(
+                                            DebugReportingFallbackJobService.this)
+                                    .recordJobFinished(
+                                            MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID,
+                                            /* isSuccessful */ true,
+                                            shouldRetry);
+                            jobFinished(params, false);
+                        });
         return true;
     }
 
     @Override
     public boolean onStopJob(JobParameters params) {
         LogUtil.d("DebugReportingJobService.onStopJob");
-        boolean shouldRetry = false;
+        boolean shouldRetry = true;
+        if (mExecutorFuture != null) {
+            shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
+        }
         AdservicesJobServiceLogger.getInstance(this)
                 .recordOnStopJob(params, MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID, shouldRetry);
         return shouldRetry;
     }
 
     @VisibleForTesting
-    protected static void schedule(Context context, JobScheduler jobScheduler) {
-        final JobInfo job =
-                new JobInfo.Builder(
-                                MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID,
-                                new ComponentName(context, DebugReportingFallbackJobService.class))
-                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                        .setPeriodic(
-                                FlagsFactory.getFlags()
-                                        .getMeasurementDebugReportingFallbackJobPeriodMs())
-                        .setPersisted(true)
-                        .build();
+    protected static void schedule(JobScheduler jobScheduler, JobInfo job) {
         jobScheduler.schedule(job);
     }
 
@@ -135,10 +135,12 @@ public class DebugReportingFallbackJobService extends JobService {
             return;
         }
 
-        final JobInfo job = jobScheduler.getPendingJob(MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID);
+        final JobInfo scheduledJob =
+                jobScheduler.getPendingJob(MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
-        if (job == null || forceSchedule) {
-            schedule(context, jobScheduler);
+        JobInfo jobInfo = buildJobInfo(context);
+        if (forceSchedule || !jobInfo.equals(scheduledJob)) {
+            schedule(jobScheduler, jobInfo);
             LogUtil.d("Scheduled DebugReportingFallbackJobService");
         } else {
             LogUtil.d("DebugReportingFallbackJobService already scheduled, skipping reschedule");
@@ -164,7 +166,19 @@ public class DebugReportingFallbackJobService extends JobService {
         return false;
     }
 
-    private void sendReports() {
+    private static JobInfo buildJobInfo(Context context) {
+        return new JobInfo.Builder(
+                        MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID,
+                        new ComponentName(context, DebugReportingFallbackJobService.class))
+                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                .setPeriodic(
+                        FlagsFactory.getFlags().getMeasurementDebugReportingFallbackJobPeriodMs())
+                .setPersisted(true)
+                .build();
+    }
+
+    @VisibleForTesting
+    void sendReports() {
         final JobLockHolder lock = JobLockHolder.getInstance(DEBUG_REPORTING);
         if (lock.tryLock()) {
             try {
@@ -189,5 +203,10 @@ public class DebugReportingFallbackJobService extends JobService {
             }
         }
         LogUtil.d("DebugReportingFallbackJobService did not acquire the lock");
+    }
+
+    @VisibleForTesting
+    Future getFutureForTesting() {
+        return mExecutorFuture;
     }
 }
