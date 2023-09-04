@@ -2,10 +2,16 @@
   "mocks": [
     {
       "request": {
-        "path": "bidding"
+        "path": "bidding",
+        "header": {
+          "x_fledge_buyer_bidding_logic_version": "3"
+        }
       },
       "response": {
-        "body": "BiddingLogicV2.js.txt"
+        "body": "BiddingLogicV3WithDebugReporting.js",
+        "header": {
+          "x_fledge_buyer_bidding_logic_version": "3"
+        }
       }
     },
     {
@@ -13,7 +19,7 @@
         "path": "scoring"
       },
       "response": {
-        "body": "ScoringLogic.js.txt"
+        "body": "ScoringLogicWithDebugReporting.js"
       }
     },
     {
@@ -31,24 +37,6 @@
       "response": {
         "body": "BiddingSignals.json"
       }
-    },
-    {
-      "request": {
-        "path": "buyer/reportImpression?ca=shoes"
-      },
-      "response": {
-        "body": "DefaultResponse.txt"
-      },
-      "verify_called": true
-    },
-    {
-      "request": {
-        "path": "seller/reportImpression?render_uri=https://localhost:38383/render/shoes/0?bid=10"
-      },
-      "response": {
-        "body": "DefaultResponse.txt"
-      },
-      "verify_called": true
     }
   ],
   "substitutions": {
@@ -57,6 +45,10 @@
     "<ad-render-uri-2>": "{base_url}/render_ad/2",
     "<buyer-trusted-bidding-uri>": "{base_url}/bidding/trusted",
     "<buyer-reporting-uri>": "{base_url}/buyer/reportImpression",
-    "<seller-reporting-uri>": "{base_url}/seller/reportImpression"
+    "<seller-reporting-uri>": "{base_url}/seller/reportImpression",
+    "<buyer-win-debug-reporting-uri>": "{base_url}/buyer/reportWin",
+    "<buyer-loss-debug-reporting-uri>": "{base_url}/buyer/reportLoss",
+    "<seller-win-debug-reporting-uri>": "{base_url}/seller/reportWin",
+    "<seller-loss-debug-reporting-uri>": "{base_url}/seller/reportLoss"
   }
 }
