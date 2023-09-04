@@ -123,10 +123,13 @@ public class FledgeAuthorizationFilter {
      * @param apiNameLoggingId the id of the api being called
      * @throws SecurityException if the package did not declare custom audience permission
      */
-    public void assertAppDeclaredPermission(@NonNull Context context, int apiNameLoggingId)
+    public void assertAppDeclaredPermission(
+            @NonNull Context context, @NonNull String appPackageName, int apiNameLoggingId)
             throws SecurityException {
         Objects.requireNonNull(context);
-        if (!PermissionHelper.hasCustomAudiencesPermission(context)) {
+        Objects.requireNonNull(appPackageName);
+
+        if (!PermissionHelper.hasCustomAudiencesPermission(context, appPackageName)) {
             sLogger.v("Permission not declared by caller in API %d", apiNameLoggingId);
             mAdServicesLogger.logFledgeApiCallStats(
                     apiNameLoggingId, STATUS_PERMISSION_NOT_REQUESTED, 0);
@@ -171,13 +174,15 @@ public class FledgeAuthorizationFilter {
                     "Enrollment data match not found for ad tech \"%s\" while calling API %d",
                     adTechIdentifier.toString(), apiNameLoggingId);
             mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_CALLER_NOT_ALLOWED, 0);
-            mEnrollmentUtil.logEnrollmentFailedStats(
-                    mAdServicesLogger,
-                    buildId,
-                    dataFileGroupStatus,
-                    enrollmentRecordsCount,
-                    adTechIdentifier.toString(),
-                    EnrollmentStatus.ErrorCause.ENROLLMENT_NOT_FOUND_ERROR_CAUSE.getValue());
+            if (mEnrollmentUtil != null) {
+                mEnrollmentUtil.logEnrollmentFailedStats(
+                        mAdServicesLogger,
+                        buildId,
+                        dataFileGroupStatus,
+                        enrollmentRecordsCount,
+                        adTechIdentifier.toString(),
+                        EnrollmentStatus.ErrorCause.ENROLLMENT_NOT_FOUND_ERROR_CAUSE.getValue());
+            }
             throw new AdTechNotAllowedException();
         }
 

@@ -163,6 +163,15 @@ public abstract class AbstractFledgeServiceFilter {
             int apiName,
             @NonNull DevContext devContext)
             throws FledgeAuthorizationFilter.AdTechNotAllowedException {
+        Uri adTechUri = Uri.parse("https://" + adTech.toString());
+        boolean isLocalhostAddress =
+                WebAddresses.isLocalhost(adTechUri) || WebAddresses.isLocalhostIp(adTechUri);
+        boolean isDeveloperMode = devContext.getDevOptionsEnabled();
+        if (isLocalhostAddress && isDeveloperMode) {
+            // Skip check for localhost and 127.0.0.1 addresses for debuggable CTS.
+            return;
+        }
+
         if (!mFlags.getDisableFledgeEnrollmentCheck()) {
             mFledgeAuthorizationFilter.assertAdTechAllowed(
                     mContext, callerPackageName, adTech, apiName);

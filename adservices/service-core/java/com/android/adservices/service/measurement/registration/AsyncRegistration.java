@@ -52,6 +52,7 @@ public class AsyncRegistration {
     @Nullable private String mRegistrationId;
 
     @Nullable private final String mPlatformAdId;
+    @Nullable private String mPostBody;
 
     public enum RedirectType {
         LOCATION,
@@ -74,6 +75,7 @@ public class AsyncRegistration {
         mAdIdPermission = builder.mAdIdPermission;
         mRegistrationId = builder.mRegistrationId;
         mPlatformAdId = builder.mPlatformAdId;
+        mPostBody = builder.mPostBody;
     }
 
     @Override
@@ -95,7 +97,8 @@ public class AsyncRegistration {
                 && mSourceType == that.mSourceType
                 && mType == that.mType
                 && Objects.equals(mRegistrationId, that.mRegistrationId)
-                && mPlatformAdId.equals(that.mPlatformAdId);
+                && mPlatformAdId.equals(that.mPlatformAdId)
+                && Objects.equals(mPostBody, that.mPostBody);
     }
 
     @Override
@@ -115,7 +118,8 @@ public class AsyncRegistration {
                 mDebugKeyAllowed,
                 mAdIdPermission,
                 mRegistrationId,
-                mPlatformAdId);
+                mPlatformAdId,
+                mPostBody);
     }
 
     /** Unique identifier for the {@link AsyncRegistration}. */
@@ -203,6 +207,12 @@ public class AsyncRegistration {
         return mPlatformAdId;
     }
 
+    /** Returns the post body. */
+    @Nullable
+    public String getPostBody() {
+        return mPostBody;
+    }
+
     /** Increments the retry count of the current record. */
     public void incrementRetryCount() {
         ++mRetryCount;
@@ -247,6 +257,7 @@ public class AsyncRegistration {
         @Nullable private String mRegistrationId;
 
         @Nullable private String mPlatformAdId;
+        @Nullable private String mPostBody;
 
         /** See {@link AsyncRegistration#getId()}. */
         @NonNull
@@ -359,6 +370,13 @@ public class AsyncRegistration {
         @NonNull
         public Builder setPlatformAdId(@Nullable String platformAdId) {
             mPlatformAdId = platformAdId;
+            return this;
+        }
+
+        /** See {@link AsyncRegistration#getPlatformAdId()} */
+        @NonNull
+        public Builder setPostBody(@Nullable String postBody) {
+            mPostBody = postBody;
             return this;
         }
 

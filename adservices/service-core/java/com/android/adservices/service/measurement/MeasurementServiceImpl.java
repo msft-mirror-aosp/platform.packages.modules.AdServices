@@ -186,6 +186,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                                     request, mFlags)),
                                     new AppPackageAccessResolver(
                                             mFlags.getMsmtApiAppAllowList(),
+                                            mFlags.getMsmtApiAppBlockList(),
                                             request.getAppPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
@@ -247,11 +248,13 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             enforceForeground),
                                     new AppPackageAccessResolver(
                                             mFlags.getMsmtApiAppAllowList(),
+                                            mFlags.getMsmtApiAppBlockList(),
                                             request.getAppPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
                                     new AppPackageAccessResolver(
                                             mFlags.getWebContextClientAppAllowList(),
+                                            /*blocklist*/ null,
                                             request.getAppPackageName()),
                                     new DevContextAccessResolver(
                                             mDevContextFilter.createDevContextFromCallingUid(
@@ -272,7 +275,21 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             @NonNull SourceRegistrationRequestInternal request,
             @NonNull CallerMetadata callerMetadata,
             @NonNull IMeasurementCallback callback) {
+        Objects.requireNonNull(request);
+        Objects.requireNonNull(callerMetadata);
+        Objects.requireNonNull(callback);
+
+        final Throttler.ApiKey apiKey = Throttler.ApiKey.MEASUREMENT_API_REGISTER_SOURCES;
+        if (isThrottled(request.getAppPackageName(), apiKey, callback)) {
+            // TODO b/290121162: Log API stats
+            return;
+        }
         // TODO b/290121162: Implementation
+        try {
+            callback.onResult();
+        } catch (RemoteException e) {
+            // TODO b/290121162: Implementation
+        }
     }
 
     @Override
@@ -320,6 +337,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             enforceForeground),
                                     new AppPackageAccessResolver(
                                             mFlags.getMsmtApiAppAllowList(),
+                                            mFlags.getMsmtApiAppBlockList(),
                                             request.getAppPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
@@ -377,9 +395,11 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             enforceForeground),
                                     new AppPackageAccessResolver(
                                             mFlags.getMsmtApiAppAllowList(),
+                                            mFlags.getMsmtApiAppBlockList(),
                                             request.getAppPackageName()),
                                     new AppPackageAccessResolver(
                                             mFlags.getWebContextClientAppAllowList(),
+                                            /*blocklist*/ null,
                                             request.getAppPackageName())),
                             callback,
                             apiNameId,
@@ -422,6 +442,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                                 enforceForeground),
                                         new AppPackageAccessResolver(
                                                 mFlags.getMsmtApiAppAllowList(),
+                                                mFlags.getMsmtApiAppBlockList(),
                                                 statusParam.getAppPackageName()));
 
                         final Optional<IAccessResolver> optionalResolver =

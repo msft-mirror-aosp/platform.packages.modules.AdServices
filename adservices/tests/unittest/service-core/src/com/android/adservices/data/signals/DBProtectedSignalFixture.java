@@ -22,13 +22,14 @@ public class DBProtectedSignalFixture {
 
     public static final byte[] KEY = {(byte) 1, (byte) 2, (byte) 3, (byte) 4};
     public static final byte[] VALUE = {(byte) 42};
-    public static final DBProtectedSignal SIGNAL =
+
+    public static final DBProtectedSignal.Builder SIGNAL_BUILDER =
             DBProtectedSignal.builder()
                     .setId(null)
                     .setBuyer(CommonFixture.VALID_BUYER_1)
                     .setKey(DBProtectedSignalFixture.KEY)
                     .setValue(DBProtectedSignalFixture.VALUE)
                     .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
-                    .setPackageName(CommonFixture.TEST_PACKAGE_NAME_1)
-                    .build();
+                    .setPackageName(CommonFixture.TEST_PACKAGE_NAME_1);
+    public static final DBProtectedSignal SIGNAL = SIGNAL_BUILDER.build();
 }

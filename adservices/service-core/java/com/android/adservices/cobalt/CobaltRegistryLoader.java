@@ -16,10 +16,13 @@
 
 package com.android.adservices.cobalt;
 
+import com.android.internal.annotations.VisibleForTesting;
+
 import com.google.cobalt.CobaltRegistry;
 
 /** Loads the Cobalt registry from a Java resource. */
-final class CobaltRegistryLoader {
+@VisibleForTesting
+public final class CobaltRegistryLoader {
     private static final String REGISTRY_FILE = "cobalt_registry.binarypb";
 
     /**

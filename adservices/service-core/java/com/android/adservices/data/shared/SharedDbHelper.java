@@ -22,6 +22,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -66,6 +67,7 @@ public class SharedDbHelper extends SQLiteOpenHelper {
     private final int mDbVersion;
     private final DbHelper mDbHelper;
 
+    @SuppressLint("NewAdServicesFile")
     @VisibleForTesting
     public SharedDbHelper(
             @NonNull Context context, @NonNull String dbName, int dbVersion, DbHelper dbHelper) {
