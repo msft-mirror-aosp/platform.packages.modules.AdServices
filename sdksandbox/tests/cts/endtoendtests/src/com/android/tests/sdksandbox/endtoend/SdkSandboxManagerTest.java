@@ -21,12 +21,10 @@ import static android.app.sdksandbox.SdkSandboxManager.EXTRA_HEIGHT_IN_PIXELS;
 import static android.app.sdksandbox.SdkSandboxManager.EXTRA_HOST_TOKEN;
 import static android.app.sdksandbox.SdkSandboxManager.EXTRA_WIDTH_IN_PIXELS;
 import static android.app.sdksandbox.SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR;
-
 import static androidx.lifecycle.Lifecycle.State;
 import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
-
+import static com.android.sdksandbox.flags.Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT;
 import static com.google.common.truth.Truth.assertThat;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
@@ -53,6 +51,11 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Parcel;
 import android.os.RemoteException;
+import android.platform.test.annotations.RequiresFlagsDisabled;
+import android.platform.test.annotations.RequiresFlagsEnabled;
+import android.platform.test.flag.junit.CheckFlagsRule;
+import android.platform.test.flag.junit.DeviceFlagsValueProvider;
+import android.provider.DeviceConfig;
 import android.view.Surface;
 
 import androidx.lifecycle.Lifecycle;
@@ -100,6 +103,8 @@ public final class SdkSandboxManagerTest {
     private static final String NAMESPACE_WINDOW_MANAGER = "window_manager";
     private static final String ASM_RESTRICTIONS_ENABLED =
             "ActivitySecurity__asm_restrictions_enabled";
+    private static final String CUSTOMIZED_SDK_CONTEXT_ENABLED =
+            "sdksandbox_customized_sdk_context_enabled";
     private static final String UNREGISTER_BEFORE_STARTING_KEY = "UNREGISTER_BEFORE_STARTING_KEY";
     private static final String ACTIVITY_STARTER_KEY = "ACTIVITY_STARTER_KEY";
     private static final UiDevice sUiDevice = UiDevice.getInstance(getInstrumentation());
@@ -113,6 +118,9 @@ public final class SdkSandboxManagerTest {
 
     @Rule(order = 2)
     public final Expect expect = Expect.create();
+
+    @Rule
+    public final CheckFlagsRule mCheckFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule();
 
     private ActivityScenario<TestActivity> mScenario;
 
@@ -765,6 +773,93 @@ public final class SdkSandboxManagerTest {
         assertThat(clearTopActivityStarter.isActivityResumed()).isTrue();
     }
 
+    /**
+     * Test that in case {@link FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT} is enabled and the {@link
+     * CUSTOMIZED_SDK_CONTEXT_ENABLED} flag is enabled, the sandbox activity context is created
+     * using the SDK ApplicationInfo.
+     *
+     * @throws RemoteException
+     */
+    @Test
+    @RequiresFlagsEnabled(FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
+    public void testSandboxActivityUseSdkBasedContextIfRequiredFlagAreEnabled()
+            throws RemoteException {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        DeviceConfigStateHelper mDeviceConfig =
+                new DeviceConfigStateHelper(DeviceConfig.NAMESPACE_ADSERVICES);
+        mDeviceConfig.set(CUSTOMIZED_SDK_CONTEXT_ENABLED, "true");
+
+        ICtsSdkProviderApi sdk = loadSdk();
+
+        ActivityStarter sandboxActivityStarter = new ActivityStarter();
+        IActivityActionExecutor actionExecutor = startSandboxActivity(sdk, sandboxActivityStarter);
+        assertThat(mScenario.getState()).isIn(Arrays.asList(State.CREATED, State.STARTED));
+        assertThat(sandboxActivityStarter.isActivityResumed()).isTrue();
+
+        String dataDir = actionExecutor.getDataDir();
+        assertThat(dataDir).contains(SDK_NAME_1);
+        assertThat(dataDir).doesNotContain(getSdkSandboxPackageName());
+    }
+
+    /**
+     * Test that in case {@link FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT} is enabled but the {@link
+     * CUSTOMIZED_SDK_CONTEXT_ENABLED} flag is disabled, the sandbox activity context is created
+     * using the sandbox App ApplicationInfo.
+     *
+     * @throws RemoteException
+     */
+    @Test
+    @RequiresFlagsEnabled(FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
+    public void testSandboxActivityUseAppBasedContextIfCustomizedSdkFlagIsDisabled()
+            throws RemoteException {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        DeviceConfigStateHelper mDeviceConfig =
+                new DeviceConfigStateHelper(DeviceConfig.NAMESPACE_ADSERVICES);
+        mDeviceConfig.set(CUSTOMIZED_SDK_CONTEXT_ENABLED, "false");
+
+        ICtsSdkProviderApi sdk = loadSdk();
+
+        ActivityStarter sandboxActivityStarter = new ActivityStarter();
+        IActivityActionExecutor actionExecutor = startSandboxActivity(sdk, sandboxActivityStarter);
+        assertThat(mScenario.getState()).isIn(Arrays.asList(State.CREATED, State.STARTED));
+        assertThat(sandboxActivityStarter.isActivityResumed()).isTrue();
+
+        String dataDir = actionExecutor.getDataDir();
+        assertThat(dataDir).doesNotContain(SDK_NAME_1);
+        assertThat(dataDir).contains(getSdkSandboxPackageName());
+    }
+
+    /**
+     * Test that in case {@link FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT} is disabled but the {@link
+     * CUSTOMIZED_SDK_CONTEXT_ENABLED} flag is enabled, the sandbox activity context is created
+     * using the sandbox App ApplicationInfo.
+     *
+     * @throws RemoteException
+     */
+    @Test
+    @RequiresFlagsDisabled(FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
+    public void testSandboxActivityUseAppBasedContextIfSdkBasedFlagIDisabled()
+            throws RemoteException {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        DeviceConfigStateHelper mDeviceConfig =
+                new DeviceConfigStateHelper(DeviceConfig.NAMESPACE_ADSERVICES);
+        mDeviceConfig.set(CUSTOMIZED_SDK_CONTEXT_ENABLED, "true");
+
+        ICtsSdkProviderApi sdk = loadSdk();
+
+        ActivityStarter sandboxActivityStarter = new ActivityStarter();
+        IActivityActionExecutor actionExecutor = startSandboxActivity(sdk, sandboxActivityStarter);
+        assertThat(mScenario.getState()).isIn(Arrays.asList(State.CREATED, State.STARTED));
+        assertThat(sandboxActivityStarter.isActivityResumed()).isTrue();
+
+        String dataDir = actionExecutor.getDataDir();
+        assertThat(dataDir).doesNotContain(SDK_NAME_1);
+        assertThat(dataDir).contains(getSdkSandboxPackageName());
+    }
+
     @Test
     @Ignore("b/298171583")
     public void testBackNavigation() throws Exception {
@@ -1038,6 +1133,13 @@ public final class SdkSandboxManagerTest {
         killSandbox();
 
         return callback.waitForSandboxDeath();
+    }
+
+    private String getSdkSandboxPackageName() {
+        return InstrumentationRegistry.getInstrumentation()
+                .getContext()
+                .getPackageManager()
+                .getSdkSandboxPackageName();
     }
 
     private void killSandbox() throws Exception {
