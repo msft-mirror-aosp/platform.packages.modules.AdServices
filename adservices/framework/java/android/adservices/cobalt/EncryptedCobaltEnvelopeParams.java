@@ -18,17 +18,20 @@ package android.adservices.cobalt;
 
 import android.annotation.IntDef;
 import android.annotation.NonNull;
+import android.annotation.SystemApi;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.Objects;
 
 /**
  * Parameters describing the encrypted Cobalt Envelope being sent.
  *
  * @hide
  */
+@SystemApi
 public final class EncryptedCobaltEnvelopeParams implements Parcelable {
     /**
      * Whether data is from a development or production device.
@@ -50,21 +53,29 @@ public final class EncryptedCobaltEnvelopeParams implements Parcelable {
 
     private final @Environment int mEnvironment;
     private final int mKeyIndex;
-    private final byte[] mCiphertext;
+    private final byte[] mCipherText;
 
+    /**
+     * The parameters describing how a Cobalt {@link Envelope} was encrypted and the ciphertext.
+     *
+     * @param environment the environment the {@link Envelope} was encrypted for
+     * @param keyIndex the identifier of the key used for encryption, see
+     *     //packages/modules/AdServices/adservices/libraries/cobalt/java/com/android/cobalt/crypto/PublicKeys.java
+     *     for key list
+     * @param cipherText an encrypted Cobalt {@link Envelope}, created using a supported encryption
+     *     algorithm and an associated key.
+     */
     public EncryptedCobaltEnvelopeParams(
-            @Environment int environment, @NonNull int keyIndex, @NonNull byte[] ciphertext) {
+            @Environment int environment, @NonNull int keyIndex, @NonNull byte[] cipherText) {
         mEnvironment = environment;
         mKeyIndex = keyIndex;
-        mCiphertext = ciphertext;
+        mCipherText = Objects.requireNonNull(cipherText);
     }
 
     private EncryptedCobaltEnvelopeParams(@NonNull Parcel in) {
-        mCiphertext = null;
-
         mEnvironment = in.readInt();
         mKeyIndex = in.readInt();
-        in.readByteArray(mCiphertext);
+        mCipherText = in.createByteArray();
     }
 
     public static final @NonNull Creator<EncryptedCobaltEnvelopeParams> CREATOR =
@@ -89,7 +100,7 @@ public final class EncryptedCobaltEnvelopeParams implements Parcelable {
     public void writeToParcel(@NonNull Parcel out, int flags) {
         out.writeInt(mEnvironment);
         out.writeInt(mKeyIndex);
-        out.writeByteArray(mCiphertext);
+        out.writeByteArray(mCipherText);
     }
 
     /** Get the environment. */
@@ -115,7 +126,7 @@ public final class EncryptedCobaltEnvelopeParams implements Parcelable {
      * <p>Envelopes are will be on the order of 1KiB in size.
      */
     @NonNull
-    public byte[] getCiphertext() {
-        return mCiphertext;
+    public byte[] getCipherText() {
+        return mCipherText;
     }
 }

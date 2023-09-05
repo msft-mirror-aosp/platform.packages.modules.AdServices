@@ -32,6 +32,8 @@ import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.WebAddresses;
+import com.android.adservices.service.measurement.AttributedTrigger;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.AttributionConfig;
 import com.android.adservices.service.measurement.EventReport;
@@ -60,7 +62,6 @@ import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Debug;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
-import com.android.adservices.service.measurement.util.Web;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementAttributionStats;
@@ -174,8 +175,6 @@ class AttributionJobHandler {
                     Trigger trigger = measurementDao.getTrigger(triggerId);
 
                     if (trigger.getStatus() != Trigger.Status.PENDING) {
-                        attributionStatus.setAttributionResult(
-                                AttributionStatus.AttributionResult.FAILURE);
                         attributionStatus.setFailureTypeFromTriggerStatus(trigger.getStatus());
                         return;
                     }
@@ -194,7 +193,7 @@ class AttributionJobHandler {
                         mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
                                 trigger, measurementDao, Type.TRIGGER_NO_MATCHING_SOURCE);
                         attributionStatus.setAttributionResult(
-                                AttributionStatus.AttributionResult.FAILURE);
+                                AttributionStatus.AttributionResult.NOT_ATTRIBUTED);
                         attributionStatus.setFailureType(
                                 AttributionStatus.FailureType.NO_MATCHING_SOURCE);
                         ignoreTrigger(trigger, measurementDao);
@@ -206,6 +205,7 @@ class AttributionJobHandler {
 
                     attributionStatus.setSourceType(source.getSourceType());
                     attributionStatus.setSurfaceTypeFromSourceAndTrigger(source, trigger);
+                    attributionStatus.setSourceRegistrant(source.getRegistrant().toString());
 
                     if (source.isInstallAttributed()) {
                         attributionStatus.setInstallAttribution(true);
@@ -213,7 +213,7 @@ class AttributionJobHandler {
 
                     if (!doTopLevelFiltersMatch(source, trigger, measurementDao)) {
                         attributionStatus.setAttributionResult(
-                                AttributionStatus.AttributionResult.FAILURE);
+                                AttributionStatus.AttributionResult.NOT_ATTRIBUTED);
                         attributionStatus.setFailureType(
                                 AttributionStatus.FailureType.TOP_LEVEL_FILTER_MATCH_FAILURE);
                         ignoreTrigger(trigger, measurementDao);
@@ -222,7 +222,7 @@ class AttributionJobHandler {
 
                     if (shouldAttributionBeBlockedByRateLimits(source, trigger, measurementDao)) {
                         attributionStatus.setAttributionResult(
-                                AttributionStatus.AttributionResult.FAILURE);
+                                AttributionStatus.AttributionResult.NOT_ATTRIBUTED);
                         attributionStatus.setFailureType(
                                 AttributionStatus.FailureType.RATE_LIMIT_EXCEEDED);
                         ignoreTrigger(trigger, measurementDao);
@@ -235,8 +235,12 @@ class AttributionJobHandler {
                     TriggeringStatus eventTriggeringStatus =
                             maybeGenerateEventReport(source, trigger, measurementDao);
 
-                    if (eventTriggeringStatus == TriggeringStatus.ATTRIBUTED
-                            || aggregateTriggeringStatus == TriggeringStatus.ATTRIBUTED) {
+                    boolean isEventTriggeringStatusAttributed =
+                            eventTriggeringStatus == TriggeringStatus.ATTRIBUTED;
+                    boolean isAggregateTriggeringStatusAttributed =
+                            aggregateTriggeringStatus == TriggeringStatus.ATTRIBUTED;
+                    if (isEventTriggeringStatusAttributed
+                            || isAggregateTriggeringStatusAttributed) {
                         ignoreCompetingSources(
                                 measurementDao,
                                 remainingMatchingSources,
@@ -245,10 +249,12 @@ class AttributionJobHandler {
                         long endTime = System.currentTimeMillis();
                         attributionStatus.setAttributionDelay(endTime - trigger.getTriggerTime());
                         attributionStatus.setAttributionResult(
-                                AttributionStatus.AttributionResult.SUCCESS);
+                                AttributionStatus.AttributionResult.SUCCESS,
+                                isAggregateTriggeringStatusAttributed,
+                                isEventTriggeringStatusAttributed);
                     } else {
                         attributionStatus.setAttributionResult(
-                                AttributionStatus.AttributionResult.FAILURE);
+                                AttributionStatus.AttributionResult.NOT_ATTRIBUTED);
                         attributionStatus.setFailureType(
                                 AttributionStatus.FailureType.NO_REPORTS_GENERATED);
                         ignoreTrigger(trigger, measurementDao);
@@ -272,7 +278,7 @@ class AttributionJobHandler {
             Source source, Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
 
-        if (trigger.getTriggerTime() > source.getAggregatableReportWindow()) {
+        if (trigger.getTriggerTime() >= source.getAggregatableReportWindow()) {
             mDebugReportApi.scheduleTriggerDebugReport(
                     source,
                     trigger,
@@ -282,11 +288,11 @@ class AttributionJobHandler {
             return TriggeringStatus.DROPPED;
         }
 
-        int numReports =
+        int numReportsPerDestination =
                 measurementDao.getNumAggregateReportsPerDestination(
                         trigger.getAttributionDestination(), trigger.getDestinationType());
 
-        if (numReports >= SystemHealthParams.getMaxAggregateReportsPerDestination()) {
+        if (numReportsPerDestination >= SystemHealthParams.getMaxAggregateReportsPerDestination()) {
             LogUtil.d(
                     String.format(
                             Locale.ENGLISH,
@@ -297,9 +303,29 @@ class AttributionJobHandler {
             mDebugReportApi.scheduleTriggerDebugReport(
                     source,
                     trigger,
-                    String.valueOf(numReports),
+                    String.valueOf(numReportsPerDestination),
                     measurementDao,
                     Type.TRIGGER_AGGREGATE_STORAGE_LIMIT);
+            return TriggeringStatus.DROPPED;
+        }
+
+        int numReportsPerSource = measurementDao.getNumAggregateReportsPerSource(source.getId());
+
+        if (mFlags.getMeasurementEnableMaxAggregateReportsPerSource()
+                && numReportsPerSource >= mFlags.getMeasurementMaxAggregateReportsPerSource()) {
+            LogUtil.d(
+                    String.format(
+                            Locale.ENGLISH,
+                            "Aggregate reports for source %1$s exceeds system health limit of"
+                                    + " %2$d.",
+                            source.getId(),
+                            mFlags.getMeasurementMaxAggregateReportsPerSource()));
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source,
+                    trigger,
+                    String.valueOf(numReportsPerSource),
+                    measurementDao,
+                    Type.TRIGGER_AGGREGATE_EXCESSIVE_REPORTS);
             return TriggeringStatus.DROPPED;
         }
 
@@ -562,15 +588,29 @@ class AttributionJobHandler {
 
         EventTrigger eventTrigger = matchingEventTrigger.get();
         // Check if deduplication key clashes with existing reports.
-        if (eventTrigger.getDedupKey() != null
-                && source.getEventReportDedupKeys().contains(eventTrigger.getDedupKey())) {
-            mDebugReportApi.scheduleTriggerDebugReport(
-                    source,
-                    trigger,
-                    /* limit = */ null,
-                    measurementDao,
-                    Type.TRIGGER_EVENT_DEDUPLICATED);
-            return TriggeringStatus.DROPPED;
+        if (eventTrigger.getDedupKey() != null) {
+            boolean alreadyAttributed;
+            if (mFlags.getMeasurementEnableAraDeduplicationAlignmentV1()) {
+                try {
+                    source.buildAttributedTriggers();
+                    alreadyAttributed = hasDeduplicationKey(source, eventTrigger.getDedupKey());
+                } catch (JSONException e) {
+                    LogUtil.e(e, "maybeGenerateEventReport: failed to build attributed triggers.");
+                    return TriggeringStatus.DROPPED;
+                }
+            } else {
+                alreadyAttributed = source.getEventReportDedupKeys().contains(
+                        eventTrigger.getDedupKey());
+            }
+            if (alreadyAttributed) {
+                mDebugReportApi.scheduleTriggerDebugReport(
+                        source,
+                        trigger,
+                        /* limit = */ null,
+                        measurementDao,
+                        Type.TRIGGER_EVENT_DEDUPLICATED);
+                return TriggeringStatus.DROPPED;
+            }
         }
 
         int numReports =
@@ -620,7 +660,12 @@ class AttributionJobHandler {
             if (!provisionEventReportQuota(source, trigger, newEventReport, measurementDao)) {
                 return TriggeringStatus.DROPPED;
             }
-            finalizeEventReportCreation(source, eventTrigger, newEventReport, measurementDao);
+            if (mFlags.getMeasurementEnableAraDeduplicationAlignmentV1()) {
+                finalizeEventReportCreation(
+                        source, eventTrigger, trigger, newEventReport, measurementDao);
+            } else {
+                finalizeEventReportCreation(source, eventTrigger, newEventReport, measurementDao);
+            }
         } else {
             if (!provisionEventReportFlexEventApiQuota(
                     source, newEventReport, measurementDao, eventTrigger)) {
@@ -636,12 +681,6 @@ class AttributionJobHandler {
             IMeasurementDao measurementDao,
             EventTrigger eventTrigger)
             throws DatastoreException {
-        try {
-            source.buildFlexibleEventReportApi();
-        } catch (JSONException e) {
-            LogUtil.e("Source::buildFlexibleEventReportApi caught JSON exception");
-            return false;
-        }
         ReportSpec reportSpec = source.getFlexEventReportSpec();
         if (!reportSpec.containsTriggerData(newEventReport.getTriggerData())) {
             return false;
@@ -653,18 +692,28 @@ class AttributionJobHandler {
             // the new proposed report doesn't cause bucket increments so no new report
             // generated
             reportSpec.insertAttributedTrigger(newEventReport);
+            // Flex API already inserts the attributed trigger and does not need an explicit action
+            // for that.
+            if (eventTrigger.getDedupKey() != null
+                    && !mFlags.getMeasurementEnableAraDeduplicationAlignmentV1()) {
+                source.getEventReportDedupKeys().add(eventTrigger.getDedupKey());
+                measurementDao.updateSourceEventReportDedupKeys(source);
+            }
         } else {
             List<EventReport> sourceEventReports = measurementDao.getSourceEventReports(source);
             if (sourceEventReports.size() + bucketIncrements <= reportSpec.getMaxReports()) {
                 // there are enough quota to generate all report for this trigger. No competing
                 // condition
                 reportSpec.insertAttributedTrigger(newEventReport);
-                for (int i = 0; i < bucketIncrements; i++) {
-                    // 1 bucket increment lead to 1 report so multiple report with same content
-                    // may be inserted.
-                    finalizeEventReportCreation(
-                            source, eventTrigger, newEventReport, measurementDao);
-                }
+
+                finalizeMultipleEventReportCreationWithTriggerSummaryBucket(
+                        source,
+                        eventTrigger,
+                        newEventReport,
+                        measurementDao,
+                        bucketIncrements,
+                        getReportCountForTriggerData(
+                                newEventReport.getTriggerData(), sourceEventReports));
             } else {
                 // competing condition: more event report candidate than allowed quota
                 Pair<List<EventReport>, Integer> tmp =
@@ -674,15 +723,31 @@ class AttributionJobHandler {
                 int numOfNewReportGenerated = tmp.second;
                 for (EventReport report : toBeDeletedReports) {
                     measurementDao.deleteEventReport(report);
+                    if (report.getTriggerDedupKey() != null
+                            && !mFlags.getMeasurementEnableAraDeduplicationAlignmentV1()) {
+                        source.getEventReportDedupKeys().remove(report.getTriggerDedupKey());
+                    }
                 }
-                for (int i = 0; i < numOfNewReportGenerated; i++) {
-                    finalizeEventReportCreation(
-                            source, eventTrigger, newEventReport, measurementDao);
-                }
+                // create a filtered list to remove new event report and deleted event report
+                List<EventReport> nonDeletedReports =
+                        sourceEventReports.stream()
+                                .filter(obj -> !toBeDeletedReports.contains(obj))
+                                .collect(Collectors.toList());
+                finalizeMultipleEventReportCreationWithTriggerSummaryBucket(
+                        source,
+                        eventTrigger,
+                        newEventReport,
+                        measurementDao,
+                        numOfNewReportGenerated,
+                        getReportCountForTriggerData(
+                                newEventReport.getTriggerData(), nonDeletedReports));
+                resetSummaryBucketForEventReportsRelatedToDeletion(
+                        source, nonDeletedReports, toBeDeletedReports, measurementDao);
             }
         }
         measurementDao.updateSourceAttributedTriggers(
-                source.getId(), source.getFlexEventReportSpec());
+                source.getId(),
+                source.attributedTriggersToJsonFlexApi());
         return true;
     }
 
@@ -743,7 +808,8 @@ class AttributionJobHandler {
             return false;
         }
 
-        if (lowestPriorityEventReport.getTriggerDedupKey() != null) {
+        if (lowestPriorityEventReport.getTriggerDedupKey() != null
+                && !mFlags.getMeasurementEnableAraDeduplicationAlignmentV1()) {
             source.getEventReportDedupKeys().remove(lowestPriorityEventReport.getTriggerDedupKey());
         }
 
@@ -763,6 +829,53 @@ class AttributionJobHandler {
         measurementDao.updateSourceEventReportDedupKeys(source);
 
         measurementDao.insertEventReport(eventReport);
+    }
+
+    private static void finalizeEventReportCreation(
+            Source source,
+            EventTrigger eventTrigger,
+            Trigger trigger,
+            EventReport eventReport,
+            IMeasurementDao measurementDao)
+            throws DatastoreException {
+        if (eventTrigger.getDedupKey() != null) {
+            source.getAttributedTriggers().add(
+                    new AttributedTrigger(
+                            trigger.getId(),
+                            eventTrigger.getTriggerData(),
+                            eventTrigger.getDedupKey()));
+            measurementDao.updateSourceAttributedTriggers(
+                    source.getId(),
+                    source.attributedTriggersToJson());
+        }
+
+        measurementDao.insertEventReport(eventReport);
+    }
+
+    private void finalizeMultipleEventReportCreationWithTriggerSummaryBucket(
+            Source source,
+            EventTrigger eventTrigger,
+            EventReport eventReport,
+            IMeasurementDao measurementDao,
+            int numNewReport,
+            int numCurrentReportWithSameTriggerData)
+            throws DatastoreException {
+        // Flex API already inserts the attributed trigger and does not need an explicit action for
+        // that.
+        if (eventTrigger.getDedupKey() != null
+                && !mFlags.getMeasurementEnableAraDeduplicationAlignmentV1()) {
+                source.getEventReportDedupKeys().add(eventTrigger.getDedupKey());
+        }
+        measurementDao.updateSourceEventReportDedupKeys(source);
+        List<Long> summaryBuckets =
+                ReportSpecUtil.getSummaryBucketsForTriggerData(
+                        source.getFlexEventReportSpec(), eventTrigger.getTriggerData());
+        for (int i = 0; i < numNewReport; i++) {
+            eventReport.updateSummaryBucket(
+                    ReportSpecUtil.getSummaryBucketFromIndex(
+                            numCurrentReportWithSameTriggerData++, summaryBuckets));
+            measurementDao.insertEventReport(eventReport);
+        }
     }
 
     private static void finalizeAggregateReportCreation(
@@ -1014,12 +1127,12 @@ class AttributionJobHandler {
         Optional<Uri> triggerDestinationTopPrivateDomain =
                 trigger.getDestinationType() == EventSurfaceType.APP
                         ? Optional.of(BaseUriExtractor.getBaseUri(attributionDestination))
-                        : Web.topPrivateDomainAndScheme(attributionDestination);
+                        : WebAddresses.topPrivateDomainAndScheme(attributionDestination);
         Uri publisher = source.getPublisher();
         Optional<Uri> publisherTopPrivateDomain =
                 source.getPublisherType() == EventSurfaceType.APP
                         ? Optional.of(publisher)
-                        : Web.topPrivateDomainAndScheme(publisher);
+                        : WebAddresses.topPrivateDomainAndScheme(publisher);
         if (!triggerDestinationTopPrivateDomain.isPresent()
                 || !publisherTopPrivateDomain.isPresent()) {
             return Optional.empty();
@@ -1065,7 +1178,17 @@ class AttributionJobHandler {
             Uri uri, @EventSurfaceType int eventSurfaceType) {
         return eventSurfaceType == EventSurfaceType.APP
                 ? Optional.of(BaseUriExtractor.getBaseUri(uri))
-                : Web.topPrivateDomainAndScheme(uri);
+                : WebAddresses.topPrivateDomainAndScheme(uri);
+    }
+
+    private static boolean hasDeduplicationKey(@NonNull Source source,
+            @NonNull UnsignedLong dedupKey) {
+        for (AttributedTrigger attributedTrigger : source.getAttributedTriggers()) {
+            if (dedupKey.equals(attributedTrigger.getDedupKey())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void logAttributionStats(AttributionStatus attributionStatus) {
@@ -1083,6 +1206,7 @@ class AttributionJobHandler {
                         .setSourceDerived(attributionStatus.isSourceDerived())
                         .setInstallAttribution(attributionStatus.isInstallAttribution())
                         .setAttributionDelay(attributionStatus.getAttributionDelay().get())
+                        .setSourceRegistrant(attributionStatus.getSourceRegistrant())
                         .build());
     }
 
@@ -1098,6 +1222,7 @@ class AttributionJobHandler {
                         .setRegistrationStatus(delayedSourceRegistrationStatus.UNKNOWN)
                         .setRegistrationDelay(
                                 delayedSourceRegistrationStatus.getRegistrationDelay())
+                        .setRegistrant(source.getRegistrant().toString())
                         .build());
     }
 
@@ -1130,6 +1255,54 @@ class AttributionJobHandler {
         } catch (NumberFormatException e) {
             LogUtil.e(e, "Configurable aggregate report delay parsing failed.");
             return reportDelayFromDefaults;
+        }
+    }
+
+    private int getReportCountForTriggerData(
+            UnsignedLong triggerData, List<EventReport> currentReports) {
+        int count = 0;
+        for (EventReport report : currentReports) {
+            if (report.getTriggerData().equals(triggerData)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private void resetSummaryBucketForEventReportsRelatedToDeletion(
+            Source source,
+            List<EventReport> currentEventReports,
+            List<EventReport> deletedReports,
+            IMeasurementDao measurementDao)
+            throws DatastoreException {
+        Set<UnsignedLong> processedTriggerData = new HashSet<>();
+        List<EventReport> orderedEventReports =
+                currentEventReports.stream()
+                        .sorted(Comparator.comparingLong(EventReport::getTriggerTime).reversed())
+                        .collect(Collectors.toList());
+
+        for (EventReport deletedReport : deletedReports) {
+            UnsignedLong triggerData = deletedReport.getTriggerData();
+            if (processedTriggerData.contains(triggerData)) {
+                continue;
+            }
+            processedTriggerData.add(triggerData);
+            int count = 0;
+            List<Long> summaryBuckets =
+                    ReportSpecUtil.getSummaryBucketsForTriggerData(
+                            source.getFlexEventReportSpec(), triggerData);
+            for (EventReport currentReport : orderedEventReports) {
+                Pair<Long, Long> newSummaryBucket =
+                        ReportSpecUtil.getSummaryBucketFromIndex(count, summaryBuckets);
+                count++;
+                if (!newSummaryBucket.equals(currentReport.getTriggerSummaryBucket())) {
+                    // only the new bucket different with original one, we need to update DB
+                    currentReport.updateSummaryBucket(newSummaryBucket);
+                    measurementDao.updateEventReportSummaryBucket(
+                            currentReport.getId(),
+                            currentReport.getStringEncodedTriggerSummaryBucket());
+                }
+            }
         }
     }
 }

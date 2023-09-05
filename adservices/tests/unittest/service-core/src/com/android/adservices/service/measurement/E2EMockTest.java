@@ -40,7 +40,9 @@ import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.enrollment.EnrollmentUtil;
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.AggregateReportingJob;
 import com.android.adservices.service.measurement.actions.EventReportingJob;
@@ -56,6 +58,7 @@ import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.attribution.AttributionJobHandlerWrapper;
 import com.android.adservices.service.measurement.attribution.TriggerContentProvider;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
+import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationContentProvider;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner;
 import com.android.adservices.service.measurement.registration.AsyncSourceFetcher;
@@ -63,6 +66,7 @@ import com.android.adservices.service.measurement.registration.AsyncTriggerFetch
 import com.android.adservices.service.measurement.reporting.AggregateReportingJobHandlerWrapper;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportingJobHandlerWrapper;
+import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.reporting.EventReportingJobHandlerWrapper;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 
@@ -85,6 +89,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -138,14 +143,16 @@ public abstract class E2EMockTest extends E2ETest {
         mClickVerifier = mock(ClickVerifier.class);
         mFlags = FlagsFactory.getFlags();
         mE2EMockStaticRule = new E2EMockStatic.E2EMockStaticRule(paramsProvider);
-        mMeasurementDataDeleter = spy(new MeasurementDataDeleter(sDatastoreManager));
+        mMeasurementDataDeleter = spy(new MeasurementDataDeleter(sDatastoreManager, mFlags));
 
         mEnrollmentDao =
                 new EnrollmentDao(
                         ApplicationProvider.getApplicationContext(),
                         DbTestUtil.getSharedDbHelperForTest(),
                         mFlags,
-                        /* enable seed */ true);
+                        /* enable seed */ true,
+                        AdServicesLoggerImpl.getInstance(),
+                        EnrollmentUtil.getInstance(sContext));
 
         mAsyncSourceFetcher =
                 spy(
@@ -161,7 +168,12 @@ public abstract class E2EMockTest extends E2ETest {
                                 mEnrollmentDao,
                                 mFlags,
                                 AdServicesLoggerImpl.getInstance()));
-        mDebugReportApi = new DebugReportApi(sContext, mFlags);
+        mDebugReportApi = new DebugReportApi(
+                sContext,
+                mFlags,
+                new EventReportWindowCalcDelegate(mFlags),
+                new SourceNoiseHandler(mFlags),
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest()));
         mMockContentResolver = mock(ContentResolver.class);
         mMockContentProviderClient = mock(ContentProviderClient.class);
         when(mMockContentResolver.acquireContentProviderClient(TriggerContentProvider.TRIGGER_URI))
@@ -331,7 +343,8 @@ public abstract class E2EMockTest extends E2ETest {
                         sDatastoreManager,
                         reportTime - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
                         reportTime,
-                        true);
+                        true,
+                        mFlags);
 
         processActualDebugEventReports(
                 timestamp,
@@ -345,7 +358,8 @@ public abstract class E2EMockTest extends E2ETest {
                         sDatastoreManager,
                         reportTime - SystemHealthParams.MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS,
                         reportTime,
-                        true);
+                        true,
+                        mFlags);
 
         processActualDebugAggregateReports(
                 (List<AggregateReport>) aggregateCaptures[0],
@@ -397,7 +411,8 @@ public abstract class E2EMockTest extends E2ETest {
                         reportingJob.mTimestamp
                                 - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
                         reportingJob.mTimestamp,
-                        false);
+                        false,
+                        mFlags);
 
         processActualEventReports(
                 (List<EventReport>) eventCaptures[0],
@@ -418,7 +433,8 @@ public abstract class E2EMockTest extends E2ETest {
                         reportingJob.mTimestamp
                                 - SystemHealthParams.MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS,
                         reportingJob.mTimestamp,
-                        false);
+                        false,
+                        mFlags);
 
         processActualAggregateReports(
                 (List<AggregateReport>) aggregateCaptures[0],
@@ -444,7 +460,7 @@ public abstract class E2EMockTest extends E2ETest {
         List<JSONObject> eventReportObjects =
                 getActualEventReportObjects(eventReports, destinations, payloads);
         for (JSONObject obj : eventReportObjects) {
-            obj.put(TestFormatJsonMapping.REPORT_TIME_KEY, triggerTime);
+            obj.put(TestFormatJsonMapping.REPORT_TIME_KEY, String.valueOf(triggerTime));
         }
         mActualOutput.mDebugEventReportObjects.addAll(eventReportObjects);
     }
@@ -605,9 +621,10 @@ public abstract class E2EMockTest extends E2ETest {
     }
 
     private void runDeleteExpiredRecordsJob(long earliestValidInsertion) {
+        int retryLimit = Flags.MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
         sDatastoreManager
                 .runInTransaction(
-                        dao -> dao.deleteExpiredRecords(earliestValidInsertion));
+                        dao -> dao.deleteExpiredRecords(earliestValidInsertion, retryLimit));
     }
 
     void updateEnrollment(String uri) {
@@ -645,7 +662,8 @@ public abstract class E2EMockTest extends E2ETest {
     }
 
     private String getEnrollmentId(String uri) {
-        String authority = Uri.parse(uri).getAuthority();
+        Optional<Uri> domainAndScheme = WebAddresses.topPrivateDomainAndScheme(Uri.parse(uri));
+        String authority = domainAndScheme.get().getAuthority();
         return mUriToEnrollmentId.computeIfAbsent(authority, k -> "enrollment-id-" + authority);
     }
 

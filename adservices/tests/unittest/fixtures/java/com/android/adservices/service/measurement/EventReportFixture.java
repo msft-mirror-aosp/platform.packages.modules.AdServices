@@ -40,6 +40,12 @@ public final class EventReportFixture {
                 .setSourceDebugKey(new UnsignedLong(237865L))
                 .setTriggerDebugKey(new UnsignedLong(928762L))
                 .setSourceId(UUID.randomUUID().toString())
-                .setTriggerId(UUID.randomUUID().toString());
+                .setTriggerId(UUID.randomUUID().toString())
+                .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example.test"))
+                .setTriggerSummaryBucket("2,3");
+    }
+
+    public static class ValidEventReportParams {
+        public static final long TRIGGER_TIME = 8640000000L;
     }
 }

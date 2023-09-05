@@ -16,73 +16,40 @@
 
 package com.android.adservices.mockito;
 
-import androidx.annotation.Nullable;
-
+import com.android.modules.utils.testing.AbstractExtendedMockitoRule;
+import com.android.modules.utils.testing.ExtendedMockitoRule;
 import com.android.modules.utils.testing.StaticMockFixture;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Supplier;
 
 /** Abstraction for {@link ExtendedMockitoRule}. */
-public class AdServicesExtendedMockitoRule extends ExtendedMockitoRule {
+public class AdServicesExtendedMockitoRule
+        extends AbstractExtendedMockitoRule<
+                AdServicesExtendedMockitoRule, AdServicesExtendedMockitoRule.Builder> {
+
+    public AdServicesExtendedMockitoRule(Builder builder) {
+        super(builder);
+    }
 
     @SafeVarargs
     public AdServicesExtendedMockitoRule(Supplier<? extends StaticMockFixture>... suppliers) {
-        super(new ExtendedMockitoRule.Builder().addStaticMockFixtures(suppliers));
+        super(new Builder().addStaticMockFixtures(suppliers));
     }
 
-    private AdServicesExtendedMockitoRule(Builder builder) {
-        super(builder.asExtendedMockitoRuleBuilder());
-    }
-
-    // TODO(b/281577492): make ExtendedMockitoRule.Builder() non-final and extend it instead?
-    public static final class Builder {
-        private final @Nullable Object mTestClassInstance;
-        private final List<Class<?>> mMockedStaticClasses = new ArrayList<>();
-        private final List<Class<?>> mSpiedStaticClasses = new ArrayList<>();
-        private final List<Supplier<? extends StaticMockFixture>> mSuppliers = new ArrayList<>();
+    public static final class Builder
+            extends AbstractBuilder<AdServicesExtendedMockitoRule, Builder> {
 
         public Builder() {
-            this(/* testClassInstance= */ null);
+            super();
         }
 
         public Builder(Object testClassInstance) {
-            mTestClassInstance = testClassInstance;
+            super(testClassInstance);
         }
 
-        public Builder mockStatic(Class<?> clazz) {
-            mMockedStaticClasses.add(clazz);
-            return this;
-        }
-
-        public Builder spyStatic(Class<?> clazz) {
-            mSpiedStaticClasses.add(clazz);
-            return this;
-        }
-
-        @SafeVarargs
-        public final Builder addStaticMockFixtures(
-                Supplier<? extends StaticMockFixture>... suppliers) {
-            for (Supplier<? extends StaticMockFixture> supplier : suppliers) {
-                mSuppliers.add(supplier);
-            }
-            return this;
-        }
-
+        @Override
         public AdServicesExtendedMockitoRule build() {
             return new AdServicesExtendedMockitoRule(this);
-        }
-
-        private ExtendedMockitoRule.Builder asExtendedMockitoRuleBuilder() {
-            ExtendedMockitoRule.Builder builder =
-                    mTestClassInstance == null
-                            ? new ExtendedMockitoRule.Builder()
-                            : new ExtendedMockitoRule.Builder(mTestClassInstance);
-            mMockedStaticClasses.forEach(c -> builder.mockStatic(c));
-            mSpiedStaticClasses.forEach(c -> builder.spyStatic(c));
-            mSuppliers.forEach(s -> builder.addStaticMockFixtures(s));
-            return builder;
         }
     }
 }

@@ -35,6 +35,7 @@ import android.webkit.URLUtil;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
+import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBidAndUri;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.exception.JSExecutionException;
@@ -246,7 +247,7 @@ public class AdSelectionScriptEngine {
             AdCounterKeyCopier adCounterKeyCopier,
             DebugReportingScriptStrategy debugReportingScript,
             boolean cpcBillingEnabled) {
-        mJsEngine = JSScriptEngine.getInstance(context);
+        mJsEngine = JSScriptEngine.getInstance(context, sLogger);
         mEnforceMaxHeapSizeFeatureSupplier = enforceMaxHeapSizeFeatureSupplier;
         mMaxHeapSizeBytesSupplier = maxHeapSizeBytesSupplier;
         mAdDataArgumentUtil = new AdDataArgumentUtil(adCounterKeyCopier);
@@ -452,7 +453,7 @@ public class AdSelectionScriptEngine {
      */
     public ListenableFuture<Long> selectOutcome(
             @NonNull String selectionLogic,
-            @NonNull List<AdSelectionIdWithBidAndRenderUri> adSelectionIdWithBidAndRenderUris,
+            @NonNull List<AdSelectionResultBidAndUri> adSelectionIdWithBidAndRenderUris,
             @NonNull AdSelectionSignals selectionSignals)
             throws JSONException, IllegalStateException {
         Objects.requireNonNull(selectionLogic);
@@ -467,7 +468,7 @@ public class AdSelectionScriptEngine {
 
         ImmutableList.Builder<JSScriptArgument> adSelectionIdWithBidArguments =
                 new ImmutableList.Builder<>();
-        for (AdSelectionIdWithBidAndRenderUri curr : adSelectionIdWithBidAndRenderUris) {
+        for (AdSelectionResultBidAndUri curr : adSelectionIdWithBidAndRenderUris) {
             // Ad with bids are going to be in an array their individual name is ignored.
             adSelectionIdWithBidArguments.add(
                     SelectAdsFromOutcomesArgumentUtil.asScriptArgument(
@@ -515,11 +516,8 @@ public class AdSelectionScriptEngine {
                 if (mCpcBillingEnabled) {
                     double adCost = json.optDouble(AD_COST_FIELD_NAME);
                     if (!Double.isNaN(adCost) && !Double.isInfinite(adCost)) {
-                        BuyerContextualSignals buyerContextualSignals =
-                                BuyerContextualSignals.builder()
-                                        .setAdCost(new AdCost(adCost, NUM_BITS_STOCHASTIC_ROUNDING))
-                                        .build();
-                        generateBidResultBuilder.setBuyerContextualSignals(buyerContextualSignals);
+                        generateBidResultBuilder.setAdCost(
+                                new AdCost(adCost, NUM_BITS_STOCHASTIC_ROUNDING));
                     }
                 }
                 results.add(generateBidResultBuilder.build());

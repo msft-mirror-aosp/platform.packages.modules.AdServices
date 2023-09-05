@@ -28,9 +28,9 @@ import android.net.Uri;
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.util.UnsignedLong;
-import com.android.adservices.service.measurement.util.Web;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
 
@@ -204,6 +204,16 @@ class FetcherUtil {
         return true;
     }
 
+    static String getSourceRegistrantToLog(AsyncRegistration asyncRegistration) {
+        switch (asyncRegistration.getType()) {
+            case APP_SOURCE:
+            case WEB_SOURCE:
+                return asyncRegistration.getRegistrant().toString();
+            default:
+                return "";
+        }
+    }
+
     static void emitHeaderMetrics(
             Flags flags,
             AdServicesLogger logger,
@@ -218,7 +228,7 @@ class FetcherUtil {
 
         if (headerSize > maxSize) {
             adTechDomain =
-                    Web.topPrivateDomainAndScheme(asyncRegistration.getRegistrationUri())
+                    WebAddresses.topPrivateDomainAndScheme(asyncRegistration.getRegistrationUri())
                             .map(Uri::toString)
                             .orElse(null);
         }
@@ -232,7 +242,8 @@ class FetcherUtil {
                                 getSurfaceType(asyncRegistration),
                                 getStatus(asyncFetchStatus),
                                 getFailureType(asyncFetchStatus),
-                                asyncFetchStatus.getRegistrationDelay().get())
+                                asyncFetchStatus.getRegistrationDelay().get(),
+                                getSourceRegistrantToLog(asyncRegistration))
                         .setAdTechDomain(adTechDomain)
                         .build());
     }

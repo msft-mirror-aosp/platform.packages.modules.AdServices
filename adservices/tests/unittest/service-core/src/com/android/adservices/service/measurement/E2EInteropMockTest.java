@@ -39,21 +39,31 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 /**
  * End-to-end test from source and trigger registration to attribution reporting, using mocked HTTP
  * requests.
  *
  * <p>Tests in assets/msmt_interop_tests/ directory were copied from Chromium
- * src/content/test/data/attribution_reporting/interop April 21, 2023 //TODO(b/290124390): Re-add
- * event_report_window.json test
+ * src/content/test/data/attribution_reporting/interop April 21, 2023. Files destination_limit.json,
+ * max_aggregatable_reports_per_source.json, parse_failures.json, rate_limit_max_attributions.json,
+ * event_level_report_time.json, aggregatable_report_window.json, and
+ * event_source_event_report_windows.json were updated with GitHub commit
+ * 8eaed64bc0ce875f31005f1c649afc823105596e
  */
 @RunWith(Parameterized.class)
 public class E2EInteropMockTest extends E2EMockTest {
     private static final String TEST_DIR_NAME = "msmt_interop_tests";
     private static final String ANDROID_APP_SCHEME = "android-app";
+    private static final List<AsyncFetchStatus.EntityStatus> sParsingErrors = List.of(
+            AsyncFetchStatus.EntityStatus.PARSING_ERROR,
+            AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+    private static final Map<String, String> sApiConfigPhFlags =
+            Map.of("max_event_info_gain", "measurement_flex_api_max_information_gain_event");
 
     private static String preprocessor(String json) {
         return json.replaceAll("\\.test(?=[\"\\/])", ".com")
@@ -62,9 +72,13 @@ public class E2EInteropMockTest extends E2EMockTest {
                 .replaceAll("\"destination\":", "\"web_destination\":");
     }
 
+    private static Map<String, String> sPhFlagsForInterop = Map.of(
+            // TODO (b/295382171): remove this after the flag is removed.
+            "measurement_enable_max_aggregate_reports_per_source", "true");
+
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> getData() throws IOException, JSONException {
-        return data(TEST_DIR_NAME, E2EInteropMockTest::preprocessor);
+        return data(TEST_DIR_NAME, E2EInteropMockTest::preprocessor, sApiConfigPhFlags);
     }
 
     public E2EInteropMockTest(
@@ -74,7 +88,20 @@ public class E2EInteropMockTest extends E2EMockTest {
             String name,
             Map<String, String> phFlagsMap)
             throws RemoteException {
-        super(actions, expectedOutput, paramsProvider, name, phFlagsMap);
+        super(
+                actions,
+                expectedOutput,
+                paramsProvider,
+                name,
+                (
+                        (Supplier<Map<String, String>>) () -> {
+                            for (String key : sPhFlagsForInterop.keySet()) {
+                                phFlagsMap.put(key, sPhFlagsForInterop.get(key));
+                            }
+                            return phFlagsMap;
+                        }
+                ).get()
+        );
         mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager, mFlags);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(
@@ -179,17 +206,23 @@ public class E2EInteropMockTest extends E2EMockTest {
                         .setDebugKeyAllowed(arDebugPermission)
                         .setRegistrationUri(Uri.parse(uri))
                         .build();
-        Source source = mAsyncSourceFetcher
-                .parseSource(asyncRegistration, enrollmentId, headers, new AsyncFetchStatus())
-                .orElseThrow();
-        Assert.assertTrue(
-                "mAsyncRegistrationQueueRunner.storeSource failed",
-                sDatastoreManager.runInTransaction(
-                        measurementDao ->
-                                mAsyncRegistrationQueueRunner.storeSource(
-                                        source,
-                                        asyncRegistration,
-                                        measurementDao)));
+
+        AsyncFetchStatus status = new AsyncFetchStatus();
+        Optional<Source> maybeSource = mAsyncSourceFetcher
+                .parseSource(asyncRegistration, enrollmentId, headers, status);
+
+        if (maybeSource.isPresent()) {
+            Assert.assertTrue(
+                    "mAsyncRegistrationQueueRunner.storeSource failed",
+                    sDatastoreManager.runInTransaction(
+                            measurementDao ->
+                                    mAsyncRegistrationQueueRunner.storeSource(
+                                            maybeSource.get(),
+                                            asyncRegistration,
+                                            measurementDao)));
+        } else {
+            Assert.assertTrue(sParsingErrors.contains(status.getEntityStatus()));
+        }
     }
 
     private void insertTrigger(
@@ -218,16 +251,22 @@ public class E2EInteropMockTest extends E2EMockTest {
                         .setDebugKeyAllowed(arDebugPermission)
                         .setRegistrationUri(Uri.parse(uri))
                         .build();
-        Trigger trigger = mAsyncTriggerFetcher
-                .parseTrigger(asyncRegistration, enrollmentId, headers, new AsyncFetchStatus())
-                .orElseThrow();
-        Assert.assertTrue(
-                "mAsyncRegistrationQueueRunner.storeTrigger failed",
-                sDatastoreManager.runInTransaction(
-                        measurementDao ->
-                                mAsyncRegistrationQueueRunner.storeTrigger(
-                                        trigger,
-                                        measurementDao)));
+
+        AsyncFetchStatus status = new AsyncFetchStatus();
+        Optional<Trigger> maybeTrigger = mAsyncTriggerFetcher
+                .parseTrigger(asyncRegistration, enrollmentId, headers, status);
+
+        if (maybeTrigger.isPresent()) {
+            Assert.assertTrue(
+                    "mAsyncRegistrationQueueRunner.storeTrigger failed",
+                    sDatastoreManager.runInTransaction(
+                            measurementDao ->
+                                    mAsyncRegistrationQueueRunner.storeTrigger(
+                                            maybeTrigger.get(),
+                                            measurementDao)));
+        } else {
+            Assert.assertTrue(sParsingErrors.contains(status.getEntityStatus()));
+        }
     }
 
     private static Source.SourceType getSourceType(RegistrationRequest request) {

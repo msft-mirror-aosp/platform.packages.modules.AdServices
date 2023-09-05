@@ -44,11 +44,6 @@ public class AdServicesConfig {
         return FlagsFactory.getFlags().getMeasurementEventFallbackReportingJobPeriodMs();
     }
 
-    /** Returns the URL for fetching public encryption keys for aggregatable reports. */
-    public static String getMeasurementAggregateEncryptionKeyCoordinatorUrl() {
-        return FlagsFactory.getFlags().getMeasurementAggregateEncryptionKeyCoordinatorUrl();
-    }
-
     /**
      * Returns the list of URL(comma-separated string) for fetching public encryption keys for
      * aggregatable reports.

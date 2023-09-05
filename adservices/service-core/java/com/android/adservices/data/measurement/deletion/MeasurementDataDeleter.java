@@ -27,7 +27,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
-import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.ReportSpecUtil;
 import com.android.adservices.service.measurement.Source;
@@ -35,6 +35,7 @@ import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.WipeoutStatus;
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementWipeoutStats;
 import com.android.internal.annotations.VisibleForTesting;
@@ -44,6 +45,7 @@ import org.json.JSONException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Facilitates deletion of measurement data from the database, for e.g. deletion of sources,
@@ -54,14 +56,11 @@ public class MeasurementDataDeleter {
     private static final int AGGREGATE_CONTRIBUTIONS_VALUE_MINIMUM_LIMIT = 0;
 
     private final DatastoreManager mDatastoreManager;
+    private final Flags mFlags;
 
-    public MeasurementDataDeleter(DatastoreManager datastoreManager) {
+    public MeasurementDataDeleter(DatastoreManager datastoreManager, Flags flags) {
         mDatastoreManager = datastoreManager;
-    }
-
-    @VisibleForTesting
-    public boolean getFlexibleEventAPIFlag() {
-        return FlagsFactory.getFlags().getMeasurementFlexibleEventReportingApiEnabled();
+        mFlags = flags;
     }
 
     /**
@@ -106,7 +105,7 @@ public class MeasurementDataDeleter {
                     resetAggregateContributions(dao, aggregateReports);
                     resetAggregateReportDedupKeys(dao, aggregateReports);
                     List<EventReport> eventReports;
-                    if (getFlexibleEventAPIFlag()) {
+                    if (mFlags.getMeasurementFlexibleEventReportingApiEnabled()) {
                         /*
                          Because some triggers may not be stored in the event report table in
                          the flexible event report API, we must extract additional related
@@ -130,7 +129,7 @@ public class MeasurementDataDeleter {
                         // on, need to check additional trigger and delete them
                         for (String sourceId : sourceIds) {
                             Source source = dao.getSource(sourceId);
-                            if (!getFlexibleEventAPIFlag()
+                            if (!mFlags.getMeasurementFlexibleEventReportingApiEnabled()
                                     || source.getTriggerSpecs() == null
                                     || source.getTriggerSpecs().isEmpty()) {
                                 continue;
@@ -178,7 +177,9 @@ public class MeasurementDataDeleter {
                     // package on device for parity
                     WipeoutStatus wipeoutStatus = new WipeoutStatus();
                     wipeoutStatus.setWipeoutType(WipeoutStatus.WipeoutType.UNKNOWN);
-                    logWipeoutStats(wipeoutStatus);
+                    logWipeoutStats(
+                            wipeoutStatus,
+                            getRegistrant(deletionParam.getAppPackageName()).toString());
                 });
     }
 
@@ -216,13 +217,38 @@ public class MeasurementDataDeleter {
             throws DatastoreException {
         for (EventReport report : eventReports) {
             if (report.getSourceId() == null) {
-                LogUtil.d("SourceId on the event report is null.");
+                LogUtil.d("resetDedupKeys: SourceId on the event report is null.");
                 continue;
             }
 
             Source source = dao.getSource(report.getSourceId());
-            source.getEventReportDedupKeys().remove(report.getTriggerDedupKey());
-            dao.updateSourceEventReportDedupKeys(source);
+
+            if (mFlags.getMeasurementEnableAraDeduplicationAlignmentV1()) {
+                UnsignedLong dedupKey = report.getTriggerDedupKey();
+                if (dedupKey != null) {
+                    try {
+                        source.buildAttributedTriggers();
+                        source.getAttributedTriggers().removeIf(attributedTrigger ->
+                                dedupKey.equals(attributedTrigger.getDedupKey())
+                                        && Objects.equals(
+                                                report.getTriggerId(),
+                                                attributedTrigger.getTriggerId()));
+                        // Flex API takes care of trigger removal from the attributed trigger list
+                        // without the need for changes here.
+                        if (!(mFlags.getMeasurementFlexibleEventReportingApiEnabled()
+                                        && source.getTriggerSpecs() != null
+                                        && !source.getTriggerSpecs().isEmpty())) {
+                            dao.updateSourceAttributedTriggers(
+                                    source.getId(), source.attributedTriggersToJson());
+                        }
+                    } catch (JSONException e) {
+                        LogUtil.e(e, "resetDedupKeys: failed to build attributed triggers.");
+                    }
+                }
+            } else {
+                source.getEventReportDedupKeys().remove(report.getTriggerDedupKey());
+                dao.updateSourceEventReportDedupKeys(source);
+            }
         }
     }
 
@@ -248,12 +274,13 @@ public class MeasurementDataDeleter {
         return Uri.parse(ANDROID_APP_SCHEME + "://" + packageName);
     }
 
-    private void logWipeoutStats(WipeoutStatus wipeoutStatus) {
+    private void logWipeoutStats(WipeoutStatus wipeoutStatus, String sourceRegistrant) {
         AdServicesLoggerImpl.getInstance()
                 .logMeasurementWipeoutStats(
                         new MeasurementWipeoutStats.Builder()
                                 .setCode(AD_SERVICES_MEASUREMENT_WIPEOUT)
                                 .setWipeoutType(wipeoutStatus.getWipeoutType().ordinal())
+                                .setSourceRegistrant(sourceRegistrant)
                                 .build());
     }
 
@@ -305,7 +332,9 @@ public class MeasurementDataDeleter {
                         eventReportsToDelete.add(eventReport);
                     }
                     dao.updateSourceAttributedTriggers(
-                            source.getId(), source.getFlexEventReportSpec());
+                            source.getId(),
+                            source.attributedTriggersToJsonFlexApi());
+                    ReportSpecUtil.resetSummaryBucketForAllEventReport(source, dao);
                 }
             }
         }

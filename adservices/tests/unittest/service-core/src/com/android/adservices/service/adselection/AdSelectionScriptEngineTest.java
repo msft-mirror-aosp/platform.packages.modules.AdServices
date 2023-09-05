@@ -43,8 +43,9 @@ import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
+import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBidAndUri;
 import com.android.adservices.data.customaudience.AdDataConversionStrategy;
 import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
 import com.android.adservices.data.customaudience.DBCustomAudience;
@@ -167,23 +168,23 @@ public class AdSelectionScriptEngineTest {
     private static final long AD_SELECTION_ID_3 = 1234567L;
     private static final double AD_BID_3 = 12.0;
     private static final Uri AD_RENDER_URI = Uri.parse("test.com/");
-    private static final AdSelectionIdWithBidAndRenderUri AD_SELECTION_ID_WITH_BID_1 =
-            AdSelectionIdWithBidAndRenderUri.builder()
+    private static final AdSelectionResultBidAndUri AD_SELECTION_ID_WITH_BID_1 =
+            AdSelectionResultBidAndUri.builder()
                     .setAdSelectionId(AD_SELECTION_ID_1)
-                    .setBid(AD_BID_1)
-                    .setRenderUri(AD_RENDER_URI)
+                    .setWinningAdBid(AD_BID_1)
+                    .setWinningAdRenderUri(AD_RENDER_URI)
                     .build();
-    private static final AdSelectionIdWithBidAndRenderUri AD_SELECTION_ID_WITH_BID_2 =
-            AdSelectionIdWithBidAndRenderUri.builder()
+    private static final AdSelectionResultBidAndUri AD_SELECTION_ID_WITH_BID_2 =
+            AdSelectionResultBidAndUri.builder()
                     .setAdSelectionId(AD_SELECTION_ID_2)
-                    .setBid(AD_BID_2)
-                    .setRenderUri(AD_RENDER_URI)
+                    .setWinningAdBid(AD_BID_2)
+                    .setWinningAdRenderUri(AD_RENDER_URI)
                     .build();
-    private static final AdSelectionIdWithBidAndRenderUri AD_SELECTION_ID_WITH_BID_3 =
-            AdSelectionIdWithBidAndRenderUri.builder()
+    private static final AdSelectionResultBidAndUri AD_SELECTION_ID_WITH_BID_3 =
+            AdSelectionResultBidAndUri.builder()
                     .setAdSelectionId(AD_SELECTION_ID_3)
-                    .setBid(AD_BID_3)
-                    .setRenderUri(AD_RENDER_URI)
+                    .setWinningAdBid(AD_BID_3)
+                    .setWinningAdRenderUri(AD_RENDER_URI)
                     .build();
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(1);
     IsolateSettings mIsolateSettings = IsolateSettings.forMaxHeapSizeEnforcementDisabled();
@@ -396,13 +397,8 @@ public class AdSelectionScriptEngineTest {
                 .containsExactly(
                         new AdWithBid(AD_DATA_WITH_DOUBLE_AD_COST_1, BID_1),
                         new AdWithBid(AD_DATA_WITH_DOUBLE_AD_COST_2, BID_2));
-        assertThat(
-                        results.stream()
-                                .map(GenerateBidResult::getBuyerContextualSignals)
-                                .collect(Collectors.toList()))
-                .containsExactly(
-                        BuyerContextualSignals.builder().setAdCost(AD_COST_1).build(),
-                        BuyerContextualSignals.builder().setAdCost(AD_COST_2).build());
+        assertThat(results.stream().map(GenerateBidResult::getAdCost).collect(Collectors.toList()))
+                .containsExactly(AD_COST_1, AD_COST_2);
     }
 
     @Test
@@ -450,10 +446,7 @@ public class AdSelectionScriptEngineTest {
                 .containsExactly(
                         new AdWithBid(AD_DATA_WITH_DOUBLE_AD_COST_1, BID_1),
                         new AdWithBid(AD_DATA_WITH_DOUBLE_AD_COST_2, BID_2));
-        assertThat(
-                        results.stream()
-                                .map(GenerateBidResult::getBuyerContextualSignals)
-                                .collect(Collectors.toList()))
+        assertThat(results.stream().map(GenerateBidResult::getAdCost).collect(Collectors.toList()))
                 .containsExactly(null, null);
     }
 
@@ -496,9 +489,10 @@ public class AdSelectionScriptEngineTest {
         verify(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
         verify(mRunAdBiddingPerCAExecutionLoggerMock).endGenerateBids();
         for (GenerateBidResult result : results) {
-            LogUtil.i(result.getAdWithBid().getAdData().toString());
+            LoggerFactory.getFledgeLogger().i(result.getAdWithBid().getAdData().toString());
         }
-        LogUtil.i(new AdWithBid(AD_DATA_WITH_DOUBLE_AD_COST_EMPTY, BID_2).getAdData().toString());
+        LoggerFactory.getFledgeLogger()
+                .i(new AdWithBid(AD_DATA_WITH_DOUBLE_AD_COST_EMPTY, BID_2).getAdData().toString());
         assertThat(
                         results.stream()
                                 .map(GenerateBidResult::getAdWithBid)
@@ -506,12 +500,8 @@ public class AdSelectionScriptEngineTest {
                 .containsExactly(
                         new AdWithBid(AD_DATA_WITH_DOUBLE_AD_COST_1, BID_1),
                         new AdWithBid(AD_DATA_WITH_DOUBLE_AD_COST_EMPTY, BID_2));
-        assertThat(
-                        results.stream()
-                                .map(GenerateBidResult::getBuyerContextualSignals)
-                                .collect(Collectors.toList()))
-                .containsExactly(
-                        BuyerContextualSignals.builder().setAdCost(AD_COST_1).build(), null);
+        assertThat(results.stream().map(GenerateBidResult::getAdCost).collect(Collectors.toList()))
+                .containsExactly(AD_COST_1, null);
     }
 
     @Test
@@ -1749,7 +1739,7 @@ public class AdSelectionScriptEngineTest {
 
     private Long selectOutcome(
             String jsScript,
-            List<AdSelectionIdWithBidAndRenderUri> adSelectionIdWithBidAndRenderUris,
+            List<AdSelectionResultBidAndUri> adSelectionIdWithBidAndRenderUris,
             AdSelectionSignals selectionSignals)
             throws Exception {
         return waitForFuture(

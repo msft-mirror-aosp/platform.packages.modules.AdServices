@@ -62,6 +62,7 @@ public class EventReport {
     private String mTriggerId;
     private Uri mRegistrationOrigin;
     private long mTriggerValue;
+    private Pair<Long, Long> mTriggerSummaryBucket;
 
     @IntDef(value = {Status.PENDING, Status.DELIVERED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -112,7 +113,9 @@ public class EventReport {
                 && Objects.equals(mTriggerDebugKey, eventReport.mTriggerDebugKey)
                 && Objects.equals(mSourceId, eventReport.mSourceId)
                 && Objects.equals(mTriggerId, eventReport.mTriggerId)
-                && Objects.equals(mRegistrationOrigin, eventReport.mRegistrationOrigin);
+                && Objects.equals(mRegistrationOrigin, eventReport.mRegistrationOrigin)
+                && mTriggerValue == eventReport.mTriggerValue
+                && Objects.equals(mTriggerSummaryBucket, eventReport.mTriggerSummaryBucket);
     }
 
     @Override
@@ -134,7 +137,9 @@ public class EventReport {
                 mTriggerDebugKey,
                 mSourceId,
                 mTriggerId,
-                mRegistrationOrigin);
+                mRegistrationOrigin,
+                mTriggerValue,
+                mTriggerSummaryBucket);
     }
 
     /**
@@ -253,6 +258,11 @@ public class EventReport {
         return mTriggerId;
     }
 
+    /** Trigger summary bucket */
+    public Pair<Long, Long> getTriggerSummaryBucket() {
+        return mTriggerSummaryBucket;
+    }
+
     /** Returns registration origin used to register the source and trigger */
     public Uri getRegistrationOrigin() {
         return mRegistrationOrigin;
@@ -261,6 +271,24 @@ public class EventReport {
     /** Trigger Value */
     public long getTriggerValue() {
         return mTriggerValue;
+    }
+
+    /** Get Summary Bucket As String */
+    public String getStringEncodedTriggerSummaryBucket() {
+        if (mTriggerSummaryBucket == null) {
+            return null;
+        } else {
+            return mTriggerSummaryBucket.first + "," + mTriggerSummaryBucket.second;
+        }
+    }
+
+    /**
+     * Update the summary bucket in the event report
+     *
+     * @param summaryBucket the summary bucket
+     */
+    public void updateSummaryBucket(Pair<Long, Long> summaryBucket) {
+        mTriggerSummaryBucket = summaryBucket;
     }
 
     /** Builder for {@link EventReport} */
@@ -272,9 +300,7 @@ public class EventReport {
             mBuilding = new EventReport();
         }
 
-        /**
-         * See {@link EventReport#getId()}
-         */
+        /** See {@link EventReport#getId()} */
         public Builder setId(String id) {
             mBuilding.mId = id;
             return this;
@@ -390,6 +416,32 @@ public class EventReport {
             return this;
         }
 
+        /**
+         * set the summary bucket from input DB text encode summary bucket
+         *
+         * @param summaryBucket the string encoded summary bucket
+         * @return builder
+         */
+        public Builder setTriggerSummaryBucket(@Nullable String summaryBucket) {
+            if (summaryBucket == null || summaryBucket.isEmpty()) {
+                mBuilding.mTriggerSummaryBucket = null;
+                return this;
+            }
+            String[] numbers = summaryBucket.split(",");
+
+            Long firstNumber = Long.parseLong(numbers[0].trim());
+            Long secondNumber = Long.parseLong(numbers[1].trim());
+            mBuilding.mTriggerSummaryBucket = new Pair<>(firstNumber, secondNumber);
+
+            return this;
+        }
+
+        /** See {@link EventReport#getTriggerSummaryBucket()} */
+        public Builder setTriggerSummaryBucket(@Nullable Pair<Long, Long> summaryBucket) {
+            mBuilding.mTriggerSummaryBucket = summaryBucket;
+            return this;
+        }
+
         /** See {@link EventReport#getTriggerId()} */
         public Builder setTriggerValue(long triggerValue) {
             mBuilding.mTriggerValue = triggerValue;
@@ -438,7 +490,8 @@ public class EventReport {
                 try {
                     source.buildFlexibleEventReportApi();
                 } catch (JSONException e) {
-                    LogUtil.e(
+                    LogUtil.d(
+                            e,
                             "EventReport::populateFromSourceAndTrigger cannot parse JSON for flex"
                                     + " event API");
                 }

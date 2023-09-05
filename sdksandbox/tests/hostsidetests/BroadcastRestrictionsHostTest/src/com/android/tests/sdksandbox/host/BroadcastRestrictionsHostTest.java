@@ -18,6 +18,11 @@ package com.android.tests.sdksandbox.host;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assume.assumeTrue;
+
+import android.app.sdksandbox.hosttestutils.DeviceSupportHostUtils;
+
+import com.android.modules.utils.build.testing.DeviceSdkLevel;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
@@ -31,6 +36,16 @@ public class BroadcastRestrictionsHostTest extends BaseHostJUnit4Test {
     private static final String TEST_APP_RESTRICTIONS_PACKAGE = "com.android.tests.sdksandbox";
     private static final String TEST_APP_BROADCAST_RESTRICTIONS_APK =
             "BroadcastRestrictionsTestApp.apk";
+    private static final String TEST_APP_BROADCAST_RESTRICTIONS_PRE_U_APK =
+            "BroadcastRestrictionsPreUTestApp.apk";
+    private static final String TEST_BROADCAST_RESTRICTIONS_CLASS_NAME =
+            TEST_APP_RESTRICTIONS_PACKAGE + ".BroadcastRestrictionsTestApp";
+    private static final String TEST_BROADCAST_RESTRICTIONS_PRE_U_CLASS_NAME =
+            TEST_APP_RESTRICTIONS_PACKAGE + ".BroadcastRestrictionsPreUTestApp";
+
+    private DeviceSdkLevel mDeviceSdkLevel;
+
+    private final DeviceSupportHostUtils mDeviceSupportUtils = new DeviceSupportHostUtils(this);
 
     /**
      * Runs the given phase of a test by calling into the device. Throws an exception if the test
@@ -38,18 +53,20 @@ public class BroadcastRestrictionsHostTest extends BaseHostJUnit4Test {
      *
      * <p>For example, <code>runPhase("testExample");</code>
      */
-    private void runPhase(String phase) throws Exception {
-        assertThat(
-                        runDeviceTests(
-                                TEST_APP_RESTRICTIONS_PACKAGE,
-                                "com.android.tests.sdksandbox.BroadcastRestrictionsTestApp",
-                                phase))
-                .isTrue();
+    private void runPhase(String testClassName, String phase) throws Exception {
+        assertThat(runDeviceTests(TEST_APP_RESTRICTIONS_PACKAGE, testClassName, phase)).isTrue();
     }
 
     @Before
     public void setUp() throws Exception {
-        installPackage(TEST_APP_BROADCAST_RESTRICTIONS_APK);
+        assumeTrue("Device supports SdkSandbox", mDeviceSupportUtils.isSdkSandboxSupported());
+        mDeviceSdkLevel = new DeviceSdkLevel(getDevice());
+
+        if (mDeviceSdkLevel.isDeviceAtLeastU()) {
+            installPackage(TEST_APP_BROADCAST_RESTRICTIONS_APK);
+        } else {
+            installPackage(TEST_APP_BROADCAST_RESTRICTIONS_PRE_U_APK);
+        }
     }
 
     @After
@@ -59,47 +76,99 @@ public class BroadcastRestrictionsHostTest extends BaseHostJUnit4Test {
 
     @Test
     public void testRegisterBroadcastReceiver_defaultValueRestrictionsApplied() throws Exception {
-        runPhase("testRegisterBroadcastReceiver_defaultValueRestrictionsApplied");
+        if (mDeviceSdkLevel.isDeviceAtLeastU()) {
+            runPhase(
+                    TEST_BROADCAST_RESTRICTIONS_CLASS_NAME,
+                    "testRegisterBroadcastReceiver_defaultValueRestrictionsApplied");
+        } else {
+            runPhase(
+                    TEST_BROADCAST_RESTRICTIONS_PRE_U_CLASS_NAME,
+                    "testRegisterBroadcastReceiver_defaultValueRestrictionsApplied");
+        }
     }
 
     @Test
     public void testRegisterBroadcastReceiver_restrictionsApplied() throws Exception {
-        runPhase("testRegisterBroadcastReceiver_restrictionsApplied");
+        if (mDeviceSdkLevel.isDeviceAtLeastU()) {
+            runPhase(
+                    TEST_BROADCAST_RESTRICTIONS_CLASS_NAME,
+                    "testRegisterBroadcastReceiver_restrictionsApplied");
+        } else {
+            runPhase(
+                    TEST_BROADCAST_RESTRICTIONS_PRE_U_CLASS_NAME,
+                    "testRegisterBroadcastReceiver_restrictionsApplied");
+        }
     }
 
     @Test
     public void testRegisterBroadcastReceiver_restrictionsNotApplied() throws Exception {
-        runPhase("testRegisterBroadcastReceiver_restrictionsNotApplied");
-    }
-
-    @Test
-    public void testRegisterBroadcastReceiver_defaultValueRestrictionsNotApplied_preU()
-            throws Exception {
-        runPhase("testRegisterBroadcastReceiver_defaultValueRestrictionsNotApplied_preU");
-    }
-
-    @Test
-    public void testRegisterBroadcastReceiver_restrictionsApplied_preU() throws Exception {
-        runPhase("testRegisterBroadcastReceiver_restrictionsApplied_preU");
-    }
-
-    @Test
-    public void testRegisterBroadcastReceiver_restrictionsNotApplied_preU() throws Exception {
-        runPhase("testRegisterBroadcastReceiver_restrictionsNotApplied_preU");
+        if (mDeviceSdkLevel.isDeviceAtLeastU()) {
+            runPhase(
+                    TEST_BROADCAST_RESTRICTIONS_CLASS_NAME,
+                    "testRegisterBroadcastReceiver_restrictionsNotApplied");
+        } else {
+            runPhase(
+                    TEST_BROADCAST_RESTRICTIONS_PRE_U_CLASS_NAME,
+                    "testRegisterBroadcastReceiver_restrictionsNotApplied");
+        }
     }
 
     @Test
     public void testRegisterBroadcastReceiver_intentFilterWithoutAction() throws Exception {
-        runPhase("testRegisterBroadcastReceiver_intentFilterWithoutAction");
+        if (mDeviceSdkLevel.isDeviceAtLeastU()) {
+            runPhase(
+                    TEST_BROADCAST_RESTRICTIONS_CLASS_NAME,
+                    "testRegisterBroadcastReceiver_intentFilterWithoutAction");
+        } else {
+            runPhase(
+                    TEST_BROADCAST_RESTRICTIONS_PRE_U_CLASS_NAME,
+                    "testRegisterBroadcastReceiver_intentFilterWithoutAction");
+        }
     }
 
     @Test
-    public void testRegisterBroadcastReceiver_intentFilterWithoutAction_preU() throws Exception {
-        runPhase("testRegisterBroadcastReceiver_intentFilterWithoutAction_preU");
+    public void testRegisterBroadcastReceiver_DeviceConfigEmptyAllowlistApplied() throws Exception {
+        if (mDeviceSdkLevel.isDeviceAtLeastU()) {
+            runPhase(
+                    TEST_BROADCAST_RESTRICTIONS_CLASS_NAME,
+                    "testRegisterBroadcastReceiver_DeviceConfigEmptyAllowlistApplied");
+        }
+    }
+
+    @Test
+    public void testRegisterBroadcastReceiver_DeviceConfigAllowlistApplied() throws Exception {
+        if (mDeviceSdkLevel.isDeviceAtLeastU()) {
+            runPhase(
+                    TEST_BROADCAST_RESTRICTIONS_CLASS_NAME,
+                    "testRegisterBroadcastReceiver_DeviceConfigAllowlistApplied");
+        }
+    }
+
+    @Test
+    public void testRegisterBroadcastReceiver_DeviceConfigNextAllowlistApplied() throws Exception {
+        if (mDeviceSdkLevel.isDeviceAtLeastU()) {
+            runPhase(
+                    TEST_BROADCAST_RESTRICTIONS_CLASS_NAME,
+                    "testRegisterBroadcastReceiver_DeviceConfigNextAllowlistApplied");
+        }
+    }
+
+    @Test
+    public void testRegisterBroadcastReceiver_DeviceConfigNextRestrictions_AllowlistNotSet()
+            throws Exception {
+        if (mDeviceSdkLevel.isDeviceAtLeastU()) {
+            runPhase(
+                    TEST_BROADCAST_RESTRICTIONS_CLASS_NAME,
+                    "testRegisterBroadcastReceiver_DeviceConfigNextRestrictions_AllowlistNotSet");
+        }
     }
 
     @Test
     public void testRegisterBroadcastReceiver_protectedBroadcast() throws Exception {
-        runPhase("testRegisterBroadcastReceiver_protectedBroadcast");
+        if (mDeviceSdkLevel.isDeviceAtLeastU()) {
+            runPhase(
+                    TEST_BROADCAST_RESTRICTIONS_CLASS_NAME,
+                    "testRegisterBroadcastReceiver_protectedBroadcast");
+        }
     }
 }

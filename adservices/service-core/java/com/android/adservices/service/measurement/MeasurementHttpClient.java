@@ -24,7 +24,7 @@ import androidx.annotation.NonNull;
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.measurement.util.Web;
+import com.android.adservices.service.common.WebAddresses;
 
 import java.io.IOException;
 import java.net.URL;
@@ -61,7 +61,7 @@ public class MeasurementHttpClient {
         Objects.requireNonNull(url);
 
         final HttpsURLConnection urlConnection = (HttpsURLConnection) url.openConnection();
-        if (Web.isLocalhost(Uri.parse(url.toString()))) {
+        if (WebAddresses.isLocalhost(Uri.parse(url.toString()))) {
             LogUtil.d("MeasurementHttpClient::setup : setting unsafe SSL for localhost, URI: %s",
                     url.toString());
             urlConnection.setSSLSocketFactory(getUnsafeSslSocketFactory());
@@ -72,6 +72,7 @@ public class MeasurementHttpClient {
 
         // Overriding default headers to avoid leaking information
         urlConnection.setRequestProperty("User-Agent", "");
+        urlConnection.setRequestProperty("Version", flags.getMainlineTrainVersion());
 
         return urlConnection;
     }

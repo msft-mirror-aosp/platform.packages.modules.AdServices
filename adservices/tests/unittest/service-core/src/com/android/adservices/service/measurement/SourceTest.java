@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -26,6 +28,9 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.net.Uri;
@@ -46,6 +51,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -61,6 +67,15 @@ public class SourceTest {
     private static final UnsignedLong DEBUG_KEY_2 = new UnsignedLong(23487834L);
     private static final UnsignedLong SHARED_DEBUG_KEY_1 = new UnsignedLong(1786463L);
     private static final UnsignedLong SHARED_DEBUG_KEY_2 = new UnsignedLong(3487834L);
+    private static final List<AttributedTrigger> ATTRIBUTED_TRIGGERS =
+            List.of(
+                    new AttributedTrigger(
+                            "triggerId",
+                            /* long priority */ 5L,
+                            /* UnsignedLong triggerData */ new UnsignedLong("89"),
+                            /* long value */ 15L,
+                            /* long triggerTime */ 1934567890L,
+                            /* UnsignedLong dedupKey */ null));
 
     @Test
     public void testDefaults() {
@@ -70,6 +85,7 @@ public class SourceTest {
         assertEquals(Source.Status.ACTIVE, source.getStatus());
         assertEquals(Source.SourceType.EVENT, source.getSourceType());
         assertEquals(Source.AttributionMode.UNASSIGNED, source.getAttributionMode());
+        assertNull(source.getAttributedTriggers());
     }
 
     @Test
@@ -87,10 +103,12 @@ public class SourceTest {
         filterMap.put("product", Arrays.asList("1234", "2345"));
 
         String sharedAggregateKeys = "[\"campaignCounts\"]";
+        String sharedFilterDataKeys = "[\"product\"]";
         String parentId = "parent-id";
         String debugJoinKey = "SAMPLE_DEBUG_JOIN_KEY";
         String debugAppAdId = "SAMPLE_DEBUG_APP_ADID";
         String debugWebAdId = "SAMPLE_DEBUG_WEB_ADID";
+        ReportSpec reportSpec = SourceFixture.getValidReportSpecValueSum();
         assertEquals(
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -125,6 +143,7 @@ public class SourceTest {
                         .setDebugKey(DEBUG_KEY_1)
                         .setRegistrationId("R1")
                         .setSharedAggregationKeys(sharedAggregateKeys)
+                        .setSharedFilterDataKeys(sharedFilterDataKeys)
                         .setInstallTime(100L)
                         .setParentId(parentId)
                         .setDebugJoinKey(debugJoinKey)
@@ -133,6 +152,12 @@ public class SourceTest {
                         .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example.test"))
                         .setCoarseEventReportDestinations(true)
                         .setSharedDebugKey(SHARED_DEBUG_KEY_1)
+                        .setAttributedTriggers(ATTRIBUTED_TRIGGERS)
+                        .setFlexEventReportSpec(reportSpec)
+                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJson())
+                        .setMaxEventLevelReports(reportSpec.getMaxReports())
+                        .setEventAttributionStatus(null)
+                        .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
                         .build(),
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -167,6 +192,7 @@ public class SourceTest {
                         .setDebugKey(DEBUG_KEY_1)
                         .setRegistrationId("R1")
                         .setSharedAggregationKeys(sharedAggregateKeys)
+                        .setSharedFilterDataKeys(sharedFilterDataKeys)
                         .setInstallTime(100L)
                         .setParentId(parentId)
                         .setDebugJoinKey(debugJoinKey)
@@ -175,6 +201,12 @@ public class SourceTest {
                         .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example.test"))
                         .setCoarseEventReportDestinations(true)
                         .setSharedDebugKey(SHARED_DEBUG_KEY_1)
+                        .setAttributedTriggers(ATTRIBUTED_TRIGGERS)
+                        .setFlexEventReportSpec(reportSpec)
+                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJson())
+                        .setMaxEventLevelReports(reportSpec.getMaxReports())
+                        .setEventAttributionStatus(null)
+                        .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
                         .build());
     }
 
@@ -342,6 +374,17 @@ public class SourceTest {
                         .setSharedAggregationKeys(sharedAggregationKeys2)
                         .build());
 
+        String sharedFilterDataKeys1 = "[\"key1\"]";
+        String sharedFilterDataKeys2 = "[\"key2\"]";
+
+        assertNotEquals(
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSharedFilterDataKeys(sharedFilterDataKeys1)
+                        .build(),
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSharedFilterDataKeys(sharedFilterDataKeys2)
+                        .build());
+
         assertNotEquals(
                 SourceFixture.getMinimalValidSourceBuilder().setInstallTime(100L).build(),
                 SourceFixture.getMinimalValidSourceBuilder().setInstallTime(101L).build());
@@ -383,6 +426,50 @@ public class SourceTest {
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSharedDebugKey(SHARED_DEBUG_KEY_2)
                         .build());
+        assertNotEquals(
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAttributedTriggers(ATTRIBUTED_TRIGGERS)
+                        .build(),
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAttributedTriggers(new ArrayList<>())
+                        .build());
+
+        ReportSpec reportSpecValueSumBased =
+                new ReportSpec(
+                        SourceFixture.getTriggerSpecValueSumEncodedJSONValidBaseline(),
+                        "5",
+                        null);
+        ReportSpec reportSpecCountBased = SourceFixture.getValidReportSpecCountBased();
+        assertNotEquals(
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setTriggerSpecs(reportSpecValueSumBased.encodeTriggerSpecsToJson())
+                        .build(),
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setTriggerSpecs(reportSpecCountBased.encodeTriggerSpecsToJson())
+                        .build());
+        assertNotEquals(
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setMaxEventLevelReports(3)
+                        .build(),
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setMaxEventLevelReports(4)
+                        .build());
+        assertNotEquals(
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventAttributionStatus(null)
+                        .build(),
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventAttributionStatus(new JSONArray().toString())
+                        .build());
+        assertNotEquals(
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setPrivacyParameters(
+                                reportSpecValueSumBased.encodePrivacyParametersToJSONString())
+                        .build(),
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setPrivacyParameters(
+                                reportSpecCountBased.encodePrivacyParametersToJSONString())
+                        .build());
     }
 
     @Test
@@ -406,6 +493,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
 
@@ -428,6 +516,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
     }
@@ -454,6 +543,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
 
@@ -477,6 +567,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
 
@@ -500,6 +591,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
 
@@ -523,6 +615,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
 
@@ -548,6 +641,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
     }
@@ -573,6 +667,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
     }
@@ -598,6 +693,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
 
@@ -620,6 +716,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
     }
@@ -645,6 +742,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
     }
@@ -684,6 +782,45 @@ public class SourceTest {
     }
 
     @Test
+    public void testAggregatableAttributionSourceWithTrigger_addsLookbackWindow() throws Exception {
+        JSONObject aggregatableSource = new JSONObject();
+        aggregatableSource.put("campaignCounts", "0x159");
+        aggregatableSource.put("geoValue", "0x5");
+
+        JSONObject filterMapJson = new JSONObject();
+        filterMapJson.put("conversion", new JSONArray(Collections.singletonList("electronics")));
+
+        final Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAggregateSource(aggregatableSource.toString())
+                        .setFilterData(filterMapJson.toString())
+                        .build();
+
+        Trigger trigger = TriggerFixture.getValidTrigger();
+        Optional<AggregatableAttributionSource> aggregatableAttributionSource =
+                source.getAggregatableAttributionSourceV2(trigger);
+        assertThat(aggregatableAttributionSource.isPresent()).isTrue();
+        assertThat(aggregatableAttributionSource.get().getAggregatableSource())
+                .containsExactly(
+                        "campaignCounts",
+                        new BigInteger("159", 16),
+                        "geoValue",
+                        new BigInteger("5", 16));
+        assertThat(
+                        aggregatableAttributionSource
+                                .get()
+                                .getFilterMap()
+                                .getAttributionFilterMapWithLongValue())
+                .containsExactly(
+                        "conversion",
+                        FilterValue.ofStringList(Collections.singletonList("electronics")),
+                        "source_type",
+                        FilterValue.ofStringList(Collections.singletonList("event")),
+                        FilterMap.LOOKBACK_WINDOW,
+                        FilterValue.ofLong(8640000L));
+    }
+
+    @Test
     public void testTriggerDataCardinality() {
         Source eventSource =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -713,7 +850,7 @@ public class SourceTest {
     }
 
     @Test
-    public void testParseFilterData_nonEmpty() throws JSONException {
+    public void testGetFilterData_nonEmpty() throws JSONException {
         JSONObject filterMapJson = new JSONObject();
         filterMapJson.put("conversion", new JSONArray(Collections.singletonList("electronics")));
         filterMapJson.put("product", new JSONArray(Arrays.asList("1234", "2345")));
@@ -728,12 +865,37 @@ public class SourceTest {
                 filterMap.getAttributionFilterMap().get("conversion"));
         assertEquals(Arrays.asList("1234", "2345"),
                 filterMap.getAttributionFilterMap().get("product"));
-        assertEquals(Collections.singletonList("navigation"),
+        assertEquals(
+                Collections.singletonList("navigation"),
                 filterMap.getAttributionFilterMap().get("source_type"));
     }
 
     @Test
-    public void testParseFilterData_nullFilterData() throws JSONException {
+    public void testGetFilterData_withTrigger_addsLookbackWindow() throws JSONException {
+        JSONObject filterMapJson = new JSONObject();
+        filterMapJson.put("conversion", new JSONArray(List.of("electronics")));
+        filterMapJson.put("product", new JSONArray(List.of("1234", "2345")));
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setFilterData(filterMapJson.toString())
+                        .build();
+        Trigger trigger = TriggerFixture.getValidTrigger();
+        FilterMap filterMap = source.getFilterData(trigger);
+        assertThat(filterMap.getAttributionFilterMapWithLongValue())
+                .containsExactly(
+                        "conversion",
+                        FilterValue.ofStringList(List.of("electronics")),
+                        "product",
+                        FilterValue.ofStringList(List.of("1234", "2345")),
+                        "source_type",
+                        FilterValue.ofStringList(List.of("navigation")),
+                        FilterMap.LOOKBACK_WINDOW,
+                        FilterValue.ofLong(8640000L));
+    }
+
+    @Test
+    public void testGetFilterData_nullFilterData() throws JSONException {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
@@ -745,7 +907,7 @@ public class SourceTest {
     }
 
     @Test
-    public void testParseFilterData_emptyFilterData() throws JSONException {
+    public void testGetFilterData_emptyFilterData() throws JSONException {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
@@ -804,23 +966,177 @@ public class SourceTest {
     }
 
     @Test
+    public void attributedTriggersToJson_buildAttributedTriggers_encodesAndDecodes()
+            throws JSONException {
+        JSONArray existingAttributes = new JSONArray();
+        JSONObject triggerRecord1 = new JSONObject();
+        triggerRecord1.put("trigger_id", "100");
+        triggerRecord1.put("trigger_data", new UnsignedLong(123L).toString());
+        triggerRecord1.put("dedup_key", new UnsignedLong(456L).toString());
+
+        JSONObject triggerRecord2 = new JSONObject();
+        triggerRecord2.put("trigger_id", "200");
+        triggerRecord2.put("trigger_data", new UnsignedLong(12L).toString());
+        triggerRecord2.put("dedup_key", new UnsignedLong(45678L).toString());
+        existingAttributes.put(triggerRecord1);
+        existingAttributes.put(triggerRecord2);
+
+        Source sourceWithEventAttributionStatus =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventAttributionStatus(existingAttributes.toString())
+                        .setAttributedTriggers(null)
+                        .build();
+        sourceWithEventAttributionStatus.buildAttributedTriggers();
+
+        String encodedTriggerStatusJson =
+                sourceWithEventAttributionStatus.attributedTriggersToJson();
+        JSONArray encodedTriggerStatus = new JSONArray(encodedTriggerStatusJson);
+
+        Source sourceWithEventAttributionStatusAfterDecoding =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventAttributionStatus(encodedTriggerStatusJson)
+                        .setAttributedTriggers(null)
+                        .build();
+        sourceWithEventAttributionStatusAfterDecoding.buildAttributedTriggers();
+
+        // Assertion
+        HashSet<String> keys1 = new HashSet(triggerRecord1.keySet());
+        keys1.addAll(encodedTriggerStatus.getJSONObject(0).keySet());
+        for (String key : keys1) {
+            assertEquals(
+                    triggerRecord1.get(key).toString(),
+                    encodedTriggerStatus.getJSONObject(0).get(key).toString());
+        }
+
+        HashSet<String> keys2 = new HashSet(triggerRecord2.keySet());
+        keys2.addAll(encodedTriggerStatus.getJSONObject(1).keySet());
+        for (String key : keys2) {
+            assertEquals(
+                    triggerRecord2.get(key).toString(),
+                    encodedTriggerStatus.getJSONObject(1).get(key).toString());
+        }
+
+        assertEquals(
+                sourceWithEventAttributionStatus.getAttributedTriggers().size(),
+                sourceWithEventAttributionStatusAfterDecoding.getAttributedTriggers().size());
+
+        for (int i = 0; i < sourceWithEventAttributionStatus.getAttributedTriggers().size(); i++) {
+            assertEquals(
+                    sourceWithEventAttributionStatus.getAttributedTriggers().get(i),
+                    sourceWithEventAttributionStatusAfterDecoding.getAttributedTriggers().get(i));
+        }
+    }
+
+    @Test
+    public void attributedTriggersToJsonFlexApi_buildAttributedTriggers_encodesAndDecodes()
+            throws JSONException {
+        JSONArray existingAttributes = new JSONArray();
+        JSONObject triggerRecord1 = new JSONObject();
+        triggerRecord1.put("trigger_id", "100");
+        triggerRecord1.put("value", 2L);
+        triggerRecord1.put("priority", 1L);
+        triggerRecord1.put("trigger_time", 1689564817000L);
+        triggerRecord1.put("trigger_data", new UnsignedLong(1L).toString());
+        /* dedup_key not provided */
+
+        JSONObject triggerRecord2 = new JSONObject();
+        triggerRecord2.put("trigger_id", "200");
+        triggerRecord2.put("value", 3L);
+        triggerRecord2.put("priority", 4L);
+        triggerRecord2.put("trigger_time", 1689564817010L);
+        triggerRecord2.put("trigger_data", new UnsignedLong(1L).toString());
+        triggerRecord2.put("dedup_key", new UnsignedLong(45678L).toString());
+        existingAttributes.put(triggerRecord1);
+        existingAttributes.put(triggerRecord2);
+
+        Source sourceWithEventAttributionStatus =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventAttributionStatus(existingAttributes.toString())
+                        .setAttributedTriggers(null)
+                        .build();
+        sourceWithEventAttributionStatus.buildAttributedTriggers();
+
+        String encodedTriggerStatusJson =
+                sourceWithEventAttributionStatus.attributedTriggersToJsonFlexApi();
+        JSONArray encodedTriggerStatus = new JSONArray(encodedTriggerStatusJson);
+
+        Source sourceWithEventAttributionStatusAfterDecoding =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventAttributionStatus(encodedTriggerStatusJson)
+                        .setAttributedTriggers(null)
+                        .build();
+        sourceWithEventAttributionStatusAfterDecoding.buildAttributedTriggers();
+
+        // Assertion
+        HashSet<String> keys1 = new HashSet(triggerRecord1.keySet());
+        keys1.addAll(encodedTriggerStatus.getJSONObject(0).keySet());
+        for (String key : keys1) {
+            assertEquals(
+                    triggerRecord1.get(key).toString(),
+                    encodedTriggerStatus.getJSONObject(0).get(key).toString());
+        }
+
+        HashSet<String> keys2 = new HashSet(triggerRecord2.keySet());
+        keys2.addAll(encodedTriggerStatus.getJSONObject(1).keySet());
+        for (String key : keys2) {
+            assertEquals(
+                    triggerRecord2.get(key).toString(),
+                    encodedTriggerStatus.getJSONObject(1).get(key).toString());
+        }
+
+        assertEquals(
+                sourceWithEventAttributionStatus.getAttributedTriggers().size(),
+                sourceWithEventAttributionStatusAfterDecoding.getAttributedTriggers().size());
+
+        for (int i = 0; i < sourceWithEventAttributionStatus.getAttributedTriggers().size(); i++) {
+            assertEquals(
+                    sourceWithEventAttributionStatus.getAttributedTriggers().get(i),
+                    sourceWithEventAttributionStatusAfterDecoding.getAttributedTriggers().get(i));
+        }
+    }
+
+    @Test
+    public void buildAttributedTriggers_multipleCalls_doesNotParseAttributionStatus()
+            throws JSONException {
+        JSONArray existingAttributes = new JSONArray();
+        JSONObject triggerRecord = new JSONObject();
+        triggerRecord.put("trigger_id", "100");
+        triggerRecord.put("value", 2L);
+        triggerRecord.put("priority", 1L);
+        triggerRecord.put("trigger_time", 1689564817000L);
+        triggerRecord.put("trigger_data", new UnsignedLong(1L).toString());
+        triggerRecord.put("dedup_key", new UnsignedLong(34567L).toString());
+
+        existingAttributes.put(triggerRecord);
+
+        Source sourceWithEventAttributionStatus =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventAttributionStatus(existingAttributes.toString())
+                        .setAttributedTriggers(null)
+                        .build();
+        Source spySource = spy(sourceWithEventAttributionStatus);
+        // Multiple calls to `Source::buildAttributedTriggers`
+        spySource.buildAttributedTriggers();
+        spySource.buildAttributedTriggers();
+        spySource.buildAttributedTriggers();
+        verify(spySource, times(1)).parseEventAttributionStatus();
+    }
+
+    @Test
     public void reportSpecs_encodingDecoding_equal() throws JSONException {
         // Setup
         Source validSource = SourceFixture.getValidSourceWithFlexEventReport();
-
         ReportSpec originalReportSpec = validSource.getFlexEventReportSpec();
-        String encodedTriggerSpecs = originalReportSpec.encodeTriggerSpecsToJSON();
+        String encodedTriggerSpecs = originalReportSpec.encodeTriggerSpecsToJson();
         String encodeddMaxReports = Integer.toString(originalReportSpec.getMaxReports());
-        String encodedExistingTriggerStatus =
-                originalReportSpec.encodeTriggerStatusToJSON().toString();
         String encodedPrivacyParameters = originalReportSpec.encodePrivacyParametersToJSONString();
-
         ReportSpec reportSpec =
                 new ReportSpec(
                         encodedTriggerSpecs,
                         encodeddMaxReports,
-                        encodedExistingTriggerStatus,
+                        validSource,
                         encodedPrivacyParameters);
+
         // Assertion
         assertEquals(originalReportSpec.getMaxReports(), reportSpec.getMaxReports());
         assertArrayEquals(originalReportSpec.getTriggerSpecs(), reportSpec.getTriggerSpecs());
@@ -846,6 +1162,7 @@ public class SourceTest {
             @Nullable String filterData,
             @Nullable String registrationId,
             @Nullable String sharedAggregationKeys,
+            @Nullable String sharedFilterDataKeys,
             @Nullable Long installTime,
             Uri registrationOrigin) {
         assertThrows(
@@ -872,6 +1189,7 @@ public class SourceTest {
                                 .setSharedAggregationKeys(sharedAggregationKeys)
                                 .setInstallTime(installTime)
                                 .setRegistrationOrigin(registrationOrigin)
+                                .setSharedFilterDataKeys(sharedFilterDataKeys)
                                 .build());
     }
 
@@ -900,10 +1218,10 @@ public class SourceTest {
         doReturn(true).when(flags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT)
                 .when(flags)
-                .getMeasurementFlexAPIMaxInformationGainEvent();
+                .getMeasurementFlexApiMaxInformationGainEvent();
         doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION)
                 .when(flags)
-                .getMeasurementFlexAPIMaxInformationGainNavigation();
+                .getMeasurementFlexApiMaxInformationGainNavigation();
         // setup
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2],"
@@ -939,10 +1257,10 @@ public class SourceTest {
         doReturn(true).when(flags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT)
                 .when(flags)
-                .getMeasurementFlexAPIMaxInformationGainEvent();
+                .getMeasurementFlexApiMaxInformationGainEvent();
         doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION)
                 .when(flags)
-                .getMeasurementFlexAPIMaxInformationGainNavigation();
+                .getMeasurementFlexApiMaxInformationGainNavigation();
         // setup
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3, 4, 5, 6, 7, 8],"
@@ -982,10 +1300,10 @@ public class SourceTest {
         doReturn(true).when(flags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT)
                 .when(flags)
-                .getMeasurementFlexAPIMaxInformationGainEvent();
+                .getMeasurementFlexApiMaxInformationGainEvent();
         doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION)
                 .when(flags)
-                .getMeasurementFlexAPIMaxInformationGainNavigation();
+                .getMeasurementFlexApiMaxInformationGainNavigation();
         // setup
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3, 4, 5, 6, 7, 8],"
@@ -1031,17 +1349,17 @@ public class SourceTest {
                                 TimeUnit.DAYS.toMillis(30))
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3, 4]}]";
-        Source testSource =
+        Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setTriggerSpecs(triggerSpecsString)
                         .setMaxEventLevelReports(3)
                         .setPrivacyParameters("{\"flip_probability\" :0.0024}")
                         .build();
-        testSource.buildFlexibleEventReportApi();
+        source.buildFlexibleEventReportApi();
         // Assertion
         assertEquals(
-                testSource.getFlexEventReportSpec(),
-                new ReportSpec(triggerSpecsString, "3", "", "{\"flip_probability\":0.0024}"));
+                source.getFlexEventReportSpec(),
+                new ReportSpec(triggerSpecsString, "3", source, "{\"flip_probability\":0.0024}"));
     }
 
     @Test
@@ -1090,7 +1408,9 @@ public class SourceTest {
                         .buildInitialFlexEventReportSpec(flags)
                         .build();
         // Assertion
-        assertEquals(testSource.getFlexEventReportSpec(), new ReportSpec(triggerSpecsString, "3"));
+        assertEquals(
+                testSource.getFlexEventReportSpec(),
+                new ReportSpec(triggerSpecsString, "3", null));
     }
 
     @Test

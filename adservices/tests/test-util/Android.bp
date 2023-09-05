@@ -30,6 +30,18 @@ filegroup {
     ],
 }
 
+// Java classes that are used by both device-side and host-side tests
+filegroup {
+    name: "adservices-test-utility-sideless-sources",
+    srcs: [
+        "side-less/**/*.java",
+    ],
+    path: "side-less",
+    visibility: [
+        ":__pkg__",
+    ],
+}
+
 filegroup {
     name: "adservices-mockito-sources",
     srcs: [
@@ -46,18 +58,33 @@ android_library {
     sdk_version: "module_current",
     min_sdk_version: "30",
     srcs: [
+        ":adservices-test-utility-sideless-sources",
         ":adservices-test-utility-sources",
+        ":adservices-service-core-phflags-sources",
     ],
     libs: [
         "error_prone_annotations",
         "framework-adservices-lib",
         "framework-annotations-lib",
+        "framework-configinfrastructure",
     ],
     static_libs: [
         "androidx.test.runner",
         "compatibility-device-util-axt",
     ],
     apex_available: ["com.android.adservices", "com.android.extservices"],
+}
+
+java_library_host {
+    name: "adservices-host-side-test-utility",
+    srcs: [
+        "host-side/**/*.java",
+        ":adservices-service-core-flags-constants-sources",
+        ":adservices-test-utility-sideless-sources",
+    ],
+    libs: [
+        "tradefed",
+    ],
 }
 
 java_defaults {
@@ -67,6 +94,9 @@ java_defaults {
     ],
     defaults: [
         "modules-utils-testable-device-config-defaults",
+    ],
+    static_libs: [
+         "adservices-service-core",
     ],
     libs: [
         "services.core.unboosted", // For LocalManagerRegistry on ExtendedMockitoExpectations

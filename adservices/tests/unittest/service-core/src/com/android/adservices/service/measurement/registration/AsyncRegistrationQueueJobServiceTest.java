@@ -19,13 +19,16 @@ package com.android.adservices.service.measurement.registration;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ASYNC_REGISTRATION_JOB;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -37,6 +40,7 @@ import static org.mockito.Mockito.verify;
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
+import android.content.ComponentName;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -47,6 +51,7 @@ import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
@@ -56,11 +61,15 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
+import org.mockito.internal.stubbing.answers.AnswersWithDelay;
+import org.mockito.internal.stubbing.answers.CallsRealMethods;
 import org.mockito.quality.Strictness;
 
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
 
 public class AsyncRegistrationQueueJobServiceTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
@@ -153,6 +162,40 @@ public class AsyncRegistrationQueueJobServiceTest {
     }
 
     @Test
+    public void onStartJob_killSwitchOff_unlockingCheck() throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    disableKillSwitch();
+                    CountDownLatch countDownLatch = createCountDownLatch();
+                    ExtendedMockito.doNothing()
+                            .when(
+                                    () ->
+                                            AsyncRegistrationQueueJobService.scheduleIfNeeded(
+                                                    any(), anyBoolean()));
+
+                    // Execute
+                    mSpyService.onStartJob(mock(JobParameters.class));
+                    countDownLatch.await();
+                    // TODO (b/298021244): replace sleep() with a better approach
+                    Thread.sleep(WAIT_IN_MILLIS);
+                    countDownLatch = createCountDownLatch();
+                    boolean result = mSpyService.onStartJob(mock(JobParameters.class));
+                    countDownLatch.await();
+                    // TODO (b/298021244): replace sleep() with a better approach
+                    Thread.sleep(WAIT_IN_MILLIS);
+
+                    // Validate
+                    assertTrue(result);
+
+                    // Verify the job ran successfully twice
+                    ExtendedMockito.verify(mSpyService, times(2)).jobFinished(any(), anyBoolean());
+                    verify(mMockJobScheduler, never())
+                            .cancel(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
+                });
+    }
+
+    @Test
     public void onStartJob_shouldDisableJobTrue_withoutLogging() throws Exception {
         runWithMocks(
                 () -> {
@@ -221,22 +264,91 @@ public class AsyncRegistrationQueueJobServiceTest {
                     // Setup
                     disableKillSwitch();
 
-                    final Context mockContext = mock(Context.class);
+                    final Context spyContext = spy(ApplicationProvider.getApplicationContext());
                     doReturn(mMockJobScheduler)
-                            .when(mockContext)
+                            .when(spyContext)
                             .getSystemService(JobScheduler.class);
-                    final JobInfo mockJobInfo = mock(JobInfo.class);
+                    long minDelay =
+                            SystemHealthParams.getMeasurementAsyncRegistrationJobQueueMinDelayMs();
+                    long maxDelay =
+                            SystemHealthParams.getMeasurementAsyncRegistrationJobQueueMaxDelayMs();
+                    final JobInfo mockJobInfo =
+                            new JobInfo.Builder(
+                                            MEASUREMENT_ASYNC_REGISTRATION_JOB_ID,
+                                            new ComponentName(
+                                                    spyContext,
+                                                    AsyncRegistrationQueueJobService.class))
+                                    .addTriggerContentUri(
+                                            new JobInfo.TriggerContentUri(
+                                                    AsyncRegistrationContentProvider.TRIGGER_URI,
+                                                    JobInfo.TriggerContentUri
+                                                            .FLAG_NOTIFY_FOR_DESCENDANTS))
+                                    .setTriggerContentUpdateDelay(minDelay)
+                                    .setTriggerContentMaxDelay(maxDelay)
+                                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                                    .setPersisted(false) // Can't call addTriggerContentUri() on a
+                                    // persisted job
+                                    .build();
                     doReturn(mockJobInfo)
                             .when(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
 
                     // Execute
                     AsyncRegistrationQueueJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule= */ false);
+                            spyContext, /* forceSchedule= */ false);
 
                     // Validate
                     ExtendedMockito.verify(
                             () -> AsyncRegistrationQueueJobService.schedule(any(), any()), never());
+                    verify(mMockJobScheduler, times(1))
+                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
+                });
+    }
+
+    @Test
+    public void scheduleIfNeeded_diffJobInfo_doesSchedule() throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    disableKillSwitch();
+
+                    final Context spyContext = spy(ApplicationProvider.getApplicationContext());
+                    doReturn(mMockJobScheduler)
+                            .when(spyContext)
+                            .getSystemService(JobScheduler.class);
+                    long minDelay =
+                            SystemHealthParams.getMeasurementAsyncRegistrationJobQueueMinDelayMs();
+                    long maxDelay =
+                            SystemHealthParams.getMeasurementAsyncRegistrationJobQueueMaxDelayMs();
+                    final JobInfo mockJobInfo =
+                            new JobInfo.Builder(
+                                            MEASUREMENT_ASYNC_REGISTRATION_JOB_ID,
+                                            new ComponentName(
+                                                    spyContext,
+                                                    AsyncRegistrationQueueJobService.class))
+                                    .addTriggerContentUri(
+                                            new JobInfo.TriggerContentUri(
+                                                    AsyncRegistrationContentProvider.TRIGGER_URI,
+                                                    JobInfo.TriggerContentUri
+                                                            .FLAG_NOTIFY_FOR_DESCENDANTS))
+                                    // different
+                                    .setTriggerContentUpdateDelay(minDelay - 1)
+                                    .setTriggerContentMaxDelay(maxDelay)
+                                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                                    .setPersisted(false) // Can't call addTriggerContentUri() on a
+                                    // persisted job
+                                    .build();
+                    doReturn(mockJobInfo)
+                            .when(mMockJobScheduler)
+                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
+
+                    // Execute
+                    AsyncRegistrationQueueJobService.scheduleIfNeeded(
+                            spyContext, /* forceSchedule= */ false);
+
+                    // Validate
+                    ExtendedMockito.verify(
+                            () -> AsyncRegistrationQueueJobService.schedule(any(), any()));
                     verify(mMockJobScheduler, times(1))
                             .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
                 });
@@ -297,6 +409,67 @@ public class AsyncRegistrationQueueJobServiceTest {
                             times(1));
                     verify(mMockJobScheduler, times(1))
                             .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
+                });
+    }
+
+    @Test
+    public void scheduleIfNeeded_minAndMaxDelayModified_scheduleAccordingly() throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    disableKillSwitch();
+                    long minDelay = 30000L;
+                    doReturn(minDelay)
+                            .when(mMockFlags)
+                            .getMeasurementAsyncRegistrationJobTriggerMinDelayMs();
+                    long maxDelay = 60000L;
+                    doReturn(maxDelay)
+                            .when(mMockFlags)
+                            .getMeasurementAsyncRegistrationJobTriggerMaxDelayMs();
+
+                    final Context mockContext = mock(Context.class);
+                    doReturn(mMockJobScheduler)
+                            .when(mockContext)
+                            .getSystemService(JobScheduler.class);
+                    doReturn(/* noJobInfo= */ null)
+                            .when(mMockJobScheduler)
+                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
+
+                    // Execute
+                    AsyncRegistrationQueueJobService.scheduleIfNeeded(mockContext, false);
+
+                    // Validate
+                    ExtendedMockito.verify(
+                            () -> AsyncRegistrationQueueJobService.schedule(any(), any()),
+                            times(1));
+                    ArgumentCaptor<JobInfo> jobInfoArgumentCaptor =
+                            ArgumentCaptor.forClass(JobInfo.class);
+                    verify(mMockJobScheduler, times(1)).schedule(jobInfoArgumentCaptor.capture());
+                    JobInfo job = jobInfoArgumentCaptor.getValue();
+                    assertEquals(minDelay, job.getTriggerContentUpdateDelay());
+                    assertEquals(maxDelay, job.getTriggerContentMaxDelay());
+                });
+    }
+
+    @Test
+    public void testOnStopJob_stopsExecutingThread() throws Exception {
+        runWithMocks(
+                () -> {
+                    disableKillSwitch();
+
+                    doAnswer(new AnswersWithDelay(WAIT_IN_MILLIS * 10, new CallsRealMethods()))
+                            .when(mSpyService)
+                            .processAsyncRecords();
+                    mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+                    Thread.sleep(WAIT_IN_MILLIS);
+
+                    assertNotNull(mSpyService.getFutureForTesting());
+
+                    boolean onStopJobResult =
+                            mSpyService.onStopJob(Mockito.mock(JobParameters.class));
+                    verify(mSpyService, times(0)).jobFinished(any(), anyBoolean());
+                    assertTrue(onStopJobResult);
+                    assertTrue(mSpyService.getFutureForTesting().isCancelled());
                 });
     }
 
@@ -376,8 +549,6 @@ public class AsyncRegistrationQueueJobServiceTest {
                     .when(() -> EnrollmentDao.getInstance(any()));
             ExtendedMockito.doReturn(mock(AdServicesLoggerImpl.class))
                     .when(AdServicesLoggerImpl::getInstance);
-            ExtendedMockito.doNothing()
-                    .when(() -> AsyncRegistrationQueueJobService.schedule(any(), any()));
             ExtendedMockito.doReturn(mMockDatastoreManager)
                     .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
 
@@ -406,5 +577,16 @@ public class AsyncRegistrationQueueJobServiceTest {
     private void toggleKillSwitch(boolean value) {
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         ExtendedMockito.doReturn(value).when(mMockFlags).getAsyncRegistrationJobQueueKillSwitch();
+    }
+
+    private CountDownLatch createCountDownLatch() {
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        doAnswer(i -> countDown(countDownLatch)).when(mSpyService).jobFinished(any(), anyBoolean());
+        return countDownLatch;
+    }
+
+    private Object countDown(CountDownLatch countDownLatch) {
+        countDownLatch.countDown();
+        return null;
     }
 }

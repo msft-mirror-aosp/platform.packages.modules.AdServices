@@ -16,7 +16,7 @@
 
 package com.android.sdksandbox;
 
-import com.android.sdksandbox.SandboxLatencyInfo;
+import android.app.sdksandbox.SandboxLatencyInfo;
 
 /** @hide */
 oneway interface IUnloadSdkCallback {

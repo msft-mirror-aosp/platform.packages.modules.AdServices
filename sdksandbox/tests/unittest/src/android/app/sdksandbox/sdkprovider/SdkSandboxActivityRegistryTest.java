@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assume.assumeTrue;
 
 import android.app.Activity;
+import android.app.sdksandbox.SandboxedSdkContext;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
@@ -42,11 +43,14 @@ public class SdkSandboxActivityRegistryTest {
     private static final String SDK_NAME = "SDK_NAME";
     private SdkSandboxActivityRegistry mRegistry;
     private SdkSandboxActivityHandler mHandler;
+    private SandboxedSdkContext mSdkContext;
 
     @Before
     public void setUp() {
         mRegistry = SdkSandboxActivityRegistry.getInstance();
         mHandler = Mockito.spy(activity -> {});
+        mSdkContext = Mockito.mock(SandboxedSdkContext.class);
+        Mockito.when(mSdkContext.getSdkName()).thenReturn(SDK_NAME);
     }
 
     @After
@@ -62,8 +66,8 @@ public class SdkSandboxActivityRegistryTest {
     public void testRegisterSdkSandboxActivityHandler() {
         assumeTrue(SdkLevel.isAtLeastU());
 
-        IBinder token1 = mRegistry.register(SDK_NAME, mHandler);
-        IBinder token2 = mRegistry.register(SDK_NAME, mHandler);
+        IBinder token1 = mRegistry.register(mSdkContext, mHandler);
+        IBinder token2 = mRegistry.register(mSdkContext, mHandler);
         assertThat(token2).isEqualTo(token1);
     }
 
@@ -71,7 +75,7 @@ public class SdkSandboxActivityRegistryTest {
     public void testUnregisterSdkSandboxActivityHandler() {
         assumeTrue(SdkLevel.isAtLeastU());
 
-        IBinder token = mRegistry.register(SDK_NAME, mHandler);
+        IBinder token = mRegistry.register(mSdkContext, mHandler);
         mRegistry.unregister(mHandler);
         new Handler(Looper.getMainLooper())
                 .runWithScissors(
@@ -95,7 +99,7 @@ public class SdkSandboxActivityRegistryTest {
     public void testNotifyOnActivityCreation() {
         assumeTrue(SdkLevel.isAtLeastU());
 
-        IBinder token = mRegistry.register(SDK_NAME, mHandler);
+        IBinder token = mRegistry.register(mSdkContext, mHandler);
         new Handler(Looper.getMainLooper())
                 .runWithScissors(
                         () -> {
@@ -115,7 +119,7 @@ public class SdkSandboxActivityRegistryTest {
     public void testNotifyOnActivityCreationMultipleTimeSucceed() {
         assumeTrue(SdkLevel.isAtLeastU());
 
-        IBinder token = mRegistry.register(SDK_NAME, mHandler);
+        IBinder token = mRegistry.register(mSdkContext, mHandler);
         new Handler(Looper.getMainLooper())
                 .runWithScissors(
                         () -> {
@@ -130,32 +134,22 @@ public class SdkSandboxActivityRegistryTest {
     public void testUnregisterAllHandlersForSdkName() {
         assumeTrue(SdkLevel.isAtLeastU());
 
-        String sdk1Name = "sdkName1";
-        String sdk2Name = "sdkName2";
-
         SdkSandboxActivityHandler handler1Sdk1 = activity -> {};
         SdkSandboxActivityHandler handler2Sdk1 = activity -> {};
-        SdkSandboxActivityHandler handler1Sdk2 = activity -> {};
 
         // Register SDK1 handlers
-        IBinder token1Sdk1 = mRegistry.register(sdk1Name, handler1Sdk1);
-        IBinder token2Sdk1 = mRegistry.register(sdk1Name, handler2Sdk1);
-        // Register SDK2 handlers
-        IBinder token1Sdk2 = mRegistry.register(sdk2Name, handler1Sdk2);
+        IBinder token1Sdk1 = mRegistry.register(mSdkContext, handler1Sdk1);
+        IBinder token2Sdk1 = mRegistry.register(mSdkContext, handler2Sdk1);
 
         // Before unregistering, registering the same handlers should return the same tokens.
-        assertThat(mRegistry.register(sdk1Name, handler1Sdk1)).isEqualTo(token1Sdk1);
-        assertThat(mRegistry.register(sdk1Name, handler2Sdk1)).isEqualTo(token2Sdk1);
-        assertThat(mRegistry.register(sdk2Name, handler1Sdk2)).isEqualTo(token1Sdk2);
+        assertThat(mRegistry.register(mSdkContext, handler1Sdk1)).isEqualTo(token1Sdk1);
+        assertThat(mRegistry.register(mSdkContext, handler2Sdk1)).isEqualTo(token2Sdk1);
 
         // Unregistering SDK1 handlers
-        mRegistry.unregisterAllActivityHandlersForSdk(sdk1Name);
+        mRegistry.unregisterAllActivityHandlersForSdk(SDK_NAME);
 
         // Registering SDK1 handlers should return different tokens as they are unregistered.
-        assertThat(mRegistry.register(sdk1Name, handler1Sdk1)).isNotEqualTo(token1Sdk1);
-        assertThat(mRegistry.register(sdk1Name, handler2Sdk1)).isNotEqualTo(token2Sdk1);
-
-        // SDK2 handlers should stay registered
-        assertThat(mRegistry.register(sdk2Name, handler1Sdk2)).isEqualTo(token1Sdk2);
+        assertThat(mRegistry.register(mSdkContext, handler1Sdk1)).isNotEqualTo(token1Sdk1);
+        assertThat(mRegistry.register(mSdkContext, handler2Sdk1)).isNotEqualTo(token2Sdk1);
     }
 }

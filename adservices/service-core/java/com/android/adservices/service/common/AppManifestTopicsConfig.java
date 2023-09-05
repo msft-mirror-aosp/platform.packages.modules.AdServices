@@ -16,36 +16,17 @@
 
 package com.android.adservices.service.common;
 
-import android.annotation.NonNull;
-
 import java.util.List;
 
 /** Topics part of the app manifest config (<ad-services-config>). */
-public class AppManifestTopicsConfig {
-    private final boolean mAllowAllToAccess;
-    private final List<String> mAllowAdPartnersToAccess;
-
+public final class AppManifestTopicsConfig extends AppManifestApiConfig {
     /**
      * Constructor.
      *
      * @param allowAllToAccess corresponds to the boolean in the config.
      * @param allowAdPartnersToAccess corresponds to the list in the config.
      */
-    public AppManifestTopicsConfig(
-            boolean allowAllToAccess, @NonNull List<String> allowAdPartnersToAccess) {
-        mAllowAllToAccess = allowAllToAccess;
-        mAllowAdPartnersToAccess = allowAdPartnersToAccess;
-    }
-
-    /** Getter for allowAllToAccess. */
-    @NonNull
-    public boolean getAllowAllToAccess() {
-        return mAllowAllToAccess;
-    }
-
-    /** Getter for allowAdPartnersToAccess. */
-    @NonNull
-    public List<String> getAllowAdPartnersToAccess() {
-        return mAllowAdPartnersToAccess;
+    public AppManifestTopicsConfig(boolean allowAllToAccess, List<String> allowAdPartnersToAccess) {
+        super(allowAllToAccess, allowAdPartnersToAccess);
     }
 }

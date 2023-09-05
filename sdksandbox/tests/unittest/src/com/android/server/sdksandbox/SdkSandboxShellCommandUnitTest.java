@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.Manifest;
 import android.app.sdksandbox.LoadSdkException;
+import android.app.sdksandbox.SandboxLatencyInfo;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -32,7 +33,6 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.sdksandbox.ISdkSandboxService;
-import com.android.sdksandbox.SandboxLatencyInfo;
 import com.android.server.wm.ActivityInterceptorCallbackRegistry;
 
 import org.junit.After;

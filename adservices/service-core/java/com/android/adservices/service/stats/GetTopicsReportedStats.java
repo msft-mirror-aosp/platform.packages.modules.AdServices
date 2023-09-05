@@ -16,7 +16,11 @@
 
 package com.android.adservices.service.stats;
 
+import android.annotation.Nullable;
+
 import com.google.auto.value.AutoValue;
+
+import java.util.List;
 
 /**
  * Class for AdServicesGetTopicsReported atom (for T+ logging) and
@@ -26,6 +30,12 @@ import com.google.auto.value.AutoValue;
  */
 @AutoValue
 public abstract class GetTopicsReportedStats {
+    /**
+     * @return list of topic ids returned.
+     */
+    @Nullable
+    public abstract List<Integer> getTopicIds();
+
     /** @return number of topic ids filtered due to duplication. */
     public abstract int getDuplicateTopicCount();
 
@@ -43,6 +53,9 @@ public abstract class GetTopicsReportedStats {
     /** Builder class for {@link GetTopicsReportedStats}. */
     @AutoValue.Builder
     public abstract static class Builder {
+        /** Set list of topic ids returned. */
+        public abstract GetTopicsReportedStats.Builder setTopicIds(List<Integer> value);
+
         /** Set duplicate topic count. */
         public abstract GetTopicsReportedStats.Builder setDuplicateTopicCount(int value);
 

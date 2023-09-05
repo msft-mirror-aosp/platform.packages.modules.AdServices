@@ -31,6 +31,7 @@ import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.IRequestSurfacePackageCallback;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.LogUtil;
+import android.app.sdksandbox.SandboxLatencyInfo;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.content.Context;
@@ -54,7 +55,6 @@ import com.android.sdksandbox.IRequestSurfacePackageFromSdkCallback;
 import com.android.sdksandbox.ISdkSandboxManagerToSdkSandboxCallback;
 import com.android.sdksandbox.ISdkSandboxService;
 import com.android.sdksandbox.IUnloadSdkCallback;
-import com.android.sdksandbox.SandboxLatencyInfo;
 import com.android.sdksandbox.service.stats.SdkSandboxStatsLog;
 
 import java.lang.annotation.Retention;
@@ -281,16 +281,8 @@ class LoadSdkSession {
         }
     }
 
-    void handleLoadSuccess(
-            long timeSystemServerReceivedCallFromSandbox, SandboxLatencyInfo sandboxLatencyInfo) {
-        final long timeSystemServerCalledApp = mInjector.getCurrentTime();
-        SdkSandboxStatsLog.write(
-                SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
-                (int) (timeSystemServerCalledApp - timeSystemServerReceivedCallFromSandbox),
-                /*success=*/ true,
-                SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_SANDBOX_TO_APP,
-                mCallingInfo.getUid());
+    void handleLoadSuccess(SandboxLatencyInfo sandboxLatencyInfo) {
+        sandboxLatencyInfo.setTimeSystemServerCalledApp(mInjector.getCurrentTime());
 
         synchronized (mLock) {
             if (getStatus() == LOAD_PENDING) {
@@ -310,7 +302,7 @@ class LoadSdkSession {
             }
         }
         try {
-            mLoadCallback.onLoadSdkSuccess(getSandboxedSdk(), timeSystemServerCalledApp);
+            mLoadCallback.onLoadSdkSuccess(getSandboxedSdk(), sandboxLatencyInfo);
         } catch (RemoteException e) {
             Log.w(TAG, "Failed to send onLoadCodeSuccess", e);
         }
@@ -323,6 +315,7 @@ class LoadSdkSession {
             boolean successAtStage,
             SandboxLatencyInfo sandboxLatencyInfo) {
         final long timeSystemServerCalledApp = mInjector.getCurrentTime();
+        sandboxLatencyInfo.setTimeSystemServerCalledApp(timeSystemServerCalledApp);
         if (stage != SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED) {
             SdkSandboxStatsLog.write(
                     SdkSandboxStatsLog.SANDBOX_API_CALLED,
@@ -351,7 +344,7 @@ class LoadSdkSession {
             }
         }
         try {
-            mLoadCallback.onLoadSdkFailure(exception, timeSystemServerCalledApp);
+            mLoadCallback.onLoadSdkFailure(exception, sandboxLatencyInfo);
         } catch (RemoteException e) {
             Log.w(TAG, "Failed to send onLoadCodeFailure", e);
         }
@@ -583,11 +576,8 @@ class LoadSdkSession {
                 SandboxedSdk sandboxedSdk,
                 ISdkSandboxManagerToSdkSandboxCallback callback,
                 SandboxLatencyInfo sandboxLatencyInfo) {
-            final long timeSystemServerReceivedCallFromSandbox = mInjector.getCurrentTime();
-            logLatencyMetricsForCallback(
-                    timeSystemServerReceivedCallFromSandbox,
-                    SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
-                    sandboxLatencyInfo);
+            sandboxLatencyInfo.setTimeSystemServerReceivedCallFromSandbox(
+                    mInjector.getCurrentTime());
 
             synchronized (this) {
                 // Keep reference to callback so that manager service can
@@ -602,17 +592,14 @@ class LoadSdkSession {
                 mSandboxedSdk = sandboxedSdk;
             }
 
-            handleLoadSuccess(timeSystemServerReceivedCallFromSandbox, sandboxLatencyInfo);
+            handleLoadSuccess(sandboxLatencyInfo);
         }
 
         @Override
         public void onLoadSdkError(
                 LoadSdkException exception, SandboxLatencyInfo sandboxLatencyInfo) {
-            final long timeSystemServerReceivedCallFromSandbox = mInjector.getCurrentTime();
-            logLatencyMetricsForCallback(
-                    timeSystemServerReceivedCallFromSandbox,
-                    SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
-                    sandboxLatencyInfo);
+            sandboxLatencyInfo.setTimeSystemServerReceivedCallFromSandbox(
+                    mInjector.getCurrentTime());
 
             if (exception.getLoadSdkErrorCode()
                     == ILoadSdkInSandboxCallback.LOAD_SDK_INSTANTIATION_ERROR) {
@@ -620,8 +607,8 @@ class LoadSdkSession {
             }
             handleLoadFailure(
                     updateLoadSdkErrorCode(exception),
-                    /*startTimeOfErrorStage=*/ timeSystemServerReceivedCallFromSandbox,
-                    SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_SANDBOX_TO_APP,
+                    /*startTimeOfErrorStage=*/ -1,
+                    SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED,
                     /*successAtStage=*/ true,
                     sandboxLatencyInfo);
         }
@@ -780,6 +767,8 @@ class LoadSdkSession {
         }
     }
 
+    // TODO(b/287047664): remove once all API methods latency is logged in
+    // SdkSandboxManagerService.logLatencies.
     private void logLatencyMetricsForCallback(
             long timeSystemServerReceivedCallFromSandbox,
             int method,
@@ -789,7 +778,7 @@ class LoadSdkSession {
         SdkSandboxStatsLog.write(
                 SdkSandboxStatsLog.SANDBOX_API_CALLED,
                 method,
-                sandboxLatencyInfo.getLatencySystemServerToSandbox(),
+                sandboxLatencyInfo.getSystemServerToSandboxLatency(),
                 /*success=*/ true,
                 SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_SANDBOX,
                 appUid);

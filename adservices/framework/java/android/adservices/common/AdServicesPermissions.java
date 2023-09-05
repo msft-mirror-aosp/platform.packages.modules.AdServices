@@ -34,6 +34,14 @@ public class AdServicesPermissions {
     public static final String ACCESS_ADSERVICES_CUSTOM_AUDIENCE =
             "android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE";
 
+    /**
+     * This permission needs to be declared by the caller of Protected Signals APIs.
+     *
+     * @hide
+     */
+    public static final String ACCESS_ADSERVICES_PROTECTED_SIGNALS =
+            "android.permission.ACCESS_ADSERVICES_PROTECTED_SIGNALS";
+
     /** This permission needs to be declared by the caller of Advertising ID APIs. */
     public static final String ACCESS_ADSERVICES_AD_ID =
             "android.permission.ACCESS_ADSERVICES_AD_ID";
@@ -103,4 +111,15 @@ public class AdServicesPermissions {
      */
     public static final String ACCESS_ADSERVICES_MANAGER =
             "android.permission.ACCESS_ADSERVICES_MANAGER";
+
+    /**
+     * This is a signature permission needs to be declared by the AdServices apk to access API for
+     * AdServices Cobalt upload service provided by another provider service. The signature
+     * permission is required to make sure that only AdServices is permitted to access this api.
+     *
+     * @hide
+     */
+    @SystemApi
+    public static final String ACCESS_PRIVILEGED_ADSERVICES_COBALT_UPLOAD =
+            "android.permission.ACCESS_PRIVILEGED_AD_SERVICES_COBALT_UPLOAD";
 }

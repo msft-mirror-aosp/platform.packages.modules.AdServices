@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.topics;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_COBALT_LOGGER_INITIALIZATION_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
+
 import android.annotation.NonNull;
 import android.content.Context;
 import android.os.Build;
@@ -24,13 +27,17 @@ import android.util.Pair;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.cobalt.CobaltFactory;
+import com.android.adservices.cobalt.CobaltInitializationException;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.GetTopicsReportedStats;
+import com.android.adservices.service.topics.cobalt.TopicsCobaltLogger;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -83,6 +90,7 @@ public class CacheManager {
 
     // Set containing Global Blocked Topic Ids
     private HashSet<Integer> mCachedGlobalBlockedTopicIds;
+    private final TopicsCobaltLogger mTopicsCobaltLogger;
     private final AdServicesLogger mLogger;
 
     @VisibleForTesting
@@ -91,12 +99,14 @@ public class CacheManager {
             Flags flags,
             AdServicesLogger logger,
             BlockedTopicsManager blockedTopicsManager,
-            GlobalBlockedTopicsManager globalBlockedTopicsManager) {
+            GlobalBlockedTopicsManager globalBlockedTopicsManager,
+            TopicsCobaltLogger topicsCobaltLogger) {
         mTopicsDao = topicsDao;
         mFlags = flags;
         mLogger = logger;
         mBlockedTopicsManager = blockedTopicsManager;
         mCachedGlobalBlockedTopicIds = globalBlockedTopicsManager.getGlobalBlockedTopicIds();
+        mTopicsCobaltLogger = topicsCobaltLogger;
     }
 
     /** Returns an instance of the CacheManager given a context. */
@@ -104,13 +114,28 @@ public class CacheManager {
     public static CacheManager getInstance(Context context) {
         synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
+                TopicsCobaltLogger topicsCobaltLogger = null;
+                try {
+                    topicsCobaltLogger =
+                            new TopicsCobaltLogger(
+                                    CobaltFactory.getCobaltLogger(
+                                            context, FlagsFactory.getFlags()));
+                } catch (CobaltInitializationException e) {
+                    sLogger.e(e, "Cobalt logger could not be initialised.");
+                    ErrorLogUtil.e(
+                            e,
+                            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_COBALT_LOGGER_INITIALIZATION_FAILURE,
+                            AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
+                }
+
                 sSingleton =
                         new CacheManager(
                                 TopicsDao.getInstance(context),
                                 FlagsFactory.getFlags(),
                                 AdServicesLoggerImpl.getInstance(),
                                 BlockedTopicsManager.getInstance(context),
-                                GlobalBlockedTopicsManager.getInstance());
+                                GlobalBlockedTopicsManager.getInstance(),
+                                topicsCobaltLogger);
             }
             return sSingleton;
         }
@@ -173,8 +198,7 @@ public class CacheManager {
         // We will need to look at the 3 historical epochs starting from last epoch.
         long epochId = currentEpochId - 1;
         List<Topic> topics = new ArrayList<>();
-        // To deduplicate returned topics
-        Set<Integer> topicsSet = new HashSet<>();
+        List<Integer> topicIdsForLogging = new ArrayList<>();
 
         int duplicateTopicCount = 0, blockedTopicCount = 0;
         mReadWriteLock.readLock().lock();
@@ -182,8 +206,9 @@ public class CacheManager {
             for (int numEpoch = 0; numEpoch < numberOfLookBackEpochs; numEpoch++) {
                 if (mCachedTopics.containsKey(epochId - numEpoch)) {
                     Topic topic = mCachedTopics.get(epochId - numEpoch).get(Pair.create(app, sdk));
+                    // Get the list of real cached topics.
                     if (topic != null) {
-                        if (topicsSet.contains(topic.getTopic())) {
+                        if (topics.contains(topic)) {
                             duplicateTopicCount++;
                             continue;
                         }
@@ -192,7 +217,20 @@ public class CacheManager {
                             continue;
                         }
                         topics.add(topic);
-                        topicsSet.add(topic.getTopic());
+                    }
+                    if (mFlags.getEnableLoggedTopic()
+                            && mTopicsDao.supportsLoggedTopicInReturnedTopicTable()) {
+                        // Get the list of logged topics.
+                        if (topic != null) {
+                            // Remove duplicate logged topics.
+                            if (topicIdsForLogging.contains(topic.getLoggedTopic())) {
+                                continue;
+                            }
+                            if (isTopicIdBlocked(topic.getLoggedTopic())) {
+                                continue;
+                            }
+                            topicIdsForLogging.add(topic.getLoggedTopic());
+                        }
                     }
                 }
             }
@@ -202,17 +240,30 @@ public class CacheManager {
 
         Collections.shuffle(topics, random);
 
-        // Log GetTopics stats.
-        ImmutableList.Builder<Integer> topicIds = ImmutableList.builder();
-        for (Topic topic : topics) {
-            topicIds.add(topic.getTopic());
+        // Log GetTopics stats with logged topics if flag ENABLE_LOGGED_TOPIC is true.
+        if (mFlags.getEnableLoggedTopic()
+                && mTopicsDao.supportsLoggedTopicInReturnedTopicTable()) {
+            mLogger.logGetTopicsReportedStats(
+                    GetTopicsReportedStats.builder()
+                            .setTopicIds(topicIdsForLogging)
+                            .setDuplicateTopicCount(duplicateTopicCount)
+                            .setFilteredBlockedTopicCount(blockedTopicCount)
+                            .setTopicIdsCount(topics.size())
+                            .build());
+        } else {
+            mLogger.logGetTopicsReportedStats(
+                    GetTopicsReportedStats.builder()
+                            .setDuplicateTopicCount(duplicateTopicCount)
+                            .setFilteredBlockedTopicCount(blockedTopicCount)
+                            .setTopicIdsCount(topics.size())
+                            .build());
         }
-        mLogger.logGetTopicsReportedStats(
-                GetTopicsReportedStats.builder()
-                        .setDuplicateTopicCount(duplicateTopicCount)
-                        .setFilteredBlockedTopicCount(blockedTopicCount)
-                        .setTopicIdsCount(topics.size())
-                        .build());
+
+        if (mFlags.getTopicsCobaltLoggingEnabled()) {
+            if (mTopicsCobaltLogger != null) {
+                mTopicsCobaltLogger.logTopicOccurrences(topics);
+            }
+        }
 
         return topics;
     }
@@ -299,7 +350,7 @@ public class CacheManager {
         return ImmutableList.copyOf(topics);
     }
 
-    /** Returns true if topic id is a global blocked topic or user blocked topic. */
+    /** Returns true if topic id is a global-blocked topic or user blocked topic. */
     private boolean isTopicIdBlocked(int topicId) {
         return mCachedBlockedTopicIds.contains(topicId)
                 || mCachedGlobalBlockedTopicIds.contains(topicId);

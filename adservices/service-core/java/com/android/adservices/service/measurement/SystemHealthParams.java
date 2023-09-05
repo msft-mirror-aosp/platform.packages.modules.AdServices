@@ -48,6 +48,22 @@ public class SystemHealthParams {
         return FlagsFactory.getFlags().getMeasurementMaxEventReportsPerDestination();
     }
 
+    /**
+     * Returns the minimum delay (in milliseconds) in job triggering after a registration request is
+     * received.
+     */
+    public static long getMeasurementAsyncRegistrationJobQueueMinDelayMs() {
+        return FlagsFactory.getFlags().getMeasurementAsyncRegistrationJobTriggerMinDelayMs();
+    }
+
+    /**
+     * Returns the maximum delay (in milliseconds) in job triggering after a registration request is
+     * received.
+     */
+    public static long getMeasurementAsyncRegistrationJobQueueMaxDelayMs() {
+        return FlagsFactory.getFlags().getMeasurementAsyncRegistrationJobTriggerMaxDelayMs();
+    }
+
     /** Delay for attribution job triggering. */
     public static final long ATTRIBUTION_JOB_TRIGGERING_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
 
@@ -83,17 +99,8 @@ public class SystemHealthParams {
     /** Maximum number of bytes allowed in an aggregate key ID. */
     public static final int MAX_BYTES_PER_ATTRIBUTION_AGGREGATE_KEY_ID = 25;
 
-    /** Maximum number of aggregation keys allowed during source or trigger registration. */
-    public static final int MAX_AGGREGATE_KEYS_PER_REGISTRATION = 50;
-
     /** Maximum number of aggregate deduplication keys allowed during trigger registration. */
     public static final int MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION = 50;
-
-    /** Maximum number of aggregatable trigger data allowed in a trigger registration. */
-    public static final int MAX_AGGREGATABLE_TRIGGER_DATA = 50;
-
-    /** Maximum number of event trigger data allowed in a trigger registration. */
-    public static final int MAX_ATTRIBUTION_EVENT_TRIGGER_DATA = 10;
 
     /** Maximum window for a delayed source to be considered valid instead of missed. */
     public static final long MAX_DELAYED_SOURCE_REGISTRATION_WINDOW = TimeUnit.MINUTES.toMillis(2);

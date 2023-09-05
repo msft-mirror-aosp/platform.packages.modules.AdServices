@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.customaudience;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
@@ -30,6 +31,7 @@ import androidx.room.migration.AutoMigrationSpec;
 import com.android.adservices.data.common.FledgeRoomConverters;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.BinderFlagReader;
+import com.android.adservices.service.common.compat.FileCompatUtils;
 
 import java.util.Objects;
 
@@ -38,20 +40,23 @@ import java.util.Objects;
         entities = {
             DBCustomAudience.class,
             DBCustomAudienceBackgroundFetchData.class,
-            DBCustomAudienceOverride.class
+            DBCustomAudienceOverride.class,
+            DBCustomAudienceQuarantine.class
         },
         version = CustomAudienceDatabase.DATABASE_VERSION,
         autoMigrations = {
             @AutoMigration(from = 1, to = 2, spec = CustomAudienceDatabase.AutoMigration1To2.class),
             @AutoMigration(from = 2, to = 3),
+            @AutoMigration(from = 3, to = 4),
         })
 @TypeConverters({FledgeRoomConverters.class})
 public abstract class CustomAudienceDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();
 
-    public static final int DATABASE_VERSION = 3;
+    public static final int DATABASE_VERSION = 4;
     // TODO(b/230653780): Should we separate the DB.
-    public static final String DATABASE_NAME = "customaudience.db";
+    public static final String DATABASE_NAME =
+            FileCompatUtils.getAdservicesFilename("customaudience.db");
 
     @RenameColumn(
             tableName = DBCustomAudience.TABLE_NAME,
@@ -72,6 +77,7 @@ public abstract class CustomAudienceDatabase extends RoomDatabase {
     // TODO: How we want handle synchronized situation (b/228101878).
 
     /** Returns an instance of the CustomAudienceDatabase given a context. */
+    @SuppressLint("NewAdServicesFile")
     public static CustomAudienceDatabase getInstance(@NonNull Context context) {
         Objects.requireNonNull(context, "Context must be provided.");
         // Initialization pattern recommended on page 334 of "Effective Java" 3rd edition

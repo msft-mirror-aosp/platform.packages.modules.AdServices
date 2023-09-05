@@ -22,6 +22,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
@@ -37,8 +38,10 @@ import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV3
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV6;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.data.topics.migration.ITopicsDbMigrator;
-import com.android.adservices.data.topics.migration.TopicDbMigratorV7;
+import com.android.adservices.data.topics.migration.TopicsDbMigratorV7;
+import com.android.adservices.data.topics.migration.TopicsDbMigratorV8;
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
@@ -55,6 +58,9 @@ import java.util.stream.Stream;
  * get the same reference.
  */
 public class DbHelper extends SQLiteOpenHelper {
+    // Version 8: Add logged_topic to ReturnedTopic table for Topics API, guarded by feature flag.
+    public static final int DATABASE_VERSION_V8 = 8;
+
     public static final int DATABASE_VERSION = 7;
 
     private static final String DATABASE_NAME = "adservices.db";
@@ -71,6 +77,7 @@ public class DbHelper extends SQLiteOpenHelper {
      * @param dbName Name of database to query
      * @param dbVersion db version
      */
+    @SuppressLint("NewAdServicesFile")
     @VisibleForTesting
     public DbHelper(@NonNull Context context, @NonNull String dbName, int dbVersion) {
         super(context, dbName, null, dbVersion);
@@ -83,7 +90,7 @@ public class DbHelper extends SQLiteOpenHelper {
     public static DbHelper getInstance(@NonNull Context ctx) {
         synchronized (DbHelper.class) {
             if (sSingleton == null) {
-                sSingleton = new DbHelper(ctx, DATABASE_NAME, DATABASE_VERSION);
+                sSingleton = new DbHelper(ctx, DATABASE_NAME, getDatabaseVersionToCreate());
             }
             return sSingleton;
         }
@@ -189,6 +196,14 @@ public class DbHelper extends SQLiteOpenHelper {
         return mDbFile != null && mDbFile.exists() ? mDbFile.length() : -1;
     }
 
+    /**
+     * Check whether logged_topic column is supported in ReturnedTopic Table. This column is
+     * introduced in Version 8.
+     */
+    public boolean supportsLoggedTopicInReturnedTopicTable() {
+        return mDbVersion >= DATABASE_VERSION_V8;
+    }
+
     /** Get Migrators in order for Measurement. */
     @VisibleForTesting
     public List<IMeasurementDbMigrator> getOrderedDbMigrators() {
@@ -201,6 +216,17 @@ public class DbHelper extends SQLiteOpenHelper {
     /** Get Migrators in order for Topics. */
     @VisibleForTesting
     public List<ITopicsDbMigrator> topicsGetOrderedDbMigrators() {
-        return ImmutableList.of(new TopicDbMigratorV7());
+        return ImmutableList.of(
+                new TopicsDbMigratorV7(),
+                new TopicsDbMigratorV8());
+    }
+
+    // Get the database version to create. It may be different as DATABASE_VERSION, depending
+    // on Flags status.
+    @VisibleForTesting
+    static int getDatabaseVersionToCreate() {
+        return FlagsFactory.getFlags().getEnableDatabaseSchemaVersion8()
+                ? DATABASE_VERSION_V8
+                : DATABASE_VERSION;
     }
 }

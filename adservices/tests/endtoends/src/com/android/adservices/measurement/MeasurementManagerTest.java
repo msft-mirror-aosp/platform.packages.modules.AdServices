@@ -23,6 +23,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
+import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.MeasurementCompatibleManager;
 import android.adservices.measurement.MeasurementManager;
@@ -74,7 +75,7 @@ public class MeasurementManagerTest {
     public void setUp() throws TimeoutException {
         if (!SdkLevel.isAtLeastT()) {
             mPreviousAppAllowList =
-                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
+                    CompatAdServicesTestUtils.getAndOverrideMsmtApiAppAllowList(
                             sContext.getPackageName());
             CompatAdServicesTestUtils.setFlags();
         }
@@ -88,7 +89,7 @@ public class MeasurementManagerTest {
         resetDisableAppSearchOnR();
 
         if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
+            CompatAdServicesTestUtils.setMsmtApiAppAllowList(mPreviousAppAllowList);
             CompatAdServicesTestUtils.resetFlagsToDefault();
         }
 
@@ -129,7 +130,7 @@ public class MeasurementManagerTest {
                 Uri.parse("https://registration-source"),
                 /* inputEvent = */ null,
                 CALLBACK_EXECUTOR,
-                new android.adservices.common.OutcomeReceiver<>() {
+                new AdServicesOutcomeReceiver<>() {
                     @Override
                     public void onResult(@NonNull Object result) {
                         anyCountDownLatch.countDown();
@@ -192,7 +193,7 @@ public class MeasurementManagerTest {
         mm.registerWebSource(
                 buildDefaultWebSourceRegistrationRequest(),
                 CALLBACK_EXECUTOR,
-                new android.adservices.common.OutcomeReceiver<>() {
+                new AdServicesOutcomeReceiver<>() {
                     @Override
                     public void onResult(@NonNull Object result) {
                         anyCountDownLatch.countDown();
@@ -251,7 +252,7 @@ public class MeasurementManagerTest {
         mm.registerWebTrigger(
                 buildDefaultWebTriggerRegistrationRequest(),
                 CALLBACK_EXECUTOR,
-                new android.adservices.common.OutcomeReceiver<>() {
+                new AdServicesOutcomeReceiver<>() {
                     @Override
                     public void onResult(@NonNull Object result) {
                         anyCountDownLatch.countDown();
@@ -299,7 +300,7 @@ public class MeasurementManagerTest {
         mm.registerTrigger(
                 Uri.parse("https://registration-trigger"),
                 CALLBACK_EXECUTOR,
-                new android.adservices.common.OutcomeReceiver<>() {
+                new AdServicesOutcomeReceiver<>() {
                     @Override
                     public void onResult(@NonNull Object result) {
                         anyCountDownLatch.countDown();
@@ -339,7 +340,7 @@ public class MeasurementManagerTest {
                         mm.deleteRegistrations(
                                 new DeletionRequest.Builder().build(),
                                 /* executor */ null,
-                                (android.adservices.common.OutcomeReceiver<Object, Exception>)
+                                (AdServicesOutcomeReceiver<Object, Exception>)
                                         i -> new CompletableFuture<>().complete(i)));
     }
 
@@ -367,8 +368,7 @@ public class MeasurementManagerTest {
                         mm.deleteRegistrations(
                                 new DeletionRequest.Builder().build(),
                                 CALLBACK_EXECUTOR,
-                                /* callback */ (android.adservices.common.OutcomeReceiver<
-                                                Object, Exception>)
+                                /* callback */ (AdServicesOutcomeReceiver<Object, Exception>)
                                         null));
     }
 
@@ -402,8 +402,8 @@ public class MeasurementManagerTest {
         final MeasurementManager mm = getMeasurementManager();
         overrideConsentManagerDebugMode();
         CompletableFuture<Integer> future = new CompletableFuture<>();
-        android.adservices.common.OutcomeReceiver<Integer, Exception> callback =
-                new android.adservices.common.OutcomeReceiver<>() {
+        AdServicesOutcomeReceiver<Integer, Exception> callback =
+                new AdServicesOutcomeReceiver<>() {
                     @Override
                     public void onResult(Integer result) {
                         future.complete(result);
@@ -446,8 +446,7 @@ public class MeasurementManagerTest {
                 () ->
                         mm.getMeasurementApiStatus(
                                 /* executor */ null,
-                                (android.adservices.common.OutcomeReceiver<Integer, Exception>)
-                                        result -> {}));
+                                (AdServicesOutcomeReceiver<Integer, Exception>) result -> {}));
     }
 
     @Test
@@ -476,8 +475,7 @@ public class MeasurementManagerTest {
                 () ->
                         mm.getMeasurementApiStatus(
                                 CALLBACK_EXECUTOR, /* callback */
-                                (android.adservices.common.OutcomeReceiver<Integer, Exception>)
-                                        null));
+                                (AdServicesOutcomeReceiver<Integer, Exception>) null));
     }
 
     // The remaining tests validate that the MeasurementManager invokes the underlying
@@ -492,7 +490,7 @@ public class MeasurementManagerTest {
                 uri,
                 /* inputEvent= */ null,
                 /* executor= */ null,
-                (android.adservices.common.OutcomeReceiver<Object, Exception>) null);
+                (AdServicesOutcomeReceiver<Object, Exception>) null);
         verify(impl).registerSource(eq(uri), isNull(), isNull(), isNull());
         verifyNoMoreInteractions(impl);
     }
@@ -507,7 +505,7 @@ public class MeasurementManagerTest {
                 uri,
                 /* inputEvent= */ null,
                 /* executor= */ null,
-                (android.os.OutcomeReceiver<Object, Exception>) null);
+                (OutcomeReceiver<Object, Exception>) null);
         verify(impl).registerSource(eq(uri), isNull(), isNull(), isNull());
         verifyNoMoreInteractions(impl);
     }
@@ -521,7 +519,7 @@ public class MeasurementManagerTest {
                 uri,
                 /* inputEvent= */ null,
                 CALLBACK_EXECUTOR,
-                (android.adservices.common.OutcomeReceiver<Object, Exception>) null);
+                (AdServicesOutcomeReceiver<Object, Exception>) null);
         verify(impl).registerSource(eq(uri), isNull(), eq(CALLBACK_EXECUTOR), isNull());
         verifyNoMoreInteractions(impl);
     }
@@ -536,7 +534,7 @@ public class MeasurementManagerTest {
                 uri,
                 /* inputEvent= */ null,
                 CALLBACK_EXECUTOR,
-                (android.os.OutcomeReceiver<Object, Exception>) null);
+                (OutcomeReceiver<Object, Exception>) null);
         verify(impl).registerSource(eq(uri), isNull(), eq(CALLBACK_EXECUTOR), isNull());
         verifyNoMoreInteractions(impl);
     }
@@ -546,8 +544,8 @@ public class MeasurementManagerTest {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
         Uri uri = Uri.parse("http://www.example.com");
-        android.adservices.common.OutcomeReceiver<Object, Exception> callback =
-                mock(android.adservices.common.OutcomeReceiver.class);
+        AdServicesOutcomeReceiver<Object, Exception> callback =
+                mock(AdServicesOutcomeReceiver.class);
         mm.registerSource(uri, /* inputEvent= */ null, /* executor= */ null, callback);
 
         verify(impl).registerSource(eq(uri), isNull(), isNull(), eq(callback));
@@ -561,12 +559,11 @@ public class MeasurementManagerTest {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
         Uri uri = Uri.parse("http://www.example.com");
-        android.os.OutcomeReceiver<Object, Exception> callback =
-                mock(android.os.OutcomeReceiver.class);
+        OutcomeReceiver<Object, Exception> callback = mock(OutcomeReceiver.class);
         mm.registerSource(uri, /* inputEvent= */ null, /* executor= */ null, callback);
 
-        ArgumentCaptor<android.adservices.common.OutcomeReceiver<Object, Exception>> captor =
-                ArgumentCaptor.forClass(android.adservices.common.OutcomeReceiver.class);
+        ArgumentCaptor<AdServicesOutcomeReceiver<Object, Exception>> captor =
+                ArgumentCaptor.forClass(AdServicesOutcomeReceiver.class);
         verify(impl).registerSource(eq(uri), isNull(), isNull(), captor.capture());
         verifyCallback(callback, captor.getValue());
         verifyNoMoreInteractions(impl);
@@ -577,8 +574,8 @@ public class MeasurementManagerTest {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
         WebSourceRegistrationRequest request = buildDefaultWebSourceRegistrationRequest();
-        android.adservices.common.OutcomeReceiver<Object, Exception> callback =
-                mock(android.adservices.common.OutcomeReceiver.class);
+        AdServicesOutcomeReceiver<Object, Exception> callback =
+                mock(AdServicesOutcomeReceiver.class);
 
         mm.registerWebSource(request, CALLBACK_EXECUTOR, callback);
 
@@ -597,8 +594,8 @@ public class MeasurementManagerTest {
 
         mm.registerWebSource(request, CALLBACK_EXECUTOR, callback);
 
-        ArgumentCaptor<android.adservices.common.OutcomeReceiver<Object, Exception>> captor =
-                ArgumentCaptor.forClass(android.adservices.common.OutcomeReceiver.class);
+        ArgumentCaptor<AdServicesOutcomeReceiver<Object, Exception>> captor =
+                ArgumentCaptor.forClass(AdServicesOutcomeReceiver.class);
         verify(impl).registerWebSource(eq(request), eq(CALLBACK_EXECUTOR), captor.capture());
         verifyCallback(callback, captor.getValue());
         verifyNoMoreInteractions(impl);
@@ -609,8 +606,8 @@ public class MeasurementManagerTest {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
         WebTriggerRegistrationRequest request = buildDefaultWebTriggerRegistrationRequest();
-        android.adservices.common.OutcomeReceiver<Object, Exception> callback =
-                mock(android.adservices.common.OutcomeReceiver.class);
+        AdServicesOutcomeReceiver<Object, Exception> callback =
+                mock(AdServicesOutcomeReceiver.class);
 
         mm.registerWebTrigger(request, CALLBACK_EXECUTOR, callback);
 
@@ -629,8 +626,8 @@ public class MeasurementManagerTest {
 
         mm.registerWebTrigger(request, CALLBACK_EXECUTOR, callback);
 
-        ArgumentCaptor<android.adservices.common.OutcomeReceiver<Object, Exception>> captor =
-                ArgumentCaptor.forClass(android.adservices.common.OutcomeReceiver.class);
+        ArgumentCaptor<AdServicesOutcomeReceiver<Object, Exception>> captor =
+                ArgumentCaptor.forClass(AdServicesOutcomeReceiver.class);
         verify(impl).registerWebTrigger(eq(request), eq(CALLBACK_EXECUTOR), captor.capture());
         verifyCallback(callback, captor.getValue());
         verifyNoMoreInteractions(impl);
@@ -641,8 +638,8 @@ public class MeasurementManagerTest {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
         Uri uri = Uri.parse("https://www.example.com");
-        android.adservices.common.OutcomeReceiver<Object, Exception> callback =
-                mock(android.adservices.common.OutcomeReceiver.class);
+        AdServicesOutcomeReceiver<Object, Exception> callback =
+                mock(AdServicesOutcomeReceiver.class);
 
         mm.registerTrigger(uri, CALLBACK_EXECUTOR, callback);
 
@@ -661,8 +658,8 @@ public class MeasurementManagerTest {
 
         mm.registerTrigger(uri, CALLBACK_EXECUTOR, callback);
 
-        ArgumentCaptor<android.adservices.common.OutcomeReceiver<Object, Exception>> captor =
-                ArgumentCaptor.forClass(android.adservices.common.OutcomeReceiver.class);
+        ArgumentCaptor<AdServicesOutcomeReceiver<Object, Exception>> captor =
+                ArgumentCaptor.forClass(AdServicesOutcomeReceiver.class);
         verify(impl).registerTrigger(eq(uri), eq(CALLBACK_EXECUTOR), captor.capture());
         verifyCallback(callback, captor.getValue());
         verifyNoMoreInteractions(impl);
@@ -673,8 +670,8 @@ public class MeasurementManagerTest {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
         DeletionRequest request = new DeletionRequest.Builder().build();
-        android.adservices.common.OutcomeReceiver<Object, Exception> callback =
-                mock(android.adservices.common.OutcomeReceiver.class);
+        AdServicesOutcomeReceiver<Object, Exception> callback =
+                mock(AdServicesOutcomeReceiver.class);
 
         mm.deleteRegistrations(request, CALLBACK_EXECUTOR, callback);
 
@@ -693,8 +690,8 @@ public class MeasurementManagerTest {
 
         mm.deleteRegistrations(request, CALLBACK_EXECUTOR, callback);
 
-        ArgumentCaptor<android.adservices.common.OutcomeReceiver<Object, Exception>> captor =
-                ArgumentCaptor.forClass(android.adservices.common.OutcomeReceiver.class);
+        ArgumentCaptor<AdServicesOutcomeReceiver<Object, Exception>> captor =
+                ArgumentCaptor.forClass(AdServicesOutcomeReceiver.class);
         verify(impl).deleteRegistrations(eq(request), eq(CALLBACK_EXECUTOR), captor.capture());
         verifyCallback(callback, captor.getValue());
         verifyNoMoreInteractions(impl);
@@ -704,8 +701,8 @@ public class MeasurementManagerTest {
     public void testGetMeasurementApiStatus_MockImpl() {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
-        android.adservices.common.OutcomeReceiver<Integer, Exception> callback =
-                mock(android.adservices.common.OutcomeReceiver.class);
+        AdServicesOutcomeReceiver<Integer, Exception> callback =
+                mock(AdServicesOutcomeReceiver.class);
 
         mm.getMeasurementApiStatus(CALLBACK_EXECUTOR, callback);
 
@@ -723,11 +720,11 @@ public class MeasurementManagerTest {
 
         mm.getMeasurementApiStatus(CALLBACK_EXECUTOR, callback);
 
-        ArgumentCaptor<android.adservices.common.OutcomeReceiver<Integer, Exception>> captor =
-                ArgumentCaptor.forClass(android.adservices.common.OutcomeReceiver.class);
+        ArgumentCaptor<AdServicesOutcomeReceiver<Integer, Exception>> captor =
+                ArgumentCaptor.forClass(AdServicesOutcomeReceiver.class);
         verify(impl).getMeasurementApiStatus(eq(CALLBACK_EXECUTOR), captor.capture());
 
-        android.adservices.common.OutcomeReceiver<Integer, Exception> invoked = captor.getValue();
+        AdServicesOutcomeReceiver<Integer, Exception> invoked = captor.getValue();
         invoked.onResult(1);
         verify(callback).onResult(1);
 
@@ -742,8 +739,8 @@ public class MeasurementManagerTest {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
         SourceRegistrationRequest request = buildDefaultAppSourcesRegistrationRequest();
-        android.adservices.common.OutcomeReceiver<Object, Exception> callback =
-                mock(android.adservices.common.OutcomeReceiver.class);
+        AdServicesOutcomeReceiver<Object, Exception> callback =
+                mock(AdServicesOutcomeReceiver.class);
 
         mm.registerSource(request, CALLBACK_EXECUTOR, callback);
 
@@ -762,8 +759,8 @@ public class MeasurementManagerTest {
 
         mm.registerSource(request, CALLBACK_EXECUTOR, callback);
 
-        ArgumentCaptor<android.adservices.common.OutcomeReceiver<Object, Exception>> captor =
-                ArgumentCaptor.forClass(android.adservices.common.OutcomeReceiver.class);
+        ArgumentCaptor<AdServicesOutcomeReceiver<Object, Exception>> captor =
+                ArgumentCaptor.forClass(AdServicesOutcomeReceiver.class);
         verify(impl).registerSource(eq(request), eq(CALLBACK_EXECUTOR), captor.capture());
         verifyCallback(callback, captor.getValue());
         verifyNoMoreInteractions(impl);
@@ -790,10 +787,10 @@ public class MeasurementManagerTest {
     }
 
     // Mockito crashes on Android R if there are any methods that take unknown types, such as
-    // android.os.OutcomeReceiver. So, declaring the parameter as Object and then casting to the
+    // OutcomeReceiver. So, declaring the parameter as Object and then casting to the
     // correct type.
     private void verifyCallback(
-            Object expected, android.adservices.common.OutcomeReceiver<Object, Exception> invoked) {
+            Object expected, AdServicesOutcomeReceiver<Object, Exception> invoked) {
         OutcomeReceiver<Object, Exception> callback = (OutcomeReceiver<Object, Exception>) expected;
         invoked.onResult("Test");
         verify(callback).onResult("Test");

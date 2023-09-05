@@ -17,6 +17,7 @@
 package com.android.server.sdksandbox;
 
 import android.app.sdksandbox.LoadSdkException;
+import android.app.sdksandbox.SandboxLatencyInfo;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -27,7 +28,6 @@ import android.os.UserHandle;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.BasicShellCommandHandler;
 import com.android.sdksandbox.ISdkSandboxService;
-import com.android.sdksandbox.SandboxLatencyInfo;
 
 import java.io.PrintWriter;
 import java.util.concurrent.CountDownLatch;
@@ -93,6 +93,8 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
         return result;
     }
 
+    // Suppress lint warning for context.getUser in R since this code is unused in R
+    @SuppressWarnings("NewApi")
     private void handleSandboxArguments() {
         String opt;
         while ((opt = getNextOption()) != null) {
@@ -123,6 +125,8 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
         }
     }
 
+    // Suppress lint warning for context.getUser in R since this code is unused in R
+    @SuppressWarnings("NewApi")
     private int parseUserArg(String arg) {
         switch (arg) {
             case "all":

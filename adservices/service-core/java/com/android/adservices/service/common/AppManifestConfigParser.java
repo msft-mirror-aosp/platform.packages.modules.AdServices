@@ -17,6 +17,7 @@
 package com.android.adservices.service.common;
 
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.content.res.XmlResourceParser;
 
 import com.android.adservices.service.exception.XmlParseException;
@@ -33,11 +34,11 @@ import java.util.List;
 public class AppManifestConfigParser {
     private static final String TAG_AD_SERVICES_CONFIG = "ad-services-config";
     private static final String TAG_INCLUDES_SDK_LIBRARY = "includes-sdk-library";
-    private static final String TAG_ATTRIBUTION = "attribution";
-    private static final String TAG_CUSTOM_AUDIENCES = "custom-audiences";
-    private static final String TAG_TOPICS = "topics";
-    private static final String TAG_ADID = "adid";
-    private static final String TAG_APPSETID = "appsetid";
+    static final String TAG_ATTRIBUTION = "attribution";
+    static final String TAG_CUSTOM_AUDIENCES = "custom-audiences";
+    static final String TAG_TOPICS = "topics";
+    static final String TAG_ADID = "adid";
+    static final String TAG_APPSETID = "appsetid";
     private static final String ATTR_ALLOW_ALL_TO_ACCESS = "allowAllToAccess";
     private static final String ATTR_ALLOW_AD_PARTNERS_TO_ACCESS = "allowAdPartnersToAccess";
     private static final String ATTR_SDK_NAME = "name";
@@ -180,20 +181,20 @@ public class AppManifestConfigParser {
     }
 
     private static String getSdkLibrary(@NonNull XmlResourceParser parser) {
-        return parser.getAttributeValue(/*namespace=*/ null, ATTR_SDK_NAME);
+        return getAttributeValue(parser, ATTR_SDK_NAME);
     }
 
     private static boolean getAllowAllToAccess(@NonNull XmlResourceParser parser) {
-        String allowAllToAccess =
-                parser.getAttributeValue(/* namespace */ null, ATTR_ALLOW_ALL_TO_ACCESS);
-        return allowAllToAccess.equals("false") ? false : true;
+        // getAttributeValue() returns null if the tag doesn't exist
+        String allowAllToAccess = getAttributeValue(parser, ATTR_ALLOW_ALL_TO_ACCESS);
+        return "true".equals(allowAllToAccess);
     }
 
     private static List<String> getAllowAdPartnersToAccess(
             @NonNull XmlResourceParser parser, @NonNull boolean allowAllToAccess)
             throws XmlParseException {
         String allowAdPartnersToAccess =
-                parser.getAttributeValue(null, ATTR_ALLOW_AD_PARTNERS_TO_ACCESS);
+                getAttributeValue(parser, ATTR_ALLOW_AD_PARTNERS_TO_ACCESS);
         if (allowAdPartnersToAccess == null || allowAdPartnersToAccess.isEmpty()) {
             return new ArrayList<>();
         }
@@ -202,5 +203,11 @@ public class AppManifestConfigParser {
                     "allowAll cannot be set to true when allowAdPartners is also set");
         }
         return Arrays.asList(allowAdPartnersToAccess.split("\\s*,\\s*"));
+    }
+
+    @Nullable
+    private static String getAttributeValue(@NonNull XmlResourceParser parser, String name) {
+        String value = parser.getAttributeValue(/* namespace= */ null, name);
+        return value == null ? null : value.trim();
     }
 }

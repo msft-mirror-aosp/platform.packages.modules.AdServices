@@ -49,6 +49,7 @@
         <!-- Disable kill switches to ignore the effect of actual PH values. -->
         <option name="run-command" value="setprop debug.adservices.global_kill_switch false"/>
         <option name="run-command" value="device_config put adservices enable_back_compat true"/>
+        <option name="run-command" value="setprop debug.adservices.adid_kill_switch false" />
 
         <option name="run-command"
                 value="setprop debug.adservices.fledge_select_ads_kill_switch false"/>

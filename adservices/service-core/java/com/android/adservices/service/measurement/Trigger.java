@@ -21,13 +21,13 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
 
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateDeduplicationKey;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Validation;
-import com.android.adservices.service.measurement.util.Web;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -39,6 +39,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -510,7 +511,9 @@ public class Trigger {
         }
         Map<String, BigInteger> adtechBitMapping = new HashMap<>();
         JSONObject jsonObject = new JSONObject(mAdtechKeyMapping);
-        for (String key : jsonObject.keySet()) {
+        Iterator<String> keys = jsonObject.keys();
+        while (keys.hasNext()) {
+            String key = keys.next();
             // Remove "0x" prefix.
             String hexString = jsonObject.getString(key).substring(2);
             BigInteger bigInteger = new BigInteger(hexString, 16);
@@ -529,7 +532,7 @@ public class Trigger {
         if (mDestinationType == EventSurfaceType.APP) {
             return mAttributionDestination;
         } else {
-            Optional<Uri> uri = Web.topPrivateDomainAndScheme(mAttributionDestination);
+            Optional<Uri> uri = WebAddresses.topPrivateDomainAndScheme(mAttributionDestination);
             return uri.orElse(null);
         }
     }

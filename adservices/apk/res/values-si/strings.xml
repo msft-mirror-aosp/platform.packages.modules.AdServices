@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"AdServices Consent API වෙත ප්‍රවේශ වීමට යෙදුමකට ඉඩ දෙයි."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID API වෙත ප්‍රවේශ වන්න"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Ad ID API වෙත ප්‍රවේශ වීමට යෙදුමකට ඉඩ දෙයි."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"AdServices Cobalt Upload API වෙත ප්‍රවේශය"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"AdServices Cobalt Upload API වෙත ප්‍රවේශ වීමට යෙදුමකට ඉඩ දෙයි."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"App Set ID API වෙත ප්‍රවේශ වන්න"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"App Set ID API වෙත ප්‍රවේශ වීමට යෙදුමකට ඉඩ දෙයි."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service API වෙත ප්‍රවේශ වන්න"</string>
@@ -40,7 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"AdService හි සක්‍රිය කිරීමේ තත්ත්ව API වෙත ප්‍රවේශ වීමට යෙදුමකට ඉඩ දෙයි."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManager හි API වෙත ප්‍රවේශ වන්න"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"යෙදුමට AdServicesManager හි API වෙත ප්‍රවේශ වීමට ඉඩ දෙයි."</string>
-    <string name="app_label" msgid="5985320129629013968">"Android පද්ධතිය"</string>
+    <string name="app_label" msgid="5844694701336604490">"දැන්වීම් පෞද්ගලිකත්වය"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Android හි දැන්වීම් පෞද්ගලිකත්ව බීටා හා එක් වන්න"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android යෙදුම්වලට ඔබට දැන්වීම් පෙන්වීමට වඩා පෞද්ගලික ක්‍රම ගවේෂණ කරයි"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"තව දැන ගන්න"</string>

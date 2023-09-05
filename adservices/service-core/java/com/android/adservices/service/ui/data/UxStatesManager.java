@@ -27,7 +27,9 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.consent.DeviceRegionProvider;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
@@ -129,15 +131,39 @@ public class UxStatesManager {
         return mUxSharedPreferences;
     }
 
-    /** Returns whether the user is already enrolled for the current UX. */
-    public boolean isEnrolledUser() {
-        // Explicitly call getUx to cover the edge case where this method is called first.
-        PrivacySandboxUxCollection ux = getUx();
-        return switch (ux) {
-            case GA_UX -> mConsentManager.wasGaUxNotificationDisplayed();
-            case U18_UX -> mConsentManager.wasU18NotificationDisplayed();
-            case BETA_UX -> mConsentManager.wasNotificationDisplayed();
-            default -> false;
-        };
+    /**
+     * Returns whether the user is already enrolled for the current UX. or it is supervised account,
+     * we then set ux and default measurement consent.
+     */
+    public boolean isEnrolledUser(Context context) {
+        boolean isNotificationDisplayed =
+                mConsentManager.wasGaUxNotificationDisplayed()
+                        || mConsentManager.wasU18NotificationDisplayed()
+                        || mConsentManager.wasNotificationDisplayed();
+        // We follow the Chrome's capabilities practice here, when user is not in adult account and
+        // u18 account, (the u18 account is for teen and un-supervised account), we are consider
+        // them as supervised accounts for now, it actually also contains robot account, but we
+        // don't have a capability for that, we will update this when we have the new capability.
+        // TODO: when new capability is available, update with new capability.
+        boolean isSupervisedAccountEnabled =
+                getFlag(FlagsConstants.KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED);
+        boolean isSupervisedUser =
+                !mConsentManager.isU18Account() && !mConsentManager.isAdultAccount();
+        // In case supervised account logging in second time and not able to set the ux to u18
+        if (isSupervisedAccountEnabled && isSupervisedUser) {
+            LogUtil.d("supervised user get");
+            mConsentManager.setUx(PrivacySandboxUxCollection.U18_UX);
+        }
+        if (!isNotificationDisplayed) {
+            if (isSupervisedAccountEnabled && isSupervisedUser) {
+                // We initial the default consent and notification.
+                LogUtil.d("supervised user initial");
+                mConsentManager.setU18NotificationDisplayed(true);
+                mConsentManager.enable(context, AdServicesApiType.MEASUREMENTS);
+                return true;
+            }
+            return false;
+        }
+        return true;
     }
 }

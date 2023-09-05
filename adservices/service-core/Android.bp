@@ -54,6 +54,31 @@ filegroup {
     ],
 }
 
+filegroup {
+    name: "adservices-service-core-flags-constants-sources",
+    srcs: [
+        "java/com/android/adservices/cobalt/CobaltConstants.java",
+        "java/com/android/adservices/service/FlagsConstants.java",
+    ],
+    path: "java",
+    visibility: [
+        "//packages/modules/AdServices/adservices/tests/test-util",
+    ],
+}
+
+filegroup {
+    name: "adservices-service-core-phflags-sources",
+    srcs: [
+        ":adservices-service-core-flags-constants-sources",
+        "java/com/android/adservices/service/Flags.java",
+        "java/com/android/adservices/service/PhFlags.java",
+    ],
+    path: "java",
+    visibility: [
+        "//packages/modules/AdServices/adservices/tests/test-util",
+    ],
+}
+
 android_library {
     name: "adservices-service-core",
     sdk_version: "module_current",
@@ -67,6 +92,7 @@ android_library {
     plugins: [
         "androidx.appsearch_appsearch-compiler-plugin",
         "androidx.room_room-compiler-plugin",
+        "auto_oneof_plugin",
         "auto_value_plugin",
         "auto_annotation_plugin"
     ],

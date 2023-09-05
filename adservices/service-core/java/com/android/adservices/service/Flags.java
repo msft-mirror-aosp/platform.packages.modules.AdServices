@@ -23,10 +23,10 @@ import android.annotation.NonNull;
 
 import androidx.annotation.Nullable;
 
-import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
-import com.android.adservices.service.adselection.AdOutcomeSelectorImpl;
-import com.android.adservices.service.common.cache.FledgeHttpCache;
-import com.android.adservices.service.measurement.PrivacyParams;
+// NOTE: do not import adservices classes that are only used on javadoc as this class is used by
+// tests that don't have them in the classpath - use the FQCN in the javadoc instead
+
+import com.android.adservices.cobalt.CobaltConstants;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
@@ -96,12 +96,28 @@ public interface Flags {
     /** How many epochs to look back when deciding if a caller has observed a topic before. */
     int TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS = 3;
 
+    /** Flag to disable direct app calls for Topics API. go/app-calls-for-topics-api */
+    boolean TOPICS_DISABLE_DIRECT_APP_CALLS = false;
+
+    /** Returns the flag to disable direct app calls for Topics API. */
+    default boolean getTopicsDisableDirectAppCalls() {
+        return TOPICS_DISABLE_DIRECT_APP_CALLS;
+    }
+
     /**
      * Returns the number of epochs to look back when deciding if a caller has observed a topic
      * before.
      */
     default int getTopicsNumberOfLookBackEpochs() {
         return TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS;
+    }
+
+    /** Privacy budget for logging topic ID distributions with randomized response. */
+    float TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION = 5f;
+
+    /** Returns the privacy budget for logging topic ID distributions with randomized response. */
+    default float getTopicsPrivacyBudgetForTopicIdDistribution() {
+        return TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION;
     }
 
     /** Available types of classifier behaviours for the Topics API. */
@@ -211,15 +227,6 @@ public interface Flags {
         return MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS;
     }
 
-    /* The default URL for fetching public encryption keys for aggregatable reports. */
-    String MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL =
-            "https://publickeyservice.aws.privacysandboxservices.com/v1alpha/publicKeys";
-
-    /** Returns the URL for fetching public encryption keys for aggregatable reports. */
-    default String getMeasurementAggregateEncryptionKeyCoordinatorUrl() {
-        return MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL;
-    }
-
     /**
      * The suffix that is appended to the aggregation coordinator origin for retrieving the
      * encryption keys.
@@ -301,6 +308,8 @@ public interface Flags {
     long MEASUREMENT_DB_SIZE_LIMIT = (1024 * 1024) * 10; // 10 MBs
     int MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(5);
     int MEASUREMENT_NETWORK_READ_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(30);
+    int MEASUREMENT_REPORT_RETRY_LIMIT = 3;
+    boolean MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED = true;
 
     /**
      * Returns the window that an InputEvent has to be within for the system to register it as a
@@ -331,6 +340,16 @@ public interface Flags {
         return MEASUREMENT_DB_SIZE_LIMIT;
     }
 
+    /** Returns Whether to limit number of Retries for Measurement Reports */
+    default boolean getMeasurementReportingRetryLimitEnabled() {
+        return MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED;
+    }
+
+    /** Returns Maximum number of Retries for Measurement Reportss */
+    default int getMeasurementReportingRetryLimit() {
+        return MEASUREMENT_REPORT_RETRY_LIMIT;
+    }
+
     /** Measurement manifest file url, used for MDD download. */
     String MEASUREMENT_MANIFEST_FILE_URL =
             "https://dl.google.com/mdi-serving/adservices/adtech_enrollment/manifest_configs/1"
@@ -353,6 +372,13 @@ public interface Flags {
     /** Enable/disable shared_debug_key processing from source RBR. */
     default boolean getMeasurementEnableSharedSourceDebugKey() {
         return MEASUREMENT_ENABLE_SHARED_SOURCE_DEBUG_KEY;
+    }
+
+    boolean MEASUREMENT_ENABLE_SHARED_FILTER_DATA_KEYS_XNA = true;
+
+    /** Enable/disable shared_filter_data_keys processing from source RBR. */
+    default boolean getMeasurementEnableSharedFilterDataKeysXNA() {
+        return MEASUREMENT_ENABLE_SHARED_FILTER_DATA_KEYS_XNA;
     }
 
     boolean MEASUREMENT_ENABLE_DEBUG_REPORT = true;
@@ -404,24 +430,26 @@ public interface Flags {
         return MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
     }
 
-    long MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
+    long DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS =
+            TimeUnit.MINUTES.toMillis(2);
 
     /**
-     * Returns the delay (in milliseconds) in job triggering after a registration request is
+     * Returns the minimum delay (in milliseconds) in job triggering after a registration request is
      * received.
      */
-    default long getMeasurementRegistrationJobTriggerDelayMs() {
-        return MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS;
+    default long getMeasurementAsyncRegistrationJobTriggerMinDelayMs() {
+        return DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS;
     }
 
-    long MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS = TimeUnit.MINUTES.toMillis(5);
+    long DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS =
+            TimeUnit.MINUTES.toMillis(5);
 
     /**
      * Returns the maximum delay (in milliseconds) in job triggering after a registration request is
      * received.
      */
-    default long getMeasurementRegistrationJobTriggerMaxDelayMs() {
-        return MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS;
+    default long getMeasurementAsyncRegistrationJobTriggerMaxDelayMs() {
+        return DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS;
     }
 
     boolean MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH = false;
@@ -479,35 +507,35 @@ public interface Flags {
     float MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT = 1.5849266F;
 
     /** Returns max information gain in Flexible Event API for Event sources */
-    default float getMeasurementFlexAPIMaxInformationGainEvent() {
+    default float getMeasurementFlexApiMaxInformationGainEvent() {
         return MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT;
     }
 
     float MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION = 11.4617280F;
 
     /** Returns max information gain in Flexible Event API for Navigation sources */
-    default float getMeasurementFlexAPIMaxInformationGainNavigation() {
+    default float getMeasurementFlexApiMaxInformationGainNavigation() {
         return MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION;
     }
 
     int MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS = 20;
 
     /** Returns max event reports in Flexible Event API */
-    default int getMeasurementFlexAPIMaxEventReports() {
+    default int getMeasurementFlexApiMaxEventReports() {
         return MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS;
     }
 
     int MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS = 5;
 
     /** Returns max event report windows in Flexible Event API */
-    default int getMeasurementFlexAPIMaxEventReportWindows() {
+    default int getMeasurementFlexApiMaxEventReportWindows() {
         return MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS;
     }
 
     int MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY = 32;
 
     /** Returns max trigger data cardinality in Flexible Event API */
-    default int getMeasurementFlexAPIMaxTriggerDataCardinality() {
+    default int getMeasurementFlexApiMaxTriggerDataCardinality() {
         return MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY;
     }
 
@@ -516,6 +544,20 @@ public interface Flags {
     /** Returns minimum event report window */
     default long getMeasurementMinimumEventReportWindowInSeconds() {
         return MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS;
+    }
+
+    long MEASUREMENT_MINIMUM_AGGREGATABLE_REPORT_WINDOW_IN_SECONDS = TimeUnit.HOURS.toSeconds(1);
+
+    /** Returns minimum aggregatable report window */
+    default long getMeasurementMinimumAggregatableReportWindowInSeconds() {
+        return MEASUREMENT_MINIMUM_AGGREGATABLE_REPORT_WINDOW_IN_SECONDS;
+    }
+
+    boolean MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER = false;
+
+    /** Returns true if lookback window filter is enabled else false. */
+    default boolean getMeasurementEnableLookbackWindowFilter() {
+        return MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER;
     }
 
     long FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = 4000L;
@@ -535,6 +577,23 @@ public interface Flags {
     // Keeping TTL as long as expiry, could be reduced later as we get more fresh CAs with adoption
     long FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS = 60 * 24 * 60L * 60L * 1000; // 60 days
     long FLEDGE_ENCRYPTION_KEY_MAX_AGE_SECONDS = TimeUnit.DAYS.toSeconds(14);
+    long FLEDGE_FETCH_CUSTOM_AUDIENCE_MIN_RETRY_AFTER_VALUE_MS = 30 * 1000; // 30 seconds
+    long FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_RETRY_AFTER_VALUE_MS =
+            24 * 60 * 60 * 1000; // 24 hours in ms
+
+    /**
+     * Returns the minimum number of milliseconds before the same fetch CA request can be retried.
+     */
+    default long getFledgeFetchCustomAudienceMinRetryAfterValueMs() {
+        return FLEDGE_FETCH_CUSTOM_AUDIENCE_MIN_RETRY_AFTER_VALUE_MS;
+    }
+
+    /**
+     * Returns the maximum number of milliseconds before the same fetch CA request can be retried.
+     */
+    default long getFledgeFetchCustomAudienceMaxRetryAfterValueMs() {
+        return FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_RETRY_AFTER_VALUE_MS;
+    }
 
     /** Returns the maximum number of custom audience can stay in the storage. */
     default long getFledgeCustomAudienceMaxCount() {
@@ -750,7 +809,10 @@ public interface Flags {
         return FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B;
     }
 
-    /** Returns boolean, if the caching is enabled for {@link FledgeHttpCache} */
+    /**
+     * Returns boolean, if the caching is enabled for {@link
+     * com.android.adservices.service.common.cache.FledgeHttpCache}
+     */
     default boolean getFledgeHttpCachingEnabled() {
         return FLEDGE_HTTP_CACHE_ENABLE;
     }
@@ -768,6 +830,29 @@ public interface Flags {
     /** Returns the default max age of entries in cache */
     default long getFledgeHttpCacheMaxAgeSeconds() {
         return FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS;
+    }
+
+    boolean PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED = false;
+    long PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS = 1L * 60L * 60L * 1000L; // 1 hour
+    long PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS = 5L * 60L * 1000L; // 5 minutes
+
+    /** Returns {@code true} if the Periodic encoding of Protected Signals is enabled. */
+    default boolean getProtectedSignalsPeriodicEncodingEnabled() {
+        return PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED;
+    }
+
+    /**
+     * @return period of running periodic encoding in milliseconds
+     */
+    default long getProtectedSignalPeriodicEncodingJobPeriodMs() {
+        return PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS;
+    }
+
+    /**
+     * @return the flexible period of running periodic encoding in milliseconds
+     */
+    default long getProtectedSignalsPeriodicEncodingJobFlexMs() {
+        return PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS;
     }
 
     int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT = 10_000;
@@ -829,6 +914,7 @@ public interface Flags {
     long FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_PER_AD_TECH_COUNT = 10; // Num entries
     long FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B =
             20 * 2; // Num characters * 2 bytes per char in UTF-8
+    long FLEDGE_REPORT_IMPRESSION_MAX_INTERACTION_REPORTING_URI_SIZE_B = 400;
 
     /** Returns the timeout constant in milliseconds that limits the bidding per CA */
     default long getAdSelectionBiddingTimeoutPerCaMs() {
@@ -847,7 +933,7 @@ public interface Flags {
 
     /**
      * Returns the timeout constant in milliseconds that limits the {@link
-     * AdOutcomeSelectorImpl#runAdOutcomeSelector}
+     * com.android.adservices.service.adselection.AdOutcomeSelectorImpl#runAdOutcomeSelector}
      */
     default long getAdSelectionSelectingOutcomeTimeoutMs() {
         return FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
@@ -891,7 +977,8 @@ public interface Flags {
     }
 
     /**
-     * Returns the maximum number of {@link DBRegisteredAdInteraction} that can be in the {@code
+     * Returns the maximum number of {@link
+     * com.android.adservices.data.adselection.DBRegisteredAdInteraction} that can be in the {@code
      * registered_ad_interactions} database at any one time.
      */
     default long getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount() {
@@ -899,18 +986,28 @@ public interface Flags {
     }
 
     /**
-     * Returns the maximum number of {@link DBRegisteredAdInteraction} that an ad-tech can register
-     * in one call to {@code reportImpression}.
+     * Returns the maximum number of {@link
+     * com.android.adservices.data.adselection.DBRegisteredAdInteraction} that an ad-tech can
+     * register in one call to {@code reportImpression}.
      */
     default long getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount() {
         return FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_PER_AD_TECH_COUNT;
     }
 
     /**
-     * Returns the maximum size in bytes of {@link DBRegisteredAdInteraction#getInteractionKey()}
+     * Returns the maximum size in bytes of {@link
+     * com.android.adservices.data.adselection.DBRegisteredAdInteraction#getInteractionKey()}
      */
     default long getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB() {
         return FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B;
+    }
+
+    /**
+     * Returns the maximum size in bytes of {@link
+     * com.android.adservices.data.adselection.DBRegisteredAdInteraction#getInteractionReportingUri()}
+     */
+    default long getFledgeReportImpressionMaxInteractionReportingUriSizeB() {
+        return FLEDGE_REPORT_IMPRESSION_MAX_INTERACTION_REPORTING_URI_SIZE_B;
     }
 
     // 24 hours in seconds
@@ -961,12 +1058,81 @@ public interface Flags {
         return FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED;
     }
 
+    boolean FLEDGE_AUCTION_SERVER_ENABLED = false;
+
+    /**
+     * @return whether to enable server auction support in post-auction APIs.
+     */
+    default boolean getFledgeAuctionServerEnabled() {
+        return FLEDGE_AUCTION_SERVER_ENABLED;
+    }
+
+    boolean FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION = true;
+
+    /**
+     * @return whether to enable server auction support in report impression.
+     */
+    default boolean getFledgeAuctionServerEnabledForReportImpression() {
+        return getFledgeAuctionServerEnabled()
+                && FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION;
+    }
+
+    boolean FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT = true;
+
+    /**
+     * @return whether to enable server auction support in report event API.
+     */
+    default boolean getFledgeAuctionServerEnabledForReportEvent() {
+        return getFledgeAuctionServerEnabled() && FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT;
+    }
+
+    boolean FLEDGE_AUCTION_SERVER_ENABLED_FOR_UPDATE_HISTOGRAM = true;
+
+    /**
+     * @return whether to enable server auction support in update histogram API.
+     */
+    default boolean getFledgeAuctionServerEnabledForUpdateHistogram() {
+        return getFledgeAuctionServerEnabled()
+                && FLEDGE_AUCTION_SERVER_ENABLED_FOR_UPDATE_HISTOGRAM;
+    }
+
+    boolean FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION = true;
+
+    /**
+     * @return whether to enable server auction support in select ads mediation API.
+     */
+    default boolean getFledgeAuctionServerEnabledForSelectAdsMediation() {
+        return getFledgeAuctionServerEnabled()
+                && FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION;
+    }
+
+    boolean FLEDGE_AUCTION_SERVER_ENABLE_AD_FILTER_IN_GET_AD_SELECTION_DATA = true;
+
+    /**
+     * @return whether to enable ad filtering in get ad selection data API.
+     */
+    default boolean getFledgeAuctionServerEnableAdFilterInGetAdSelectionData() {
+        return FLEDGE_AUCTION_SERVER_ENABLE_AD_FILTER_IN_GET_AD_SELECTION_DATA;
+    }
+
     ImmutableList<Integer> FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES =
             ImmutableList.of(0, 1024, 2048, 4096, 8192, 16384, 32768, 65536);
 
     /** Returns available bucket sizes for auction server payloads. */
     default ImmutableList<Integer> getFledgeAuctionServerPayloadBucketSizes() {
         return FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES;
+    }
+
+    // TODO(b/291680065): Remove when owner field is returned from B&A
+    boolean FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED = false;
+
+    /**
+     * @return true if forcing {@link
+     *     android.adservices.adselection.AdSelectionManager#persistAdSelectionResult} to continue
+     *     when owner is null, otherwise false.
+     */
+    default boolean getFledgeAuctionServerForceSearchWhenOwnerIsAbsentEnabled() {
+        return FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED;
     }
 
     boolean FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED = false;
@@ -976,6 +1142,15 @@ public interface Flags {
      */
     default boolean getFledgeEventLevelDebugReportingEnabled() {
         return FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED;
+    }
+
+    boolean FLEDGE_EVENT_LEVEL_DEBUG_REPORT_SEND_IMMEDIATELY = false;
+
+    /**
+     * @return whether to call remote URLs for debug reporting.
+     */
+    default boolean getFledgeEventLevelDebugReportSendImmediately() {
+        return FLEDGE_EVENT_LEVEL_DEBUG_REPORT_SEND_IMMEDIATELY;
     }
 
     int FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_BATCH_DELAY_SECONDS = 60 * 15;
@@ -996,6 +1171,56 @@ public interface Flags {
         return FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_MAX_ITEMS_PER_BATCH;
     }
 
+    int FLEDGE_DEBUG_REPORT_SENDER_JOB_NETWORK_CONNECT_TIMEOUT_MS = 5 * 1000; // 5 seconds
+
+    /**
+     * @return the maximum time in milliseconds allowed for a network call to open its initial
+     *     connection during the FLEDGE debug report sender job.
+     */
+    default int getFledgeDebugReportSenderJobNetworkConnectionTimeoutMs() {
+        return FLEDGE_DEBUG_REPORT_SENDER_JOB_NETWORK_CONNECT_TIMEOUT_MS;
+    }
+
+    int FLEDGE_DEBUG_REPORT_SENDER_JOB_NETWORK_READ_TIMEOUT_MS = 30 * 1000; // 30 seconds
+
+    /**
+     * @return the maximum time in milliseconds allowed for a network call to read a response from a
+     *     target server during the FLEDGE debug report sender job.
+     */
+    default int getFledgeDebugReportSenderJobNetworkReadTimeoutMs() {
+        return FLEDGE_DEBUG_REPORT_SENDER_JOB_NETWORK_READ_TIMEOUT_MS;
+    }
+
+    long FLEDGE_DEBUG_REPORT_SENDER_JOB_MAX_RUNTIME_MS = 10L * 60L * 1000L; // 5 minutes
+
+    /**
+     * @return the maximum amount of time (in milliseconds) each FLEDGE debug report sender job is
+     *     allowed to run.
+     */
+    default long getFledgeDebugReportSenderJobMaxRuntimeMs() {
+        return FLEDGE_DEBUG_REPORT_SENDER_JOB_MAX_RUNTIME_MS;
+    }
+
+    long FLEDGE_DEBUG_REPORT_SENDER_JOB_PERIOD_MS = TimeUnit.MINUTES.toMillis(10);
+
+    /**
+     * @return the best effort max time (in milliseconds) between each FLEDGE debug report sender
+     *     job run.
+     */
+    default long getFledgeDebugReportSenderJobPeriodMs() {
+        return FLEDGE_DEBUG_REPORT_SENDER_JOB_PERIOD_MS;
+    }
+
+    long FLEDGE_DEBUG_REPORT_SENDER_JOB_FLEX_MS = TimeUnit.MINUTES.toMillis(2);
+
+    /**
+     * @return the amount of flex (in milliseconds) around the end of each period to run each FLEDGE
+     *     debug report sender job.
+     */
+    default long getFledgeDebugReportSenderJobFlexMs() {
+        return FLEDGE_DEBUG_REPORT_SENDER_JOB_FLEX_MS;
+    }
+
     boolean FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED = true;
 
     /** Returns whether to compress requests sent off device for ad selection. */
@@ -1012,7 +1237,7 @@ public interface Flags {
     }
 
     String FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI =
-            "https://d38za9ovyr65qt.cloudfront.net/v1alpha/publicKeys";
+            "https://publickeyservice-test1.bas-kms.xyz/v1alpha/publicKeys";
 
     /**
      * @return Uri to fetch auction encryption key for fledge ad selection.
@@ -1075,6 +1300,12 @@ public interface Flags {
 
     default long getFledgeAuctionServerAuctionKeyFetchTimeoutMs() {
         return FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_TIMEOUT_MS;
+    }
+
+    long FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS = 5000;
+
+    default long getFledgeAuctionServerOverallTimeoutMs() {
+        return FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS;
     }
 
     boolean FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_ENABLED = false;
@@ -1301,18 +1532,18 @@ public interface Flags {
     @interface ConsentSourceOfTruth {}
 
     /** Write and read consent from system server only. */
-    int SYSTEM_SERVER_ONLY = 0;
+    int SYSTEM_SERVER_ONLY = FlagsConstants.SYSTEM_SERVER_ONLY;
     /** Write and read consent from PPAPI only */
-    int PPAPI_ONLY = 1;
+    int PPAPI_ONLY = FlagsConstants.PPAPI_ONLY;
     /** Write consent to both PPAPI and system server. Read consent from system server only. */
-    int PPAPI_AND_SYSTEM_SERVER = 2;
+    int PPAPI_AND_SYSTEM_SERVER = FlagsConstants.PPAPI_AND_SYSTEM_SERVER;
     /**
      * Write consent data to AppSearch only. To store consent data in AppSearch the flag
      * enable_appsearch_consent_data must also be true. This ensures that both writes and reads can
      * happen to/from AppSearch. The writes are done by code on S-, while reads are done from code
      * running on S- for all consent requests and on T+ once after OTA.
      */
-    int APPSEARCH_ONLY = 3;
+    int APPSEARCH_ONLY = FlagsConstants.APPSEARCH_ONLY;
 
     /**
      * Consent source of truth intended to be used by default. On S- devices, there is no AdServices
@@ -1637,7 +1868,7 @@ public interface Flags {
     boolean MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH = false;
 
     /**
-     * Returns the kill switch value for Measurement Job Debug Reporting. The API will be disabled
+     * Returns the kill switch value for Measurement Job Debug Reporting. The Job will be disabled
      * if either the Global Kill Switch, Measurement Kill Switch, or the Measurement Job Debug
      * Reporting Kill Switch value is true.
      */
@@ -1646,6 +1877,83 @@ public interface Flags {
         return getGlobalKillSwitch()
                 || getMeasurementKillSwitch()
                 || MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH;
+    }
+
+    /**
+     * Measurement Debug Reporting Fallback Job kill Switch. The default value is false which means
+     * the job is enabled. This flag is used for emergency turning off the Debug Reporting Fallback
+     * Job.
+     */
+    boolean MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for the Measurement Debug Reporting Fallback Job. The API will
+     * be disabled if either the Global Kill Switch, Measurement Kill Switch, or the Measurement
+     * Debug Reporting Fallback Job kill switch value is true.
+     */
+    default boolean getMeasurementDebugReportingFallbackJobKillSwitch() {
+        // We check the Global Kill Switch first. As a result, it overrides all other kill Switches.
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH;
+    }
+
+    /**
+     * Measurement Verbose Debug Reporting Fallback Job kill Switch. The default value is false
+     * which means the job is enabled. This flag is used for emergency turning off the Verbose Debug
+     * Reporting Fallback Job.
+     */
+    boolean MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for the Measurement Debug Reporting Fallback Job. The API will
+     * be disabled if either the Global Kill Switch, Measurement Kill Switch, or the Measurement
+     * Debug Reporting Fallback Job kill switch value is true.
+     */
+    default boolean getMeasurementVerboseDebugReportingFallbackJobKillSwitch() {
+        // We check the Global Kill Switch first. As a result, it overrides all other kill Switches.
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH;
+    }
+
+    /**
+     * Returns the job period in millis for the Measurement Verbose Debug Reporting Fallback Job.
+     */
+    long MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(1);
+
+    /**
+     * Returns the job period in millis for the Measurement Verbose Debug Reporting Fallback Job.
+     */
+    default long getMeasurementVerboseDebugReportingFallbackJobPeriodMs() {
+        return MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS;
+    }
+
+    /** Returns the job period in millis for the Measurement Debug Reporting Fallback Job. */
+    long MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(1);
+
+    /** Returns the job period in millis for the Measurement Debug Reporting Fallback Job. */
+    default long getMeasurementDebugReportingFallbackJobPeriodMs() {
+        return MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS;
+    }
+
+    /*
+     * Measurement Job Verbose Debug Reporting Kill Switch. The default value is false which means
+     * the Verbose Debug Reporting Job is enabled. This flag is used for emergency turning off the
+     * Verbose Debug Reporting Job.
+     */
+    boolean MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Measurement Job Verbose Debug Reporting. The Job will be
+     * disabled if either the Global Kill Switch, Measurement Kill Switch, or the Measurement Job
+     * Verbose Debug Reporting Kill Switch value is true.
+     */
+    default boolean getMeasurementJobVerboseDebugReportingKillSwitch() {
+        // We check the Global Kill Switch first. As a result, it overrides all other kill Switches.
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH;
     }
 
     /**
@@ -1798,12 +2106,14 @@ public interface Flags {
     // FLEDGE Kill switches
 
     /**
-     * Fledge Ad Selection API kill switch. The default value is false which means that Select Ads
-     * API is enabled by default. This flag should be should as emergency andon cord.
+     * Fledge AdSelectionService kill switch. The default value is false which means that
+     * AdSelectionService is enabled by default. This flag should be should as emergency andon cord.
      */
     boolean FLEDGE_SELECT_ADS_KILL_SWITCH = false;
 
-    /** @return value of Fledge Ad Selection API kill switch */
+    /**
+     * @return value of Fledge Ad Selection Service API kill switch .
+     */
     default boolean getFledgeSelectAdsKillSwitch() {
         // Check for global kill switch first, as it should override all other kill switches
         return getGlobalKillSwitch() || FLEDGE_SELECT_ADS_KILL_SWITCH;
@@ -1819,7 +2129,24 @@ public interface Flags {
      * @return value of Fledge Auction server API kill switch.
      */
     default boolean getFledgeAuctionServerKillSwitch() {
-        return getGlobalKillSwitch() || FLEDGE_AUCTION_SERVER_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getFledgeSelectAdsKillSwitch()
+                || FLEDGE_AUCTION_SERVER_KILL_SWITCH;
+    }
+
+    /**
+     * Fledge On Device Auction API Kill switch. The default value is false which means that On
+     * Device Auction APIs is enabled by default.
+     */
+    boolean FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH = false;
+
+    /**
+     * @return value of On Device Auction API kill switch.
+     */
+    default boolean getFledgeOnDeviceAuctionKillSwitch() {
+        return getGlobalKillSwitch()
+                || getFledgeSelectAdsKillSwitch()
+                || FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH;
     }
 
     /**
@@ -1833,6 +2160,20 @@ public interface Flags {
     default boolean getFledgeCustomAudienceServiceKillSwitch() {
         // Check for global kill switch first, as it should override all other kill switches
         return getGlobalKillSwitch() || FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
+    }
+
+    /**
+     * Protected signals API kill switch. The default value is false which means that protected
+     * signals are enabled by default. This flag should be should as emergency andon cord.
+     */
+    boolean PROTECTED_SIGNALS_SERVICE_KILL_SWITCH = false;
+
+    /**
+     * @return value of the protected signals API kill switch.
+     */
+    default boolean getProtectedSignalsServiceKillSwitch() {
+        // Check for global kill switch first, as it should override all other kill switches
+        return getGlobalKillSwitch() || PROTECTED_SIGNALS_SERVICE_KILL_SWITCH;
     }
 
     /**
@@ -1901,6 +2242,65 @@ public interface Flags {
     }
 
     /*
+     * The allow-list for Measurement APIs. This list has the list of app package names that we
+     * allow using Measurement APIs. Overridden by Block List
+     */
+    String MSMT_API_APP_ALLOW_LIST =
+            "android.platform.test.scenario,"
+                    + "android.adservices.crystalball,"
+                    + "android.adservices.cts,"
+                    + "android.adservices.debuggablects,"
+                    + "com.android.adservices.endtoendtest,"
+                    + "com.android.adservices.servicecoretest,"
+                    + "com.android.adservices.tests.permissions.appoptout,"
+                    + "com.android.adservices.tests.permissions.valid,"
+                    + "com.android.adservices.tests.adid,"
+                    + "com.android.adservices.tests.appsetid,"
+                    + "com.android.sdksandboxclient,"
+                    + "com.android.tests.sandbox.adid,"
+                    + "com.android.tests.sandbox.appsetid,"
+                    + "com.android.tests.sandbox.fledge,"
+                    + "com.android.tests.sandbox.measurement,"
+                    + "com.example.adservices.samples.adid.app,"
+                    + "com.example.adservices.samples.appsetid.app,"
+                    + "com.example.adservices.samples.fledge.sampleapp,"
+                    + "com.example.adservices.samples.fledge.sampleapp1,"
+                    + "com.example.adservices.samples.fledge.sampleapp2,"
+                    + "com.example.adservices.samples.fledge.sampleapp3,"
+                    + "com.example.adservices.samples.fledge.sampleapp4,"
+                    + "com.example.measurement.sampleapp,"
+                    + "com.example.measurement.sampleapp2,"
+                    + "com.android.adservices.tests.cts.endtoendtest.measurement";
+
+    /*
+     * App Package Name that does not belong to this allow-list will not be able to use Measurement
+     * APIs.
+     * If this list has special value "*", then all package names are allowed.
+     * Block List takes precedence over Allow List.
+     * There must be not any empty space between comma.
+     */
+    default String getMsmtApiAppAllowList() {
+        return MSMT_API_APP_ALLOW_LIST;
+    }
+
+    /*
+     * The blocklist for Measurement APIs. This list has the list of app package names that we
+     * do not allow to use Measurement APIs.
+     */
+    String MSMT_API_APP_BLOCK_LIST = "";
+
+    /*
+     * App Package Name that belong to this blocklist will not be able to use Measurement
+     * APIs.
+     * If this list has special value "*", then all package names are blocked.
+     * Block List takes precedence over Allow List.
+     * There must be not any empty space between comma.
+     */
+    default String getMsmtApiAppBlockList() {
+        return MSMT_API_APP_BLOCK_LIST;
+    }
+
+    /*
      * The allow-list for PP APIs. This list has the list of app signatures that we allow
      * using PP APIs. App Package signatures that do not belong to this allow-list will not be
      * able to use PP APIs, unless the package name of this app is in the bypass list.
@@ -1947,7 +2347,7 @@ public interface Flags {
      * PP API Rate Limit for ad id. This is the max allowed QPS for one API client to one PP API.
      * Negative Value means skipping the rate limiting checking.
      */
-    float ADID_REQUEST_PERMITS_PER_SECOND = 25;
+    float ADID_REQUEST_PERMITS_PER_SECOND = FlagsConstants.ADID_REQUEST_PERMITS_PER_SECOND;
 
     /**
      * PP API Rate Limit for app set id. This is the max allowed QPS for one API client to one PP
@@ -1966,6 +2366,12 @@ public interface Flags {
      * API client to one PP API. Negative Value means skipping the rate limiting checking.
      */
     float MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND = 25;
+
+    /**
+     * PP API Rate Limit for measurement register sources. This is the max allowed QPS for one API
+     * client to one PP API. Negative Value means skipping the rate limiting checking.
+     */
+    float MEASUREMENT_REGISTER_SOURCES_REQUEST_PERMITS_PER_SECOND = 25;
 
     /**
      * PP API Rate Limit for measurement register trigger. This is the max allowed QPS for one API
@@ -2025,6 +2431,11 @@ public interface Flags {
     /** Returns the Measurement Register Source Request Permits Per Second. */
     default float getMeasurementRegisterSourceRequestPermitsPerSecond() {
         return MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Measurement Register Sources Request Permits Per Second. */
+    default float getMeasurementRegisterSourcesRequestPermitsPerSecond() {
+        return MEASUREMENT_REGISTER_SOURCES_REQUEST_PERMITS_PER_SECOND;
     }
 
     /** Returns the Measurement Register Web Source Request Permits Per Second. */
@@ -2512,6 +2923,7 @@ public interface Flags {
     // New Feature Flags
     boolean FLEDGE_REGISTER_AD_BEACON_ENABLED = false;
     boolean FLEDGE_CPC_BILLING_ENABLED = false;
+    boolean FLEDGE_DATA_VERSION_HEADER_ENABLED = false;
 
     /** Returns whether the {@code registerAdBeacon} feature is enabled. */
     default boolean getFledgeRegisterAdBeaconEnabled() {
@@ -2521,6 +2933,11 @@ public interface Flags {
     /** Returns whether the CPC billing feature is enabled. */
     default boolean getFledgeCpcBillingEnabled() {
         return FLEDGE_CPC_BILLING_ENABLED;
+    }
+
+    /** Returns whether the data version header feature is enabled. */
+    default boolean getFledgeDataVersionHeaderEnabled() {
+        return FLEDGE_DATA_VERSION_HEADER_ENABLED;
     }
 
     /**
@@ -2548,6 +2965,14 @@ public interface Flags {
      */
     default String getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist() {
         return DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_BLOCKLIST;
+    }
+
+    /** Get mainline train version */
+    String DEFAULT_MAINLINE_TRAIN_VERSION = "000000";
+
+    /** Get mainline train version */
+    default String getMainlineTrainVersion() {
+        return DEFAULT_MAINLINE_TRAIN_VERSION;
     }
 
     /** Default Determines whether EU notification flow change is enabled. */
@@ -2598,6 +3023,41 @@ public interface Flags {
         return MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION;
     }
 
+    /** Disable maximum number of aggregatable reports per source by default. */
+    boolean MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE = false;
+
+    /**
+     * Returns true if maximum number of aggregatable reports per source is enabled, false
+     * otherwise.
+     */
+    default boolean getMeasurementEnableMaxAggregateReportsPerSource() {
+        return MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE;
+    }
+
+    /** Maximum Aggregate Reports per source. */
+    int MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE = 20;
+
+    /** Returns maximum Aggregate Reports per source. */
+    default int getMeasurementMaxAggregateReportsPerSource() {
+        return MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE;
+    }
+
+    /** Maximum number of aggregation keys allowed during source registration. */
+    int MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION = 50;
+
+    /** Returns maximum number of aggregation keys allowed during source registration. */
+    default int getMeasurementMaxAggregateKeysPerSourceRegistration() {
+        return MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION;
+    }
+
+    /** Maximum number of aggregation keys allowed during trigger registration. */
+    int MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION = 50;
+
+    /** Returns maximum number of aggregation keys allowed during trigger registration. */
+    default int getMeasurementMaxAggregateKeysPerTriggerRegistration() {
+        return MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION;
+    }
+
     /** Default minimum event report delay in milliseconds */
     long MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS = 3_600_000L;
 
@@ -2616,7 +3076,7 @@ public interface Flags {
 
     /**
      * Default early reporting windows for VTC type source. Derived from {@link
-     * PrivacyParams#EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS}.
+     * com.android.adservices.service.measurement.PrivacyParams#EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS}.
      */
     String MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS = "";
 
@@ -2630,7 +3090,7 @@ public interface Flags {
 
     /**
      * Default early reporting windows for CTC type source. Derived from {@link
-     * PrivacyParams#NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS}.
+     * com.android.adservices.service.measurement.PrivacyParams#NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS}.
      */
     String MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS =
             String.join(
@@ -2656,8 +3116,8 @@ public interface Flags {
 
     /**
      * Default aggregate report delay. Derived from {@link
-     * PrivacyParams#AGGREGATE_REPORT_MIN_DELAY} and {@link
-     * PrivacyParams#AGGREGATE_REPORT_DELAY_SPAN}.
+     * com.android.adservices.service.measurement.PrivacyParams#AGGREGATE_REPORT_MIN_DELAY} and
+     * {@link com.android.adservices.service.measurement.PrivacyParams#AGGREGATE_REPORT_DELAY_SPAN}.
      */
     String MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG =
             String.join(
@@ -2697,6 +3157,90 @@ public interface Flags {
     /** Returns whether Measurement ARA parsing alignment v1 feature is enabled. */
     default boolean getMeasurementEnableAraParsingAlignmentV1() {
         return MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1;
+    }
+
+    /** Default Measurement ARA parsing alignment v1 feature flag. */
+    boolean MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1 = true;
+
+    /** Returns whether Measurement ARA deduplication alignment v1 feature is enabled. */
+    default boolean getMeasurementEnableAraDeduplicationAlignmentV1() {
+        return MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1;
+    }
+
+    /** Default Measurement app package name logging flag. */
+    boolean MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING = true;
+
+    /** Returns whether Measurement app package name logging is enabled. */
+    default boolean getMeasurementEnableAppPackageNameLogging() {
+        return MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING;
+    }
+
+    /** Default allowlist to enable app package name logging. */
+    String MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST = "";
+
+    /** Returns a list of app package names that allows logging. */
+    default String getMeasurementAppPackageNameLoggingAllowlist() {
+        return MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST;
+    }
+
+    /** Disable measurement reporting jobs to throw unaccounted exceptions by default. */
+    boolean MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION = false;
+
+    /**
+     * If enabled, measurement reporting jobs will throw unaccounted e.g. unexpected unchecked
+     * exceptions.
+     */
+    default boolean getMeasurementEnableReportingJobsThrowUnaccountedException() {
+        return MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION;
+    }
+
+    /**
+     * Disable measurement reporting jobs to throw {@link org.json.JSONException} exception by
+     * default.
+     */
+    boolean MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_JSON_EXCEPTION = false;
+
+    /** If enabled, measurement reporting jobs will throw {@link org.json.JSONException}. */
+    default boolean getMeasurementEnableReportingJobsThrowJsonException() {
+        return MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_JSON_EXCEPTION;
+    }
+
+    /** Disable measurement report to be deleted if any unrecoverable exception occurs. */
+    boolean MEASUREMENT_ENABLE_DELETE_REPORTS_ON_UNRECOVERABLE_EXCEPTION = false;
+
+    /** If enabled, measurement reports will get deleted if any unrecoverable exception occurs. */
+    default boolean getMeasurementEnableReportDeletionOnUnrecoverableException() {
+        return MEASUREMENT_ENABLE_DELETE_REPORTS_ON_UNRECOVERABLE_EXCEPTION;
+    }
+
+    /** Disable measurement aggregate reporting jobs to throw {@code CryptoException} by default. */
+    boolean MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_CRYPTO_EXCEPTION = false;
+
+    /** If enabled, measurement aggregate reporting job will throw {@code CryptoException}. */
+    default boolean getMeasurementEnableReportingJobsThrowCryptoException() {
+        return MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_CRYPTO_EXCEPTION;
+    }
+
+    /**
+     * Disable measurement datastore to throw {@link
+     * com.android.adservices.data.measurement.DatastoreException} when it occurs by default.
+     */
+    boolean MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION = false;
+
+    /**
+     * If enabled, measurement DatastoreManager can throw DatastoreException wrapped in an unchecked
+     * exception.
+     */
+    default boolean getMeasurementEnableDatastoreManagerThrowDatastoreException() {
+        return MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION;
+    }
+
+    /** Set the sampling rate to 100% for unknown exceptions to be re-thrown. */
+    float MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE = 1.0f;
+
+    /** Sampling rate to decide whether to throw unknown exceptions for measurement. */
+    default float getMeasurementThrowUnknownExceptionSamplingRate() {
+        return MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE;
     }
 
     /** Default U18 UX feature flag.. */
@@ -2763,5 +3307,151 @@ public interface Flags {
     /** Returns whether the {@code enrollmentMddRecordDeletion} feature is enabled. */
     default boolean getEnrollmentMddRecordDeletionEnabled() {
         return ENROLLMENT_MDD_RECORD_DELETION_ENABLED;
+    }
+
+    /** Default value of whether topics cobalt logging feature is enabled. */
+    boolean TOPICS_COBALT_LOGGING_ENABLED = false;
+
+    /**
+     * Returns whether the topics cobalt logging feature is enabled.
+     *
+     * <p>The topics cobalt logging will be disabled either the getCobaltLoggingEnabled or {@code
+     * TOPICS_COBALT_LOGGING_ENABLED} is {@code false}.
+     */
+    default boolean getTopicsCobaltLoggingEnabled() {
+        return getCobaltLoggingEnabled() && TOPICS_COBALT_LOGGING_ENABLED;
+    }
+
+    /** Default value of Cobalt Adservices Api key. */
+    String COBALT_ADSERVICES_API_KEY_HEX = CobaltConstants.DEFAULT_API_KEY;
+
+    default String getCobaltAdservicesApiKeyHex() {
+        return COBALT_ADSERVICES_API_KEY_HEX;
+    }
+
+    /**
+     * Default value of Adservices release stage for Cobalt. The value should correspond to {@link
+     * com.google.cobalt.ReleaseStage} enum.
+     */
+    String ADSERVICES_RELEASE_STAGE_FOR_COBALT = CobaltConstants.DEFAULT_RELEASE_STAGE;
+
+    /** Returns the value of Adservices release stage for Cobalt. */
+    default String getAdservicesReleaseStageForCobalt() {
+        return ADSERVICES_RELEASE_STAGE_FOR_COBALT;
+    }
+
+    /**
+     * A feature flag to enable DB schema change to version 8 in Topics API. Version 8 is to add
+     * logged_topic column to ReturnedTopic table.
+     *
+     * <p>Default value is false, which means the feature is disabled by default and needs to be
+     * ramped up.
+     */
+    boolean ENABLE_LOGGED_TOPIC = false;
+
+    /** @return if to enable logged_topic column in ReturnedTopic table. */
+    default boolean getEnableLoggedTopic() {
+        return ENABLE_LOGGED_TOPIC;
+    }
+
+    /** Whether to enable database schema version 8 */
+    boolean ENABLE_DATABASE_SCHEMA_VERSION_8 = false;
+
+    /** @return if to enable database schema version 8. */
+    default boolean getEnableDatabaseSchemaVersion8() {
+        return ENABLE_DATABASE_SCHEMA_VERSION_8;
+    }
+
+    /**
+     * Default whether to limit logging for enrollment metrics to avoid performance issues. This
+     * includes not logging data that requires database queries and downloading MDD files.
+     */
+    boolean ENROLLMENT_ENABLE_LIMITED_LOGGING = false;
+
+    /** Returns whether enrollment logging should be limited. */
+    default boolean getEnrollmentEnableLimitedLogging() {
+        return ENROLLMENT_ENABLE_LIMITED_LOGGING;
+    }
+
+    /**
+     * Default value for if events will be registered as a source of attribution in addition to
+     * being reported.
+     */
+    boolean FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED = false;
+
+    /**
+     * Returns if events will be registered as a source of attribution in addition to being
+     * reported.
+     *
+     * <p>This, unlocked by the short-term integration between Protected Audience (PA) and
+     * Measurement's ARA, enables the {@link
+     * android.adservices.adselection.AdSelectionManager#reportEvent} API to report an event and
+     * register it as source of attribution, using a single API call, unified under the hood.
+     *
+     * <ul>
+     *   <li>When enabled, by default: ARA will report and register the event.
+     *   <li>When enabled, with fallback: PA will report the event and ARA will register the event.
+     *   <li>When disabled, when {@link
+     *       android.adservices.adselection.AdSelectionManager#reportEvent} is called, only PA will
+     *       report the event.
+     * </ul>
+     */
+    default boolean getFledgeMeasurementReportAndRegisterEventApiEnabled() {
+        return FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
+    }
+
+    /** Default value for if the fallback for event reporting and source registration is enabled. */
+    boolean FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED = false;
+
+    /**
+     * Returns if the fallback for event reporting and source registration is enabled.
+     *
+     * <ul>
+     *   <li>Only relevant if {@link #getFledgeMeasurementReportAndRegisterEventApiEnabled} is
+     *       {@code true}.
+     *   <li>When enabled, PA will report the event and ARA will register the event.
+     *   <li>When disabled, ARA will report and register the event.
+     * </ul>
+     *
+     * <p>If enabled
+     */
+    default boolean getFledgeMeasurementReportAndRegisterEventApiFallbackEnabled() {
+        return getFledgeMeasurementReportAndRegisterEventApiEnabled()
+                && FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED;
+    }
+
+    /** Cobalt logging job period in milliseconds. */
+    long COBALT_LOGGING_JOB_PERIOD_MS = 6 * 60 * 60 * 1000; // 6 hours.
+
+    /** Returns the max time period (in milliseconds) between each cobalt logging job run. */
+    default long getCobaltLoggingJobPeriodMs() {
+        return COBALT_LOGGING_JOB_PERIOD_MS;
+    }
+
+    /** Cobalt logging feature flag. */
+    boolean COBALT_LOGGING_ENABLED = false;
+
+    /**
+     * Returns the feature flag value for cobalt logging job. The cobalt logging feature will be
+     * disabled if either the Global Kill Switch or the Cobalt Logging enabled flag is true.
+     */
+    default boolean getCobaltLoggingEnabled() {
+        return !getGlobalKillSwitch() && COBALT_LOGGING_ENABLED;
+    }
+
+    /** U18 UX detention channel is enabled by default. */
+    boolean IS_U18_UX_DETENTION_CHANNEL_ENABLED_DEFAULT = true;
+
+    /** Returns whether the U18 UX detentional channel is enabled. */
+    default boolean isU18UxDetentionChannelEnabled() {
+        return IS_U18_UX_DETENTION_CHANNEL_ENABLED_DEFAULT;
+    }
+
+    /** U18 supervised account flow is enabled by default. */
+    boolean IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT = true;
+
+    /** Returns whether the U18 supervised account is enabled. */
+    default boolean isU18SupervisedAccountEnabled() {
+        return IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT;
     }
 }

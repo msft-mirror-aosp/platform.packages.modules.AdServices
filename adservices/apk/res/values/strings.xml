@@ -48,6 +48,11 @@
     <!-- Description of an application permission that lets it access Ad ID API. [CHAR LIMIT=NONE] -->
     <string name="permdesc_adServicesAccessAdId">Allows an application to access Ad ID API.</string>
 
+    <!-- Title of an application permission that lets it access AdServices Cobalt Upload API. [CHAR LIMIT=NONE] -->
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload">Access to AdServices Cobalt Upload API</string>
+    <!-- Description of an application permission that lets it access AdServices Cobalt Upload API. [CHAR LIMIT=NONE] -->
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload">Allows an application to access AdServices Cobalt Upload API.</string>
+
     <!-- Title of an application permission that lets it access App Set ID API. [CHAR LIMIT=NONE] -->
     <string name="permlab_adServicesAccessAppSetId">Access to App Set ID API</string>
     <!-- Description of an application permission that lets it access App Set ID API. [CHAR LIMIT=NONE] -->
@@ -80,7 +85,7 @@
     <!--*****************************************************************************************-->
 
     <!-- Text for the label of the app. This will appear as the app name on notifications sent by this app. [CHAR LIMIT=NONE] -->
-    <string name="app_label">Android System</string>
+    <string name="app_label">Ad Privacy</string>
 
     <!-- EU Notification UI strings *************************************************************-->
     <!-- Text for the main title of the EU notification. [CHAR LIMIT=NONE] -->

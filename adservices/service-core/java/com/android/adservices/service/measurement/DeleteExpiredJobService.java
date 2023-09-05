@@ -72,9 +72,12 @@ public final class DeleteExpiredJobService extends JobService {
                     long earliestValidInsertion =
                             System.currentTimeMillis()
                                     - FlagsFactory.getFlags().getMeasurementDataExpiryWindowMs();
+                    int retryLimit = FlagsFactory.getFlags()
+                            .getMeasurementMaxRetriesPerRegistrationRequest();
                     DatastoreManagerFactory.getDatastoreManager(this)
                             .runInTransaction(
-                                    dao -> dao.deleteExpiredRecords(earliestValidInsertion));
+                                    dao -> dao.deleteExpiredRecords(
+                                            earliestValidInsertion, retryLimit));
 
                     boolean shouldRetry = false;
                     AdservicesJobServiceLogger.getInstance(DeleteExpiredJobService.this)
@@ -100,16 +103,8 @@ public final class DeleteExpiredJobService extends JobService {
 
     /** Schedule the job. */
     @VisibleForTesting
-    static void schedule(Context context, JobScheduler jobScheduler) {
-        final JobInfo job =
-                new JobInfo.Builder(
-                                MEASUREMENT_DELETE_EXPIRED_JOB_ID,
-                                new ComponentName(context, DeleteExpiredJobService.class))
-                        .setRequiresDeviceIdle(true)
-                        .setPeriodic(AdServicesConfig.getMeasurementDeleteExpiredJobPeriodMs())
-                        .setPersisted(true)
-                        .build();
-        jobScheduler.schedule(job);
+    static void schedule(JobScheduler jobScheduler, JobInfo jobInfo) {
+        jobScheduler.schedule(jobInfo);
     }
 
     /**
@@ -130,14 +125,25 @@ public final class DeleteExpiredJobService extends JobService {
             return;
         }
 
-        final JobInfo job = jobScheduler.getPendingJob(MEASUREMENT_DELETE_EXPIRED_JOB_ID);
+        final JobInfo scheduledJob = jobScheduler.getPendingJob(MEASUREMENT_DELETE_EXPIRED_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
-        if (job == null || forceSchedule) {
-            schedule(context, jobScheduler);
+        JobInfo jobInfo = buildJobInfo(context);
+        if (forceSchedule || !jobInfo.equals(scheduledJob)) {
+            schedule(jobScheduler, jobInfo);
             LogUtil.d("Scheduled DeleteExpiredJobService");
         } else {
             LogUtil.d("DeleteExpiredJobService already scheduled, skipping reschedule");
         }
+    }
+
+    private static JobInfo buildJobInfo(Context context) {
+        return new JobInfo.Builder(
+                        MEASUREMENT_DELETE_EXPIRED_JOB_ID,
+                        new ComponentName(context, DeleteExpiredJobService.class))
+                .setRequiresDeviceIdle(true)
+                .setPeriodic(AdServicesConfig.getMeasurementDeleteExpiredJobPeriodMs())
+                .setPersisted(true)
+                .build();
     }
 
     private boolean skipAndCancelBackgroundJob(

@@ -22,9 +22,10 @@ import static org.junit.Assert.assertNotNull;
 
 import android.cts.statsdatom.lib.AtomTestUtils;
 import android.cts.statsdatom.lib.ConfigUtils;
-import android.cts.statsdatom.lib.DeviceUtils;
 import android.cts.statsdatom.lib.ReportUtils;
 
+import com.android.adservices.common.AdServicesHostSideDeviceSupportedRule;
+import com.android.adservices.common.HostSideSdkLevelSupportRule;
 import com.android.internal.os.StatsdConfigProto.StatsdConfig;
 import com.android.os.AtomsProto;
 import com.android.os.AtomsProto.AdServicesSettingsUsageReported;
@@ -37,7 +38,6 @@ import com.android.tradefed.testtype.DeviceJUnit4ClassRunner.TestMetrics;
 import com.android.tradefed.testtype.IDeviceTest;
 
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -55,10 +55,7 @@ import java.util.List;
  * with tradefed's DeviceJUnit4ClassRunner
  */
 @RunWith(DeviceJUnit4ClassRunner.class)
-public class UiApiLoggingHostTest implements IDeviceTest {
-    public static final String FEATURE_WATCH = "android.hardware.type.watch";
-    public static final String FEATURE_AUTOMOTIVE = "android.hardware.type.automotive";
-    public static final String FEATURE_LEANBACK = "android.software.leanback";
+public final class UiApiLoggingHostTest implements IDeviceTest {
     private static final String CLASS =
             "com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity";
     private static final String TARGET_PACKAGE = "com.google.android.adservices.api";
@@ -68,17 +65,26 @@ public class UiApiLoggingHostTest implements IDeviceTest {
     private static final String TARGET_EXT_ADSERVICES_PACKAGE_AOSP = "com.android.ext.services";
     private static final int PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH = 2;
     private static final int APPSEARCH_ONLY = 3;
-    private static final int ANDROID_T_API_LEVEL = 33;
-    private int mApiLevel;
     private String mTargetPackage;
     private String mTargetPackageAosp;
-    @Rule public TestMetrics mMetrics = new TestMetrics();
+
+    @Rule(order = 0)
+    public final HostSideSdkLevelSupportRule sdkLevel = HostSideSdkLevelSupportRule.forAnyLevel();
+
+    @Rule(order = 1)
+    public final AdServicesHostSideDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesHostSideDeviceSupportedRule();
+
+    @Rule(order = 1)
+    public TestMetrics metricsRule = new TestMetrics();
 
     private ITestDevice mDevice;
 
     @Override
     public void setDevice(ITestDevice device) {
         mDevice = device;
+        adServicesDeviceSupportedRule.setDevice(device);
+        sdkLevel.setDevice(device);
     }
 
     @Override
@@ -88,17 +94,15 @@ public class UiApiLoggingHostTest implements IDeviceTest {
 
     @Before
     public void setUp() throws Exception {
-        Assume.assumeTrue(isDeviceSupported(getDevice()));
         ConfigUtils.removeConfig(getDevice());
         ReportUtils.clearReports(getDevice());
         disableGlobalKillSwitch();
         disableMddBackgroundTasks(true);
         overrideDisableTopicsEnrollmentCheck(/* enrolmentCheckFlag */ "1");
-        stopPacakageAPI();
-        mApiLevel = getDevice().getApiLevel();
+        stopPackageAPI();
 
         // Set flags for test to run on devices with api level lower than 33 (S-)
-        if (mApiLevel < ANDROID_T_API_LEVEL) {
+        if (!sdkLevel.isAtLeastT()) {
             mTargetPackage = TARGET_EXT_ADSERVICES_PACKAGE;
             mTargetPackageAosp = TARGET_EXT_ADSERVICES_PACKAGE_AOSP;
             setFlags();
@@ -110,14 +114,11 @@ public class UiApiLoggingHostTest implements IDeviceTest {
 
     @After
     public void tearDown() throws Exception {
-        if (!isDeviceSupported(getDevice())) {
-            return;
-        }
         disableMddBackgroundTasks(false);
-        if (mApiLevel < ANDROID_T_API_LEVEL) {
+        if (!sdkLevel.isAtLeastT()) {
             resetFlagsToDefault();
         }
-        stopPacakageAPI();
+        stopPackageAPI();
         ConfigUtils.removeConfig(getDevice());
         ReportUtils.clearReports(getDevice());
     }
@@ -157,12 +158,12 @@ public class UiApiLoggingHostTest implements IDeviceTest {
     }
 
     private void rebootIfSMinus() throws DeviceNotAvailableException, InterruptedException {
-        if (mApiLevel < ANDROID_T_API_LEVEL) {
+        if (!sdkLevel.isAtLeastT()) {
             ITestDevice device = getDevice();
             device.reboot();
             device.waitForDeviceAvailable();
-            // Sleep 30s to wait for AdExtBootCompletedReceiver execution
-            Thread.sleep(30000 /* ms */);
+            // Sleep 5 mins to wait for AdExtBootCompletedReceiver execution
+            Thread.sleep(300 * 1000 /* ms */);
         }
     }
 
@@ -207,7 +208,7 @@ public class UiApiLoggingHostTest implements IDeviceTest {
         device.executeShellCommand("am start -n " + packageName + "/" + CLASS);
     }
 
-    public void stopPacakageAPI() throws DeviceNotAvailableException {
+    public void stopPackageAPI() throws DeviceNotAvailableException {
         getDevice().executeShellCommand("am force-stop " + mTargetPackage);
         getDevice().executeShellCommand("am force-stop " + mTargetPackageAosp);
     }
@@ -279,11 +280,5 @@ public class UiApiLoggingHostTest implements IDeviceTest {
         getDevice()
                 .executeShellCommand(
                         "device_config put adservices enable_appsearch_consent_data " + isEnabled);
-    }
-
-    private boolean isDeviceSupported(ITestDevice device) throws Exception {
-        return !DeviceUtils.hasFeature(device, FEATURE_WATCH)
-                && !DeviceUtils.hasFeature(device, FEATURE_AUTOMOTIVE)
-                && !DeviceUtils.hasFeature(device, FEATURE_LEANBACK);
     }
 }

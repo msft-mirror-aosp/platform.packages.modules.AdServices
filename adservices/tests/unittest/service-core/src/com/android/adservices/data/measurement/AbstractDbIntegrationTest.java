@@ -347,6 +347,9 @@ public abstract class AbstractDbIntegrationTest {
                 MeasurementTables.SourceContract.SHARED_AGGREGATION_KEYS,
                 source.getSharedAggregationKeys());
         values.put(
+                MeasurementTables.SourceContract.SHARED_FILTER_DATA_KEYS,
+                source.getSharedFilterDataKeys());
+        values.put(
                 MeasurementTables.SourceContract.REGISTRATION_ORIGIN,
                 source.getRegistrationOrigin().toString());
         long row = db.insert(MeasurementTables.SourceContract.TABLE, null, values);
@@ -493,6 +496,9 @@ public abstract class AbstractDbIntegrationTest {
         values.put(
                 MeasurementTables.AggregateReport.DEBUG_CLEARTEXT_PAYLOAD,
                 aggregateReport.getDebugCleartextPayload());
+        values.put(
+                MeasurementTables.AggregateReport.DEBUG_REPORT_STATUS,
+                aggregateReport.getDebugReportStatus());
         values.put(MeasurementTables.AggregateReport.STATUS, aggregateReport.getStatus());
         values.put(MeasurementTables.AggregateReport.API_VERSION, aggregateReport.getApiVersion());
         values.put(MeasurementTables.AggregateReport.SOURCE_ID, aggregateReport.getSourceId());

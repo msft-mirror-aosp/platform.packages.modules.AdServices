@@ -26,6 +26,7 @@ import static android.app.sdksandbox.SdkSandboxManager.REQUEST_SURFACE_PACKAGE_I
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
@@ -66,6 +67,7 @@ public class SdkSandboxManagerUnitTest {
     private SdkSandboxManager mSdkSandboxManager;
     private ISdkSandboxManager mBinder;
     private Context mContext;
+    private SandboxLatencyInfo mSandboxLatencyInfo;
     private static final String SDK_NAME = "com.android.codeproviderresources";
     private static final String ERROR_MSG = "Error";
     private static final long TIME_SYSTEM_SERVER_CALLED_APP = 1;
@@ -77,6 +79,8 @@ public class SdkSandboxManagerUnitTest {
 
         mBinder = Mockito.mock(ISdkSandboxManager.class);
         mSdkSandboxManager = new SdkSandboxManager(mContext, mBinder);
+
+        mSandboxLatencyInfo = new SandboxLatencyInfo();
     }
 
     @Test
@@ -103,6 +107,7 @@ public class SdkSandboxManagerUnitTest {
                         Mockito.eq(mContext.getPackageName()),
                         Mockito.nullable(IBinder.class),
                         Mockito.eq(SDK_NAME),
+                        Mockito.any(SandboxLatencyInfo.class),
                         callingTimeArgumentCaptor.capture(),
                         Mockito.eq(params),
                         callbackArgumentCaptor.capture());
@@ -113,7 +118,7 @@ public class SdkSandboxManagerUnitTest {
         // Simulate the success callback
         callbackArgumentCaptor
                 .getValue()
-                .onLoadSdkSuccess(new SandboxedSdk(new Binder()), System.currentTimeMillis());
+                .onLoadSdkSuccess(new SandboxedSdk(new Binder()), mSandboxLatencyInfo);
         ArgumentCaptor<SandboxedSdk> sandboxedSdkCapture =
                 ArgumentCaptor.forClass(SandboxedSdk.class);
         Mockito.verify(outcomeReceiver).onResult(sandboxedSdkCapture.capture());
@@ -136,6 +141,7 @@ public class SdkSandboxManagerUnitTest {
                         Mockito.eq(mContext.getPackageName()),
                         Mockito.nullable(IBinder.class),
                         Mockito.eq(SDK_NAME),
+                        Mockito.any(SandboxLatencyInfo.class),
                         Mockito.anyLong(),
                         Mockito.eq(params),
                         callbackArgumentCaptor.capture());
@@ -145,7 +151,7 @@ public class SdkSandboxManagerUnitTest {
                 .getValue()
                 .onLoadSdkFailure(
                         new LoadSdkException(LOAD_SDK_NOT_FOUND, ERROR_MSG),
-                        System.currentTimeMillis());
+                        mSandboxLatencyInfo);
         ArgumentCaptor<LoadSdkException> exceptionCapture =
                 ArgumentCaptor.forClass(LoadSdkException.class);
         Mockito.verify(outcomeReceiver).onError(exceptionCapture.capture());
@@ -395,39 +401,12 @@ public class SdkSandboxManagerUnitTest {
     }
 
     @Test
-    public void testLoadSdk_latencySystemServerToAppLogged_success() throws Exception {
+    public void testLoadSdk_callSuccessful_logLatenciesCalled() throws Exception {
         final Bundle params = new Bundle();
 
         mSdkSandboxManager.loadSdk(SDK_NAME, params, Runnable::run, new FakeOutcomeReceiver<>());
-
-        final ArgumentCaptor<ILoadSdkCallback> callbackArgumentCaptor =
-                ArgumentCaptor.forClass(ILoadSdkCallback.class);
-        Mockito.verify(mBinder)
-                .loadSdk(
-                        Mockito.eq(mContext.getPackageName()),
-                        Mockito.nullable(IBinder.class),
-                        Mockito.eq(SDK_NAME),
-                        Mockito.anyLong(),
-                        Mockito.eq(params),
-                        callbackArgumentCaptor.capture());
-
-        // Simulate the success callback
-        callbackArgumentCaptor
-                .getValue()
-                .onLoadSdkSuccess(new SandboxedSdk(new Binder()), System.currentTimeMillis());
-
-        Mockito.verify(mBinder, Mockito.times(1))
-                .logLatencyFromSystemServerToApp(
-                        Mockito.eq(ISdkSandboxManager.LOAD_SDK), Mockito.anyInt());
-    }
-
-    @Test
-    public void testLoadSdk_latencySystemServerToAppLogged_failed() throws Exception {
-        final Bundle params = new Bundle();
-
-        mSdkSandboxManager.loadSdk(
-                SDK_NAME, params, Runnable::run, new FakeOutcomeReceiver<>());
-
+        ArgumentCaptor<SandboxLatencyInfo> sandboxLatencyInfoCaptor =
+                ArgumentCaptor.forClass(SandboxLatencyInfo.class);
         ArgumentCaptor<ILoadSdkCallback> callbackArgumentCaptor =
                 ArgumentCaptor.forClass(ILoadSdkCallback.class);
         Mockito.verify(mBinder)
@@ -435,20 +414,54 @@ public class SdkSandboxManagerUnitTest {
                         Mockito.eq(mContext.getPackageName()),
                         Mockito.nullable(IBinder.class),
                         Mockito.eq(SDK_NAME),
+                        sandboxLatencyInfoCaptor.capture(),
                         Mockito.anyLong(),
                         Mockito.eq(params),
                         callbackArgumentCaptor.capture());
+        // Simulate the success callback
+        callbackArgumentCaptor
+                .getValue()
+                .onLoadSdkSuccess(
+                        new SandboxedSdk(new Binder()), sandboxLatencyInfoCaptor.getValue());
 
+        Mockito.verify(mBinder, Mockito.times(1))
+                .logLatencies(Mockito.eq(sandboxLatencyInfoCaptor.getValue()));
+        assertEquals(
+                SandboxLatencyInfo.METHOD_LOAD_SDK,
+                sandboxLatencyInfoCaptor.getValue().getMethod());
+    }
+
+    @Test
+    public void testLoadSdk_callFails_logLatenciesCalled() throws Exception {
+        final Bundle params = new Bundle();
+
+        mSdkSandboxManager.loadSdk(
+                SDK_NAME, params, Runnable::run, new FakeOutcomeReceiver<>());
+        ArgumentCaptor<SandboxLatencyInfo> sandboxLatencyInfoCaptor =
+                ArgumentCaptor.forClass(SandboxLatencyInfo.class);
+        ArgumentCaptor<ILoadSdkCallback> callbackArgumentCaptor =
+                ArgumentCaptor.forClass(ILoadSdkCallback.class);
+        Mockito.verify(mBinder)
+                .loadSdk(
+                        Mockito.eq(mContext.getPackageName()),
+                        Mockito.nullable(IBinder.class),
+                        Mockito.eq(SDK_NAME),
+                        sandboxLatencyInfoCaptor.capture(),
+                        Mockito.anyLong(),
+                        Mockito.eq(params),
+                        callbackArgumentCaptor.capture());
         // Simulate the error callback
         callbackArgumentCaptor
                 .getValue()
                 .onLoadSdkFailure(
                         new LoadSdkException(LOAD_SDK_NOT_FOUND, ERROR_MSG),
-                        System.currentTimeMillis());
+                        sandboxLatencyInfoCaptor.getValue());
 
         Mockito.verify(mBinder, Mockito.times(1))
-                .logLatencyFromSystemServerToApp(
-                        Mockito.eq(ISdkSandboxManager.LOAD_SDK), Mockito.anyInt());
+                .logLatencies(Mockito.eq(sandboxLatencyInfoCaptor.getValue()));
+        assertEquals(
+                SandboxLatencyInfo.METHOD_LOAD_SDK,
+                sandboxLatencyInfoCaptor.getValue().getMethod());
     }
 
     @Test
