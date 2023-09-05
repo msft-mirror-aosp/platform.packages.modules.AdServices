@@ -354,13 +354,13 @@
             android:exported="false"
         />
 
-        <!-- Boot completed receiver registers package changed event receivers.
-             On T+, we explicitly disable this in the system service, so it runs only on S-. -->
+        <!-- Boot completed receiver registers package changed event receivers. -->
         <receiver android:name="com.android.adservices.service.common.AdExtBootCompletedReceiver"
+                  android:permission="android.permission.INIT_EXT_SERVICES"
                   android:enabled="@bool/atLeastS"
                   android:exported="true">
             <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.adservices.action.INIT_EXT_SERVICES"/>
             </intent-filter>
         </receiver>
 
