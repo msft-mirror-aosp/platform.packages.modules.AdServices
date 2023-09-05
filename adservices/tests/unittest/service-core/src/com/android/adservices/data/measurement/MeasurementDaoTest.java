@@ -1673,12 +1673,12 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testCountDistinctEnrollmentsPerPublisherXDestinationInSource_atWindow() {
+    public void testCountDistinctRegistrationOriginPerPublisherXDestinationInSource_atWindow() {
         Uri publisher = Uri.parse("android-app://publisher.app");
         List<Uri> webDestinations = List.of(WebUtil.validUri("https://web-destination.test"));
         List<Uri> appDestinations = List.of(Uri.parse("android-app://destination.app"));
         List<Source> activeSourcesWithAppAndWebDestinations =
-                getSourcesWithDifferentEnrollments(
+                getSourcesWithDifferentRegistrationOrigins(
                         2,
                         appDestinations,
                         webDestinations,
@@ -1688,18 +1688,19 @@ public class MeasurementDaoTest {
         for (Source source : activeSourcesWithAppAndWebDestinations) {
             insertSource(source);
         }
-        String excludedEnrollmentId = "enrollment-id-1";
+        Uri excludedRegistrationOrigin = WebUtil.validUri("https://subdomain1.example.test");
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
                             Integer.valueOf(1),
-                            measurementDao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
-                                    publisher,
-                                    EventSurfaceType.APP,
-                                    appDestinations,
-                                    excludedEnrollmentId,
-                                    4500000000L,
-                                    6000000000L));
+                            measurementDao
+                                    .countDistinctReportingOriginsPerPublisherXDestinationInSource(
+                                            publisher,
+                                            EventSurfaceType.APP,
+                                            appDestinations,
+                                            excludedRegistrationOrigin,
+                                            4500000000L,
+                                            6000000000L));
                 });
     }
 
@@ -1709,7 +1710,7 @@ public class MeasurementDaoTest {
         List<Uri> webDestinations = List.of(WebUtil.validUri("https://web-destination.test"));
         List<Uri> appDestinations = List.of(Uri.parse("android-app://destination.app"));
         List<Source> activeSourcesWithAppAndWebDestinations =
-                getSourcesWithDifferentEnrollments(
+                getSourcesWithDifferentRegistrationOrigins(
                         2,
                         appDestinations,
                         webDestinations,
@@ -1719,18 +1720,19 @@ public class MeasurementDaoTest {
         for (Source source : activeSourcesWithAppAndWebDestinations) {
             insertSource(source);
         }
-        String excludedEnrollmentId = "enrollment-id-1";
+        Uri excludedReportingOrigin = WebUtil.validUri("https://subdomain1.example.test");
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
                             Integer.valueOf(0),
-                            measurementDao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
-                                    publisher,
-                                    EventSurfaceType.APP,
-                                    appDestinations,
-                                    excludedEnrollmentId,
-                                    4500000000L,
-                                    6000000000L));
+                            measurementDao
+                                    .countDistinctReportingOriginsPerPublisherXDestinationInSource(
+                                            publisher,
+                                            EventSurfaceType.APP,
+                                            appDestinations,
+                                            excludedReportingOrigin,
+                                            4500000000L,
+                                            6000000000L));
                 });
     }
 
@@ -1740,7 +1742,7 @@ public class MeasurementDaoTest {
         List<Uri> webDestinations = List.of(WebUtil.validUri("https://web-destination.test"));
         List<Uri> appDestinations = List.of(Uri.parse("android-app://destination.app"));
         List<Source> activeSourcesWithAppAndWebDestinations =
-                getSourcesWithDifferentEnrollments(
+                getSourcesWithDifferentRegistrationOrigins(
                         2,
                         appDestinations,
                         webDestinations,
@@ -1748,7 +1750,7 @@ public class MeasurementDaoTest {
                         publisher,
                         Source.Status.ACTIVE);
         List<Source> expiredSourcesWithAppAndWebDestinations =
-                getSourcesWithDifferentEnrollments(
+                getSourcesWithDifferentRegistrationOrigins(
                         4,
                         appDestinations,
                         webDestinations,
@@ -1762,18 +1764,19 @@ public class MeasurementDaoTest {
         for (Source source : expiredSourcesWithAppAndWebDestinations) {
             insertSource(source);
         }
-        String excludedEnrollmentId = "enrollment-id-1";
+        Uri excludedReportingOrigin = WebUtil.validUri("https://subdomain1.example.test");
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
                             Integer.valueOf(1),
-                            measurementDao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
-                                    publisher,
-                                    EventSurfaceType.APP,
-                                    appDestinations,
-                                    excludedEnrollmentId,
-                                    4500000000L,
-                                    6000000000L));
+                            measurementDao
+                                    .countDistinctReportingOriginsPerPublisherXDestinationInSource(
+                                            publisher,
+                                            EventSurfaceType.APP,
+                                            appDestinations,
+                                            excludedReportingOrigin,
+                                            4500000000L,
+                                            6000000000L));
                 });
     }
 
@@ -1783,7 +1786,7 @@ public class MeasurementDaoTest {
         List<Uri> webDestinations = List.of(WebUtil.validUri("https://web-destination.test"));
         List<Uri> appDestinations = List.of(Uri.parse("android-app://destination.app"));
         List<Source> activeSourcesWithAppAndWebDestinations =
-                getSourcesWithDifferentEnrollments(
+                getSourcesWithDifferentRegistrationOrigins(
                         2,
                         appDestinations,
                         webDestinations,
@@ -1791,13 +1794,13 @@ public class MeasurementDaoTest {
                         publisher,
                         Source.Status.ACTIVE);
         List<Source> activeSourcesWithAppDestinations =
-                getSourcesWithDifferentEnrollments(
+                getSourcesWithDifferentRegistrationOrigins(
                         2, appDestinations, null, 5000000000L, publisher, Source.Status.ACTIVE);
         List<Source> activeSourcesWithWebDestinations =
-                getSourcesWithDifferentEnrollments(
+                getSourcesWithDifferentRegistrationOrigins(
                         2, null, webDestinations, 5500000000L, publisher, Source.Status.ACTIVE);
         List<Source> activeSourcesOutOfWindow =
-                getSourcesWithDifferentEnrollments(
+                getSourcesWithDifferentRegistrationOrigins(
                         10,
                         appDestinations,
                         webDestinations,
@@ -1805,7 +1808,7 @@ public class MeasurementDaoTest {
                         publisher,
                         Source.Status.ACTIVE);
         List<Source> ignoredSources =
-                getSourcesWithDifferentEnrollments(
+                getSourcesWithDifferentRegistrationOrigins(
                         3,
                         appDestinations,
                         webDestinations,
@@ -1828,17 +1831,19 @@ public class MeasurementDaoTest {
             insertSource(source);
         }
         String excludedEnrollmentId = "enrollment-id-1";
+        Uri excludedReportingOrigin = WebUtil.validUri("https://subdomain1.example.test");
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
                             Integer.valueOf(2),
-                            measurementDao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
-                                    publisher,
-                                    EventSurfaceType.APP,
-                                    appDestinations,
-                                    excludedEnrollmentId,
-                                    4000000000L,
-                                    6000000000L));
+                            measurementDao
+                                    .countDistinctReportingOriginsPerPublisherXDestinationInSource(
+                                            publisher,
+                                            EventSurfaceType.APP,
+                                            appDestinations,
+                                            excludedReportingOrigin,
+                                            4000000000L,
+                                            6000000000L));
                 });
     }
 
@@ -1848,7 +1853,7 @@ public class MeasurementDaoTest {
         List<Uri> webDestinations = List.of(WebUtil.validUri("https://web-destination.test"));
         List<Uri> appDestinations = List.of(Uri.parse("android-app://destination.app"));
         List<Source> activeSourcesWithAppAndWebDestinations =
-                getSourcesWithDifferentEnrollments(
+                getSourcesWithDifferentRegistrationOrigins(
                         2,
                         appDestinations,
                         webDestinations,
@@ -1856,13 +1861,13 @@ public class MeasurementDaoTest {
                         publisher,
                         Source.Status.ACTIVE);
         List<Source> activeSourcesWithAppDestinations =
-                getSourcesWithDifferentEnrollments(
+                getSourcesWithDifferentRegistrationOrigins(
                         2, appDestinations, null, 5000000000L, publisher, Source.Status.ACTIVE);
         List<Source> activeSourcesWithWebDestinations =
-                getSourcesWithDifferentEnrollments(
+                getSourcesWithDifferentRegistrationOrigins(
                         2, null, webDestinations, 5500000000L, publisher, Source.Status.ACTIVE);
         List<Source> activeSourcesOutOfWindow =
-                getSourcesWithDifferentEnrollments(
+                getSourcesWithDifferentRegistrationOrigins(
                         10,
                         appDestinations,
                         webDestinations,
@@ -1870,7 +1875,7 @@ public class MeasurementDaoTest {
                         publisher,
                         Source.Status.ACTIVE);
         List<Source> ignoredSources =
-                getSourcesWithDifferentEnrollments(
+                getSourcesWithDifferentRegistrationOrigins(
                         3,
                         appDestinations,
                         webDestinations,
@@ -1893,17 +1898,19 @@ public class MeasurementDaoTest {
             insertSource(source);
         }
         String excludedEnrollmentId = "enrollment-id-22";
+        Uri excludedReportingOrigin = WebUtil.validUri("https://subdomain22.example.test");
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
                             Integer.valueOf(3),
-                            measurementDao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
-                                    publisher,
-                                    EventSurfaceType.WEB,
-                                    webDestinations,
-                                    excludedEnrollmentId,
-                                    4000000000L,
-                                    6000000000L));
+                            measurementDao
+                                    .countDistinctReportingOriginsPerPublisherXDestinationInSource(
+                                            publisher,
+                                            EventSurfaceType.WEB,
+                                            webDestinations,
+                                            excludedReportingOrigin,
+                                            4000000000L,
+                                            6000000000L));
                 });
     }
 
@@ -1918,7 +1925,7 @@ public class MeasurementDaoTest {
                         WebUtil.validUri("https://web-destination-2.test"));
         List<Uri> appDestinations = List.of(Uri.parse("android-app://destination.app"));
         List<Source> activeSourcesWithAppAndWebDestinations =
-                getSourcesWithDifferentEnrollments(
+                getSourcesWithDifferentRegistrationOrigins(
                         3,
                         appDestinations,
                         webDestinations1,
@@ -1926,13 +1933,13 @@ public class MeasurementDaoTest {
                         publisher,
                         Source.Status.ACTIVE);
         List<Source> activeSourcesWithAppDestinations =
-                getSourcesWithDifferentEnrollments(
+                getSourcesWithDifferentRegistrationOrigins(
                         2, appDestinations, null, 5000000000L, publisher, Source.Status.ACTIVE);
         List<Source> activeSourcesWithWebDestinations =
-                getSourcesWithDifferentEnrollments(
+                getSourcesWithDifferentRegistrationOrigins(
                         2, null, webDestinations2, 5500000000L, publisher, Source.Status.ACTIVE);
         List<Source> activeSourcesOutOfWindow =
-                getSourcesWithDifferentEnrollments(
+                getSourcesWithDifferentRegistrationOrigins(
                         10,
                         appDestinations,
                         webDestinations2,
@@ -1940,7 +1947,7 @@ public class MeasurementDaoTest {
                         publisher,
                         Source.Status.ACTIVE);
         List<Source> ignoredSources =
-                getSourcesWithDifferentEnrollments(
+                getSourcesWithDifferentRegistrationOrigins(
                         2,
                         appDestinations,
                         webDestinations1,
@@ -1963,17 +1970,19 @@ public class MeasurementDaoTest {
             insertSource(source);
         }
         String excludedEnrollmentId = "enrollment-id-1";
+        Uri excludedReportingOrigin = WebUtil.validUri("https://subdomain1.example.test");
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
                             Integer.valueOf(2),
-                            measurementDao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
-                                    publisher,
-                                    EventSurfaceType.WEB,
-                                    webDestinations2,
-                                    excludedEnrollmentId,
-                                    4000000000L,
-                                    6000000000L));
+                            measurementDao
+                                    .countDistinctReportingOriginsPerPublisherXDestinationInSource(
+                                            publisher,
+                                            EventSurfaceType.WEB,
+                                            webDestinations2,
+                                            excludedReportingOrigin,
+                                            4000000000L,
+                                            6000000000L));
                 });
     }
 
@@ -5736,7 +5745,7 @@ public class MeasurementDaoTest {
         return sources;
     }
 
-    private static List<Source> getSourcesWithDifferentEnrollments(
+    private static List<Source> getSourcesWithDifferentRegistrationOrigins(
             int numSources,
             List<Uri> appDestinations,
             List<Uri> webDestinations,
@@ -5747,7 +5756,7 @@ public class MeasurementDaoTest {
                 eventTime
                         + TimeUnit.SECONDS.toMillis(
                                 MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
-        return getSourcesWithDifferentEnrollments(
+        return getSourcesWithDifferentRegistrationOrigins(
                 numSources,
                 appDestinations,
                 webDestinations,
@@ -5757,7 +5766,7 @@ public class MeasurementDaoTest {
                 sourceStatus);
     }
 
-    private static List<Source> getSourcesWithDifferentEnrollments(
+    private static List<Source> getSourcesWithDifferentRegistrationOrigins(
             int numSources,
             List<Uri> appDestinations,
             List<Uri> webDestinations,
@@ -5777,8 +5786,9 @@ public class MeasurementDaoTest {
                             .setStatus(sourceStatus)
                             .setAppDestinations(getNullableUriList(appDestinations))
                             .setWebDestinations(getNullableUriList(webDestinations))
-                            .setEnrollmentId("enrollment-id-" + i)
-                            .setRegistrationOrigin(REGISTRATION_ORIGIN);
+                            .setEnrollmentId("enrollment-id")
+                            .setRegistrationOrigin(
+                                    WebUtil.validUri("https://subdomain" + i + ".example.test"));
             sources.add(sourceBuilder.build());
         }
         return sources;
