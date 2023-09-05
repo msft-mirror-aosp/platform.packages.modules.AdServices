@@ -45,6 +45,7 @@ import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
+import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.AttributionConfig;
 import com.android.adservices.service.measurement.EventReport;
@@ -149,10 +150,16 @@ public class AttributionJobHandlerTest {
     @Mock Flags mFlags;
 
     @Mock AdServicesLogger mLogger;
-
+    @Mock AdServicesErrorLogger mErrorLogger;
     @Mock DebugReportApi mDebugReportApi;
 
+
+
     class FakeDatastoreManager extends DatastoreManager {
+
+        FakeDatastoreManager() {
+            super(mErrorLogger);
+        }
 
         @Override
         public ITransaction createNewTransaction() {
