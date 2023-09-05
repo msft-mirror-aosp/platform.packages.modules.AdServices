@@ -3651,6 +3651,11 @@ public final class PhFlags implements Flags {
                         + getMeasurementEnableAraDeduplicationAlignmentV1());
         writer.println(
                 "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING
+                        + " = "
+                        + getMeasurementEnableSourceDeactivationAfterFiltering());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING
                         + " = "
                         + getMeasurementEnableAppPackageNameLogging());
@@ -4699,6 +4704,15 @@ public final class PhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1,
                 /* defaultValue */ MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1);
+    }
+
+    @Override
+    public boolean getMeasurementEnableSourceDeactivationAfterFiltering() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING,
+                /* defaultValue */ MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING);
     }
 
     @Override

@@ -220,6 +220,13 @@ class AttributionJobHandler {
                         return;
                     }
 
+                    if (mFlags.getMeasurementEnableSourceDeactivationAfterFiltering()) {
+                        ignoreCompetingSources(
+                                measurementDao,
+                                remainingMatchingSources,
+                                trigger.getEnrollmentId());
+                    }
+
                     if (shouldAttributionBeBlockedByRateLimits(source, trigger, measurementDao)) {
                         attributionStatus.setAttributionResult(
                                 AttributionStatus.AttributionResult.NOT_ATTRIBUTED);
@@ -241,10 +248,12 @@ class AttributionJobHandler {
                             aggregateTriggeringStatus == TriggeringStatus.ATTRIBUTED;
                     if (isEventTriggeringStatusAttributed
                             || isAggregateTriggeringStatusAttributed) {
-                        ignoreCompetingSources(
-                                measurementDao,
-                                remainingMatchingSources,
-                                trigger.getEnrollmentId());
+                        if (!mFlags.getMeasurementEnableSourceDeactivationAfterFiltering()) {
+                            ignoreCompetingSources(
+                                    measurementDao,
+                                    remainingMatchingSources,
+                                    trigger.getEnrollmentId());
+                        }
                         attributeTriggerAndInsertAttribution(trigger, source, measurementDao);
                         long endTime = System.currentTimeMillis();
                         attributionStatus.setAttributionDelay(endTime - trigger.getTriggerTime());
