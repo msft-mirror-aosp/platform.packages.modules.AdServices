@@ -280,14 +280,17 @@ public class AsyncSourceFetcher {
                     LogUtil.d("Source filter-data includes 'source_type' key.");
                     return false;
                 }
-                if (!FetcherUtil.areValidAttributionFilters(maybeFilterData)) {
+                if (!FetcherUtil.areValidAttributionFilters(
+                        maybeFilterData, mFlags, /* canIncludeLookbackWindow= */ false)) {
                     LogUtil.d("Source filter-data is invalid.");
                     return false;
                 }
                 builder.setFilterData(maybeFilterData.toString());
             } else {
                 if (!FetcherUtil.areValidAttributionFilters(
-                        json.optJSONObject(SourceHeaderContract.FILTER_DATA))) {
+                        json.optJSONObject(SourceHeaderContract.FILTER_DATA),
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false)) {
                     LogUtil.d("Source filter-data is invalid.");
                     return false;
                 }

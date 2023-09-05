@@ -24,6 +24,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.WebAddresses;
+import com.android.adservices.service.measurement.FilterMap;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -107,6 +108,25 @@ class FetcherUtil {
         }
     }
 
+    private static Optional<Long> extractLookbackWindow(JSONObject obj) {
+        try {
+            long lookbackWindow = Long.parseLong(obj.optString(FilterMap.LOOKBACK_WINDOW));
+            if (lookbackWindow <= 0) {
+                LogUtil.d(
+                        "extractLookbackWindow: non positive lookback window found: %d",
+                        lookbackWindow);
+                return Optional.empty();
+            }
+            return Optional.of(lookbackWindow);
+        } catch (NumberFormatException e) {
+            LogUtil.d(
+                    e,
+                    "extractLookbackWindow: caught exception. Key: %s",
+                    FilterMap.LOOKBACK_WINDOW);
+            return Optional.empty();
+        }
+    }
+
     /**
      * Validate aggregate key ID.
      */
@@ -167,7 +187,8 @@ class FetcherUtil {
             return false;
         }
         for (int i = 0; i < filterSet.length(); i++) {
-            if (!areValidAttributionFilters(filterSet.optJSONObject(i))) {
+            if (!areValidAttributionFilters(
+                    filterSet.optJSONObject(i), flags, canIncludeLookbackWindow)) {
                 return false;
             }
         }
@@ -188,6 +209,13 @@ class FetcherUtil {
             if (key.getBytes().length
                     > FlagsFactory.getFlags().getMeasurementMaxBytesPerAttributionFilterString()) {
                 return false;
+            }
+            if (flags.getMeasurementEnableLookbackWindowFilter()
+                    && FilterMap.LOOKBACK_WINDOW.equals(key)) {
+                if (!canIncludeLookbackWindow || extractLookbackWindow(filtersObj).isEmpty()) {
+                    return false;
+                }
+                continue;
             }
             JSONArray values = filtersObj.optJSONArray(key);
             if (values == null

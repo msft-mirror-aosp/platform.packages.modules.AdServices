@@ -183,7 +183,7 @@ public class AsyncTriggerFetcher {
             }
             if (!json.isNull(TriggerHeaderContract.FILTERS)) {
                 JSONArray filters = Filter.maybeWrapFilters(json, TriggerHeaderContract.FILTERS);
-                if (!FetcherUtil.areValidAttributionFilters(filters)) {
+                if (!FetcherUtil.areValidAttributionFilters(filters, mFlags, true)) {
                     LogUtil.d("parseTrigger: filters are invalid.");
                     asyncFetchStatus.setEntityStatus(
                             AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
@@ -194,7 +194,7 @@ public class AsyncTriggerFetcher {
             if (!json.isNull(TriggerHeaderContract.NOT_FILTERS)) {
                 JSONArray notFilters =
                         Filter.maybeWrapFilters(json, TriggerHeaderContract.NOT_FILTERS);
-                if (!FetcherUtil.areValidAttributionFilters(notFilters)) {
+                if (!FetcherUtil.areValidAttributionFilters(notFilters, mFlags, true)) {
                     LogUtil.d("parseTrigger: not-filters are invalid.");
                     asyncFetchStatus.setEntityStatus(
                             AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
@@ -460,7 +460,8 @@ public class AsyncTriggerFetcher {
                 }
                 if (!eventTriggerDatum.isNull("filters")) {
                     JSONArray filters = Filter.maybeWrapFilters(eventTriggerDatum, "filters");
-                    if (!FetcherUtil.areValidAttributionFilters(filters)) {
+                    if (!FetcherUtil.areValidAttributionFilters(
+                            filters, mFlags, /* canIncludeLookbackWindow= */ true)) {
                         LogUtil.d("getValidEventTriggerData: filters are invalid.");
                         return Optional.empty();
                     }
@@ -469,7 +470,8 @@ public class AsyncTriggerFetcher {
                 if (!eventTriggerDatum.isNull("not_filters")) {
                     JSONArray notFilters =
                             Filter.maybeWrapFilters(eventTriggerDatum, "not_filters");
-                    if (!FetcherUtil.areValidAttributionFilters(notFilters)) {
+                    if (!FetcherUtil.areValidAttributionFilters(
+                            notFilters, mFlags, /* canIncludeLookbackWindow= */ true)) {
                         LogUtil.d("getValidEventTriggerData: not-filters are invalid.");
                         return Optional.empty();
                     }
@@ -536,7 +538,8 @@ public class AsyncTriggerFetcher {
             }
             if (!aggregateTriggerData.isNull("filters")) {
                 JSONArray filters = Filter.maybeWrapFilters(aggregateTriggerData, "filters");
-                if (!FetcherUtil.areValidAttributionFilters(filters)) {
+                if (!FetcherUtil.areValidAttributionFilters(
+                        filters, mFlags, /* canIncludeLookbackWindow= */ true)) {
                     LogUtil.d("Aggregate trigger data filters are invalid.");
                     return Optional.empty();
                 }
@@ -544,7 +547,8 @@ public class AsyncTriggerFetcher {
             }
             if (!aggregateTriggerData.isNull("not_filters")) {
                 JSONArray notFilters = Filter.maybeWrapFilters(aggregateTriggerData, "not_filters");
-                if (!FetcherUtil.areValidAttributionFilters(notFilters)) {
+                if (!FetcherUtil.areValidAttributionFilters(
+                        notFilters, mFlags, /* canIncludeLookbackWindow= */ true)) {
                     LogUtil.d("Aggregate trigger data not-filters are invalid.");
                     return Optional.empty();
                 }
@@ -619,7 +623,8 @@ public class AsyncTriggerFetcher {
             }
             if (!deduplicationKeyObj.isNull("filters")) {
                 JSONArray filters = Filter.maybeWrapFilters(deduplicationKeyObj, "filters");
-                if (!FetcherUtil.areValidAttributionFilters(filters)) {
+                if (!FetcherUtil.areValidAttributionFilters(
+                        filters, mFlags, /* canIncludeLookbackWindow= */ true)) {
                     LogUtil.d("Aggregate deduplication key: " + i + " contains invalid filters.");
                     return Optional.empty();
                 }
@@ -627,7 +632,8 @@ public class AsyncTriggerFetcher {
             }
             if (!deduplicationKeyObj.isNull("not_filters")) {
                 JSONArray notFilters = Filter.maybeWrapFilters(deduplicationKeyObj, "not_filters");
-                if (!FetcherUtil.areValidAttributionFilters(notFilters)) {
+                if (!FetcherUtil.areValidAttributionFilters(
+                        notFilters, mFlags, /* canIncludeLookbackWindow= */ true)) {
                     LogUtil.d(
                             "Aggregate deduplication key: " + i + " contains invalid not filters.");
                     return Optional.empty();
