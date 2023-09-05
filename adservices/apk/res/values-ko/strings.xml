@@ -189,16 +189,16 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"앱에서 추천하는 광고를 재설정하시겠습니까?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"목록의 앱에서 제공한 광고 추천 데이터가 삭제되고 앞으로는 앱에서 새로운 광고를 추천합니다. 관련된 일부 광고는 계속 표시될 수 있습니다."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"앱 데이터 재설정됨"</string>
-    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"광고 주제 사용 설정"</string>
-    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android에서 관심분야 주제를 파악하기 시작하지만, 첫 번째 주제가 표시될 때까지 시간이 걸릴 수 있습니다."</string>
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"광고 주제 사용 설정됨"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"이제 Android에서 관심분야 주제를 파악합니다. 주제가 표시될 때까지 시간이 걸릴 수 있습니다."</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"광고 주제를 사용 중지하시겠습니까?"</string>
-    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"이 주제 목록이 삭제됩니다. Android에서 더 이상 관심분야 주제를 파악하지 않지만, 관련성 있는 광고가 계속 표시될 수도 있습니다."</string>
-    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"앱 추천 광고 사용 설정"</string>
-    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"앱이 광고를 추천하기 시작할 수 있습니다. 앱이 광고를 추천하기 시작하면 앱 목록이 표시됩니다."</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"주제 목록이 삭제됩니다. Android에서 더 이상 관심분야 주제를 파악하지 않지만, 관련성 있는 광고가 계속 표시될 수 있습니다."</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"앱 추천 광고 사용 설정됨"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"이제 앱에서 광고를 추천합니다. 광고 추천이 시작되면 앱 목록이 표시됩니다."</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"앱 추천 광고를 사용 중지하시겠습니까?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"모든 광고 추천 데이터가 삭제됩니다. 앱이 더 이상 광고를 추천할 수 없지만, 관련성 있는 광고가 계속 표시될 수도 있습니다."</string>
-    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"광고 측정 사용 설정"</string>
-    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android는 앱에서 광고 실적을 측정할 수 있도록 매우 제한된 정보만 앱과 공유할 수 있습니다."</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"모든 광고 추천 데이터가 삭제됩니다. 앱이 더 이상 광고를 추천할 수 없지만, 관련성 있는 광고가 계속 표시될 수 있습니다."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"광고 측정 사용 설정됨"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android는 앱의 광고 실적 측정을 위한 목적으로 매우 제한된 정보만 앱과 공유할 수 있습니다."</string>
     <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"광고 측정을 사용 중지하시겠습니까?"</string>
     <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"모든 대기 중인 광고 측정 보고서가 삭제되며 새로운 보고서가 생성되거나 공유되지 않습니다."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"광고 개인 정보 보호"</string>

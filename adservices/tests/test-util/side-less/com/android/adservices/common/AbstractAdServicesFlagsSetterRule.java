@@ -58,9 +58,15 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
 
     protected static final String LOGCAT_LEVEL_VERBOSE = "VERBOSE";
 
+    // TODO(b/295321663): move these constants (and those from LogFactory) to AdServicesCommon
     protected static final String LOGCAT_TAG_ADSERVICES = "adservices";
     protected static final String LOGCAT_TAG_ADSERVICES_SERVICE = LOGCAT_TAG_ADSERVICES + "-system";
     protected static final String LOGCAT_TAG_TOPICS = LOGCAT_TAG_ADSERVICES + ".topics";
+    protected static final String LOGCAT_TAG_FLEDGE = LOGCAT_TAG_ADSERVICES + ".fledge";
+    protected static final String LOGCAT_TAG_MEASUREMENT = LOGCAT_TAG_ADSERVICES + ".measurement";
+    protected static final String LOGCAT_TAG_UI = LOGCAT_TAG_ADSERVICES + ".ui";
+    protected static final String LOGCAT_TAG_ADID = LOGCAT_TAG_ADSERVICES + ".adid";
+    protected static final String LOGCAT_TAG_APPSETID = LOGCAT_TAG_ADSERVICES + ".appsetid";
 
     // TODO(b/294423183): make private once not used by subclass for legacy methods
     protected final DeviceConfigHelper mDeviceConfig;
@@ -75,6 +81,11 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     // Cache system properties that were set before the test started, so the rule can be
     // instantiated using a builder-like approach - will be set to null after test starts.
     @Nullable private List<FlagOrSystemProperty> mInitialSystemProperties = new ArrayList<>();
+
+    // Cache methods that were called before the test started, so the rule can be
+    // instantiated using a builder-like approach - will be set to null after test starts.
+    // TODO(b/294423183): get rid of mInitialFlags / mInitialSystemProperties and use just this
+    @Nullable private List<Command> mInitialCommands = new ArrayList<>();
 
     protected AbstractAdServicesFlagsSetterRule(
             RealLogger logger,
@@ -95,6 +106,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
                 mDeviceConfig.setSyncDisabledMode(SyncDisabledModeForTest.PERSISTENT);
                 setInitialSystemProperties(testName);
                 setInitialFlags(testName);
+                runInitialCommands(testName);
                 List<Throwable> cleanUpErrors = new ArrayList<>();
                 Throwable testError = null;
                 StringBuilder dump = new StringBuilder("*** Flags before:\n");
@@ -195,6 +207,13 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         return setOrCacheFlag(FlagsConstants.KEY_GLOBAL_KILL_SWITCH, value);
     }
 
+    /**
+     * Overrides flag used by {@link com.android.adservices.service.PhFlags#getAdServicesEnabled}.
+     */
+    public T setAdServicesEnabled(boolean value) {
+        return setOrCacheFlag(FlagsConstants.KEY_ADSERVICES_ENABLED, value);
+    }
+
     /** Overrides the flag that sets the Topics kill switch. */
     public T setTopicsKillSwitch(boolean value) {
         return setOrCacheFlag(FlagsConstants.KEY_TOPICS_KILL_SWITCH, value);
@@ -267,57 +286,83 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         return setOrCacheDebugSystemProperty(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, value);
     }
 
-    /** Overrides flag used by {@link PhFlags#getEnableBackCompat()}. */
+    /**
+     * Overrides flag used by {@link com.android.adservices.service.PhFlags#getEnableBackCompat()}.
+     */
     public T setEnableBackCompat(boolean value) {
         return setOrCacheFlag(FlagsConstants.KEY_ENABLE_BACK_COMPAT, value);
     }
 
-    /** Overrides flag used by {@link PhFlags#getConsentSourceOfTruth()}. */
+    /**
+     * Overrides flag used by {@link
+     * com.android.adservices.service.PhFlags#getConsentSourceOfTruth()}.
+     */
     public T setConsentSourceOfTruth(int value) {
         return setOrCacheFlag(FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH, value);
     }
 
-    /** Overrides flag used by {@link PhFlags#getBlockedTopicsSourceOfTruth()}. */
+    /**
+     * Overrides flag used by {@link
+     * com.android.adservices.service.PhFlags#getBlockedTopicsSourceOfTruth()}.
+     */
     public T setBlockedTopicsSourceOfTruth(int value) {
         return setOrCacheFlag(FlagsConstants.KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH, value);
     }
 
-    /** Overrides flag used by {@link PhFlags#getEnableAppsearchConsentData()}. */
+    /**
+     * Overrides flag used by {@link
+     * com.android.adservices.service.PhFlags#getEnableAppsearchConsentData()}.
+     */
     public T setEnableAppsearchConsentData(boolean value) {
         return setOrCacheFlag(FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA, value);
     }
 
     /**
-     * Overrides flag used by {@link PhFlags#getMeasurementRollbackDeletionAppSearchKillSwitch()}.
+     * Overrides flag used by {@link
+     * com.android.adservices.service.PhFlags#getMeasurementRollbackDeletionAppSearchKillSwitch()}.
      */
     public T setMeasurementRollbackDeletionAppSearchKillSwitch(boolean value) {
         return setOrCacheFlag(
                 FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH, value);
     }
 
-    /** Overrides flag used by {@link PhFlags#getPpapiAppAllowList()}. */
+    /**
+     * Overrides flag used by {@link com.android.adservices.service.PhFlags#getPpapiAppAllowList()}.
+     */
     public T setPpapiAppAllowList(String value) {
         return setOrCacheFlagWithSeparator(
                 FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST, value, ALLOWLIST_SEPARATOR);
     }
 
-    /** Overrides flag used by {@link PhFlags#getMsmtApiAppAllowList()}. */
+    /**
+     * Overrides flag used by {@link
+     * com.android.adservices.service.PhFlags#getMsmtApiAppAllowList()}.
+     */
     public T setMsmtApiAppAllowList(String value) {
         return setOrCacheFlagWithSeparator(
                 FlagsConstants.KEY_MSMT_API_APP_ALLOW_LIST, value, ALLOWLIST_SEPARATOR);
     }
 
-    /** Overrides flag used by {@link PhFlags#getAdIdRequestPermitsPerSecond()}. */
+    /**
+     * Overrides flag used by {@link
+     * com.android.adservices.service.PhFlags#getAdIdRequestPermitsPerSecond()}.
+     */
     public T setAdIdRequestPermitsPerSecond(double value) {
         return setOrCacheFlag(FlagsConstants.KEY_ADID_REQUEST_PERMITS_PER_SECOND, value);
     }
 
-    /** Overrides flag used by {@link PhFlags#getAdIdKillSwitchForTests()}. */
+    /**
+     * Overrides flag used by {@link
+     * com.android.adservices.service.PhFlags#getAdIdKillSwitchForTests()}.
+     */
     public T setAdIdKillSwitchForTests(boolean value) {
         return setOrCacheDebugSystemProperty(FlagsConstants.KEY_ADID_KILL_SWITCH, value);
     }
 
-    /** Overrides flag used by {@link PhFlags#getMddBackgroundTaskKillSwitch()}. */
+    /**
+     * Overrides flag used by {@link
+     * com.android.adservices.service.PhFlags#getMddBackgroundTaskKillSwitch()}.
+     */
     public T setMddBackgroundTaskKillSwitch(boolean value) {
         return setOrCacheFlag(FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH, value);
     }
@@ -327,45 +372,51 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
      * device running the test.
      */
     public T setCompatModeFlags() {
-        if (isAtLeastT()) {
-            mLog.d("setCompatModeFlags(): ignored on SDK %d", getDeviceSdk());
-            // Do nothing; this method is intended to set flags for Android S- only.
-            return getThis();
-        }
+        return runOrCache(
+                "setCompatModeFlags()",
+                () -> {
+                    if (isAtLeastT()) {
+                        mLog.d("setCompatModeFlags(): ignored on SDK %d", getDeviceSdk());
+                        // Do nothing; this method is intended to set flags for Android S- only.
+                        return;
+                    }
 
-        if (isAtLeastS()) {
-            mLog.d("setCompatModeFlags(): setting flags for S+");
-            setEnableBackCompat(true);
-            setBlockedTopicsSourceOfTruth(FlagsConstants.APPSEARCH_ONLY);
-            setConsentSourceOfTruth(FlagsConstants.APPSEARCH_ONLY);
-            setEnableAppsearchConsentData(true);
-            setMeasurementRollbackDeletionAppSearchKillSwitch(false);
-            return getThis();
-        }
-        mLog.d("setCompatModeFlags(): setting flags for R+");
-        setEnableBackCompat(true);
-        // TODO (b/285208753): Update flags once AppSearch is supported on R.
-        setBlockedTopicsSourceOfTruth(FlagsConstants.PPAPI_ONLY);
-        setConsentSourceOfTruth(FlagsConstants.PPAPI_ONLY);
-        setEnableAppsearchConsentData(false);
-        setMeasurementRollbackDeletionAppSearchKillSwitch(true);
-
-        return getThis();
+                    if (isAtLeastS()) {
+                        mLog.d("setCompatModeFlags(): setting flags for S+");
+                        setEnableBackCompat(true);
+                        setBlockedTopicsSourceOfTruth(FlagsConstants.APPSEARCH_ONLY);
+                        setConsentSourceOfTruth(FlagsConstants.APPSEARCH_ONLY);
+                        setEnableAppsearchConsentData(true);
+                        setMeasurementRollbackDeletionAppSearchKillSwitch(false);
+                        return;
+                    }
+                    mLog.d("setCompatModeFlags(): setting flags for R+");
+                    setEnableBackCompat(true);
+                    // TODO (b/285208753): Update flags once AppSearch is supported on R.
+                    setBlockedTopicsSourceOfTruth(FlagsConstants.PPAPI_ONLY);
+                    setConsentSourceOfTruth(FlagsConstants.PPAPI_ONLY);
+                    setEnableAppsearchConsentData(false);
+                    setMeasurementRollbackDeletionAppSearchKillSwitch(true);
+                });
     }
 
     /**
-     * Sets just the flag needed by {@link PhFlags#getEnableBackCompat()}, but only if required by
-     * the Android version of the device running the test.
+     * Sets just the flag needed by {@link
+     * com.android.adservices.service.PhFlags#getEnableBackCompat()}, but only if required by the
+     * Android version of the device running the test.
      */
     public T setCompatModeFlag() {
-        if (isAtLeastT()) {
-            mLog.d("setCompatModeFlag(): ignored on SDK %d", getDeviceSdk());
-            // Do nothing; this method is intended to set flags for Android S- only.
-            return getThis();
-        }
-        mLog.d("setCompatModeFlag(): setting flags on SDK %d", getDeviceSdk());
-        setEnableBackCompat(true);
-        return getThis();
+        return runOrCache(
+                "setCompatModeFlag()",
+                () -> {
+                    if (isAtLeastT()) {
+                        mLog.d("setCompatModeFlag(): ignored on SDK %d", getDeviceSdk());
+                        // Do nothing; this method is intended to set flags for Android S- only.
+                        return;
+                    }
+                    mLog.d("setCompatModeFlag(): setting flags on SDK %d", getDeviceSdk());
+                    setEnableBackCompat(true);
+                });
     }
 
     /**
@@ -374,23 +425,26 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
      */
     @Deprecated
     T resetCompatModeFlags() {
-        mLog.d("resetCompatModeFlags()");
         assertCalledByLegacyHelper();
-        if (isAtLeastT()) {
-            mLog.d("resetCompatModeFlags(): ignored on %d", getDeviceSdk());
-            // Do nothing; this method is intended to set flags for Android S- only.
-            return getThis();
-        }
-        mLog.v("resetCompatModeFlags(): setting flags on %d", getDeviceSdk());
-        setEnableBackCompat(false);
-        // TODO (b/285208753): Set to AppSearch always once it's supported on R.
-        boolean atLeastS = isAtLeastS();
-        int sourceOfTruth = atLeastS ? FlagsConstants.APPSEARCH_ONLY : FlagsConstants.PPAPI_ONLY;
-        setBlockedTopicsSourceOfTruth(sourceOfTruth);
-        setConsentSourceOfTruth(sourceOfTruth);
-        setEnableAppsearchConsentData(atLeastS);
-        setMeasurementRollbackDeletionAppSearchKillSwitch(!atLeastS);
-        return getThis();
+        return runOrCache(
+                "resetCompatModeFlags()",
+                () -> {
+                    if (isAtLeastT()) {
+                        mLog.d("resetCompatModeFlags(): ignored on %d", getDeviceSdk());
+                        // Do nothing; this method is intended to set flags for Android S- only.
+                        return;
+                    }
+                    mLog.v("resetCompatModeFlags(): setting flags on %d", getDeviceSdk());
+                    setEnableBackCompat(false);
+                    // TODO (b/285208753): Set to AppSearch always once it's supported on R.
+                    boolean atLeastS = isAtLeastS();
+                    int sourceOfTruth =
+                            atLeastS ? FlagsConstants.APPSEARCH_ONLY : FlagsConstants.PPAPI_ONLY;
+                    setBlockedTopicsSourceOfTruth(sourceOfTruth);
+                    setConsentSourceOfTruth(sourceOfTruth);
+                    setEnableAppsearchConsentData(atLeastS);
+                    setMeasurementRollbackDeletionAppSearchKillSwitch(!atLeastS);
+                });
     }
 
     /** Sets a {@code logcat} tag. */
@@ -400,7 +454,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     }
 
     /**
-     * Sets a {@code logcat} tags commons to all test.
+     * Sets the common AdServices {@code logcat} tags.
      *
      * <p>This method is usually set automatically by the factory methods, but should be set again
      * (on host-side tests) after reboot.
@@ -408,6 +462,22 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     public T setDefaultLogcatTags() {
         setLogcatTag(LOGCAT_TAG_ADSERVICES, LOGCAT_LEVEL_VERBOSE);
         setLogcatTag(LOGCAT_TAG_ADSERVICES_SERVICE, LOGCAT_LEVEL_VERBOSE);
+        return getThis();
+    }
+
+    /**
+     * Sets all AdServices {@code logcat} tags.
+     *
+     * <p>This method is usually set automatically by the factory methods, but should be set again
+     * (on host-side tests) after reboot.
+     */
+    public T setAllLogcatTags() {
+        setDefaultLogcatTags();
+        setLogcatTag(LOGCAT_TAG_TOPICS, LOGCAT_LEVEL_VERBOSE);
+        setLogcatTag(LOGCAT_TAG_FLEDGE, LOGCAT_LEVEL_VERBOSE);
+        setLogcatTag(LOGCAT_TAG_MEASUREMENT, LOGCAT_LEVEL_VERBOSE);
+        setLogcatTag(LOGCAT_TAG_ADID, LOGCAT_LEVEL_VERBOSE);
+        setLogcatTag(LOGCAT_TAG_APPSETID, LOGCAT_LEVEL_VERBOSE);
         return getThis();
     }
 
@@ -425,10 +495,19 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     }
 
     // TODO(b/294423183): remove once legacy usage is gone
-    protected void assertCalledByLegacyHelper() {
-        throw new UnsupportedOperationException(
-                "Must be overridden by subclass (if it supports "
-                        + "methods used by legacy helpers");
+    /**
+     * Checks whether this rule is used to implement some "legacy" helpers (i.e., deprecated classes
+     * that will be removed once their clients use the rule) like {@code CompatAdServicesTestUtils}.
+     */
+    protected boolean isCalledByLegacyHelper() {
+        return false;
+    }
+
+    // TODO(b/294423183): remove once legacy usage is gone
+    protected final void assertCalledByLegacyHelper() {
+        if (!isCalledByLegacyHelper()) {
+            throw new UnsupportedOperationException("Only available for legacy helpers");
+        }
     }
 
     private T setOrCacheFlag(String name, boolean value) {
@@ -475,7 +554,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     // TODO(b/294423183): need to add unit test for setters that call this
     private T setOrCacheFlag(String name, String value, @Nullable String separator) {
         FlagOrSystemProperty flag = new FlagOrSystemProperty(name, value, separator);
-        if (mInitialFlags != null) {
+        if (mInitialFlags != null && !isCalledByLegacyHelper()) {
             if (isFlagManagedByRunner(name)) {
                 return getThis();
             }
@@ -540,7 +619,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     }
 
     private T setOrCacheSystemProperty(String name, String value) {
-        if (mInitialSystemProperties != null) {
+        if (mInitialSystemProperties != null && !isCalledByLegacyHelper()) {
             mLog.v("Caching SystemProperty %s=%s as test is not running yet", name, value);
             mInitialSystemProperties.add(new FlagOrSystemProperty(name, value));
             return getThis();
@@ -556,6 +635,40 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     private void resetSystemProperties(String testName) {
         mLog.d("Resetting SystemProperties after %s", testName);
         mSystemProperties.reset();
+    }
+
+    private T runOrCache(String description, Runnable r) {
+        if (mInitialCommands != null && !isCalledByLegacyHelper()) {
+            // mInitialCommands is initialized with an empty list, which is set to null after the
+            // test starts (on runInitialCommands())
+            mLog.v("Caching %s as test is not running yet", description);
+            mInitialCommands.add(new Command(description, r));
+            return getThis();
+        }
+        runCommand(description, r);
+        return getThis();
+    }
+
+    private void runCommand(String description, Runnable runnable) {
+        mLog.v("Running %s", description);
+        runnable.run();
+    }
+
+    private void runInitialCommands(String testName) {
+        if (mInitialCommands == null) {
+            throw new IllegalStateException("already called");
+        }
+        if (mInitialCommands.isEmpty()) {
+            mLog.d("Not running any command before %s", testName);
+        } else {
+            int size = mInitialCommands.size();
+            mLog.d("Running %d commands before %s", size, testName);
+            for (Command command : mInitialCommands) {
+                runCommand(command.description, command.runnable);
+            }
+        }
+        // Sets it to null so next calls to runOrCache() will run (instead of caching)
+        mInitialCommands = null;
     }
 
     private void runSafely(List<Throwable> errors, Runnable r) {
@@ -638,6 +751,21 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
                 string.append(" (separator=").append(separator).append(')');
             }
             return string.toString();
+        }
+    }
+
+    private static final class Command {
+        public final String description;
+        public final Runnable runnable;
+
+        Command(String description, Runnable runnable) {
+            this.description = description;
+            this.runnable = runnable;
+        }
+
+        @Override
+        public String toString() {
+            return description;
         }
     }
 

@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static com.android.adservices.service.measurement.util.JobLockHolder.Type.VERBOSE_DEBUG_REPORTING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB;
 
@@ -33,12 +34,16 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.service.measurement.util.JobLockHolder;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.util.concurrent.ListeningExecutorService;
+
 import java.time.Clock;
 import java.time.Instant;
-import java.util.concurrent.Executor;
+import java.util.concurrent.Future;
 
 /**
  * Fallback service for scheduling debug reporting jobs. This runs periodically to handle any
@@ -50,7 +55,10 @@ public class VerboseDebugReportingFallbackJobService extends JobService {
     private static final int MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_ID =
             MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB.getJobId();
 
-    private static final Executor sBlockingExecutor = AdServicesExecutors.getBlockingExecutor();
+    private static final ListeningExecutorService sBlockingExecutor =
+            AdServicesExecutors.getBlockingExecutor();
+
+    private Future mExecutorFuture;
 
     @Override
     public boolean onStartJob(JobParameters params) {
@@ -78,19 +86,20 @@ public class VerboseDebugReportingFallbackJobService extends JobService {
         LogUtil.d(
                 "VerboseDebugReportingFallbackJobService.onStartJob " + "at %s",
                 jobStartTime.toString());
-        sBlockingExecutor.execute(
-                () -> {
-                    sendReports();
-                    boolean shouldRetry = false;
-                    AdservicesJobServiceLogger.getInstance(
-                                    VerboseDebugReportingFallbackJobService.this)
-                            .recordJobFinished(
-                                    MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_ID,
-                                    /* isSuccessful */ true,
-                                    shouldRetry);
+        mExecutorFuture =
+                sBlockingExecutor.submit(
+                        () -> {
+                            sendReports();
+                            boolean shouldRetry = false;
+                            AdservicesJobServiceLogger.getInstance(
+                                            VerboseDebugReportingFallbackJobService.this)
+                                    .recordJobFinished(
+                                            MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_ID,
+                                            /* isSuccessful */ true,
+                                            shouldRetry);
 
-                    jobFinished(params, false);
-                });
+                            jobFinished(params, false);
+                        });
         return true;
     }
 
@@ -98,6 +107,9 @@ public class VerboseDebugReportingFallbackJobService extends JobService {
     public boolean onStopJob(JobParameters params) {
         LogUtil.d("VerboseDebugReportingJobService.onStopJob");
         boolean shouldRetry = true;
+        if (mExecutorFuture != null) {
+            shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
+        }
         AdservicesJobServiceLogger.getInstance(this)
                 .recordOnStopJob(
                         params, MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_ID, shouldRetry);
@@ -105,18 +117,7 @@ public class VerboseDebugReportingFallbackJobService extends JobService {
     }
 
     @VisibleForTesting
-    protected static void schedule(Context context, JobScheduler jobScheduler) {
-        final JobInfo job =
-                new JobInfo.Builder(
-                                MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_ID,
-                                new ComponentName(
-                                        context, VerboseDebugReportingFallbackJobService.class))
-                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                        .setPeriodic(
-                                FlagsFactory.getFlags()
-                                        .getMeasurementVerboseDebugReportingFallbackJobPeriodMs())
-                        .setPersisted(true)
-                        .build();
+    protected static void schedule(JobScheduler jobScheduler, JobInfo job) {
         jobScheduler.schedule(job);
     }
 
@@ -138,17 +139,30 @@ public class VerboseDebugReportingFallbackJobService extends JobService {
             return;
         }
 
-        final JobInfo job =
+        final JobInfo scheduledJob =
                 jobScheduler.getPendingJob(MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_ID);
+        JobInfo jobInfo = buildJobInfo(context);
         // Schedule if it hasn't been scheduled already or force rescheduling
-        if (job == null || forceSchedule) {
-            schedule(context, jobScheduler);
+        if (forceSchedule || !jobInfo.equals(scheduledJob)) {
+            schedule(jobScheduler, jobInfo);
             LogUtil.d("Scheduled VerboseDebugReportingFallbackJobService");
         } else {
             LogUtil.d(
                     "VerboseDebugReportingFallbackJobService already scheduled, skipping"
                             + " reschedule");
         }
+    }
+
+    private static JobInfo buildJobInfo(Context context) {
+        return new JobInfo.Builder(
+                        MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_ID,
+                        new ComponentName(context, VerboseDebugReportingFallbackJobService.class))
+                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                .setPeriodic(
+                        FlagsFactory.getFlags()
+                                .getMeasurementVerboseDebugReportingFallbackJobPeriodMs())
+                .setPersisted(true)
+                .build();
     }
 
     private boolean skipAndCancelBackgroundJob(
@@ -171,11 +185,31 @@ public class VerboseDebugReportingFallbackJobService extends JobService {
         return false;
     }
 
-    private void sendReports() {
-        EnrollmentDao enrollmentDao = EnrollmentDao.getInstance(getApplicationContext());
-        DatastoreManager datastoreManager =
-                DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
-        new DebugReportingJobHandler(enrollmentDao, datastoreManager, FlagsFactory.getFlags())
-                .performScheduledPendingReports();
+    @VisibleForTesting
+    void sendReports() {
+        final JobLockHolder lock = JobLockHolder.getInstance(VERBOSE_DEBUG_REPORTING);
+        if (lock.tryLock()) {
+            try {
+                EnrollmentDao enrollmentDao = EnrollmentDao.getInstance(getApplicationContext());
+                DatastoreManager datastoreManager =
+                        DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
+                new DebugReportingJobHandler(
+                                enrollmentDao,
+                                datastoreManager,
+                                FlagsFactory.getFlags(),
+                                AdServicesLoggerImpl.getInstance(),
+                                ReportingStatus.UploadMethod.FALLBACK)
+                        .performScheduledPendingReports();
+                return;
+            } finally {
+                lock.unlock();
+            }
+        }
+        LogUtil.d("VerboseDebugReportingFallbackJobService did not acquire the lock");
+    }
+
+    @VisibleForTesting
+    Future getFutureForTesting() {
+        return mExecutorFuture;
     }
 }

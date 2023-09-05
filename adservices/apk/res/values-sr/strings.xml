@@ -198,9 +198,9 @@
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Желите да искључите огласе које предлажу апликације?"</string>
     <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Сви подаци о предлозима ће се избрисати. Апликације више неће моћи да предлажу огласе, али и даље могу да вам се приказују релевантни огласи."</string>
     <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Мерење огласа је укључено"</string>
-    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android може да дели само веома ограничене информације са апликацијама да би помогао апликацијама да мере учинак огласа."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android може да дели само веома ограничене информације са апликацијама како би помогао апликацијама да мере учинак огласа."</string>
     <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Желите да искључите мерење огласа?"</string>
-    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"Сви извештаји о мерењу огласа на чекању ће бити избрисани и нови извештаји неће бити генерисани или дељени."</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"Сви извештаји о мерењу огласа на чекању ће бити избрисани и нови извештаји неће бити генерисани ни дељени."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Приватност са огласима"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Теме огласа"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Огласи које предлажу апликације"</string>

@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assume.assumeTrue;
 
+import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.sdkprovider.SdkSandboxActivityHandler;
 import android.app.sdksandbox.sdkprovider.SdkSandboxActivityRegistry;
@@ -32,6 +33,7 @@ import android.os.Looper;
 
 import com.android.modules.utils.build.SdkLevel;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -41,13 +43,22 @@ import org.mockito.Mockito;
 @RunWith(JUnit4.class)
 public class SandboxedActivityTest {
 
+    private static final String SDK_NAME = "SDK_NAME";
+    private SandboxedSdkContext mSdkContext;
+
+    @Before
+    public void setUp() {
+        mSdkContext = Mockito.mock(SandboxedSdkContext.class);
+        Mockito.when(mSdkContext.getSdkName()).thenReturn(SDK_NAME);
+    }
+
     @Test
     public void testSandboxedActivityCreation() {
         assumeTrue(SdkLevel.isAtLeastU());
 
         SdkSandboxActivityHandler sdkSandboxActivityHandler = Mockito.spy(activity -> {});
         SdkSandboxActivityRegistry registry = SdkSandboxActivityRegistry.getInstance();
-        IBinder token = registry.register("SDK_NAME", sdkSandboxActivityHandler);
+        IBinder token = registry.register(mSdkContext, sdkSandboxActivityHandler);
 
         new Handler(Looper.getMainLooper())
                 .runWithScissors(
@@ -158,10 +169,10 @@ public class SandboxedActivityTest {
     }
 
     @Test
-    public void testSandboxedActivityFinishIfHandlerNotifiedAlreadyAboutAnotherActivity() {
+    public void testMultipleSandboxedActivitiesForTheSameHandler() {
         SdkSandboxActivityHandler sdkSandboxActivityHandler = activity -> {};
         SdkSandboxActivityRegistry registry = SdkSandboxActivityRegistry.getInstance();
-        IBinder token = registry.register("SDK_NAME", sdkSandboxActivityHandler);
+        IBinder token = registry.register(mSdkContext, sdkSandboxActivityHandler);
 
         new Handler(Looper.getMainLooper())
                 .runWithScissors(
@@ -181,11 +192,11 @@ public class SandboxedActivityTest {
 
                             SandboxedActivity sandboxedActivity2 =
                                     Mockito.spy(new SandboxedActivity());
-                            sandboxedActivity1.setIntent(intent);
+                            sandboxedActivity2.setIntent(intent);
                             sandboxedActivity2.notifySdkOnActivityCreation();
 
                             Mockito.verify(sandboxedActivity1, Mockito.never()).finish();
-                            Mockito.verify(sandboxedActivity2).finish();
+                            Mockito.verify(sandboxedActivity1, Mockito.never()).finish();
                         },
                         1000);
     }

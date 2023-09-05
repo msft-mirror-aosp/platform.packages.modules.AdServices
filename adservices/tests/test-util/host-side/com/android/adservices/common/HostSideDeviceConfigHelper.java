@@ -73,7 +73,7 @@ final class HostSideDeviceConfigHelper implements DeviceConfigHelper.Interface {
 
     @Override
     public String dump() {
-        return runShellCommand("device_config list%s", mNamespace).trim();
+        return runShellCommand("device_config list %s", mNamespace).trim();
     }
 
     @Override

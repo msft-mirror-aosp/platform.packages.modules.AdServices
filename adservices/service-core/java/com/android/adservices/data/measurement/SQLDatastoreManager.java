@@ -67,7 +67,9 @@ public class SQLDatastoreManager extends DatastoreManager {
         return new MeasurementDao(
                 () ->
                         mDbHelper.getDbFileSize()
-                                >= FlagsFactory.getFlags().getMeasurementDbSizeLimit());
+                                >= FlagsFactory.getFlags().getMeasurementDbSizeLimit(),
+                () -> FlagsFactory.getFlags().getMeasurementReportingRetryLimit(),
+                () -> FlagsFactory.getFlags().getMeasurementReportingRetryLimitEnabled());
     }
 
     @Override

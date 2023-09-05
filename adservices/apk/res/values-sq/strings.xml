@@ -193,7 +193,7 @@
     <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android do të fillojë të shënojë temat me interes, por mund të duhet pak kohë sa të shfaqen temat e tua të para."</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Të çaktivizohen temat e reklamave?"</string>
     <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Kjo listë me tema do të fshihet. Android nuk do të shënojë më tema me interes, por mund të shohësh ende reklama të përshtatshme."</string>
-    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Reklamat e sugjeruara nga aplikacioni janë aktive"</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Reklamat e sugjeruara nga aplikacionet janë aktive"</string>
     <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Aplikacionet mund të fillojnë të sugjerojnë reklama. Do të shohësh një listë aplikacionesh sapo ato të fillojnë të sugjerojnë reklama."</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Të çaktivizohen reklamat e sugjeruara nga aplikacionet?"</string>
     <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Të gjitha të dhënat e sugjerimeve të reklamave do të fshihen. Aplikacionet nuk do të mund të sugjerojnë më reklama, por mund të shohësh ende reklama të përshtatshme."</string>

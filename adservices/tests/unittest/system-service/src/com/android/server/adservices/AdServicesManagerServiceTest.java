@@ -16,6 +16,7 @@
 
 package com.android.server.adservices;
 
+import static com.android.server.adservices.PhFlags.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
 import static com.android.server.adservices.PhFlags.KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -48,7 +49,9 @@ import android.content.pm.ResolveInfo;
 import android.content.pm.VersionedPackage;
 import android.content.rollback.RollbackManager;
 import android.net.Uri;
+import android.os.Binder;
 import android.os.Handler;
+import android.os.ParcelFileDescriptor;
 import android.os.UserHandle;
 import android.provider.DeviceConfig;
 import android.util.ArrayMap;
@@ -68,7 +71,6 @@ import com.android.server.adservices.feature.PrivacySandboxUxCollection;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -76,9 +78,13 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -86,6 +92,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /** Tests for {@link AdServicesManagerService} */
@@ -293,6 +300,30 @@ public class AdServicesManagerServiceTest {
 
         // The flag is disabled so there is no call to the packageManager
         Mockito.verify(mSpyContext, Mockito.times(0)).getPackageManager();
+    }
+
+    @Test
+    public void testAdServicesShellCommand_disabled() throws Exception {
+        setShellCommandEnabled(false);
+        String expectedOutput = handleShellCommand(new Binder());
+
+        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
+
+        String result = handleShellCommand(mService);
+
+        assertWithMessage("shell command output").that(result).contains(expectedOutput);
+    }
+
+    @Test
+    public void testAdServicesShellCommand_enabled() throws Exception {
+        setShellCommandEnabled(true);
+        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
+        String expectedOutput =
+                String.format(AdServicesShellCommand.WRONG_UID_TEMPLATE, Binder.getCallingUid());
+
+        String result = handleShellCommand(mService);
+
+        assertWithMessage("shell command output").that(result).contains(expectedOutput);
     }
 
     @Test
@@ -573,7 +604,6 @@ public class AdServicesManagerServiceTest {
         assertThrows(SecurityException.class, () -> service.getConsent(ConsentParcel.ALL_API));
     }
 
-    @Ignore
     @Test
     public void testRecordGaUxNotificationDisplayed() throws IOException {
         AdServicesManagerService service =
@@ -1147,5 +1177,37 @@ public class AdServicesManagerServiceTest {
                             assertThat(service.getEnrollmentChannel())
                                     .isEqualTo(channel.toString());
                         });
+    }
+
+    private static void setShellCommandEnabled(boolean value) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ADSERVICES_SHELL_COMMAND_ENABLED,
+                Boolean.toString(value),
+                /* makeDefault */ false);
+    }
+
+    private static String handleShellCommand(Binder binder) throws IOException {
+        ParcelFileDescriptor[] inPipe = ParcelFileDescriptor.createPipe();
+        ParcelFileDescriptor[] outAndErrPipe = ParcelFileDescriptor.createPipe();
+        ParcelFileDescriptor readEnd = outAndErrPipe[0];
+        ParcelFileDescriptor writeEnd = outAndErrPipe[1];
+
+        binder.handleShellCommand(
+                /* in= */ inPipe[1], /* out= */ writeEnd, /* err= */ writeEnd, /* args= */ null);
+        writeEnd.close();
+
+        // Input is not used, but cannot be null (and must be closed)
+        inPipe[1].close(); // write end
+        inPipe[0].close(); // read end
+
+        String output;
+        try (InputStream is = new ParcelFileDescriptor.AutoCloseInputStream(readEnd)) {
+            output =
+                    new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))
+                            .lines()
+                            .collect(Collectors.joining("\n"));
+        }
+        return output.trim();
     }
 }
