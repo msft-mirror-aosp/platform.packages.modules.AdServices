@@ -500,11 +500,12 @@ public class AttributionJobHandlerTest {
         List<Source> matchingSourceList = new ArrayList<>();
         matchingSourceList.add(source);
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
-        when(mMeasurementDao.countDistinctEnrollmentsPerPublisherXDestinationInAttribution(
-                any(), any(), any(), anyLong(), anyLong())).thenReturn(10);
+        when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestInAttribution(
+                        any(), any(), any(), anyLong(), anyLong()))
+                .thenReturn(10);
         mHandler.performPendingAttributions();
         verify(mMeasurementDao)
-                .countDistinctEnrollmentsPerPublisherXDestinationInAttribution(
+                .countDistinctReportingOriginsPerPublisherXDestInAttribution(
                         any(), any(), any(), anyLong(), anyLong());
         verify(mMeasurementDao)
                 .updateTriggerStatus(

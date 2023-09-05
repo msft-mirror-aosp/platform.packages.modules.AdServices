@@ -606,6 +606,8 @@ public class AsyncRegistrationQueueRunner {
                 .setSourceId(source.getId())
                 // Intentionally kept it as null because it's a fake attribution
                 .setTriggerId(null)
+                // Intentionally using source here since trigger is not available
+                .setRegistrationOrigin(source.getRegistrationOrigin())
                 .build();
     }
 
