@@ -2739,16 +2739,14 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public void incrementReportingRetryCount(String id, DataType reportType)
+    public int incrementAndGetReportingRetryCount(String id, DataType reportType)
             throws DatastoreException {
         KeyValueData eventRetry = getKeyValueData(id, reportType);
         eventRetry.setReportRetryCount(eventRetry.getReportRetryCount() + 1);
         insertOrUpdateKeyValueData(eventRetry);
-        LogUtil.d(
-                "Incrementing: "
-                        + reportType
-                        + " Retry Count: "
-                        + eventRetry.getReportRetryCount());
+        int retryCount = eventRetry.getReportRetryCount();
+        LogUtil.d("Incrementing: " + reportType + " Retry Count: " + retryCount);
+        return retryCount;
     }
 
     @Override

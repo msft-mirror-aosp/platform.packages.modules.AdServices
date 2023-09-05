@@ -5153,7 +5153,7 @@ public class MeasurementDaoTest {
                         .runInTransaction(
                                 measurementDao -> {
                                     // Adds records to KeyValueData table for Retry Count.
-                                    measurementDao.incrementReportingRetryCount(
+                                    measurementDao.incrementAndGetReportingRetryCount(
                                             debugReport.getId(), DataType.DEBUG_REPORT_RETRY_COUNT);
                                     assertTrue(measurementDao.getDebugReportIds().isEmpty());
                                 }));
@@ -8308,7 +8308,7 @@ public class MeasurementDaoTest {
                 dm.runInTransactionWithResult(
                         (dao) -> {
                             // Adds records to KeyValueData table for Retry Count.
-                            dao.incrementReportingRetryCount(
+                            dao.incrementAndGetReportingRetryCount(
                                     ar31.getId(), DataType.AGGREGATE_REPORT_RETRY_COUNT);
                             return dao.getPendingAggregateReportIdsByCoordinatorInWindow(
                                     AggregateReportFixture.ValidAggregateReportParams.TRIGGER_TIME,
@@ -8431,7 +8431,7 @@ public class MeasurementDaoTest {
                 dm.runInTransactionWithResult(
                         (dao) -> {
                             // Adds records to KeyValueData table for Retry Count.
-                            dao.incrementReportingRetryCount(
+                            dao.incrementAndGetReportingRetryCount(
                                     ar31.getId(), DataType.AGGREGATE_REPORT_RETRY_COUNT);
                             return dao.getPendingAggregateDebugReportIdsByCoordinator();
                         });
@@ -8498,7 +8498,7 @@ public class MeasurementDaoTest {
                 dm.runInTransactionWithResult(
                         (dao) -> {
                             // Adds records to KeyValueData table for Retry Count.
-                            dao.incrementReportingRetryCount(
+                            dao.incrementAndGetReportingRetryCount(
                                     "1", DataType.EVENT_REPORT_RETRY_COUNT);
                             return dao.getPendingEventReportIdsInWindow(
                                     EventReportFixture.ValidEventReportParams.TRIGGER_TIME,
@@ -8550,7 +8550,7 @@ public class MeasurementDaoTest {
                 dm.runInTransactionWithResult(
                         (dao) -> {
                             // Adds records to KeyValueData table for Retry Count.
-                            dao.incrementReportingRetryCount(
+                            dao.incrementAndGetReportingRetryCount(
                                     "1", DataType.EVENT_REPORT_RETRY_COUNT);
                             return dao.getPendingDebugEventReportIds();
                         });
@@ -8638,10 +8638,12 @@ public class MeasurementDaoTest {
         DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
         datastoreManager.runInTransaction(
                 (dao) -> {
-                    dao.incrementReportingRetryCount(eventId, DataType.EVENT_REPORT_RETRY_COUNT);
-                    dao.incrementReportingRetryCount(
+                    dao.incrementAndGetReportingRetryCount(
+                            eventId, DataType.EVENT_REPORT_RETRY_COUNT);
+                    dao.incrementAndGetReportingRetryCount(
                             aggregateId, DataType.AGGREGATE_REPORT_RETRY_COUNT);
-                    dao.incrementReportingRetryCount(debugId, DataType.DEBUG_REPORT_RETRY_COUNT);
+                    dao.incrementAndGetReportingRetryCount(
+                            debugId, DataType.DEBUG_REPORT_RETRY_COUNT);
                 });
         Optional<KeyValueData> eventCount =
                 datastoreManager.runInTransactionWithResult(
@@ -8664,8 +8666,9 @@ public class MeasurementDaoTest {
 
         datastoreManager.runInTransaction(
                 (dao) -> {
-                    dao.incrementReportingRetryCount(eventId, DataType.EVENT_REPORT_RETRY_COUNT);
-                    dao.incrementReportingRetryCount(
+                    dao.incrementAndGetReportingRetryCount(
+                            eventId, DataType.EVENT_REPORT_RETRY_COUNT);
+                    dao.incrementAndGetReportingRetryCount(
                             aggregateId, DataType.AGGREGATE_REPORT_RETRY_COUNT);
                 });
         eventCount =
