@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Приложение сможет получать доступ к AdServices Consent API."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Доступ к Ad ID API"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Приложение сможет получать доступ к Ad ID API."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"Доступ к AdServices Cobalt Upload API"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Приложение сможет получать доступ к AdServices Cobalt Upload API."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Доступ к App Set ID API"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Приложение сможет получать доступ к App Set ID API."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Доступ к Consent Service API"</string>
@@ -40,8 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Приложение сможет получать доступ к API для чтения состояния поддержки AdService."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Доступ к API AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Приложение сможет получать доступ к API AdServicesManager."</string>
-    <!-- no translation found for app_label (5844694701336604490) -->
-    <skip />
+    <string name="app_label" msgid="5844694701336604490">"Конфиденциальность в рекламе"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Примите участие в бета-тестировании конфиденциальности в рекламе для Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Мы ищем новые способы показа рекламы в Android, которые лучше защищают вашу конфиденциальность"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Подробнее"</string>

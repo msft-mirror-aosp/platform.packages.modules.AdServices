@@ -23,6 +23,7 @@ import static org.mockito.Mockito.verify;
 import android.net.Uri;
 
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
+import com.android.adservices.service.devapi.DevContext;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -41,24 +42,31 @@ public class DebugReportSenderStrategyHttpImplTest {
     private AdServicesHttpsClient mMockHttpsClient;
     private DebugReportSenderStrategyHttpImpl mDebugReportSender;
 
+    private DevContext mDevContext;
+
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
 
-        mDebugReportSender = new DebugReportSenderStrategyHttpImpl(mMockHttpsClient);
+        mDebugReportSender =
+                new DebugReportSenderStrategyHttpImpl(
+                        mMockHttpsClient, DevContext.createForDevOptionsDisabled());
+        mDevContext = DevContext.createForDevOptionsDisabled();
     }
 
     @Test
     public void testSend_withSingleReport_allRequestsAreSuccessful()
             throws ExecutionException, InterruptedException {
         Uri uri = Uri.parse("http://example.com/reportWin");
-        doReturn(Futures.immediateVoidFuture()).when(mMockHttpsClient).getAndReadNothing(uri);
+        doReturn(Futures.immediateVoidFuture())
+                .when(mMockHttpsClient)
+                .getAndReadNothing(uri, mDevContext);
 
         mDebugReportSender.enqueue(uri);
         ListenableFuture<Void> future = mDebugReportSender.flush();
         future.get();
 
-        verify(mMockHttpsClient, times(1)).getAndReadNothing(uri);
+        verify(mMockHttpsClient, times(1)).getAndReadNothing(uri, mDevContext);
     }
 
     @Test
@@ -66,15 +74,19 @@ public class DebugReportSenderStrategyHttpImplTest {
             throws ExecutionException, InterruptedException {
         Uri uri1 = Uri.parse("http://example.com/reportWin");
         Uri uri2 = Uri.parse("http://example.com/reportLoss");
-        doReturn(Futures.immediateVoidFuture()).when(mMockHttpsClient).getAndReadNothing(uri1);
-        doReturn(Futures.immediateVoidFuture()).when(mMockHttpsClient).getAndReadNothing(uri2);
+        doReturn(Futures.immediateVoidFuture())
+                .when(mMockHttpsClient)
+                .getAndReadNothing(uri1, mDevContext);
+        doReturn(Futures.immediateVoidFuture())
+                .when(mMockHttpsClient)
+                .getAndReadNothing(uri2, mDevContext);
 
         mDebugReportSender.batchEnqueue(List.of(uri1, uri2));
         ListenableFuture<Void> future = mDebugReportSender.flush();
         future.get();
 
-        verify(mMockHttpsClient, times(1)).getAndReadNothing(uri1);
-        verify(mMockHttpsClient, times(1)).getAndReadNothing(uri2);
+        verify(mMockHttpsClient, times(1)).getAndReadNothing(uri1, mDevContext);
+        verify(mMockHttpsClient, times(1)).getAndReadNothing(uri2, mDevContext);
     }
 
     @Test
@@ -82,16 +94,19 @@ public class DebugReportSenderStrategyHttpImplTest {
             throws ExecutionException, InterruptedException {
         Uri uri1 = Uri.parse("http://example.com/reportWin");
         Uri uri2 = Uri.parse("http://example.com/reportLoss");
-        doReturn(Futures.immediateVoidFuture()).when(mMockHttpsClient).getAndReadNothing(uri1);
-        doReturn(Futures.immediateFailedFuture(new Exception())).when(
-                mMockHttpsClient).getAndReadNothing(uri2);
+        doReturn(Futures.immediateVoidFuture())
+                .when(mMockHttpsClient)
+                .getAndReadNothing(uri1, mDevContext);
+        doReturn(Futures.immediateFailedFuture(new Exception()))
+                .when(mMockHttpsClient)
+                .getAndReadNothing(uri2, mDevContext);
 
         mDebugReportSender.enqueue(uri1);
         mDebugReportSender.enqueue(uri2);
         ListenableFuture<?> future = mDebugReportSender.flush();
         future.get();
 
-        verify(mMockHttpsClient, times(1)).getAndReadNothing(uri1);
-        verify(mMockHttpsClient, times(1)).getAndReadNothing(uri2);
+        verify(mMockHttpsClient, times(1)).getAndReadNothing(uri1, mDevContext);
+        verify(mMockHttpsClient, times(1)).getAndReadNothing(uri2, mDevContext);
     }
 }

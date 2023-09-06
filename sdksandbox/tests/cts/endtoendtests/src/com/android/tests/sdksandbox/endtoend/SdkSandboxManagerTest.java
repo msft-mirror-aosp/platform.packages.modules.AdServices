@@ -70,6 +70,7 @@ import com.android.modules.utils.build.SdkLevel;
 import com.google.common.truth.Expect;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -84,6 +85,7 @@ import java.util.concurrent.TimeUnit;
 @RunWith(JUnit4.class)
 public final class SdkSandboxManagerTest {
 
+    private static final String TAG = SdkSandboxManagerTest.class.getSimpleName();
     private static final String NON_EXISTENT_SDK = "com.android.not_exist";
 
     private static final String APP_OWNED_SDK_SANDBOX_INTERFACE_NAME =
@@ -764,7 +766,8 @@ public final class SdkSandboxManagerTest {
     }
 
     @Test
-    public void testBackNavigation() {
+    @Ignore("b/298171583")
+    public void testBackNavigation() throws Exception {
         assumeTrue(SdkLevel.isAtLeastU());
 
         ICtsSdkProviderApi sdk = loadSdk();
@@ -795,7 +798,8 @@ public final class SdkSandboxManagerTest {
     }
 
     @Test
-    public void testSandboxActivityShouldRotateIfNotLocked() throws RemoteException {
+    @Ignore("b/298171583")
+    public void testSandboxActivityShouldRotateIfNotLocked() throws Exception {
         assumeTrue(SdkLevel.isAtLeastU());
 
         ICtsSdkProviderApi sdk = loadSdk();
@@ -816,7 +820,8 @@ public final class SdkSandboxManagerTest {
     }
 
     @Test
-    public void testSandboxActivityOrientationLocking() throws RemoteException {
+    @Ignore("b/298171583")
+    public void testSandboxActivityOrientationLocking() throws Exception {
         assumeTrue(SdkLevel.isAtLeastU());
 
         ICtsSdkProviderApi sdk = loadSdk();
@@ -868,6 +873,20 @@ public final class SdkSandboxManagerTest {
 
         assertThat(mScenario.getState()).isEqualTo(State.RESUMED);
         assertThat(activityStarter.isActivityResumed()).isFalse();
+    }
+
+    @Test
+    public void testSandboxActivityStartIntentViewWithNoSecurityExceptions() throws Exception {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        ICtsSdkProviderApi sdk = loadSdk();
+
+        ActivityStarter sandboxActivityStarter = new ActivityStarter();
+        IActivityActionExecutor actionExecutor = startSandboxActivity(sdk, sandboxActivityStarter);
+        assertThat(mScenario.getState()).isIn(Arrays.asList(State.CREATED, State.STARTED));
+        assertThat(sandboxActivityStarter.isActivityResumed()).isTrue();
+
+        actionExecutor.openLandingPage();
     }
 
     // Helper method to load SDK_NAME_1

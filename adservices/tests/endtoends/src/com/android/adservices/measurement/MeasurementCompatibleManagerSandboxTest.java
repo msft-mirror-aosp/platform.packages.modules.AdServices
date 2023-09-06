@@ -26,7 +26,7 @@ import static org.mockito.Mockito.verify;
 
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdCompatibleManager;
-import android.adservices.common.OutcomeReceiver;
+import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.IMeasurementService;
@@ -47,14 +47,14 @@ import android.test.suitebuilder.annotation.SmallTest;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
-import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.compatibility.common.util.ShellUtils;
-import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -64,7 +64,7 @@ import java.util.concurrent.Executor;
 
 @SmallTest
 @RunWith(AndroidJUnit4.class)
-public class MeasurementCompatibleManagerSandboxTest {
+public final class MeasurementCompatibleManagerSandboxTest {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     protected static final Context sSandboxedSdkContext =
             new SandboxedSdkContext(
@@ -78,19 +78,24 @@ public class MeasurementCompatibleManagerSandboxTest {
                     /* isCustomizedSdkContext = */ false);
 
     private Executor mMockCallbackExecutor;
-    private OutcomeReceiver mMockOutcomeReceiver;
+    private AdServicesOutcomeReceiver mMockOutcomeReceiver;
     private IMeasurementService mMockMeasurementService;
 
     private MeasurementCompatibleManager mMeasurementManager;
 
+    // Ignore tests when device is not at least T
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
+
+    // Skip the test if it runs on unsupported platforms.
+    @Rule(order = 1)
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
     @Before
     public void setUp() {
-        // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-
         mMockCallbackExecutor = mock(Executor.class);
-        mMockOutcomeReceiver = mock(OutcomeReceiver.class);
+        mMockOutcomeReceiver = mock(AdServicesOutcomeReceiver.class);
         mMockMeasurementService = mock(IMeasurementService.class);
 
         // The intention of spying on MeasurementManager and returning an IMeasurementService mock
@@ -104,12 +109,12 @@ public class MeasurementCompatibleManagerSandboxTest {
         doReturn(mMockMeasurementService).when(mMeasurementManager).getService();
         doAnswer(
                         (invocation) -> {
-                            ((OutcomeReceiver) invocation.getArgument(1))
+                            ((AdServicesOutcomeReceiver) invocation.getArgument(1))
                                     .onResult(new AdId(adId, true));
                             return null;
                         })
                 .when(adIdManager)
-                .getAdId(any(), any(OutcomeReceiver.class));
+                .getAdId(any(), any(AdServicesOutcomeReceiver.class));
 
         overrideMeasurementKillSwitches(true);
     }

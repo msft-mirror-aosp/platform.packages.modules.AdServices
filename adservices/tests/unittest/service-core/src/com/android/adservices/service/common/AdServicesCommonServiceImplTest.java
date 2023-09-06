@@ -134,7 +134,7 @@ public class AdServicesCommonServiceImplTest {
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
         doReturn(mPackageManager).when(mContext).getPackageManager();
         doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
-        doReturn(true).when(mUxStatesManager).isEnrolledUser();
+        doReturn(true).when(mUxStatesManager).isEnrolledUser(mContext);
     }
 
 
@@ -148,7 +148,7 @@ public class AdServicesCommonServiceImplTest {
     // For the old entry point logic, we only check the UX flag and user enrollment is irrelevant.
     @Test
     public void isAdServiceEnabledTest_userNotEnrolledEntryPointLogicV1() throws InterruptedException {
-        doReturn(false).when(mUxStatesManager).isEnrolledUser();
+        doReturn(false).when(mUxStatesManager).isEnrolledUser(mContext);
         doReturn(false).when(mFlags).getEnableAdServicesSystemApi();
         mCommonService =
                 new AdServicesCommonServiceImpl(mContext, mFlags, mUxEngine, mUxStatesManager);
@@ -167,7 +167,7 @@ public class AdServicesCommonServiceImplTest {
     @Test
     public void isAdServiceEnabledTest_userNotEnrolledEntryPointLogicV2()
             throws InterruptedException {
-        doReturn(false).when(mUxStatesManager).isEnrolledUser();
+        doReturn(false).when(mUxStatesManager).isEnrolledUser(mContext);
         doReturn(true).when(mFlags).getEnableAdServicesSystemApi();
         doReturn(GA_UX).when(mConsentManager).getUx();
 

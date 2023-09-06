@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Permite que um aplicativo tenha acesso à API AdServices Consent."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Acessar a API Ad ID"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Permite que um aplicativo tenha acesso a API Ad ID."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"Acesso à API AdServices Cobalt Upload"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Permite que um aplicativo acesse a API AdServices Cobalt Upload."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Acessar a API App Set ID"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Permite que um aplicativo tenha acesso à API App Set Id."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Acesso à API Consent Service"</string>
@@ -188,9 +190,9 @@
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Os dados de sugestão de anúncio dos apps na sua lista serão excluídos, e os apps vão passar a sugerir novos anúncios. Talvez você ainda encontre alguns anúncios relacionados."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Os dados do app foram redefinidos"</string>
     <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Os temas de anúncios estão ativados"</string>
-    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"O Android vai começar a marcar temas de interesse, mas pode demorar um pouco para os primeiros aparecerem."</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"O Android vai começar a salvar temas de interesse, mas pode demorar um pouco para os primeiros aparecerem."</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Desativar temas de anúncios?"</string>
-    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Esta lista de temas será excluída. O Android vai parar de marcar temas de interesse, mas é possível que você ainda encontre anúncios relevantes."</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Esta lista de temas será excluída. O Android vai parar de salvar temas de interesse, mas é possível que você ainda encontre anúncios relevantes."</string>
     <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Os anúncios sugeridos por apps estão ativados"</string>
     <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Apps poderão sugerir anúncios. Uma lista dos apps será mostrada depois que eles começarem a sugerir anúncios."</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Desativar os anúncios sugeridos por apps?"</string>

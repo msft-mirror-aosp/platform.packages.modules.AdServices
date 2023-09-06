@@ -17,11 +17,14 @@ package com.android.adservices;
 
 import android.adservices.adid.AdIdProviderService;
 import android.adservices.appsetid.AppSetIdProviderService;
+import android.adservices.cobalt.AdServicesCobaltUploadService;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
 
 import java.util.List;
 
+// TODO(b/295321663): need to split constants into AdServicesCommonConstants so they can be used by
+// host-side test artifacts.
 /**
  * Common constants for AdServices
  *
@@ -40,6 +43,14 @@ public class AdServicesCommon {
     /** Intent action to discover the AdSelection service in the APK. */
     public static final String ACTION_AD_SELECTION_SERVICE =
             "android.adservices.adselection.AD_SELECTION_SERVICE";
+
+    /**
+     * Intent action to discover the protected signals service in the APK.
+     *
+     * @hide
+     */
+    public static final String ACTION_PROTECTED_SIGNALS_SERVICE =
+            "android.adservices.adselection.PROTECTED_SIGNALS_SERVICE";
 
     /** Intent action to discover the Measurement service in the APK. */
     public static final String ACTION_MEASUREMENT_SERVICE =
@@ -62,6 +73,10 @@ public class AdServicesCommon {
     public static final String ACTION_AD_SERVICES_COMMON_SERVICE =
             "android.adservices.AD_SERVICES_COMMON_SERVICE";
 
+    /** Intent action to discover the AdServices Cobalt upload service. */
+    public static final String ACTION_AD_SERVICES_COBALT_UPLOAD_SERVICE =
+            AdServicesCobaltUploadService.SERVICE_INTERFACE;
+
     // Used to differentiate between AdServices APK package name and AdExtServices APK package name.
     // The AdExtServices APK package name suffix is android.ext.services.
     public static final String ADSERVICES_APK_PACKAGE_NAME_SUFFIX = "android.adservices.api";
@@ -73,6 +88,23 @@ public class AdServicesCommon {
      * Suffix for the ExtServices APEX Package name. Used to figure out the installed apex version.
      */
     public static final String EXTSERVICES_APEX_NAME_SUFFIX = "android.extservices";
+
+    /**
+     * Prefix for system properties used for debugging purposes (like simulating unsupported devices
+     * or change some behavior without changing a flag).
+     */
+    public static final String SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX = "debug.adservices.";
+
+    /** System property used to simulate AdServices behavior in a device that doesn't support it. */
+    public static final String SYSTEM_PROPERTY_FOR_DEBUGGING_SUPPORTED_ON_DEVICE =
+            SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + "supported";
+
+    /** System property used to simulate AdServices behavior on devices with low memory. */
+    public static final String SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW =
+            SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + "low_ram_device";
+
+    /** Path name for Adservice class names */
+    public static final String ADSERVICES_CLASS_PATH_PREFIX = "com.android.adservices.";
 
     /** The package name of the active AdServices APK on this device. */
     public static ServiceInfo resolveAdServicesService(

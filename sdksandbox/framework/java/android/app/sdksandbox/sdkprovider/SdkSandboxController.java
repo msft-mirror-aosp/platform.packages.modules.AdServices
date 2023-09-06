@@ -152,7 +152,6 @@ public class SdkSandboxController {
      *     LoadSdkException}.
      * @throws UnsupportedOperationException if the controller is obtained from an unexpected
      *     context. Use {@link SandboxedSdkProvider#getContext()} for the right context
-     * @hide
      */
     public void loadSdk(
             @NonNull String sdkName,
@@ -221,7 +220,8 @@ public class SdkSandboxController {
         }
         enforceSandboxedSdkContextInitialization();
 
-        return mSdkSandboxActivityRegistry.register(getSdkName(), sdkSandboxActivityHandler);
+        return mSdkSandboxActivityRegistry.register(
+                (SandboxedSdkContext) mContext, sdkSandboxActivityHandler);
     }
 
     /**
@@ -268,11 +268,6 @@ public class SdkSandboxController {
                     "Only available from the context obtained by calling android.app.sdksandbox"
                             + ".SandboxedSdkProvider#getContext()");
         }
-    }
-
-    @NonNull
-    private String getSdkName() {
-        return ((SandboxedSdkContext) mContext).getSdkName();
     }
 
     private static class LoadSdkReceiverProxy extends ILoadSdkCallback.Stub {

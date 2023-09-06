@@ -16,9 +16,18 @@
 
 package com.android.adservices.service.adselection;
 
+import android.annotation.NonNull;
 
+import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
+import com.android.adservices.service.devapi.DevContext;
+
+import com.google.common.util.concurrent.FluentFuture;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+
+import java.util.concurrent.ExecutorService;
 
 /**
  * Event-level debug reporting for ad selection.
@@ -38,37 +47,63 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
  * <li>forDebuggingOnly.reportAdAuctionWin(String url)
  *
  *     <p>For the classes that wrap JavaScript code, see {@link DebugReportingScriptStrategy}.
+ *
  *     <p>For the classes that send events, see {@link DebugReportSenderStrategy}.
+ *
  *     <p>For the business logic processing events, see {@link DebugReportProcessor}.
  */
-public class DebugReporting {
+public abstract class DebugReporting {
 
-    private final AdServicesHttpsClient mAdServicesHttpsClient;
-    private final boolean mEnabled;
-
-    public DebugReporting(Flags flags, AdServicesHttpsClient adServicesHttpsClient) {
-        mAdServicesHttpsClient = adServicesHttpsClient;
-        mEnabled = getEnablementStatus(flags);
+    /**
+     * @return an instance of debug reporting after checking for is limited ad tracking is enabled
+     *     or not.
+     */
+    public static ListenableFuture<DebugReporting> createInstance(
+            @NonNull Flags flags,
+            @NonNull AdServicesHttpsClient adServicesHttpsClient,
+            @NonNull DevContext devContext,
+            @NonNull AdSelectionDebugReportDao adSelectionDebugReportDao,
+            @NonNull ExecutorService lightweightExecutorService,
+            @NonNull AdIdFetcher adIdFetcher,
+            @NonNull String packageName,
+            int callingUid) {
+        if (!getEnablementStatus(flags)) {
+            return Futures.immediateFuture(new DebugReportingDisabled());
+        }
+        return FluentFuture.from(adIdFetcher.isLimitedAdTrackingEnabled(packageName, callingUid))
+                .transform(
+                        isLatEnabled -> {
+                            if (isLatEnabled) {
+                                return new DebugReportingDisabled();
+                            } else {
+                                return new DebugReportingEnabled(
+                                        flags,
+                                        adServicesHttpsClient,
+                                        devContext,
+                                        adSelectionDebugReportDao);
+                            }
+                        },
+                        lightweightExecutorService);
     }
 
-    public DebugReportingScriptStrategy getScriptStrategy() {
-        return mEnabled
-                ? new DebugReportingEnabledScriptStrategy()
-                : new DebugReportingScriptDisabledStrategy();
-    }
+    /**
+     * @return DebugReportingScriptStrategy to be used while running on device ad selection.
+     */
+    @NonNull
+    public abstract DebugReportingScriptStrategy getScriptStrategy();
 
-    public DebugReportSenderStrategy getSenderStrategy() {
-        return mEnabled
-                ? new DebugReportSenderStrategyHttpImpl(mAdServicesHttpsClient)
-                : new DebugReportSenderStrategyNoOp();
-    }
+    /**
+     * @return DebugReportSenderStrategy to be used while running on device ad selection.
+     */
+    @NonNull
+    public abstract DebugReportSenderStrategy getSenderStrategy();
 
-    public boolean isEnabled() {
-        return mEnabled;
-    }
+    /**
+     * @return returns status of debug reporting
+     */
+    public abstract boolean isEnabled();
 
     private static boolean getEnablementStatus(Flags flags) {
         return flags.getFledgeEventLevelDebugReportingEnabled();
     }
-
 }

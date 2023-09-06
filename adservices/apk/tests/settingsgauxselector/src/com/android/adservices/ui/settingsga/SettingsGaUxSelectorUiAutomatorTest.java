@@ -244,19 +244,40 @@ public class SettingsGaUxSelectorUiAutomatorTest {
         // open measurement view
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_title);
 
-        // click reset
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_reset_title);
-        UiObject resetButton =
-                ApkTestUtil.getElement(sDevice, R.string.settingsUI_measurement_view_reset_title);
-        resetButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
-        assertThat(resetButton.exists()).isTrue();
+        // R Msmt UI is not scrollable
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.R) {
+            // click reset
+            ApkTestUtil.click(sDevice, R.string.settingsUI_measurement_view_reset_title);
+            UiObject resetButton =
+                    ApkTestUtil.getElement(
+                            sDevice, R.string.settingsUI_measurement_view_reset_title);
+            resetButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+            assertThat(resetButton.exists()).isTrue();
 
-        // click reset again
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_reset_title);
-        resetButton =
-                ApkTestUtil.getElement(sDevice, R.string.settingsUI_measurement_view_reset_title);
-        resetButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
-        assertThat(resetButton.exists()).isTrue();
+            // click reset again
+            ApkTestUtil.click(sDevice, R.string.settingsUI_measurement_view_reset_title);
+            resetButton =
+                    ApkTestUtil.getElement(
+                            sDevice, R.string.settingsUI_measurement_view_reset_title);
+            resetButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+            assertThat(resetButton.exists()).isTrue();
+        } else {
+            // click reset
+            ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_reset_title);
+            UiObject resetButton =
+                    ApkTestUtil.getElement(
+                            sDevice, R.string.settingsUI_measurement_view_reset_title);
+            resetButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+            assertThat(resetButton.exists()).isTrue();
+
+            // click reset again
+            ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_reset_title);
+            resetButton =
+                    ApkTestUtil.getElement(
+                            sDevice, R.string.settingsUI_measurement_view_reset_title);
+            resetButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+            assertThat(resetButton.exists()).isTrue();
+        }
     }
 
     @Test
@@ -642,7 +663,8 @@ public class SettingsGaUxSelectorUiAutomatorTest {
         UiObject subtitle = sDevice.findObject(new UiSelector().resourceIdMatches(regexResId));
         subtitle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         scrollView.scrollIntoView(subtitle);
-        if (subtitle.getText().equals("Off")) {
+        if (subtitle.getText()
+                .equals(ApkTestUtil.getString(R.string.settingsUI_subtitle_consent_off))) {
             ApkTestUtil.scrollToAndClick(sDevice, stringIdOfTitle);
             UiObject toggle =
                     sDevice.findObject(new UiSelector().className("android.widget.Switch"));
@@ -651,7 +673,12 @@ public class SettingsGaUxSelectorUiAutomatorTest {
             toggle.click();
             sDevice.pressBack();
             toggle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
-            assertThat(subtitle.getText().equals("Off")).isFalse();
+            assertThat(
+                            subtitle.getText()
+                                    .equals(
+                                            ApkTestUtil.getString(
+                                                    R.string.settingsUI_subtitle_consent_off)))
+                    .isFalse();
         } else {
             ApkTestUtil.scrollToAndClick(sDevice, stringIdOfTitle);
             UiObject toggle =
@@ -661,7 +688,12 @@ public class SettingsGaUxSelectorUiAutomatorTest {
             toggle.click();
             sDevice.pressBack();
             toggle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
-            assertThat(subtitle.getText().equals("Off")).isTrue();
+            assertThat(
+                            subtitle.getText()
+                                    .equals(
+                                            ApkTestUtil.getString(
+                                                    R.string.settingsUI_subtitle_consent_off)))
+                    .isTrue();
         }
     }
 

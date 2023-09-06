@@ -71,7 +71,7 @@ public final class AdServicesCobaltUploadTest {
         EncryptedCobaltEnvelopeParams params = proxy.getEncryptedCobaltEnvelopeParams();
         assertThat(params.getEnvironment()).isEqualTo(ENVIRONMENT_DEV);
         assertThat(params.getKeyIndex()).isEqualTo(KEY_INDEX);
-        assertThat(params.getCiphertext()).isEqualTo(BYTES);
+        assertThat(params.getCipherText()).isEqualTo(BYTES);
     }
 
     @Test
@@ -91,6 +91,6 @@ public final class AdServicesCobaltUploadTest {
         EncryptedCobaltEnvelopeParams params = proxy.getEncryptedCobaltEnvelopeParams();
         assertThat(params.getEnvironment()).isEqualTo(ENVIRONMENT_PROD);
         assertThat(params.getKeyIndex()).isEqualTo(KEY_INDEX);
-        assertThat(params.getCiphertext()).isEqualTo(BYTES);
+        assertThat(params.getCipherText()).isEqualTo(BYTES);
     }
 }

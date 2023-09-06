@@ -30,7 +30,6 @@ import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
 import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.common.AdTechIdentifier;
-import android.adservices.common.CommonFixture;
 import android.adservices.common.FrequencyCapFilters;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
@@ -42,7 +41,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
-import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -79,6 +77,9 @@ public class PermissionsAppOptOutTest {
                             sContext.getPackageName());
             CompatAdServicesTestUtils.setFlags();
         }
+
+        // Kill AdServices process
+        AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
     @After
@@ -91,8 +92,6 @@ public class PermissionsAppOptOutTest {
             CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
             CompatAdServicesTestUtils.resetFlagsToDefault();
         }
-        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
     }
 
     @Test

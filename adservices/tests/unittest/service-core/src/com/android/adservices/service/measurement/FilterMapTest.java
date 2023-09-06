@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
@@ -94,6 +96,36 @@ public final class FilterMapTest {
         assertEquals(expected, actual);
     }
 
+    @Test
+    public void serializeAsJsonV2_success() throws JSONException {
+        // Setup
+        FilterMap expected = createExampleV2();
+
+        // Execution
+        JSONObject jsonObject = expected.serializeAsJsonV2();
+        FilterMap actual = new FilterMap.Builder().buildFilterDataV2(jsonObject).build();
+
+        // Assertion
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testAddLongValue() {
+        assertThat(new FilterMap.Builder().addLongValue("a", 1L).build().getLongValue("a"))
+                .isEqualTo(1L);
+    }
+
+    @Test
+    public void testAddStringListValue() {
+        List<String> stringList = Arrays.asList("123", "456");
+        assertThat(
+                        new FilterMap.Builder()
+                                .addStringListValue("a", stringList)
+                                .build()
+                                .getStringListValue("a"))
+                .isEqualTo(stringList);
+    }
+
     private FilterMap createExample() {
         Map<String, List<String>> attributionFilterMap = new HashMap<>();
         attributionFilterMap.put("type", Arrays.asList("1", "2", "3", "4"));
@@ -101,6 +133,17 @@ public final class FilterMapTest {
 
         return new FilterMap.Builder()
                 .setAttributionFilterMap(attributionFilterMap)
+                .build();
+    }
+
+    private FilterMap createExampleV2() {
+        Map<String, FilterValue> attributionFilterMap = new HashMap<>();
+        attributionFilterMap.put(
+                "type", FilterValue.ofStringList(Arrays.asList("1", "2", "3", "4")));
+        attributionFilterMap.put("ctid", FilterValue.ofStringList(Collections.singletonList("id")));
+
+        return new FilterMap.Builder()
+                .setAttributionFilterMapWithLongValue(attributionFilterMap)
                 .build();
     }
 }

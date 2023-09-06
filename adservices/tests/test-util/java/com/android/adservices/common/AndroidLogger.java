@@ -23,47 +23,79 @@ import com.android.adservices.common.Logger.RealLogger;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
-import java.util.Objects;
-
 public final class AndroidLogger implements RealLogger {
 
-    private final String mTag;
+    private static final AndroidLogger sInstance = new AndroidLogger();
 
-    public AndroidLogger(Class<?> clazz) {
-        this(clazz.getSimpleName());
+    public static AndroidLogger getInstance() {
+        return sInstance;
     }
 
-    public AndroidLogger(String tag) {
-        mTag = Objects.requireNonNull(tag);
+    private AndroidLogger() {}
+
+    @Override
+    @FormatMethod
+    public void log(LogLevel level, String tag, @FormatString String msgFmt, Object... msgArgs) {
+        String message = String.format(msgFmt, msgArgs);
+        switch (level) {
+            case WTF:
+                Log.wtf(tag, message);
+                return;
+            case ERROR:
+                Log.e(tag, message);
+                return;
+            case WARNING:
+                Log.w(tag, message);
+                return;
+            case INFO:
+                Log.i(tag, message);
+                return;
+            case DEBUG:
+                Log.d(tag, message);
+                return;
+            case VERBOSE:
+                Log.v(tag, message);
+                return;
+            default:
+                Log.wtf(tag, "invalid level (" + level + "): " + message);
+        }
     }
 
     @Override
     @FormatMethod
-    public void log(LogLevel level, @FormatString String msgFmt, Object... msgArgs) {
+    public void log(
+            LogLevel level,
+            String tag,
+            Throwable t,
+            @FormatString String msgFmt,
+            Object... msgArgs) {
         String message = String.format(msgFmt, msgArgs);
         switch (level) {
+            case WTF:
+                Log.wtf(tag, message, t);
+                return;
             case ERROR:
-                Log.e(mTag, message);
+                Log.e(tag, message, t);
                 return;
             case WARNING:
-                Log.w(mTag, message);
+                Log.w(tag, message, t);
                 return;
             case INFO:
-                Log.i(mTag, message);
+                Log.i(tag, message, t);
                 return;
             case DEBUG:
-                Log.d(mTag, message);
+                Log.d(tag, message, t);
                 return;
             case VERBOSE:
-                Log.v(mTag, message);
+                Log.v(tag, message, t);
                 return;
             default:
-                Log.wtf(mTag, "invalid level (" + level + "): " + message);
+                Log.wtf(tag, "invalid level (" + level + "): " + message);
         }
     }
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + "[tag=" + mTag + "]";
+        return AndroidLogger.class.getSimpleName();
     }
 }

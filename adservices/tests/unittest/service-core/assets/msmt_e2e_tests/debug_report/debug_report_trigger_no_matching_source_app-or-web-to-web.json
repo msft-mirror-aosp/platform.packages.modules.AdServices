@@ -1,7 +1,7 @@
 {
   "description": "A2W test: given no source, trigger has debug_permission (ar_debug permission) enabled. Expected trigger-no-matching-source debug report",
   "phflags_override": {
-    "measurement_debug_join_key_enrollment_allowlist" : "enrollment-id-www.ad-tech1.com"
+    "measurement_debug_join_key_enrollment_allowlist" : "enrollment-id-ad-tech1.com"
   },
   "input": {
     "web_triggers": [

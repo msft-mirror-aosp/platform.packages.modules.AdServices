@@ -33,11 +33,14 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
+import android.net.Uri;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.ParcelFileDescriptor;
 import android.os.Process;
 import android.os.RemoteException;
+import android.text.TextUtils;
 import android.window.OnBackInvokedCallback;
 import android.window.OnBackInvokedDispatcher;
 
@@ -54,8 +57,12 @@ import androidx.room.RoomDatabase;
 import com.android.sdksandbox.SdkSandboxServiceImpl;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
@@ -274,6 +281,42 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
         }
     }
 
+    /**
+     * Checks that the passed file descriptor contains the expected String. If not, an
+     * IllegalStateException is thrown.
+     */
+    @Override
+    public void checkReadFileDescriptor(ParcelFileDescriptor pFd, String expectedValue) {
+        String readValue;
+        try {
+            FileInputStream fis = new FileInputStream(pFd.getFileDescriptor());
+            readValue = new String(fis.readAllBytes(), StandardCharsets.UTF_8);
+            fis.close();
+            pFd.close();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+
+        if (!TextUtils.equals(readValue, expectedValue)) {
+            throw new IllegalStateException(
+                    "Read value " + readValue + " does not match expected value " + expectedValue);
+        }
+    }
+
+    @Override
+    public ParcelFileDescriptor createFileDescriptor(String valueToWrite) {
+        try {
+            String fileName = "createFileDescriptor";
+            FileOutputStream fout = mContext.openFileOutput(fileName, Context.MODE_PRIVATE);
+            fout.write(valueToWrite.getBytes(StandardCharsets.UTF_8));
+            fout.close();
+            File file = new File(mContext.getFilesDir(), fileName);
+            return ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_WRITE);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
     private void registerLifecycleEvents(
             IActivityStarter iActivityStarter,
             Activity sandboxActivity,
@@ -359,6 +402,16 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
         @Override
         public void setOrientationToPortrait() {
             mActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        }
+
+        @Override
+        public void openLandingPage() {
+            String url = "http://www.google.com";
+            Intent visitUrl = new Intent(Intent.ACTION_VIEW);
+            visitUrl.setData(Uri.parse(url));
+            visitUrl.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+            mActivity.startActivity(visitUrl);
         }
 
         public void setActivity(Activity activity) {

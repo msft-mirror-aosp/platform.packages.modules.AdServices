@@ -33,14 +33,15 @@ import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -53,10 +54,12 @@ public class SettingsGaUiAutomatorTest {
 
     private String mTestName;
 
+    @Rule
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
     @Before
     public void setup() {
-        Assume.assumeTrue(ApkTestUtil.isDeviceSupported());
-
         // Initialize UiDevice instance
         sDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -78,8 +81,6 @@ public class SettingsGaUiAutomatorTest {
 
     @After
     public void teardown() {
-        if (!ApkTestUtil.isDeviceSupported()) return;
-
         ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + mTestName + "_");
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
@@ -240,16 +241,17 @@ public class SettingsGaUiAutomatorTest {
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_title);
 
         // click reset
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_reset_title);
+        clickResetBtn();
         UiObject resetButton =
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_measurement_view_reset_title);
         resetButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(resetButton.exists()).isTrue();
 
         // click reset again
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_reset_title);
+        clickResetBtn();
         resetButton =
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_measurement_view_reset_title);
+
         resetButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(resetButton.exists()).isTrue();
     }
@@ -642,7 +644,8 @@ public class SettingsGaUiAutomatorTest {
         UiObject subtitle = sDevice.findObject(new UiSelector().resourceIdMatches(regexResId));
         subtitle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         scrollView.scrollIntoView(subtitle);
-        if (subtitle.getText().equals("Off")) {
+        if (subtitle.getText()
+                .equals(ApkTestUtil.getString(R.string.settingsUI_subtitle_consent_off))) {
             ApkTestUtil.scrollToAndClick(sDevice, stringIdOfTitle);
             UiObject toggle =
                     sDevice.findObject(new UiSelector().className("android.widget.Switch"));
@@ -651,7 +654,12 @@ public class SettingsGaUiAutomatorTest {
             toggle.click();
             sDevice.pressBack();
             toggle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
-            assertThat(subtitle.getText().equals("Off")).isFalse();
+            assertThat(
+                            subtitle.getText()
+                                    .equals(
+                                            ApkTestUtil.getString(
+                                                    R.string.settingsUI_subtitle_consent_off)))
+                    .isFalse();
         } else {
             ApkTestUtil.scrollToAndClick(sDevice, stringIdOfTitle);
             UiObject toggle =
@@ -661,7 +669,12 @@ public class SettingsGaUiAutomatorTest {
             toggle.click();
             sDevice.pressBack();
             toggle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
-            assertThat(subtitle.getText().equals("Off")).isTrue();
+            assertThat(
+                            subtitle.getText()
+                                    .equals(
+                                            ApkTestUtil.getString(
+                                                    R.string.settingsUI_subtitle_consent_off)))
+                    .isTrue();
         }
     }
 
@@ -672,5 +685,16 @@ public class SettingsGaUiAutomatorTest {
         UiObject element = ApkTestUtil.getPageElement(sDevice, resId);
         scrollView.scrollIntoView(element);
         return element;
+    }
+
+    public void clickResetBtn() throws UiObjectNotFoundException {
+        // R Msmt UI is not scrollable
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.R) {
+            ApkTestUtil.click(
+                    sDevice,
+                    com.android.adservices.api.R.string.settingsUI_measurement_view_reset_title);
+        } else {
+            ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_reset_title);
+        }
     }
 }

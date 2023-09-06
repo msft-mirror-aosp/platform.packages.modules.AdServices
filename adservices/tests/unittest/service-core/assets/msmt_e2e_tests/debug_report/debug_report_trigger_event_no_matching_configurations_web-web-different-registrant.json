@@ -1,7 +1,7 @@
 {
   "description": "W2W different registrant test: given source and trigger both have debug_permission (ar_debug permission) enabled, join key match. Expected source-success and trigger-event-no-matching-configurations debug report",
   "phflags_override": {
-    "measurement_debug_join_key_enrollment_allowlist" : "enrollment-id-www.ad-tech1.test"
+    "measurement_debug_join_key_enrollment_allowlist" : "enrollment-id-ad-tech1.test"
   },
   "input": {
     "web_sources": [

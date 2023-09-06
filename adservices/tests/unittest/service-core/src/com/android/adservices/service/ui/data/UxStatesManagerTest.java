@@ -16,12 +16,15 @@
 
 package com.android.adservices.service.ui.data;
 
+import static com.android.adservices.service.FlagsConstants.KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import android.adservices.common.AdServicesStates;
@@ -33,6 +36,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.consent.DeviceRegionProvider;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
@@ -115,6 +119,18 @@ public class UxStatesManagerTest {
     @Test
     public void getFlagTest_emptyFlagKey() {
         assertThat(mUxStatesManager.getFlag("")).isFalse();
+    }
+
+    @Test
+    public void persistAdServicesStatesTest_u18User() {
+        doReturn(true).when(mMockConsentManager).isU18Account();
+
+        mUxStatesManager.persistAdServicesStates(new AdServicesStates.Builder().build());
+
+        verify(mMockConsentManager).setAdIdEnabled(anyBoolean());
+        verify(mMockConsentManager, never()).setU18Account(anyBoolean());
+        verify(mMockConsentManager).setAdultAccount(anyBoolean());
+        verify(mMockConsentManager).setEntryPointEnabled(anyBoolean());
     }
 
     @Test
@@ -202,35 +218,120 @@ public class UxStatesManagerTest {
 
     @Test
     public void isEnrolledUserTest_gaNoticeDisplayed() {
+        Map<String, Boolean> testMap = new HashMap<String, Boolean>();
+        testMap.put(KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED, false);
+        doReturn(testMap).when(mMockFlags).getUxFlags();
         doReturn(true).when(mMockConsentManager).wasGaUxNotificationDisplayed();
 
         mUxStatesManager = new UxStatesManager(mContext, mMockFlags, mMockConsentManager);
-        assertThat(mUxStatesManager.isEnrolledUser()).isTrue();
+        assertThat(mUxStatesManager.isEnrolledUser(mContext)).isTrue();
     }
 
     @Test
     public void isEnrolledUserTest_betaNoticeDisplayed() {
         doReturn(true).when(mMockConsentManager).wasNotificationDisplayed();
+        doReturn(true).when(mMockConsentManager).isU18Account();
 
+        Map<String, Boolean> testMap = new HashMap<String, Boolean>();
+        testMap.put(KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED, false);
+        doReturn(testMap).when(mMockFlags).getUxFlags();
         mUxStatesManager = new UxStatesManager(mContext, mMockFlags, mMockConsentManager);
-        assertThat(mUxStatesManager.isEnrolledUser()).isTrue();
+        assertThat(mUxStatesManager.isEnrolledUser(mContext)).isTrue();
     }
 
     @Test
     public void isEnrolledUserTest_U18NoticeDisplayed() {
         doReturn(true).when(mMockConsentManager).wasU18NotificationDisplayed();
+        doReturn(true).when(mMockConsentManager).isU18Account();
 
         mUxStatesManager = new UxStatesManager(mContext, mMockFlags, mMockConsentManager);
-        assertThat(mUxStatesManager.isEnrolledUser()).isTrue();
+        assertThat(mUxStatesManager.isEnrolledUser(mContext)).isTrue();
     }
 
     @Test
     public void isEnrolledUserTest_noNoticeDisplayed() {
+        Map<String, Boolean> testMap = new HashMap<String, Boolean>();
+        testMap.put(KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED, false);
+        doReturn(testMap).when(mMockFlags).getUxFlags();
         doReturn(false).when(mMockConsentManager).wasNotificationDisplayed();
         doReturn(false).when(mMockConsentManager).wasGaUxNotificationDisplayed();
         doReturn(false).when(mMockConsentManager).wasU18NotificationDisplayed();
+        doReturn(true).when(mMockConsentManager).isU18Account();
 
         mUxStatesManager = new UxStatesManager(mContext, mMockFlags, mMockConsentManager);
-        assertThat(mUxStatesManager.isEnrolledUser()).isFalse();
+        assertThat(mUxStatesManager.isEnrolledUser(mContext)).isFalse();
+    }
+
+    @Test
+    public void isEnrolledUserTest_supervisedAccount() {
+        Map<String, Boolean> testMap = new HashMap<String, Boolean>();
+        testMap.put(KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED, true);
+        doReturn(testMap).when(mMockFlags).getUxFlags();
+        doReturn(false).when(mMockConsentManager).wasNotificationDisplayed();
+        doReturn(false).when(mMockConsentManager).wasGaUxNotificationDisplayed();
+        doReturn(true).when(mMockConsentManager).wasU18NotificationDisplayed();
+        doReturn(false).when(mMockConsentManager).isAdultAccount();
+        doReturn(false).when(mMockConsentManager).isU18Account();
+
+        doNothing().when(mMockConsentManager).setUx(any(PrivacySandboxUxCollection.class));
+        doNothing().when(mMockConsentManager).setU18NotificationDisplayed(anyBoolean());
+        doNothing()
+                .when(mMockConsentManager)
+                .enable(any(Context.class), any(AdServicesApiType.class));
+        mUxStatesManager = new UxStatesManager(mContext, mMockFlags, mMockConsentManager);
+
+        assertThat(mUxStatesManager.isEnrolledUser(mContext)).isTrue();
+        verify(mMockConsentManager).setUx(any(PrivacySandboxUxCollection.class));
+        verify(mMockConsentManager, never()).setU18NotificationDisplayed(anyBoolean());
+        verify(mMockConsentManager, never())
+                .enable(any(Context.class), any(AdServicesApiType.class));
+    }
+
+    @Test
+    public void isEnrolledUserTest_supervisedAccount_initial() {
+        Map<String, Boolean> testMap = new HashMap<String, Boolean>();
+        testMap.put(KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED, true);
+        doReturn(testMap).when(mMockFlags).getUxFlags();
+        doReturn(false).when(mMockConsentManager).wasNotificationDisplayed();
+        doReturn(false).when(mMockConsentManager).wasGaUxNotificationDisplayed();
+        doReturn(false).when(mMockConsentManager).wasU18NotificationDisplayed();
+        doReturn(false).when(mMockConsentManager).isAdultAccount();
+        doReturn(false).when(mMockConsentManager).isU18Account();
+
+        doNothing().when(mMockConsentManager).setUx(any(PrivacySandboxUxCollection.class));
+        doNothing().when(mMockConsentManager).setU18NotificationDisplayed(anyBoolean());
+        doNothing()
+                .when(mMockConsentManager)
+                .enable(any(Context.class), any(AdServicesApiType.class));
+        mUxStatesManager = new UxStatesManager(mContext, mMockFlags, mMockConsentManager);
+        assertThat(mUxStatesManager.isEnrolledUser(mContext)).isTrue();
+        verify(mMockConsentManager).setUx(any(PrivacySandboxUxCollection.class));
+        verify(mMockConsentManager).setU18NotificationDisplayed(anyBoolean());
+        verify(mMockConsentManager).enable(any(Context.class), any(AdServicesApiType.class));
+    }
+
+    @Test
+    public void isEnrolledUserTest_supervisedAccountFlagDisabled() {
+        Map<String, Boolean> testMap = new HashMap<String, Boolean>();
+        testMap.put(KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED, false);
+        doReturn(testMap).when(mMockFlags).getUxFlags();
+        doReturn(false).when(mMockConsentManager).wasNotificationDisplayed();
+        doReturn(false).when(mMockConsentManager).wasGaUxNotificationDisplayed();
+        doReturn(false).when(mMockConsentManager).wasU18NotificationDisplayed();
+        doReturn(false).when(mMockConsentManager).isAdultAccount();
+        doReturn(false).when(mMockConsentManager).isU18Account();
+
+        doNothing().when(mMockConsentManager).setUx(any(PrivacySandboxUxCollection.class));
+        doNothing().when(mMockConsentManager).setU18NotificationDisplayed(anyBoolean());
+        doNothing()
+                .when(mMockConsentManager)
+                .enable(any(Context.class), any(AdServicesApiType.class));
+        mUxStatesManager = new UxStatesManager(mContext, mMockFlags, mMockConsentManager);
+
+        assertThat(mUxStatesManager.isEnrolledUser(mContext)).isFalse();
+        verify(mMockConsentManager, never()).setUx(any(PrivacySandboxUxCollection.class));
+        verify(mMockConsentManager, never()).setU18NotificationDisplayed(anyBoolean());
+        verify(mMockConsentManager, never())
+                .enable(any(Context.class), any(AdServicesApiType.class));
     }
 }

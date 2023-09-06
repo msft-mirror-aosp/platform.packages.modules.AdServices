@@ -18,6 +18,10 @@ package com.android.sdksandbox.cts.host;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assume.assumeTrue;
+
+import android.app.sdksandbox.hosttestutils.DeviceSupportHostUtils;
+
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
@@ -31,6 +35,8 @@ public final class CtsSdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
     private static final String TEST_APP_PACKAGE_NAME = "com.android.sdksandbox.cts.app";
     private static final String TEST_APP_APK_NAME = "CtsSdkSandboxHostTestApp.apk";
+
+    private final DeviceSupportHostUtils mDeviceSupportUtils = new DeviceSupportHostUtils(this);
 
     /**
      * Runs the given phase of a test by calling into the device. Throws an exception if the test
@@ -49,6 +55,7 @@ public final class CtsSdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
     @Before
     public void setUp() throws Exception {
+        assumeTrue("Device supports SdkSandbox", mDeviceSupportUtils.isSdkSandboxSupported());
         uninstallPackage(TEST_APP_PACKAGE_NAME);
     }
 

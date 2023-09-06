@@ -27,6 +27,7 @@ android_test {
         "mockito-target-extended-minus-junit4",
         "truth-prebuilt",
         "adservices-test-fixtures",
+        "adservices-test-utility",
     ],
     libs: [
         "android.test.base",
@@ -54,6 +55,7 @@ android_test {
     ],
     static_libs: [
         "adservices-test-fixtures",
+        "adservices-test-utility",
         "androidx.test.core",
         "androidx.test.runner",
         "mockito-target-extended-minus-junit4",

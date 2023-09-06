@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.attribution;
 
+import static com.android.adservices.service.measurement.util.JobLockHolder.Type.ATTRIBUTION_PROCESSING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ATTRIBUTION_FALLBACK_JOB;
 
@@ -34,10 +35,13 @@ import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportingJobService;
+import com.android.adservices.service.measurement.util.JobLockHolder;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
-import java.util.concurrent.Executor;
+import com.google.common.util.concurrent.ListeningExecutorService;
+
+import java.util.concurrent.Future;
 
 /**
  * Fallback attribution job. The actual job execution logic is part of {@link
@@ -46,7 +50,9 @@ import java.util.concurrent.Executor;
 public class AttributionFallbackJobService extends JobService {
     private static final int MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID =
             MEASUREMENT_ATTRIBUTION_FALLBACK_JOB.getJobId();
-    private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
+    private static final ListeningExecutorService sBackgroundExecutor =
+            AdServicesExecutors.getBackgroundExecutor();
+    private Future mExecutorFuture;
 
     @Override
     public void onCreate() {
@@ -77,35 +83,52 @@ public class AttributionFallbackJobService extends JobService {
         }
 
         LogUtil.d("AttributionFallbackJobService.onStartJob");
-        sBackgroundExecutor.execute(
-                () -> {
-                    boolean success =
-                            new AttributionJobHandler(
-                                            DatastoreManagerFactory.getDatastoreManager(
-                                                    getApplicationContext()),
-                                            new DebugReportApi(
-                                                    getApplicationContext(),
-                                                    FlagsFactory.getFlags()))
-                                    .performPendingAttributions();
-                    DebugReportingJobService.scheduleIfNeeded(
-                            getApplicationContext(),
-                            /* forceSchedule */ true,
-                            /* isDebugReportApi */ false);
+        mExecutorFuture =
+                sBackgroundExecutor.submit(
+                        () -> {
+                            processPendingAttributions();
 
-                    AdservicesJobServiceLogger.getInstance(AttributionFallbackJobService.this)
-                            .recordJobFinished(
-                                    MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID, success, !success);
+                            DebugReportingJobService.scheduleIfNeeded(
+                                    getApplicationContext(), /* forceSchedule */ false);
 
-                    jobFinished(params, !success);
-                });
+                            AdservicesJobServiceLogger.getInstance(
+                                            AttributionFallbackJobService.this)
+                                    .recordJobFinished(
+                                            MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID,
+                                            /* isSuccessful */ true,
+                                            /* shouldRetry */ false);
+
+                            jobFinished(params, /* wantsReschedule= */ false);
+                        });
         return true;
+    }
+
+    @VisibleForTesting
+    void processPendingAttributions() {
+        final JobLockHolder lock = JobLockHolder.getInstance(ATTRIBUTION_PROCESSING);
+        if (lock.tryLock()) {
+            try {
+                new AttributionJobHandler(
+                                DatastoreManagerFactory.getDatastoreManager(
+                                        getApplicationContext()),
+                                new DebugReportApi(
+                                        getApplicationContext(), FlagsFactory.getFlags()))
+                        .performPendingAttributions();
+                return;
+            } finally {
+                lock.unlock();
+            }
+        }
+        LogUtil.d("AttributionFallbackJobService did not acquire the lock");
     }
 
     @Override
     public boolean onStopJob(JobParameters params) {
         LogUtil.d("AttributionFallbackJobService.onStopJob");
         boolean shouldRetry = true;
-
+        if (mExecutorFuture != null) {
+            shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
+        }
         AdservicesJobServiceLogger.getInstance(this)
                 .recordOnStopJob(params, MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID, shouldRetry);
         return shouldRetry;
@@ -116,17 +139,17 @@ public class AttributionFallbackJobService extends JobService {
      * change.
      */
     @VisibleForTesting
-    static void schedule(Context context, JobScheduler jobScheduler) {
-        final JobInfo job =
-                new JobInfo.Builder(
-                                MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID,
-                                new ComponentName(context, AttributionJobService.class))
-                        .setPeriodic(
-                                FlagsFactory.getFlags()
-                                        .getMeasurementAttributionFallbackJobPeriodMs())
-                        .setPersisted(true)
-                        .build();
+    static void schedule(JobScheduler jobScheduler, JobInfo job) {
         jobScheduler.schedule(job);
+    }
+
+    private static JobInfo buildJobInfo(Context context) {
+        return new JobInfo.Builder(
+                        MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID,
+                        new ComponentName(context, AttributionFallbackJobService.class))
+                .setPeriodic(FlagsFactory.getFlags().getMeasurementAttributionFallbackJobPeriodMs())
+                .setPersisted(true)
+                .build();
     }
 
     /**
@@ -147,10 +170,12 @@ public class AttributionFallbackJobService extends JobService {
             return;
         }
 
-        final JobInfo job = jobScheduler.getPendingJob(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID);
+        final JobInfo scheduledJob =
+                jobScheduler.getPendingJob(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
-        if (job == null || forceSchedule) {
-            schedule(context, jobScheduler);
+        JobInfo jobInfo = buildJobInfo(context);
+        if (forceSchedule || !jobInfo.equals(scheduledJob)) {
+            schedule(jobScheduler, jobInfo);
             LogUtil.d("Scheduled AttributionFallbackJobService");
         } else {
             LogUtil.d("AttributionFallbackJobService already scheduled, skipping reschedule");
@@ -174,5 +199,10 @@ public class AttributionFallbackJobService extends JobService {
 
         // Returning false means that this job has completed its work.
         return false;
+    }
+
+    @VisibleForTesting
+    Future getFutureForTesting() {
+        return mExecutorFuture;
     }
 }
