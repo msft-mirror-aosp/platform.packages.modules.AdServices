@@ -41,7 +41,7 @@ public class UiNotificationLandingPageMicrobenchmark extends NotificationLanding
                     .around(new DropCachesRule());
 
     @NoMetricBefore
-    public void setup() {
+    public void setup() throws Exception {
         super.setup();
     }
 
