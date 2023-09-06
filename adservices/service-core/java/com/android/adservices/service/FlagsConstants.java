@@ -982,4 +982,7 @@ public final class FlagsConstants {
 
     public static final String KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED =
             "is_u18_supervised_account_enabled";
+
+    public static final String KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT =
+            "app_config_returns_enabled_by_detault";
 }
