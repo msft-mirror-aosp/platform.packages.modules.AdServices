@@ -154,7 +154,6 @@ public final class AggregateFallbackReportingJobService extends JobService {
                         MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID,
                         new ComponentName(context, AggregateFallbackReportingJobService.class))
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                .setRequiresDeviceIdle(true)
                 .setRequiresBatteryNotLow(true)
                 .setPeriodic(AdServicesConfig.getMeasurementAggregateFallbackReportingJobPeriodMs())
                 .setPersisted(true)
