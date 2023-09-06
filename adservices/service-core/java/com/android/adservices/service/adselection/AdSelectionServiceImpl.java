@@ -502,6 +502,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         ListenableFuture<DebugReporting> debugReportingFuture =
                 DebugReporting.createInstance(
+                        mContext,
                         mFlags,
                         mAdServicesHttpsClient,
                         devContext,
