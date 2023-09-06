@@ -54,6 +54,8 @@ import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
 import com.android.adservices.service.js.JSScriptEngine;
+import com.android.adservices.service.signals.ProtectedSignal;
+import com.android.adservices.service.signals.ProtectedSignalsFixture;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 
@@ -74,12 +76,15 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -1637,6 +1642,78 @@ public class AdSelectionScriptEngineTest {
         assertThat(result.status).isEqualTo(0);
         assertThat(((JSONObject) result.results.get(0)).getString("greeting"))
                 .isEqualTo("%shello " + AD_DATA_WITH_DOUBLE_RESULT_1.getRenderUri());
+    }
+
+    @Test
+    public void testEncodeSignals()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        List<String> seeds = List.of("SignalsA", "SignalsB");
+        Map<String, List<ProtectedSignal>> rawSignalsMap =
+                ProtectedSignalsFixture.generateMapOfProtectedSignals(seeds, 20);
+
+        String encodeSignalsJS =
+                "function encodeSignals(signals, maxSize) {\n"
+                        + "    return {'status' : 0, 'results' : signals.length};\n"
+                        + "}\n";
+        ListenableFuture<String> jsOutcome =
+                mAdSelectionScriptEngine.encodeSignals(encodeSignalsJS, rawSignalsMap, 10);
+        String result = jsOutcome.get(5, TimeUnit.SECONDS);
+
+        Assert.assertEquals(
+                "The result expected is the size of keys in the input signals",
+                String.valueOf(seeds.size()),
+                result);
+    }
+
+    @Test
+    public void testHandleEncodingEmptyOutput() {
+        IllegalStateException exception =
+                assertThrows(
+                        IllegalStateException.class,
+                        () -> {
+                            mAdSelectionScriptEngine.handleEncodingOutput("");
+                        });
+        assertEquals(
+                "The encoding script either doesn't contain the required function or the"
+                        + " function returned null",
+                exception.getMessage());
+    }
+
+    @Test
+    public void testHandleEncodingOutputFailedStatus() {
+        int status = 1;
+        String result = "unused";
+
+        String encodingScriptOutput =
+                "  {\"status\": " + status + ", \"results\" : \"" + result + "\" }";
+        IllegalStateException exception =
+                assertThrows(
+                        IllegalStateException.class,
+                        () -> {
+                            mAdSelectionScriptEngine.handleEncodingOutput(encodingScriptOutput);
+                        });
+        assertEquals(
+                String.format(
+                        "Outcome selection script failed with status '%s' or returned unexpected"
+                                + " result '%s'",
+                        status, result),
+                exception.getMessage());
+    }
+
+    @Test
+    public void testHandleEncodingOutputMissingResult() {
+        int status = 1;
+        String result = "unused";
+
+        String encodingScriptOutput =
+                "  {\"status\": " + status + ", \"bad_result_key\" : \"" + result + "\" }";
+        IllegalStateException exception =
+                assertThrows(
+                        IllegalStateException.class,
+                        () -> {
+                            mAdSelectionScriptEngine.handleEncodingOutput(encodingScriptOutput);
+                        });
+        assertEquals("Exception processing result from encoding", exception.getMessage());
     }
 
     private AdSelectionConfig anAdSelectionConfig() {
