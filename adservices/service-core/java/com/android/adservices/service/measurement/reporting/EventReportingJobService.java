@@ -169,7 +169,6 @@ public final class EventReportingJobService extends JobService {
         return new JobInfo.Builder(
                         MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID,
                         new ComponentName(context, EventReportingJobService.class))
-                .setRequiresDeviceIdle(true)
                 .setRequiresBatteryNotLow(true)
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
                 .setPeriodic(AdServicesConfig.getMeasurementEventMainReportingJobPeriodMs())
