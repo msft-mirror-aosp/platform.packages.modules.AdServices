@@ -18,6 +18,7 @@ package com.android.adservices.service.signals;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -36,6 +37,7 @@ import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessor;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -92,19 +94,59 @@ public class UpdateProcessingOrchestratorTest {
 
     @Test
     public void testUpdatesProcessorBadJson() throws Exception {
+        final JSONException exception = new JSONException("JSONException for testing");
+        when(mUpdateProcessorSelectorMock.getUpdateProcessor(TEST_PROCESSOR))
+                .thenReturn(
+                        new UpdateProcessor() {
+                            @Override
+                            public String getName() {
+                                return null;
+                            }
+
+                            @Override
+                            public UpdateOutput processUpdates(
+                                    Object updates, Map<ByteBuffer, Set<DBProtectedSignal>> current)
+                                    throws JSONException {
+                                throw exception;
+                            }
+                        });
+
         JSONObject commandToNumber = new JSONObject();
         commandToNumber.put(TEST_PROCESSOR, 1);
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        mUpdateProcessingOrchestrator.processUpdates(
-                                ADTECH, PACKAGE, NOW, commandToNumber));
+        Throwable t =
+                assertThrows(
+                        "Couldn't unpack signal updates JSON",
+                        IllegalArgumentException.class,
+                        () ->
+                                mUpdateProcessingOrchestrator.processUpdates(
+                                        ADTECH, PACKAGE, NOW, commandToNumber));
+        assertEquals(exception, t.getCause());
     }
 
     @Test
     public void testUpdatesProcessorSingleInsert() throws Exception {
         JSONObject json = new JSONObject();
         json.put(TEST_PROCESSOR, new JSONObject());
+
+        when(mProtectedSignalsDaoMock.getSignalsByBuyer(any())).thenReturn(Collections.emptyList());
+
+        UpdateOutput toReturn = new UpdateOutput();
+        toReturn.getKeysTouched().add(ByteBuffer.wrap(KEY_1));
+        toReturn.getToAdd().add(DBProtectedSignal.builder().setKey(KEY_1).setValue(VALUE));
+        when(mUpdateProcessorSelectorMock.getUpdateProcessor(TEST_PROCESSOR))
+                .thenReturn(createProcessor(TEST_PROCESSOR, toReturn));
+
+        mUpdateProcessingOrchestrator.processUpdates(ADTECH, PACKAGE, NOW, json);
+
+        List<DBProtectedSignal> expected = Arrays.asList(createSignal(KEY_1, VALUE));
+        verify(mProtectedSignalsDaoMock).insertAndDelete(eq(expected), eq(Collections.emptyList()));
+        verify(mUpdateProcessorSelectorMock).getUpdateProcessor(eq(TEST_PROCESSOR));
+    }
+
+    @Test
+    public void testUpdatesProcessorSingleInsertJsonArray() throws Exception {
+        JSONObject json = new JSONObject();
+        json.put(TEST_PROCESSOR, new JSONArray());
 
         when(mProtectedSignalsDaoMock.getSignalsByBuyer(any())).thenReturn(Collections.emptyList());
 

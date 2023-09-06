@@ -127,11 +127,10 @@ public class UpdateProcessingOrchestrator {
         for (Iterator<String> iter = json.keys(); iter.hasNext(); ) {
             String key = iter.next();
             sLogger.v("Running update processor %s", key);
-            JSONObject value = json.getJSONObject(key);
             UpdateOutput output =
                     mUpdateProcessorSelector
                             .getUpdateProcessor(key)
-                            .processUpdates(value, currentSignalsMap);
+                            .processUpdates(json.get(key), currentSignalsMap);
             combinedUpdates.getToAdd().addAll(output.getToAdd());
             combinedUpdates.getToRemove().addAll(output.getToRemove());
             if (!Collections.disjoint(combinedUpdates.getKeysTouched(), output.getKeysTouched())) {
