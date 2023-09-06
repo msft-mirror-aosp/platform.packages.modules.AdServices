@@ -4857,6 +4857,11 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED
                         + " = "
                         + getMeasurementAggregateFallbackReportingJobPersisted());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT
+                        + " = "
+                        + getAppConfigReturnsEnabledByDefault());
     }
 
     @VisibleForTesting
@@ -5552,10 +5557,19 @@ public final class PhFlags implements Flags {
                 /* defaultValue */ IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT);
     }
 
+    @Override
     public boolean getAdIdCacheEnabled() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_AD_ID_CACHE_ENABLED,
                 /* defaultValue */ DEFAULT_ADID_CACHE_ENABLED);
+    }
+
+    @Override
+    public boolean getAppConfigReturnsEnabledByDefault() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT,
+                /* defaultValue */ Flags.APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT);
     }
 }

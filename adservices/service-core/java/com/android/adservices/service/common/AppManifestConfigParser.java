@@ -47,6 +47,12 @@ public class AppManifestConfigParser {
 
     private AppManifestConfigParser() {}
 
+    @VisibleForTesting
+    static AppManifestConfig getConfig(@NonNull XmlResourceParser parser)
+            throws XmlParseException, XmlPullParserException, IOException {
+        return getConfig(parser, /* enabledByDefault=*/ false);
+    }
+
     /**
      * Parses and validates the given XML resource into a {@link AppManifestConfig} object.
      *
@@ -54,15 +60,8 @@ public class AppManifestConfigParser {
      * app_manifest_config.xsd schema.
      *
      * @param parser the XmlParser representing the AdServices App Manifest configuration
+     * @param enabledByDefault whether APIs should be enabled by default when missing from the
      */
-    public static AppManifestConfig getConfig(@NonNull XmlResourceParser parser)
-            throws XmlParseException, XmlPullParserException, IOException {
-        return getConfig(parser, /* enabledByDefault=*/ false);
-    }
-
-    // TODO(b/297585683): merge methods or add javadoc - most likely will need to read the flag
-    // here
-    @VisibleForTesting
     static AppManifestConfig getConfig(@NonNull XmlResourceParser parser, boolean enabledByDefault)
             throws XmlParseException, XmlPullParserException, IOException {
         AppManifestIncludesSdkLibraryConfig includesSdkLibraryConfig;
