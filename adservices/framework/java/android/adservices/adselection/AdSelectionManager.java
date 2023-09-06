@@ -179,7 +179,11 @@ public class AdSelectionManager {
 
     @NonNull
     AdSelectionService doGetService() {
-        return mServiceBinder.getService();
+        AdSelectionService service = mServiceBinder.getService();
+        if (service == null) {
+            throw new IllegalStateException("ad selection service is not available.");
+        }
+        return service;
     }
 
     /**
