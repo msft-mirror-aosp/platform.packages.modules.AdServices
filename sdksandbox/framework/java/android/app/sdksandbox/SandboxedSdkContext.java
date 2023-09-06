@@ -245,4 +245,9 @@ public final class SandboxedSdkContext extends ContextWrapper {
         }
         return mClassLoader;
     }
+
+    /** Returns true if the Customized SDK Context flag is enabled, otherwise return false. */
+    public boolean isCustomizedSdkContextEnabled() {
+        return mCustomizedSdkContextEnabled;
+    }
 }
