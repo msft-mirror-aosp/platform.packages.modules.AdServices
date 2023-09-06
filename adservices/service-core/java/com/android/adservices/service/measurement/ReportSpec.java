@@ -19,7 +19,7 @@ package com.android.adservices.service.measurement;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.measurement.noising.Combinatorics;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.internal.annotations.VisibleForTesting;
@@ -38,6 +38,7 @@ import java.util.Objects;
  * A class wrapper for the trigger specification from the input argument during source registration
  */
 public class ReportSpec {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     private final TriggerSpec[] mTriggerSpecs;
     private int mMaxEventLevelReports;
     private final PrivacyComputationParams mPrivacyParams;
@@ -282,7 +283,7 @@ public class ReportSpec {
             }
             return new JSONArray(triggerSpecsArray).toString();
         } catch (JSONException e) {
-            LogUtil.e("ReportSpec::encodeTriggerSpecsToJson is unable to encode TriggerSpecs");
+            sLogger.e("ReportSpec::encodeTriggerSpecsToJson is unable to encode TriggerSpecs");
             return null;
         }
     }
@@ -299,7 +300,7 @@ public class ReportSpec {
                     ReportSpecUtil.FlexEventReportJsonKeys.FLIP_PROBABILITY,
                     mPrivacyParams.mFlipProbability);
         } catch (JSONException e) {
-            LogUtil.e(
+            sLogger.e(
                     "ReportSpec::encodePrivacyParametersToJSONString is unable to encode"
                             + " PrivacyParams to JSON");
             return null;
@@ -352,7 +353,7 @@ public class ReportSpec {
                 return true;
             }
         }
-        LogUtil.e("ReportSpec::deleteFromAttributedValue: eventReport cannot be found");
+        sLogger.e("ReportSpec::deleteFromAttributedValue: eventReport cannot be found");
         return false;
     }
 

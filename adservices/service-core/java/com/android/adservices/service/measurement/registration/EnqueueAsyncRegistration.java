@@ -29,7 +29,7 @@ import android.content.ContentResolver;
 import android.net.Uri;
 import android.os.RemoteException;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
@@ -40,6 +40,9 @@ import java.util.UUID;
 
 /** Class containing static functions for enqueueing AsyncRegistrations */
 public class EnqueueAsyncRegistration {
+
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
+
     /**
      * Inserts an App Source or Trigger Registration request into the Async Registration Queue
      * table.
@@ -268,7 +271,7 @@ public class EnqueueAsyncRegistration {
                 contentProviderClient.insert(AsyncRegistrationContentProvider.TRIGGER_URI, null);
             }
         } catch (RemoteException e) {
-            LogUtil.e(e, "AsyncRegistration Content Provider invocation failed.");
+            sLogger.e(e, "AsyncRegistration Content Provider invocation failed.");
         }
     }
 
