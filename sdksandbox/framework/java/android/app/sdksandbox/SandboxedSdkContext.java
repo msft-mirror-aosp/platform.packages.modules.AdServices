@@ -125,15 +125,7 @@ public final class SandboxedSdkContext extends ContextWrapper {
     @NonNull
     public Context createCredentialProtectedStorageContext() {
         Context newBaseContext = getBaseContext().createCredentialProtectedStorageContext();
-        return new SandboxedSdkContext(
-                newBaseContext,
-                mClassLoader,
-                mClientPackageName,
-                mSdkProviderInfo,
-                mSdkName,
-                (mCeDataDir != null) ? mCeDataDir.toString() : null,
-                (mDeDataDir != null) ? mDeDataDir.toString() : null,
-                mCustomizedSdkContextEnabled);
+        return createContextWithNewBase(newBaseContext);
     }
 
     /**
@@ -146,6 +138,17 @@ public final class SandboxedSdkContext extends ContextWrapper {
     @NonNull
     public Context createDeviceProtectedStorageContext() {
         Context newBaseContext = getBaseContext().createDeviceProtectedStorageContext();
+        return createContextWithNewBase(newBaseContext);
+    }
+
+    /**
+     * Returns a new SandboxedSdkContext object with the same fields of the caller {@link
+     * SandboxedSdkContext} but with new base {@link Context}.
+     *
+     * @param newBaseContext The new base {@link Context} to use.
+     */
+    @NonNull
+    public SandboxedSdkContext createContextWithNewBase(@NonNull Context newBaseContext) {
         return new SandboxedSdkContext(
                 newBaseContext,
                 mClassLoader,
