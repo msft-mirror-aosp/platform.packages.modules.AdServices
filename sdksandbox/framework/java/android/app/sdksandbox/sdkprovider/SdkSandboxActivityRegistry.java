@@ -16,9 +16,14 @@
 
 package android.app.sdksandbox.sdkprovider;
 
+import static android.app.sdksandbox.SdkSandboxManager.EXTRA_SANDBOXED_ACTIVITY_HANDLER;
+
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.app.Activity;
 import android.app.sdksandbox.SandboxedSdkContext;
+import android.app.sdksandbox.sandboxactivity.ActivityContextInfo;
+import android.content.Intent;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
@@ -38,6 +43,8 @@ import java.util.Map;
  * @hide
  */
 public class SdkSandboxActivityRegistry {
+    private static final String TAG = "SdkSandboxActivityRegistry";
+
     private static final Object sLock = new Object();
 
     @GuardedBy("sLock")
@@ -139,6 +146,43 @@ public class SdkSandboxActivityRegistry {
     }
 
     /**
+     * Returns {@link ActivityContextInfo} instance containing the information which is needed to
+     * build the sandbox activity {@link android.content.Context} for the passed {@link Intent}.
+     *
+     * @param intent an {@link Intent} for a sandbox {@link Activity} containing information to
+     *     identify the SDK which requested the activity.
+     * @return {@link ActivityContextInfo} instance if the intent refers to a registered {@link
+     *     SdkSandboxActivityHandler}, otherwise {@code null}.
+     * @throws IllegalStateException if Customized SDK Context flag is not enabled
+     */
+    @Nullable
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+    public ActivityContextInfo getContextInfo(@NonNull Intent intent) {
+        synchronized (mMapsLock) {
+            final IBinder handlerToken = extractHandlerToken(intent);
+            if (handlerToken == null) {
+                return null;
+            }
+            final HandlerInfo handlerInfo = mTokenToHandlerInfoMap.get(handlerToken);
+            if (handlerInfo == null) {
+                return null;
+            }
+            if (!handlerInfo.getSdkContext().isCustomizedSdkContextEnabled()) {
+                throw new IllegalStateException("Customized SDK flag is disabled.");
+            }
+            return handlerInfo.getContextInfo();
+        }
+    }
+
+    @Nullable
+    private IBinder extractHandlerToken(Intent intent) {
+        if (intent == null || intent.getExtras() == null) {
+            return null;
+        }
+        return intent.getExtras().getBinder(EXTRA_SANDBOXED_ACTIVITY_HANDLER);
+    }
+
+    /**
      * Unregisters all {@link SdkSandboxActivityHandler} instances that are registered by the passed
      * SDK.
      *
@@ -172,12 +216,14 @@ public class SdkSandboxActivityRegistry {
         private final SandboxedSdkContext mSdkContext;
         private final SdkSandboxActivityHandler mHandler;
         private final IBinder mToken;
+        private final ActivityContextInfo mContextInfo;
 
         HandlerInfo(
                 SandboxedSdkContext sdkContext, SdkSandboxActivityHandler handler, IBinder token) {
             this.mSdkContext = sdkContext;
             this.mHandler = handler;
             this.mToken = token;
+            mContextInfo = mSdkContext::getApplicationInfo;
         }
 
         @NonNull
@@ -193,6 +239,11 @@ public class SdkSandboxActivityRegistry {
         @NonNull
         public IBinder getToken() {
             return mToken;
+        }
+
+        @NonNull
+        public ActivityContextInfo getContextInfo() {
+            return mContextInfo;
         }
     }
 }

@@ -283,6 +283,51 @@ public class SandboxedSdkContextUnitTest {
         assertThat(am1).isNotSameInstanceAs(am2);
     }
 
+    /**
+     * Test the getter of customizedSdkContextEnabled flag
+     *
+     * @throws Exception for errors to retrieve the ApplicationInfo from PackageManager
+     */
+    @Test
+    public void testisCustomizedSdkContextEnabled() throws Exception {
+        ApplicationInfo info =
+                InstrumentationRegistry.getContext()
+                        .getPackageManager()
+                        .getApplicationInfo(
+                                RESOURCES_PACKAGE,
+                                PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES);
+
+        boolean isCustomizedSdkContextEnabled = true;
+        SandboxedSdkContext context =
+                new SandboxedSdkContext(
+                        InstrumentationRegistry.getContext()
+                                .createCredentialProtectedStorageContext(),
+                        getClass().getClassLoader(),
+                        CLIENT_PACKAGE_NAME,
+                        info,
+                        SDK_NAME,
+                        SDK_CE_DATA_DIR,
+                        SDK_DE_DATA_DIR,
+                        isCustomizedSdkContextEnabled);
+        assertThat(context.isCustomizedSdkContextEnabled())
+                .isEqualTo(isCustomizedSdkContextEnabled);
+
+        isCustomizedSdkContextEnabled = false;
+        context =
+                new SandboxedSdkContext(
+                        InstrumentationRegistry.getContext()
+                                .createCredentialProtectedStorageContext(),
+                        getClass().getClassLoader(),
+                        CLIENT_PACKAGE_NAME,
+                        info,
+                        SDK_NAME,
+                        SDK_CE_DATA_DIR,
+                        SDK_DE_DATA_DIR,
+                        isCustomizedSdkContextEnabled);
+        assertThat(context.isCustomizedSdkContextEnabled())
+                .isEqualTo(isCustomizedSdkContextEnabled);
+    }
+
     private static class TestContext extends MockContext {
 
         private final TestService mMockService;
