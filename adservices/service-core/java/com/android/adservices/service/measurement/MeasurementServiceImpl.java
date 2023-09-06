@@ -186,6 +186,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                                     request, mFlags)),
                                     new AppPackageAccessResolver(
                                             mFlags.getMsmtApiAppAllowList(),
+                                            mFlags.getMsmtApiAppBlockList(),
                                             request.getAppPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
@@ -247,11 +248,13 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             enforceForeground),
                                     new AppPackageAccessResolver(
                                             mFlags.getMsmtApiAppAllowList(),
+                                            mFlags.getMsmtApiAppBlockList(),
                                             request.getAppPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
                                     new AppPackageAccessResolver(
                                             mFlags.getWebContextClientAppAllowList(),
+                                            /*blocklist*/ null,
                                             request.getAppPackageName()),
                                     new DevContextAccessResolver(
                                             mDevContextFilter.createDevContextFromCallingUid(
@@ -334,6 +337,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             enforceForeground),
                                     new AppPackageAccessResolver(
                                             mFlags.getMsmtApiAppAllowList(),
+                                            mFlags.getMsmtApiAppBlockList(),
                                             request.getAppPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
@@ -391,9 +395,11 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             enforceForeground),
                                     new AppPackageAccessResolver(
                                             mFlags.getMsmtApiAppAllowList(),
+                                            mFlags.getMsmtApiAppBlockList(),
                                             request.getAppPackageName()),
                                     new AppPackageAccessResolver(
                                             mFlags.getWebContextClientAppAllowList(),
+                                            /*blocklist*/ null,
                                             request.getAppPackageName())),
                             callback,
                             apiNameId,
@@ -436,6 +442,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                                 enforceForeground),
                                         new AppPackageAccessResolver(
                                                 mFlags.getMsmtApiAppAllowList(),
+                                                mFlags.getMsmtApiAppBlockList(),
                                                 statusParam.getAppPackageName()));
 
                         final Optional<IAccessResolver> optionalResolver =

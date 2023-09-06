@@ -39,6 +39,7 @@ import android.content.rollback.RollbackManager;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.ParcelFileDescriptor;
 import android.os.UserHandle;
 import android.provider.DeviceConfig;
 import android.util.ArrayMap;
@@ -56,6 +57,7 @@ import com.android.server.sdksandbox.SdkSandboxManagerLocal;
 import java.io.FileDescriptor;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -218,6 +220,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
 
         @Override
         public void dump(PrintWriter writer, String[] args) {
+            // Dumps the service when it could not be published as a binder service.
             // Usage: adb shell dumpsys system_server_dumper --name AdServices
             mService.dump(/* fd= */ null, writer, args);
         }
@@ -726,7 +729,6 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     @RequiresPermission(android.Manifest.permission.DUMP)
     protected void dump(FileDescriptor fd, PrintWriter pw, String[] args) {
         mContext.enforceCallingPermission(android.Manifest.permission.DUMP, /* message= */ null);
-
         synchronized (mSetPackageVersionLock) {
             pw.printf("mAdServicesModuleName: %s\n", mAdServicesModuleName);
             pw.printf("mAdServicesModuleVersion: %d\n", mAdServicesModuleVersion);
@@ -738,7 +740,36 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
             pw.printf("mAdServicesPackagesRolledBackFrom: %s\n", mAdServicesPackagesRolledBackFrom);
             pw.printf("mAdServicesPackagesRolledBackTo: %s\n", mAdServicesPackagesRolledBackTo);
         }
+        pw.printf("ShellCmd enabled: %b\n", isShellCmdEnabled());
         mUserInstanceManager.dump(pw, args);
+    }
+
+    private static boolean isShellCmdEnabled() {
+        return FlagsFactory.getFlags().getAdServicesShellCommandEnabled();
+    }
+
+    @Override
+    public int handleShellCommand(
+            ParcelFileDescriptor in,
+            ParcelFileDescriptor out,
+            ParcelFileDescriptor err,
+            String[] args) {
+
+        if (!isShellCmdEnabled()) {
+            LogUtil.d(
+                    "handleShellCommand(%s): disabled by flag %s",
+                    Arrays.toString(args), PhFlags.KEY_ADSERVICES_SHELL_COMMAND_ENABLED);
+            return super.handleShellCommand(in, out, err, args);
+        }
+
+        LogUtil.v("Executing shell cmd: %s", Arrays.toString(args));
+        return new AdServicesShellCommand()
+                .exec(
+                        this,
+                        in.getFileDescriptor(),
+                        out.getFileDescriptor(),
+                        err.getFileDescriptor(),
+                        args);
     }
 
     @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)

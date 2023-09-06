@@ -54,10 +54,10 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
+import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
-import com.android.adservices.data.adselection.AuctionServerAdSelectionDao;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBAdSelectionHistogramInfo;
 import com.android.adservices.data.adselection.EncryptionContextDao;
@@ -194,7 +194,6 @@ public class FrequencyCapFilteringE2ETest {
     private FrequencyCapDao mFrequencyCapDaoSpy;
     private EncryptionKeyDao mEncryptionKeyDao;
     private EncryptionContextDao mEncryptionContextDao;
-    private AuctionServerAdSelectionDao mAuctionServerAdSelectionDao;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
     private ScheduledThreadPoolExecutor mScheduledExecutor;
@@ -205,6 +204,8 @@ public class FrequencyCapFilteringE2ETest {
     private AdSelectionServiceImpl mAdSelectionServiceImpl;
     private UpdateAdCounterHistogramInput mInputParams;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptor;
+    @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
+    @Mock private AdIdFetcher mAdIdFetcher;
 
     @Before
     public void setup() {
@@ -237,7 +238,6 @@ public class FrequencyCapFilteringE2ETest {
                 Room.inMemoryDatabaseBuilder(mContextSpy, AdSelectionServerDatabase.class).build();
         mEncryptionContextDao = serverDb.encryptionContextDao();
         mEncryptionKeyDao = serverDb.encryptionKeyDao();
-        mAuctionServerAdSelectionDao = serverDb.auctionServerAdSelectionDao();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mScheduledExecutor = AdServicesExecutors.getScheduler();
@@ -266,7 +266,6 @@ public class FrequencyCapFilteringE2ETest {
                         mFrequencyCapDaoSpy,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClientMock,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -280,7 +279,9 @@ public class FrequencyCapFilteringE2ETest {
                         mServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor);
+                        mObliviousHttpEncryptor,
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         mInputParams =
                 new UpdateAdCounterHistogramInput.Builder(
@@ -430,7 +431,6 @@ public class FrequencyCapFilteringE2ETest {
                         mFrequencyCapDaoSpy,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClientMock,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -444,7 +444,9 @@ public class FrequencyCapFilteringE2ETest {
                         mServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor);
+                        mObliviousHttpEncryptor,
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         UpdateAdCounterHistogramTestCallback callback = callUpdateAdCounterHistogram(mInputParams);
 
@@ -490,7 +492,6 @@ public class FrequencyCapFilteringE2ETest {
                             mFrequencyCapDaoSpy,
                             mEncryptionContextDao,
                             mEncryptionKeyDao,
-                            mAuctionServerAdSelectionDao,
                             mAdServicesHttpsClientMock,
                             mDevContextFilterMock,
                             mLightweightExecutorService,
@@ -511,7 +512,9 @@ public class FrequencyCapFilteringE2ETest {
                                     Throttler.getInstance(flagsWithLowRateLimit)),
                             mAdFilteringFeatureFactory,
                             mConsentManagerMock,
-                            mObliviousHttpEncryptor);
+                            mObliviousHttpEncryptor,
+                            mAdSelectionDebugReportDao,
+                            mAdIdFetcher);
 
             UpdateAdCounterHistogramTestCallback callback =
                     callUpdateAdCounterHistogram(mInputParams);
@@ -557,7 +560,7 @@ public class FrequencyCapFilteringE2ETest {
                 .isEqualTo(AD_WITH_FILTER.getRenderUri());
 
         DBAdSelectionHistogramInfo histogramInfo =
-                mAdSelectionEntryDao.getAdSelectionHistogramInfo(
+                mAdSelectionEntryDao.getAdSelectionHistogramInfoInOnDeviceTable(
                         adSelectionCallback.mAdSelectionResponse.getAdSelectionId(),
                         CommonFixture.TEST_PACKAGE_NAME);
         assertThat(histogramInfo).isNotNull();
@@ -710,7 +713,7 @@ public class FrequencyCapFilteringE2ETest {
         // higher than a certain minimum version.
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
-        class FlagsWithLowEventCounts implements Flags {
+        class FlagsWithLowEventCounts extends FlagsOverridingAdFiltering implements Flags {
             @Override
             public boolean getEnforceIsolateMaxHeapSize() {
                 return false;
@@ -740,7 +743,6 @@ public class FrequencyCapFilteringE2ETest {
                         mFrequencyCapDaoSpy,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClientMock,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -754,7 +756,9 @@ public class FrequencyCapFilteringE2ETest {
                         mServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor);
+                        mObliviousHttpEncryptor,
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         // Persist ad selections
         mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);
@@ -821,7 +825,8 @@ public class FrequencyCapFilteringE2ETest {
                 "JS Sandbox is not available",
                 JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
-        final class FlagsWithLowPerBuyerEventCounts implements Flags {
+        final class FlagsWithLowPerBuyerEventCounts extends FlagsOverridingAdFiltering
+                implements Flags {
             @Override
             public boolean getEnforceIsolateMaxHeapSize() {
                 return false;
@@ -851,7 +856,6 @@ public class FrequencyCapFilteringE2ETest {
                         mFrequencyCapDaoSpy,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClientMock,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -865,7 +869,9 @@ public class FrequencyCapFilteringE2ETest {
                         mServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor);
+                        mObliviousHttpEncryptor,
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         // Persist ad selections
         mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);

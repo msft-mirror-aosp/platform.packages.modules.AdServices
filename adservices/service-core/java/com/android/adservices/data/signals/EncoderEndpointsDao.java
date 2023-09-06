@@ -29,7 +29,7 @@ public interface EncoderEndpointsDao {
 
     /**
      * @param endpoint an entry containing endpoint for an encoder
-     * @return the count of entries persisted, ideally 1 if succeeded
+     * @return the rowId of the entry persisted
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     long registerEndpoint(DBEncoderEndpoint endpoint);
@@ -40,4 +40,10 @@ public interface EncoderEndpointsDao {
      */
     @Query("SELECT * FROM encoder_endpoints WHERE buyer = :buyer")
     DBEncoderEndpoint getEndpoint(AdTechIdentifier buyer);
+
+    /**
+     * @param buyer Ad-tech identifier whose encoder endpoint we want to delete
+     */
+    @Query("DELETE FROM encoder_endpoints WHERE buyer = :buyer")
+    void deleteEncoderEndpoint(AdTechIdentifier buyer);
 }

@@ -18,6 +18,7 @@ package android.app.sdksandbox.sdkprovider;
 
 import android.annotation.NonNull;
 import android.app.Activity;
+import android.app.sdksandbox.SandboxedSdkContext;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
@@ -71,12 +72,14 @@ public class SdkSandboxActivityRegistry {
      * <p>If {@link SdkSandboxActivityHandler} is already registered, its {@link IBinder} identifier
      * will be returned.
      *
-     * @param sdkName is the name of the SDK registering {@link SdkSandboxActivityHandler}
+     * @param sdkContext is the {@link SandboxedSdkContext} which is registering the {@link
+     *     SdkSandboxActivityHandler}
      * @param handler is the {@link SdkSandboxActivityHandler} to register.
      */
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     @NonNull
-    public IBinder register(@NonNull String sdkName, @NonNull SdkSandboxActivityHandler handler) {
+    public IBinder register(
+            @NonNull SandboxedSdkContext sdkContext, @NonNull SdkSandboxActivityHandler handler) {
         synchronized (mMapsLock) {
             if (mHandlerToHandlerInfoMap.containsKey(handler)) {
                 HandlerInfo handlerInfo = mHandlerToHandlerInfoMap.get(handler);
@@ -84,7 +87,7 @@ public class SdkSandboxActivityRegistry {
             }
 
             IBinder token = new Binder();
-            HandlerInfo handlerInfo = new HandlerInfo(sdkName, handler, token);
+            HandlerInfo handlerInfo = new HandlerInfo(sdkContext, handler, token);
             mHandlerToHandlerInfoMap.put(handlerInfo.getHandler(), handlerInfo);
             mTokenToHandlerInfoMap.put(handlerInfo.getToken(), handlerInfo);
             return token;
@@ -151,7 +154,7 @@ public class SdkSandboxActivityRegistry {
             while (iter.hasNext()) {
                 Map.Entry<SdkSandboxActivityHandler, HandlerInfo> handlerEntry = iter.next();
                 HandlerInfo handlerInfo = handlerEntry.getValue();
-                if (handlerInfo.getSdkName().equals(sdkName)) {
+                if (handlerInfo.getSdkContext().getSdkName().equals(sdkName)) {
                     IBinder handlerToken = handlerInfo.getToken();
                     iter.remove();
                     mTokenToHandlerInfoMap.remove(handlerToken);
@@ -166,20 +169,20 @@ public class SdkSandboxActivityRegistry {
      * @hide
      */
     private static class HandlerInfo {
-        private final String mSdkName;
+        private final SandboxedSdkContext mSdkContext;
         private final SdkSandboxActivityHandler mHandler;
         private final IBinder mToken;
 
-
-        HandlerInfo(String sdkName, SdkSandboxActivityHandler handler, IBinder token) {
-            this.mSdkName = sdkName;
+        HandlerInfo(
+                SandboxedSdkContext sdkContext, SdkSandboxActivityHandler handler, IBinder token) {
+            this.mSdkContext = sdkContext;
             this.mHandler = handler;
             this.mToken = token;
         }
 
         @NonNull
-        public String getSdkName() {
-            return mSdkName;
+        public SandboxedSdkContext getSdkContext() {
+            return mSdkContext;
         }
 
         @NonNull

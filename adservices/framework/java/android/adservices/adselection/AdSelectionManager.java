@@ -18,13 +18,19 @@ package android.adservices.adselection;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
+import android.adservices.adid.AdId;
+import android.adservices.adid.AdIdCompatibleManager;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.common.SandboxedSdkContextUtils;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.annotation.RequiresPermission;
+import android.annotation.SuppressLint;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.os.Build;
@@ -39,10 +45,14 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.ServiceBinder;
+import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * AdSelection Manager provides APIs for app and ad-SDKs to run ad selection processes as well as
@@ -52,6 +62,7 @@ import java.util.concurrent.TimeoutException;
 @RequiresApi(Build.VERSION_CODES.S)
 public class AdSelectionManager {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+
     /**
      * Constant that represents the service name for {@link AdSelectionManager} to be used in {@link
      * android.adservices.AdServicesFrameworkInitializer#registerServiceWrappers}
@@ -60,8 +71,15 @@ public class AdSelectionManager {
      */
     public static final String AD_SELECTION_SERVICE = "ad_selection_service";
 
+    private static final long AD_ID_TIMEOUT_MS = 400;
+    private static final String DEBUG_API_WARNING_MESSAGE =
+            "To enable debug api, include ACCESS_ADSERVICES_AD_ID "
+                    + "permission and enable advertising ID under device settings";
+    private final Executor mAdIdExecutor = Executors.newCachedThreadPool();
     @NonNull private Context mContext;
     @NonNull private ServiceBinder<AdSelectionService> mServiceBinder;
+    @NonNull private AdIdCompatibleManager mAdIdManager;
+    @NonNull private ServiceProvider mServiceProvider;
 
     /**
      * Factory method for creating an instance of AdSelectionManager.
@@ -78,12 +96,38 @@ public class AdSelectionManager {
     }
 
     /**
+     * Factory method for creating an instance of AdSelectionManager.
+     *
+     * <p>Note: This is for testing only.
+     *
+     * @param context The {@link Context} to use
+     * @param adIdManager The {@link AdIdCompatibleManager} instance to use
+     * @param adSelectionService The {@link AdSelectionService} instance to use
+     * @return A {@link AdSelectionManager} instance
+     * @hide
+     */
+    @VisibleForTesting
+    @NonNull
+    public static AdSelectionManager get(
+            @NonNull Context context,
+            @NonNull AdIdCompatibleManager adIdManager,
+            @NonNull AdSelectionService adSelectionService) {
+        AdSelectionManager adSelectionManager = AdSelectionManager.get(context);
+        adSelectionManager.mAdIdManager = adIdManager;
+        adSelectionManager.mServiceProvider = () -> adSelectionService;
+        return adSelectionManager;
+    }
+
+    /**
      * Create AdSelectionManager
      *
      * @hide
      */
     public AdSelectionManager(@NonNull Context context) {
         Objects.requireNonNull(context);
+
+        // Initialize the default service provider
+        mServiceProvider = this::doGetService;
 
         // In case the AdSelectionManager is initiated from inside a sdk_sandbox process the
         // fields will be immediately rewritten by the initialize method below.
@@ -109,6 +153,7 @@ public class AdSelectionManager {
                         context,
                         AdServicesCommon.ACTION_AD_SELECTION_SERVICE,
                         AdSelectionService.Stub::asInterface);
+        mAdIdManager = new AdIdCompatibleManager(context);
         return this;
     }
 
@@ -117,8 +162,23 @@ public class AdSelectionManager {
         return new TestAdSelectionManager(this);
     }
 
+    /**
+     * Using this interface {@code getService}'s implementation is decoupled from the default {@link
+     * #doGetService()}. This allows us to inject mock instances of {@link AdSelectionService} to
+     * inspect and test the manager-service boundary.
+     */
+    interface ServiceProvider {
+        @NonNull
+        AdSelectionService getService();
+    }
+
     @NonNull
-    AdSelectionService getService() {
+    ServiceProvider getServiceProvider() {
+        return mServiceProvider;
+    }
+
+    @NonNull
+    AdSelectionService doGetService() {
         return mServiceBinder.getService();
     }
 
@@ -162,7 +222,7 @@ public class AdSelectionManager {
         Objects.requireNonNull(receiver);
 
         try {
-            final AdSelectionService service = getService();
+            final AdSelectionService service = getServiceProvider().getService();
             service.getAdSelectionData(
                     new GetAdSelectionDataInput.Builder()
                             .setSeller(request.getSeller())
@@ -175,15 +235,15 @@ public class AdSelectionManager {
                         @Override
                         public void onSuccess(GetAdSelectionDataResponse resultParcel) {
                             executor.execute(
-                                    () ->
-                                            receiver.onResult(
-                                                    new GetAdSelectionDataOutcome.Builder()
-                                                            .setAdSelectionId(
-                                                                    resultParcel.getAdSelectionId())
-                                                            .setAdSelectionData(
-                                                                    resultParcel
-                                                                            .getAdSelectionData())
-                                                            .build()));
+                                    () -> {
+                                        receiver.onResult(
+                                                new GetAdSelectionDataOutcome.Builder()
+                                                        .setAdSelectionId(
+                                                                resultParcel.getAdSelectionId())
+                                                        .setAdSelectionData(
+                                                                resultParcel.getAdSelectionData())
+                                                        .build());
+                                    });
                         }
 
                         @Override
@@ -242,7 +302,7 @@ public class AdSelectionManager {
         Objects.requireNonNull(receiver);
 
         try {
-            final AdSelectionService service = getService();
+            final AdSelectionService service = getServiceProvider().getService();
             service.persistAdSelectionResult(
                     new PersistAdSelectionResultInput.Builder()
                             .setSeller(request.getSeller())
@@ -343,7 +403,7 @@ public class AdSelectionManager {
         Objects.requireNonNull(receiver);
 
         try {
-            final AdSelectionService service = getService();
+            final AdSelectionService service = getServiceProvider().getService();
             service.selectAds(
                     new AdSelectionInput.Builder()
                             .setAdSelectionConfig(adSelectionConfig)
@@ -448,7 +508,7 @@ public class AdSelectionManager {
         Objects.requireNonNull(receiver);
 
         try {
-            final AdSelectionService service = getService();
+            final AdSelectionService service = getServiceProvider().getService();
             service.selectAdsFromOutcomes(
                     new AdSelectionFromOutcomesInput.Builder()
                             .setAdSelectionFromOutcomesConfig(adSelectionFromOutcomesConfig)
@@ -583,7 +643,7 @@ public class AdSelectionManager {
         Objects.requireNonNull(receiver);
 
         try {
-            final AdSelectionService service = getService();
+            final AdSelectionService service = getServiceProvider().getService();
             service.reportImpression(
                     new ReportImpressionInput.Builder()
                             .setAdSelectionId(request.getAdSelectionId())
@@ -656,15 +716,21 @@ public class AdSelectionManager {
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
         try {
-            final AdSelectionService service = getService();
-            service.reportInteraction(
+            ReportInteractionInput.Builder inputBuilder =
                     new ReportInteractionInput.Builder()
                             .setAdSelectionId(request.getAdSelectionId())
                             .setInteractionKey(request.getKey())
                             .setInteractionData(request.getData())
                             .setReportingDestinations(request.getReportingDestinations())
                             .setCallerPackageName(getCallerPackageName())
-                            .build(),
+                            .setCallerSdkName(getCallerSdkName())
+                            .setInputEvent(request.getInputEvent());
+
+            getAdId((adIdValue) -> inputBuilder.setAdId(adIdValue));
+
+            final AdSelectionService service = getServiceProvider().getService();
+            service.reportInteraction(
+                    inputBuilder.build(),
                     new ReportInteractionCallback.Stub() {
                         @Override
                         public void onSuccess() {
@@ -727,7 +793,7 @@ public class AdSelectionManager {
         Objects.requireNonNull(receiver);
 
         try {
-            final AdSelectionService service = getService();
+            final AdSelectionService service = getServiceProvider().getService();
             service.setAppInstallAdvertisers(
                     new SetAppInstallAdvertisersInput.Builder()
                             .setAdvertisers(request.getAdvertisers())
@@ -797,7 +863,8 @@ public class AdSelectionManager {
         Objects.requireNonNull(outcomeReceiver, "Outcome receiver must not be null");
 
         try {
-            final AdSelectionService service = Objects.requireNonNull(getService());
+            final AdSelectionService service = getServiceProvider().getService();
+            Objects.requireNonNull(service);
             service.updateAdCounterHistogram(
                     new UpdateAdCounterHistogramInput.Builder(
                                     updateAdCounterHistogramRequest.getAdSelectionId(),
@@ -836,5 +903,59 @@ public class AdSelectionManager {
         return sandboxedSdkContext == null
                 ? mContext.getPackageName()
                 : sandboxedSdkContext.getClientPackageName();
+    }
+
+    private String getCallerSdkName() {
+        SandboxedSdkContext sandboxedSdkContext =
+                SandboxedSdkContextUtils.getAsSandboxedSdkContext(mContext);
+        return sandboxedSdkContext == null ? null : sandboxedSdkContext.getSdkPackageName();
+    }
+
+    private interface AdSelectionAdIdCallback {
+        void onResult(@Nullable String adIdValue);
+    }
+
+    @SuppressLint("MissingPermission")
+    private void getAdId(AdSelectionAdIdCallback adSelectionAdIdCallback) {
+        try {
+            CountDownLatch timer = new CountDownLatch(1);
+            AtomicReference<String> adIdValue = new AtomicReference<>();
+            mAdIdManager.getAdId(
+                    mAdIdExecutor,
+                    new android.adservices.common.AdServicesOutcomeReceiver<>() {
+                        @Override
+                        public void onResult(AdId adId) {
+                            String id = adId.getAdId();
+                            adIdValue.set(!AdId.ZERO_OUT.equals(id) ? id : null);
+                            sLogger.v("AdId permission enabled: %b.", !AdId.ZERO_OUT.equals(id));
+                            timer.countDown();
+                        }
+
+                        @Override
+                        public void onError(Exception e) {
+                            if (e instanceof IllegalStateException
+                                    || e instanceof SecurityException) {
+                                sLogger.w(DEBUG_API_WARNING_MESSAGE);
+                            } else {
+                                sLogger.w(e, DEBUG_API_WARNING_MESSAGE);
+                            }
+                            timer.countDown();
+                        }
+                    });
+
+            boolean timedOut = false;
+            try {
+                timedOut = !timer.await(AD_ID_TIMEOUT_MS, MILLISECONDS);
+            } catch (InterruptedException e) {
+                sLogger.w(e, "Interrupted while getting the AdId.");
+            }
+            if (timedOut) {
+                sLogger.w("AdId call timed out.");
+            }
+            adSelectionAdIdCallback.onResult(adIdValue.get());
+        } catch (Exception e) {
+            sLogger.d(e, "Could not get AdId.");
+            adSelectionAdIdCallback.onResult(null);
+        }
     }
 }

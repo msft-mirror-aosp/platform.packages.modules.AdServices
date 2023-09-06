@@ -496,6 +496,9 @@ public abstract class AbstractDbIntegrationTest {
         values.put(
                 MeasurementTables.AggregateReport.DEBUG_CLEARTEXT_PAYLOAD,
                 aggregateReport.getDebugCleartextPayload());
+        values.put(
+                MeasurementTables.AggregateReport.DEBUG_REPORT_STATUS,
+                aggregateReport.getDebugReportStatus());
         values.put(MeasurementTables.AggregateReport.STATUS, aggregateReport.getStatus());
         values.put(MeasurementTables.AggregateReport.API_VERSION, aggregateReport.getApiVersion());
         values.put(MeasurementTables.AggregateReport.SOURCE_ID, aggregateReport.getSourceId());

@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Колдонмого AdServices Consent API\'син пайдаланууга мүмкүнчүлүк берет."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID API\'син колдонуу мүмкүнчүлүгү"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Колдонмого Ad ID API\'сине кирүүгө мүмкүнчүлүк берет."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"AdServices Cobalt Upload API\'син пайдалануу мүмкүнчүлүгү"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Колдонмого AdServices Cobalt Upload API\'син пайдаланууга мүмкүнчүлүк берет."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"App Set ID API\'син колдонуу мүмкүнчүлүгү"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Колдонмого App Set ID API\'cин пайдаланууга мүмкүнчүлүк берет."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service API\'син колдонуу мүмкүнчүлүгү"</string>
@@ -40,8 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Колдонмого AdService кызматынын иштетүү абалынын API\'син пайдаланууга мүмкүнчүлүк берет."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"API AdServicesManager жеткиликтүү болот"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Колдонмого AdServicesManager API жеткиликтүү болот."</string>
-    <!-- no translation found for app_label (5844694701336604490) -->
-    <skip />
+    <string name="app_label" msgid="5844694701336604490">"Жарнаманын купуялыгы"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Android\'деги жарнамалардын купуялыгынын бета версиясына кошулуңуз"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android сизге жарнамаларды көрсөтүүнүн мындан да купуя жолдорун изилдеп жатат"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Кененирээк"</string>
@@ -93,7 +94,7 @@
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"Купуялык параметрлерине өтүп, аларды каалаган убакта өзгөртө аласыз."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Жарнамалардын темалары тууралуу кеңири маалымат"</string>
     <string name="notificationUI_learn_more_from_privacy_policy" msgid="7809111628979410445"><a href="https://policies.google.com/privacy">"Купуялык саясатыбыздан"</a>" Android маалыматыңызды кандайча коргой турганын билип алыңыз."</string>
-    <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"Байкап көрүңүз"</string>
+    <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"Байкап көрүү"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  Кандай маалымат колдонулат"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Жарнамалардын темалары соңку пайдаланган колдонмолоруңузга жана аларды канчалык көп ачканыңызга жараша аныкталат."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  Бул маалымат кандайча колдонулат"</string>

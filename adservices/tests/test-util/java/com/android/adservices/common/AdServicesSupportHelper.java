@@ -15,8 +15,11 @@
  */
 package com.android.adservices.common;
 
+import static com.android.adservices.AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW;
+import static com.android.adservices.AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_SUPPORTED_ON_DEVICE;
 import static com.android.compatibility.common.util.ShellIdentityUtils.invokeStaticMethodWithShellPermissions;
 
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.SystemProperties;
@@ -27,36 +30,43 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.service.PhFlags;
 
+// TODO(b/297248322): move this class to sideless as the logic is duplicated on hostside
 /** Helper to check if AdServices is supported / enabled in a device. */
 public final class AdServicesSupportHelper {
 
     private static final String TAG = AdServicesSupportHelper.class.getSimpleName();
 
-    private static final String SYSPROP_ADSERVICES_SUPPORTED = "debug.adservices.supported";
-
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getTargetContext();
 
     private static boolean isDeviceSupportedByDefault(Context context) {
+        return isPhone(context) && !isLowRamDevice(context);
+    }
+
+    private static boolean isPhone(Context context) {
         PackageManager pm = context.getPackageManager();
-        return !pm.hasSystemFeature(PackageManager.FEATURE_RAM_LOW) // Android Go Devices
-                && !pm.hasSystemFeature(PackageManager.FEATURE_WATCH)
-                && !pm.hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE)
-                && !pm.hasSystemFeature(PackageManager.FEATURE_LEANBACK);
+        // TODO(b/284744130): need to figure out how to filter out tablets
+        boolean isIt =
+                !pm.hasSystemFeature(PackageManager.FEATURE_WATCH)
+                        && !pm.hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE)
+                        && !pm.hasSystemFeature(PackageManager.FEATURE_LEANBACK);
+        Log.v(TAG, "isPhone(): returning " + isIt);
+        return isIt;
     }
 
     /** Checks whether AdServices is supported by the device / form factor. */
     public static boolean isDeviceSupported() {
         if (AdservicesTestHelper.isDebuggable()) {
-            String overriddenValue = SystemProperties.get(SYSPROP_ADSERVICES_SUPPORTED);
+            String overriddenValue =
+                    SystemProperties.get(SYSTEM_PROPERTY_FOR_DEBUGGING_SUPPORTED_ON_DEVICE);
             if (!TextUtils.isEmpty(overriddenValue)) {
                 boolean supported = Boolean.valueOf(overriddenValue);
                 Log.i(
                         TAG,
-                        "isDeviceSupported(): returning"
+                        "isDeviceSupported(): returning "
                                 + supported
                                 + " as defined by system property "
-                                + SYSPROP_ADSERVICES_SUPPORTED
+                                + SYSTEM_PROPERTY_FOR_DEBUGGING_SUPPORTED_ON_DEVICE
                                 + " ("
                                 + overriddenValue
                                 + ")");
@@ -65,8 +75,47 @@ public final class AdServicesSupportHelper {
         }
 
         boolean supported = isDeviceSupportedByDefault(sContext);
-        Log.v(TAG, "isDeviceSupported(): returning hardcoded value (" + supported + ")");
+        Log.v(TAG, "isDeviceSupported(): returning non-simulated value (" + supported + ")");
         return supported;
+    }
+
+    // TODO(b/297408848): rename to isAdservicesLiteDevice() or something like that
+    /** Checks whether the device has low ram. */
+    public static boolean isLowRamDevice() {
+        return isLowRamDevice(sContext);
+    }
+
+    private static boolean isLowRamDevice(Context context) {
+        if (AdservicesTestHelper.isDebuggable()) {
+            String overriddenValue =
+                    SystemProperties.get(SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW);
+            if (!TextUtils.isEmpty(overriddenValue)) {
+                boolean isLowRamDevice = Boolean.valueOf(overriddenValue);
+                Log.i(
+                        TAG,
+                        "isLowRamDevice(): returning "
+                                + isLowRamDevice
+                                + " as defined by system property "
+                                + SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW
+                                + " ("
+                                + overriddenValue
+                                + ")");
+                return isLowRamDevice;
+            }
+        }
+
+        boolean isLowRamDevice = context.getSystemService(ActivityManager.class).isLowRamDevice();
+        boolean isPhone = isPhone(context);
+        boolean isIt = isPhone && isLowRamDevice;
+        Log.v(
+                TAG,
+                "isLowRamDevice(): returning non-simulated value "
+                        + isIt
+                        + " when isPhone="
+                        + isPhone
+                        + " and isLowRamDevice="
+                        + isLowRamDevice);
+        return isIt;
     }
 
     /** Gets the value of AdServices global kill switch. */

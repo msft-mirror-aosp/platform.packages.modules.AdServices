@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Permet à une appli d\'accéder à l\'API AdServices Consent."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Accéder à l\'API Ad ID"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Permet à une appli d\'accéder à l\'API Ad ID."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"Accès à l\'API AdServices Cobalt Upload"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Autorise une application à accéder à l\'API AdServices Cobalt Upload."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Accéder à l\'API App Set ID"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Permet à une appli d\'accéder à l\'API App Set ID."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Accéder à l\'API Consent Service"</string>
@@ -40,8 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Permet à une appli d\'accéder à l\'API d\'état d\'activation d\'AdService."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Accès aux API d\'AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Permet à une application d\'accéder aux API d\'AdServicesManager."</string>
-    <!-- no translation found for app_label (5844694701336604490) -->
-    <skip />
+    <string name="app_label" msgid="5844694701336604490">"Confidentialité des annonces"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Essayez la bêta Confidentialité des annonces d\'Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android explore de nouvelles méthodes plus respectueuses de la confidentialité pour vous proposer des annonces dans les applis."</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"En savoir plus"</string>

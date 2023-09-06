@@ -199,7 +199,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
         // Log wipeout event triggered by request to uninstall package on device
         WipeoutStatus wipeoutStatus = new WipeoutStatus();
         wipeoutStatus.setWipeoutType(WipeoutStatus.WipeoutType.UNINSTALL);
-        logWipeoutStats(wipeoutStatus);
+        logWipeoutStats(wipeoutStatus, packageUri.toString());
     }
 
     @VisibleForTesting
@@ -218,7 +218,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
         // Log wipeout event triggered by request (from Android) to delete data of package on device
         WipeoutStatus wipeoutStatus = new WipeoutStatus();
         wipeoutStatus.setWipeoutType(WipeoutStatus.WipeoutType.CLEAR_DATA);
-        logWipeoutStats(wipeoutStatus);
+        logWipeoutStats(wipeoutStatus, packageUri.toString());
     }
 
     @VisibleForTesting
@@ -378,12 +378,13 @@ public class PackageChangedReceiver extends BroadcastReceiver {
         return SharedStorageDatabase.getInstance(context);
     }
 
-    private void logWipeoutStats(WipeoutStatus wipeoutStatus) {
+    private void logWipeoutStats(WipeoutStatus wipeoutStatus, String appPackageName) {
         AdServicesLoggerImpl.getInstance()
                 .logMeasurementWipeoutStats(
                         new MeasurementWipeoutStats.Builder()
                                 .setCode(AD_SERVICES_MEASUREMENT_WIPEOUT)
                                 .setWipeoutType(wipeoutStatus.getWipeoutType().ordinal())
+                                .setSourceRegistrant(appPackageName)
                                 .build());
     }
 }

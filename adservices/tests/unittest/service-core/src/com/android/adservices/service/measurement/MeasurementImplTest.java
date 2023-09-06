@@ -117,6 +117,8 @@ public final class MeasurementImplTest {
     private static final WebTriggerParams INPUT_TRIGGER_REGISTRATION_2 =
             new WebTriggerParams.Builder(REGISTRATION_URI_2).setDebugKeyAllowed(false).build();
     private static final long REQUEST_TIME = 10000L;
+    private static final String POST_BODY = "{\"ad_location\":\"bottom_right\"}";
+    private static final String AD_ID_VALUE = "ad_id_value";
 
     @Spy
     private DatastoreManager mDatastoreManager =
@@ -321,6 +323,35 @@ public final class MeasurementImplTest {
                         DEFAULT_AD_ID_PERMISSION,
                         System.currentTimeMillis());
         assertEquals(STATUS_INVALID_ARGUMENT, result);
+    }
+
+    @Test
+    public void testRegisterEvent_noOptionalParameters_success() {
+        final int result =
+                mMeasurementImpl.registerEvent(
+                        DEFAULT_URI,
+                        DEFAULT_CONTEXT.getPackageName(),
+                        SDK_PACKAGE_NAME,
+                        false,
+                        null,
+                        null,
+                        null);
+        assertEquals(STATUS_SUCCESS, result);
+    }
+
+    @Test
+    public void testRegisterEvent_optionalParameters_success() {
+        doReturn(true).when(mClickVerifier).isInputEventVerifiable(any(), anyLong());
+        final int result =
+                mMeasurementImpl.registerEvent(
+                        DEFAULT_URI,
+                        DEFAULT_CONTEXT.getPackageName(),
+                        SDK_PACKAGE_NAME,
+                        false,
+                        POST_BODY,
+                        getInputEvent(),
+                        AD_ID_VALUE);
+        assertEquals(STATUS_SUCCESS, result);
     }
 
     @Test

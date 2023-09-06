@@ -72,6 +72,7 @@ public class MeasurementHttpClient {
 
         // Overriding default headers to avoid leaking information
         urlConnection.setRequestProperty("User-Agent", "");
+        urlConnection.setRequestProperty("Version", flags.getMainlineTrainVersion());
 
         return urlConnection;
     }

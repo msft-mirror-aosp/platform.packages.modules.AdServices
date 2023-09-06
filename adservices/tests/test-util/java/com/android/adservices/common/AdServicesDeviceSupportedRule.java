@@ -18,33 +18,21 @@ package com.android.adservices.common;
 /** See {@link AbstractAdServicesDeviceSupportedRule}. */
 public final class AdServicesDeviceSupportedRule extends AbstractAdServicesDeviceSupportedRule {
 
-    /** Creates a rule using {@link Mode#SUPPORTED_BY_DEFAULT}. */
     public AdServicesDeviceSupportedRule() {
-        this(Mode.SUPPORTED_BY_DEFAULT);
-    }
-
-    /** Creates a rule with the given mode. */
-    public AdServicesDeviceSupportedRule(Mode mode) {
-        super(new AndroidLogger(AdServicesDeviceSupportedRule.class), mode);
+        super(AndroidLogger.getInstance());
     }
 
     @Override
-    public boolean isFeatureSupported() {
+    public boolean isAdServicesSupportedOnDevice() {
         boolean isSupported = AdServicesSupportHelper.isDeviceSupported();
-        mLog.v("isFeatureSupported(): %b", isSupported);
+        mLog.v("isAdServicesSupportedOnDevice(): %b", isSupported);
         return isSupported;
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * <p>Will always throw the exception (if any), as AdService APIs should not throw exceptions
-     * when running on unsupported devices.
-     */
     @Override
-    public void afterTest(boolean testShouldRunAsSupported, Throwable thrown) throws Throwable {
-        if (thrown != null) {
-            throw thrown;
-        }
+    public boolean isLowRamDevice() throws Exception {
+        boolean isLowRamDevice = AdServicesSupportHelper.isLowRamDevice();
+        mLog.v("isLowRamDevice(): %b", isLowRamDevice);
+        return isLowRamDevice;
     }
 }

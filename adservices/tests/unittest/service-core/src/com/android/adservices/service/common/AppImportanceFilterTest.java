@@ -20,6 +20,7 @@ import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREG
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND_SERVICE;
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastT;
 import static com.android.adservices.service.common.AppImportanceFilterTest.ApiCallStatsSubject.apiCallStats;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
@@ -35,30 +36,34 @@ import static org.mockito.Mockito.when;
 import android.adservices.common.AdServicesStatusUtils;
 import android.app.ActivityManager;
 import android.content.pm.PackageManager;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
 
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class AppImportanceFilterTest {
+public final class AppImportanceFilterTest {
+
+    private static final String TAG = AppImportanceFilterTest.class.getSimpleName();
+
     private static final int API_CLASS = AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
     private static final int API_NAME = AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
     private static final int APP_UID = 321;
@@ -71,17 +76,14 @@ public class AppImportanceFilterTest {
     @Mock private ActivityManager mActivityManager;
     @Mock AdServicesLogger mAdServiceLogger;
 
+    @Rule
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this).spyStatic(SdkLevel.class).build();
+
     private AppImportanceFilter mAppImportanceFilter;
-    private MockitoSession mMockitoSession;
 
     @Before
     public void setUp() {
-        mMockitoSession =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(SdkLevel.class)
-                        .initMocks(this)
-                        .startMocking();
-
         mAppImportanceFilter =
                 new AppImportanceFilter(
                         mActivityManager,
@@ -91,14 +93,9 @@ public class AppImportanceFilterTest {
                         () -> IMPORTANCE_FOREGROUND_SERVICE);
     }
 
-    @After
-    public void tearDown() {
-        mMockitoSession.finishMocking();
-    }
-
     @Test
     public void testCalledWithForegroundAppPackageName_onSMinus_succeedBySkippingCheck() {
-        ExtendedMockito.doReturn(false).when(SdkLevel::isAtLeastT);
+        mockIsAtLeastT(false);
 
         // No exception is thrown
         mAppImportanceFilter.assertCallerIsInForeground(APP_PACKAGE_NAME, API_NAME, SDK_NAME);
@@ -109,7 +106,7 @@ public class AppImportanceFilterTest {
 
     @Test
     public void testCalledWithForegroundAppPackageName_succeed() {
-        ExtendedMockito.doReturn(true).when(SdkLevel::isAtLeastT);
+        mockIsAtLeastT(true);
         when(mActivityManager.getPackageImportance(APP_PACKAGE_NAME))
                 .thenReturn(IMPORTANCE_FOREGROUND);
 
@@ -121,7 +118,7 @@ public class AppImportanceFilterTest {
 
     @Test
     public void testCalledWithForegroundServiceImportanceAppPackageName_succeed() {
-        ExtendedMockito.doReturn(true).when(SdkLevel::isAtLeastT);
+        mockIsAtLeastT(true);
         when(mActivityManager.getPackageImportance(APP_PACKAGE_NAME))
                 .thenReturn(IMPORTANCE_FOREGROUND_SERVICE);
 
@@ -134,7 +131,7 @@ public class AppImportanceFilterTest {
     @Test
     public void
             testCalledWithLessThanForegroundImportanceAppPackageName_throwsIllegalStateException() {
-        ExtendedMockito.doReturn(true).when(SdkLevel::isAtLeastT);
+        mockIsAtLeastT(true);
         when(mActivityManager.getPackageImportance(APP_PACKAGE_NAME))
                 .thenReturn(IMPORTANCE_VISIBLE);
 
@@ -149,7 +146,7 @@ public class AppImportanceFilterTest {
 
     @Test
     public void testCalledWithLessThanForegroundImportanceAppPackageName_logsFailure() {
-        ExtendedMockito.doReturn(true).when(SdkLevel::isAtLeastT);
+        mockIsAtLeastT(true);
         when(mActivityManager.getPackageImportance(APP_PACKAGE_NAME))
                 .thenReturn(IMPORTANCE_VISIBLE);
 
@@ -169,14 +166,13 @@ public class AppImportanceFilterTest {
                 .hasResultCode(AdServicesStatusUtils.STATUS_BACKGROUND_CALLER)
                 .hasSdkPackageName(SDK_NAME)
                 .hasAppPackageName(APP_PACKAGE_NAME);
-
         verifyZeroInteractions(mPackageManager);
     }
 
     @Test
     public void
             testFailureTryingToRetrievePackageImportancePackageName_throwsIllegalStateException() {
-        ExtendedMockito.doReturn(true).when(SdkLevel::isAtLeastT);
+        mockIsAtLeastT(true);
         when(mActivityManager.getPackageImportance(APP_PACKAGE_NAME))
                 .thenThrow(
                         new IllegalStateException("Simulating failure calling activity manager"));
@@ -190,7 +186,7 @@ public class AppImportanceFilterTest {
 
     @Test
     public void testCalledWithForegroundAppUid_onSMinus_succeedBySkippingCheck() {
-        ExtendedMockito.doReturn(false).when(SdkLevel::isAtLeastT);
+        mockIsAtLeastT(false);
 
         // No exception is thrown
         mAppImportanceFilter.assertCallerIsInForeground(APP_UID, API_NAME, SDK_NAME);
@@ -201,8 +197,8 @@ public class AppImportanceFilterTest {
 
     @Test
     public void testCalledWithForegroundAppUid_succeed() {
-        ExtendedMockito.doReturn(true).when(SdkLevel::isAtLeastT);
-        when(mActivityManager.getUidImportance(APP_UID)).thenReturn(IMPORTANCE_FOREGROUND);
+        mockIsAtLeastT(true);
+        mockGetUidImportance(APP_UID, IMPORTANCE_FOREGROUND);
 
         // No exception is thrown
         mAppImportanceFilter.assertCallerIsInForeground(APP_UID, API_NAME, SDK_NAME);
@@ -212,8 +208,8 @@ public class AppImportanceFilterTest {
 
     @Test
     public void testCalledWithForegroundServiceImportanceAppUid_succeed() {
-        ExtendedMockito.doReturn(true).when(SdkLevel::isAtLeastT);
-        when(mActivityManager.getUidImportance(APP_UID)).thenReturn(IMPORTANCE_FOREGROUND_SERVICE);
+        mockIsAtLeastT(true);
+        mockGetUidImportance(APP_UID, IMPORTANCE_FOREGROUND_SERVICE);
 
         // No exception is thrown
         mAppImportanceFilter.assertCallerIsInForeground(APP_UID, API_NAME, SDK_NAME);
@@ -223,8 +219,8 @@ public class AppImportanceFilterTest {
 
     @Test
     public void testCalledWithLessThanForegroundImportanceAppUid_throwsIllegalStateException() {
-        ExtendedMockito.doReturn(true).when(SdkLevel::isAtLeastT);
-        when(mActivityManager.getUidImportance(APP_UID)).thenReturn(IMPORTANCE_VISIBLE);
+        mockIsAtLeastT(true);
+        mockGetUidImportance(APP_UID, IMPORTANCE_VISIBLE);
 
         assertThrows(
                 WrongCallingApplicationStateException.class,
@@ -233,10 +229,9 @@ public class AppImportanceFilterTest {
 
     @Test
     public void testCalledWithLessThanForegroundImportanceAppUid_logsFailure() {
-        ExtendedMockito.doReturn(true).when(SdkLevel::isAtLeastT);
-        when(mActivityManager.getUidImportance(APP_UID)).thenReturn(IMPORTANCE_VISIBLE);
-        when(mPackageManager.getPackagesForUid(APP_UID))
-                .thenReturn(new String[] {APP_PACKAGE_NAME});
+        mockIsAtLeastT(true);
+        mockGetUidImportance(APP_UID, IMPORTANCE_VISIBLE);
+        mockGetPackagesForUid(APP_UID, APP_PACKAGE_NAME);
 
         assertThrows(
                 IllegalStateException.class,
@@ -256,10 +251,9 @@ public class AppImportanceFilterTest {
 
     @Test
     public void testCalledWithLessThanForegroundImportanceAppUidAndNullSdkName_logsFailure() {
-        ExtendedMockito.doReturn(true).when(SdkLevel::isAtLeastT);
-        when(mActivityManager.getUidImportance(APP_UID)).thenReturn(IMPORTANCE_VISIBLE);
-        when(mPackageManager.getPackagesForUid(APP_UID))
-                .thenReturn(new String[] {APP_PACKAGE_NAME});
+        mockIsAtLeastT(true);
+        mockGetUidImportance(APP_UID, IMPORTANCE_VISIBLE);
+        mockGetPackagesForUid(APP_UID, APP_PACKAGE_NAME);
 
         assertThrows(
                 WrongCallingApplicationStateException.class,
@@ -279,14 +273,63 @@ public class AppImportanceFilterTest {
 
     @Test
     public void testFailureTryingToRetrievePackageImportanceFromUid_throwsIllegalStateException() {
-        ExtendedMockito.doReturn(true).when(SdkLevel::isAtLeastT);
-        when(mActivityManager.getUidImportance(APP_UID))
-                .thenThrow(
-                        new IllegalStateException("Simulating failure calling activity manager"));
+        mockIsAtLeastT(true);
+        mockGetUidImportance(
+                APP_UID, new IllegalStateException("Simulating failure calling activity manager"));
 
         assertThrows(
                 IllegalStateException.class,
                 () -> mAppImportanceFilter.assertCallerIsInForeground(APP_UID, API_NAME, SDK_NAME));
+    }
+
+    @Test
+    public void
+            testSecurityExceptionTryingToRetrievePackageImportanceFromUid_throwsWrongCallingApplicationStateException() {
+        mockIsAtLeastT(true);
+        mockGetUidImportance(APP_UID, new SecurityException("No can do"));
+
+        WrongCallingApplicationStateException thrown =
+                assertThrows(
+                        WrongCallingApplicationStateException.class,
+                        () ->
+                                mAppImportanceFilter.assertCallerIsInForeground(
+                                        APP_UID, API_NAME, SDK_NAME));
+
+        assertWithMessage("exception message")
+                .that(thrown)
+                .hasMessageThat()
+                .contains(
+                        AdServicesStatusUtils
+                                .SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_TO_CROSS_USER_BOUNDARIES);
+
+        verify(mAdServiceLogger).logApiCallStats(mApiCallStatsArgumentCaptor.capture());
+        assertWithMessage("")
+                .about(apiCallStats())
+                .that(mApiCallStatsArgumentCaptor.getValue())
+                .hasCode(AD_SERVICES_API_CALLED)
+                .hasApiName(API_NAME)
+                .hasApiClass(API_CLASS)
+                .hasResultCode(
+                        AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_TO_CROSS_USER_BOUNDARIES)
+                .hasSdkPackageName(SDK_NAME)
+                .hasAppPackageName(AppImportanceFilter.UNKNOWN_APP_PACKAGE_NAME);
+    }
+
+    private void mockGetUidImportance(int uid, int result) {
+        Log.v(TAG, "mocking pm.getUidImportance(" + uid + ") returning " + result);
+        when(mActivityManager.getUidImportance(uid)).thenReturn(result);
+    }
+
+    private void mockGetUidImportance(int uid, RuntimeException result) {
+        Log.v(TAG, "mocking pm.getUidImportance(" + uid + ") throwing " + result);
+        when(mActivityManager.getUidImportance(uid)).thenThrow(result);
+    }
+
+    private void mockGetPackagesForUid(int uid, String... packages) {
+        Log.v(
+                TAG,
+                "mocking pm.getPackagesForUid(" + uid + ") returning " + Arrays.toString(packages));
+        when(mPackageManager.getPackagesForUid(uid)).thenReturn(packages);
     }
 
     /** Helper to generate a process info object */

@@ -96,6 +96,8 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
     private boolean mIsDebugMode;
     private String mPreviousAppAllowList;
 
+    // TODO(b/294423183): refactor to use AdServicesFlagsSetterRule instead of PhFlagsFixture
+
     @Before
     public void setup() {
         // Skip the test if it runs on unsupported platforms

@@ -34,9 +34,8 @@ import java.util.Objects;
  * be used by the caller to inform the choice of the custom audience the user should be added to.
  * Any field set by the caller cannot be overridden by the custom audience fetched from the {@code
  * fetchUri}. For more information about each field refer to {@link CustomAudience}.
- *
  */
-public class FetchAndJoinCustomAudienceRequest {
+public final class FetchAndJoinCustomAudienceRequest {
     @NonNull private final Uri mFetchUri;
     @Nullable private final String mName;
     @Nullable private final Instant mActivationTime;
