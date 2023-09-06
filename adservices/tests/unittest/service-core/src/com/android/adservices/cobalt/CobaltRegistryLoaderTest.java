@@ -47,14 +47,19 @@ public class CobaltRegistryLoaderTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
 
     @Test
+    public void cobaltRegistryIsValidated_isTrue() throws Exception {
+        assertThat(CobaltRegistryValidated.IS_REGISTRY_VALIDATED).isTrue();
+    }
+
+    @Test
     public void getRegistry_registryCanBeLoaded() throws Exception {
-        CobaltRegistry registry = CobaltRegistryLoader.getRegistry();
+        CobaltRegistry registry = CobaltRegistryLoader.getRegistry(CONTEXT);
         assertThat(registry).isNotEqualTo(CobaltRegistry.getDefaultInstance());
     }
 
     @Test
     public void getRegistry_unsupportedFeaturesNotInRegistry() throws Exception {
-        CobaltRegistry registry = CobaltRegistryLoader.getRegistry();
+        CobaltRegistry registry = CobaltRegistryLoader.getRegistry(CONTEXT);
         assertThat(registry.getCustomersCount()).isEqualTo(1);
         assertThat(registry.getCustomers(0).getProjectsCount()).isEqualTo(1);
 
