@@ -20,6 +20,8 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.res.XmlResourceParser;
 
+import androidx.annotation.VisibleForTesting;
+
 import com.android.adservices.service.exception.XmlParseException;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -54,6 +56,14 @@ public class AppManifestConfigParser {
      * @param parser the XmlParser representing the AdServices App Manifest configuration
      */
     public static AppManifestConfig getConfig(@NonNull XmlResourceParser parser)
+            throws XmlParseException, XmlPullParserException, IOException {
+        return getConfig(parser, /* enabledByDefault=*/ false);
+    }
+
+    // TODO(b/297585683): merge methods or add javadoc - most likely will need to read the flag
+    // here
+    @VisibleForTesting
+    static AppManifestConfig getConfig(@NonNull XmlResourceParser parser, boolean enabledByDefault)
             throws XmlParseException, XmlPullParserException, IOException {
         AppManifestIncludesSdkLibraryConfig includesSdkLibraryConfig;
         AppManifestAttributionConfig attributionConfig = null;
@@ -177,7 +187,8 @@ public class AppManifestConfigParser {
                 customAudiencesConfig,
                 topicsConfig,
                 adIdConfig,
-                appSetIdConfig);
+                appSetIdConfig,
+                enabledByDefault);
     }
 
     private static String getSdkLibrary(@NonNull XmlResourceParser parser) {
