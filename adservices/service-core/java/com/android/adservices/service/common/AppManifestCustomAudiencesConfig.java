@@ -16,10 +16,16 @@
 
 package com.android.adservices.service.common;
 
+import android.annotation.Nullable;
+
+import java.util.Collections;
 import java.util.List;
 
 /** Custom Audiences part of the app manifest config (<ad-services-config>). */
-public final class AppManifestCustomAudiencesConfig extends AppManifestApiConfig {
+final class AppManifestCustomAudiencesConfig extends AppManifestApiConfig {
+
+    @Nullable private static AppManifestCustomAudiencesConfig sEnabledByDefaultInstance;
+
     /**
      * Constructor.
      *
@@ -32,4 +38,12 @@ public final class AppManifestCustomAudiencesConfig extends AppManifestApiConfig
     }
 
     // TODO(b/237445006): Add app install related fields.
+
+    static AppManifestCustomAudiencesConfig getEnabledByDefaultInstance() {
+        if (sEnabledByDefaultInstance == null) {
+            sEnabledByDefaultInstance =
+                    new AppManifestCustomAudiencesConfig(true, Collections.emptyList());
+        }
+        return sEnabledByDefaultInstance;
+    }
 }
