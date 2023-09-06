@@ -467,25 +467,9 @@ public class UiUtils {
         assertThat(topicsButton.exists()).isTrue();
     }
 
-    public static void connectToWifi(UiDevice device) throws UiObjectNotFoundException {
-        UiUtils.startAndroidSettingsApp(device);
-
-        // Navigate to Wi-Fi
-        scrollToThenClickElementContainingText(device, "Network");
-        scrollToThenClickElementContainingText(device, "Internet");
-
-        // flip Wi-Fi switch if off
-        UiObject WifiSwitch =
-                device.findObject(new UiSelector().className("android.widget.Switch"));
-        WifiSwitch.waitForExists(LAUNCH_TIMEOUT);
-        if (!WifiSwitch.isChecked()) {
-            WifiSwitch.click();
-        }
-
-        // click first Wi-Fi connection
-        UiObject wifi = device.findObject(new UiSelector().textContains("Wifi"));
-        wifi.waitForExists(LONG_TIMEOUT);
-        wifi.click();
+    public static void connectToWifi() {
+        ShellUtils.runShellCommand("svc wifi enable");
+        ShellUtils.runShellCommand("cmd wifi connect-network VirtWifi open");
     }
 
     public static void turnOffWifi(UiDevice device)
