@@ -79,6 +79,7 @@ public class SdkSandboxActivityRegistryTest {
     @Test
     public void testUnregisterSdkSandboxActivityHandler() {
         IBinder token = mRegistry.register(mSdkContext, mHandler);
+        Intent intent = buildSandboxActivityIntent(token);
         mRegistry.unregister(mHandler);
         new Handler(Looper.getMainLooper())
                 .runWithScissors(
@@ -89,7 +90,7 @@ public class SdkSandboxActivityRegistryTest {
                                             IllegalArgumentException.class,
                                             () ->
                                                     mRegistry.notifyOnActivityCreation(
-                                                            token, activity));
+                                                            intent, activity));
                             assertThat(exception.getMessage())
                                     .isEqualTo(
                                             "There is no registered "
@@ -101,11 +102,12 @@ public class SdkSandboxActivityRegistryTest {
     @Test
     public void testNotifyOnActivityCreation() {
         IBinder token = mRegistry.register(mSdkContext, mHandler);
+        Intent intent = buildSandboxActivityIntent(token);
         new Handler(Looper.getMainLooper())
                 .runWithScissors(
                         () -> {
                             Activity activity = new Activity();
-                            mRegistry.notifyOnActivityCreation(token, activity);
+                            mRegistry.notifyOnActivityCreation(intent, activity);
 
                             ArgumentCaptor<Activity> activityArgumentCaptor =
                                     ArgumentCaptor.forClass(Activity.class);
@@ -119,12 +121,13 @@ public class SdkSandboxActivityRegistryTest {
     @Test
     public void testNotifyOnActivityCreationMultipleTimeSucceed() {
         IBinder token = mRegistry.register(mSdkContext, mHandler);
+        Intent intent = buildSandboxActivityIntent(token);
         new Handler(Looper.getMainLooper())
                 .runWithScissors(
                         () -> {
                             Activity activity = new Activity();
-                            mRegistry.notifyOnActivityCreation(token, activity);
-                            mRegistry.notifyOnActivityCreation(token, activity);
+                            mRegistry.notifyOnActivityCreation(intent, activity);
+                            mRegistry.notifyOnActivityCreation(intent, activity);
                         },
                         1000);
     }
@@ -176,6 +179,28 @@ public class SdkSandboxActivityRegistryTest {
         Mockito.when(mSdkContext.isCustomizedSdkContextEnabled()).thenReturn(true);
 
         assertThat(mRegistry.getContextInfo(intent)).isNull();
+    }
+
+    /**
+     * Test retrieving the SDK context from SdkSandboxActivityRegistry, passing an intent refers to
+     * the registered handler.
+     */
+    @Test
+    public void testGetSdkContext() {
+        final IBinder token = mRegistry.register(mSdkContext, mHandler);
+        Intent intent = buildSandboxActivityIntent(token);
+
+        SandboxedSdkContext sdkContext = mRegistry.getSdkContext(intent);
+        assertThat(sdkContext).isEqualTo(mSdkContext);
+    }
+
+    /** Ensure that handler has to be registered to retrieve the SDK context. */
+    @Test
+    public void testGetSdkContextIsNullForUnregisteredIntent() {
+        Intent intent = buildSandboxActivityIntent(new Binder());
+
+        SandboxedSdkContext sdkContext = mRegistry.getSdkContext(intent);
+        assertThat(sdkContext).isNull();
     }
 
     /**
