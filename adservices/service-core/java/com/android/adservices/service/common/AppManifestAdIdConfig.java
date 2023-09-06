@@ -16,10 +16,16 @@
 
 package com.android.adservices.service.common;
 
+import android.annotation.Nullable;
+
+import java.util.Collections;
 import java.util.List;
 
 /** AdId part of the app manifest config (<ad-services-config>). */
-public class AppManifestAdIdConfig extends AppManifestApiConfig {
+final class AppManifestAdIdConfig extends AppManifestApiConfig {
+
+    @Nullable private static AppManifestAdIdConfig sEnabledByDefaultInstance;
+
     /**
      * Constructor.
      *
@@ -28,5 +34,12 @@ public class AppManifestAdIdConfig extends AppManifestApiConfig {
      */
     public AppManifestAdIdConfig(boolean allowAllToAccess, List<String> allowAdPartnersToAccess) {
         super(allowAllToAccess, allowAdPartnersToAccess);
+    }
+
+    static AppManifestAdIdConfig getEnabledByDefaultInstance() {
+        if (sEnabledByDefaultInstance == null) {
+            sEnabledByDefaultInstance = new AppManifestAdIdConfig(true, Collections.emptyList());
+        }
+        return sEnabledByDefaultInstance;
     }
 }

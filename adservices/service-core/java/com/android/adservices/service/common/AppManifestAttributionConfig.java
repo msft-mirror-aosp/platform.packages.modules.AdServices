@@ -16,10 +16,16 @@
 
 package com.android.adservices.service.common;
 
+import android.annotation.Nullable;
+
+import java.util.Collections;
 import java.util.List;
 
 /** Attribution part of the app manifest config (<ad-services-config>). */
-public final class AppManifestAttributionConfig extends AppManifestApiConfig {
+final class AppManifestAttributionConfig extends AppManifestApiConfig {
+
+    @Nullable private static AppManifestAttributionConfig sEnabledByDefaultInstance;
+
     /**
      * Constructor.
      *
@@ -29,5 +35,13 @@ public final class AppManifestAttributionConfig extends AppManifestApiConfig {
     public AppManifestAttributionConfig(
             boolean allowAllToAccess, List<String> allowAdPartnersToAccess) {
         super(allowAllToAccess, allowAdPartnersToAccess);
+    }
+
+    static AppManifestAttributionConfig getEnabledByDefaultInstance() {
+        if (sEnabledByDefaultInstance == null) {
+            sEnabledByDefaultInstance =
+                    new AppManifestAttributionConfig(true, Collections.emptyList());
+        }
+        return sEnabledByDefaultInstance;
     }
 }

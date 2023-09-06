@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.AdServicesCommonManager;
+import android.adservices.common.AdServicesOutcomeReceiver;
 import android.content.Context;
 import android.os.OutcomeReceiver;
 
@@ -30,9 +31,11 @@ import androidx.test.runner.AndroidJUnit4;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -54,7 +57,9 @@ public class AdServicesCommonManagerTest {
             new AdServicesDeviceSupportedRule();
 
     @Test
-    public void testStatusManagerNotAuthorized() {
+    public void testStatusManagerNotAuthorizedOnSPlus() {
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
+
         overrideAdserviceEnableStatus(false);
 
         // At beginning, Sdk1 receives a false status.
@@ -71,10 +76,44 @@ public class AdServicesCommonManagerTest {
     }
 
     @Test
-    public void testSetStatusEnabledNotExecuted() throws Exception {
+    public void testSetStatusEnabledNotExecutedOnSPlus() throws Exception {
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
         mCommonManager.setAdServicesEnabled(true, true);
 
         ListenableFuture<Boolean> adServicesStatusResponse = getAdservicesStatus();
+
+        Exception adServicesStatusResponseException =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            adServicesStatusResponse.get(1, TimeUnit.SECONDS);
+                        });
+        assertThat(adServicesStatusResponseException.getCause())
+                .isInstanceOf(SecurityException.class);
+    }
+
+    @Test
+    public void testStatusManagerNotAuthorizedCompat() {
+        overrideAdserviceEnableStatus(false);
+
+        // At beginning, Sdk1 receives a false status.
+        ListenableFuture<Boolean> adServicesStatusResponse = getAdservicesStatusCompat();
+
+        Exception adServicesStatusResponseException =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            adServicesStatusResponse.get(1, TimeUnit.SECONDS);
+                        });
+        assertThat(adServicesStatusResponseException.getCause())
+                .isInstanceOf(SecurityException.class);
+    }
+
+    @Test
+    public void testSetStatusEnabledNotExecutedCompat() throws Exception {
+        mCommonManager.setAdServicesEnabled(true, true);
+
+        ListenableFuture<Boolean> adServicesStatusResponse = getAdservicesStatusCompat();
 
         Exception adServicesStatusResponseException =
                 assertThrows(
@@ -98,6 +137,28 @@ public class AdServicesCommonManagerTest {
                     mCommonManager.isAdServicesEnabled(
                             CALLBACK_EXECUTOR,
                             new OutcomeReceiver<Boolean, Exception>() {
+                                @Override
+                                public void onResult(Boolean result) {
+                                    completer.set(result);
+                                }
+
+                                @Override
+                                public void onError(Exception error) {
+                                    completer.setException(error);
+                                }
+                            });
+                    // This value is used only for debug purposes: it will be used in toString()
+                    // of returned future or error cases.
+                    return "getStatus";
+                });
+    }
+
+    private ListenableFuture<Boolean> getAdservicesStatusCompat() {
+        return CallbackToFutureAdapter.getFuture(
+                completer -> {
+                    mCommonManager.isAdServicesEnabled(
+                            CALLBACK_EXECUTOR,
+                            new AdServicesOutcomeReceiver<Boolean, Exception>() {
                                 @Override
                                 public void onResult(Boolean result) {
                                     completer.set(result);
