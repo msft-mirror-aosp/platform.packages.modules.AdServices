@@ -173,10 +173,10 @@ public class MeasurementDataDeleter {
                     dao.updateSourceStatus(sourceIds, Source.Status.MARKED_TO_DELETE);
                     dao.updateTriggerStatus(triggerIds, Trigger.Status.MARKED_TO_DELETE);
 
-                    // Log wipeout event triggered by request (from Chrome) to delete data of
-                    // package on device for parity
+                    // Log wipeout event triggered by request (from the delete registrations API)
                     WipeoutStatus wipeoutStatus = new WipeoutStatus();
-                    wipeoutStatus.setWipeoutType(WipeoutStatus.WipeoutType.UNKNOWN);
+                    wipeoutStatus.setWipeoutType(
+                            WipeoutStatus.WipeoutType.DELETE_REGISTRATIONS_API);
                     logWipeoutStats(
                             wipeoutStatus,
                             getRegistrant(deletionParam.getAppPackageName()).toString());
@@ -279,7 +279,7 @@ public class MeasurementDataDeleter {
                 .logMeasurementWipeoutStats(
                         new MeasurementWipeoutStats.Builder()
                                 .setCode(AD_SERVICES_MEASUREMENT_WIPEOUT)
-                                .setWipeoutType(wipeoutStatus.getWipeoutType().ordinal())
+                                .setWipeoutType(wipeoutStatus.getWipeoutType().getValue())
                                 .setSourceRegistrant(sourceRegistrant)
                                 .build());
     }
