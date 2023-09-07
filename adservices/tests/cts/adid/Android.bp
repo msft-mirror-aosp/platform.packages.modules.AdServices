@@ -23,6 +23,7 @@ android_test {
     ],
     static_libs: [
         "adservices-clients",
+        "adservices-test-utility",
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt",
         "truth-prebuilt",
@@ -42,3 +43,4 @@ android_test {
     test_mainline_modules: ["com.google.android.adservices.apex"],
     manifest: "AndroidManifest.xml",
 }
+
