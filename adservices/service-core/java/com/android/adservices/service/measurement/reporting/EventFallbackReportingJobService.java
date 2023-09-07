@@ -178,7 +178,6 @@ public final class EventFallbackReportingJobService extends JobService {
         return new JobInfo.Builder(
                         MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID,
                         new ComponentName(context, EventFallbackReportingJobService.class))
-                .setRequiresDeviceIdle(true)
                 .setRequiresBatteryNotLow(true)
                 .setPeriodic(AdServicesConfig.getMeasurementEventFallbackReportingJobPeriodMs())
                 .setPersisted(true)
