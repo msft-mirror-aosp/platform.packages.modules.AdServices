@@ -275,7 +275,7 @@ class AttributionJobHandler {
             Source source, Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
         if (!hasAttributionQuota(source, trigger, measurementDao)
-                || !isEnrollmentWithinPrivacyBounds(source, trigger, measurementDao)) {
+                || !isReportingOriginWithinPrivacyBounds(source, trigger, measurementDao)) {
             LogUtil.d("Attribution blocked by rate limits. Source ID: %s ; Trigger ID: %s ",
                     source.getId(), trigger.getId());
             return true;
@@ -1099,19 +1099,18 @@ class AttributionJobHandler {
         return Math.floorDiv(timestamp, TimeUnit.DAYS.toMillis(1)) * TimeUnit.DAYS.toMillis(1);
     }
 
-    private boolean isEnrollmentWithinPrivacyBounds(
+    private boolean isReportingOriginWithinPrivacyBounds(
             Source source, Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
         Optional<Pair<Uri, Uri>> publisherAndDestination =
                 getPublisherAndDestinationTopPrivateDomains(source, trigger);
         if (publisherAndDestination.isPresent()) {
             Integer count =
-                    measurementDao.countDistinctEnrollmentsPerPublisherXDestinationInAttribution(
+                    measurementDao.countDistinctReportingOriginsPerPublisherXDestInAttribution(
                             publisherAndDestination.get().first,
                             publisherAndDestination.get().second,
-                            trigger.getEnrollmentId(),
-                            trigger.getTriggerTime()
-                                    - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS,
+                            trigger.getRegistrationOrigin(),
+                            trigger.getTriggerTime() - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS,
                             trigger.getTriggerTime());
             if (count >= mFlags.getMeasurementMaxDistinctEnrollmentsInAttribution()) {
                 mDebugReportApi.scheduleTriggerDebugReport(
@@ -1180,6 +1179,7 @@ class AttributionJobHandler {
                 .setRegistrant(trigger.getRegistrant().toString())
                 .setSourceId(source.getId())
                 .setTriggerId(trigger.getId())
+                .setRegistrationOrigin(trigger.getRegistrationOrigin())
                 .build();
     }
 
