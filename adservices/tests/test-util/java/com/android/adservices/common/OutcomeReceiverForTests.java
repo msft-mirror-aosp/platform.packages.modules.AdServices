@@ -45,14 +45,14 @@ public final class OutcomeReceiverForTests<T> implements OutcomeReceiver<T, Exce
 
     @Override
     public void onError(Exception error) {
-        setMethodCalled("onError", error);
         mError = error;
+        setMethodCalled("onError", error);
     }
 
     @Override
     public void onResult(T result) {
-        setMethodCalled("onResult", result);
         mResult = result;
+        setMethodCalled("onResult", result);
     }
 
     /**
