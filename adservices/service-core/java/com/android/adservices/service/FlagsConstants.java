@@ -209,8 +209,13 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1 =
             "measurement_enable_ara_deduplication_alignment_v1";
+
+    public static final String KEY_MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING =
+            "measurement_enable_source_deactivation_after_filtering";
+
     public static final String KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS =
             "measurement_debug_reporting_fallback_job_period_ms";
+
     public static final String KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS =
             "measurement_verbose_debug_reporting_fallback_job_period_ms";
 

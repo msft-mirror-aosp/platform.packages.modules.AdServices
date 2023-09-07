@@ -470,54 +470,54 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testCountDistinctEnrollmentsPerPublisherXDestinationInAttribution_atWindow() {
+    public void testCountDistinctReportingOriginPerPublisherXDestinationInAttribution_atWindow() {
         Uri sourceSite = Uri.parse("android-app://publisher.app");
         Uri appDestination = Uri.parse("android-app://destination.app");
         String registrant = "android-app://registrant.app";
         List<Attribution> attributionsWithAppDestinations =
-                getAttributionsWithDifferentEnrollments(
+                getAttributionsWithDifferentReportingOrigins(
                         4, appDestination, 5000000001L, sourceSite, registrant);
         for (Attribution attribution : attributionsWithAppDestinations) {
             insertAttribution(attribution);
         }
         DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
-        String excludedEnrollmentId = "enrollment-id-0";
+        Uri excludedRegistrationOrigin = WebUtil.validUri("https://subdomain0.example.test");
         datastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
                             Integer.valueOf(3),
                             measurementDao
-                                    .countDistinctEnrollmentsPerPublisherXDestinationInAttribution(
+                                    .countDistinctReportingOriginsPerPublisherXDestInAttribution(
                                             sourceSite,
                                             appDestination,
-                                            excludedEnrollmentId,
+                                            excludedRegistrationOrigin,
                                             5000000000L,
                                             6000000000L));
                 });
     }
 
     @Test
-    public void testCountDistinctEnrollmentsPerPublisherXDestinationInAttribution_beyondWindow() {
+    public void testCountDistinctReportingOriginsPerPublisherXDestInAttribution_beyondWindow() {
         Uri sourceSite = Uri.parse("android-app://publisher.app");
         Uri appDestination = Uri.parse("android-app://destination.app");
         String registrant = "android-app://registrant.app";
         List<Attribution> attributionsWithAppDestinations =
-                getAttributionsWithDifferentEnrollments(
+                getAttributionsWithDifferentReportingOrigins(
                         4, appDestination, 5000000000L, sourceSite, registrant);
         for (Attribution attribution : attributionsWithAppDestinations) {
             insertAttribution(attribution);
         }
         DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
-        String excludedEnrollmentId = "enrollment-id-0";
+        Uri excludedReportingOrigin = WebUtil.validUri("https://subdomain.example0.test");
         datastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
                             Integer.valueOf(0),
                             measurementDao
-                                    .countDistinctEnrollmentsPerPublisherXDestinationInAttribution(
+                                    .countDistinctReportingOriginsPerPublisherXDestInAttribution(
                                             sourceSite,
                                             appDestination,
-                                            excludedEnrollmentId,
+                                            excludedReportingOrigin,
                                             5000000000L,
                                             6000000000L));
                 });
@@ -769,22 +769,22 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testCountDistinctEnrollmentsPerPublisherXDestinationInAttribution_appDestination() {
+    public void testCountDistinctReportingOriginsPerPublisherXDestinationInAttribution_appDest() {
         Uri sourceSite = Uri.parse("android-app://publisher.app");
         Uri webDestination = WebUtil.validUri("https://web-destination.test");
         Uri appDestination = Uri.parse("android-app://destination.app");
         String registrant = "android-app://registrant.app";
         List<Attribution> attributionsWithAppDestinations1 =
-                getAttributionsWithDifferentEnrollments(
+                getAttributionsWithDifferentReportingOrigins(
                         4, appDestination, 5000000000L, sourceSite, registrant);
         List<Attribution> attributionsWithAppDestinations2 =
-                getAttributionsWithDifferentEnrollments(
+                getAttributionsWithDifferentReportingOrigins(
                         2, appDestination, 5000000000L, sourceSite, registrant);
         List<Attribution> attributionsWithWebDestinations =
-                getAttributionsWithDifferentEnrollments(
+                getAttributionsWithDifferentReportingOrigins(
                         2, webDestination, 5500000000L, sourceSite, registrant);
         List<Attribution> attributionsOutOfWindow =
-                getAttributionsWithDifferentEnrollments(
+                getAttributionsWithDifferentReportingOrigins(
                         10, appDestination, 50000000000L, sourceSite, registrant);
         for (Attribution attribution : attributionsWithAppDestinations1) {
             insertAttribution(attribution);
@@ -799,38 +799,38 @@ public class MeasurementDaoTest {
             insertAttribution(attribution);
         }
         DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
-        String excludedEnrollmentId = "enrollment-id-0";
+        Uri excludedReportingOrigin = WebUtil.validUri("https://subdomain0.example.test");
         datastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
                             Integer.valueOf(3),
                             measurementDao
-                                    .countDistinctEnrollmentsPerPublisherXDestinationInAttribution(
+                                    .countDistinctReportingOriginsPerPublisherXDestInAttribution(
                                             sourceSite,
                                             appDestination,
-                                            excludedEnrollmentId,
+                                            excludedReportingOrigin,
                                             4000000000L,
                                             6000000000L));
                 });
     }
 
     @Test
-    public void testCountDistinctEnrollmentsPerPublisherXDestinationInAttribution_webDestination() {
+    public void testCountDistinctReportingOriginsPerPublisherXDestinationInAttribution_webDest() {
         Uri sourceSite = Uri.parse("android-app://publisher.app");
         Uri webDestination = WebUtil.validUri("https://web-destination.test");
         Uri appDestination = Uri.parse("android-app://destination.app");
         String registrant = "android-app://registrant.app";
         List<Attribution> attributionsWithAppDestinations =
-                getAttributionsWithDifferentEnrollments(
+                getAttributionsWithDifferentReportingOrigins(
                         2, appDestination, 5000000000L, sourceSite, registrant);
         List<Attribution> attributionsWithWebDestinations1 =
-                getAttributionsWithDifferentEnrollments(
+                getAttributionsWithDifferentReportingOrigins(
                         4, webDestination, 5000000000L, sourceSite, registrant);
         List<Attribution> attributionsWithWebDestinations2 =
-                getAttributionsWithDifferentEnrollments(
+                getAttributionsWithDifferentReportingOrigins(
                         2, webDestination, 5500000000L, sourceSite, registrant);
         List<Attribution> attributionsOutOfWindow =
-                getAttributionsWithDifferentEnrollments(
+                getAttributionsWithDifferentReportingOrigins(
                         10, webDestination, 50000000000L, sourceSite, registrant);
         for (Attribution attribution : attributionsWithAppDestinations) {
             insertAttribution(attribution);
@@ -845,16 +845,16 @@ public class MeasurementDaoTest {
             insertAttribution(attribution);
         }
         DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
-        String excludedEnrollmentId = "enrollment-id-3";
+        Uri excludedReportingOrigin = WebUtil.validUri("https://subdomain3.example.test");
         datastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
                             Integer.valueOf(3),
                             measurementDao
-                                    .countDistinctEnrollmentsPerPublisherXDestinationInAttribution(
+                                    .countDistinctReportingOriginsPerPublisherXDestInAttribution(
                                             sourceSite,
                                             webDestination,
-                                            excludedEnrollmentId,
+                                            excludedReportingOrigin,
                                             4000000000L,
                                             6000000000L));
                 });
@@ -4078,6 +4078,7 @@ public class MeasurementDaoTest {
                         .setSourceSite(source.getPublisher().toString())
                         .setRegistrant(source.getRegistrant().toString())
                         .setTriggerTime(trigger.getTriggerTime())
+                        .setRegistrationOrigin(trigger.getRegistrationOrigin())
                         .build();
         DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
 
@@ -4117,6 +4118,7 @@ public class MeasurementDaoTest {
                                 trigger.getTriggerTime()
                                         - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS
                                         + 1)
+                        .setRegistrationOrigin(trigger.getRegistrationOrigin())
                         .build();
         DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
 
@@ -4155,6 +4157,7 @@ public class MeasurementDaoTest {
                         .setTriggerTime(
                                 trigger.getTriggerTime()
                                         - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS)
+                        .setRegistrationOrigin(trigger.getRegistrationOrigin())
                         .build();
         DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
 
@@ -4621,6 +4624,7 @@ public class MeasurementDaoTest {
                         .setDestinationOrigin("android-app://installed-destination-site")
                         .setRegistrant("android-app://installed-source-site")
                         .setEnrollmentId("enrollment-id")
+                        .setRegistrationOrigin(REGISTRATION_ORIGIN)
                         .build());
         // Attribution has source site not installed, record will be deleted.
         attributionList.add(
@@ -4632,6 +4636,7 @@ public class MeasurementDaoTest {
                         .setDestinationOrigin("android-app://installed-destination-site")
                         .setRegistrant("android-app://installed-source-site")
                         .setEnrollmentId("enrollment-id")
+                        .setRegistrationOrigin(REGISTRATION_ORIGIN)
                         .build());
         // Attribution has destination site not installed, record will be deleted.
         attributionList.add(
@@ -4643,6 +4648,7 @@ public class MeasurementDaoTest {
                         .setDestinationOrigin("android-app://not-installed-destination-site")
                         .setRegistrant("android-app://installed-source-site")
                         .setEnrollmentId("enrollment-id")
+                        .setRegistrationOrigin(REGISTRATION_ORIGIN)
                         .build());
         attributionList.forEach(
                 attribution -> {
@@ -5856,7 +5862,7 @@ public class MeasurementDaoTest {
         return sources;
     }
 
-    private static List<Attribution> getAttributionsWithDifferentEnrollments(
+    private static List<Attribution> getAttributionsWithDifferentReportingOrigins(
             int numAttributions,
             Uri destinationSite,
             long triggerTime,
@@ -5871,7 +5877,9 @@ public class MeasurementDaoTest {
                             .setSourceOrigin(sourceSite.toString())
                             .setDestinationSite(destinationSite.toString())
                             .setDestinationOrigin(destinationSite.toString())
-                            .setEnrollmentId("enrollment-id-" + i)
+                            .setEnrollmentId("enrollment-id")
+                            .setRegistrationOrigin(
+                                    WebUtil.validUri("https://subdomain" + i + ".example.test"))
                             .setRegistrant(registrant);
             attributions.add(attributionBuilder.build());
         }
@@ -5888,6 +5896,9 @@ public class MeasurementDaoTest {
         values.put(AttributionContract.TRIGGER_TIME, attribution.getTriggerTime());
         values.put(AttributionContract.SOURCE_ID, attribution.getSourceId());
         values.put(AttributionContract.TRIGGER_ID, attribution.getTriggerId());
+        values.put(
+                AttributionContract.REGISTRATION_ORIGIN,
+                attribution.getRegistrationOrigin().toString());
         long row = db.insert("msmt_attribution", null, values);
         assertNotEquals("Attribution insertion failed", -1, row);
     }
@@ -5905,6 +5916,7 @@ public class MeasurementDaoTest {
                 .setRegistrant("android-app://registrant.app")
                 .setSourceId(sourceId)
                 .setTriggerId(triggerId)
+                .setRegistrationOrigin(REGISTRATION_ORIGIN)
                 .build();
     }
 
@@ -9165,6 +9177,10 @@ public class MeasurementDaoTest {
         index = cursor.getColumnIndex(MeasurementTables.AttributionContract.REGISTRANT);
         if (index > -1 && !cursor.isNull(index)) {
             builder.setRegistrant(cursor.getString(index));
+        }
+        index = cursor.getColumnIndex(MeasurementTables.AttributionContract.REGISTRATION_ORIGIN);
+        if (index > -1 && !cursor.isNull(index)) {
+            builder.setRegistrationOrigin(Uri.parse(cursor.getString(index)));
         }
         return builder.build();
     }
