@@ -2921,6 +2921,39 @@ public final class AsyncSourceFetcherTest {
     }
 
     @Test
+    public void testSourceRequest_filterData_shouldNotIncludeKookbackWindow() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        String filterData =
+                "  \"filter_data\": {\"product\":[\"1234\"], \"ctid\":[\"id\"], "
+                        + "\"_lookback_window\": 123} \n";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "  \"destination\": \"android-app://com"
+                                                + ".myapps\",\n"
+                                                + "  \"priority\": \"123\",\n"
+                                                + "  \"expiry\": \"456789\",\n"
+                                                + "  \"source_event_id\": \"987654321\",\n"
+                                                + filterData
+                                                + "}\n")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
     public void testMissingHeaderButWithRedirect() throws Exception {
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
