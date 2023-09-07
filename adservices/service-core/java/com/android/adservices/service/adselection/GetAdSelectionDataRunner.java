@@ -34,6 +34,7 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.datahandlers.AdSelectionInitialization;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
@@ -81,6 +82,7 @@ public class GetAdSelectionDataRunner {
     @NonNull private final ObliviousHttpEncryptor mObliviousHttpEncryptor;
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
+    @NonNull private final EncodedPayloadDao mEncodedPayloadDao;
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
@@ -100,6 +102,7 @@ public class GetAdSelectionDataRunner {
             @NonNull final ObliviousHttpEncryptor obliviousHttpEncryptor,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
             @NonNull final CustomAudienceDao customAudienceDao,
+            @NonNull final EncodedPayloadDao encodedPayloadDao,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final AdFilterer adFilterer,
             @NonNull final ExecutorService backgroundExecutorService,
@@ -112,6 +115,7 @@ public class GetAdSelectionDataRunner {
         Objects.requireNonNull(obliviousHttpEncryptor);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(customAudienceDao);
+        Objects.requireNonNull(encodedPayloadDao);
         Objects.requireNonNull(adFilterer);
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(backgroundExecutorService);
@@ -124,6 +128,7 @@ public class GetAdSelectionDataRunner {
         mObliviousHttpEncryptor = obliviousHttpEncryptor;
         mAdSelectionEntryDao = adSelectionEntryDao;
         mCustomAudienceDao = customAudienceDao;
+        mEncodedPayloadDao = encodedPayloadDao;
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
@@ -137,6 +142,7 @@ public class GetAdSelectionDataRunner {
         mBuyerInputGenerator =
                 new BuyerInputGenerator(
                         mCustomAudienceDao,
+                        mEncodedPayloadDao,
                         adFilterer,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -159,6 +165,7 @@ public class GetAdSelectionDataRunner {
             @NonNull final ObliviousHttpEncryptor obliviousHttpEncryptor,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
             @NonNull final CustomAudienceDao customAudienceDao,
+            @NonNull final EncodedPayloadDao encodedPayloadDao,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final AdFilterer adFilterer,
             @NonNull final ExecutorService backgroundExecutorService,
@@ -172,6 +179,7 @@ public class GetAdSelectionDataRunner {
         Objects.requireNonNull(obliviousHttpEncryptor);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(customAudienceDao);
+        Objects.requireNonNull(encodedPayloadDao);
         Objects.requireNonNull(adFilterer);
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(backgroundExecutorService);
@@ -185,6 +193,7 @@ public class GetAdSelectionDataRunner {
         mObliviousHttpEncryptor = obliviousHttpEncryptor;
         mAdSelectionEntryDao = adSelectionEntryDao;
         mCustomAudienceDao = customAudienceDao;
+        mEncodedPayloadDao = encodedPayloadDao;
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
@@ -198,6 +207,7 @@ public class GetAdSelectionDataRunner {
         mBuyerInputGenerator =
                 new BuyerInputGenerator(
                         mCustomAudienceDao,
+                        mEncodedPayloadDao,
                         adFilterer,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
