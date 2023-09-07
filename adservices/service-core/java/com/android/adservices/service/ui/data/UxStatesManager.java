@@ -89,7 +89,10 @@ public class UxStatesManager {
     public void persistAdServicesStates(AdServicesStates adServicesStates) {
         // Only a subset of states should be persisted.
         mConsentManager.setAdIdEnabled(adServicesStates.isAdIdEnabled());
-        mConsentManager.setU18Account(adServicesStates.isU18Account());
+        // TO-DO (b/285005057): Remove the if statement when users can graduate.
+        if (!mConsentManager.isU18Account()) {
+            mConsentManager.setU18Account(adServicesStates.isU18Account());
+        }
         mConsentManager.setAdultAccount(adServicesStates.isAdultAccount());
         mConsentManager.setEntryPointEnabled(adServicesStates.isPrivacySandboxUiEnabled());
     }

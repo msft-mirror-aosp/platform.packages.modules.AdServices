@@ -154,8 +154,6 @@ public class MeasurementDaoTest {
     private static final Uri APP_DESTINATION = Uri.parse("android-app://com.destination.example");
     private static final Uri REGISTRATION_ORIGIN =
             WebUtil.validUri("https://subdomain.example.test");
-    private static final List<Uri> ATTRIBUTION_DESTINATIONS =
-            List.of(Uri.parse("https://destination.test"));
 
     // Fake ID count for initializing triggers.
     private int mValueId = 1;
@@ -8234,13 +8232,13 @@ public class MeasurementDaoTest {
 
         // URL 1
         List<String> url1Ids = res.get("https://url1.test");
-        url1Ids.sort(String.CASE_INSENSITIVE_ORDER::compare);
+        url1Ids.sort(String.CASE_INSENSITIVE_ORDER);
         assertEquals(2, url1Ids.size());
         assertEquals("11", url1Ids.get(0));
         assertEquals("12", url1Ids.get(1));
         // URL 2
         List<String> url2Ids = res.get("https://url2.test");
-        url2Ids.sort(String.CASE_INSENSITIVE_ORDER::compare);
+        url2Ids.sort(String.CASE_INSENSITIVE_ORDER);
         assertEquals(1, url2Ids.size());
         assertEquals("21", url2Ids.get(0));
     }
@@ -8294,13 +8292,13 @@ public class MeasurementDaoTest {
 
         // URL 1
         List<String> url1Ids = res.get("https://url1.test");
-        url1Ids.sort(String.CASE_INSENSITIVE_ORDER::compare);
+        url1Ids.sort(String.CASE_INSENSITIVE_ORDER);
         assertEquals(2, url1Ids.size());
         assertEquals("11", url1Ids.get(0));
         assertEquals("12", url1Ids.get(1));
         // URL 2
         List<String> url2Ids = res.get("https://url2.test");
-        url2Ids.sort(String.CASE_INSENSITIVE_ORDER::compare);
+        url2Ids.sort(String.CASE_INSENSITIVE_ORDER);
         assertEquals(1, url2Ids.size());
         assertEquals("21", url2Ids.get(0));
 
@@ -8321,13 +8319,13 @@ public class MeasurementDaoTest {
 
         // URL 1
         url1Ids = res.get("https://url1.test");
-        url1Ids.sort(String.CASE_INSENSITIVE_ORDER::compare);
+        url1Ids.sort(String.CASE_INSENSITIVE_ORDER);
         assertEquals(2, url1Ids.size());
         assertEquals("11", url1Ids.get(0));
         assertEquals("12", url1Ids.get(1));
         // URL 2
         url2Ids = res.get("https://url2.test");
-        url2Ids.sort(String.CASE_INSENSITIVE_ORDER::compare);
+        url2Ids.sort(String.CASE_INSENSITIVE_ORDER);
         assertEquals(1, url2Ids.size());
         assertEquals("21", url2Ids.get(0));
     }
@@ -8371,12 +8369,12 @@ public class MeasurementDaoTest {
         // URL 1
         List<String> url1Ids = res.get("https://url1.test");
         assertEquals(2, url1Ids.size());
-        url1Ids.sort(String.CASE_INSENSITIVE_ORDER::compare);
+        url1Ids.sort(String.CASE_INSENSITIVE_ORDER);
         assertEquals("11", url1Ids.get(0));
         assertEquals("12", url1Ids.get(1));
         // URL 2
         List<String> url2Ids = res.get("https://url2.test");
-        url2Ids.sort(String.CASE_INSENSITIVE_ORDER::compare);
+        url2Ids.sort(String.CASE_INSENSITIVE_ORDER);
         assertEquals(1, url2Ids.size());
         assertEquals("21", url2Ids.get(0));
     }
@@ -8442,12 +8440,12 @@ public class MeasurementDaoTest {
         // URL 1
         List<String> url1Ids = res.get("https://url1.test");
         assertEquals(2, url1Ids.size());
-        url1Ids.sort(String.CASE_INSENSITIVE_ORDER::compare);
+        url1Ids.sort(String.CASE_INSENSITIVE_ORDER);
         assertEquals("11", url1Ids.get(0));
         assertEquals("12", url1Ids.get(1));
         // URL 2
         List<String> url2Ids = res.get("https://url2.test");
-        url2Ids.sort(String.CASE_INSENSITIVE_ORDER::compare);
+        url2Ids.sort(String.CASE_INSENSITIVE_ORDER);
         assertEquals(1, url2Ids.size());
         assertEquals("21", url2Ids.get(0));
     }
@@ -8507,7 +8505,7 @@ public class MeasurementDaoTest {
                         });
         res = resOpt.get();
         assertEquals(1, res.size());
-        assertEquals(res, List.of("2"));
+        assertEquals(List.of("2"), res);
     }
 
     @Test
@@ -8556,7 +8554,7 @@ public class MeasurementDaoTest {
                         });
         res = resOpt.get();
         assertEquals(1, res.size());
-        assertEquals(res, List.of("2"));
+        assertEquals(List.of("2"), res);
     }
 
     @Test
@@ -8658,11 +8656,11 @@ public class MeasurementDaoTest {
                         (dao) -> dao.getKeyValueData(debugId, DataType.DEBUG_REPORT_RETRY_COUNT));
 
         assertTrue(eventCount.isPresent());
-        assertEquals((eventCount.get().getReportRetryCount()), 1);
+        assertEquals(1, (eventCount.get().getReportRetryCount()));
         assertTrue(aggregateCount.isPresent());
-        assertEquals((aggregateCount.get().getReportRetryCount()), 1);
+        assertEquals(1, (aggregateCount.get().getReportRetryCount()));
         assertTrue(debugCount.isPresent());
-        assertEquals((debugCount.get().getReportRetryCount()), 1);
+        assertEquals(1, (debugCount.get().getReportRetryCount()));
 
         datastoreManager.runInTransaction(
                 (dao) -> {
@@ -8684,11 +8682,11 @@ public class MeasurementDaoTest {
                         (dao) -> dao.getKeyValueData(debugId, DataType.DEBUG_REPORT_RETRY_COUNT));
 
         assertTrue(eventCount.isPresent());
-        assertEquals((eventCount.get().getReportRetryCount()), 2);
+        assertEquals(2, (eventCount.get().getReportRetryCount()));
         assertTrue(aggregateCount.isPresent());
-        assertEquals((aggregateCount.get().getReportRetryCount()), 2);
+        assertEquals(2, (aggregateCount.get().getReportRetryCount()));
         assertTrue(debugCount.isPresent());
-        assertEquals((debugCount.get().getReportRetryCount()), 1);
+        assertEquals(1, (debugCount.get().getReportRetryCount()));
     }
 
     private void queryAndAssertSourceEntries(
