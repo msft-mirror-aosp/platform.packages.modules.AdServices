@@ -69,10 +69,12 @@ public class ReconsentNotificationTriggerTest {
         // consent debug mode is turned off for this test class as we only care about the
         // first trigger (API call).
         mDevice.pressHome();
+
         UiUtils.disableConsentDebugMode();
         UiUtils.disableSchedulingParams();
         UiUtils.setSourceOfTruthToPPAPI();
         UiUtils.clearSavedStatus();
+        UiUtils.disableNotificationFlowV2();
     }
 
     @After
