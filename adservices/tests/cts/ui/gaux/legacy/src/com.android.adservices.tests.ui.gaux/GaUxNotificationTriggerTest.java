@@ -66,6 +66,8 @@ public class GaUxNotificationTriggerTest {
         // first trigger (API call).
         UiUtils.enableConsentDebugMode();
 
+        UiUtils.disableNotificationFlowV2();
+
         mDevice.pressHome();
     }
 

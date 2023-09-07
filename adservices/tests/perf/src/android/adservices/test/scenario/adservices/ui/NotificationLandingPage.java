@@ -48,7 +48,7 @@ public class NotificationLandingPage {
     private static UiDevice sDevice;
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
         UiUtils.disableGlobalKillswitch();
         // Initialize UiDevice instance
         sDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
