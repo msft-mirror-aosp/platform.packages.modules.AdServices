@@ -209,6 +209,7 @@ public class AuctionServerE2ETest {
     private static final float SCORE = 5;
     private static final AuctionResult AUCTION_RESULT =
             AuctionResult.newBuilder()
+                    .setAdType(AuctionResult.AdType.REMARKETING_AD)
                     .setAdRenderUrl(WINNER_AD_RENDER_URI.toString())
                     .setCustomAudienceName(WINNING_CUSTOM_AUDIENCE_NAME)
                     .setCustomAudienceOwner(WINNING_CUSTOM_AUDIENCE_OWNER)
