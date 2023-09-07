@@ -7692,7 +7692,7 @@ public class PhFlagsTest {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED,
                 Boolean.toString(phOverridingValue),
-                /* makeDefault */ !IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT);
+                /* makeDefault */ false);
 
         assertThat(mPhFlags.isU18SupervisedAccountEnabled()).isEqualTo(phOverridingValue);
     }
