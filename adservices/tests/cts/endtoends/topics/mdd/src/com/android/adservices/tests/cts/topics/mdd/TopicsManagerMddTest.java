@@ -60,7 +60,7 @@ public class TopicsManagerMddTest {
     // Override the Epoch Job Period to this value to speed up the epoch computation.
     private static final long TEST_EPOCH_JOB_PERIOD_MS = 3000;
     // Waiting time for assets to be downloaded after triggering MDD job.
-    private static final long TEST_MDD_DOWNLOAD_WAIT_TIME_MS = 45000;
+    private static final long TEST_MDD_DOWNLOAD_WAIT_TIME_MS = 20000;
     // Waiting time for the AdvertisingTopicsClient to unbind.
     private static final long TEST_UNBIND_WAIT_TIME = 3000;
 
@@ -195,13 +195,13 @@ public class TopicsManagerMddTest {
 
     private String getDefaultMddManifestFileUrl() {
         return ShellUtils.runShellCommand(
-                "device_config get adservices mdd_topics_classifier_manifest_file_url");
+                "getprop debug.adservices.mdd_topics_classifier_manifest_file_url");
     }
 
     // Override the flag to set manifest url for Mdd.
     private void overrideMddManifestFileUrl(String val) {
         ShellUtils.runShellCommand(
-                "device_config put adservices mdd_topics_classifier_manifest_file_url " + val);
+                "setprop debug.adservices.mdd_topics_classifier_manifest_file_url " + val);
     }
 
     // Override the Epoch Period to shorten the Epoch Length in the test.
