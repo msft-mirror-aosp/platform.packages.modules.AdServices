@@ -19,6 +19,7 @@ package com.android.adservices.service.common;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastS;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
 
@@ -43,7 +44,6 @@ public final class AndroidManifestConfigParserTest {
     private static final String TEST_APP_PACKAGE_NAME = "com.android.adservices.servicecoretest";
     private static final String RESOURCE_NAME = "ad_services_config";
     private static final String RESOURCE_TYPE = "xml";
-    private static final String MISSING_PROPERTY_ERROR_MSG = "Missing AdServices config property!";
     private static final String MISSING_RESOURCE_ERROR_MSG =
             "Missing resource attribute in AdServices config property!";
 
@@ -99,13 +99,9 @@ public final class AndroidManifestConfigParserTest {
         XmlResourceParser parser = createParser(R.xml.android_manifest_missing_property);
         Resources resources =
                 mContext.getPackageManager().getResourcesForApplication(TEST_APP_PACKAGE_NAME);
-        Exception e =
-                assertThrows(
-                        NoSuchElementException.class,
-                        () ->
-                                AndroidManifestConfigParser.getAdServicesConfigResourceId(
-                                        parser, resources));
-        assertThat(e.getMessage()).isEqualTo(MISSING_PROPERTY_ERROR_MSG);
+        assertWithMessage("resource id for android_manifest_missing_property.xml")
+                .that(AndroidManifestConfigParser.getAdServicesConfigResourceId(parser, resources))
+                .isNull();
     }
 
     @Test
@@ -116,13 +112,10 @@ public final class AndroidManifestConfigParserTest {
                 createParser(R.xml.android_manifest_missing_property_inside_application);
         Resources resources =
                 mContext.getPackageManager().getResourcesForApplication(TEST_APP_PACKAGE_NAME);
-        Exception e =
-                assertThrows(
-                        NoSuchElementException.class,
-                        () ->
-                                AndroidManifestConfigParser.getAdServicesConfigResourceId(
-                                        parser, resources));
-        assertThat(e.getMessage()).isEqualTo(MISSING_PROPERTY_ERROR_MSG);
+        assertWithMessage(
+                        "resource id for android_manifest_missing_property_inside_application.xml")
+                .that(AndroidManifestConfigParser.getAdServicesConfigResourceId(parser, resources))
+                .isNull();
     }
 
     @Test
@@ -132,13 +125,9 @@ public final class AndroidManifestConfigParserTest {
         XmlResourceParser parser = createParser(R.xml.android_manifest_missing_property_name);
         Resources resources =
                 mContext.getPackageManager().getResourcesForApplication(TEST_APP_PACKAGE_NAME);
-        Exception e =
-                assertThrows(
-                        NoSuchElementException.class,
-                        () ->
-                                AndroidManifestConfigParser.getAdServicesConfigResourceId(
-                                        parser, resources));
-        assertThat(e.getMessage()).isEqualTo(MISSING_PROPERTY_ERROR_MSG);
+        assertWithMessage("resource id for android_manifest_missing_property_name.xml")
+                .that(AndroidManifestConfigParser.getAdServicesConfigResourceId(parser, resources))
+                .isNull();
     }
 
     @Test
@@ -148,13 +137,9 @@ public final class AndroidManifestConfigParserTest {
         XmlResourceParser parser = createParser(R.xml.android_manifest_incorrect_property_name);
         Resources resources =
                 mContext.getPackageManager().getResourcesForApplication(TEST_APP_PACKAGE_NAME);
-        Exception e =
-                assertThrows(
-                        NoSuchElementException.class,
-                        () ->
-                                AndroidManifestConfigParser.getAdServicesConfigResourceId(
-                                        parser, resources));
-        assertThat(e.getMessage()).isEqualTo(MISSING_PROPERTY_ERROR_MSG);
+        assertWithMessage("resource id for android_manifest_incorrect_property_name.xml")
+                .that(AndroidManifestConfigParser.getAdServicesConfigResourceId(parser, resources))
+                .isNull();
     }
 
     @Test
@@ -165,13 +150,9 @@ public final class AndroidManifestConfigParserTest {
                 createParser(R.xml.android_manifest_missing_property_incorrect_depth);
         Resources resources =
                 mContext.getPackageManager().getResourcesForApplication(TEST_APP_PACKAGE_NAME);
-        Exception e =
-                assertThrows(
-                        NoSuchElementException.class,
-                        () ->
-                                AndroidManifestConfigParser.getAdServicesConfigResourceId(
-                                        parser, resources));
-        assertThat(e.getMessage()).isEqualTo(MISSING_PROPERTY_ERROR_MSG);
+        assertWithMessage("resource id for android_manifest_missing_property_incorrect_depth.xml")
+                .that(AndroidManifestConfigParser.getAdServicesConfigResourceId(parser, resources))
+                .isNull();
     }
 
     @Test
