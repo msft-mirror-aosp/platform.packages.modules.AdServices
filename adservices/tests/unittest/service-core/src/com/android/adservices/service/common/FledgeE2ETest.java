@@ -55,6 +55,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
 
 import android.adservices.adid.AdId;
 import android.adservices.adselection.AdSelectionCallback;
@@ -133,6 +134,7 @@ import com.android.adservices.service.adselection.AdCost;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
 import com.android.adservices.service.adselection.AdIdFetcher;
 import com.android.adservices.service.adselection.AdSelectionServiceImpl;
+import com.android.adservices.service.adselection.DebugReportSenderJobService;
 import com.android.adservices.service.adselection.EventReporter;
 import com.android.adservices.service.adselection.JsVersionHelper;
 import com.android.adservices.service.adselection.JsVersionRegister;
@@ -344,6 +346,7 @@ public class FledgeE2ETest {
                         .mockStatic(BackgroundFetchJobService.class)
                         .mockStatic(ConsentManager.class)
                         .mockStatic(AppImportanceFilter.class)
+                        .mockStatic(DebugReportSenderJobService.class)
                         .strictness(Strictness.LENIENT)
                         .initMocks(this)
                         .startMocking();
@@ -1964,6 +1967,7 @@ public class FledgeE2ETest {
                         /* debugReportingLatch= */ null);
         doNothing()
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
+        doNothing().when(() -> DebugReportSenderJobService.scheduleIfNeeded(any(), anyBoolean()));
         mMockAdIdWorker.setResult(MockAdIdWorker.MOCK_AD_ID, false);
 
         AdSelectionTestCallback resultsCallback =
@@ -2013,6 +2017,9 @@ public class FledgeE2ETest {
                                 })
                         .collect(Collectors.toSet());
         assertEquals(expectedDebugUris, actualDebugUris);
+        verify(
+                () -> DebugReportSenderJobService.scheduleIfNeeded(any(Context.class), eq(false)),
+                times(1));
     }
 
     @Test
@@ -2053,6 +2060,7 @@ public class FledgeE2ETest {
                         /* debugReportingLatch= */ null);
         doNothing()
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
+        doNothing().when(() -> DebugReportSenderJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelectionAndWaitForFullCallback(
@@ -2074,6 +2082,9 @@ public class FledgeE2ETest {
                         CommonFixture.FIXED_NEXT_ONE_DAY, 1000);
         assertNotNull(debugReports);
         assertTrue(debugReports.isEmpty());
+        verify(
+                () -> DebugReportSenderJobService.scheduleIfNeeded(any(Context.class), eq(false)),
+                never());
     }
 
     @Test
