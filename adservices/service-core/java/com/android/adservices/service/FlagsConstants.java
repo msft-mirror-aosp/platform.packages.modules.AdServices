@@ -62,6 +62,8 @@ public final class FlagsConstants {
 
     public static final String KEY_ERROR_CODE_LOGGING_DENY_LIST = "error_code_logging_deny_list";
 
+    public static final String KEY_MAINLINE_TRAIN_VERSION = "mainline_train_version";
+
     // Topics keys
     public static final String KEY_TOPICS_EPOCH_JOB_PERIOD_MS = "topics_epoch_job_period_ms";
     public static final String KEY_TOPICS_EPOCH_JOB_FLEX_MS = "topics_epoch_job_flex_ms";
@@ -207,8 +209,13 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1 =
             "measurement_enable_ara_deduplication_alignment_v1";
+
+    public static final String KEY_MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING =
+            "measurement_enable_source_deactivation_after_filtering";
+
     public static final String KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS =
             "measurement_debug_reporting_fallback_job_period_ms";
+
     public static final String KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS =
             "measurement_verbose_debug_reporting_fallback_job_period_ms";
 
@@ -232,6 +239,11 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE =
             "measurement_throw_unknown_exception_sampling_rate";
+    static final String KEY_MEASUREMENT_REPORT_RETRY_LIMIT = "measurement_report_retry_limit";
+    static final String KEY_MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED =
+            "measurement_report_retry_limit_enabled";
+    public static final String KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST =
+            "measurement_app_package_name_logging_allowlist";
 
     // FLEDGE Custom Audience keys
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT =

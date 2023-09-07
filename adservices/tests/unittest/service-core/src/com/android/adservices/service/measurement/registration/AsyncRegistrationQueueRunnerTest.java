@@ -1662,6 +1662,7 @@ public class AsyncRegistrationQueueRunnerTest {
                         .setSourceSite(source.getPublisher().toString())
                         .setRegistrant(source.getRegistrant().toString())
                         .setTriggerTime(source.getEventTime())
+                        .setRegistrationOrigin(source.getRegistrationOrigin())
                         .build(),
                 attributionRateLimitArgCaptor.getValue());
     }
@@ -1711,6 +1712,7 @@ public class AsyncRegistrationQueueRunnerTest {
                         .setSourceSite(source.getPublisher().toString())
                         .setRegistrant(source.getRegistrant().toString())
                         .setTriggerTime(source.getEventTime())
+                        .setRegistrationOrigin(source.getRegistrationOrigin())
                         .build(),
                 attributionRateLimitArgCaptor.getValue());
     }
@@ -1765,6 +1767,7 @@ public class AsyncRegistrationQueueRunnerTest {
                         .setSourceSite(source.getPublisher().toString())
                         .setRegistrant(source.getRegistrant().toString())
                         .setTriggerTime(source.getEventTime())
+                        .setRegistrationOrigin(source.getRegistrationOrigin())
                         .build(),
                 attributionRateLimitArgCaptor.getAllValues().get(0));
 
@@ -1777,6 +1780,7 @@ public class AsyncRegistrationQueueRunnerTest {
                         .setSourceSite(source.getPublisher().toString())
                         .setRegistrant(source.getRegistrant().toString())
                         .setTriggerTime(source.getEventTime())
+                        .setRegistrationOrigin(source.getRegistrationOrigin())
                         .build(),
                 attributionRateLimitArgCaptor.getAllValues().get(1));
     }
@@ -1823,6 +1827,7 @@ public class AsyncRegistrationQueueRunnerTest {
                         .setSourceSite(source.getPublisher().toString())
                         .setRegistrant(source.getRegistrant().toString())
                         .setTriggerTime(source.getEventTime())
+                        .setRegistrationOrigin(source.getRegistrationOrigin())
                         .build(),
                 attributionRateLimitArgCaptor.getValue());
     }

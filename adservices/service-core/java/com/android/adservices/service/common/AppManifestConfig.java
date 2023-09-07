@@ -27,6 +27,8 @@ import android.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
 
+import java.util.function.Supplier;
+
 /** The object representing the AdServices manifest config. */
 public final class AppManifestConfig {
     @NonNull private final AppManifestIncludesSdkLibraryConfig mIncludesSdkLibraryConfig;
@@ -35,6 +37,9 @@ public final class AppManifestConfig {
     @Nullable private final AppManifestTopicsConfig mTopicsConfig;
     @Nullable private final AppManifestAdIdConfig mAdIdConfig;
     @Nullable private final AppManifestAppSetIdConfig mAppSetIdConfig;
+    // TODO(b/297585683): remove this attribute (and update test cases) once it's always enabled by
+    // default (it will be initially determined by a flag).
+    private final boolean mEnabledByDefault;
 
     /**
      * AdServices manifest config must contain configs for Attribution, Custom Audiences, AdId,
@@ -49,6 +54,7 @@ public final class AppManifestConfig {
      * @param topicsConfig the config for Topics.
      * @param adIdConfig the config for adId.
      * @param appSetIdConfig the config for appSetId.
+     * @param enabledByDefault whether APIs should be enabled by default when missing from the
      */
     public AppManifestConfig(
             @NonNull AppManifestIncludesSdkLibraryConfig includesSdkLibraryConfig,
@@ -56,13 +62,15 @@ public final class AppManifestConfig {
             @Nullable AppManifestCustomAudiencesConfig customAudiencesConfig,
             @Nullable AppManifestTopicsConfig topicsConfig,
             @Nullable AppManifestAdIdConfig adIdConfig,
-            @Nullable AppManifestAppSetIdConfig appSetIdConfig) {
+            @Nullable AppManifestAppSetIdConfig appSetIdConfig,
+            boolean enabledByDefault) {
         mIncludesSdkLibraryConfig = includesSdkLibraryConfig;
         mAttributionConfig = attributionConfig;
         mCustomAudiencesConfig = customAudiencesConfig;
         mTopicsConfig = topicsConfig;
         mAdIdConfig = adIdConfig;
         mAppSetIdConfig = appSetIdConfig;
+        mEnabledByDefault = enabledByDefault;
     }
 
     /** Getter for IncludesSdkLibraryConfig. */
@@ -78,7 +86,10 @@ public final class AppManifestConfig {
      */
     @Nullable
     public AppManifestAttributionConfig getAttributionConfig() {
-        return getConfig(TAG_ATTRIBUTION, mAttributionConfig);
+        return getConfig(
+                TAG_ATTRIBUTION,
+                mAttributionConfig,
+                AppManifestAttributionConfig::getEnabledByDefaultInstance);
     }
 
     /**
@@ -98,7 +109,10 @@ public final class AppManifestConfig {
      */
     @Nullable
     public AppManifestCustomAudiencesConfig getCustomAudiencesConfig() {
-        return getConfig(TAG_CUSTOM_AUDIENCES, mCustomAudiencesConfig);
+        return getConfig(
+                TAG_CUSTOM_AUDIENCES,
+                mCustomAudiencesConfig,
+                AppManifestCustomAudiencesConfig::getEnabledByDefaultInstance);
     }
 
     /**
@@ -118,7 +132,8 @@ public final class AppManifestConfig {
      */
     @Nullable
     public AppManifestTopicsConfig getTopicsConfig() {
-        return getConfig(TAG_TOPICS, mTopicsConfig);
+        return getConfig(
+                TAG_TOPICS, mTopicsConfig, AppManifestTopicsConfig::getEnabledByDefaultInstance);
     }
 
     /**
@@ -138,7 +153,7 @@ public final class AppManifestConfig {
      */
     @Nullable
     public AppManifestAdIdConfig getAdIdConfig() {
-        return getConfig(TAG_ADID, mAdIdConfig);
+        return getConfig(TAG_ADID, mAdIdConfig, AppManifestAdIdConfig::getEnabledByDefaultInstance);
     }
 
     /**
@@ -157,7 +172,10 @@ public final class AppManifestConfig {
      */
     @Nullable
     public AppManifestAppSetIdConfig getAppSetIdConfig() {
-        return getConfig(TAG_APPSETID, mAppSetIdConfig);
+        return getConfig(
+                TAG_APPSETID,
+                mAppSetIdConfig,
+                AppManifestAppSetIdConfig::getEnabledByDefaultInstance);
     }
 
     /**
@@ -169,20 +187,25 @@ public final class AppManifestConfig {
         return isAllowedAccess(TAG_APPSETID, mAppSetIdConfig, sdk);
     }
 
-    @Nullable
-    private <T extends AppManifestApiConfig> T getConfig(String tag, @Nullable T config) {
+    private <T extends AppManifestApiConfig> T getConfig(
+            String tag, @Nullable T config, Supplier<T> supplier) {
         if (config != null) {
             return config;
         }
-        LogUtil.v("app manifest config " + tag + " tag not found, returning null");
+        if (mEnabledByDefault) {
+            LogUtil.v("app manifest config tag '%s' not found, returning default", tag);
+            return supplier.get();
+        }
+        LogUtil.v("app manifest config tag '%s' not found, returning null", tag);
         return null;
     }
 
     private boolean isAllowedAccess(
             String tag, @Nullable AppManifestApiConfig config, String partnerId) {
         if (config == null) {
-            LogUtil.v("app manifest config " + tag + " not found, returning false");
-            return false;
+            LogUtil.v(
+                    "app manifest config tag '%s' not found, returning %b", tag, mEnabledByDefault);
+            return mEnabledByDefault;
         }
 
         return config.getAllowAllToAccess()

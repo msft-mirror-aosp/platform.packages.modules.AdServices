@@ -500,11 +500,12 @@ public class AttributionJobHandlerTest {
         List<Source> matchingSourceList = new ArrayList<>();
         matchingSourceList.add(source);
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
-        when(mMeasurementDao.countDistinctEnrollmentsPerPublisherXDestinationInAttribution(
-                any(), any(), any(), anyLong(), anyLong())).thenReturn(10);
+        when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestInAttribution(
+                        any(), any(), any(), anyLong(), anyLong()))
+                .thenReturn(10);
         mHandler.performPendingAttributions();
         verify(mMeasurementDao)
-                .countDistinctEnrollmentsPerPublisherXDestinationInAttribution(
+                .countDistinctReportingOriginsPerPublisherXDestInAttribution(
                         any(), any(), any(), anyLong(), anyLong());
         verify(mMeasurementDao)
                 .updateTriggerStatus(
@@ -813,6 +814,159 @@ public class AttributionJobHandlerTest {
         EventReport eventReport = reportArg.getValue();
         assertEquals(REGISTRATION_URI, eventReport.getRegistrationOrigin());
 
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
+    @Test
+    public void
+            performAttributions_sourceDeactivationAfterFilteringFlagOn_ignoresWithoutAttribution()
+                    throws DatastoreException {
+        String eventTriggers =
+                "[{"
+                        + "  \"trigger_data\": \"5\","
+                        + "  \"priority\": \"123\","
+                        + "  \"deduplication_key\": \"2\","
+                        + "  \"filters\": [{"
+                        + "    \"key_1\": [\"value_1\"] "
+                        + "   }]"
+                        + "}]";
+        // Missing top level filters match anything. Competing sources are ignored directly after.
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setStatus(Trigger.Status.PENDING)
+                        .setEventTriggers(eventTriggers)
+                        .setTriggerTime(3)
+                        .build();
+        Source source1 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("source1")
+                        .setPriority(100L)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setEventTime(1L)
+                        .setExpiryTime(30)
+                        // Filters match the trigger's event triggers but the Source is not matched
+                        // since it has lower priority.
+                        .setFilterData("{\"key_1\":[\"1234\",\"value_1\"]}")
+                        .build();
+        Source source2 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("source2")
+                        .setPriority(200L)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setEventTime(2L)
+                        .setExpiryTime(30)
+                        // Filters do not match the trigger's event triggers so a report is not
+                        // generated.
+                        .setFilterData("{\"key_1\":[\"no_match\"]}")
+                        .build();
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source1);
+        matchingSourceList.add(source2);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
+        when(mMeasurementDao.getSourceDestinations(source1.getId()))
+                .thenReturn(Pair.create(
+                        source1.getAppDestinations(),
+                        source1.getWebDestinations()));
+        when(mMeasurementDao.getSourceDestinations(source2.getId()))
+                .thenReturn(Pair.create(
+                        source2.getAppDestinations(),
+                        source2.getWebDestinations()));
+
+        when(mFlags.getMeasurementEnableSourceDeactivationAfterFiltering()).thenReturn(true);
+
+        mHandler.performPendingAttributions();
+        trigger.setStatus(Trigger.Status.ATTRIBUTED);
+        verify(mMeasurementDao)
+                .updateSourceStatus(eq(List.of(source1.getId())), eq(Source.Status.IGNORED));
+        assertEquals(1, matchingSourceList.size());
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())),
+                        eq(Trigger.Status.IGNORED));
+        verify(mMeasurementDao, never()).updateSourceAttributedTriggers(anyString(), any());
+        verify(mMeasurementDao, never()).insertEventReport(any());
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
+    @Test
+    public void
+            performAttributions_sourceDeactivationAfterFilteringFlagOff_doesNotIgnoreWithoutAttr()
+                    throws DatastoreException {
+        String eventTriggers =
+                "[{"
+                        + "  \"trigger_data\": \"5\","
+                        + "  \"priority\": \"123\","
+                        + "  \"deduplication_key\": \"2\","
+                        + "  \"filters\": [{"
+                        + "    \"key_1\": [\"value_1\"] "
+                        + "   }]"
+                        + "}]";
+        // Missing top level filters match anything.
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setStatus(Trigger.Status.PENDING)
+                        .setEventTriggers(eventTriggers)
+                        .setTriggerTime(3)
+                        .build();
+        Source source1 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("source1")
+                        .setPriority(100L)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setEventTime(1L)
+                        .setExpiryTime(30)
+                        // Filters match but the Source is not matched since it has lower priority.
+                        .setFilterData("{\"key_1\":[\"1234\",\"value_1\"]}")
+                        .build();
+        Source source2 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("source2")
+                        .setPriority(200L)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setEventTime(2L)
+                        .setExpiryTime(30)
+                        // Filters do not match, attribution flow returns and does not ignore
+                        // competing sources.
+                        .setFilterData("{\"key_1\":[\"1234\",\"no_match\"]}")
+                        .build();
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source1);
+        matchingSourceList.add(source2);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
+        when(mMeasurementDao.getSourceDestinations(source1.getId()))
+                .thenReturn(Pair.create(
+                        source1.getAppDestinations(),
+                        source1.getWebDestinations()));
+        when(mMeasurementDao.getSourceDestinations(source2.getId()))
+                .thenReturn(Pair.create(
+                        source2.getAppDestinations(),
+                        source2.getWebDestinations()));
+
+        when(mFlags.getMeasurementEnableSourceDeactivationAfterFiltering()).thenReturn(false);
+
+        mHandler.performPendingAttributions();
+        trigger.setStatus(Trigger.Status.ATTRIBUTED);
+        // Attribution did not occur and competing sources are not ignored.
+        verify(mMeasurementDao, never()).updateSourceStatus(any(), anyInt());
+        assertEquals(1, matchingSourceList.size());
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())),
+                        eq(Trigger.Status.IGNORED));
+        verify(mMeasurementDao, never()).updateSourceAttributedTriggers(anyString(), any());
+        verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }

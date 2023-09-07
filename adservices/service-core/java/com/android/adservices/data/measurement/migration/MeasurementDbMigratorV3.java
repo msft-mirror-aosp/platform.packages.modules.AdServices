@@ -247,7 +247,7 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                 db,
                 MeasurementTables.AttributionContract.TABLE,
                 ATTRIBUTION_CONTRACT_BACKUP,
-                MeasurementTables.CREATE_TABLE_ATTRIBUTION_LATEST);
+                MeasurementTables.CREATE_TABLE_ATTRIBUTION_V6);
     }
 
     private static void migrateEventReportData(SQLiteDatabase db) {
