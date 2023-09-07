@@ -53,6 +53,7 @@ import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
 import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
+import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
@@ -168,6 +169,7 @@ public class AsyncRegistrationQueueRunnerTest {
     @Mock HttpsURLConnection mUrlConnection;
     @Mock Flags mFlags;
     @Mock AdServicesLogger mLogger;
+    @Mock AdServicesErrorLogger mErrorLogger;
     @Mock SourceNoiseHandler mSourceNoiseHandler;
 
     private MockitoSession mStaticMockSession;
@@ -177,6 +179,10 @@ public class AsyncRegistrationQueueRunnerTest {
     }
 
     class FakeDatastoreManager extends DatastoreManager {
+
+        FakeDatastoreManager() {
+            super(mErrorLogger);
+        }
 
         @Override
         public ITransaction createNewTransaction() {
@@ -2244,7 +2250,9 @@ public class AsyncRegistrationQueueRunnerTest {
                                                 + "\""
                                                 + "}")));
         DatastoreManager datastoreManager =
-                spy(new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest()));
+                spy(
+                        new SQLDatastoreManager(
+                                DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger));
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 spy(
                         new AsyncRegistrationQueueRunner(

@@ -102,17 +102,19 @@ public class E2EInteropMockTest extends E2EMockTest {
                         }
                 ).get()
         );
-        mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager, mFlags);
+        mAttributionHelper =
+                TestObjectProvider.getAttributionJobHandler(
+                        mDatastoreManager, mFlags, mErrorLogger);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(
-                        sDatastoreManager,
+                        mDatastoreManager,
                         mClickVerifier,
                         mMeasurementDataDeleter,
                         mMockContentResolver);
         mAsyncRegistrationQueueRunner =
                 TestObjectProvider.getAsyncRegistrationQueueRunner(
                         TestObjectProvider.Type.DENOISED,
-                        sDatastoreManager,
+                        mDatastoreManager,
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,
                         mDebugReportApi,
@@ -214,12 +216,10 @@ public class E2EInteropMockTest extends E2EMockTest {
         if (maybeSource.isPresent()) {
             Assert.assertTrue(
                     "mAsyncRegistrationQueueRunner.storeSource failed",
-                    sDatastoreManager.runInTransaction(
+                    mDatastoreManager.runInTransaction(
                             measurementDao ->
                                     mAsyncRegistrationQueueRunner.storeSource(
-                                            maybeSource.get(),
-                                            asyncRegistration,
-                                            measurementDao)));
+                                            maybeSource.get(), asyncRegistration, measurementDao)));
         } else {
             Assert.assertTrue(sParsingErrors.contains(status.getEntityStatus()));
         }
@@ -259,11 +259,10 @@ public class E2EInteropMockTest extends E2EMockTest {
         if (maybeTrigger.isPresent()) {
             Assert.assertTrue(
                     "mAsyncRegistrationQueueRunner.storeTrigger failed",
-                    sDatastoreManager.runInTransaction(
+                    mDatastoreManager.runInTransaction(
                             measurementDao ->
                                     mAsyncRegistrationQueueRunner.storeTrigger(
-                                            maybeTrigger.get(),
-                                            measurementDao)));
+                                            maybeTrigger.get(), measurementDao)));
         } else {
             Assert.assertTrue(sParsingErrors.contains(status.getEntityStatus()));
         }

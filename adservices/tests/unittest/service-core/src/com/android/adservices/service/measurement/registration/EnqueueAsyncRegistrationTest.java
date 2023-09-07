@@ -42,6 +42,7 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.data.measurement.SqliteObjectMapper;
+import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.Source;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -106,6 +107,7 @@ public class EnqueueAsyncRegistrationTest {
     @Mock private InputEvent mInputEvent;
     @Mock private ContentResolver mContentResolver;
     @Mock private ContentProviderClient mMockContentProviderClient;
+    @Mock private AdServicesErrorLogger mErrorLogger;
 
     private MockitoSession mStaticMockSession;
 
@@ -149,7 +151,7 @@ public class EnqueueAsyncRegistrationTest {
     @Test
     public void appSourceOrTriggerRegistrationRequest_sourceInvalidRegistrationUri_doesNotInsert() {
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
         RegistrationRequest registrationRequest =
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_SOURCE,
@@ -188,7 +190,7 @@ public class EnqueueAsyncRegistrationTest {
     @Test
     public void testAppSourceRegistrationRequest_event_isValid() {
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
         RegistrationRequest registrationRequest =
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_SOURCE,
@@ -244,7 +246,7 @@ public class EnqueueAsyncRegistrationTest {
     @Test
     public void testAppSourceRegistrationRequest_navigation_isValid() {
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
         RegistrationRequest registrationRequest =
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_SOURCE,
@@ -302,7 +304,7 @@ public class EnqueueAsyncRegistrationTest {
     public void
             appSourceOrTriggerRegistrationRequest_triggerInvalidRegistrationUri_doesNotInsert() {
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
         RegistrationRequest registrationRequest =
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_TRIGGER,
@@ -341,7 +343,7 @@ public class EnqueueAsyncRegistrationTest {
     @Test
     public void testAppTriggerRegistrationRequest_isValid() {
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
         RegistrationRequest registrationRequest =
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_TRIGGER,
@@ -393,7 +395,7 @@ public class EnqueueAsyncRegistrationTest {
     @Test
     public void testAppRegistrationRequestWithAdId_isValid() {
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
         RegistrationRequest registrationRequest =
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_TRIGGER,
@@ -439,7 +441,7 @@ public class EnqueueAsyncRegistrationTest {
     @Test
     public void testAppRegistrationRequestWithPostBody_isValid() {
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
         RegistrationRequest registrationRequest =
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_TRIGGER,
@@ -484,7 +486,7 @@ public class EnqueueAsyncRegistrationTest {
     @Test
     public void testWebSourceRegistrationRequest_event_isValid() {
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
         Assert.assertTrue(
                 EnqueueAsyncRegistration.webSourceRegistrationRequest(
                         VALID_WEB_SOURCE_REGISTRATION_NULL_INPUT_EVENT,
@@ -540,7 +542,7 @@ public class EnqueueAsyncRegistrationTest {
     @Test
     public void testWebSourceRegistrationRequest_navigation_isValid() {
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
         List<WebSourceParams> sourceParamsList = new ArrayList<>();
         sourceParamsList.add(INPUT_SOURCE_REGISTRATION_1);
         sourceParamsList.add(INVALID_SOURCE_REGISTRATION);
@@ -608,7 +610,7 @@ public class EnqueueAsyncRegistrationTest {
     @Test
     public void testWebTriggerRegistrationRequest_isValid() {
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
         Assert.assertTrue(
                 EnqueueAsyncRegistration.webTriggerRegistrationRequest(
                         VALID_WEB_TRIGGER_REGISTRATION,
@@ -677,7 +679,7 @@ public class EnqueueAsyncRegistrationTest {
                         .build();
 
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
         EnqueueAsyncRegistration.appSourceOrTriggerRegistrationRequest(
                 registrationRequest,
                 DEFAULT_AD_ID_PERMISSION,

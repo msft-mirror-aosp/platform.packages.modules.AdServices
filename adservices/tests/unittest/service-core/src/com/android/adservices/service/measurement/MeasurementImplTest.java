@@ -58,6 +58,7 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
+import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -124,9 +125,11 @@ public final class MeasurementImplTest {
     private static final String POST_BODY = "{\"ad_location\":\"bottom_right\"}";
     private static final String AD_ID_VALUE = "ad_id_value";
 
+    @Mock AdServicesErrorLogger mErrorLogger;
+
     @Spy
     private DatastoreManager mDatastoreManager =
-            new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
+            new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
 
     @Mock private ContentProviderClient mMockContentProviderClient;
     @Mock private ContentResolver mContentResolver;
@@ -216,7 +219,8 @@ public final class MeasurementImplTest {
         MeasurementImpl measurement =
                 new MeasurementImpl(
                         DEFAULT_CONTEXT,
-                        new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest()),
+                        new SQLDatastoreManager(
+                                DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger),
                         mClickVerifier,
                         mMeasurementDataDeleter,
                         mContentResolver);
