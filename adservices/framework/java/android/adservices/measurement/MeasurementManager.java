@@ -130,6 +130,7 @@ public class MeasurementManager {
      *     event).
      * @param executor used by callback to dispatch results.
      * @param callback intended to notify asynchronously the API result.
+     * @throws IllegalArgumentException if the scheme for {@code attributionSource} is not HTTPS
      */
     @RequiresApi(Build.VERSION_CODES.S)
     @RequiresPermission(ACCESS_ADSERVICES_ATTRIBUTION)
@@ -301,6 +302,7 @@ public class MeasurementManager {
      *     sources during the attribution process.
      * @param executor used by callback to dispatch results.
      * @param callback intended to notify asynchronously the API result.
+     * @throws IllegalArgumentException if the scheme for {@code trigger} is not HTTPS
      */
     @RequiresApi(Build.VERSION_CODES.S)
     @RequiresPermission(ACCESS_ADSERVICES_ATTRIBUTION)
