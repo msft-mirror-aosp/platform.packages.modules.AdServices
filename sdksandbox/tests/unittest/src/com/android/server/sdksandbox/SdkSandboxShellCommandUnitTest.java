@@ -396,10 +396,10 @@ public class SdkSandboxShellCommandUnitTest {
                 SandboxLatencyInfo sandboxLatencyInfo) {
             if (mBindingSuccessful) {
                 callback.onBindingSuccessful(
-                        Mockito.mock(ISdkSandboxService.class), -1, sandboxLatencyInfo);
+                        Mockito.mock(ISdkSandboxService.class), sandboxLatencyInfo);
             } else {
                 callback.onBindingFailed(
-                        new LoadSdkException(null, new Bundle()), -1, sandboxLatencyInfo);
+                        new LoadSdkException(null, new Bundle()), sandboxLatencyInfo);
             }
         }
 

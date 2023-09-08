@@ -24,7 +24,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.adservices.common.CommonFixture;
+import android.content.Context;
 import android.os.Process;
+
+import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
@@ -45,6 +48,7 @@ import java.util.concurrent.ExecutorService;
 
 public class DebugReportingTest {
 
+    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final DevContext DEV_CONTEXT_DISABLED = DevContext.createForDevOptionsDisabled();
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final int CALLER_UID = Process.myUid();
@@ -164,6 +168,7 @@ public class DebugReportingTest {
     private DebugReporting initDebugReporting() {
         try {
             return DebugReporting.createInstance(
+                            CONTEXT,
                             mFlagsMock,
                             mHttpClientMock,
                             DEV_CONTEXT_DISABLED,

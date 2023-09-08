@@ -17,6 +17,10 @@
 package com.android.adservices.service.adselection;
 
 import android.annotation.NonNull;
+import android.content.Context;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.service.Flags;
@@ -52,6 +56,8 @@ import java.util.concurrent.ExecutorService;
  *
  *     <p>For the business logic processing events, see {@link DebugReportProcessor}.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public abstract class DebugReporting {
 
     /**
@@ -59,6 +65,7 @@ public abstract class DebugReporting {
      *     or not.
      */
     public static ListenableFuture<DebugReporting> createInstance(
+            @NonNull Context context,
             @NonNull Flags flags,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull DevContext devContext,
@@ -77,6 +84,7 @@ public abstract class DebugReporting {
                                 return new DebugReportingDisabled();
                             } else {
                                 return new DebugReportingEnabled(
+                                        context,
                                         flags,
                                         adServicesHttpsClient,
                                         devContext,
