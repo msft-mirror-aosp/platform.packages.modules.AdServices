@@ -332,6 +332,7 @@ public class AsyncRegistrationQueueRunner {
                         dao)) {
             return false;
         }
+        Flags flags = FlagsFactory.getFlags();
         int numOfOriginExcludingRegistrationOrigin =
                 dao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
                         source.getRegistrationOrigin(),
@@ -340,7 +341,8 @@ public class AsyncRegistrationQueueRunner {
                         source.getEnrollmentId(),
                         source.getEventTime(),
                         PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW);
-        if (numOfOriginExcludingRegistrationOrigin > 0) {
+        if (numOfOriginExcludingRegistrationOrigin
+                >= flags.getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow()) {
             debugReportApi.scheduleSourceSuccessDebugReport(source, dao);
             LogUtil.d(
                     "insertSources: Max limit of 1 reporting origin for publisher - %s and"
@@ -348,7 +350,7 @@ public class AsyncRegistrationQueueRunner {
                     publisher, source.getEnrollmentId());
             return false;
         }
-        if (!source.hasValidInformationGain(FlagsFactory.getFlags())) {
+        if (!source.hasValidInformationGain(flags)) {
             debugReportApi.scheduleSourceFlexibleEventReportApiDebugReport(source, dao);
             return false;
         }
