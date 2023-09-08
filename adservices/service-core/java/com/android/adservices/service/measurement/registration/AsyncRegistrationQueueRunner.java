@@ -341,6 +341,7 @@ public class AsyncRegistrationQueueRunner {
                         source.getEventTime(),
                         PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW);
         if (numOfOriginExcludingRegistrationOrigin > 0) {
+            debugReportApi.scheduleSourceSuccessDebugReport(source, dao);
             LogUtil.d(
                     "insertSources: Max limit of 1 reporting origin for publisher - %s and"
                             + " enrollment - %s reached.",
