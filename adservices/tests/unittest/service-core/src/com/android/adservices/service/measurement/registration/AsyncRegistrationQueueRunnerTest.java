@@ -240,6 +240,9 @@ public class AsyncRegistrationQueueRunnerTest {
                 .thenReturn(Flags.MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION);
         when(mFlags.getMeasurementMaxDistinctDestinationsInActiveSource())
                 .thenReturn(Flags.MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE);
+        when(mFlags.getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow())
+                .thenReturn(Flags
+                        .MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW);
     }
 
     @Test
