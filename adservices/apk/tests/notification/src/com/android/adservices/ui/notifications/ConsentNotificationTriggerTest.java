@@ -496,7 +496,6 @@ public class ConsentNotificationTriggerTest {
                         new UiSelector()
                                 .packageName("com.android.systemui")
                                 .resourceId("com.android.systemui:id/notification_stack_scroller"));
-        assertThat(scroller.exists()).isTrue();
 
         // there might be only one notification and no scroller exists.
         UiObject notificationCard;

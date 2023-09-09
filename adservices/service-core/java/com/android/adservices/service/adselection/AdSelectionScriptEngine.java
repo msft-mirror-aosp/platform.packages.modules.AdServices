@@ -18,6 +18,7 @@ package com.android.adservices.service.adselection;
 
 import static com.android.adservices.service.js.JSScriptArgument.arrayArg;
 import static com.android.adservices.service.js.JSScriptArgument.jsonArg;
+import static com.android.adservices.service.js.JSScriptArgument.numericArg;
 import static com.android.adservices.service.js.JSScriptArgument.recordArg;
 import static com.android.adservices.service.js.JSScriptArgument.stringArg;
 import static com.android.adservices.service.js.JSScriptArgument.stringArrayArg;
@@ -43,6 +44,8 @@ import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.profiling.Tracing;
+import com.android.adservices.service.signals.ProtectedSignal;
+import com.android.adservices.service.signals.ProtectedSignalsArgumentUtil;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 import com.android.internal.annotations.VisibleForTesting;
@@ -58,6 +61,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
@@ -104,8 +108,14 @@ public class AdSelectionScriptEngine {
     public static final String TRUSTED_SCORING_SIGNALS_ARG_NAME = "__rb_trusted_scoring_signals";
     public static final String GENERATE_BID_FUNCTION_NAME = "generateBid";
     public static final String SCORE_AD_FUNCTION_NAME = "scoreAd";
+
+    public static final String ENCODE_SIGNALS_DRIVER_FUNCTION_NAME = "encodeSignalsDriver";
+    public static final String ENCODE_SIGNALS_FUNCTION_NAME = "encodeSignals";
     public static final String USER_SIGNALS_ARG_NAME = "__rb_user_signals";
     public static final String AD_SCORE_FIELD_NAME = "score";
+
+    public static final String SIGNALS_ARG_NAME = "__rb_protected_signals";
+    public static final String MAX_SIZE_BYTES_ARG_NAME = "__rb_max_size_bytes";
     public static final String DEBUG_REPORTING_WIN_URI_FIELD_NAME = "debug_reporting_win_uri";
     public static final String DEBUG_REPORTING_LOSS_URI_FIELD_NAME = "debug_reporting_loss_uri";
     public static final String DEBUG_REPORTING_SELLER_REJECT_REASON_FIELD_NAME = "rejectReason";
@@ -227,6 +237,76 @@ public class AdSelectionScriptEngine {
                     + " }\n"
                     + " return -1;\n"
                     + "}";
+
+    /**
+     * Minified JS that un-marshals signals to map their keys and values to byte[]. Should be
+     * invoked by the driver script before passing the signals to encodeSignals() function.
+     *
+     *
+     * function decodeHex(hexString) {
+     *     hexString = hexString.replace(/\\s/g, '');
+     *     if (hexString.length % 2 !== 0) {
+     *         throw new Error('hex must have even chars.');
+     *     }
+     *     const byteArray = new Uint8Array(hexString.length / 2);
+     *     for (let i = 0; i < hexString.length; i += 2) {
+     *         const byteValue = parseInt(hexString.substr(i, 2), 16);
+     *         byteArray[i / 2] = byteValue;
+     *     }
+     *
+     *     return byteArray;
+     * }
+     *
+     * function unmarshal(signalObjects) {
+     *     const signals = signalObjects;
+     *     const mappedObjects = [];
+     *
+     *     signals.forEach(signalGroup => {
+     *         for (const key in signalGroup) {
+     *             const signal_key = decodeHex(key);
+     *             const decodedValues = signalGroup[key].map(entry => ({
+     *                 signal_value: decodeHex(entry.val),
+     *                 creation_time: entry.time,
+     *                 package_name: entry.app.trim(), // Remove leading/trailing whitespaces
+     *             }));
+     *
+     *             const mappedObject = {
+     *                 [signal_key]: decodedValues,
+     *             };
+     *             mappedObjects.push(mappedObject);
+     *         }
+     *     });
+     *
+     *     return mappedObjects;
+     * }
+     */
+    private static final String UNMARSHAL_SIGNALS_JS =
+            "function decodeHex(e){if((e=e.replace(/\\\\s/g,\"\")).length%2!=0)throw new Error"
+                    + "(\"hex must have even chars.\");const n=new Uint8Array(e.length/2);for(let"
+                    + " t=0;t<e.length;t+=2){const r=parseInt(e.substr(t,2),16);n[t/2]=r}return "
+                    + "n}function unmarshal(e){const n=[];return e.forEach((e=>{for(const t in e)"
+                    + "{const r={[decodeHex(t)]:e[t].map((e=>({signal_value:decodeHex(e.val),"
+                    + "creation_time:e.time,package_name:e.app.trim()})))};n.push(r)}})),n}";
+
+    /**
+     * This JS wraps around encodeSignals() logic. Un-marshals the signals and then invokes the
+     * encodeSignals() script.
+     */
+    private static final String ENCODE_SIGNALS_DRIVER_JS =
+            "function "
+                    + ENCODE_SIGNALS_DRIVER_FUNCTION_NAME
+                    + "(signals, maxSize) {\n"
+                    + "console.log(signals, maxSize);\n"
+                    + "  const unmarshalledSignals = unmarshal(signals);\n"
+                    + "\n"
+                    + "  "
+                    + "  return "
+                    + ENCODE_SIGNALS_FUNCTION_NAME
+                    + "(unmarshalledSignals, maxSize);\n"
+                    + "}\n"
+                    + "\n"
+                    + UNMARSHAL_SIGNALS_JS;
+
     private static final String TAG = AdSelectionScriptEngine.class.getName();
     private static final int JS_SCRIPT_STATUS_SUCCESS = 0;
     private static final String ARG_PASSING_SEPARATOR = ", ";
@@ -443,6 +523,50 @@ public class AdSelectionScriptEngine {
     }
 
     /**
+     * Injects buyer provided encodeSignals() logic into a driver JS. The driver script first
+     * un-marshals the signals, which would be marshaled by {@link ProtectedSignalsArgumentUtil},
+     * and then invokes the buyer provided encoding logic.
+     *
+     * @param encodingLogic The buyer provided encoding logic
+     * @param rawSignals The signals fetched from buyer delegation
+     * @param maxSize maxSize of payload generated by the buyer
+     * @throws IllegalStateException if the JSON created from raw Signals is invalid
+     */
+    public ListenableFuture<String> encodeSignals(
+            @NonNull String encodingLogic,
+            @NonNull Map<String, List<ProtectedSignal>> rawSignals,
+            @NonNull int maxSize)
+            throws IllegalStateException {
+
+        String combinedDriverAndEncodingLogic = ENCODE_SIGNALS_DRIVER_JS + encodingLogic;
+        ImmutableList<JSScriptArgument> args = null;
+        try {
+            args =
+                    ImmutableList.<JSScriptArgument>builder()
+                            .add(
+                                    ProtectedSignalsArgumentUtil.asScriptArgument(
+                                            SIGNALS_ARG_NAME, rawSignals))
+                            .add(numericArg(MAX_SIZE_BYTES_ARG_NAME, maxSize))
+                            .build();
+        } catch (JSONException e) {
+            throw new IllegalStateException("Exception processing JSON version of signals");
+        }
+
+        IsolateSettings isolateSettings =
+                mEnforceMaxHeapSizeFeatureSupplier.get()
+                        ? IsolateSettings.forMaxHeapSizeEnforcementEnabled(
+                                mMaxHeapSizeBytesSupplier.get())
+                        : IsolateSettings.forMaxHeapSizeEnforcementDisabled();
+        return FluentFuture.from(
+                        mJsEngine.evaluate(
+                                combinedDriverAndEncodingLogic,
+                                args,
+                                ENCODE_SIGNALS_DRIVER_FUNCTION_NAME,
+                                isolateSettings))
+                .transform(result -> handleEncodingOutput(result), mExecutor);
+    }
+
+    /**
      * Runs selection logic on map of {@code long} ad selection id {@code double} bid
      *
      * @return either one of the ad selection ids passed in {@code adSelectionIdBidPairs} or {@code
@@ -613,6 +737,32 @@ public class AdSelectionScriptEngine {
             String errorMsg = String.format(JS_EXECUTION_RESULT_INVALID, scriptResults.results);
             sLogger.v(errorMsg);
             throw new IllegalStateException(errorMsg);
+        }
+    }
+
+    @VisibleForTesting
+    String handleEncodingOutput(String encodingScriptResult) throws IllegalStateException {
+
+        if (encodingScriptResult.isEmpty()) {
+            throw new IllegalStateException(
+                    "The encoding script either doesn't contain the required function or the"
+                            + " function returned null");
+        }
+
+        try {
+            JSONObject jsonResult = new JSONObject(encodingScriptResult);
+            int status = jsonResult.getInt(STATUS_FIELD_NAME);
+            String result = jsonResult.getString(RESULTS_FIELD_NAME);
+
+            if (status != JS_SCRIPT_STATUS_SUCCESS || result == null) {
+                String errorMsg = String.format(JS_EXECUTION_STATUS_UNSUCCESSFUL, status, result);
+                sLogger.v(errorMsg);
+                throw new IllegalStateException(errorMsg);
+            }
+            return result;
+        } catch (JSONException e) {
+            sLogger.e("Could not extract the Encoded Payload result");
+            throw new IllegalStateException("Exception processing result from encoding");
         }
     }
 

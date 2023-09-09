@@ -131,13 +131,13 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
-     * Gets the count of distinct IDs of enrollments in the Attribution table in a time window with
-     * matching publisher and destination, excluding a given enrollment ID.
+     * Gets the count of distinct reporting origins in the Attribution table in a time window with
+     * matching publisher and destination, excluding a given reporting origin.
      */
-    Integer countDistinctEnrollmentsPerPublisherXDestinationInAttribution(
+    Integer countDistinctReportingOriginsPerPublisherXDestInAttribution(
             Uri sourceSite,
             Uri destination,
-            String excludedEnrollmentId,
+            Uri excludedReportingOrigin,
             long windowStartTime,
             long windowEndTime)
             throws DatastoreException;
@@ -661,12 +661,15 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
-     * Increments Retry Counter for EventReporting Records. This is used for Retry Limiting.
+     * Increments Retry Counter for EventReporting Records and return the updated retry count. This
+     * is used for Retry Limiting.
      *
      * @param id Primary key id of Record in Measurement Event Report Table.
      * @param reportType KeyValueData.DataType corresponding with Record type being incremented.
+     * @return current report count
      */
-    void incrementReportingRetryCount(String id, DataType reportType) throws DatastoreException;
+    int incrementAndGetReportingRetryCount(String id, DataType reportType)
+            throws DatastoreException;
 
     /**
      * Returns the number of unique AdIds provided by an Ad Tech in web contexts to match with the

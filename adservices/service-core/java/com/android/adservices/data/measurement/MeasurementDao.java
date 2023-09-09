@@ -1067,6 +1067,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.AttributionContract.REGISTRANT, attribution.getRegistrant());
         values.put(MeasurementTables.AttributionContract.SOURCE_ID, attribution.getSourceId());
         values.put(MeasurementTables.AttributionContract.TRIGGER_ID, attribution.getTriggerId());
+        values.put(
+                MeasurementTables.AttributionContract.REGISTRATION_ORIGIN,
+                attribution.getRegistrationOrigin().toString());
         long rowId =
                 mSQLTransaction
                         .getDatabase()
@@ -1145,10 +1148,10 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public Integer countDistinctEnrollmentsPerPublisherXDestinationInAttribution(
+    public Integer countDistinctReportingOriginsPerPublisherXDestInAttribution(
             Uri sourceSite,
             Uri destinationSite,
-            String excludedEnrollmentId,
+            Uri excludedReportingOrigin,
             long windowStartTime,
             long windowEndTime)
             throws DatastoreException {
@@ -1158,7 +1161,7 @@ class MeasurementDao implements IMeasurementDao {
                         "SELECT COUNT(DISTINCT %1$s) FROM %2$s "
                                 + "WHERE %3$s = ? AND %4$s = ? AND %1s != ? "
                                 + "AND %5$s > ? AND %5$s <= ?",
-                        MeasurementTables.AttributionContract.ENROLLMENT_ID,
+                        MeasurementTables.AttributionContract.REGISTRATION_ORIGIN,
                         MeasurementTables.AttributionContract.TABLE,
                         MeasurementTables.AttributionContract.SOURCE_SITE,
                         MeasurementTables.AttributionContract.DESTINATION_SITE,
@@ -1170,7 +1173,7 @@ class MeasurementDao implements IMeasurementDao {
                         new String[] {
                             sourceSite.toString(),
                             destinationSite.toString(),
-                            excludedEnrollmentId,
+                            excludedReportingOrigin.toString(),
                             String.valueOf(windowStartTime),
                             String.valueOf(windowEndTime)
                         });
@@ -2739,16 +2742,14 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public void incrementReportingRetryCount(String id, DataType reportType)
+    public int incrementAndGetReportingRetryCount(String id, DataType reportType)
             throws DatastoreException {
         KeyValueData eventRetry = getKeyValueData(id, reportType);
         eventRetry.setReportRetryCount(eventRetry.getReportRetryCount() + 1);
         insertOrUpdateKeyValueData(eventRetry);
-        LogUtil.d(
-                "Incrementing: "
-                        + reportType
-                        + " Retry Count: "
-                        + eventRetry.getReportRetryCount());
+        int retryCount = eventRetry.getReportRetryCount();
+        LogUtil.d("Incrementing: " + reportType + " Retry Count: " + retryCount);
+        return retryCount;
     }
 
     @Override

@@ -2964,26 +2964,11 @@
     },
     {
       "name": "Should match but no report generated - AttributionMode = Never",
-      "description": "2 sources, 1 trigger. Ignore 1st source, match with 2nd source but it has attribution mode = Never. Hence, no reports generated",
+      "description": "2 sources, 1 trigger. Match with first source, ignore second source; but the first source has attribution mode = Never. Hence, no reports generated",
       "input": {
         "sources": [
           {
             "id": "S1",
-            "eventId": 1,
-            "sourceType": "navigation",
-            "publisher": "https://www.example1.test",
-            "enrollmentId": "enrollment-id-3",
-            "eventTime": 8640000001,
-            "expiryTime": 8640000030,
-            "eventReportWindow": 8640000030,
-            "aggregatableReportWindow": 8640000030,
-            "priority": 100,
-            "status": 0,
-            "registrant": "android-app://com.example.abc",
-            "attribution_mode": 1
-          },
-          {
-            "id": "S2",
             "eventId": 2,
             "sourceType": "navigation",
             "publisher": "https://www.example1.test",
@@ -2996,6 +2981,21 @@
             "status": 0,
             "registrant": "android-app://com.example.abc",
             "attribution_mode": 2
+          },
+          {
+            "id": "S2",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "publisher": "https://www.example1.test",
+            "enrollmentId": "enrollment-id-3",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "eventReportWindow": 8640000030,
+            "aggregatableReportWindow": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc",
+            "attribution_mode": 1
           }
         ],
         "source_destinations": [
@@ -3036,21 +3036,6 @@
         "sources": [
           {
             "id": "S1",
-            "eventId": 1,
-            "sourceType": "navigation",
-            "publisher": "https://www.example1.test",
-            "enrollmentId": "enrollment-id-3",
-            "eventTime": 8640000001,
-            "expiryTime": 8640000030,
-            "eventReportWindow": 8640000030,
-            "aggregatableReportWindow": 8640000030,
-            "priority": 100,
-            "status": 0,
-            "registrant": "android-app://com.example.abc",
-            "attribution_mode": 1
-          },
-          {
-            "id": "S2",
             "eventId": 2,
             "sourceType": "navigation",
             "publisher": "https://www.example1.test",
@@ -3063,6 +3048,21 @@
             "status": 0,
             "registrant": "android-app://com.example.abc",
             "attribution_mode": 2
+          },
+          {
+            "id": "S2",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "publisher": "https://www.example1.test",
+            "enrollmentId": "enrollment-id-3",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "eventReportWindow": 8640000030,
+            "aggregatableReportWindow": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc",
+            "attribution_mode": 1
           }
         ],
         "source_destinations": [
@@ -3102,26 +3102,11 @@
     },
     {
       "name": "Should match but no report generated - AttributionMode = Falsely",
-      "description": "2 sources, 1 trigger. Ignore 1st source, match with 2nd source but it has attribution mode = Falsely. Hence, no report generation",
+      "description": "2 sources, 1 trigger. Match with first source, ignore second source; but the first source has attribution mode = Falsely. Hence, no report generation",
       "input": {
         "sources": [
           {
             "id": "S1",
-            "eventId": 1,
-            "sourceType": "navigation",
-            "publisher": "https://www.example1.test",
-            "enrollmentId": "enrollment-id-3",
-            "eventTime": 8640000001,
-            "expiryTime": 8640000030,
-            "eventReportWindow": 8640000030,
-            "aggregatableReportWindow": 8640000030,
-            "priority": 100,
-            "status": 0,
-            "registrant": "android-app://com.example.abc",
-            "attribution_mode": 1
-          },
-          {
-            "id": "S2",
             "eventId": 2,
             "sourceType": "navigation",
             "publisher": "https://www.example1.test",
@@ -3134,6 +3119,21 @@
             "status": 0,
             "registrant": "android-app://com.example.abc",
             "attribution_mode": 3
+          },
+          {
+            "id": "S2",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "publisher": "https://www.example1.test",
+            "enrollmentId": "enrollment-id-3",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "eventReportWindow": 8640000030,
+            "aggregatableReportWindow": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc",
+            "attribution_mode": 1
           }
         ],
         "source_destinations": [
@@ -3174,21 +3174,6 @@
         "sources": [
           {
             "id": "S1",
-            "eventId": 1,
-            "sourceType": "navigation",
-            "publisher": "https://www.example1.test",
-            "enrollmentId": "enrollment-id-3",
-            "eventTime": 8640000001,
-            "expiryTime": 8640000030,
-            "eventReportWindow": 8640000030,
-            "aggregatableReportWindow": 8640000030,
-            "priority": 100,
-            "status": 0,
-            "registrant": "android-app://com.example.abc",
-            "attribution_mode": 1
-          },
-          {
-            "id": "S2",
             "eventId": 2,
             "sourceType": "navigation",
             "publisher": "https://www.example1.test",
@@ -3201,6 +3186,21 @@
             "status": 0,
             "registrant": "android-app://com.example.abc",
             "attribution_mode": 3
+          },
+          {
+            "id": "S2",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "publisher": "https://www.example1.test",
+            "enrollmentId": "enrollment-id-3",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "eventReportWindow": 8640000030,
+            "aggregatableReportWindow": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc",
+            "attribution_mode": 1
           }
         ],
         "source_destinations": [

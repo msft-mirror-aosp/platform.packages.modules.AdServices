@@ -687,7 +687,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
 
         TestFailure(Throwable cause, StringBuilder dump) {
             super(
-                    "Test failed (see flags / system proprties below the stack trace)",
+                    "Test failed (see flags / system properties below the stack trace)",
                     cause,
                     /* enableSuppression= */ false,
                     /* writableStackTrace= */ false);

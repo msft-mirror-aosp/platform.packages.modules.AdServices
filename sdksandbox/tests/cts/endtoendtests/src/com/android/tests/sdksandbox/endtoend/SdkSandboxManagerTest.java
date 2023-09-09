@@ -875,6 +875,20 @@ public final class SdkSandboxManagerTest {
         assertThat(activityStarter.isActivityResumed()).isFalse();
     }
 
+    @Test
+    public void testSandboxActivityStartIntentViewWithNoSecurityExceptions() throws Exception {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        ICtsSdkProviderApi sdk = loadSdk();
+
+        ActivityStarter sandboxActivityStarter = new ActivityStarter();
+        IActivityActionExecutor actionExecutor = startSandboxActivity(sdk, sandboxActivityStarter);
+        assertThat(mScenario.getState()).isIn(Arrays.asList(State.CREATED, State.STARTED));
+        assertThat(sandboxActivityStarter.isActivityResumed()).isTrue();
+
+        actionExecutor.openLandingPage();
+    }
+
     // Helper method to load SDK_NAME_1
     private ICtsSdkProviderApi loadSdk() {
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();

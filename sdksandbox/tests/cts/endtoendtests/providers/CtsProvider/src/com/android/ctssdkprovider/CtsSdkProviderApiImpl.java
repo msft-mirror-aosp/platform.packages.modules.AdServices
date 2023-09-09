@@ -33,6 +33,7 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
+import android.net.Uri;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -401,6 +402,16 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
         @Override
         public void setOrientationToPortrait() {
             mActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        }
+
+        @Override
+        public void openLandingPage() {
+            String url = "http://www.google.com";
+            Intent visitUrl = new Intent(Intent.ACTION_VIEW);
+            visitUrl.setData(Uri.parse(url));
+            visitUrl.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+            mActivity.startActivity(visitUrl);
         }
 
         public void setActivity(Activity activity) {
