@@ -100,6 +100,7 @@ import android.net.Uri;
 import android.os.LimitExceededException;
 import android.os.Process;
 import android.os.RemoteException;
+import android.webkit.WebView;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
@@ -311,12 +312,13 @@ public class AdSelectionServiceImplTest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(JSScriptEngine.class)
-                        // mAdServicesLoggerMock is not referenced in many tests
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
+                        .spyStatic(WebView.class)
                         .mockStatic(ConsentManager.class)
                         .mockStatic(MeasurementImpl.class)
                         .mockStatic(AppImportanceFilter.class)
+                        // mAdServicesLoggerMock is not referenced in many tests
+                        .strictness(Strictness.LENIENT)
+                        .initMocks(this)
                         .startMocking();
 
         mCustomAudienceDao =
@@ -6847,6 +6849,134 @@ public class AdSelectionServiceImplTest {
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
                         eq(STATUS_SUCCESS),
                         anyInt());
+    }
+
+    @Test
+    public void testReportImpression_webViewNotInstalled_failsGracefully() throws Exception {
+        // A null package means WebView is not installed
+        doReturn(null).when(WebView::getCurrentWebViewPackage);
+
+        // Shut down any running JSScriptEngine to ensure the new singleton gets picked up
+        JSScriptEngine.getInstance(CONTEXT, LoggerFactory.getFledgeLogger()).shutdown();
+
+        try {
+            Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+            Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+
+            Flags flagsWithEnrollment = new AdSelectionServicesTestsFlags(true);
+
+            Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
+
+            String sellerDecisionLogicJs =
+                    "function reportResult(ad_selection_config, render_uri, bid, "
+                            + "contextual_signals) {"
+                            + " \n"
+                            + " return {'status': 0, 'results': {'signals_for_buyer':"
+                            + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
+                            + sellerReportingUri
+                            + "' } };\n"
+                            + "}";
+
+            String buyerDecisionLogicJs =
+                    "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
+                            + " contextual_signals, custom_audience_signals) { \n"
+                            + " return {'status': 0, 'results': {'reporting_uri': '"
+                            + buyerReportingUri
+                            + "' } };\n"
+                            + "}";
+
+            mMockWebServerRule.startMockWebServer(
+                    new Dispatcher() {
+                        @Override
+                        public MockResponse dispatch(RecordedRequest request) {
+                            switch (request.getPath()) {
+                                case mFetchJavaScriptPathSeller:
+                                    return new MockResponse().setBody(sellerDecisionLogicJs);
+                                default:
+                                    throw new IllegalStateException(
+                                            "Only JavaScript logic fetch can occur");
+                            }
+                        }
+                    });
+
+            DBBuyerDecisionLogic dbBuyerDecisionLogic =
+                    new DBBuyerDecisionLogic.Builder()
+                            .setBiddingLogicUri(biddingLogicUri)
+                            .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
+                            .build();
+
+            DBAdSelection dbAdSelection =
+                    new DBAdSelection.Builder()
+                            .setAdSelectionId(AD_SELECTION_ID)
+                            .setCustomAudienceSignals(mCustomAudienceSignals)
+                            .setBuyerContextualSignals(mContextualSignals.toString())
+                            .setBiddingLogicUri(biddingLogicUri)
+                            .setWinningAdRenderUri(RENDER_URI)
+                            .setWinningAdBid(BID)
+                            .setCreationTimestamp(ACTIVATION_TIME)
+                            .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                            .build();
+
+            mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
+            mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
+
+            AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+            when(mDevContextFilterMock.createDevContext())
+                    .thenReturn(DevContext.createForDevOptionsDisabled());
+
+            // Create new service impl to let the WebView stub take effect
+            AdSelectionServiceImpl adSelectionService =
+                    new AdSelectionServiceImpl(
+                            mAdSelectionEntryDao,
+                            mAppInstallDao,
+                            mCustomAudienceDao,
+                            mFrequencyCapDao,
+                            mEncryptionContextDao,
+                            mEncryptionKeyDao,
+                            mClientSpy,
+                            mDevContextFilterMock,
+                            mLightweightExecutorService,
+                            mBackgroundExecutorService,
+                            mScheduledExecutor,
+                            CONTEXT,
+                            mAdServicesLoggerMock,
+                            flagsWithEnrollment,
+                            CallingAppUidSupplierProcessImpl.create(),
+                            mFledgeAuthorizationFilterMock,
+                            mAdSelectionServiceFilterMock,
+                            mAdFilteringFeatureFactory,
+                            mConsentManagerMock,
+                            mObliviousHttpEncryptor,
+                            mAdSelectionDebugReportDao,
+                            mAdIdFetcher);
+
+            ReportImpressionInput input =
+                    new ReportImpressionInput.Builder()
+                            .setAdSelectionId(AD_SELECTION_ID)
+                            .setAdSelectionConfig(adSelectionConfig)
+                            .setCallerPackageName(TEST_PACKAGE_NAME)
+                            .build();
+
+            // Count down callback + log interaction.
+            // Impression reporting should still fail due to unsupported WebView,
+            // but gracefully instead of crashing the process
+            ReportImpressionTestCallback callback =
+                    callReportImpression(adSelectionService, input, true);
+            assertWithMessage("Callback success").that(callback.mIsSuccess).isFalse();
+            assertWithMessage("Error status code")
+                    .that(callback.mFledgeErrorResponse.getStatusCode())
+                    .isEqualTo(STATUS_INTERNAL_ERROR);
+
+            verify(mAdServicesLoggerMock)
+                    .logFledgeApiCallStats(
+                            eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                            eq(STATUS_INTERNAL_ERROR),
+                            anyInt());
+        } finally {
+            // Shut down any running JSScriptEngine to ensure the new singleton gets picked up
+            JSScriptEngine.getInstance(CONTEXT, LoggerFactory.getFledgeLogger()).shutdown();
+        }
     }
 
     @Test
