@@ -41,7 +41,7 @@ public final class AdServicesFlagsSetterRule
         super(
                 AndroidLogger.getInstance(),
                 namespace -> new DeviceSideDeviceConfigHelper(namespace, usedByLegacyHelper),
-                new DeviceSideSystemPropertiesHelper());
+                DeviceSideSystemPropertiesHelper.getInstance());
         mUsedByLegacyHelper = usedByLegacyHelper;
     }
 

@@ -35,6 +35,8 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.RemoteException;
+import android.text.StaticLayout;
+import android.text.TextPaint;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -144,7 +146,11 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
         mSdkSdkCommEnabled = params.getString(EXTRA_SDK_SDK_ENABLED_KEY, null);
 
         return new TestView(
-                windowContext, getContext(), mSdkSdkCommEnabled, getOnClickListener(getContext()));
+                windowContext,
+                getContext(),
+                mSdkSdkCommEnabled,
+                getOnClickListener(getContext()),
+                width);
     }
 
     protected View.OnClickListener getOnClickListener(Context context) {
@@ -161,26 +167,25 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
         private Context mSdkContext;
         private String mSdkToSdkCommEnabled;
         private View.OnClickListener mClickListener;
+        private int mWidth;
 
         TestView(
                 Context windowContext,
                 Context sdkContext,
                 String sdkSdkCommEnabled,
-                View.OnClickListener clickListener) {
+                View.OnClickListener clickListener,
+                int width) {
             super(windowContext);
             mSdkContext = sdkContext;
             mSdkToSdkCommEnabled = sdkSdkCommEnabled;
             mClickListener = clickListener;
+            mWidth = width;
         }
 
         @Override
         protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);
 
-            Paint paint = new Paint();
-            paint.setStyle(Paint.Style.FILL);
-            paint.setColor(Color.WHITE);
-            paint.setTextSize(50);
             Random random = new Random();
             String message = null;
 
@@ -237,7 +242,15 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
             }
             int c = Color.rgb(random.nextInt(256), random.nextInt(256), random.nextInt(256));
             canvas.drawColor(c);
-            canvas.drawText(message, 75, 75, paint);
+
+            TextPaint paint = new TextPaint();
+            paint.setStyle(Paint.Style.FILL);
+            paint.setColor(Color.WHITE);
+            paint.setTextSize(50);
+            StaticLayout.Builder.obtain(message, 0, message.length(), paint, mWidth)
+                    .build()
+                    .draw(canvas);
+
             setOnClickListener(mClickListener);
         }
     }

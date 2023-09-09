@@ -60,7 +60,7 @@ public class OTAStringsCorruptFileUiAutomatorTest {
         sDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
         sCommonManager = sContext.getSystemService(AdServicesCommonManager.class);
         // enable wifi
-        UiUtils.connectToWifi(sDevice);
+        UiUtils.connectToWifi();
 
         // wait for wifi to connect
         Thread.sleep(LAUNCH_TIMEOUT);

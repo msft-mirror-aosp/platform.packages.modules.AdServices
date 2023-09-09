@@ -37,6 +37,7 @@ import java.util.concurrent.Executor;
 public class UpdatesDownloader {
 
     public static final String PACKAGE_NAME_HEADER = "X-PROTECTED-SIGNALS-PACKAGE";
+    public static final String CONVERSION_ERROR_MSG = "Error converting response body to JSON";
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final Executor mLightweightExecutor;
     @NonNull private final AdServicesHttpsClient mHttpClient;
@@ -77,7 +78,7 @@ public class UpdatesDownloader {
             return new JSONObject(response.getResponseBody());
         } catch (JSONException e) {
             sLogger.e(e, "Error converting fetchSignalsUpdate response body to JSON");
-            throw new IllegalArgumentException("Error converting response body to JSON", e);
+            throw new IllegalArgumentException(CONVERSION_ERROR_MSG, e);
         }
     }
 }

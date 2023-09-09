@@ -112,7 +112,7 @@ public class SdkSandboxTest {
             new SharedPreferencesUpdate(KEYS_TO_SYNC, getBundleFromMap(TEST_DATA));
     private static final SandboxLatencyInfo SANDBOX_LATENCY_INFO = new SandboxLatencyInfo();
 
-    private static boolean sCustomizedSdkContextEnabled;
+    private static boolean sCustomizedSdkContextEnabled = SdkLevel.isAtLeastU();
     private static SdkSandboxActivityRegistry sSdkSandboxActivityRegistry;
 
     private Context mContext;
@@ -160,7 +160,7 @@ public class SdkSandboxTest {
                         InstrumentationRegistry.getInstrumentation().getContext(),
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         "sdksandbox_customized_sdk_context_enabled");
-        sCustomizedSdkContextEnabled = Boolean.parseBoolean(stateManager.get());
+        sCustomizedSdkContextEnabled &= Boolean.parseBoolean(stateManager.get());
         sSdkSandboxActivityRegistry = Mockito.spy(SdkSandboxActivityRegistry.getInstance());
     }
 

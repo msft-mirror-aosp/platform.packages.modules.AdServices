@@ -29,6 +29,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.WebAddresses;
+import com.android.adservices.service.measurement.FilterMap;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -112,6 +113,25 @@ class FetcherUtil {
         }
     }
 
+    private static Optional<Long> extractLookbackWindow(JSONObject obj) {
+        try {
+            long lookbackWindow = Long.parseLong(obj.optString(FilterMap.LOOKBACK_WINDOW));
+            if (lookbackWindow <= 0) {
+                LogUtil.d(
+                        "extractLookbackWindow: non positive lookback window found: %d",
+                        lookbackWindow);
+                return Optional.empty();
+            }
+            return Optional.of(lookbackWindow);
+        } catch (NumberFormatException e) {
+            LogUtil.d(
+                    e,
+                    "extractLookbackWindow: caught exception. Key: %s",
+                    FilterMap.LOOKBACK_WINDOW);
+            return Optional.empty();
+        }
+    }
+
     /**
      * Validate aggregate key ID.
      */
@@ -161,25 +181,24 @@ class FetcherUtil {
         }
     }
 
-    /**
-     * Validate attribution filters JSONArray.
-     */
-    static boolean areValidAttributionFilters(@NonNull JSONArray filterSet) {
+    /** Validate attribution filters JSONArray. */
+    static boolean areValidAttributionFilters(
+            @NonNull JSONArray filterSet, Flags flags, boolean canIncludeLookbackWindow) {
         if (filterSet.length() > MAX_FILTER_MAPS_PER_FILTER_SET) {
             return false;
         }
         for (int i = 0; i < filterSet.length(); i++) {
-            if (!areValidAttributionFilters(filterSet.optJSONObject(i))) {
+            if (!areValidAttributionFilters(
+                    filterSet.optJSONObject(i), flags, canIncludeLookbackWindow)) {
                 return false;
             }
         }
         return true;
     }
 
-    /**
-     * Validate attribution filters JSONObject.
-     */
-    static boolean areValidAttributionFilters(JSONObject filtersObj) {
+    /** Validate attribution filters JSONObject. */
+    static boolean areValidAttributionFilters(
+            JSONObject filtersObj, Flags flags, boolean canIncludeLookbackWindow) {
         if (filtersObj == null || filtersObj.length() > MAX_ATTRIBUTION_FILTERS) {
             return false;
         }
@@ -188,6 +207,13 @@ class FetcherUtil {
             String key = keys.next();
             if (key.getBytes().length > MAX_BYTES_PER_ATTRIBUTION_FILTER_STRING) {
                 return false;
+            }
+            if (flags.getMeasurementEnableLookbackWindowFilter()
+                    && FilterMap.LOOKBACK_WINDOW.equals(key)) {
+                if (!canIncludeLookbackWindow || extractLookbackWindow(filtersObj).isEmpty()) {
+                    return false;
+                }
+                continue;
             }
             JSONArray values = filtersObj.optJSONArray(key);
             if (values == null || values.length() > MAX_VALUES_PER_ATTRIBUTION_FILTER) {
