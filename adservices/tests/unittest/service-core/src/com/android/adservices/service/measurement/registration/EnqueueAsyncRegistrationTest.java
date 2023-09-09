@@ -22,6 +22,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import android.adservices.measurement.RegistrationRequest;
+import android.adservices.measurement.RegistrationRequestFixture;
 import android.adservices.measurement.WebSourceParams;
 import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.adservices.measurement.WebTriggerParams;
@@ -32,6 +33,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.os.Parcel;
 import android.os.RemoteException;
 import android.view.InputEvent;
 
@@ -74,7 +76,7 @@ public class EnqueueAsyncRegistrationTest {
             new WebSourceParams.Builder(REGISTRATION_URI_2).setDebugKeyAllowed(false).build();
 
     private static final WebSourceParams INVALID_SOURCE_REGISTRATION =
-            new WebSourceParams.Builder(INVALID_REGISTRATION_URI).setDebugKeyAllowed(false).build();
+            getInvalidWebSourceParams(INVALID_REGISTRATION_URI);
 
     private static final WebTriggerParams INPUT_TRIGGER_REGISTRATION_1 =
             new WebTriggerParams.Builder(REGISTRATION_URI_1).setDebugKeyAllowed(true).build();
@@ -83,8 +85,7 @@ public class EnqueueAsyncRegistrationTest {
             new WebTriggerParams.Builder(REGISTRATION_URI_2).setDebugKeyAllowed(false).build();
 
     private static final WebTriggerParams INVALID_TRIGGER_REGISTRATION =
-            new WebTriggerParams.Builder(INVALID_REGISTRATION_URI).setDebugKeyAllowed(false)
-                    .build();
+            getInvalidWebTriggerParams(INVALID_REGISTRATION_URI);
 
     private static final List<WebSourceParams> sSourceParamsList = new ArrayList<>();
 
@@ -153,13 +154,11 @@ public class EnqueueAsyncRegistrationTest {
         DatastoreManager datastoreManager =
                 new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
         RegistrationRequest registrationRequest =
-                new RegistrationRequest.Builder(
-                                RegistrationRequest.REGISTER_SOURCE,
-                                // Invalid scheme for registrationUri
-                                Uri.parse("http://baz.test"),
-                                sDefaultContext.getPackageName(),
-                                SDK_PACKAGE_NAME)
-                        .build();
+                RegistrationRequestFixture.getInvalidRegistrationRequest(
+                        RegistrationRequest.REGISTER_SOURCE,
+                        INVALID_REGISTRATION_URI,
+                        sDefaultContext.getPackageName(),
+                        SDK_PACKAGE_NAME);
 
         Assert.assertTrue(
                 EnqueueAsyncRegistration.appSourceOrTriggerRegistrationRequest(
@@ -306,13 +305,11 @@ public class EnqueueAsyncRegistrationTest {
         DatastoreManager datastoreManager =
                 new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
         RegistrationRequest registrationRequest =
-                new RegistrationRequest.Builder(
-                                RegistrationRequest.REGISTER_TRIGGER,
-                                // Invalid registrationUri
-                                Uri.parse("http://baz.test"),
-                                sDefaultContext.getPackageName(),
-                                SDK_PACKAGE_NAME)
-                        .build();
+                RegistrationRequestFixture.getInvalidRegistrationRequest(
+                        RegistrationRequest.REGISTER_TRIGGER,
+                        INVALID_REGISTRATION_URI,
+                        sDefaultContext.getPackageName(),
+                        SDK_PACKAGE_NAME);
 
         Assert.assertTrue(
                 EnqueueAsyncRegistration.appSourceOrTriggerRegistrationRequest(
@@ -755,5 +752,21 @@ public class EnqueueAsyncRegistrationTest {
         Assert.assertEquals(
                 AsyncRegistration.RegistrationType.WEB_TRIGGER,
                 asyncRegistration.getType());
+    }
+
+    private static WebSourceParams getInvalidWebSourceParams(Uri uri) {
+        Parcel parcel = Parcel.obtain();
+        uri.writeToParcel(parcel, 0);
+        parcel.writeBoolean(false);
+        parcel.setDataPosition(0);
+        return WebSourceParams.CREATOR.createFromParcel(parcel);
+    }
+
+    private static WebTriggerParams getInvalidWebTriggerParams(Uri uri) {
+        Parcel parcel = Parcel.obtain();
+        uri.writeToParcel(parcel, 0);
+        parcel.writeBoolean(false);
+        parcel.setDataPosition(0);
+        return WebTriggerParams.CREATOR.createFromParcel(parcel);
     }
 }

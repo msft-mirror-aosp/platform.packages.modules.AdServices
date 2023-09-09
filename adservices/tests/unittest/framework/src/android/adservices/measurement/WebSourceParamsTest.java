@@ -17,6 +17,7 @@
 package android.adservices.measurement;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import android.net.Uri;
@@ -26,7 +27,7 @@ import org.junit.Test;
 
 /** Unit tests for {@link WebSourceParams}. */
 public class WebSourceParamsTest {
-    private static final Uri REGISTRATION_URI = Uri.parse("https://foo.com");
+    private static final Uri REGISTRATION_URI = Uri.parse("https://foo.test");
     private static final WebSourceParams WEB_SOURCE_PARAMS =
             new WebSourceParams.Builder(REGISTRATION_URI).setDebugKeyAllowed(true).build();
 
@@ -42,6 +43,20 @@ public class WebSourceParamsTest {
     @Test
     public void testCreationAttribution() {
         verifyExampleRegistration(WEB_SOURCE_PARAMS);
+    }
+
+    @Test
+    public void testRegistrationUriWithoutScheme_throwsException() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new WebSourceParams.Builder(Uri.parse("foo.test")).build());
+    }
+
+    @Test
+    public void testRegistrationUriWithNonHttpsScheme_throwsException() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new WebSourceParams.Builder(Uri.parse("http://foo.test")).build());
     }
 
     @Test

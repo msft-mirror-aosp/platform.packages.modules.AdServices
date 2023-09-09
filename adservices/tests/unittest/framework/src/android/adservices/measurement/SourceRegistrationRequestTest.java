@@ -27,6 +27,7 @@ import android.view.KeyEvent;
 
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -35,8 +36,9 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class SourceRegistrationRequestTest {
-    private static final Uri REGISTRATION_URI_1 = Uri.parse("android-app://com.example.app1");
-    private static final Uri REGISTRATION_URI_2 = Uri.parse("android-app://com.example.app3");
+    private static final Uri REGISTRATION_URI_1 = Uri.parse("https://bar.test");
+    private static final Uri REGISTRATION_URI_2 = Uri.parse("https://foo.test");
+    private static final Uri INVALID_REGISTRATION_URI = Uri.parse("http://bar.test");
     private static final List<Uri> SOURCE_REGISTRATIONS =
             Arrays.asList(REGISTRATION_URI_1, REGISTRATION_URI_2);
     private static final KeyEvent INPUT_KEY_EVENT =
@@ -108,6 +110,16 @@ public class SourceRegistrationRequestTest {
                 IllegalArgumentException.class,
                 () ->
                         new SourceRegistrationRequest.Builder(generateAppRegistrationUrisList(21))
+                                .setInputEvent(INPUT_KEY_EVENT)
+                                .build());
+
+        List<Uri> listWithInvalidRegistrationUri = new ArrayList<>();
+        listWithInvalidRegistrationUri.addAll(SOURCE_REGISTRATIONS);
+        listWithInvalidRegistrationUri.add(INVALID_REGISTRATION_URI);
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new SourceRegistrationRequest.Builder(listWithInvalidRegistrationUri)
                                 .setInputEvent(INPUT_KEY_EVENT)
                                 .build());
     }

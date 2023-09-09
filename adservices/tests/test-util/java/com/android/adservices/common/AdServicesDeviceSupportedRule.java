@@ -19,20 +19,6 @@ package com.android.adservices.common;
 public final class AdServicesDeviceSupportedRule extends AbstractAdServicesDeviceSupportedRule {
 
     public AdServicesDeviceSupportedRule() {
-        super(AndroidLogger.getInstance());
-    }
-
-    @Override
-    public boolean isAdServicesSupportedOnDevice() {
-        boolean isSupported = AdServicesSupportHelper.isDeviceSupported();
-        mLog.v("isAdServicesSupportedOnDevice(): %b", isSupported);
-        return isSupported;
-    }
-
-    @Override
-    public boolean isLowRamDevice() throws Exception {
-        boolean isLowRamDevice = AdServicesSupportHelper.isLowRamDevice();
-        mLog.v("isLowRamDevice(): %b", isLowRamDevice);
-        return isLowRamDevice;
+        super(AndroidLogger.getInstance(), AdServicesSupportHelper.getInstance());
     }
 }
