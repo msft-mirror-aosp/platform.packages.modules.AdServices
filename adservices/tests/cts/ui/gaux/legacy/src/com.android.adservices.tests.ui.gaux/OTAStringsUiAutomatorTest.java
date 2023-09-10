@@ -20,6 +20,7 @@ import static com.android.adservices.tests.ui.libs.UiConstants.ENTRY_POINT_ENABL
 
 import android.adservices.common.AdServicesCommonManager;
 import android.content.Context;
+import android.platform.test.rule.ScreenRecordRule;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -28,17 +29,21 @@ import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.Until;
 
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.tests.ui.libs.UiUtils;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(AndroidJUnit4.class)
+@ScreenRecordRule.ScreenRecord
 public class OTAStringsUiAutomatorTest {
     private static final int LAUNCH_TIMEOUT = 5000;
     private static final String MDD_URL =
@@ -46,6 +51,8 @@ public class OTAStringsUiAutomatorTest {
                     + "-ui-ota-strings/1522/bd19b7e7d207afc30f1c07de7df5766a21a1b0eb";
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();
+
+    @Rule public final ScreenRecordRule sScreenRecordRule = new ScreenRecordRule();
     private static UiDevice sDevice;
 
     private static AdServicesCommonManager sCommonManager;
@@ -62,6 +69,7 @@ public class OTAStringsUiAutomatorTest {
 
         // download test OTA strings
         sCommonManager = sContext.getSystemService(AdServicesCommonManager.class);
+
         UiUtils.setupOTAStrings(sContext, sDevice, sCommonManager, MDD_URL);
     }
 
@@ -75,6 +83,8 @@ public class OTAStringsUiAutomatorTest {
 
     @Before
     public void initTestCase() {
+        // Skip the test if it runs on unsupported platforms.
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
         // Start from the home screen
         sDevice.pressHome();

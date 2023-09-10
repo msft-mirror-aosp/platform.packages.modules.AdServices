@@ -22,6 +22,7 @@ import static com.android.adservices.tests.ui.libs.UiConstants.ENTRY_POINT_ENABL
 import android.adservices.common.AdServicesCommonManager;
 import android.content.Context;
 import android.os.OutcomeReceiver;
+import android.platform.test.rule.ScreenRecordRule;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
 import androidx.test.filters.FlakyTest;
@@ -39,6 +40,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -47,11 +49,14 @@ import java.util.concurrent.Executors;
 
 /** Test for verifying user consent notification trigger behaviors. */
 @RunWith(AndroidJUnit4.class)
+@ScreenRecordRule.ScreenRecord
 public class ReconsentNotificationTriggerTest {
 
     private AdServicesCommonManager mCommonManager;
     private UiDevice mDevice;
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
+
+    @Rule public final ScreenRecordRule sScreenRecordRule = new ScreenRecordRule();
 
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();

@@ -21,6 +21,7 @@ import static com.android.adservices.tests.ui.libs.UiConstants.ENTRY_POINT_ENABL
 
 import android.adservices.common.AdServicesCommonManager;
 import android.content.Context;
+import android.platform.test.rule.ScreenRecordRule;
 
 import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -35,11 +36,13 @@ import com.android.adservices.tests.ui.libs.UiUtils;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /** Test for verifying user consent notification trigger behaviors. */
 @RunWith(AndroidJUnit4.class)
+@ScreenRecordRule.ScreenRecord
 public class GaUxNotificationTriggerTest {
 
     private AdServicesCommonManager mCommonManager;
@@ -48,6 +51,8 @@ public class GaUxNotificationTriggerTest {
 
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();
+
+    @Rule public final ScreenRecordRule sScreenRecordRule = new ScreenRecordRule();
 
     @Before
     public void setUp() throws Exception {
