@@ -42,6 +42,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.adservices.measurement.RegistrationRequest;
+import android.adservices.measurement.RegistrationRequestFixture;
 import android.adservices.measurement.WebSourceParams;
 import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.content.Context;
@@ -674,7 +675,12 @@ public final class AsyncSourceFetcherTest {
 
     @Test
     public void registerSource_nonHttpsUrl_rejectsSource() {
-        RegistrationRequest request = buildRequest(WebUtil.validUrl("http://foo.test"));
+        RegistrationRequest request =
+                RegistrationRequestFixture.getInvalidRegistrationRequest(
+                        RegistrationRequest.REGISTER_SOURCE,
+                        WebUtil.validUri("http://foo.test"),
+                        sContext.getPackageName(),
+                        SDK_PACKAGE_NAME);
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -689,7 +695,12 @@ public final class AsyncSourceFetcherTest {
 
     @Test
     public void testBadSourceUrl() {
-        RegistrationRequest request = buildRequest(WebUtil.validUrl("bad-schema://foo.test"));
+        RegistrationRequest request =
+                RegistrationRequestFixture.getInvalidRegistrationRequest(
+                        RegistrationRequest.REGISTER_SOURCE,
+                        WebUtil.validUri("bad-schema://foo.test"),
+                        sContext.getPackageName(),
+                        SDK_PACKAGE_NAME);
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -2893,6 +2904,39 @@ public final class AsyncSourceFetcherTest {
                 "  \"filter_data\": {\"product\":[\"1234\",\""
                         + LONG_FILTER_STRING
                         + "\"], \"ctid\":[\"id\"]} \n";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "  \"destination\": \"android-app://com"
+                                                + ".myapps\",\n"
+                                                + "  \"priority\": \"123\",\n"
+                                                + "  \"expiry\": \"456789\",\n"
+                                                + "  \"source_event_id\": \"987654321\",\n"
+                                                + filterData
+                                                + "}\n")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testSourceRequest_filterData_shouldNotIncludeKookbackWindow() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        String filterData =
+                "  \"filter_data\": {\"product\":[\"1234\"], \"ctid\":[\"id\"], "
+                        + "\"_lookback_window\": 123} \n";
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
