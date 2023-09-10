@@ -208,8 +208,6 @@ class LoadSdkSession {
     void load(
             ISdkSandboxService service,
             ApplicationInfo customizedInfo,
-            int timeToLoadSandbox,
-            long timeSystemServerReceivedCallFromApp,
             SandboxLatencyInfo sandboxLatencyInfo) {
         // TODO(b/258679084): If a second load request comes here, while the first is pending, it
         // will go through. SdkSandboxManagerService already has a check for this, but we should
@@ -234,23 +232,7 @@ class LoadSdkSession {
                     sandboxLatencyInfo);
         }
 
-        final long timeSystemServerCalledSandbox = mInjector.getCurrentTime();
-        sandboxLatencyInfo.setTimeSystemServerCalledSandbox(timeSystemServerCalledSandbox);
-
-        int latencySystemServerAppToSandbox =
-                (int) (timeSystemServerCalledSandbox - timeSystemServerReceivedCallFromApp);
-        if (timeToLoadSandbox != -1) {
-            latencySystemServerAppToSandbox -= timeToLoadSandbox;
-        }
-
-        SdkSandboxStatsLog.write(
-                SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
-                latencySystemServerAppToSandbox,
-                /*success=*/ true,
-                SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
-                mCallingInfo.getUid());
-
+        sandboxLatencyInfo.setTimeSystemServerCalledSandbox(mInjector.getCurrentTime());
         try {
             service.loadSdk(
                     mCallingInfo.getPackageName(),
@@ -272,10 +254,12 @@ class LoadSdkSession {
                     sandboxLatencyInfo);
         } catch (RemoteException e) {
             String errorMsg = "Failed to load sdk";
+            sandboxLatencyInfo.setSandboxStatus(
+                    SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
             handleLoadFailure(
                     new LoadSdkException(SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR, errorMsg),
-                    /*startTimeOfErrorStage=*/ timeSystemServerReceivedCallFromApp,
-                    /*stage*/ SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
+                    /*startTimeOfErrorStage=*/ -1,
+                    /*stage*/ SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED,
                     /*successAtStage=*/ false,
                     sandboxLatencyInfo);
         }
@@ -308,6 +292,7 @@ class LoadSdkSession {
         }
     }
 
+    // TODO(b/296844050): remove startTimeOfErrorStage, stage and successAtStage parameters.
     void handleLoadFailure(
             LoadSdkException exception,
             long startTimeOfErrorStage,

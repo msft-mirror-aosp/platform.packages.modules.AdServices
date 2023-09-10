@@ -25,6 +25,13 @@ final class HostSideSystemPropertiesHelper implements SystemPropertiesHelper.Int
     private static final Logger sLogger =
             new Logger(ConsoleLogger.getInstance(), HostSideSystemPropertiesHelper.class);
 
+    private static final HostSideSystemPropertiesHelper sInstance =
+            new HostSideSystemPropertiesHelper();
+
+    static HostSideSystemPropertiesHelper getInstance() {
+        return sInstance;
+    }
+
     @Override
     public String get(String name) {
         return getProperty(name);
@@ -45,4 +52,6 @@ final class HostSideSystemPropertiesHelper implements SystemPropertiesHelper.Int
     public String toString() {
         return HostSideSystemPropertiesHelper.class.getSimpleName();
     }
+
+    private HostSideSystemPropertiesHelper() {}
 }

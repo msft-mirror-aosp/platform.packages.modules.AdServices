@@ -283,7 +283,6 @@ public class AggregateFallbackReportingJobServiceTest {
                                                     spyContext,
                                                     AggregateFallbackReportingJobService.class))
                                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                                    .setRequiresDeviceIdle(true)
                                     .setRequiresBatteryNotLow(true)
                                     .setPeriodic(fallbackReportingJobPeriodMs)
                                     .setPersisted(true)
@@ -325,7 +324,6 @@ public class AggregateFallbackReportingJobServiceTest {
                                             new ComponentName(
                                                     spyContext,
                                                     AggregateFallbackReportingJobService.class))
-                                    .setRequiresDeviceIdle(true)
                                     .setRequiresBatteryNotLow(true)
                                     .setPeriodic(periodMs - 1)
                                     .setPersisted(true)
@@ -432,7 +430,6 @@ public class AggregateFallbackReportingJobServiceTest {
                     final JobInfo jobInfo = captor.getValue();
                     assertNotNull(jobInfo);
                     assertEquals(NETWORK_TYPE_ANY, jobInfo.getNetworkType());
-                    assertTrue(jobInfo.isRequireDeviceIdle());
                     assertTrue(jobInfo.isRequireBatteryNotLow());
                     assertTrue(jobInfo.isPeriodic());
                     assertTrue(jobInfo.isPersisted());

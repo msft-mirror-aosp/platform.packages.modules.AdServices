@@ -20,6 +20,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.content.Context;
 import android.os.Build;
 import android.util.Pair;
@@ -90,7 +91,11 @@ public class CacheManager {
 
     // Set containing Global Blocked Topic Ids
     private HashSet<Integer> mCachedGlobalBlockedTopicIds;
+
+    @Nullable
+    // Expected to be null when the topics cobalt flag is disabled.
     private final TopicsCobaltLogger mTopicsCobaltLogger;
+
     private final AdServicesLogger mLogger;
 
     @VisibleForTesting
@@ -116,10 +121,12 @@ public class CacheManager {
             if (sSingleton == null) {
                 TopicsCobaltLogger topicsCobaltLogger = null;
                 try {
-                    topicsCobaltLogger =
-                            new TopicsCobaltLogger(
-                                    CobaltFactory.getCobaltLogger(
-                                            context, FlagsFactory.getFlags()));
+                    if (FlagsFactory.getFlags().getTopicsCobaltLoggingEnabled()) {
+                        topicsCobaltLogger =
+                                new TopicsCobaltLogger(
+                                        CobaltFactory.getCobaltLogger(
+                                                context, FlagsFactory.getFlags()));
+                    }
                 } catch (CobaltInitializationException e) {
                     sLogger.e(e, "Cobalt logger could not be initialised.");
                     ErrorLogUtil.e(

@@ -18,9 +18,11 @@ package com.android.adservices.tests.ui.libs.pages;
 import static com.android.adservices.tests.ui.libs.UiConstants.LAUNCH_TIMEOUT_MS;
 import static com.android.adservices.tests.ui.libs.UiConstants.SYSTEM_UI_NAME;
 import static com.android.adservices.tests.ui.libs.UiConstants.SYSTEM_UI_RESOURCE_ID;
+import static com.android.adservices.tests.ui.libs.UiUtils.LAUNCH_TIMEOUT;
 import static com.android.adservices.tests.ui.libs.UiUtils.PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT;
 import static com.android.adservices.tests.ui.libs.UiUtils.SCROLL_WAIT_TIME;
 import static com.android.adservices.tests.ui.libs.UiUtils.getElement;
+import static com.android.adservices.tests.ui.libs.UiUtils.getPageElement;
 import static com.android.adservices.tests.ui.libs.UiUtils.getString;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -78,8 +80,15 @@ public class NotificationPages {
                 notificationHeader = R.string.notificationUI_u18_header_title;
                 break;
         }
-        Log.d("adservices", "eu test is " + isEuTest);
-        Log.d("adservices", "notificationTitle is " + getString(context, notificationTitle));
+
+        Log.d(
+                "adservices",
+                "Expected notification card title is: " + getString(context, notificationTitle));
+        Log.d(
+                "adservices",
+                "Expected notification landing page title is: "
+                        + getString(context, notificationHeader));
+
         UiSelector notificationCardSelector =
                 new UiSelector().text(getString(context, notificationTitle));
 
@@ -97,8 +106,11 @@ public class NotificationPages {
         assertThat(notificationCard.exists()).isTrue();
 
         notificationCard.click();
-        Thread.sleep(LAUNCH_TIMEOUT_MS);
-        UiObject title = getElement(context, device, notificationHeader);
+
+        UiObject title = getPageElement(context, device, notificationHeader);
+
+        title.waitForExists(LAUNCH_TIMEOUT);
+
         assertThat(title.exists()).isTrue();
     }
 

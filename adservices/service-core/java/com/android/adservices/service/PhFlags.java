@@ -47,20 +47,8 @@ import java.util.stream.Collectors;
 /** Flags Implementation that delegates to DeviceConfig. */
 // TODO(b/228037065): Add validation logics for Feature flags read from PH.
 public final class PhFlags implements Flags {
-    // TODO b/298278031 Migrate Keys/Namespace to FlagConstants.
-    static final String KEY_MEASUREMENT_REPORT_RETRY_LIMIT = "measurement_report_retry_limit";
-    static final String KEY_MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED =
-            "measurement_report_retry_limit_enabled";
 
     private static final PhFlags sSingleton = new PhFlags();
-
-    // TODO(b/298090610): Move this flag to FlagsConstants after M10 is fully rolled out.
-    public static final String KEY_MAINLINE_TRAIN_VERSION = "mainline_train_version";
-    // TODO(b/298090610): Remove NAMESPACE_ADSERVICES after M10 is fully rolled out.
-    static final String NAMESPACE_ADSERVICES = "adservices";
-    // TODO(b/297089223): Move this flag to FlagsConstants after M10 is fully rolled out.
-    public static final String KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST =
-            "measurement_app_package_name_logging_allowlist";
 
     /** Returns the singleton instance of the PhFlags. */
     @NonNull
@@ -470,8 +458,8 @@ public final class PhFlags implements Flags {
     public boolean getMeasurementReportingRetryLimitEnabled() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getBoolean(
-                NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED,
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED,
                 /* defaultValue */ MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED);
     }
 
@@ -479,8 +467,8 @@ public final class PhFlags implements Flags {
     public int getMeasurementReportingRetryLimit() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getInt(
-                NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_MEASUREMENT_REPORT_RETRY_LIMIT,
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MEASUREMENT_REPORT_RETRY_LIMIT,
                 /* defaultValue */ MEASUREMENT_REPORT_RETRY_LIMIT);
     }
 
@@ -668,6 +656,16 @@ public final class PhFlags implements Flags {
                 /* flagName */ FlagsConstants
                         .KEY_MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE,
                 /* defaultValue */ MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE);
+    }
+
+    @Override
+    public int getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow() {
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW,
+                /* defaultValue */
+                        MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW);
     }
 
     @Override
@@ -1606,8 +1604,8 @@ public final class PhFlags implements Flags {
     @Override
     public String getMainlineTrainVersion() {
         return DeviceConfig.getString(
-                NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_MAINLINE_TRAIN_VERSION,
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MAINLINE_TRAIN_VERSION,
                 /* defaultValue */ DEFAULT_MAINLINE_TRAIN_VERSION);
     }
 
@@ -3300,12 +3298,12 @@ public final class PhFlags implements Flags {
                         + getMeasurementDbSizeLimit());
         writer.println(
                 "\t"
-                        + KEY_MEASUREMENT_REPORT_RETRY_LIMIT
+                        + FlagsConstants.KEY_MEASUREMENT_REPORT_RETRY_LIMIT
                         + " = "
                         + getMeasurementReportingRetryLimit());
         writer.println(
                 "\t"
-                        + KEY_MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED
+                        + FlagsConstants.KEY_MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED
                         + " = "
                         + getMeasurementReportingRetryLimitEnabled());
         writer.println(
@@ -3462,7 +3460,11 @@ public final class PhFlags implements Flags {
                                 .KEY_MEASUREMENT_DEBUG_KEY_AD_ID_MATCHING_ENROLLMENT_BLOCKLIST
                         + " = "
                         + getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist());
-        writer.println("\t" + KEY_MAINLINE_TRAIN_VERSION + " = " + getMainlineTrainVersion());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MAINLINE_TRAIN_VERSION
+                        + " = "
+                        + getMainlineTrainVersion());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED
@@ -3630,6 +3632,11 @@ public final class PhFlags implements Flags {
                         + " = "
                         + getMeasurementMaxDistinctDestinationsInActiveSource());
         writer.println(
+                "\t" + FlagsConstants
+                        .KEY_MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW
+                        + " = "
+                        + getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow());
+        writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT
                         + " = "
@@ -3651,12 +3658,17 @@ public final class PhFlags implements Flags {
                         + getMeasurementEnableAraDeduplicationAlignmentV1());
         writer.println(
                 "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING
+                        + " = "
+                        + getMeasurementEnableSourceDeactivationAfterFiltering());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING
                         + " = "
                         + getMeasurementEnableAppPackageNameLogging());
         writer.println(
                 "\t"
-                        + KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST
+                        + FlagsConstants.KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST
                         + " = "
                         + getMeasurementAppPackageNameLoggingAllowlist());
         writer.println(
@@ -4702,6 +4714,15 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableSourceDeactivationAfterFiltering() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING,
+                /* defaultValue */ MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING);
+    }
+
+    @Override
     public boolean getMeasurementEnableReportingJobsThrowUnaccountedException() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -4852,7 +4873,9 @@ public final class PhFlags implements Flags {
     @Override
     public String getMeasurementAppPackageNameLoggingAllowlist() {
         return DeviceConfig.getString(
-                NAMESPACE_ADSERVICES, KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST, "");
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST,
+                /* defaultValue */ "");
     }
 
     @Override
