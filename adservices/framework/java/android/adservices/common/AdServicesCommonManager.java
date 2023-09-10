@@ -53,8 +53,6 @@ import java.util.concurrent.Executor;
  *
  * @hide
  */
-// TODO(b/269798827): Enable for R.
-@RequiresApi(Build.VERSION_CODES.S)
 @SystemApi
 public class AdServicesCommonManager {
     /** @hide */
@@ -102,7 +100,24 @@ public class AdServicesCommonManager {
 
     /**
      * Get the AdService's enablement state which represents whether AdServices feature is enabled
-     * or not.
+     * or not. This API is for Android S+, which has the OutcomeReceiver class available.
+     *
+     * @hide
+     */
+    @SystemApi
+    @RequiresPermission(anyOf = {ACCESS_ADSERVICES_STATE, ACCESS_ADSERVICES_STATE_COMPAT})
+    @RequiresApi(Build.VERSION_CODES.S)
+    public void isAdServicesEnabled(
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull OutcomeReceiver<Boolean, Exception> callback) {
+        isAdServicesEnabled(
+                executor, OutcomeReceiverConverter.toAdServicesOutcomeReceiver(callback));
+    }
+
+    /**
+     * Get the AdService's enablement state which represents whether AdServices feature is enabled
+     * or not. This API is for Android R, and uses the AdServicesOutcomeReceiver class because
+     * OutcomeReceiver is not available.
      *
      * @hide
      */
@@ -110,7 +125,7 @@ public class AdServicesCommonManager {
     @RequiresPermission(anyOf = {ACCESS_ADSERVICES_STATE, ACCESS_ADSERVICES_STATE_COMPAT})
     public void isAdServicesEnabled(
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Boolean, Exception> callback) {
+            @NonNull AdServicesOutcomeReceiver<Boolean, Exception> callback) {
         final IAdServicesCommonService service = getService();
         try {
             service.isAdServicesEnabled(
@@ -166,7 +181,8 @@ public class AdServicesCommonManager {
     }
 
     /**
-     * Enable AdServices based on the AdServicesStates input parameter.
+     * Enable AdServices based on the AdServicesStates input parameter. This API is for Android S+,
+     * which has the OutcomeReceiver class available.
      *
      * <p>Based on the provided {@code AdServicesStates}, AdServices may be enabled. Specifically,
      * users will be provided with an enrollment channel (such as notification) to become privacy
@@ -191,10 +207,39 @@ public class AdServicesCommonManager {
      */
     @SystemApi
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
+    @RequiresApi(Build.VERSION_CODES.S)
     public void enableAdServices(
             @NonNull AdServicesStates adServicesStates,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<Boolean, Exception> callback) {
+        enableAdServices(
+                adServicesStates,
+                executor,
+                OutcomeReceiverConverter.toAdServicesOutcomeReceiver(callback));
+    }
+
+    /**
+     * Enable AdServices based on the AdServicesStates input parameter. This API is for Android R,
+     * and uses the AdServicesOutcomeReceiver class because OutcomeReceiver is not available.
+     *
+     * <p>Based on the provided {@code AdServicesStates}, AdServices may be enabled. Specifically,
+     * users will be provided with an enrollment channel (such as notification) to become privacy
+     * sandbox users when:
+     *
+     * <ul>
+     *   <li>isAdServicesUiEnabled - true.
+     *   <li>isU18Account | isAdultAccount - true.
+     * </ul>
+     *
+     * @param adServicesStates parcel containing relevant AdServices state variables.
+     * @hide
+     */
+    @SystemApi
+    @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
+    public void enableAdServices(
+            @NonNull AdServicesStates adServicesStates,
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull AdServicesOutcomeReceiver<Boolean, Exception> callback) {
         Objects.requireNonNull(adServicesStates);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(callback);

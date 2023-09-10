@@ -67,12 +67,15 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.AdditionalMatchers.geq;
 import static org.mockito.Mockito.timeout;
 
+import android.adservices.adid.AdId;
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
@@ -99,6 +102,7 @@ import android.os.LimitExceededException;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.SystemClock;
+import android.webkit.WebView;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
@@ -109,6 +113,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
+import com.android.adservices.data.adselection.AdSelectionDebugReportingDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
@@ -622,7 +627,10 @@ public class AdSelectionE2ETest {
 
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptor;
-    @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
+    private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
+
+    private MockAdIdWorker mMockAdIdWorker;
+    private AdIdFetcher mAdIdFetcher;
 
     @Before
     public void setUp() throws Exception {
@@ -655,6 +663,7 @@ public class AdSelectionE2ETest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
+                        .spyStatic(WebView.class)
                         .initMocks(this)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
@@ -672,6 +681,13 @@ public class AdSelectionE2ETest {
                 new AdServicesHttpsClient(
                         AdServicesExecutors.getBlockingExecutor(),
                         CacheProviderFactory.createNoOpCache());
+        mAdSelectionDebugReportDao =
+                Room.inMemoryDatabaseBuilder(mContext, AdSelectionDebugReportingDatabase.class)
+                        .build()
+                        .getAdSelectionDebugReportDao();
+        mMockAdIdWorker = new MockAdIdWorker(mContext, mFlags);
+        mAdIdFetcher =
+                new AdIdFetcher(mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor);
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
@@ -700,7 +716,8 @@ public class AdSelectionE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         // Create a dispatcher that helps map a request -> response in mockWebServer
         Uri uriPathForScoringWithReportResults =
@@ -833,6 +850,7 @@ public class AdSelectionE2ETest {
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
                         DevContext.createForDevOptionsDisabled());
+        mMockAdIdWorker.setResult(AdId.ZERO_OUT, true);
     }
 
     @After
@@ -952,7 +970,8 @@ public class AdSelectionE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -1073,7 +1092,8 @@ public class AdSelectionE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -1213,7 +1233,8 @@ public class AdSelectionE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -1349,7 +1370,8 @@ public class AdSelectionE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -1466,7 +1488,8 @@ public class AdSelectionE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -1678,7 +1701,8 @@ public class AdSelectionE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
@@ -1748,7 +1772,7 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionSuccess_flagToPreV3_preV3BiddingLogic() throws Exception {
-        mFlags = new AdSelectionE2ETestFlags(2);
+        mFlags = new AdSelectionE2ETestFlags(2, false);
         doReturn(mFlags).when(FlagsFactory::getFlags);
         mAdSelectionService =
                 new AdSelectionServiceImpl(
@@ -1772,7 +1796,8 @@ public class AdSelectionE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -1954,7 +1979,8 @@ public class AdSelectionE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -2073,7 +2099,8 @@ public class AdSelectionE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -2213,7 +2240,8 @@ public class AdSelectionE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -2349,7 +2377,8 @@ public class AdSelectionE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -2466,7 +2495,8 @@ public class AdSelectionE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -3002,7 +3032,8 @@ public class AdSelectionE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -3136,7 +3167,8 @@ public class AdSelectionE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(adSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -3852,7 +3884,8 @@ public class AdSelectionE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         AdSelectionTestCallback resultsCallbackNoCache =
                 invokeSelectAds(adSelectionServiceNoCache, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -3966,7 +3999,8 @@ public class AdSelectionE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         AdSelectionTestCallback resultsCallbackNoCache =
                 invokeSelectAds(adSelectionServiceNoCache, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -4082,7 +4116,8 @@ public class AdSelectionE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         // We call selectAds again to verify that scoring logic was also cached
         AdSelectionTestCallback resultsCallbackWithCaching =
@@ -4201,7 +4236,8 @@ public class AdSelectionE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         // We call selectAds again to verify that scoring logic was also cached
         AdSelectionTestCallback resultsCallbackWithCaching =
@@ -4322,7 +4358,8 @@ public class AdSelectionE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
@@ -4456,7 +4493,8 @@ public class AdSelectionE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
@@ -5622,7 +5660,8 @@ public class AdSelectionE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         String jsWaitMoreThanAllowedForBiddingPerCa =
                 insertJsWait(2 * mFlags.getAdSelectionBiddingTimeoutPerCaMs());
@@ -5867,7 +5906,8 @@ public class AdSelectionE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -5940,7 +5980,8 @@ public class AdSelectionE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         resultsCallback =
                 invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -6127,7 +6168,8 @@ public class AdSelectionE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -6200,7 +6242,8 @@ public class AdSelectionE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         resultsCallback =
                 invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -6316,7 +6359,8 @@ public class AdSelectionE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         String jsWaitMoreThanAllowedForScoring =
                 insertJsWait(2 * mFlags.getAdSelectionScoringTimeoutMs());
@@ -6989,7 +7033,8 @@ public class AdSelectionE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
@@ -7117,7 +7162,8 @@ public class AdSelectionE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
@@ -7247,7 +7293,8 @@ public class AdSelectionE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -7319,6 +7366,88 @@ public class AdSelectionE2ETest {
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
+    }
+
+    @Test
+    public void testRunAdSelection_webViewNotInstalled_failsGracefully() throws Exception {
+        // A null package means WebView is not installed
+        doReturn(null).when(WebView::getCurrentWebViewPackage);
+
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
+
+        // Shut down any running JSScriptEngine to ensure the new singleton gets picked up
+        JSScriptEngine.getInstance(mContext, LoggerFactory.getFledgeLogger()).shutdown();
+
+        try {
+            // Create a new local service impl so that the WebView stub takes effect
+            AdSelectionServiceImpl adSelectionServiceImpl =
+                    new AdSelectionServiceImpl(
+                            mAdSelectionEntryDaoSpy,
+                            mAppInstallDao,
+                            mCustomAudienceDao,
+                            mFrequencyCapDao,
+                            mEncryptionContextDao,
+                            mEncryptionKeyDao,
+                            mAdServicesHttpsClient,
+                            mDevContextFilter,
+                            mLightweightExecutorService,
+                            mBackgroundExecutorService,
+                            mScheduledExecutor,
+                            mContext,
+                            mAdServicesLoggerMock,
+                            mFlags,
+                            CallingAppUidSupplierProcessImpl.create(),
+                            mFledgeAuthorizationFilterSpy,
+                            mAdSelectionServiceFilter,
+                            mAdFilteringFeatureFactory,
+                            mConsentManagerMock,
+                            mObliviousHttpEncryptor,
+                            mAdSelectionDebugReportDao,
+                            mAdIdFetcher);
+
+            mMockWebServerRule.startMockWebServer(mDispatcher);
+            List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+            List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+            DBCustomAudience dBCustomAudienceForBuyer1 =
+                    createDBCustomAudience(
+                            BUYER_1,
+                            mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1),
+                            bidsForBuyer1,
+                            BUYER_TRUSTED_SIGNAL_URI_PATH);
+            DBCustomAudience dBCustomAudienceForBuyer2 =
+                    createDBCustomAudience(
+                            BUYER_2,
+                            mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2),
+                            bidsForBuyer2,
+                            BUYER_TRUSTED_SIGNAL_URI_PATH);
+
+            // Populating the Custom Audience DB
+            mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                    dBCustomAudienceForBuyer1,
+                    CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+            mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                    dBCustomAudienceForBuyer2,
+                    CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+
+            // Ad selection should fail gracefully and not crash
+            AdSelectionTestCallback resultsCallback =
+                    invokeSelectAds(
+                            adSelectionServiceImpl, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+            assertCallbackFailed(resultsCallback);
+            assertWithMessage("Error code")
+                    .that(resultsCallback.mFledgeErrorResponse.getStatusCode())
+                    .isEqualTo(STATUS_INTERNAL_ERROR);
+
+            verify(mAdServicesLoggerMock)
+                    .logFledgeApiCallStats(
+                            eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                            eq(STATUS_INTERNAL_ERROR),
+                            geq((int) BINDER_ELAPSED_TIME_MS));
+        } finally {
+            // Shut down any running JSScriptEngine to ensure the new singleton gets picked up
+            JSScriptEngine.getInstance(mContext, LoggerFactory.getFledgeLogger()).shutdown();
+        }
     }
 
     /**
@@ -7643,12 +7772,15 @@ public class AdSelectionE2ETest {
     private static class AdSelectionE2ETestFlags implements Flags {
         private final long mBiddingLogicVersion;
 
+        private final boolean mDebugReportingEnabled;
+
         AdSelectionE2ETestFlags() {
-            this(JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3);
+            this(JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3, false);
         }
 
-        AdSelectionE2ETestFlags(long biddingLogicVersion) {
+        AdSelectionE2ETestFlags(long biddingLogicVersion, boolean enableDebugReporting) {
             mBiddingLogicVersion = biddingLogicVersion;
+            mDebugReportingEnabled = enableDebugReporting;
         }
 
         @Override
@@ -7750,6 +7882,16 @@ public class AdSelectionE2ETest {
 
         @Override
         public boolean getFledgeCpcBillingEnabled() {
+            return false;
+        }
+
+        @Override
+        public boolean getFledgeEventLevelDebugReportingEnabled() {
+            return mDebugReportingEnabled;
+        }
+
+        @Override
+        public boolean getFledgeEventLevelDebugReportSendImmediately() {
             return false;
         }
     }

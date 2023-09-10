@@ -67,7 +67,7 @@ public class EncoderLogicHandler {
             ImmutableSet.of(ENCODER_VERSION_RESPONSE_HEADER);
 
     @VisibleForTesting
-    EncoderLogicHandler(
+    public EncoderLogicHandler(
             @NonNull EncoderPersistenceManager encoderPersistenceManager,
             @NonNull EncoderEndpointsDao encoderEndpointsDao,
             @NonNull EncoderLogicDao encoderLogicDao,

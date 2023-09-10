@@ -69,18 +69,18 @@ public class SandboxedSdkContextUnitTest {
     private static final String SDK_CE_DATA_DIR = "/data/misc_ce/0/sdksandbox/com.foo/sdk@123";
     private static final String SDK_DE_DATA_DIR = "/data/misc_de/0/sdksandbox/com.foo/sdk@123";
 
-    private static boolean sCustomizedSdkContextEnabled;
+    private static boolean sCustomizedSdkContextEnabled = SdkLevel.isAtLeastU();
 
     private MockitoSession mStaticMockSession;
 
     @BeforeClass
-    public static void setUpClass() throws Exception {
+    public static void setUpClass() {
         DeviceConfigStateManager stateManager =
                 new DeviceConfigStateManager(
                         InstrumentationRegistry.getInstrumentation().getContext(),
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         "sdksandbox_customized_sdk_context_enabled");
-        sCustomizedSdkContextEnabled = Boolean.parseBoolean(stateManager.get());
+        sCustomizedSdkContextEnabled &= Boolean.parseBoolean(stateManager.get());
     }
 
     @Before

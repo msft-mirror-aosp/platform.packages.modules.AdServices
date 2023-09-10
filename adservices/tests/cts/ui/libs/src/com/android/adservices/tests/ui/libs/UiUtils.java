@@ -65,20 +65,41 @@ public class UiUtils {
 
     private static final String ANDROID_WIDGET_SCROLLVIEW = "android.widget.ScrollView";
 
+    private static void forceSetFlag(String flagName, boolean newFlagValue) throws Exception {
+        String currentFlagValue =
+                ShellUtils.runShellCommand("device_config get adservices " + flagName);
+
+        for (int i = 0; i < 5; i++) {
+            if (currentFlagValue.equals(String.valueOf(newFlagValue))) {
+                return;
+            }
+
+            ShellUtils.runShellCommand(
+                    String.format("device_config put adservices %s %s", flagName, newFlagValue));
+
+            Thread.sleep(250);
+
+            currentFlagValue =
+                    ShellUtils.runShellCommand("device_config get adservices " + flagName);
+
+            LogUtil.e(String.format("Flag was not set on iteration %d.", i));
+        }
+
+        throw new IllegalStateException("Unable to set flag in 5 iterations.");
+    }
+
     public static void refreshConsentResetToken() {
         ShellUtils.runShellCommand(
                 "device_config put adservices consent_notification_reset_token "
                         + UUID.randomUUID().toString());
     }
 
-    public static void turnOffEnableAdsServicesAPI() {
-        ShellUtils.runShellCommand(
-                "device_config put adservices enable_ad_services_system_api false");
+    public static void turnOffEnableAdsServicesAPI() throws Exception {
+        forceSetFlag("enable_ad_services_system_api", false);
     }
 
-    public static void turnOnEnableAdsServicesAPI() {
-        ShellUtils.runShellCommand(
-                "device_config put adservices enable_ad_services_system_api true");
+    public static void turnOnEnableAdsServicesAPI() throws Exception {
+        forceSetFlag("enable_ad_services_system_api", true);
     }
 
     public static void setAsNonWorkingHours() {
@@ -99,50 +120,52 @@ public class UiUtils {
                 "device_config put adservices consent_notification_interval_end_ms 86400000");
     }
 
-    public static void enableConsentDebugMode() {
-        ShellUtils.runShellCommand(
-                "device_config put adservices consent_notification_debug_mode true");
+    public static void enableConsentDebugMode() throws Exception {
+        forceSetFlag("consent_notification_debug_mode", true);
     }
 
-    public static void disableConsentDebugMode() {
-        ShellUtils.runShellCommand(
-                "device_config put adservices consent_notification_debug_mode false");
+    public static void disableConsentDebugMode() throws Exception {
+        forceSetFlag("consent_notification_debug_mode", false);
     }
 
-    public static void disableGlobalKillswitch() {
-        ShellUtils.runShellCommand("device_config put adservices global_kill_switch false");
+    public static void disableGlobalKillswitch() throws Exception {
+        forceSetFlag("global_kill_switch", false);
     }
 
-    public static void enableGlobalKillSwitch() {
-        ShellUtils.runShellCommand("device_config put adservices global_kill_switch true");
+    public static void enableGlobalKillSwitch() throws Exception {
+        forceSetFlag("global_kill_switch", true);
     }
 
-    public static void setAsEuDevice() {
-        ShellUtils.runShellCommand("device_config put adservices is_eea_device true");
+    public static void setAsEuDevice() throws Exception {
+        forceSetFlag("is_eea_device", true);
     }
 
-    public static void setAsRowDevice() {
-        ShellUtils.runShellCommand("device_config put adservices is_eea_device false");
+    public static void setAsRowDevice() throws Exception {
+        forceSetFlag("is_eea_device", false);
     }
 
-    public static void enableU18() {
-        ShellUtils.runShellCommand("device_config put adservices u18_ux_enabled true");
+    public static void enableU18() throws Exception {
+        forceSetFlag("u18_ux_enabled", true);
     }
 
-    public static void disableU18() {
-        ShellUtils.runShellCommand("device_config put adservices u18_ux_enabled false");
+    public static void disableU18() throws Exception {
+        forceSetFlag("u18_ux_enabled", false);
     }
 
-    public static void enableGa() {
-        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
+    public static void enableGa() throws Exception {
+        forceSetFlag("ga_ux_enabled", true);
     }
 
-    public static void disableGa() {
-        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled false");
+    public static void disableGa() throws Exception {
+        forceSetFlag("ga_ux_enabled", false);
     }
 
-    public static void enableBeta() {
-        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled false");
+    public static void enableBeta() throws Exception {
+        forceSetFlag("ga_ux_enabled", false);
+    }
+
+    public static void disableOtaStrings() throws Exception {
+        forceSetFlag("ui_ota_strings_feature_enabled", false);
     }
 
     public static void restartAdservices() {
@@ -171,18 +194,20 @@ public class UiUtils {
                 .grantRuntimePermission("com.android.adservices.api", POST_NOTIFICATIONS);
     }
 
-    public static void enableConsentNotificationActivityDebugMode() {
-        ShellUtils.runShellCommand(
-                "device_config put adservices consent_notification_activity_debug_mode true");
+    public static void enableConsentNotificationActivityDebugMode() throws Exception {
+        forceSetFlag("consent_notification_activity_debug_mode", true);
     }
 
-    public static void enableEnableAdservicesSystemApi() {
-        ShellUtils.runShellCommand(
-                "device_config put adservices enable_ad_services_system_api true");
+    public static void enableEnableAdservicesSystemApi() throws Exception {
+        forceSetFlag("enable_ad_services_system_api", true);
     }
 
-    public static void enableUiDialogsFeature() {
-        ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled true");
+    public static void enableUiDialogsFeature() throws Exception {
+        forceSetFlag("ui_dialogs_feature_enabled", true);
+    }
+
+    public static void disableNotificationFlowV2() throws Exception {
+        forceSetFlag("eu_notif_flow_change_enabled", false);
     }
 
     public static void setDebugUx(UiConstants.UX ux) {
@@ -467,25 +492,9 @@ public class UiUtils {
         assertThat(topicsButton.exists()).isTrue();
     }
 
-    public static void connectToWifi(UiDevice device) throws UiObjectNotFoundException {
-        UiUtils.startAndroidSettingsApp(device);
-
-        // Navigate to Wi-Fi
-        scrollToThenClickElementContainingText(device, "Network");
-        scrollToThenClickElementContainingText(device, "Internet");
-
-        // flip Wi-Fi switch if off
-        UiObject WifiSwitch =
-                device.findObject(new UiSelector().className("android.widget.Switch"));
-        WifiSwitch.waitForExists(LAUNCH_TIMEOUT);
-        if (!WifiSwitch.isChecked()) {
-            WifiSwitch.click();
-        }
-
-        // click first Wi-Fi connection
-        UiObject wifi = device.findObject(new UiSelector().textContains("Wifi"));
-        wifi.waitForExists(LONG_TIMEOUT);
-        wifi.click();
+    public static void connectToWifi() {
+        ShellUtils.runShellCommand("svc wifi enable");
+        ShellUtils.runShellCommand("cmd wifi connect-network VirtWifi open");
     }
 
     public static void turnOffWifi(UiDevice device)

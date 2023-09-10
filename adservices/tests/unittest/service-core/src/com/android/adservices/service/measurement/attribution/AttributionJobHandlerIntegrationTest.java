@@ -21,6 +21,7 @@ import com.android.adservices.data.measurement.AbstractDbIntegrationTest;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DbState;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
+import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
@@ -44,6 +45,7 @@ import java.util.Collection;
 public class AttributionJobHandlerIntegrationTest extends AbstractDbIntegrationTest {
 
     private final AdServicesLogger mLogger;
+    private final AdServicesErrorLogger mErrorLogger;
 
     @Parameterized.Parameters(name = "{2}")
     public static Collection<Object[]> data() throws IOException, JSONException {
@@ -57,12 +59,13 @@ public class AttributionJobHandlerIntegrationTest extends AbstractDbIntegrationT
     public AttributionJobHandlerIntegrationTest(DbState input, DbState output, String name) {
         super(input, output);
         mLogger = Mockito.mock(AdServicesLogger.class);
+        mErrorLogger = Mockito.mock(AdServicesErrorLogger.class);
     }
 
     @Override
     public void runActionToTest() {
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
         Assert.assertTrue(
                 "Attribution failed.",
                 (new AttributionJobHandler(
