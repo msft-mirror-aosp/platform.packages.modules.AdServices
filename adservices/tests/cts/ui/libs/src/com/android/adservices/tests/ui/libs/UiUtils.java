@@ -164,6 +164,10 @@ public class UiUtils {
         forceSetFlag("ga_ux_enabled", false);
     }
 
+    public static void disableOtaStrings() throws Exception {
+        forceSetFlag("ui_ota_strings_feature_enabled", false);
+    }
+
     public static void restartAdservices() {
         ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
         ShellUtils.runShellCommand("am force-stop com.android.adservices.api");
