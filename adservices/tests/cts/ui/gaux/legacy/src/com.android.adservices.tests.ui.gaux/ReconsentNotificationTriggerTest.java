@@ -75,6 +75,7 @@ public class ReconsentNotificationTriggerTest {
         UiUtils.setSourceOfTruthToPPAPI();
         UiUtils.clearSavedStatus();
         UiUtils.disableNotificationFlowV2();
+        UiUtils.disableOtaStrings();
     }
 
     @After
