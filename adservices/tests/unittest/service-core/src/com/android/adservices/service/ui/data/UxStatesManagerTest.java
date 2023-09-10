@@ -122,6 +122,18 @@ public class UxStatesManagerTest {
     }
 
     @Test
+    public void persistAdServicesStatesTest_u18User() {
+        doReturn(true).when(mMockConsentManager).isU18Account();
+
+        mUxStatesManager.persistAdServicesStates(new AdServicesStates.Builder().build());
+
+        verify(mMockConsentManager).setAdIdEnabled(anyBoolean());
+        verify(mMockConsentManager, never()).setU18Account(anyBoolean());
+        verify(mMockConsentManager).setAdultAccount(anyBoolean());
+        verify(mMockConsentManager).setEntryPointEnabled(anyBoolean());
+    }
+
+    @Test
     public void getFlagTest_invalidFlagKey() {
         assertThat(mUxStatesManager.getFlag("INVALID_FLAG_KEY")).isFalse();
     }

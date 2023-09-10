@@ -42,7 +42,7 @@ public class UpdateEncoderEventHandler {
     @NonNull private final EncoderLogicHandler mEncoderLogicHandler;
 
     @VisibleForTesting
-    UpdateEncoderEventHandler(
+    public UpdateEncoderEventHandler(
             @NonNull EncoderEndpointsDao encoderEndpointsDao,
             @NonNull EncoderLogicHandler encoderLogicHandler) {
         Objects.requireNonNull(encoderEndpointsDao);

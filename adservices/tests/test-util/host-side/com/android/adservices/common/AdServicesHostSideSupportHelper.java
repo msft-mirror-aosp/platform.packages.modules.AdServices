@@ -15,98 +15,34 @@
  */
 package com.android.adservices.common;
 
-import com.android.tradefed.device.DeviceNotAvailableException;
-import com.android.tradefed.device.ITestDevice;
+import static com.android.adservices.common.TestDeviceHelper.call;
 
 /** Helper to check if AdServices is supported / enabled in a device. */
-public final class AdServicesHostSideSupportHelper {
+final class AdServicesHostSideSupportHelper extends AbstractDeviceSupportHelper {
 
-    private static final String FEATURE_AUTOMOTIVE = "android.hardware.type.automotive";
-    private static final String FEATURE_LEANBACK = "android.software.leanback";
-    private static final String FEATURE_WATCH = "android.hardware.type.watch";
+    private static final AdServicesHostSideSupportHelper sInstance =
+            new AdServicesHostSideSupportHelper();
 
-    // Copied from RoSystemProperties
-    private static final String SYSTEM_PROPERTY_CONFIG_LOW_RAM = "ro.config.low_ram";
-
-    // TODO(b/295321663): 3 constants below should be static imported from AdServicesCommonConstants
-    private static final String SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX = "debug.adservices.";
-    private static final String SYSTEM_PROPERTY_FOR_DEBUGGING_SUPPORTED_ON_DEVICE =
-            SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + "supported";
-    private static final String SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW =
-            SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + "low_ram_device";
-
-    private static final Logger sLogger =
-            new Logger(ConsoleLogger.getInstance(), AdServicesHostSideSupportHelper.class);
-
-    public static boolean isDebuggable(ITestDevice device) throws DeviceNotAvailableException {
-        return "1".equals(device.getProperty("ro.debuggable"));
+    public static final AdServicesHostSideSupportHelper getInstance() {
+        return sInstance;
     }
 
-    public static boolean isDeviceSupported(ITestDevice device) throws DeviceNotAvailableException {
-        if (isDebuggable(device)) {
-            String overriddenValue =
-                    device.getProperty(SYSTEM_PROPERTY_FOR_DEBUGGING_SUPPORTED_ON_DEVICE);
-            if (overriddenValue != null && !overriddenValue.isEmpty()) {
-                boolean supported = Boolean.valueOf(overriddenValue);
-                sLogger.i(
-                        "isDeviceSupported(): returning %b as defined by system property %s (%s)",
-                        supported,
-                        SYSTEM_PROPERTY_FOR_DEBUGGING_SUPPORTED_ON_DEVICE,
-                        overriddenValue);
-                return supported;
-            }
-        }
-
-        boolean supported = isDeviceSupportedByDefault(device);
-        sLogger.v("isDeviceSupported(): returning hardcoded value (%b)", supported);
-        return supported;
+    @Override
+    protected boolean hasPackageManagerFeature(String feature) {
+        return call(device -> device.hasFeature(feature));
     }
 
-    //  TODO(b/284971005): create another object to have this logic (which would take an interface
-    // that gets system properties) so it can be used by device and host sides
-    private static boolean isDeviceSupportedByDefault(ITestDevice device)
-            throws DeviceNotAvailableException {
-        return isPhone(device) && !isLowRamDevice(device);
+    @Override
+    protected boolean isLowRamDeviceByDefault() {
+        return "true".equals(call(device -> device.getProperty("ro.config.low_ram")));
     }
 
-    private static boolean isPhone(ITestDevice device) throws DeviceNotAvailableException {
-        boolean isIt =
-                !device.hasFeature(FEATURE_WATCH)
-                        && !device.hasFeature(FEATURE_AUTOMOTIVE)
-                        && !device.hasFeature(FEATURE_LEANBACK);
-        // TODO(b/284744130): need to figure out how to filter out tablets
-        sLogger.v("isPhone(): returning %b", isIt);
-        return isIt;
-    }
-
-    // TODO(b/297408848): rename to isAdservicesLiteDevice() or something like that
-    /** Checks whether the device has low ram. */
-    public static boolean isLowRamDevice(ITestDevice device) throws DeviceNotAvailableException {
-        if (isDebuggable(device)) {
-            String overriddenValue =
-                    device.getProperty(SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW);
-            if (overriddenValue != null && !overriddenValue.isEmpty()) {
-                boolean isLowRamDevice = Boolean.valueOf(overriddenValue);
-                sLogger.i(
-                        "isLowRamDevice(): returning %b as defined by system property %s (%s)",
-                        isLowRamDevice,
-                        SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW,
-                        overriddenValue);
-                return isLowRamDevice;
-            }
-        }
-
-        boolean isLowRamDevice = "true".equals(device.getProperty(SYSTEM_PROPERTY_CONFIG_LOW_RAM));
-        boolean isPhone = isPhone(device);
-        boolean isIt = isPhone && isLowRamDevice;
-        sLogger.v(
-                "isLowRamDevice(): returning non-simulated value %b when isPhone=%b and"
-                        + " isLowRamDevice=%b",
-                isIt, isPhone, isLowRamDevice);
-        return isIt;
+    @Override
+    protected boolean isDebuggable() {
+        return "1".equals(call(device -> device.getProperty("ro.debuggable")));
     }
 
     private AdServicesHostSideSupportHelper() {
-        throw new UnsupportedOperationException("Provides only static methods");
+        super(ConsoleLogger.getInstance(), HostSideSystemPropertiesHelper.getInstance());
     }
 }

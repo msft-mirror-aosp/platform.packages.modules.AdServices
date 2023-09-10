@@ -41,7 +41,7 @@ public class UiSettingsMainPageMicrobenchmark extends UiSettingsMainPage {
                     .around(new DropCachesRule());
 
     @NoMetricBefore
-    public void setup() {
+    public void setup() throws Exception {
         super.setup();
     }
 

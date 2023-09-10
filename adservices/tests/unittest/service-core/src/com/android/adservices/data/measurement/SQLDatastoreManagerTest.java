@@ -23,11 +23,11 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.verify;
 
 import android.content.Context;
 
@@ -35,7 +35,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.DbTestUtil;
-import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -52,6 +52,7 @@ public class SQLDatastoreManagerTest {
     @Mock private DatastoreManager.ThrowingCheckedFunction<Void> mFunction;
     @Mock private DatastoreManager.ThrowingCheckedConsumer mConsumer;
     @Mock private Flags mFlags;
+    @Mock AdServicesErrorLogger mErrorLogger;
     private MockitoSession mMockitoSession;
     private SQLDatastoreManager mSQLDatastoreManager;
 
@@ -60,11 +61,11 @@ public class SQLDatastoreManagerTest {
         mMockitoSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(LogUtil.class)
-                        .spyStatic(ErrorLogUtil.class)
                         .spyStatic(FlagsFactory.class)
                         .initMocks(this)
                         .startMocking();
-        mSQLDatastoreManager = new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
+        mSQLDatastoreManager =
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
     }
 
     @Test
@@ -72,7 +73,6 @@ public class SQLDatastoreManagerTest {
             throws DatastoreException {
         // Setup
         doThrow(new IllegalArgumentException()).when(mFunction).apply(any());
-        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
 
         // Execution & assertion
         assertThrows(
@@ -86,12 +86,11 @@ public class SQLDatastoreManagerTest {
                                                 + MeasurementDbHelper.CURRENT_DATABASE_VERSION)));
         int errorCode =
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_DATASTORE_UNKNOWN_FAILURE;
-        ExtendedMockito.verify(
-                () ->
-                        ErrorLogUtil.e(
-                                any(),
-                                eq(errorCode),
-                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT)));
+        verify(mErrorLogger)
+                .logErrorWithExceptionInfo(
+                        any(),
+                        eq(errorCode),
+                        eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT));
     }
 
     @Test
@@ -99,7 +98,6 @@ public class SQLDatastoreManagerTest {
             throws DatastoreException {
         // Setup
         doThrow(new DatastoreException(null)).when(mFunction).apply(any());
-        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
         doReturn(false).when(mFlags).getMeasurementEnableDatastoreManagerThrowDatastoreException();
 
@@ -114,12 +112,11 @@ public class SQLDatastoreManagerTest {
                                         "Underlying datastore version: "
                                                 + MeasurementDbHelper.CURRENT_DATABASE_VERSION)));
         int errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_DATASTORE_FAILURE;
-        ExtendedMockito.verify(
-                () ->
-                        ErrorLogUtil.e(
-                                any(),
-                                eq(errorCode),
-                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT)));
+        verify(mErrorLogger)
+                .logErrorWithExceptionInfo(
+                        any(),
+                        eq(errorCode),
+                        eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT));
     }
 
     @Test
@@ -127,7 +124,6 @@ public class SQLDatastoreManagerTest {
             throws DatastoreException {
         // Setup
         doThrow(new DatastoreException(null)).when(mFunction).apply(any());
-        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
         doReturn(true).when(mFlags).getMeasurementEnableDatastoreManagerThrowDatastoreException();
         doReturn(1.0f).when(mFlags).getMeasurementThrowUnknownExceptionSamplingRate();
@@ -148,19 +144,17 @@ public class SQLDatastoreManagerTest {
                                         "Underlying datastore version: "
                                                 + MeasurementDbHelper.CURRENT_DATABASE_VERSION)));
         int errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_DATASTORE_FAILURE;
-        ExtendedMockito.verify(
-                () ->
-                        ErrorLogUtil.e(
-                                any(),
-                                eq(errorCode),
-                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT)));
+        verify(mErrorLogger)
+                .logErrorWithExceptionInfo(
+                        any(),
+                        eq(errorCode),
+                        eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT));
     }
 
     @Test
     public void runInTransaction_throwsException_logsDbVersion() throws DatastoreException {
         // Setup
         doThrow(new IllegalArgumentException()).when(mConsumer).accept(any());
-        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
 
         // Execution & assertion
         assertThrows(
@@ -174,12 +168,11 @@ public class SQLDatastoreManagerTest {
                                                 + MeasurementDbHelper.CURRENT_DATABASE_VERSION)));
         int errorCode =
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_DATASTORE_UNKNOWN_FAILURE;
-        ExtendedMockito.verify(
-                () ->
-                        ErrorLogUtil.e(
-                                any(),
-                                eq(errorCode),
-                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT)));
+        verify(mErrorLogger)
+                .logErrorWithExceptionInfo(
+                        any(),
+                        eq(errorCode),
+                        eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT));
     }
 
     @Test
@@ -187,7 +180,6 @@ public class SQLDatastoreManagerTest {
             throws DatastoreException {
         // Setup
         doThrow(new DatastoreException(null)).when(mConsumer).accept(any());
-        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
         doReturn(false).when(mFlags).getMeasurementEnableDatastoreManagerThrowDatastoreException();
 
@@ -202,12 +194,11 @@ public class SQLDatastoreManagerTest {
                                         "Underlying datastore version: "
                                                 + MeasurementDbHelper.CURRENT_DATABASE_VERSION)));
         int errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_DATASTORE_FAILURE;
-        ExtendedMockito.verify(
-                () ->
-                        ErrorLogUtil.e(
-                                any(),
-                                eq(errorCode),
-                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT)));
+        verify(mErrorLogger)
+                .logErrorWithExceptionInfo(
+                        any(),
+                        eq(errorCode),
+                        eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT));
     }
 
     @Test
@@ -215,7 +206,6 @@ public class SQLDatastoreManagerTest {
             throws DatastoreException {
         // Setup
         doThrow(new DatastoreException(null)).when(mConsumer).accept(any());
-        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
         doReturn(true).when(mFlags).getMeasurementEnableDatastoreManagerThrowDatastoreException();
         doReturn(0.0f).when(mFlags).getMeasurementThrowUnknownExceptionSamplingRate();
@@ -231,12 +221,11 @@ public class SQLDatastoreManagerTest {
                                         "Underlying datastore version: "
                                                 + MeasurementDbHelper.CURRENT_DATABASE_VERSION)));
         int errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_DATASTORE_FAILURE;
-        ExtendedMockito.verify(
-                () ->
-                        ErrorLogUtil.e(
-                                any(),
-                                eq(errorCode),
-                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT)));
+        verify(mErrorLogger)
+                .logErrorWithExceptionInfo(
+                        any(),
+                        eq(errorCode),
+                        eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT));
     }
 
     @Test
@@ -244,7 +233,6 @@ public class SQLDatastoreManagerTest {
             throws DatastoreException {
         // Setup
         doThrow(new DatastoreException(null)).when(mConsumer).accept(any());
-        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
         doReturn(true).when(mFlags).getMeasurementEnableDatastoreManagerThrowDatastoreException();
         doReturn(1.0f).when(mFlags).getMeasurementThrowUnknownExceptionSamplingRate();
@@ -265,12 +253,11 @@ public class SQLDatastoreManagerTest {
                                         "Underlying datastore version: "
                                                 + MeasurementDbHelper.CURRENT_DATABASE_VERSION)));
         int errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_DATASTORE_FAILURE;
-        ExtendedMockito.verify(
-                () ->
-                        ErrorLogUtil.e(
-                                any(),
-                                eq(errorCode),
-                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT)));
+        verify(mErrorLogger)
+                .logErrorWithExceptionInfo(
+                        any(),
+                        eq(errorCode),
+                        eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT));
     }
 
     @After

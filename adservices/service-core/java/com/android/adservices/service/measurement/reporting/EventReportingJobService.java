@@ -36,6 +36,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.measurement.util.JobLockHolder;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -105,6 +106,9 @@ public final class EventReportingJobService extends JobService {
                                 EnrollmentDao.getInstance(getApplicationContext()),
                                 DatastoreManagerFactory.getDatastoreManager(
                                         getApplicationContext()),
+                                FlagsFactory.getFlags(),
+                                AdServicesLoggerImpl.getInstance(),
+                                ReportingStatus.ReportType.EVENT,
                                 ReportingStatus.UploadMethod.REGULAR)
                         .performScheduledPendingReportsInWindow(
                                 System.currentTimeMillis() - maxEventReportUploadRetryWindowMs,
@@ -169,7 +173,6 @@ public final class EventReportingJobService extends JobService {
         return new JobInfo.Builder(
                         MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID,
                         new ComponentName(context, EventReportingJobService.class))
-                .setRequiresDeviceIdle(true)
                 .setRequiresBatteryNotLow(true)
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
                 .setPeriodic(AdServicesConfig.getMeasurementEventMainReportingJobPeriodMs())
