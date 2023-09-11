@@ -23,6 +23,12 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELE
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_EXPIRED_JOB_REQUIRES_DEVICE_IDLE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERSISTED;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_REPORTING_JOB_PERSISTED;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
 
 import static java.lang.Float.parseFloat;
 
@@ -4659,6 +4665,36 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS
                         + " = "
                         + getMeasurementDeleteExpiredJobPeriodMs());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW
+                        + " = "
+                        + getMeasurementEventReportingJobRequiredBatteryNotLow());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE
+                        + " = "
+                        + getMeasurementEventReportingJobRequiredNetworkType());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_EVENT_REPORTING_JOB_PERSISTED
+                        + " = "
+                        + getMeasurementEventReportingJobPersisted());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW
+                        + " = "
+                        + getMeasurementEventFallbackReportingJobRequiredBatteryNotLow());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE
+                        + " = "
+                        + getMeasurementEventFallbackReportingJobRequiredNetworkType());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERSISTED
+                        + " = "
+                        + getMeasurementEventFallbackReportingJobPersisted());
     }
 
     @VisibleForTesting
@@ -5002,6 +5038,56 @@ public final class PhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS,
                 /* defaultValue */ MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS);
+    }
+
+    @Override
+    public boolean getMeasurementEventReportingJobRequiredBatteryNotLow() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW,
+                /* defaultValue */ MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW);
+    }
+
+    @Override
+    public int getMeasurementEventReportingJobRequiredNetworkType() {
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE,
+                /* defaultValue */ MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE);
+    }
+
+    @Override
+    public boolean getMeasurementEventReportingJobPersisted() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_EVENT_REPORTING_JOB_PERSISTED,
+                /* defaultValue */ MEASUREMENT_EVENT_REPORTING_JOB_PERSISTED);
+    }
+
+    @Override
+    public boolean getMeasurementEventFallbackReportingJobRequiredBatteryNotLow() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */
+                KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW,
+                /* defaultValue */
+                MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW);
+    }
+
+    @Override
+    public int getMeasurementEventFallbackReportingJobRequiredNetworkType() {
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE,
+                /* defaultValue */ MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE);
+    }
+
+    @Override
+    public boolean getMeasurementEventFallbackReportingJobPersisted() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERSISTED,
+                /* defaultValue */ MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERSISTED);
     }
 
     @Override
