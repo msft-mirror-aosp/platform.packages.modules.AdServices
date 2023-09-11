@@ -107,6 +107,7 @@ import android.os.RemoteException;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -1456,6 +1457,7 @@ public class FledgeE2ETest {
     }
 
     @Test
+    @FlakyTest(bugId = 298130832)
     public void testFledgeFlowSuccessWithOneCAWithNegativeBidsWithDevOverrides() throws Exception {
         setupConsentGivenStubs();
 
