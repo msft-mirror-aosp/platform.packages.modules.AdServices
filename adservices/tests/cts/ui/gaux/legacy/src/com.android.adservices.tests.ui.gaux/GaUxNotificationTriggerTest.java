@@ -46,6 +46,8 @@ public class GaUxNotificationTriggerTest {
 
     private UiDevice mDevice;
 
+    private String mTestName;
+
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();
 
@@ -75,7 +77,10 @@ public class GaUxNotificationTriggerTest {
     public void tearDown() throws Exception {
         if (!AdservicesTestHelper.isDeviceSupported()) return;
 
+        UiUtils.takeScreenshot(mDevice, getClass().getSimpleName() + "_" + mTestName + "_");
+
         mDevice.pressHome();
+
         AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
@@ -86,6 +91,8 @@ public class GaUxNotificationTriggerTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testGaRowAdIdEnabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsRowDevice();
         UiUtils.enableGa();
 
@@ -105,6 +112,8 @@ public class GaUxNotificationTriggerTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testGaRowAdIdDisabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsRowDevice();
         UiUtils.enableGa();
 
@@ -124,6 +133,8 @@ public class GaUxNotificationTriggerTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testGaEuAdIdEnabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsEuDevice();
         UiUtils.enableGa();
 
@@ -141,6 +152,8 @@ public class GaUxNotificationTriggerTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testGaEuAdIdDisabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsEuDevice();
         UiUtils.enableGa();
 

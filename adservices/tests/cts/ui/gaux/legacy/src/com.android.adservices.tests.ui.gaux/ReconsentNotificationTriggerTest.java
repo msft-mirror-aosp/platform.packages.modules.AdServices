@@ -51,6 +51,8 @@ public class ReconsentNotificationTriggerTest {
 
     private AdServicesCommonManager mCommonManager;
     private UiDevice mDevice;
+    private String mTestName;
+
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private static final Context sContext =
@@ -82,7 +84,10 @@ public class ReconsentNotificationTriggerTest {
     public void tearDown() throws Exception {
         if (!AdservicesTestHelper.isDeviceSupported()) return;
 
+        UiUtils.takeScreenshot(mDevice, getClass().getSimpleName() + "_" + mTestName + "_");
+
         mDevice.pressHome();
+
         AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
@@ -94,6 +99,8 @@ public class ReconsentNotificationTriggerTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testRowAdIdDisabledGaUxEnabledReConsent() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         reconsentNotificationTriggerHelper(true, false, true, AD_ID_DISABLED, true);
     }
 
@@ -105,6 +112,8 @@ public class ReconsentNotificationTriggerTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testRowAdIdEnabledGaUxEnabledReConsent() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         reconsentNotificationTriggerHelper(true, false, false, AD_ID_ENABLED, true);
     }
 
@@ -116,6 +125,8 @@ public class ReconsentNotificationTriggerTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testRowAdIdEnabledGaUxEnabledReConsentSecondNotDisplayed() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         reconsentNotificationTriggerHelper(true, false, false, AD_ID_ENABLED, true);
 
         mDevice.pressHome();
@@ -138,6 +149,8 @@ public class ReconsentNotificationTriggerTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testRowAdIdEnabledConsentOptoutGaUxEnabledReConsent() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         reconsentNotificationTriggerHelper(false, false, false, AD_ID_ENABLED, false);
     }
 
@@ -149,6 +162,8 @@ public class ReconsentNotificationTriggerTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testEuAdIdEnabledGaUxEnabledReconsent() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsEuDevice();
         UiUtils.enableBeta();
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
@@ -180,6 +195,8 @@ public class ReconsentNotificationTriggerTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testDeleteStatus() {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.clearSavedStatus();
         AdservicesTestHelper.killAdservicesProcess(sContext);
     }
