@@ -83,7 +83,7 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     @Override
     public List<SandboxedSdk> getSandboxedSdks(
-            String callingPackageName, long timeAppCalledSystemServer) {
+            String callingPackageName, SandboxLatencyInfo sandboxLatencyInfo) {
         return Collections.emptyList();
     }
 
