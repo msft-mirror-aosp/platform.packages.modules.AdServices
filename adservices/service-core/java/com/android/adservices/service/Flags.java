@@ -20,6 +20,7 @@ import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREG
 
 import android.annotation.IntDef;
 import android.annotation.NonNull;
+import android.app.job.JobInfo;
 
 import androidx.annotation.Nullable;
 
@@ -3387,6 +3388,50 @@ public interface Flags {
      */
     default long getMeasurementDeleteExpiredJobPeriodMs() {
         return MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS;
+    }
+
+    boolean MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW = true;
+
+    /** Returns whether to require battery not low for event reporting job . */
+    default boolean getMeasurementEventReportingJobRequiredBatteryNotLow() {
+        return MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
+    }
+
+    int MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE = JobInfo.NETWORK_TYPE_UNMETERED;
+
+    /** Returns the required network type for event reporting job . */
+    default int getMeasurementEventReportingJobRequiredNetworkType() {
+        return MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
+    }
+
+    boolean MEASUREMENT_EVENT_REPORTING_JOB_PERSISTED = true;
+
+    /** Returns whether to persist this job across device reboots for event reporting job. */
+    default boolean getMeasurementEventReportingJobPersisted() {
+        return MEASUREMENT_EVENT_REPORTING_JOB_PERSISTED;
+    }
+
+    boolean MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW = true;
+
+    /** Returns whether to require battery not low for event fallback reporting job . */
+    default boolean getMeasurementEventFallbackReportingJobRequiredBatteryNotLow() {
+        return MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
+    }
+
+    int MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE = JobInfo.NETWORK_TYPE_ANY;
+
+    /** Returns the required network type for event fallback reporting job . */
+    default int getMeasurementEventFallbackReportingJobRequiredNetworkType() {
+        return MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
+    }
+
+    boolean MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERSISTED = true;
+
+    /**
+     * Returns whether to persist this job across device reboots for event fallback reporting job.
+     */
+    default boolean getMeasurementEventFallbackReportingJobPersisted() {
+        return MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERSISTED;
     }
 
     /** Default U18 UX feature flag.. */

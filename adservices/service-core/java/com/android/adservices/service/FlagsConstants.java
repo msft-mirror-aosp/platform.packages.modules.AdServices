@@ -19,7 +19,7 @@ package com.android.adservices.service;
  * Defines constants used by {@code Flags}, {@code PhFlags} and testing infra (both device and host
  * side).
  *
- * <p><b>NOTE: </b>cannot have any dependency on Android or other AdServices code.
+ * <p><b>NOTE: </b>cannot have any dependency on Android or other AdServices code.>>>
  */
 public final class FlagsConstants {
 
