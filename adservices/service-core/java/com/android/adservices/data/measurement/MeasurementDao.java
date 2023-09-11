@@ -1667,6 +1667,36 @@ class MeasurementDao implements IMeasurementDao {
                         + subQuery
                         + ")",
                 new String[] {KeyValueData.DataType.REGISTRATION_REDIRECT_COUNT.toString()});
+
+        // When Limiting Retries, consider Verbose Debug Reports Expired when Exceeds Limit.
+        if (mReportingRetryLimitEnabledSupplier.get()) {
+            db.delete(
+                    MeasurementTables.DebugReportContract.TABLE,
+                    MeasurementTables.DebugReportContract.ID
+                            + " IN ("
+                            + "SELECT "
+                            + MeasurementTables.DebugReportContract.ID
+                            + " FROM "
+                            + MeasurementTables.DebugReportContract.TABLE
+                            + " LEFT JOIN "
+                            + MeasurementTables.KeyValueDataContract.TABLE
+                            + " ON ("
+                            + MeasurementTables.DebugReportContract.ID
+                            + " = "
+                            + MeasurementTables.KeyValueDataContract.KEY
+                            + ") "
+                            + "WHERE CAST("
+                            + MeasurementTables.KeyValueDataContract.VALUE
+                            + " AS INTEGER) >= ? "
+                            + "AND "
+                            + MeasurementTables.KeyValueDataContract.DATA_TYPE
+                            + " = ? "
+                            + ")",
+                    new String[] {
+                        mReportingRetryLimitSupplier.get().toString(),
+                        DataType.DEBUG_REPORT_RETRY_COUNT.toString()
+                    });
+        }
     }
 
     @Override
