@@ -199,9 +199,15 @@ public abstract class FledgeScenarioTest extends ForegroundDebuggableCtsTest {
         Log.d(TAG, "Joined Custom Audience: " + customAudienceName);
     }
 
+    protected void joinCustomAudience(CustomAudience customAudience)
+            throws ExecutionException, InterruptedException, TimeoutException {
+        mCustomAudienceClient.joinCustomAudience(customAudience).get(5, TimeUnit.SECONDS);
+        Log.d(TAG, "Joined Custom Audience: " + customAudience.getName());
+    }
+
     protected void leaveCustomAudience(String customAudienceName)
             throws ExecutionException, InterruptedException, TimeoutException {
-        CustomAudience customAudience = makeCustomAudience(customAudienceName);
+        CustomAudience customAudience = makeCustomAudience(customAudienceName).build();
         mCustomAudienceClient
                 .leaveCustomAudience(customAudience.getBuyer(), customAudience.getName())
                 .get(TIMEOUT, TimeUnit.SECONDS);
@@ -273,11 +279,11 @@ public abstract class FledgeScenarioTest extends ForegroundDebuggableCtsTest {
 
     private JoinCustomAudienceRequest makeJoinCustomAudienceRequest(String customAudienceName) {
         return new JoinCustomAudienceRequest.Builder()
-                .setCustomAudience(makeCustomAudience(customAudienceName))
+                .setCustomAudience(makeCustomAudience(customAudienceName).build())
                 .build();
     }
 
-    protected CustomAudience makeCustomAudience(String customAudienceName) {
+    protected CustomAudience.Builder makeCustomAudience(String customAudienceName) {
         Uri trustedBiddingUri = Uri.parse(mServerBaseAddress + Scenarios.BIDDING_SIGNALS_PATH);
         Uri dailyUpdateUri =
                 Uri.parse(mServerBaseAddress + Scenarios.getDailyUpdatePath(customAudienceName));
@@ -295,8 +301,7 @@ public abstract class FledgeScenarioTest extends ForegroundDebuggableCtsTest {
                         Uri.parse(String.format(mServerBaseAddress + Scenarios.BIDDING_LOGIC_PATH)))
                 .setBuyer(mAdTechIdentifier)
                 .setActivationTime(Instant.now())
-                .setExpirationTime(Instant.now().plus(5, ChronoUnit.DAYS))
-                .build();
+                .setExpirationTime(Instant.now().plus(5, ChronoUnit.DAYS));
     }
 
     private ImmutableList<AdData> makeAds(String customAudienceName) {
