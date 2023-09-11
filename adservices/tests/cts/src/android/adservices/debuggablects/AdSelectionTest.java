@@ -16,10 +16,17 @@
 
 package android.adservices.debuggablects;
 
+import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
+import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
+
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertThrows;
+
 import android.adservices.adselection.AdSelectionConfig;
+import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionOutcome;
+import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
@@ -28,7 +35,7 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudience;
-import android.adservices.customaudience.CustomAudienceFixture;
+import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
 import android.adservices.customaudience.JoinCustomAudienceRequest;
 import android.adservices.customaudience.TrustedBiddingData;
 import android.adservices.utils.MockWebServerRule;
@@ -50,6 +57,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.mockwebserver.MockWebServer;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
@@ -59,18 +68,22 @@ import org.junit.Test;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Locale;
 import java.util.Random;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class AdSelectionTest extends ForegroundDebuggableCtsTest {
     private static final String TAG = "android.adservices.debuggablects";
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final int TIMEOUT = 120;
     private static final int NUM_ADS_PER_AUDIENCE = 4;
-    private static final String CUSTOM_AUDIENCE = CustomAudienceFixture.VALID_NAME;
+    private static final String SHOES_CA = "shoes";
+    private static final String SHIRTS_CA = "shirts";
     private static final String PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private AdvertisingCustomAudienceClient mCustomAudienceClient;
     private AdSelectionClient mAdSelectionClient;
@@ -146,25 +159,14 @@ public class AdSelectionTest extends ForegroundDebuggableCtsTest {
                 ScenarioDispatcher.fromScenario(
                         "scenarios/remarketing-cuj-default.json", getCacheBusterPrefix());
         setupDefaultMockWebServer(dispatcher);
-        JoinCustomAudienceRequest joinCustomAudienceRequest = makeJoinCustomAudienceRequest();
         AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
 
         try {
-            mCustomAudienceClient
-                    .joinCustomAudience(joinCustomAudienceRequest.getCustomAudience())
-                    .get(5, TimeUnit.SECONDS);
-            Log.d(TAG, "Joined Custom Audience.");
-            AdSelectionOutcome result =
-                    mAdSelectionClient.selectAds(adSelectionConfig).get(TIMEOUT, TimeUnit.SECONDS);
-            Log.d(TAG, "Ran ad selection.");
+            joinCustomAudience(SHIRTS_CA);
+            AdSelectionOutcome result = doSelectAds(adSelectionConfig);
             assertThat(result.hasOutcome()).isTrue();
         } finally {
-            mCustomAudienceClient
-                    .leaveCustomAudience(
-                            joinCustomAudienceRequest.getCustomAudience().getBuyer(),
-                            joinCustomAudienceRequest.getCustomAudience().getName())
-                    .get(TIMEOUT, TimeUnit.SECONDS);
-            Log.d(TAG, "Left Custom Audience.");
+            leaveCustomAudience(SHIRTS_CA);
         }
 
         assertThat(dispatcher.getCalledPaths())
@@ -187,30 +189,15 @@ public class AdSelectionTest extends ForegroundDebuggableCtsTest {
                 ScenarioDispatcher.fromScenario(
                         "scenarios/remarketing-cuj-reportimpression.json", getCacheBusterPrefix());
         setupDefaultMockWebServer(dispatcher);
-        JoinCustomAudienceRequest joinCustomAudienceRequest = makeJoinCustomAudienceRequest();
         AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
-        long adSelectionId;
 
         try {
-            mCustomAudienceClient
-                    .joinCustomAudience(joinCustomAudienceRequest.getCustomAudience())
-                    .get(5, TimeUnit.SECONDS);
-            AdSelectionOutcome result =
-                    mAdSelectionClient.selectAds(adSelectionConfig).get(TIMEOUT, TimeUnit.SECONDS);
-            adSelectionId = result.getAdSelectionId();
-            assertThat(result.hasOutcome()).isTrue();
-            assertThat(result.getRenderUri()).isNotNull();
+            joinCustomAudience(SHOES_CA);
+            doReportImpression(
+                    doSelectAds(adSelectionConfig).getAdSelectionId(), adSelectionConfig);
         } finally {
-            mCustomAudienceClient
-                    .leaveCustomAudience(
-                            joinCustomAudienceRequest.getCustomAudience().getBuyer(),
-                            joinCustomAudienceRequest.getCustomAudience().getName())
-                    .get(TIMEOUT, TimeUnit.SECONDS);
+            leaveCustomAudience(SHOES_CA);
         }
-        mAdSelectionClient
-                .reportImpression(new ReportImpressionRequest(adSelectionId, adSelectionConfig))
-                .get(TIMEOUT, TimeUnit.SECONDS);
-        Log.d(TAG, "Ran report impression.");
 
         assertThat(dispatcher.getCalledPaths())
                 .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
@@ -231,38 +218,355 @@ public class AdSelectionTest extends ForegroundDebuggableCtsTest {
                 ScenarioDispatcher.fromScenario(
                         "scenarios/remarketing-cuj-119.json", getCacheBusterPrefix());
         setupDefaultMockWebServer(dispatcher);
-        JoinCustomAudienceRequest joinCustomAudienceRequest = makeJoinCustomAudienceRequest();
         AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
 
         try {
+            joinCustomAudience(SHOES_CA);
             overrideBiddingLogicVersionToV3(true);
-            mCustomAudienceClient
-                    .joinCustomAudience(joinCustomAudienceRequest.getCustomAudience())
-                    .get(5, TimeUnit.SECONDS);
-            Log.d(TAG, "Joined Custom Audience.");
-            AdSelectionOutcome result =
-                    mAdSelectionClient.selectAds(adSelectionConfig).get(TIMEOUT, TimeUnit.SECONDS);
-            Log.d(TAG, "Ran ad selection.");
+            AdSelectionOutcome result = doSelectAds(adSelectionConfig);
             assertThat(result.hasOutcome()).isTrue();
             assertThat(result.getRenderUri()).isNotNull();
         } finally {
             overrideBiddingLogicVersionToV3(false);
-            mCustomAudienceClient
-                    .leaveCustomAudience(
-                            joinCustomAudienceRequest.getCustomAudience().getBuyer(),
-                            joinCustomAudienceRequest.getCustomAudience().getName())
-                    .get(TIMEOUT, TimeUnit.SECONDS);
-            Log.d(TAG, "Left Custom Audience.");
+            leaveCustomAudience(SHOES_CA);
         }
 
         assertThat(dispatcher.getCalledPaths())
                 .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
     }
 
+    /**
+     * Test that buyers can specify an adCost in generateBid that is found in the buyer impression
+     * reporting URI (Remarketing CUJ 160).
+     */
+    @Test
+    public void testAdSelection_withAdCostInUrl_happyPath() throws Exception {
+        ScenarioDispatcher dispatcher =
+                ScenarioDispatcher.fromScenario(
+                        "scenarios/remarketing-cuj-160.json", getCacheBusterPrefix());
+        setupDefaultMockWebServer(dispatcher);
+        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+        long adSelectionId;
+
+        try {
+            overrideCpcBillingEnabled(true);
+            joinCustomAudience(SHOES_CA);
+            AdSelectionOutcome result = doSelectAds(adSelectionConfig);
+            adSelectionId = result.getAdSelectionId();
+            assertThat(result.hasOutcome()).isTrue();
+            assertThat(result.getRenderUri()).isNotNull();
+        } finally {
+            overrideCpcBillingEnabled(false);
+            leaveCustomAudience(SHOES_CA);
+        }
+        doReportImpression(adSelectionId, adSelectionConfig);
+
+        assertThat(dispatcher.getCalledPaths())
+                .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
+    }
+
+    /**
+     * Test that buyers can specify an adCost in generateBid that reported (Remarketing CUJ 161).
+     */
+    @Test
+    public void testAdSelection_withAdCostInUrl_adCostIsReported() throws Exception {
+        ScenarioDispatcher dispatcher =
+                ScenarioDispatcher.fromScenario(
+                        "scenarios/remarketing-cuj-161.json", getCacheBusterPrefix());
+        setupDefaultMockWebServer(dispatcher);
+        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+        long adSelectionId;
+
+        try {
+            overrideRegisterAdBeaconEnabled(true);
+            overrideCpcBillingEnabled(true);
+            joinCustomAudience(SHOES_CA);
+            AdSelectionOutcome result = doSelectAds(adSelectionConfig);
+            adSelectionId = result.getAdSelectionId();
+            doReportImpression(adSelectionId, adSelectionConfig);
+            doReportEvent(adSelectionId, "click");
+        } finally {
+            overrideRegisterAdBeaconEnabled(false);
+            overrideCpcBillingEnabled(false);
+            leaveCustomAudience(SHOES_CA);
+        }
+
+        assertThat(dispatcher.getCalledPaths())
+                .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
+    }
+
+    /**
+     * Test that custom audience can be successfully fetched from a server and joined to participate
+     * in a successful ad selection (Remarketing CUJ 169).
+     */
+    @Test
+    public void testAdSelection_withFetchCustomAudience_fetchesAndReturnsSuccessfully()
+            throws Exception {
+        ScenarioDispatcher dispatcher =
+                ScenarioDispatcher.fromScenario(
+                        "scenarios/remarketing-cuj-fetchCA.json", getCacheBusterPrefix());
+        setupDefaultMockWebServer(dispatcher);
+        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+        String customAudienceName = "hats";
+
+        try {
+            CustomAudience customAudience = makeCustomAudience(customAudienceName);
+            ShellUtils.runShellCommand(
+                    "device_config put adservices fledge_fetch_custom_audience_enabled true");
+            mCustomAudienceClient
+                    .fetchAndJoinCustomAudience(
+                            new FetchAndJoinCustomAudienceRequest.Builder(
+                                            Uri.parse(
+                                                    getServerBaseAddress()
+                                                            + Scenarios.FETCH_CA_PATH))
+                                    .setActivationTime(customAudience.getActivationTime())
+                                    .setExpirationTime(customAudience.getExpirationTime())
+                                    .setName(customAudience.getName())
+                                    .setUserBiddingSignals(customAudience.getUserBiddingSignals())
+                                    .build())
+                    .get(5, TimeUnit.SECONDS);
+            Log.d(TAG, "Joined Custom Audience: " + customAudienceName);
+            AdSelectionOutcome result = doSelectAds(adSelectionConfig);
+            assertThat(result.hasOutcome()).isTrue();
+            assertThat(result.getRenderUri()).isNotNull();
+        } finally {
+            ShellUtils.runShellCommand(
+                    "device_config put adservices fledge_fetch_custom_audience_enabled false");
+            leaveCustomAudience(customAudienceName);
+        }
+
+        assertThat(dispatcher.getCalledPaths())
+                .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
+    }
+
+    /** Test that ad selection fails with an expired custom audience. */
+    @Test
+    public void testAdSelection_withShortlyExpiringCustomAudience_selectAdsThrowsException()
+            throws Exception {
+        ScenarioDispatcher dispatcher =
+                ScenarioDispatcher.fromScenario(
+                        "scenarios/remarketing-cuj-default.json", getCacheBusterPrefix());
+        setupDefaultMockWebServer(dispatcher);
+        CustomAudience template = makeCustomAudience(SHOES_CA);
+        CustomAudience customAudience =
+                new CustomAudience.Builder()
+                        .setName(template.getName())
+                        .setBuyer(template.getBuyer())
+                        .setBiddingLogicUri(template.getBiddingLogicUri())
+                        .setActivationTime(template.getActivationTime())
+                        .setExpirationTime(Instant.now().plus(1, ChronoUnit.SECONDS))
+                        .setDailyUpdateUri(template.getDailyUpdateUri())
+                        .setUserBiddingSignals(template.getUserBiddingSignals())
+                        .setTrustedBiddingData(template.getTrustedBiddingData())
+                        .setAds(template.getAds())
+                        .build();
+        AdSelectionConfig config = makeAdSelectionConfig();
+
+        mCustomAudienceClient.joinCustomAudience(customAudience).get(1, TimeUnit.SECONDS);
+        Log.d(TAG, "Joined custom audience");
+        // Make a call to verify ad selection succeeds before timing out.
+        mAdSelectionClient.selectAds(config).get(TIMEOUT, TimeUnit.SECONDS);
+        Thread.sleep(4000);
+
+        Exception selectAdsException =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> mAdSelectionClient.selectAds(config).get(TIMEOUT, TimeUnit.SECONDS));
+        assertThat(selectAdsException.getCause()).isInstanceOf(IllegalStateException.class);
+    }
+
+    /**
+     * Test that not providing any ad selection Ids to selectAds with ad selection outcomes should
+     * result in failure (Remarketing CUJ 071).
+     */
+    @Test
+    public void testAdSelectionOutcomes_withNoAdSelectionId_throwsException() throws Exception {
+        ScenarioDispatcher dispatcher =
+                ScenarioDispatcher.fromScenario(
+                        "scenarios/remarketing-cuj-default.json", getCacheBusterPrefix());
+        setupDefaultMockWebServer(dispatcher);
+        AdSelectionFromOutcomesConfig config =
+                new AdSelectionFromOutcomesConfig.Builder()
+                        .setSeller(mAdTechIdentifier)
+                        .setAdSelectionIds(List.of())
+                        .setSelectionLogicUri(
+                                Uri.parse(getServerBaseAddress() + Scenarios.MEDIATION_LOGIC_PATH))
+                        .setSelectionSignals(makeAdSelectionSignals())
+                        .build();
+
+        try {
+            Exception selectAdsException =
+                    assertThrows(
+                            ExecutionException.class,
+                            () ->
+                                    mAdSelectionClient
+                                            .selectAds(config)
+                                            .get(TIMEOUT, TimeUnit.SECONDS));
+            assertThat(selectAdsException.getCause()).isInstanceOf(IllegalArgumentException.class);
+        } finally {
+            leaveCustomAudience(SHIRTS_CA);
+        }
+    }
+
+    /** Test that buyer and seller receive win and loss debug reports (Remarketing CUJ 164). */
+    @Test
+    public void testAdSelection_withDebugReporting_happyPath() throws Exception {
+        ScenarioDispatcher dispatcher =
+                ScenarioDispatcher.fromScenario(
+                        "scenarios/remarketing-cuj-164.json", getCacheBusterPrefix());
+        setupDefaultMockWebServer(dispatcher);
+        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+
+        try {
+            joinCustomAudience(SHOES_CA);
+            setDebugReportingEnabledForTesting(true);
+            AdSelectionOutcome result = doSelectAds(adSelectionConfig);
+            assertThat(result.hasOutcome()).isTrue();
+        } finally {
+            setDebugReportingEnabledForTesting(false);
+            leaveCustomAudience(SHOES_CA);
+        }
+
+        assertThat(dispatcher.getCalledPaths())
+                .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
+    }
+
+    /**
+     * Test that buyer and seller do not receive win and loss debug reports if the feature is
+     * disabled (Remarketing CUJ 165).
+     */
+    @Test
+    public void testAdSelection_withDebugReportingDisabled_doesNotSend() throws Exception {
+        ScenarioDispatcher dispatcher =
+                ScenarioDispatcher.fromScenario(
+                        "scenarios/remarketing-cuj-165.json", getCacheBusterPrefix());
+        setupDefaultMockWebServer(dispatcher);
+        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+
+        try {
+            joinCustomAudience(SHOES_CA);
+            overrideBiddingLogicVersionToV3(true);
+            AdSelectionOutcome result = doSelectAds(adSelectionConfig);
+            assertThat(result.hasOutcome()).isTrue();
+        } finally {
+            overrideBiddingLogicVersionToV3(false);
+            leaveCustomAudience(SHOES_CA);
+        }
+
+        assertThat(dispatcher.getCalledPaths())
+                .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
+    }
+
+    /**
+     * Test that buyer and seller receive win and loss debug reports with reject reason (Remarketing
+     * CUJ 170).
+     */
+    @Test
+    public void testAdSelection_withDebugReportingAndRejectReason_happyPath() throws Exception {
+        ScenarioDispatcher dispatcher =
+                ScenarioDispatcher.fromScenario(
+                        "scenarios/remarketing-cuj-170.json", getCacheBusterPrefix());
+        setupDefaultMockWebServer(dispatcher);
+        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+
+        try {
+            joinCustomAudience(SHOES_CA);
+            joinCustomAudience(SHIRTS_CA);
+            setDebugReportingEnabledForTesting(true);
+            AdSelectionOutcome result = doSelectAds(adSelectionConfig);
+            assertThat(result.hasOutcome()).isTrue();
+        } finally {
+            setDebugReportingEnabledForTesting(false);
+            leaveCustomAudience(SHOES_CA);
+            leaveCustomAudience(SHIRTS_CA);
+        }
+
+        assertThat(dispatcher.getCalledPaths())
+                .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
+    }
+
+    private AdSelectionOutcome doSelectAds(AdSelectionConfig adSelectionConfig)
+            throws ExecutionException, InterruptedException, TimeoutException {
+        AdSelectionOutcome result =
+                mAdSelectionClient.selectAds(adSelectionConfig).get(TIMEOUT, TimeUnit.SECONDS);
+        Log.d(TAG, "Ran ad selection.");
+        return result;
+    }
+
+    private void doReportEvent(long adSelectionId, String eventName)
+            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+        mAdSelectionClient
+                .reportEvent(
+                        new ReportEventRequest.Builder(
+                                        adSelectionId,
+                                        eventName,
+                                        new JSONObject().put("key", "value").toString(),
+                                        FLAG_REPORTING_DESTINATION_SELLER
+                                                | FLAG_REPORTING_DESTINATION_BUYER)
+                                .build())
+                .get(TIMEOUT, TimeUnit.SECONDS);
+        Log.d(TAG, "Ran report ad click for ad selection id: " + adSelectionId);
+    }
+
+    private void doReportImpression(long adSelectionId, AdSelectionConfig adSelectionConfig)
+            throws ExecutionException, InterruptedException, TimeoutException {
+        mAdSelectionClient
+                .reportImpression(new ReportImpressionRequest(adSelectionId, adSelectionConfig))
+                .get(TIMEOUT, TimeUnit.SECONDS);
+        Log.d(TAG, "Ran report impression for ad selection id: " + adSelectionId);
+    }
+
+    private void joinCustomAudience(String customAudienceName)
+            throws ExecutionException, InterruptedException, TimeoutException {
+        JoinCustomAudienceRequest joinCustomAudienceRequest =
+                makeJoinCustomAudienceRequest(customAudienceName);
+        mCustomAudienceClient
+                .joinCustomAudience(joinCustomAudienceRequest.getCustomAudience())
+                .get(5, TimeUnit.SECONDS);
+        Log.d(TAG, "Joined Custom Audience: " + customAudienceName);
+    }
+
+    private void leaveCustomAudience(String customAudienceName)
+            throws ExecutionException, InterruptedException, TimeoutException {
+        CustomAudience customAudience = makeCustomAudience(customAudienceName);
+        mCustomAudienceClient
+                .leaveCustomAudience(customAudience.getBuyer(), customAudience.getName())
+                .get(TIMEOUT, TimeUnit.SECONDS);
+        Log.d(TAG, "Left Custom Audience: " + customAudienceName);
+    }
+
     private String getServerBaseAddress() {
         return String.format(
                 "https://%s:%s%s/",
                 mMockWebServer.getHostName(), mMockWebServer.getPort(), getCacheBusterPrefix());
+    }
+
+    private void overrideCpcBillingEnabled(boolean enabled) {
+        ShellUtils.runShellCommand(
+                String.format(
+                        "device_config put adservices fledge_cpc_billing_enabled %s",
+                        enabled ? "true" : "false"));
+    }
+
+    private void overrideRegisterAdBeaconEnabled(boolean enabled) {
+        ShellUtils.runShellCommand(
+                String.format(
+                        "device_config put adservices fledge_register_ad_beacon_enabled %s",
+                        enabled ? "true" : "false"));
+    }
+
+    private void setDebugReportingEnabledForTesting(boolean enabled) {
+        overrideBiddingLogicVersionToV3(enabled);
+        ShellUtils.runShellCommand(
+                String.format(
+                        "device_config put adservices fledge_event_level_debug_reporting_enabled"
+                                + " %s",
+                        enabled ? "true" : "false"));
+        ShellUtils.runShellCommand(
+                String.format(
+                        "device_config put adservices"
+                                + " fledge_event_level_debug_report_send_immediately %s",
+                        enabled ? "true" : "false"));
     }
 
     private static void overrideBiddingLogicVersionToV3(boolean useVersion3) {
@@ -305,43 +609,43 @@ public class AdSelectionTest extends ForegroundDebuggableCtsTest {
                 String.format("{\"valid\": true, \"publisher\": \"%s\"}", PACKAGE_NAME));
     }
 
-    private JoinCustomAudienceRequest makeJoinCustomAudienceRequest() {
-        Uri trustedBiddingUri = Uri.parse(mServerBaseAddress + Scenarios.BIDDING_SIGNALS_PATH);
-        Uri dailyUpdateUri =
-                Uri.parse(mServerBaseAddress + Scenarios.getDailyUpdatePath(CUSTOM_AUDIENCE));
+    private JoinCustomAudienceRequest makeJoinCustomAudienceRequest(String customAudienceName) {
         return new JoinCustomAudienceRequest.Builder()
-                .setCustomAudience(
-                        new CustomAudience.Builder()
-                                .setName(AdSelectionTest.CUSTOM_AUDIENCE)
-                                .setDailyUpdateUri(dailyUpdateUri)
-                                .setTrustedBiddingData(
-                                        new TrustedBiddingData.Builder()
-                                                .setTrustedBiddingKeys(ImmutableList.of())
-                                                .setTrustedBiddingUri(trustedBiddingUri)
-                                                .build())
-                                .setUserBiddingSignals(AdSelectionSignals.fromString("{}"))
-                                .setAds(makeAds())
-                                .setBiddingLogicUri(
-                                        Uri.parse(
-                                                String.format(
-                                                        mServerBaseAddress
-                                                                + Scenarios.BIDDING_LOGIC_PATH)))
-                                .setBuyer(mAdTechIdentifier)
-                                .setActivationTime(Instant.now())
-                                .setExpirationTime(Instant.now().plus(5, ChronoUnit.DAYS))
-                                .build())
+                .setCustomAudience(makeCustomAudience(customAudienceName))
                 .build();
     }
 
-    private ImmutableList<AdData> makeAds() {
+    private CustomAudience makeCustomAudience(String customAudienceName) {
+        Uri trustedBiddingUri = Uri.parse(mServerBaseAddress + Scenarios.BIDDING_SIGNALS_PATH);
+        Uri dailyUpdateUri =
+                Uri.parse(mServerBaseAddress + Scenarios.getDailyUpdatePath(customAudienceName));
+        return new CustomAudience.Builder()
+                .setName(customAudienceName)
+                .setDailyUpdateUri(dailyUpdateUri)
+                .setTrustedBiddingData(
+                        new TrustedBiddingData.Builder()
+                                .setTrustedBiddingKeys(ImmutableList.of())
+                                .setTrustedBiddingUri(trustedBiddingUri)
+                                .build())
+                .setUserBiddingSignals(AdSelectionSignals.fromString("{}"))
+                .setAds(makeAds(customAudienceName))
+                .setBiddingLogicUri(
+                        Uri.parse(String.format(mServerBaseAddress + Scenarios.BIDDING_LOGIC_PATH)))
+                .setBuyer(mAdTechIdentifier)
+                .setActivationTime(Instant.now())
+                .setExpirationTime(Instant.now().plus(5, ChronoUnit.DAYS))
+                .build();
+    }
+
+    private ImmutableList<AdData> makeAds(String customAudienceName) {
         ImmutableList.Builder<AdData> ads = new ImmutableList.Builder<>();
         for (int i = 0; i < NUM_ADS_PER_AUDIENCE; i++) {
-            ads.add(makeAd(/* adNumber= */ i));
+            ads.add(makeAd(/* adNumber= */ i, customAudienceName));
         }
         return ads.build();
     }
 
-    private AdData makeAd(int adNumber) {
+    private AdData makeAd(int adNumber, String customAudienceName) {
         return new AdData.Builder()
                 .setMetadata(
                         String.format(
@@ -353,9 +657,7 @@ public class AdSelectionTest extends ForegroundDebuggableCtsTest {
                         Uri.parse(
                                 String.format(
                                         "%s/render/%s/%s",
-                                        mServerBaseAddress,
-                                        AdSelectionTest.CUSTOM_AUDIENCE,
-                                        adNumber)))
+                                        mServerBaseAddress, customAudienceName, adNumber)))
                 .build();
     }
 }
