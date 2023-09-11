@@ -32,7 +32,7 @@ public class SandboxLatencyInfoUnitTest {
     private static final long TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP = 2;
     private static final long TIME_LOAD_SANDBOX_STARTED = 3;
     private static final long TIME_SANDBOX_LOADED = 4;
-    private static final long TIME_SYSTEM_SERVER_CALLED_SANDBOX = 5;
+    private static final long TIME_SYSTEM_SERVER_CALL_FINISHED = 5;
     private static final long TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER = 6;
     private static final long TIME_SANDBOX_CALLED_SDK = 7;
     private static final long TIME_SDK_CALL_COMPLETED = 8;
@@ -40,7 +40,6 @@ public class SandboxLatencyInfoUnitTest {
     private static final long TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_SANDBOX = 10;
     private static final long TIME_SYSTEM_SERVER_CALLED_APP = 11;
     private static final long TIME_APP_RECEIVED_CALL_FROM_SYSTEM_SERVER = 12;
-    private static final long TIME_FAILED_AT_SYSTEM_SERVER = 13;
 
     @Test
     public void testSandboxLatencyInfo_describeContents() {
@@ -88,25 +87,9 @@ public class SandboxLatencyInfoUnitTest {
         SandboxLatencyInfo sandboxLatencyInfo = getSandboxLatencyObjectWithAllFieldsSet();
         int systemServerAppToSandboxLatency =
                 (int)
-                        (TIME_SYSTEM_SERVER_CALLED_SANDBOX
+                        (TIME_SYSTEM_SERVER_CALL_FINISHED
                                 - TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP
                                 - (TIME_SANDBOX_LOADED - TIME_LOAD_SANDBOX_STARTED));
-        assertThat(sandboxLatencyInfo.getSystemServerAppToSandboxLatency())
-                .isEqualTo(systemServerAppToSandboxLatency);
-    }
-
-    @Test
-    public void testSandboxLatencyInfo_getSystemServerAppToSandboxLatency_FailedAtSystemServer() {
-        SandboxLatencyInfo sandboxLatencyInfo = getSandboxLatencyObjectWithAllFieldsSet();
-        int systemServerAppToSandboxLatency =
-                (int)
-                        (TIME_FAILED_AT_SYSTEM_SERVER
-                                - TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP
-                                - (TIME_SANDBOX_LOADED - TIME_LOAD_SANDBOX_STARTED));
-
-        sandboxLatencyInfo.setSandboxStatus(
-                SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
-
         assertThat(sandboxLatencyInfo.getSystemServerAppToSandboxLatency())
                 .isEqualTo(systemServerAppToSandboxLatency);
     }
@@ -124,7 +107,7 @@ public class SandboxLatencyInfoUnitTest {
         int systemServerToSandboxLatency =
                 (int)
                         (TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER
-                                - TIME_SYSTEM_SERVER_CALLED_SANDBOX);
+                                - TIME_SYSTEM_SERVER_CALL_FINISHED);
         assertThat(sandboxLatencyInfo.getSystemServerToSandboxLatency())
                 .isEqualTo(systemServerToSandboxLatency);
     }
@@ -382,10 +365,10 @@ public class SandboxLatencyInfoUnitTest {
     }
 
     @Test
-    public void testGetTimeSystemServerCalledSandbox() {
+    public void testGetTimeSystemServerCallFinished() {
         SandboxLatencyInfo sandboxLatencyInfo = getSandboxLatencyObjectWithAllFieldsSet();
-        assertThat(sandboxLatencyInfo.getTimeSystemServerCalledSandbox())
-                .isEqualTo(TIME_SYSTEM_SERVER_CALLED_SANDBOX);
+        assertThat(sandboxLatencyInfo.getTimeSystemServerCallFinished())
+                .isEqualTo(TIME_SYSTEM_SERVER_CALL_FINISHED);
     }
 
     @Test
@@ -402,8 +385,7 @@ public class SandboxLatencyInfoUnitTest {
                 TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP);
         sandboxLatencyInfo.setTimeLoadSandboxStarted(TIME_LOAD_SANDBOX_STARTED);
         sandboxLatencyInfo.setTimeSandboxLoaded(TIME_SANDBOX_LOADED);
-        sandboxLatencyInfo.setTimeSystemServerCalledSandbox(TIME_SYSTEM_SERVER_CALLED_SANDBOX);
-        sandboxLatencyInfo.setTimeFailedAtSystemServer(TIME_FAILED_AT_SYSTEM_SERVER);
+        sandboxLatencyInfo.setTimeSystemServerCallFinished(TIME_SYSTEM_SERVER_CALL_FINISHED);
         sandboxLatencyInfo.setTimeSandboxReceivedCallFromSystemServer(
                 TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER);
         sandboxLatencyInfo.setTimeSandboxCalledSdk(TIME_SANDBOX_CALLED_SDK);
