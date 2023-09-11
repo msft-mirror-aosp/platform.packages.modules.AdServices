@@ -46,7 +46,7 @@ interface ISdkSandboxManager {
     // TODO(b/242031240): wrap the many input params in one parcelable object
     oneway void requestSurfacePackage(in String callingPackageName, in String sdkName, in IBinder hostToken, int displayId, int width, int height, long timeAppCalledSystemServer, in Bundle params, IRequestSurfacePackageCallback callback);
     List<AppOwnedSdkSandboxInterface> getAppOwnedSdkSandboxInterfaces(in String callingPackageName, long timeAppCalledSystemServer);
-    List<SandboxedSdk> getSandboxedSdks(in String callingPackageName, long timeAppCalledSystemServer);
+    List<SandboxedSdk> getSandboxedSdks(in String callingPackageName, in SandboxLatencyInfo sandboxLatencyInfo);
     oneway void syncDataFromClient(in String callingPackageName, long timeAppCalledSystemServer, in SharedPreferencesUpdate update, in ISharedPreferencesSyncCallback callback);
     void stopSdkSandbox(in String callingPackageName);
     void logLatencies(in SandboxLatencyInfo sandboxLatencyInfo);
