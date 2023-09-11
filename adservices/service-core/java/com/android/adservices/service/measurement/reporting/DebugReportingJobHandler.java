@@ -175,7 +175,8 @@ public class DebugReportingJobHandler {
                 }
             } else {
                 LogUtil.d("Sending debug report failed with http error");
-                reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.NETWORK);
+                reportingStatus.setFailureStatus(
+                        ReportingStatus.FailureStatus.UNSUCCESSFUL_HTTP_RESPONSE_CODE);
                 return AdServicesStatusUtils.STATUS_IO_ERROR;
             }
         } catch (IOException e) {
