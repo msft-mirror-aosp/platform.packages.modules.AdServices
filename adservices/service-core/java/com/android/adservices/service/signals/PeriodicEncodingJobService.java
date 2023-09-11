@@ -148,6 +148,7 @@ public class PeriodicEncodingJobService extends JobService {
     @Override
     public boolean onStopJob(JobParameters params) {
         LoggerFactory.getFledgeLogger().d("PeriodicEncodingJobService.onStopJob");
+        PeriodicEncodingJobWorker.getInstance(this).stopWork();
 
         boolean shouldRetry = true;
         AdservicesJobServiceLogger.getInstance(PeriodicEncodingJobService.this)
