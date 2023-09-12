@@ -79,7 +79,7 @@ import java.util.stream.Collectors;
 
 /** Flags Implementation that delegates to DeviceConfig. */
 // TODO(b/228037065): Add validation logics for Feature flags read from PH.
-public final class PhFlags implements Flags {
+public final class PhFlags extends CommonPhFlags implements Flags {
 
     private static final PhFlags sSingleton = new PhFlags();
 
@@ -3461,6 +3461,8 @@ public final class PhFlags implements Flags {
 
     @Override
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
+        super.dump(writer, args); // common flags
+
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED

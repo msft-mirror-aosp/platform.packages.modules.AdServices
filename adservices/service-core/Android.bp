@@ -92,10 +92,27 @@ filegroup {
     ],
 }
 
+// TODO(b/306522832): move to Shared/ and change packages (to something like
+// c.a.ads.flags), although we'd need to be consider whether to make sure it's
+// used only by adservices itself, not ODP (or SdkSandbox)
+filegroup {
+    name: "adservices-service-common-flags-sources",
+    srcs: [
+        "java/com/android/adservices/service/CommonFlags.java",
+        "java/com/android/adservices/service/CommonFlagsConstants.java",
+        "java/com/android/adservices/service/CommonPhFlags.java",
+    ],
+    path: "java",
+    visibility: [
+        "//packages/modules/AdServices/adservices/service",
+    ],
+}
+
 filegroup {
     name: "adservices-service-core-phflags-sources",
     srcs: [
         ":adservices-service-core-flags-constants-sources",
+        ":adservices-service-common-flags-sources",
         "java/com/android/adservices/service/Flags.java",
         "java/com/android/adservices/service/PhFlags.java",
     ],
