@@ -34,6 +34,8 @@ public final class TestAnnotations {
                 return sdkLevelAtLeastR(reason);
             case S:
                 return sdkLevelAtLeastS(reason);
+            case S2:
+                return sdkLevelAtLeastS2(reason);
             case T:
                 return sdkLevelAtLeastT(reason);
             case U:
@@ -51,6 +53,11 @@ public final class TestAnnotations {
     @AutoAnnotation
     public static RequiresSdkLevelAtLeastS sdkLevelAtLeastS(String reason) {
         return new AutoAnnotation_TestAnnotations_sdkLevelAtLeastS(reason);
+    }
+
+    @AutoAnnotation
+    public static RequiresSdkLevelAtLeastS sdkLevelAtLeastS2(String reason) {
+        return new AutoAnnotation_TestAnnotations_sdkLevelAtLeastS2(reason);
     }
 
     @AutoAnnotation
