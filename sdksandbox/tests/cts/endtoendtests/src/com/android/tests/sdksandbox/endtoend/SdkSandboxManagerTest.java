@@ -28,8 +28,10 @@ import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentat
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
@@ -59,7 +61,9 @@ import androidx.lifecycle.Lifecycle;
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
+import androidx.test.uiautomator.Until;
 
 import com.android.compatibility.common.util.DeviceConfigStateHelper;
 import com.android.ctssdkprovider.IActivityActionExecutor;
@@ -78,8 +82,7 @@ import org.junit.runners.JUnit4;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.util.Random;
 
 /** End-to-end tests of {@link SdkSandboxManager} APIs. */
 @RunWith(JUnit4.class)
@@ -102,6 +105,8 @@ public final class SdkSandboxManagerTest {
             "ActivitySecurity__asm_restrictions_enabled";
     private static final String UNREGISTER_BEFORE_STARTING_KEY = "UNREGISTER_BEFORE_STARTING_KEY";
     private static final String ACTIVITY_STARTER_KEY = "ACTIVITY_STARTER_KEY";
+    private static final String TEXT_KEY = "TEXT_KEY";
+    private static final int WAIT_FOR_TEXT_IN_MS = 1000;
     private static final UiDevice sUiDevice = UiDevice.getInstance(getInstrumentation());
 
     @Rule(order = 0)
@@ -120,6 +125,8 @@ public final class SdkSandboxManagerTest {
 
     private final DeviceConfigStateHelper mDeviceConfig =
             new DeviceConfigStateHelper(NAMESPACE_WINDOW_MANAGER);
+
+    private final Random mRandom = new Random();
 
     @Before
     public void setup() throws Exception {
@@ -914,6 +921,8 @@ public final class SdkSandboxManagerTest {
 
     private IActivityActionExecutor startSandboxActivity(
             ICtsSdkProviderApi sdk, ActivityStarter activityStarter, Bundle extras) {
+        final String randomText = mRandom.nextInt(Integer.MAX_VALUE) + "";
+        extras.putString(TEXT_KEY, randomText);
         ActivityExecutorContainer activityExecutorContainer = new ActivityExecutorContainer();
         mScenario.onActivity(
                 clientActivity -> {
@@ -930,6 +939,11 @@ public final class SdkSandboxManagerTest {
                 });
         IActivityActionExecutor actionExecutor = activityExecutorContainer.getExecutor();
         assertThat(actionExecutor).isNotNull();
+        if (extras.containsKey(UNREGISTER_BEFORE_STARTING_KEY)) {
+            assertFalse(sUiDevice.wait(Until.hasObject(By.text(randomText)), WAIT_FOR_TEXT_IN_MS));
+        } else {
+            assertTrue(sUiDevice.wait(Until.hasObject(By.text(randomText)), WAIT_FOR_TEXT_IN_MS));
+        }
         return actionExecutor;
     }
 
@@ -949,7 +963,6 @@ public final class SdkSandboxManagerTest {
     private class ActivityStarter extends IActivityStarter.Stub {
         private Activity mFromActivity;
         private boolean mActivityResumed = false;
-        private final CountDownLatch mWaitingForActivityToStartLatch = new CountDownLatch(1);
 
         ActivityStarter() {}
 
@@ -959,14 +972,12 @@ public final class SdkSandboxManagerTest {
             assertThat(mFromActivity).isNotNull();
 
             mSdkSandboxManager.startSdkSandboxActivity(mFromActivity, token);
-            waitForActivityToBeResumed();
         }
 
         // It is called to notify that onResume() is called against the new started Activity.
         @Override
         public void onActivityResumed() {
             mActivityResumed = true;
-            mWaitingForActivityToStartLatch.countDown();
         }
 
         // It is called to notify the new started Activity is no longer in the Resumed state.
@@ -985,13 +996,15 @@ public final class SdkSandboxManagerTest {
         public void startLocalActivity(int flags) {
             assertThat(mFromActivity).isNotNull();
 
-            Intent intent = new Intent(mFromActivity, TestActivity.class);
-            Bundle params = new Bundle();
+            final Intent intent = new Intent(mFromActivity, TestActivity.class);
+            final Bundle params = new Bundle();
+            final String randomText = mRandom.nextInt(Integer.MAX_VALUE) + "";
+            params.putString(TEXT_KEY, randomText);
             params.putBinder(ACTIVITY_STARTER_KEY, this);
             intent.putExtras(params);
             intent.addFlags(flags);
             mFromActivity.startActivity(intent);
-            waitForActivityToBeResumed();
+            assertTrue(sUiDevice.wait(Until.hasObject(By.text(randomText)), WAIT_FOR_TEXT_IN_MS));
         }
 
         public void setFromActivity(Activity activity) {
@@ -1000,14 +1013,6 @@ public final class SdkSandboxManagerTest {
 
         public boolean isActivityResumed() {
             return mActivityResumed;
-        }
-
-        private void waitForActivityToBeResumed() {
-            try {
-                mWaitingForActivityToStartLatch.await(1, TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
-                fail("Exception while waiting for the sandbox activity: " + e.getMessage());
-            }
         }
     }
 
