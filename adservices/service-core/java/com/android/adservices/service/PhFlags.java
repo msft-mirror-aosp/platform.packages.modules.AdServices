@@ -2607,6 +2607,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getConsentManagerLazyEnableMode() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_CONSENT_MANAGER_LAZY_ENABLE_MODE,
+                /* defaultValue */ CONSENT_MANAGER_LAZY_ENABLE_MODE);
+    }
+
+    @Override
     public String getConsentNotificationResetToken() {
         return DeviceConfig.getString(
                 FlagsConstants.NAMESPACE_ADSERVICES,
