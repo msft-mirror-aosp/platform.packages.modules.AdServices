@@ -1488,6 +1488,12 @@ public interface Flags {
         return MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
     }
 
+    boolean CONSENT_MANAGER_LAZY_ENABLE_MODE = true;
+
+    default boolean getConsentManagerLazyEnableMode() {
+        return CONSENT_MANAGER_LAZY_ENABLE_MODE;
+    }
+
     long CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS =
             /* hours */ 9 * /* minutes */ 60 * /* seconds */ 60 * /* milliseconds */ 1000; // 9 AM
 
