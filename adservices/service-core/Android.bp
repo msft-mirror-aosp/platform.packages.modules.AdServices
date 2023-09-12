@@ -170,16 +170,19 @@ cc_library_shared {
         "-Wno-unused-parameter",
         "-Wno-unused-but-set-variable",
     ],
-    srcs: ["jni/cpp/hpke_jni.cpp", "jni/cpp/ohttp_jni.cpp"],
+    srcs: ["jni/cpp/hpke_jni.cpp", "jni/cpp/ohttp_jni.cpp", "jni/cpp/act_jni.cpp",],
     include_dirs: ["packages/modules/AdServices/adservices/service-core/jni/include"],
-    header_libs: [ "jni_headers"  ],
-    shared_libs: ["libcrypto", "liblog"],
+    header_libs: ["jni_headers"],
+    shared_libs: ["libcrypto", "liblog",],
+    static_libs: ["libact"],
+    version_script: "jni/version-script.lds",
     apex_available: ["com.android.adservices", "com.android.extservices"],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",
         "//packages/modules/ExtServices:__subpackages__",
     ],
 }
+
 
 // Schemas needs to be bundled via this android_library since service-core unit tests for schema
 // migration will need this.
