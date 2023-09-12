@@ -257,10 +257,22 @@
       "name": "AdServicesFrameworkUnitTests"
     },
     {
-      "name": "AdServicesServiceCoreUnitTests"
+      "name": "AdServicesServiceCoreUnitTests",
+      "options": [
+        {
+          // Exclude tests that are marked flaky
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
     },
     {
-      "name": "AdExtServicesServiceCoreUnitTests"
+      "name": "AdExtServicesServiceCoreUnitTests",
+      "options": [
+        {
+          // Exclude tests that are marked flaky
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
     },
     {
       "name": "AdServicesJsEngineUnitTests"
