@@ -443,10 +443,10 @@ public class StatsdAdServicesLoggerTest {
         MeasurementAttributionStats stats =
                 new MeasurementAttributionStats.Builder()
                         .setCode(AD_SERVICES_MEASUREMENT_ATTRIBUTION)
-                        .setSourceType(AttributionStatus.SourceType.EVENT.ordinal())
-                        .setSurfaceType(AttributionStatus.AttributionSurface.APP_WEB.ordinal())
-                        .setResult(AttributionStatus.AttributionResult.SUCCESS.ordinal())
-                        .setFailureType(AttributionStatus.FailureType.UNKNOWN.ordinal())
+                        .setSourceType(AttributionStatus.SourceType.VIEW.getValue())
+                        .setSurfaceType(AttributionStatus.AttributionSurface.APP_WEB.getValue())
+                        .setResult(AttributionStatus.AttributionResult.SUCCESS.getValue())
+                        .setFailureType(AttributionStatus.FailureType.UNKNOWN.getValue())
                         .setSourceDerived(false)
                         .setInstallAttribution(true)
                         .setAttributionDelay(100L)
@@ -474,10 +474,10 @@ public class StatsdAdServicesLoggerTest {
                 () ->
                         AdServicesStatsLog.write(
                                 eq(AD_SERVICES_MEASUREMENT_ATTRIBUTION),
-                                eq(AttributionStatus.SourceType.EVENT.ordinal()),
-                                eq(AttributionStatus.AttributionSurface.APP_WEB.ordinal()),
-                                eq(AttributionStatus.AttributionResult.SUCCESS.ordinal()),
-                                eq(AttributionStatus.FailureType.UNKNOWN.ordinal()),
+                                eq(AttributionStatus.SourceType.VIEW.getValue()),
+                                eq(AttributionStatus.AttributionSurface.APP_WEB.getValue()),
+                                eq(AttributionStatus.AttributionResult.SUCCESS.getValue()),
+                                eq(AttributionStatus.FailureType.UNKNOWN.getValue()),
                                 eq(false),
                                 eq(true),
                                 eq(100L),
