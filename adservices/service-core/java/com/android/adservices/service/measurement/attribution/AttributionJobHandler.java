@@ -261,7 +261,6 @@ class AttributionJobHandler {
                         long endTime = System.currentTimeMillis();
                         attributionStatus.setAttributionDelay(endTime - trigger.getTriggerTime());
                         attributionStatus.setAttributionResult(
-                                AttributionStatus.AttributionResult.SUCCESS,
                                 isAggregateTriggeringStatusAttributed,
                                 isEventTriggeringStatusAttributed);
                     } else {
@@ -1222,10 +1221,10 @@ class AttributionJobHandler {
         mLogger.logMeasurementAttributionStats(
                 new MeasurementAttributionStats.Builder()
                         .setCode(AD_SERVICES_MEASUREMENT_ATTRIBUTION)
-                        .setSourceType(attributionStatus.getSourceType().ordinal())
-                        .setSurfaceType(attributionStatus.getAttributionSurface().ordinal())
-                        .setResult(attributionStatus.getAttributionResult().ordinal())
-                        .setFailureType(attributionStatus.getFailureType().ordinal())
+                        .setSourceType(attributionStatus.getSourceType().getValue())
+                        .setSurfaceType(attributionStatus.getAttributionSurface().getValue())
+                        .setResult(attributionStatus.getAttributionResult().getValue())
+                        .setFailureType(attributionStatus.getFailureType().getValue())
                         .setSourceDerived(attributionStatus.isSourceDerived())
                         .setInstallAttribution(attributionStatus.isInstallAttribution())
                         .setAttributionDelay(attributionStatus.getAttributionDelay().get())
