@@ -57,8 +57,10 @@ public class OTAStringsUiAutomatorTest {
 
     private static AdServicesCommonManager sCommonManager;
 
+    private String mTestName;
+
     @BeforeClass
-    public static void initTestClass() throws InterruptedException, UiObjectNotFoundException {
+    public static void initTestClass() throws Exception, UiObjectNotFoundException {
         // Initialize UiDevice instance
         sDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
         // enable wifi
@@ -66,6 +68,8 @@ public class OTAStringsUiAutomatorTest {
 
         // wait for wifi to connect
         Thread.sleep(LAUNCH_TIMEOUT);
+
+        UiUtils.disableNotificationFlowV2();
 
         // download test OTA strings
         sCommonManager = sContext.getSystemService(AdServicesCommonManager.class);
@@ -83,6 +87,7 @@ public class OTAStringsUiAutomatorTest {
 
     @Before
     public void initTestCase() {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         // Skip the test if it runs on unsupported platforms.
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
@@ -99,6 +104,7 @@ public class OTAStringsUiAutomatorTest {
 
     @After
     public void tearDown() throws Exception {
+        UiUtils.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + mTestName + "_");
         ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
     }
 
