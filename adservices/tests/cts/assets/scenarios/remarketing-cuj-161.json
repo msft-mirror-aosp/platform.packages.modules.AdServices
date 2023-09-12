@@ -5,7 +5,7 @@
         "path": "bidding"
       },
       "response": {
-        "body": "BiddingLogicV2.js.txt"
+        "body": "BiddingLogicV2AdCostClick.js"
       }
     },
     {
@@ -13,7 +13,7 @@
         "path": "scoring"
       },
       "response": {
-        "body": "ScoringLogic.js.txt"
+        "body": "ScoringLogicAdCost.js"
       }
     },
     {
@@ -34,19 +34,38 @@
     },
     {
       "request": {
-        "path": "buyer/reportImpression?ca=shoes"
+        "path": "reportWin"
       },
       "response": {
-        "body": "DefaultResponse.txt"
+        "body": null
       },
       "verify_called": true
     },
     {
       "request": {
-        "path": "seller/reportImpression?render_uri=https://localhost:38383/render/shoes/0?bid=10"
+        "path": "sellerInteraction?click",
+        "method": "POST"
       },
       "response": {
-        "body": "DefaultResponse.txt"
+        "body_str": "200 OK"
+      }
+    },
+    {
+      "request": {
+        "path": "reportResult"
+      },
+      "response": {
+        "body": null
+      },
+      "verify_called": true
+    },
+    {
+      "request": {
+        "path": "buyerInteraction?click?adCost=1",
+        "method": "POST"
+      },
+      "response": {
+        "body_str": "200 OK"
       },
       "verify_called": true
     }
@@ -55,8 +74,11 @@
     "<daily-update-uri>": "{base_url}/bidding/daily",
     "<ad-render-uri-1>": "{base_url}/render_ad/1",
     "<ad-render-uri-2>": "{base_url}/render_ad/2",
+    "https://js.example.com/render/ad1": "{base_url}/render_ad/1",
+    "https://js.example.com/render/ad2": "{base_url}/render_ad/2",
     "<buyer-trusted-bidding-uri>": "{base_url}/bidding/trusted",
-    "<buyer-reporting-uri>": "{base_url}/buyer/reportImpression",
-    "<seller-reporting-uri>": "{base_url}/seller/reportImpression"
+    "https://js.example.com/bidding/trusted": "{base_url}/bidding/trusted",
+    "<buyer-reporting-uri>": "{base_url}",
+    "<seller-reporting-uri>": "{base_url}"
   }
 }

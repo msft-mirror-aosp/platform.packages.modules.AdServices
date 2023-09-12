@@ -60,7 +60,7 @@ public class ScenarioDispatcher extends Dispatcher {
     public static final String SCENARIOS_DATA_JARPATH = "scenarios/data/";
     public static final String X_FLEDGE_BUYER_BIDDING_LOGIC_VERSION =
             "x_fledge_buyer_bidding_logic_version";
-    public static final int TIMEOUT_SEC = 2;
+    public static final int TIMEOUT_SEC = 4;
 
     private final Map<Request, Response> mRequestToResponseMap;
     private final String mPrefix;
@@ -108,10 +108,10 @@ public class ScenarioDispatcher extends Dispatcher {
      * @return String list of paths.
      */
     public ImmutableSet<String> getCalledPaths() throws InterruptedException {
-        if (mCallCount.await(TIMEOUT_SEC, TimeUnit.SECONDS)) {
-            return mCalledPaths.build();
+        if (!mCallCount.await(TIMEOUT_SEC, TimeUnit.SECONDS)) {
+            sLogger.w("Timeout reached in getCalledPaths()");
         }
-        return ImmutableSet.of();
+        return mCalledPaths.build();
     }
 
     private ScenarioDispatcher(String scenarioPath, String prefix)
@@ -234,20 +234,29 @@ public class ScenarioDispatcher extends Dispatcher {
 
     @Override
     public MockResponse dispatch(RecordedRequest request) throws InterruptedException {
-        String normalizedPath = normalizePath(request.getPath());
-        mCalledPaths.add("/" + normalizedPath);
-        mCallCount.countDown();
+        String path = pathWithoutPrefix(request.getPath());
 
         for (Request mockRequest : mRequestToResponseMap.keySet()) {
-            String path = mockRequest.getPath();
-            if (isMatchingPath(request.getPath(), path)) {
+            String mockPath = mockRequest.getPath();
+            if (isMatchingPath(request.getPath(), mockPath)) {
                 Response mockResponse = mRequestToResponseMap.get(mockRequest);
                 String body = mockResponse.getBody();
                 for (Map.Entry<String, String> keyValuePair : mSubstitutionVariables.entrySet()) {
                     body = body.replace(keyValuePair.getKey(), keyValuePair.getValue());
                 }
 
-                sLogger.v("serving path at %s (200)", normalizedPath);
+                // If the mock path specifically has query params, then add that, otherwise strip
+                // them before adding them to the log.
+                // This behaviour matches the existing test server functionality.
+                mCalledPaths.add(
+                        String.format(
+                                "/%s",
+                                hasQueryParams(mockPath)
+                                        ? mockPath
+                                        : pathWithoutQueryParams(path)));
+                mCallCount.countDown();
+                sLogger.v("serving path at %s (200)", path);
+
                 return maybeApplyFledgeV3Header(
                         new MockResponse().setBody(body).setResponseCode(200),
                         request,
@@ -256,7 +265,12 @@ public class ScenarioDispatcher extends Dispatcher {
             }
         }
 
-        sLogger.v("serving path at %s (404)", normalizedPath);
+        // For any requests that weren't specifically overloaded with query params to be handled,
+        // always strip them when adding them to the log.
+        // This behaviour matches the existing test server functionality.
+        mCalledPaths.add("/" + pathWithoutQueryParams(path));
+        mCallCount.countDown();
+        sLogger.v("serving path at %s (404)", path);
         return new MockResponse().setResponseCode(404);
     }
 
@@ -320,15 +334,20 @@ public class ScenarioDispatcher extends Dispatcher {
     }
 
     private boolean isMatchingPath(String path, String mockPath) {
-        return normalizePath(path).equals(mockPath);
+        return pathWithoutQueryParams(pathWithoutPrefix(path)).equals(mockPath)
+                || pathWithoutPrefix(path).equals(mockPath);
     }
 
-    private String normalizePath(String path) {
-        // request path: {prefix} + /my/path?123
-        // potential response path: /my/path
-        // Strip request prefix as well as any query parameters. This ensures we're only checking
-        // against what would appear in the scenario file.
-        return path.replace(mPrefix + "/", "").split("\\?")[0];
+    private boolean hasQueryParams(String path) {
+        return path.contains("?");
+    }
+
+    private String pathWithoutQueryParams(String path) {
+        return path.split("\\?")[0];
+    }
+
+    private String pathWithoutPrefix(String path) {
+        return path.replace(mPrefix + "/", "");
     }
 
     private String loadTextResourceWithSubstitutions(String fileName) {
@@ -336,8 +355,10 @@ public class ScenarioDispatcher extends Dispatcher {
         if (!Strings.isNullOrEmpty(fileName)) {
             try {
                 responseBody = loadTextResource(fileName);
+                sLogger.v("loading file: " + fileName);
             } catch (IOException e) {
-                throw new IllegalArgumentException("failed to load fake response body", e);
+                throw new IllegalArgumentException(
+                        "failed to load fake response body: " + fileName, e);
             }
         }
 

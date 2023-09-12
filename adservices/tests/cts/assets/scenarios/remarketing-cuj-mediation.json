@@ -34,19 +34,10 @@
     },
     {
       "request": {
-        "path": "buyer/reportImpression?ca=shoes"
+        "path": "mediation"
       },
       "response": {
-        "body": "DefaultResponse.txt"
-      },
-      "verify_called": true
-    },
-    {
-      "request": {
-        "path": "seller/reportImpression?render_uri=https://localhost:38383/render/shoes/0?bid=10"
-      },
-      "response": {
-        "body": "DefaultResponse.txt"
+        "body": "MediationLogic.js.txt"
       },
       "verify_called": true
     }

@@ -483,9 +483,10 @@ public final class SdkSandboxManager {
      */
     public @NonNull List<SandboxedSdk> getSandboxedSdks() {
         try {
-            return mService.getSandboxedSdks(
-                    mContext.getPackageName(),
-                    /*timeAppCalledSystemServer=*/ System.currentTimeMillis());
+            SandboxLatencyInfo sandboxLatencyInfo =
+                    new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_GET_SANDBOXED_SDKS);
+            sandboxLatencyInfo.setTimeAppCalledSystemServer(System.currentTimeMillis());
+            return mService.getSandboxedSdks(mContext.getPackageName(), sandboxLatencyInfo);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
