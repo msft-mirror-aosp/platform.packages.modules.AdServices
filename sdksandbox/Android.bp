@@ -32,3 +32,23 @@ java_defaults {
     },
     min_sdk_version: "33",
 }
+
+aconfig_declarations {
+    name: "sdk_sandbox_flags",
+    package: "com.android.sdksandbox.flags",
+    srcs: ["**/*.aconfig"],
+}
+
+java_aconfig_library {
+    name: "sdk_sandbox_flags_lib",
+    aconfig_declarations: "sdk_sandbox_flags",
+    defaults: ["framework-minus-apex-aconfig-java-defaults"],
+    visibility: [
+        "//frameworks/base",
+        "//packages/modules/AdServices:__subpackages__",
+    ],
+    min_sdk_version: "33",
+    apex_available: [
+        "com.android.adservices",
+    ],
+}
