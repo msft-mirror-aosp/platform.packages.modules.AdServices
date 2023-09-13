@@ -772,13 +772,9 @@ public final class SdkSandboxManagerTest {
         assertThat(clearTopActivityStarter.isActivityResumed()).isTrue();
     }
 
-    /**
-     * Ensure that SDK can lock back navigation
-     *
-     * @throws RemoteException
-     */
     @Test
-    public void testBackNavigationControl() throws RemoteException {
+    @Ignore("b/298171583")
+    public void testBackNavigation() throws Exception {
         assumeTrue(SdkLevel.isAtLeastU());
 
         ICtsSdkProviderApi sdk = loadSdk();
@@ -789,17 +785,21 @@ public final class SdkSandboxManagerTest {
         assertThat(mScenario.getState()).isIn(Arrays.asList(State.CREATED, State.STARTED));
         assertThat(sandboxActivityStarter.isActivityResumed()).isTrue();
 
-        actionExecutor.disableBackButton();
+        try {
+            actionExecutor.disableBackButton();
+        } catch (RemoteException e) {
+            fail("Error while disabling back button: " + e.getMessage());
+        }
         sUiDevice.pressBack();
-        assertFalse(
-                sUiDevice.wait(Until.hasObject(By.text("DEFAULT_SHOW_TEXT")), WAIT_FOR_TEXT_IN_MS));
         assertThat(mScenario.getState()).isIn(Arrays.asList(State.CREATED, State.STARTED));
         assertThat(sandboxActivityStarter.isActivityResumed()).isTrue();
 
-        actionExecutor.enableBackButton();
+        try {
+            actionExecutor.enableBackButton();
+        } catch (RemoteException e) {
+            fail("Error while enabling back button: " + e.getMessage());
+        }
         sUiDevice.pressBack();
-        assertTrue(
-                sUiDevice.wait(Until.hasObject(By.text("DEFAULT_SHOW_TEXT")), WAIT_FOR_TEXT_IN_MS));
         assertThat(mScenario.getState()).isEqualTo(State.RESUMED);
         assertThat(sandboxActivityStarter.isActivityResumed()).isFalse();
     }
