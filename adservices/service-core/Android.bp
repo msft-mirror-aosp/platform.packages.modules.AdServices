@@ -171,7 +171,11 @@ cc_library_shared {
         "-Wno-unused-parameter",
         "-Wno-unused-but-set-variable",
     ],
-    srcs: ["jni/cpp/hpke_jni.cpp", "jni/cpp/ohttp_jni.cpp", "jni/cpp/act_jni.cpp",],
+    srcs: [
+        "jni/cpp/hpke_jni.cpp",
+        "jni/cpp/ohttp_jni.cpp",
+        "jni/cpp/act_jni.cpp",
+    ],
     include_dirs: ["packages/modules/AdServices/adservices/service-core/jni/include"],
     header_libs: ["jni_headers"],
     shared_libs: ["libcrypto", "liblog",],
