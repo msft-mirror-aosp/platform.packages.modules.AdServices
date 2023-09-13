@@ -3362,6 +3362,46 @@ public interface Flags {
         return MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERSISTED;
     }
 
+    int MEASUREMENT_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE = JobInfo.NETWORK_TYPE_ANY;
+
+    /** Returns the required network type for debug reporting job . */
+    default int getMeasurementDebugReportingJobRequiredNetworkType() {
+        return MEASUREMENT_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
+    }
+
+    int MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_REQUIRED_NETWORK_TYPE = JobInfo.NETWORK_TYPE_ANY;
+
+    /** Returns the required network type for debug reporting fallback job . */
+    default int getMeasurementDebugReportingFallbackJobRequiredNetworkType() {
+        return MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_REQUIRED_NETWORK_TYPE;
+    }
+
+    boolean MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED = true;
+
+    /**
+     * Returns whether to persist this job across device reboots for debug fallback reporting job.
+     */
+    default boolean getMeasurementDebugReportingFallbackJobPersisted() {
+        return MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
+    }
+
+    int MEASUREMENT_VERBOSE_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE = JobInfo.NETWORK_TYPE_ANY;
+
+    /** Returns the required network type for verbose debug reporting job . */
+    default int getMeasurementVerboseDebugReportingJobRequiredNetworkType() {
+        return MEASUREMENT_VERBOSE_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
+    }
+
+    boolean MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED = true;
+
+    /**
+     * Returns whether to persist this job across device reboots for verbose debug fallback
+     * reporting job.
+     */
+    default boolean getMeasurementVerboseDebugReportingFallbackJobPersisted() {
+        return MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
+    }
+
     /** Default U18 UX feature flag.. */
     boolean DEFAULT_U18_UX_ENABLED = false;
 
