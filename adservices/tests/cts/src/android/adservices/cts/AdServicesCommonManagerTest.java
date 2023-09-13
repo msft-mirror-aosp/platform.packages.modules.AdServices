@@ -30,12 +30,15 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
+import org.junit.After;
 import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -55,6 +58,20 @@ public class AdServicesCommonManagerTest {
     @Rule
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
             new AdServicesDeviceSupportedRule();
+
+    @Before
+    public void setup() {
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.setFlags();
+        }
+    }
+
+    @After
+    public void tearDown() {
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+        }
+    }
 
     @Test
     public void testStatusManagerNotAuthorizedOnSPlus() {
