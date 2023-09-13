@@ -41,6 +41,7 @@ public final class E2EMockStatic implements StaticMockFixture {
     public E2EMockStatic(E2ETest.ParamsProvider paramsProvider) {
         mParams = paramsProvider;
     }
+
     /**
      * {@inheritDoc}
      */
@@ -64,9 +65,8 @@ public final class E2EMockStatic implements StaticMockFixture {
                         () ->
                                 FlagsFactory.getFlags()
                                         .getMeasurementMaxAttributionPerRateLimitWindow());
-        doAnswer((Answer<Integer>) invocation ->
-                mParams.getNavigationTriggerDataCardinality())
-                    .when(() -> PrivacyParams.getNavigationTriggerDataCardinality());
+        doAnswer((Answer<Integer>) invocation -> mParams.getNavigationTriggerDataCardinality())
+                .when(() -> PrivacyParams.getNavigationTriggerDataCardinality());
         doAnswer((Answer<Integer>) invocation -> mParams.getMaxDistinctEnrollmentsInAttribution())
                 .when(
                         () ->
@@ -77,20 +77,18 @@ public final class E2EMockStatic implements StaticMockFixture {
                         () ->
                                 FlagsFactory.getFlags()
                                         .getMeasurementMaxDistinctDestinationsInActiveSource());
-        doAnswer((Answer<Integer>) invocation ->
-                mParams.getMaxDistinctEnrollmentsPerPublisherXDestinationInSource())
-                    .when(() -> PrivacyParams
-                            .getMaxDistinctEnrollmentsPerPublisherXDestinationInSource());
+        doAnswer((Answer<Integer>) invocation -> mParams.getMaxDistinctOriginsPerPubXDestInSource())
+                .when(
+                        () ->
+                                FlagsFactory.getFlags()
+                                        .getMeasurementMaxDistinctRepOrigPerPublXDestInSource());
         // System health params
-        doAnswer((Answer<Integer>) invocation ->
-                mParams.getMaxSourcesPerPublisher())
-                    .when(() -> SystemHealthParams.getMaxSourcesPerPublisher());
-        doAnswer((Answer<Integer>) invocation ->
-                mParams.getMaxEventReportsPerDestination())
-                    .when(() -> SystemHealthParams.getMaxEventReportsPerDestination());
-        doAnswer((Answer<Integer>) invocation ->
-                mParams.getMaxAggregateReportsPerDestination())
-                    .when(() -> SystemHealthParams.getMaxAggregateReportsPerDestination());
+        doAnswer((Answer<Integer>) invocation -> mParams.getMaxSourcesPerPublisher())
+                .when(() -> SystemHealthParams.getMaxSourcesPerPublisher());
+        doAnswer((Answer<Integer>) invocation -> mParams.getMaxEventReportsPerDestination())
+                .when(() -> SystemHealthParams.getMaxEventReportsPerDestination());
+        doAnswer((Answer<Integer>) invocation -> mParams.getMaxAggregateReportsPerDestination())
+                .when(() -> SystemHealthParams.getMaxAggregateReportsPerDestination());
         // Pass manifest checks
         doReturn(true)
                 .when(
@@ -99,11 +97,9 @@ public final class E2EMockStatic implements StaticMockFixture {
                                         any(), any(), anyString()));
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
-    public void tearDown() { }
+    public void tearDown() {}
 
     public static class E2EMockStaticRule extends AdServicesExtendedMockitoRule {
         public E2EMockStaticRule(E2ETest.ParamsProvider paramsProvider) {
