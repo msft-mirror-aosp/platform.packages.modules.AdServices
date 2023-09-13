@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.apiimplementation;
+package com.android.sdksandboxcode_1;
 
 import android.app.Activity;
 import android.app.sdksandbox.interfaces.IActivityStarter;
@@ -143,11 +143,6 @@ public class SdkApi extends ISdkApi.Stub {
         }
 
         callback.assertLoadSdkIsSuccessful();
-    }
-
-    @Override
-    public String getMessage() {
-        return "Message from sdk in the sandbox process";
     }
 
     @Override
