@@ -149,6 +149,8 @@ public final class FlagsConstants {
             "measurement_enforce_foreground_status_delete_registrations";
     public static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS =
             "measurement_enforce_foreground_status_get_status";
+    public static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCES =
+            "measurement_enforce_foreground_status_register_sources";
     public static final String KEY_MEASUREMENT_ENABLE_XNA = "measurement_enable_xna";
     public static final String KEY_MEASUREMENT_ENABLE_SHARED_SOURCE_DEBUG_KEY =
             "measurement_enable_shared_source_debug_key";
@@ -507,6 +509,8 @@ public final class FlagsConstants {
             "measurement_api_status_kill_switch";
     public static final String KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH =
             "measurement_api_register_source_kill_switch";
+    public static final String KEY_MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH =
+            "measurement_api_register_web_sources_kill_switch";
     public static final String KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH =
             "measurement_api_register_trigger_kill_switch";
     public static final String KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH =
