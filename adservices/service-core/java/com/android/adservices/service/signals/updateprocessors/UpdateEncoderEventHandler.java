@@ -93,10 +93,6 @@ public class UpdateEncoderEventHandler {
                     FluentFuture<Boolean> unused = mEncoderLogicHandler.downloadAndUpdate(buyer);
                 }
                 break;
-            case DELETE:
-                mEncoderEndpointsDao.deleteEncoderEndpoint(buyer);
-                // TODO(b/297586190): Delete persisted encoding logic when deleting encoder endpoint
-                break;
             default:
                 throw new IllegalArgumentException(
                         "Unexpected value for update event type: " + event.getUpdateType());
