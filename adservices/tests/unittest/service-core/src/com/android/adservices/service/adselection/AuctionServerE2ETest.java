@@ -103,6 +103,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.adid.AdIdCacheManager;
 import com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKeyManager;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
@@ -303,7 +304,7 @@ public class AuctionServerE2ETest {
                         .build();
         mAdSelectionDebugReportDaoSpy =
                 spy(adSelectionDebugReportingDatabase.getAdSelectionDebugReportDao());
-        mMockAdIdWorker = new MockAdIdWorker(mContext, mFlags);
+        mMockAdIdWorker = new MockAdIdWorker(new AdIdCacheManager(mContext));
         mAdIdFetcher =
                 new AdIdFetcher(mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor);
 

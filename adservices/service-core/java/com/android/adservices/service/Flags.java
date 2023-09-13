@@ -134,10 +134,13 @@ public interface Flags {
 
     /** Unknown classifier option. */
     int UNKNOWN_CLASSIFIER = 0;
+
     /** Only on-device classification. */
     int ON_DEVICE_CLASSIFIER = 1;
+
     /** Only Precomputed classification. */
     int PRECOMPUTED_CLASSIFIER = 2;
+
     /** Precomputed classification values are preferred over on-device classification values. */
     int PRECOMPUTED_THEN_ON_DEVICE_CLASSIFIER = 3;
 
@@ -1549,10 +1552,13 @@ public interface Flags {
 
     /** Write and read consent from system server only. */
     int SYSTEM_SERVER_ONLY = FlagsConstants.SYSTEM_SERVER_ONLY;
+
     /** Write and read consent from PPAPI only */
     int PPAPI_ONLY = FlagsConstants.PPAPI_ONLY;
+
     /** Write consent to both PPAPI and system server. Read consent from system server only. */
     int PPAPI_AND_SYSTEM_SERVER = FlagsConstants.PPAPI_AND_SYSTEM_SERVER;
+
     /**
      * Write consent data to AppSearch only. To store consent data in AppSearch the flag
      * enable_appsearch_consent_data must also be true. This ensures that both writes and reads can
@@ -3477,5 +3483,28 @@ public interface Flags {
     /** Returns whether the U18 supervised account is enabled. */
     default boolean isU18SupervisedAccountEnabled() {
         return IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT;
+    }
+
+    /**
+     * Default value to determine whether {@link
+     * com.android.adservices.service.adid.AdIdCacheManager} is enabled to read AdId from and for
+     * AdIdProvider to update AdId to.
+     */
+    boolean DEFAULT_ADID_CACHE_ENABLED = false;
+
+    /**
+     * Returns if {@link com.android.adservices.service.adid.AdIdCacheManager} is enabled to read
+     * AdId from and for AdIdProvider to update AdId to.
+     *
+     * <ul>
+     *   <li>When enabled, AdIdCacheManager will read AdId from the cache and AdIdProvider will
+     *       update the cache if AdId changes.
+     *   <li>When disabled, AdIdCacheManager will call AdIdProvider to get the AdId.
+     * </ul>
+     *
+     * @return if {@link com.android.adservices.service.adid.AdIdCacheManager} is enabled.
+     */
+    default boolean getAdIdCacheEnabled() {
+        return DEFAULT_ADID_CACHE_ENABLED;
     }
 }

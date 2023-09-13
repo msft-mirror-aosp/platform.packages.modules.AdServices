@@ -863,4 +863,6 @@ public final class FlagsConstants {
 
     public static final String KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED =
             "is_u18_supervised_account_enabled";
+
+    public static final String KEY_AD_ID_CACHE_ENABLED = "ad_id_cache_enabled";
 }
