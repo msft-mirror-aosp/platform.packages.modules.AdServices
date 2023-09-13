@@ -74,7 +74,14 @@
     },
     {
       // Install com.google.android.extservices.apex and run AdExtServicesServiceCoreUnitTests.
-      "name": "AdExtServicesServiceCoreUnitTests[com.google.android.extservices.apex]"
+      "name": "AdExtServicesServiceCoreUnitTests[com.google.android.extservices.apex]",
+            "options": [
+              {
+                // Exclude tests that are marked flaky
+                "exclude-annotation": "androidx.test.filters.FlakyTest"
+              }
+            ]
+
     },
     {
       // Install com.google.android.adservices.apex and run AdServicesJsEngineUnitTests.
@@ -334,7 +341,13 @@
       "name": "AdServicesApkUITestsAppConsent"
     },
     {
-      "name": "CtsAdServicesEndToEndTests"
+      "name": "CtsAdServicesEndToEndTests",
+      "options": [
+        {
+          // Exclude tests that are marked flaky
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
     },
     {
       "name": "AdServicesManagerServiceTests"
