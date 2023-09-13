@@ -33,7 +33,7 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CallingAppUidSupplierProcessImpl;
 import android.adservices.common.CommonFixture;
 import android.adservices.http.MockWebServerRule;
-import android.adservices.signals.FetchSignalUpdatesInput;
+import android.adservices.signals.UpdateSignalsInput;
 import android.content.Context;
 import android.net.Uri;
 
@@ -139,7 +139,7 @@ public class SignalsEncodingE2ETest {
     private EncoderEndpointsDao mEncoderEndpointsDao;
     private EncoderLogicDao mEncoderLogicDao;
     private ProtectedSignalsServiceImpl mService;
-    private FetchOrchestrator mFetchOrchestrator;
+    private UpdateSignalsOrchestrator mUpdateSignalsOrchestrator;
     private UpdatesDownloader mUpdatesDownloader;
     private UpdateProcessingOrchestrator mUpdateProcessingOrchestrator;
     private UpdateProcessorSelector mUpdateProcessorSelector;
@@ -231,8 +231,8 @@ public class SignalsEncodingE2ETest {
         mUpdatesDownloader =
                 new UpdatesDownloader(mLightweightExecutorService, mAdServicesHttpsClient);
 
-        mFetchOrchestrator =
-                new FetchOrchestrator(
+        mUpdateSignalsOrchestrator =
+                new UpdateSignalsOrchestrator(
                         mBackgroundExecutorService,
                         mUpdatesDownloader,
                         mUpdateProcessingOrchestrator,
@@ -240,7 +240,7 @@ public class SignalsEncodingE2ETest {
         mService =
                 new ProtectedSignalsServiceImpl(
                         mContextSpy,
-                        mFetchOrchestrator,
+                        mUpdateSignalsOrchestrator,
                         mFledgeAuthorizationFilter,
                         mConsentManagerMock,
                         mDevContextFilterMock,
@@ -552,11 +552,11 @@ public class SignalsEncodingE2ETest {
     }
 
     private void callForUri(Uri uri) throws Exception {
-        FetchSignalUpdatesInput input =
-                new FetchSignalUpdatesInput.Builder(uri, CommonFixture.TEST_PACKAGE_NAME).build();
+        UpdateSignalsInput input =
+                new UpdateSignalsInput.Builder(uri, CommonFixture.TEST_PACKAGE_NAME).build();
         SignalsIntakeE2ETest.CallbackForTesting callback =
                 new SignalsIntakeE2ETest.CallbackForTesting();
-        mService.fetchSignalUpdates(input, callback);
+        mService.updateSignals(input, callback);
         callback.mSuccessLatch.await(WAIT_TIME_SECONDS, TimeUnit.SECONDS);
     }
 
