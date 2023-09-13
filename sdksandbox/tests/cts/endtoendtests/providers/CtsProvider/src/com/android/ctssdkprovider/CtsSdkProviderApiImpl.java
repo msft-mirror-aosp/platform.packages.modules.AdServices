@@ -431,11 +431,6 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
             mActivity.startActivity(visitUrl);
         }
 
-        @Override
-        public void finish() {
-            mActivity.finish();
-        }
-
         public void setActivity(Activity activity) {
             mActivity = activity;
             mDispatcher = activity.getOnBackInvokedDispatcher();
