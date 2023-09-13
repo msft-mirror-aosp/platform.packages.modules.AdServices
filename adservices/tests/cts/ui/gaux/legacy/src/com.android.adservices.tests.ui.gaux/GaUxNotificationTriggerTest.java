@@ -101,6 +101,8 @@ public class GaUxNotificationTriggerTest {
         UiUtils.setAsRowDevice();
         UiUtils.enableGa();
 
+        AdservicesTestHelper.killAdservicesProcess(sContext);
+
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
 
         AdservicesWorkflows.verifyNotification(
@@ -121,6 +123,8 @@ public class GaUxNotificationTriggerTest {
 
         UiUtils.setAsRowDevice();
         UiUtils.enableGa();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_DISABLED);
 
@@ -143,6 +147,8 @@ public class GaUxNotificationTriggerTest {
         UiUtils.setAsEuDevice();
         UiUtils.enableGa();
 
+        AdservicesTestHelper.killAdservicesProcess(sContext);
+
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
 
         AdservicesWorkflows.verifyNotification(
@@ -161,6 +167,8 @@ public class GaUxNotificationTriggerTest {
 
         UiUtils.setAsEuDevice();
         UiUtils.enableGa();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_DISABLED);
 
