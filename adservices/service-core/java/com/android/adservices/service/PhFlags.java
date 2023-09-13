@@ -1343,6 +1343,25 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementApiRegisterSourcesKillSwitch() {
+        // We check the Global Killswitch first then Measurement Killswitch.
+        // As a result, it overrides all other killswitches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        final boolean defaultValue = MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(
+                                FlagsConstants.KEY_MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                FlagsConstants.NAMESPACE_ADSERVICES,
+                                /* flagName */ FlagsConstants
+                                        .KEY_MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH,
+                                defaultValue));
+    }
+
+    @Override
     public boolean getMeasurementApiRegisterWebTriggerKillSwitch() {
         // We check the Global Killswitch first then Measurement Killswitch.
         // As a result, it overrides all other killswitches.
@@ -2574,6 +2593,15 @@ public final class PhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS,
                 /* defaultValue */ MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS);
+    }
+
+    @Override
+    public boolean getEnforceForegroundStatusForMeasurementRegisterSources() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */
+                FlagsConstants.KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCES,
+                /* defaultValue */ MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCES);
     }
 
     @Override
