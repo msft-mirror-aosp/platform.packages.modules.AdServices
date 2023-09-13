@@ -61,7 +61,7 @@ public class TopicsManagerTest {
     // Override the Epoch Job Period to this value to speed up the epoch computation.
     private static final long TEST_EPOCH_JOB_PERIOD_MS = 5000;
     // Expected model versions.
-    private static final long EXPECTED_MODEL_VERSION = 4L;
+    private static final long EXPECTED_MODEL_VERSION = 5L;
     // Expected taxonomy version.
     private static final long EXPECTED_TAXONOMY_VERSION = 2L;
 
@@ -370,7 +370,7 @@ public class TopicsManagerTest {
 
         // Top 5 classifications for empty string with v4 model are:
         // S-: [10420, 10189, 10301, 10230, 10010].
-        // T+: [10166, 10010, 10301, 10230, 10184].
+        // T+: [10166, 10332, 10280, 10230, 10184].
         // V4 model uses package name as part of input, which differs between
         // versions for back-compat, changing the returned topics for each version.
         // This is computed by running the model on the device; topics are checked
@@ -380,7 +380,7 @@ public class TopicsManagerTest {
         if (ADSERVICES_PACKAGE_NAME.contains("ext.services")) {
             expectedTopTopicIds = Arrays.asList(10420, 10189, 10301, 10230, 10010);
         } else {
-            expectedTopTopicIds = Arrays.asList(10166, 10010, 10301, 10230, 10184);
+            expectedTopTopicIds = Arrays.asList(10166, 10332, 10280, 10230, 10184);
         }
         assertThat(topic.getTopicId()).isIn(expectedTopTopicIds);
     }
