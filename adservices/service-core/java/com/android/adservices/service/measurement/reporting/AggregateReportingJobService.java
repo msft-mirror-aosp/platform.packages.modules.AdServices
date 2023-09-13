@@ -171,7 +171,6 @@ public final class AggregateReportingJobService extends JobService {
                 new JobInfo.Builder(
                                 MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID,
                                 new ComponentName(context, AggregateReportingJobService.class))
-                        .setRequiresDeviceIdle(true)
                         .setRequiresBatteryNotLow(true)
                         .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
                         .setPeriodic(
