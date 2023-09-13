@@ -1728,6 +1728,24 @@ public interface Flags {
     }
 
     /**
+     * Measurement API Register Sources Kill Switch. The default value is false which means Register
+     * Sources API is enabled. This flag is used for emergency turning off the Register Sources API.
+     */
+    boolean MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Measurement API Register Sources. The API will be disabled
+     * if either the Global Kill Switch, Measurement Kill Switch, or the Measurement API Register
+     * Sources Kill Switch value is true.
+     */
+    default boolean getMeasurementApiRegisterSourcesKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH;
+    }
+
+    /**
      * Measurement API Register Web Trigger Kill Switch. The default value is false which means
      * Register Web Trigger API is enabled. This flag is used for emergency turning off the Register
      * Web Trigger API.
@@ -2559,6 +2577,7 @@ public interface Flags {
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_SOURCE = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS = true;
+    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCES = true;
     boolean MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH = true;
 
     /**
@@ -2607,6 +2626,14 @@ public interface Flags {
      */
     default boolean getEnforceForegroundStatusForMeasurementStatus() {
         return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS;
+    }
+
+    /**
+     * @return true if Measurement Get Status API should require that the calling API is running in
+     *     foreground.
+     */
+    default boolean getEnforceForegroundStatusForMeasurementRegisterSources() {
+        return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCES;
     }
 
     /** @return true if the Enrollment match is based on url origin matching */
