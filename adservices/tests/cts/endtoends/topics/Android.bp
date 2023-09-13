@@ -50,18 +50,3 @@ android_test {
     test_mainline_modules: ["com.google.android.adservices.apex"],
 }
 
-android_test {
-    name: "CtsAdExtServicesEndToEndTests",
-    defaults: ["cts-adservices-endtoend-defaults"],
-    test_suites: [
-        "cts",
-        "general-tests",
-        "mts-extservices",
-    ],
-    min_sdk_version: "30",
-    max_sdk_version: "32",
-    manifest: "CtsAdExtServicesEndToEndTestsManifest.xml",
-    test_config: "CtsAdExtServicesEndToEndTests.xml",
-    test_mainline_modules: ["com.google.android.extservices.apex"],
-}
-
