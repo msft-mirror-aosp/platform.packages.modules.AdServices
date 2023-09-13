@@ -374,8 +374,7 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
                         LinearLayout.LayoutParams.WRAP_CONTENT));
         layout.setOrientation(LinearLayout.HORIZONTAL);
         final TextView tv1 = new TextView(activity);
-        int orientation = activity.getResources().getConfiguration().orientation;
-        tv1.setText(textToCheck + "_orientation: " + orientation);
+        tv1.setText(textToCheck);
         layout.addView(tv1);
         activity.setContentView(layout);
     }

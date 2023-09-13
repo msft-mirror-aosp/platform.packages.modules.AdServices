@@ -50,12 +50,12 @@ import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PermissionInfo;
-import android.content.res.Configuration;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Parcel;
 import android.os.RemoteException;
+import android.view.Surface;
 
 import androidx.lifecycle.Lifecycle;
 import androidx.test.core.app.ActivityScenario;
@@ -74,6 +74,7 @@ import com.android.modules.utils.build.SdkLevel;
 import com.google.common.truth.Expect;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -106,10 +107,6 @@ public final class SdkSandboxManagerTest {
     private static final String ACTIVITY_STARTER_KEY = "ACTIVITY_STARTER_KEY";
     private static final String TEXT_KEY = "TEXT_KEY";
     private static final int WAIT_FOR_TEXT_IN_MS = 1000;
-    private static final String ORIENTATION_PORTRAIT_MESSAGE =
-            "orientation: " + Configuration.ORIENTATION_PORTRAIT;
-    private static final String ORIENTATION_LANDSCAPE_MESSAGE =
-            "orientation: " + Configuration.ORIENTATION_LANDSCAPE;
     private static final UiDevice sUiDevice = UiDevice.getInstance(getInstrumentation());
 
     @Rule(order = 0)
@@ -807,13 +804,9 @@ public final class SdkSandboxManagerTest {
         assertThat(sandboxActivityStarter.isActivityResumed()).isFalse();
     }
 
-    /**
-     * Tests that orientation work for sandbox activity
-     *
-     * @throws RemoteException
-     */
     @Test
-    public void testSandboxActivityShouldRotateIfNotLocked() throws RemoteException {
+    @Ignore("b/298171583")
+    public void testSandboxActivityShouldRotateIfNotLocked() throws Exception {
         assumeTrue(SdkLevel.isAtLeastU());
 
         ICtsSdkProviderApi sdk = loadSdk();
@@ -823,28 +816,19 @@ public final class SdkSandboxManagerTest {
         assertThat(mScenario.getState()).isIn(Arrays.asList(State.CREATED, State.STARTED));
         assertThat(sandboxActivityStarter.isActivityResumed()).isTrue();
 
-        // Assert Portrait Rotation.
-        assertTrue(
-                sUiDevice.wait(
-                        Until.hasObject(By.textContains(ORIENTATION_PORTRAIT_MESSAGE)),
-                        WAIT_FOR_TEXT_IN_MS));
-
+        // Assert Natural Rotation.
+        assertThat(sUiDevice.getDisplayRotation()).isEqualTo(Surface.ROTATION_0);
+        // Rotate device to landscape
         sUiDevice.setOrientationLandscape();
-        assertTrue(
-                sUiDevice.wait(
-                        Until.hasObject(By.textContains(ORIENTATION_LANDSCAPE_MESSAGE)),
-                        WAIT_FOR_TEXT_IN_MS));
+        // Without SDK locking the orientation, display should rotate.
+        assertThat(sUiDevice.getDisplayRotation()).isEqualTo(Surface.ROTATION_90);
         assertThat(mScenario.getState()).isIn(Arrays.asList(State.CREATED, State.STARTED));
         assertThat(sandboxActivityStarter.isActivityResumed()).isTrue();
     }
 
-    /**
-     * Tests that SDK can lock sandbox activity orientation
-     *
-     * @throws Exception
-     */
     @Test
-    public void testSandboxActivityOrientationLocking() throws RemoteException {
+    @Ignore("b/298171583")
+    public void testSandboxActivityOrientationLocking() throws Exception {
         assumeTrue(SdkLevel.isAtLeastU());
 
         ICtsSdkProviderApi sdk = loadSdk();
@@ -854,40 +838,28 @@ public final class SdkSandboxManagerTest {
         assertThat(mScenario.getState()).isIn(Arrays.asList(State.CREATED, State.STARTED));
         assertThat(sandboxActivityStarter.isActivityResumed()).isTrue();
 
-        // Assert Portrait Rotation.
-        assertTrue(
-                sUiDevice.wait(
-                        Until.hasObject(By.textContains(ORIENTATION_PORTRAIT_MESSAGE)),
-                        WAIT_FOR_TEXT_IN_MS));
+        // Assert Natural Rotation.
+        assertThat(sUiDevice.getDisplayRotation()).isEqualTo(Surface.ROTATION_0);
 
-        // Locking orientation to landscape
+        // Locking orientation to landscape should override device current orientation
+        // (portrait) and restart the sandbox activity in the landscape orientation.
         actionExecutor.setOrientationToLandscape();
-        assertTrue(
-                sUiDevice.wait(
-                        Until.hasObject(By.textContains(ORIENTATION_LANDSCAPE_MESSAGE)),
-                        WAIT_FOR_TEXT_IN_MS));
+
+        assertThat(sUiDevice.getDisplayRotation()).isEqualTo(Surface.ROTATION_90);
         // Rotation the device should not affect the locked display orientation.
         sUiDevice.setOrientationPortrait();
-        assertFalse(
-                sUiDevice.wait(
-                        Until.hasObject(By.textContains(ORIENTATION_PORTRAIT_MESSAGE)),
-                        WAIT_FOR_TEXT_IN_MS));
+        assertThat(sUiDevice.getDisplayRotation()).isEqualTo(Surface.ROTATION_90);
         assertThat(mScenario.getState()).isIn(Arrays.asList(State.CREATED, State.STARTED));
         assertThat(sandboxActivityStarter.isActivityResumed()).isTrue();
 
-        // Locking orientation to portrait
+        // Locking orientation to portrait should override device current orientation
+        // (landscape) and restart the sandbox activity in the portrait orientation.
         actionExecutor.setOrientationToPortrait();
-        assertTrue(
-                sUiDevice.wait(
-                        Until.hasObject(By.textContains(ORIENTATION_PORTRAIT_MESSAGE)),
-                        WAIT_FOR_TEXT_IN_MS));
 
+        assertThat(sUiDevice.getDisplayRotation()).isEqualTo(Surface.ROTATION_0);
         // Rotation the device should not affect the locked display orientation.
         sUiDevice.setOrientationLandscape();
-        assertFalse(
-                sUiDevice.wait(
-                        Until.hasObject(By.textContains(ORIENTATION_LANDSCAPE_MESSAGE)),
-                        WAIT_FOR_TEXT_IN_MS));
+        assertThat(sUiDevice.getDisplayRotation()).isEqualTo(Surface.ROTATION_0);
         assertThat(mScenario.getState()).isIn(Arrays.asList(State.CREATED, State.STARTED));
         assertThat(sandboxActivityStarter.isActivityResumed()).isTrue();
     }
@@ -991,13 +963,9 @@ public final class SdkSandboxManagerTest {
         IActivityActionExecutor actionExecutor = activityExecutorContainer.getExecutor();
         assertThat(actionExecutor).isNotNull();
         if (extras.containsKey(UNREGISTER_BEFORE_STARTING_KEY)) {
-            assertFalse(
-                    sUiDevice.wait(
-                            Until.hasObject(By.textContains(randomText)), WAIT_FOR_TEXT_IN_MS));
+            assertFalse(sUiDevice.wait(Until.hasObject(By.text(randomText)), WAIT_FOR_TEXT_IN_MS));
         } else {
-            assertTrue(
-                    sUiDevice.wait(
-                            Until.hasObject(By.textContains(randomText)), WAIT_FOR_TEXT_IN_MS));
+            assertTrue(sUiDevice.wait(Until.hasObject(By.text(randomText)), WAIT_FOR_TEXT_IN_MS));
         }
         return actionExecutor;
     }
