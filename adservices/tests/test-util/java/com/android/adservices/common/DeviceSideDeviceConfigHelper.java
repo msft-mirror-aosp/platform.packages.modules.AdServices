@@ -44,22 +44,24 @@ final class DeviceSideDeviceConfigHelper extends DeviceConfigHelper.Interface {
         return call(() -> DeviceConfig.getString(mNamespace, name, /* defaultValue= */ null));
     }
 
+    // TODO(b/300136201): override non-async methods to use a DeviceConfig listener
+
     @Override
-    public boolean set(String name, String value) {
-        mLog.v("set(%s=%s)", name, value);
+    public boolean asyncSet(String name, String value) {
+        mLog.v("asyncSet(%s=%s)", name, value);
         return call(
                 () -> DeviceConfig.setProperty(mNamespace, name, value, /* makeDefault= */ false));
     }
 
     @Override
-    public boolean delete(String name) {
-        mLog.v("delete(%s)", name);
+    public boolean asyncDelete(String name) {
+        mLog.v("asyncDelete(%s)", name);
 
         if (SdkLevel.isAtLeastT()) {
             return call(() -> DeviceConfig.deleteProperty(mNamespace, name));
         }
         // Use shell command instead
-        return super.delete(name);
+        return super.asyncDelete(name);
     }
 
     @Override
