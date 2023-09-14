@@ -287,6 +287,7 @@ public class EventFallbackReportingJobServiceTest {
                                             new ComponentName(
                                                     mockContext,
                                                     EventFallbackReportingJobService.class))
+                                    .setRequiresDeviceIdle(true)
                                     .setRequiresBatteryNotLow(true)
                                     .setPeriodic(periodMs)
                                     .setPersisted(true)
@@ -327,6 +328,7 @@ public class EventFallbackReportingJobServiceTest {
                                             new ComponentName(
                                                     mockContext,
                                                     EventFallbackReportingJobService.class))
+                                    .setRequiresDeviceIdle(true)
                                     .setRequiresBatteryNotLow(true)
                                     // difference
                                     .setPeriodic(periodMs - 1)
@@ -431,6 +433,7 @@ public class EventFallbackReportingJobServiceTest {
                     final JobInfo jobInfo = captor.getValue();
                     assertNotNull(jobInfo);
                     assertEquals(NETWORK_TYPE_ANY, jobInfo.getNetworkType());
+                    assertTrue(jobInfo.isRequireDeviceIdle());
                     assertTrue(jobInfo.isRequireBatteryNotLow());
                     assertTrue(jobInfo.isPeriodic());
                     assertTrue(jobInfo.isPersisted());

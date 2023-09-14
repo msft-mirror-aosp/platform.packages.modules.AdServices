@@ -278,6 +278,7 @@ public class EventReportingJobServiceTest {
                                             MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID,
                                             new ComponentName(
                                                     spyContext, EventReportingJobService.class))
+                                    .setRequiresDeviceIdle(true)
                                     .setRequiresBatteryNotLow(true)
                                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
                                     .setPeriodic(
@@ -319,6 +320,7 @@ public class EventReportingJobServiceTest {
                                             MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID,
                                             new ComponentName(
                                                     spyContext, EventReportingJobService.class))
+                                    .setRequiresDeviceIdle(true)
                                     .setRequiresBatteryNotLow(true)
                                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
                                     .setPeriodic(

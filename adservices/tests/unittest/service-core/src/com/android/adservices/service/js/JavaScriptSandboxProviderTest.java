@@ -20,8 +20,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import static org.junit.Assert.assertThrows;
 
 import android.content.Context;
@@ -76,15 +74,12 @@ public class JavaScriptSandboxProviderTest {
     }
 
     @Test
-    public void testJsSandboxProviderCreateFailsIfSandboxNotSupported() {
+    public void testJsSandboxProviderCreateFails() {
         when(JavaScriptSandbox.isSupported()).thenReturn(false);
         mJsSandboxProvider = new JSScriptEngine.JavaScriptSandboxProvider(mProfilerMock, mLogger);
         ThrowingRunnable getFutureInstance =
-                () -> mJsSandboxProvider.getFutureInstance(mApplicationContext).get();
-        Exception futureException = assertThrows(ExecutionException.class, getFutureInstance);
-        assertThat(futureException)
-                .hasCauseThat()
-                .isInstanceOf(JSSandboxIsNotAvailableException.class);
+                () -> mJsSandboxProvider.getFutureInstance(mApplicationContext);
+        assertThrows(JSSandboxIsNotAvailableException.class, getFutureInstance);
         verify(JavaScriptSandbox::isSupported);
     }
 

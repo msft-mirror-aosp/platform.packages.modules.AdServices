@@ -164,51 +164,9 @@ public class JSScriptEngineTest {
             ThrowingRunnable getFutureInstance =
                     () ->
                             new JSScriptEngine.JavaScriptSandboxProvider(sMockProfiler, sLogger)
-                                    .getFutureInstance(sContext)
-                                    .get();
+                                    .getFutureInstance(sContext);
 
-            Exception futureException = assertThrows(ExecutionException.class, getFutureInstance);
-            assertThat(futureException)
-                    .hasCauseThat()
-                    .isInstanceOf(JSSandboxIsNotAvailableException.class);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
-    }
-
-    @Test
-    public void testEngineFailsIfJSSandboxNotAvailableInWebViewVersion() {
-        MockitoSession staticMockSessionLocal = null;
-
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(WebView.class)
-                            .strictness(Strictness.LENIENT)
-                            .initMocks(this)
-                            .startMocking();
-            ExtendedMockito.doReturn(null).when(WebView::getCurrentWebViewPackage);
-
-            ThrowingRunnable getFutureInstance =
-                    () ->
-                            callJSEngine(
-                                    JSScriptEngine.createNewInstanceForTesting(
-                                            sContext,
-                                            new JSScriptEngine.JavaScriptSandboxProvider(
-                                                    sMockProfiler, sLogger),
-                                            sMockProfiler,
-                                            sLogger),
-                                    "function test() { return \"hello world\"; }",
-                                    ImmutableList.of(),
-                                    "test",
-                                    mDefaultIsolateSettings);
-
-            Exception futureException = assertThrows(ExecutionException.class, getFutureInstance);
-            assertThat(futureException)
-                    .hasCauseThat()
-                    .isInstanceOf(JSSandboxIsNotAvailableException.class);
+            assertThrows(JSSandboxIsNotAvailableException.class, getFutureInstance);
         } finally {
             if (staticMockSessionLocal != null) {
                 staticMockSessionLocal.finishMocking();

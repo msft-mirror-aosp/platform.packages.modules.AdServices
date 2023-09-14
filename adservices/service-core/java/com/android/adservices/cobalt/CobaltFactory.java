@@ -32,7 +32,6 @@ import com.android.cobalt.impl.CobaltPeriodicJobImpl;
 import com.android.cobalt.observations.PrivacyGenerator;
 import com.android.cobalt.system.SystemClockImpl;
 import com.android.cobalt.system.SystemData;
-import com.android.internal.annotations.GuardedBy;
 
 import com.google.cobalt.CobaltRegistry;
 
@@ -42,8 +41,6 @@ import java.util.concurrent.ExecutorService;
 
 /** Factory for Cobalt's logger and periodic job implementations. */
 public final class CobaltFactory {
-    private static final Object SINGLETON_LOCK = new Object();
-
     /*
      * Use the prod pipeline because AdServices' reports are for either the DEBUG or GA release
      * stage and DEBUG is sufficient for local testing.
@@ -56,10 +53,7 @@ public final class CobaltFactory {
     private static DataService sSingletonDataService;
     private static SecureRandom sSingletonSecureRandom;
 
-    @GuardedBy("SINGLETON_LOCK")
     private static CobaltLogger sSingletonCobaltLogger;
-
-    @GuardedBy("SINGLETON_LOCK")
     private static CobaltPeriodicJob sSingletonCobaltPeriodicJob;
 
     /**
@@ -72,12 +66,12 @@ public final class CobaltFactory {
             throws CobaltInitializationException {
         Objects.requireNonNull(context);
         Objects.requireNonNull(flags);
-        synchronized (SINGLETON_LOCK) {
+        synchronized (CobaltFactory.class) {
             if (sSingletonCobaltLogger == null) {
                 sSingletonCobaltLogger =
                         sSingletonCobaltLogger =
                                 new CobaltLoggerImpl(
-                                        getRegistry(context),
+                                        getRegistry(),
                                         CobaltReleaseStages.getReleaseStage(
                                                 flags.getAdservicesReleaseStageForCobalt()),
                                         getDataService(context),
@@ -103,11 +97,11 @@ public final class CobaltFactory {
             @NonNull Context context, @NonNull Flags flags) throws CobaltInitializationException {
         Objects.requireNonNull(context);
         Objects.requireNonNull(flags);
-        synchronized (SINGLETON_LOCK) {
+        synchronized (CobaltFactory.class) {
             if (sSingletonCobaltPeriodicJob == null) {
                 sSingletonCobaltPeriodicJob =
                         new CobaltPeriodicJobImpl(
-                                getRegistry(context),
+                                getRegistry(),
                                 CobaltReleaseStages.getReleaseStage(
                                         flags.getAdservicesReleaseStageForCobalt()),
                                 getDataService(context),
@@ -134,10 +128,9 @@ public final class CobaltFactory {
     }
 
     @NonNull
-    private static CobaltRegistry getRegistry(Context context)
-            throws CobaltInitializationException {
+    private static CobaltRegistry getRegistry() throws CobaltInitializationException {
         if (sSingletonCobaltRegistry == null) {
-            sSingletonCobaltRegistry = CobaltRegistryLoader.getRegistry(context);
+            sSingletonCobaltRegistry = CobaltRegistryLoader.getRegistry();
         }
         return sSingletonCobaltRegistry;
     }

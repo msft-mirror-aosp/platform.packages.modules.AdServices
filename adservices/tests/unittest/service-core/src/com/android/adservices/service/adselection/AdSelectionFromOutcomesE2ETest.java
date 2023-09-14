@@ -205,7 +205,6 @@ public class AdSelectionFromOutcomesE2ETest {
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptor;
     @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
-    @Mock private AdIdFetcher mAdIdFetcher;
 
     @Before
     public void setUp() throws Exception {
@@ -278,8 +277,7 @@ public class AdSelectionFromOutcomesE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         // Create a dispatcher that helps map a request -> response in mockWebServer
         mDispatcher =
@@ -407,8 +405,7 @@ public class AdSelectionFromOutcomesE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback resultsCallback =
                 invokeSelectAdsFromOutcomes(adSelectionService, config, CALLER_PACKAGE_NAME);

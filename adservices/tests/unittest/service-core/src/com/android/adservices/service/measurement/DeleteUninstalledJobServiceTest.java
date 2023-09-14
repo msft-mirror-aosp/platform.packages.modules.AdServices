@@ -222,6 +222,7 @@ public class DeleteUninstalledJobServiceTest {
                                             MEASUREMENT_DELETE_UNINSTALLED_JOB_ID,
                                             new ComponentName(
                                                     mockContext, DeleteUninstalledJobService.class))
+                                    .setRequiresDeviceIdle(true)
                                     .setPeriodic(
                                             AdServicesConfig
                                                     .getMeasurementDeleteExpiredJobPeriodMs())
@@ -260,6 +261,7 @@ public class DeleteUninstalledJobServiceTest {
                                             MEASUREMENT_DELETE_UNINSTALLED_JOB_ID,
                                             new ComponentName(
                                                     mockContext, DeleteUninstalledJobService.class))
+                                    .setRequiresDeviceIdle(true)
                                     // Difference
                                     .setPeriodic(periodMs - 1)
                                     .setPersisted(true)

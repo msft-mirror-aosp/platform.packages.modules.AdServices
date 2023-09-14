@@ -137,6 +137,7 @@ public final class DeleteUninstalledJobService extends JobService {
         return new JobInfo.Builder(
                         MEASUREMENT_DELETE_UNINSTALLED_JOB_ID,
                         new ComponentName(context, DeleteUninstalledJobService.class))
+                .setRequiresDeviceIdle(true)
                 .setPeriodic(AdServicesConfig.getMeasurementDeleteExpiredJobPeriodMs())
                 .setPersisted(true)
                 .build();

@@ -107,18 +107,13 @@ public class JSScriptEngine {
             synchronized (mSandboxLock) {
                 if (mFutureSandbox == null) {
                     if (!AvailabilityChecker.isJSSandboxAvailable()) {
-                        JSSandboxIsNotAvailableException exception =
-                                new JSSandboxIsNotAvailableException();
                         mLogger.e(
-                                exception,
                                 "JS Sandbox is not available in this version of WebView "
                                         + "or WebView is not installed at all!");
-                        mFutureSandbox =
-                                FluentFuture.from(Futures.immediateFailedFuture(exception));
-                        return mFutureSandbox;
+                        throw new JSSandboxIsNotAvailableException();
                     }
 
-                    mLogger.d("Creating JavaScriptSandbox");
+                    mLogger.i("Creating JavaScriptSandbox");
                     mSandboxInitStopWatch =
                             mProfiler.start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME);
 
@@ -134,7 +129,7 @@ public class JSScriptEngine {
                                 @Override
                                 public void onSuccess(JavaScriptSandbox result) {
                                     mSandboxInitStopWatch.stop();
-                                    mLogger.d("JSScriptEngine created.");
+                                    mLogger.i("JSScriptEngine created.");
                                 }
 
                                 @Override
@@ -158,10 +153,10 @@ public class JSScriptEngine {
             synchronized (mSandboxLock) {
                 if (mFutureSandbox != null) {
                     ListenableFuture<Void> result =
-                            mFutureSandbox
+                            FluentFuture.from(mFutureSandbox)
                                     .<Void>transform(
                                             jsSandbox -> {
-                                                mLogger.d(
+                                                mLogger.i(
                                                         "Closing connection from JSScriptEngine to"
                                                                 + " WebView Sandbox");
                                                 jsSandbox.close();
@@ -171,8 +166,7 @@ public class JSScriptEngine {
                                     .catching(
                                             Throwable.class,
                                             t -> {
-                                                mLogger.w(
-                                                        t,
+                                                mLogger.i(
                                                         "JavaScriptSandbox initialization failed,"
                                                                 + " won't close");
                                                 return null;
