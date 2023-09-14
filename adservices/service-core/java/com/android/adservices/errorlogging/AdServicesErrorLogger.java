@@ -25,8 +25,7 @@ public interface AdServicesErrorLogger {
      * Creates value {@link AdServicesErrorStats} object and logs AdServices error/exceptions if
      * flag enabled.
      */
-    void logError(
-            int errorCode, int ppapiName, @NonNull String className, @NonNull String methodName);
+    void logError(int errorCode, int ppapiName);
 
     /**
      * Creates value {@link AdServicesErrorStats} object that contains exception information and
