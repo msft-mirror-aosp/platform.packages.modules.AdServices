@@ -24,9 +24,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import android.content.Context;
-
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.cobalt.CobaltRegistryLoader;
@@ -56,8 +53,6 @@ public final class TopicsCobaltLoggerTest {
     private static final int LAST_TOPIC = FIRST_TOPIC + SUPPORTED_TOPICS_COUNT - 1;
     private static final int LOGGED_TOPICS_COUNT = 10;
 
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
-
     @Mock private CobaltLogger mMockCobaltLogger;
     private TopicsCobaltLogger mTopicsCobaltLogger;
 
@@ -75,7 +70,7 @@ public final class TopicsCobaltLoggerTest {
         // See
         // //packages/modules/AdServices/adservices/service-core/resources/cobalt_registry.textpb
         // for the actual registy.
-        CobaltRegistry cobaltRegistry = CobaltRegistryLoader.getRegistry(sContext);
+        CobaltRegistry cobaltRegistry = CobaltRegistryLoader.getRegistry();
         assertThat(cobaltRegistry.getCustomersCount()).isAtLeast(1);
         assertThat(cobaltRegistry.getCustomers(0).getProjectsCount()).isAtLeast(1);
         MetricDefinition topicsMetric =

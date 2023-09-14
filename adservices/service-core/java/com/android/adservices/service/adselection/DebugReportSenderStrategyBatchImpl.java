@@ -17,11 +17,7 @@
 package com.android.adservices.service.adselection;
 
 import android.annotation.NonNull;
-import android.content.Context;
 import android.net.Uri;
-import android.os.Build;
-
-import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
@@ -42,25 +38,19 @@ import java.util.concurrent.ArrayBlockingQueue;
  * Sender strategy to persist the debug reports in database to be sent by a background job in a
  * batch.
  */
-// TODO(b/269798827): Enable for R.
-@RequiresApi(Build.VERSION_CODES.S)
 public class DebugReportSenderStrategyBatchImpl implements DebugReportSenderStrategy {
     private static final int MAX_QUEUE_DEPTH = 1000;
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
-    @NonNull private final Context mContext;
     @NonNull private final Queue<DBAdSelectionDebugReport> mDebugReportQueue;
     @NonNull private final AdSelectionDebugReportDao mAdSelectionDebugReportDao;
     @NonNull private final DevContext mDevContext;
 
     DebugReportSenderStrategyBatchImpl(
-            @NonNull Context context,
             @NonNull AdSelectionDebugReportDao adSelectionDebugReportDao,
             @NonNull DevContext devContext) {
-        Objects.requireNonNull(context);
         Objects.requireNonNull(adSelectionDebugReportDao);
         Objects.requireNonNull(devContext);
 
-        mContext = context;
         mAdSelectionDebugReportDao = adSelectionDebugReportDao;
         mDevContext = devContext;
         mDebugReportQueue = new ArrayBlockingQueue<>(MAX_QUEUE_DEPTH);
@@ -95,14 +85,10 @@ public class DebugReportSenderStrategyBatchImpl implements DebugReportSenderStra
 
     @Override
     public ListenableFuture<Void> flush() {
-        if (mDebugReportQueue.isEmpty()) {
-            return Futures.immediateVoidFuture();
-        }
         List<DBAdSelectionDebugReport> adSelectionDebugReports = new ArrayList<>(mDebugReportQueue);
         mDebugReportQueue.clear();
         mAdSelectionDebugReportDao.persistAdSelectionDebugReporting(adSelectionDebugReports);
         sLogger.v("successfully persisted %d debug reports in db", adSelectionDebugReports.size());
-        DebugReportSenderJobService.scheduleIfNeeded(mContext, false);
         return Futures.immediateVoidFuture();
     }
 }

@@ -205,7 +205,6 @@ public class FrequencyCapFilteringE2ETest {
     private UpdateAdCounterHistogramInput mInputParams;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptor;
     @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
-    @Mock private AdIdFetcher mAdIdFetcher;
 
     @Before
     public void setup() {
@@ -280,8 +279,7 @@ public class FrequencyCapFilteringE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         mInputParams =
                 new UpdateAdCounterHistogramInput.Builder(
@@ -445,8 +443,7 @@ public class FrequencyCapFilteringE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         UpdateAdCounterHistogramTestCallback callback = callUpdateAdCounterHistogram(mInputParams);
 
@@ -513,8 +510,7 @@ public class FrequencyCapFilteringE2ETest {
                             mAdFilteringFeatureFactory,
                             mConsentManagerMock,
                             mObliviousHttpEncryptor,
-                            mAdSelectionDebugReportDao,
-                            mAdIdFetcher);
+                            mAdSelectionDebugReportDao);
 
             UpdateAdCounterHistogramTestCallback callback =
                     callUpdateAdCounterHistogram(mInputParams);
@@ -757,8 +753,7 @@ public class FrequencyCapFilteringE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         // Persist ad selections
         mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);
@@ -870,8 +865,7 @@ public class FrequencyCapFilteringE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         // Persist ad selections
         mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);

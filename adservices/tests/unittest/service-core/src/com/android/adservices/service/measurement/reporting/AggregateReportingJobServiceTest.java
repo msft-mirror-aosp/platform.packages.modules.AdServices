@@ -277,6 +277,7 @@ public class AggregateReportingJobServiceTest {
                                             MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID,
                                             new ComponentName(
                                                     spyContext, AggregateReportingJobService.class))
+                                    .setRequiresDeviceIdle(true)
                                     .setRequiresBatteryNotLow(true)
                                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
                                     .setPeriodic(periodMs)
@@ -317,6 +318,7 @@ public class AggregateReportingJobServiceTest {
                                             MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID,
                                             new ComponentName(
                                                     spyContext, AggregateReportingJobService.class))
+                                    .setRequiresDeviceIdle(true)
                                     .setRequiresBatteryNotLow(true)
                                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
                                     .setPeriodic(

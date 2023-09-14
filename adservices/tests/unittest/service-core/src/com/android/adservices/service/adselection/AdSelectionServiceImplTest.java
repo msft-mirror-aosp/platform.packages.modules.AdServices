@@ -301,7 +301,6 @@ public class AdSelectionServiceImplTest {
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptor;
     @Mock private MeasurementImpl mMeasurementServiceMock;
     @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
-    @Mock private AdIdFetcher mAdIdFetcher;
 
     public AdSelectionServiceImplTest() {}
 
@@ -498,8 +497,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -617,8 +615,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -745,8 +742,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -874,8 +870,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -991,8 +986,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1106,8 +1100,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1227,8 +1220,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1345,8 +1337,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1469,8 +1460,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1641,8 +1631,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1783,8 +1772,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1943,8 +1931,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2109,8 +2096,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2266,8 +2252,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2412,8 +2397,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2562,8 +2546,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2727,8 +2710,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2900,8 +2882,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3042,8 +3023,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3147,8 +3127,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3251,8 +3230,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3361,8 +3339,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3466,8 +3443,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3566,8 +3542,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -3665,8 +3640,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -3765,8 +3739,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -3885,8 +3858,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
@@ -4028,8 +4000,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
@@ -4121,8 +4092,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -4179,8 +4149,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -4232,8 +4201,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -4290,8 +4258,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -4359,8 +4326,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -4424,8 +4390,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -4493,8 +4458,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -4563,8 +4527,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -4674,8 +4637,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -4787,8 +4749,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -4896,8 +4857,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -5002,8 +4962,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         adSelectionService.destroy();
         verify(jsScriptEngineMock).shutdown();
@@ -5037,8 +4996,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         adSelectionService.destroy();
         verify(jsScriptEngineMock, never()).shutdown();
@@ -5086,8 +5044,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -5149,8 +5106,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -5213,8 +5169,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -5268,8 +5223,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -5325,8 +5279,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -5376,8 +5329,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
 
@@ -5431,8 +5383,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
 
@@ -5529,8 +5480,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -5641,8 +5591,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -5757,8 +5706,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -5878,8 +5826,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -5981,8 +5928,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(INCORRECT_AD_SELECTION_ID)
@@ -6084,8 +6030,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -6215,8 +6160,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -6327,8 +6271,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -6441,8 +6384,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -6576,8 +6518,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -6705,8 +6646,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -6819,8 +6759,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -6881,8 +6820,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -6942,8 +6880,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -6997,8 +6934,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -7058,8 +6994,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -7131,8 +7066,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -7198,8 +7132,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -7269,8 +7202,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -7339,8 +7271,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         AdSelectionFromOutcomesConfig config1 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -7458,8 +7389,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         AdSelectionFromOutcomesConfig config1 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -7571,8 +7501,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         AdSelectionFromOutcomesConfig config1 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -7689,8 +7618,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         AdSelectionFromOutcomesConfig config1 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -7825,8 +7753,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         AdSelectionOverrideTestCallback overridesCallback =
                 callAddOverrideForSelectAds(
@@ -8497,8 +8424,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -8557,8 +8483,7 @@ public class AdSelectionServiceImplTest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdSelectionDebugReportDao);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -8598,8 +8523,7 @@ public class AdSelectionServiceImplTest {
                 mAdFilteringFeatureFactory,
                 mConsentManagerMock,
                 mObliviousHttpEncryptor,
-                mAdSelectionDebugReportDao,
-                mAdIdFetcher);
+                mAdSelectionDebugReportDao);
     }
 
     private void persistAdSelectionEntryDaoResults(Map<Long, Double> adSelectionIdToBidMap) {
