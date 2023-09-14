@@ -586,7 +586,7 @@ public interface Flags {
     int MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW = 1;
 
     /**
-     * Returns the number of reporting origins per source site, reporting site,
+     * Returns the maximum number of reporting origins per source site, reporting site,
      * reporting-origin-update-window counted per source registration.
      */
     default int getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow() {
@@ -594,12 +594,49 @@ public interface Flags {
     }
 
     int MEASUREMENT_MAX_DISTINCT_REP_ORIG_PER_PUBLISHER_X_DEST_IN_SOURCE = 100;
+
     /**
      * Max distinct reporting origins with source registration per { Publisher X Advertiser X
      * TimePeriod }.
      */
     default int getMeasurementMaxDistinctRepOrigPerPublXDestInSource() {
         return MEASUREMENT_MAX_DISTINCT_REP_ORIG_PER_PUBLISHER_X_DEST_IN_SOURCE;
+    }
+
+    boolean MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT = true;
+
+    /** Returns {@code true} if Measurement destination rate limit is enabled. */
+    default boolean getMeasurementEnableDestinationRateLimit() {
+        return MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT;
+    }
+
+    int MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW = 50;
+
+    /**
+     * Returns the maximum number of distinct destination sites per source site per rate limit
+     * window.
+     */
+    default int getMeasurementMaxDestinationsPerPublisherPerRateLimitWindow() {
+        return MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW;
+    }
+
+    int MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW = 200;
+
+    /**
+     * Returns the maximum number of distinct destination sites per source site X enrollment per
+     * rate limit window.
+     */
+    default int getMeasurementMaxDestPerPublisherXEnrollmentPerRateLimitWindow() {
+        return MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW;
+    }
+
+    long MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW = TimeUnit.MINUTES.toMillis(1);
+
+    /**
+     * Returns the duration that controls the rate-limiting window for destinations.
+     */
+    default long getMeasurementDestinationRateLimitWindow() {
+        return MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
     }
 
     boolean MEASUREMENT_FLEX_LITE_API_ENABLED = true;

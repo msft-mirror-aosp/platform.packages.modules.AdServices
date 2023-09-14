@@ -53,6 +53,7 @@ public class DebugReportApi {
     /** Define different verbose debug report types. */
     public interface Type {
         String SOURCE_DESTINATION_LIMIT = "source-destination-limit";
+        String SOURCE_DESTINATION_RATE_LIMIT = "source-destination-rate-limit";
         String SOURCE_NOISED = "source-noised";
         String SOURCE_STORAGE_LIMIT = "source-storage-limit";
         String SOURCE_SUCCESS = "source-success";
@@ -168,32 +169,15 @@ public class DebugReportApi {
     /** Schedules the Source Destination limit Debug Report */
     public void scheduleSourceDestinationLimitDebugReport(
             Source source, String limit, IMeasurementDao dao) {
-        if (isSourceDebugFlagDisabled(Type.SOURCE_DESTINATION_LIMIT)) {
-            return;
-        }
-        if (isAdTechNotOptIn(source.isDebugReporting(), Type.SOURCE_DESTINATION_LIMIT)) {
-            return;
-        }
-        try {
-            JSONObject body = new JSONObject();
-            body.put(Body.SOURCE_EVENT_ID, source.getEventId().toString());
-            body.put(Body.ATTRIBUTION_DESTINATION, generateSourceDestinations(source));
-            body.put(Body.SOURCE_SITE, generateSourceSite(source));
-            body.put(Body.LIMIT, limit);
-            if (getAdIdPermissionFromSource(source) == PermissionState.GRANTED
-                    || getArDebugPermissionFromSource(source) == PermissionState.GRANTED) {
-                body.put(Body.SOURCE_DEBUG_KEY, source.getDebugKey());
-            }
-            scheduleReport(
-                    Type.SOURCE_DESTINATION_LIMIT,
-                    body,
-                    source.getEnrollmentId(),
-                    source.getRegistrationOrigin(),
-                    dao);
-        } catch (JSONException e) {
-            LoggerFactory.getMeasurementLogger()
-                    .e(e, "Json error in debug report %s", Type.SOURCE_DESTINATION_LIMIT);
-        }
+        scheduleSourceDestinationLimitDebugReport(
+                source, limit, Type.SOURCE_DESTINATION_LIMIT, dao);
+    }
+
+    /** Schedules the Source Destination rate-limit Debug Report */
+    public void scheduleSourceDestinationRateLimitDebugReport(
+            Source source, String limit, IMeasurementDao dao) {
+        scheduleSourceDestinationLimitDebugReport(
+                source, limit, Type.SOURCE_DESTINATION_RATE_LIMIT, dao);
     }
 
     /** Schedules the Source Noised Debug Report */
@@ -373,6 +357,36 @@ public class DebugReportApi {
                 source.getEnrollmentId(),
                 trigger.getRegistrationOrigin(),
                 dao);
+    }
+
+    /** Schedules the Source Destination limit type Debug Report */
+    private void scheduleSourceDestinationLimitDebugReport(
+            Source source, String limit, String type, IMeasurementDao dao) {
+        if (isSourceDebugFlagDisabled(Type.SOURCE_DESTINATION_LIMIT)) {
+            return;
+        }
+        if (isAdTechNotOptIn(source.isDebugReporting(), Type.SOURCE_DESTINATION_LIMIT)) {
+            return;
+        }
+        try {
+            JSONObject body = new JSONObject();
+            body.put(Body.SOURCE_EVENT_ID, source.getEventId().toString());
+            body.put(Body.ATTRIBUTION_DESTINATION, generateSourceDestinations(source));
+            body.put(Body.SOURCE_SITE, generateSourceSite(source));
+            body.put(Body.LIMIT, limit);
+            if (getAdIdPermissionFromSource(source) == PermissionState.GRANTED
+                    || getArDebugPermissionFromSource(source) == PermissionState.GRANTED) {
+                body.put(Body.SOURCE_DEBUG_KEY, source.getDebugKey());
+            }
+            scheduleReport(
+                    type,
+                    body,
+                    source.getEnrollmentId(),
+                    source.getRegistrationOrigin(),
+                    dao);
+        } catch (JSONException e) {
+            LoggerFactory.getMeasurementLogger().e(e, "Json error in debug report %s", type);
+        }
     }
 
     /**

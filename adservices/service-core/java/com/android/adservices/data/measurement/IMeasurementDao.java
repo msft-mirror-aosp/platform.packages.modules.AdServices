@@ -144,12 +144,25 @@ public interface IMeasurementDao {
 
     /**
      * Gets the count of distinct Uri's of destinations in the Source table in a time window with
-     * matching publisher, enrollment, and ACTIVE status, excluding a given destination.
+     * matching publisher, enrollment, unexpired and ACTIVE status, excluding a given destination.
      */
     Integer countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
             Uri publisher,
             @EventSurfaceType int publisherType,
             String enrollmentId,
+            List<Uri> excludedDestinations,
+            @EventSurfaceType int destinationType,
+            long windowStartTime,
+            long windowEndTime)
+            throws DatastoreException;
+
+    /**
+     * Gets the count of distinct Uri's of destinations in the Source table in a time window with
+     * matching publisher, and ACTIVE status, excluding a given destination.
+     */
+    Integer countDistinctDestinationsPerPublisherPerRateLimitWindow(
+            Uri publisher,
+            @EventSurfaceType int publisherType,
             List<Uri> excludedDestinations,
             @EventSurfaceType int destinationType,
             long windowStartTime,
