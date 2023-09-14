@@ -346,7 +346,6 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_PERSISTED =
             "measurement_async_registration_fallback_job_persisted";
 
-<<<<<<< HEAD   (16d72f Introduce flags for attribution (fallback) job info.)
     public static final String KEY_MEASUREMENT_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW =
             "measurement_aggregate_reporting_job_required_battery_not_low";
 
@@ -368,8 +367,6 @@ public final class FlagsConstants {
             "measurement_aggregate_fallback_reporting_job_persisted";
 
 
-=======
->>>>>>> CHANGE (0cf5b1 Introduce flags for async registration (fallback) job info.)
     // FLEDGE Custom Audience keys
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT =
             "fledge_custom_audience_max_count";
