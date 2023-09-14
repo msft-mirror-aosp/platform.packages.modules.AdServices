@@ -89,7 +89,7 @@ import java.util.Random;
 
 /** End-to-end tests of {@link SdkSandboxManager} APIs. */
 @RunWith(JUnit4.class)
-public final class SdkSandboxManagerTest {
+public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
 
     private static final String TAG = SdkSandboxManagerTest.class.getSimpleName();
     private static final String NON_EXISTENT_SDK = "com.android.not_exist";
@@ -144,7 +144,6 @@ public final class SdkSandboxManagerTest {
     public void setup() throws Exception {
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
         mSdkSandboxManager = context.getSystemService(SdkSandboxManager.class);
-        killSandboxIfExists();
         mScenario = activityScenarioRule.getScenario();
         mDeviceConfig.set(ASM_RESTRICTIONS_ENABLED, "1");
         sUiDevice.setOrientationNatural();
@@ -1177,6 +1176,13 @@ public final class SdkSandboxManagerTest {
         return params;
     }
 
+    private String getSdkSandboxPackageName() {
+        return InstrumentationRegistry.getInstrumentation()
+                .getContext()
+                .getPackageManager()
+                .getSdkSandboxPackageName();
+    }
+
     private void loadMultipleSdks() {
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_NAME_1, new Bundle(), Runnable::run, callback);
@@ -1185,27 +1191,5 @@ public final class SdkSandboxManagerTest {
         FakeLoadSdkCallback callback2 = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_NAME_2, new Bundle(), Runnable::run, callback2);
         callback2.assertLoadSdkIsSuccessful();
-    }
-
-    // Returns true if the sandbox was already likely existing, false otherwise.
-    private boolean killSandboxIfExists() throws Exception {
-        FakeSdkSandboxProcessDeathCallback callback = new FakeSdkSandboxProcessDeathCallback();
-        mSdkSandboxManager.addSdkSandboxProcessDeathCallback(Runnable::run, callback);
-        killSandbox();
-
-        return callback.waitForSandboxDeath();
-    }
-
-    private String getSdkSandboxPackageName() {
-        return InstrumentationRegistry.getInstrumentation()
-                .getContext()
-                .getPackageManager()
-                .getSdkSandboxPackageName();
-    }
-
-    private void killSandbox() throws Exception {
-        // TODO(b/241542162): Avoid using reflection as a workaround once test apis can be run
-        //  without issue.
-        mSdkSandboxManager.getClass().getMethod("stopSdkSandbox").invoke(mSdkSandboxManager);
     }
 }
