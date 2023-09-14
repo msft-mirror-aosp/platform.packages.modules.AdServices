@@ -35,6 +35,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -49,7 +50,6 @@ import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
-import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.measurement.reporting.DebugReportingJobService;
 import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
@@ -68,12 +68,14 @@ import org.mockito.quality.Strictness;
 
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Unit test for {@link AttributionJobService
  */
 public class AttributionJobServiceTest {
     private static final long WAIT_IN_MILLIS = 1_000L;
+    private static final long JOB_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
     private static final int MEASUREMENT_ATTRIBUTION_JOB_ID =
             MEASUREMENT_ATTRIBUTION_JOB.getJobId();
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
@@ -96,6 +98,7 @@ public class AttributionJobServiceTest {
         mSpyLogger =
                 spy(new AdservicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mockStatsdLogger));
         mMockFlags = mock(Flags.class);
+        when(mMockFlags.getMeasurementAttributionJobTriggeringDelayMs()).thenReturn(JOB_DELAY_MS);
     }
 
     @Test
@@ -286,8 +289,7 @@ public class AttributionJobServiceTest {
                                                     TriggerContentProvider.TRIGGER_URI,
                                                     JobInfo.TriggerContentUri
                                                             .FLAG_NOTIFY_FOR_DESCENDANTS))
-                                    .setTriggerContentUpdateDelay(
-                                            SystemHealthParams.ATTRIBUTION_JOB_TRIGGERING_DELAY_MS)
+                                    .setTriggerContentUpdateDelay(JOB_DELAY_MS)
                                     .setPersisted(false) // Can't call addTriggerContentUri() on a
                                     // persisted job
                                     .build();
@@ -329,9 +331,7 @@ public class AttributionJobServiceTest {
                                                     JobInfo.TriggerContentUri
                                                             .FLAG_NOTIFY_FOR_DESCENDANTS))
                                     // Difference
-                                    .setTriggerContentUpdateDelay(
-                                            SystemHealthParams.ATTRIBUTION_JOB_TRIGGERING_DELAY_MS
-                                                    + 1)
+                                    .setTriggerContentUpdateDelay(JOB_DELAY_MS + 1)
                                     .setPersisted(false) // Can't call addTriggerContentUri() on a
                                     // persisted job
                                     .build();
