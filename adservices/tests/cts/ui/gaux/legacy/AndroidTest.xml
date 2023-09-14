@@ -21,6 +21,7 @@
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent"/>
         <option name="teardown-command" value="device_config set_sync_disabled_for_tests none"/>
 
+        <option name="run-command" value="setprop log.tag.adservices VERBOSE" />
         <option
             name="run-command"
             value="device_config put adservices consent_notification_activity_debug_mode false"/>

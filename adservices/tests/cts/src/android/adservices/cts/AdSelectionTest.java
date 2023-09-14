@@ -16,23 +16,20 @@
 
 package android.adservices.cts;
 
-import static com.google.common.truth.Truth.assertWithMessage;
-
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.adselection.AdSelectionConfig;
-import android.adservices.adselection.AdSelectionManager;
+import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CommonFixture;
 import android.content.Context;
 import android.net.Uri;
-import android.os.OutcomeReceiver;
 
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.OutcomeReceiverForTests;
 import com.android.adservices.common.RequiresLowRamDevice;
+import com.android.adservices.common.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -48,17 +45,25 @@ public final class AdSelectionTest {
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Executor sCallbackExecutor = Executors.newCachedThreadPool();
 
-    @Rule
+    // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    // Skip the test if it runs on unsupported platforms.
+    @Rule(order = 1)
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
             new AdServicesDeviceSupportedRule();
 
     @Test
     @RequiresLowRamDevice
     public void testGetAdSelectionService_lowRamDevice_throwsIllegalStateException() {
-        AdSelectionManager manager = AdSelectionManager.get(sContext);
-        assertWithMessage("manager").that(manager).isNotNull();
-        @SuppressWarnings("rawtypes")
-        OutcomeReceiver receiver = new OutcomeReceiverForTests<>();
+        AdSelectionClient client =
+                new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(sCallbackExecutor)
+                        .setUseGetMethodToCreateManagerInstance(true)
+                        .build();
+
         AdSelectionSignals signals =
                 AdSelectionSignals.fromString(
                         String.format(
@@ -75,9 +80,6 @@ public final class AdSelectionTest {
                         .setTrustedScoringSignalsUri(Uri.parse("http://example.com"))
                         .build();
 
-        //noinspection unchecked
-        assertThrows(
-                IllegalStateException.class,
-                () -> manager.selectAds(config, sCallbackExecutor, receiver));
+        assertThrows(IllegalStateException.class, () -> client.selectAds(config));
     }
 }

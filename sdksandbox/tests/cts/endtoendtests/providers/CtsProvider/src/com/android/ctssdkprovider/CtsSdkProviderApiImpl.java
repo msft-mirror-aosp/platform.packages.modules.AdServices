@@ -374,6 +374,11 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
         private Activity mActivity;
 
         @Override
+        public String getDataDir() {
+            return mActivity.getApplicationInfo().dataDir;
+        }
+
+        @Override
         public void disableBackButton() {
             ensureActivityIsCreated();
             if (mBackNavigationDisabled) {
