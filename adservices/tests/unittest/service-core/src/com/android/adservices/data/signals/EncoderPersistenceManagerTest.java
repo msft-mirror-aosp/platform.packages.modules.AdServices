@@ -105,7 +105,7 @@ public class EncoderPersistenceManagerTest {
 
     @Test
     public void testPersistAndGetEncoder() {
-        mEncoderPersistenceManager.persistEncoder(BUYER_1, ENCODER);
+        assertTrue(mEncoderPersistenceManager.persistEncoder(BUYER_1, ENCODER));
         assertEquals(
                 "Encoder read should have matched the encoder persisted",
                 ENCODER,
