@@ -252,6 +252,21 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST =
             "measurement_app_package_name_logging_allowlist";
 
+    public static final String KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED =
+            "measurement_delete_uninstalled_job_persisted";
+
+    public static final String KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS =
+            "measurement_delete_uninstalled_job_period_ms";
+
+    public static final String KEY_MEASUREMENT_DELETE_EXPIRED_JOB_PERSISTED =
+            "measurement_delete_expired_job_persisted";
+
+    public static final String KEY_MEASUREMENT_DELETE_EXPIRED_JOB_REQUIRES_DEVICE_IDLE =
+            "measurement_delete_expired_job_requires_device_idle";
+
+    public static final String KEY_MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS =
+            "measurement_delete_expired_job_period_ms";
+
     // FLEDGE Custom Audience keys
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT =
             "fledge_custom_audience_max_count";
