@@ -20,7 +20,6 @@ import static android.adservices.cobalt.EncryptedCobaltEnvelopeParams.ENVIRONMEN
 import static android.adservices.cobalt.EncryptedCobaltEnvelopeParams.ENVIRONMENT_PROD;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilError;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__COBALT_UPLOAD_API_REMOTE_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED;
 
@@ -38,6 +37,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.mockito.ExtendedMockitoExpectations;
 import com.android.cobalt.CobaltPipelineType;
 
 import com.google.cobalt.EncryptedMessage;
@@ -164,7 +164,7 @@ public final class CobaltUploaderTest {
                         .setKeyIndex(KEY_INDEX)
                         .setCiphertext(ByteString.copyFrom(BYTES))
                         .build());
-        verifyErrorLogUtilError(
+        ExtendedMockitoExpectations.verifyErrorLogUtilErrorWithException(
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__COBALT_UPLOAD_API_REMOTE_EXCEPTION,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED,
                 /* numberOfInvocations= */ 1);
