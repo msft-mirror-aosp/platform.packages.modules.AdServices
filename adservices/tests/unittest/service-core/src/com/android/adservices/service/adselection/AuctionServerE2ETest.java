@@ -101,6 +101,8 @@ import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.data.signals.EncodedPayloadDao;
+import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKeyManager;
@@ -234,6 +236,7 @@ public class AuctionServerE2ETest {
     private MockitoSession mStaticMockSession = null;
     @Mock private ConsentManager mConsentManagerMock;
     private CustomAudienceDao mCustomAudienceDaoSpy;
+    private EncodedPayloadDao mEncodedPayloadDaoSpy;
     private AdSelectionEntryDao mAdSelectionEntryDao;
     private AppInstallDao mAppInstallDao;
     private FrequencyCapDao mFrequencyCapDaoSpy;
@@ -272,6 +275,11 @@ public class AuctionServerE2ETest {
                                 .addTypeConverter(new DBCustomAudience.Converters(true, true))
                                 .build()
                                 .customAudienceDao());
+        mEncodedPayloadDaoSpy =
+                spy(
+                        Room.inMemoryDatabaseBuilder(mContext, ProtectedSignalsDatabase.class)
+                                .build()
+                                .getEncodedPayloadDao());
         mAdSelectionEntryDao =
                 Room.inMemoryDatabaseBuilder(mContext, AdSelectionDatabase.class)
                         .build()
@@ -799,6 +807,7 @@ public class AuctionServerE2ETest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDaoSpy,
+                        mEncodedPayloadDaoSpy,
                         mFrequencyCapDaoSpy,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
@@ -1427,6 +1436,7 @@ public class AuctionServerE2ETest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDaoSpy,
+                        mEncodedPayloadDaoSpy,
                         mFrequencyCapDaoSpy,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
@@ -1496,6 +1506,7 @@ public class AuctionServerE2ETest {
                 mAdSelectionEntryDao,
                 mAppInstallDao,
                 mCustomAudienceDaoSpy,
+                mEncodedPayloadDaoSpy,
                 mFrequencyCapDaoSpy,
                 mEncryptionContextDao,
                 mEncryptionKeyDao,
