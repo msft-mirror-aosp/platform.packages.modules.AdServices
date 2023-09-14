@@ -16,6 +16,9 @@
 
 package android.adservices.test.scenario.adservices.fledge;
 
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
+
 import android.Manifest;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.GetAdSelectionDataOutcome;
@@ -49,6 +52,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -59,6 +63,8 @@ public class AdSelectionDataE2ETest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final String CONTEXTUAL_SIGNALS_ONE_BUYER = "ContextualSignalsOneBuyer.json";
+    private static final String CONTEXTUAL_SIGNALS_CONTEXTUAL_WINNER =
+            "ContextualSignalsContextualWinner.json";
 
     private static final String CONTEXTUAL_SIGNALS_FIVE_BUYERS = "ContextualSignalsFiveBuyers.json";
     private static final String CUSTOM_AUDIENCE_ONE_BUYER_ONE_CA_ONE_AD =
@@ -186,7 +192,7 @@ public class AdSelectionDataE2ETest {
     }
 
     @Test
-    public void runAdSelection_noAdRenderId_contextualWinner() throws Exception {
+    public void runAdSelection_noAdRenderId_baReturnsError_ppapiThrowsError() throws Exception {
         List<CustomAudience> customAudiences =
                 CustomAudienceTestFixture.readCustomAudiences(CUSTOM_AUDIENCE_NO_AD_RENDER_ID);
         CustomAudienceTestFixture.joinCustomAudiences(customAudiences);
@@ -213,6 +219,50 @@ public class AdSelectionDataE2ETest {
                                         .decode(selectAdResponse.auctionResultCiphertext))
                         .build();
 
+        // AuctionConfig returns an Error saying no buyer inputs found
+        // PPAPI reads that and throws IllegalArgumentException
+        // PPAPI returns an IllegalArgumentException but it seems to be getting wrapped in
+        // ExecutionException somewhere in the test framework.
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                AD_SELECTION_CLIENT
+                                        .persistAdSelectionResult(persistAdSelectionResultRequest)
+                                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS));
+
+        assertTrue(exception.getMessage().contains("IllegalArgumentException"));
+    }
+
+    @Test
+    public void runAdSelection_baReturnsIsChaffTrue_noAdReturnedByPpapi() throws Exception {
+        List<CustomAudience> customAudiences =
+                CustomAudienceTestFixture.readCustomAudiences(
+                        CUSTOM_AUDIENCE_ONE_BUYER_ONE_CA_ONE_AD);
+        CustomAudienceTestFixture.joinCustomAudiences(customAudiences);
+
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder()
+                        .setSeller(AdTechIdentifier.fromString("example.com"))
+                        .build();
+        GetAdSelectionDataOutcome outcome =
+                AD_SELECTION_CLIENT
+                        .getAdSelectionData(request)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        SelectAdResponse selectAdResponse =
+                FakeAdExchangeServer.runServerAuction(
+                        CONTEXTUAL_SIGNALS_CONTEXTUAL_WINNER, outcome.getAdSelectionData());
+
+        PersistAdSelectionResultRequest persistAdSelectionResultRequest =
+                new PersistAdSelectionResultRequest.Builder()
+                        .setAdSelectionId(outcome.getAdSelectionId())
+                        .setSeller(AdTechIdentifier.fromString("example.com"))
+                        .setAdSelectionResult(
+                                BaseEncoding.base64()
+                                        .decode(selectAdResponse.auctionResultCiphertext))
+                        .build();
+
         AdSelectionOutcome adSelectionOutcome =
                 AD_SELECTION_CLIENT
                         .persistAdSelectionResult(persistAdSelectionResultRequest)
@@ -221,6 +271,7 @@ public class AdSelectionDataE2ETest {
         CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
 
         Assert.assertTrue(adSelectionOutcome.getRenderUri().toString().isEmpty());
+
     }
 
     private String getWinningAdRenderIdForDummyScripts(List<CustomAudience> customAudiences) {
