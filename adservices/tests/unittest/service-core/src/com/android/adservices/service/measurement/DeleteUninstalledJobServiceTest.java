@@ -34,6 +34,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -43,7 +44,6 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
@@ -68,6 +68,7 @@ public class DeleteUninstalledJobServiceTest {
     private static final int MEASUREMENT_DELETE_UNINSTALLED_JOB_ID =
             MEASUREMENT_DELETE_UNINSTALLED_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 1_000L;
+    private static final long JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(4);
 
     @Mock private JobScheduler mMockJobScheduler;
     @Mock private MeasurementImpl mMockMeasurementImpl;
@@ -222,9 +223,7 @@ public class DeleteUninstalledJobServiceTest {
                                             MEASUREMENT_DELETE_UNINSTALLED_JOB_ID,
                                             new ComponentName(
                                                     mockContext, DeleteUninstalledJobService.class))
-                                    .setPeriodic(
-                                            AdServicesConfig
-                                                    .getMeasurementDeleteExpiredJobPeriodMs())
+                                    .setPeriodic(JOB_PERIOD_MS)
                                     .setPersisted(true)
                                     .build();
                     doReturn(mockJobInfo)
@@ -254,14 +253,13 @@ public class DeleteUninstalledJobServiceTest {
                     doReturn(mMockJobScheduler)
                             .when(mockContext)
                             .getSystemService(JobScheduler.class);
-                    long periodMs = AdServicesConfig.getMeasurementDeleteExpiredJobPeriodMs();
                     final JobInfo mockJobInfo =
                             new JobInfo.Builder(
                                             MEASUREMENT_DELETE_UNINSTALLED_JOB_ID,
                                             new ComponentName(
                                                     mockContext, DeleteUninstalledJobService.class))
                                     // Difference
-                                    .setPeriodic(periodMs - 1)
+                                    .setPeriodic(JOB_PERIOD_MS - 1)
                                     .setPersisted(true)
                                     .build();
                     doReturn(mockJobInfo)
@@ -421,7 +419,6 @@ public class DeleteUninstalledJobServiceTest {
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
                         .initMocks(this)
-                        .spyStatic(AdServicesConfig.class)
                         .spyStatic(MeasurementImpl.class)
                         .spyStatic(DeleteUninstalledJobService.class)
                         .spyStatic(FlagsFactory.class)
@@ -435,8 +432,6 @@ public class DeleteUninstalledJobServiceTest {
                     .when(() -> MeasurementImpl.getInstance(any()));
             doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
             doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
-            ExtendedMockito.doReturn(TimeUnit.HOURS.toMillis(24))
-                    .when(AdServicesConfig::getMeasurementDeleteUninstalledJobPeriodMs);
             ExtendedMockito.doNothing()
                     .when(() -> DeleteUninstalledJobService.schedule(any(), any()));
 
@@ -473,5 +468,7 @@ public class DeleteUninstalledJobServiceTest {
         ExtendedMockito.doReturn(value)
                 .when(mMockFlags)
                 .getMeasurementJobDeleteUninstalledKillSwitch();
+        when(mMockFlags.getMeasurementDeleteUninstalledJobPersisted()).thenReturn(true);
+        when(mMockFlags.getMeasurementDeleteUninstalledJobPeriodMs()).thenReturn(JOB_PERIOD_MS);
     }
 }
