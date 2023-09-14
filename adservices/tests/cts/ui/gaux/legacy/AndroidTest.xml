@@ -31,6 +31,9 @@
         <option name="run-command" value="device_config put adservices global_kill_switch false"/>
         <option
             name="run-command"
+            value="device_config put adservices is_eea_device_feature_enabled true"/>
+        <option
+            name="run-command"
             value="device_config put adservices adservice_enable_status true"/>
         <option
             name="run-command"
