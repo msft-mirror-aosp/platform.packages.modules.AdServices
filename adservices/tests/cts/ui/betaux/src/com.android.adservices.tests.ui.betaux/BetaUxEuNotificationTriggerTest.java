@@ -22,6 +22,7 @@ import static com.android.adservices.tests.ui.libs.UiConstants.ENTRY_POINT_ENABL
 
 import android.adservices.common.AdServicesCommonManager;
 import android.content.Context;
+import android.platform.test.rule.ScreenRecordRule;
 
 import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -36,19 +37,25 @@ import com.android.adservices.tests.ui.libs.UiUtils;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /** Test for verifying user consent notification trigger behaviors. */
 @RunWith(AndroidJUnit4.class)
+@ScreenRecordRule.ScreenRecord
 public class BetaUxEuNotificationTriggerTest {
 
     private AdServicesCommonManager mCommonManager;
 
     private UiDevice mDevice;
 
+    private String mTestName;
+
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();
+
+    @Rule public final ScreenRecordRule sScreenRecordRule = new ScreenRecordRule();
 
     @Before
     public void setUp() throws Exception {
@@ -66,6 +73,8 @@ public class BetaUxEuNotificationTriggerTest {
         // consent debug mode is turned on for this test class as we only care about the
         // first trigger (API call).
         UiUtils.enableConsentDebugMode();
+        UiUtils.disableNotificationFlowV2();
+        UiUtils.disableOtaStrings();
 
         mDevice.pressHome();
     }
@@ -75,6 +84,7 @@ public class BetaUxEuNotificationTriggerTest {
         if (!AdservicesTestHelper.isDeviceSupported()) return;
 
         mDevice.pressHome();
+
         AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
@@ -82,8 +92,12 @@ public class BetaUxEuNotificationTriggerTest {
     @Test
     @FlakyTest(bugId = 297119850)
     public void testBetaEuEntryPointDisabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsEuDevice();
         UiUtils.enableBeta();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_DISABLED, AD_ID_ENABLED);
 
@@ -99,8 +113,12 @@ public class BetaUxEuNotificationTriggerTest {
     @Test
     @FlakyTest(bugId = 297119850)
     public void testBetaEuAdIdDisabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsEuDevice();
         UiUtils.enableBeta();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_DISABLED);
 
@@ -116,8 +134,12 @@ public class BetaUxEuNotificationTriggerTest {
     @Test
     @FlakyTest(bugId = 297119850)
     public void testBetaEuAdIdEnabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsEuDevice();
         UiUtils.enableBeta();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
 
