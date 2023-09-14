@@ -65,7 +65,6 @@ public abstract class UpdateEncoderEvent {
     }
 
     public enum UpdateType {
-        REGISTER,
-        DELETE
+        REGISTER
     }
 }
