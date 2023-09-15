@@ -855,6 +855,7 @@ public interface Flags {
     boolean PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED = false;
     long PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS = 1L * 60L * 60L * 1000L; // 1 hour
     long PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS = 5L * 60L * 1000L; // 5 minutes
+    int PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES = (int) (1.5 * 1024); // 1.5 KB
 
     /** Returns {@code true} if the Periodic encoding of Protected Signals is enabled. */
     default boolean getProtectedSignalsPeriodicEncodingEnabled() {
@@ -873,6 +874,13 @@ public interface Flags {
      */
     default long getProtectedSignalsPeriodicEncodingJobFlexMs() {
         return PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS;
+    }
+
+    /**
+     * @return the max size in bytes for encoded payload
+     */
+    default int getProtectedSignalsEncodedPayloadMaxSizeBytes() {
+        return PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES;
     }
 
     int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT = 10_000;
