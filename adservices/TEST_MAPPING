@@ -413,6 +413,9 @@
     },
     {
       "name": "AdServicesGaUxAlreadyEnrolledChannelTest"
+    },
+    {
+      "name": "AdServicesGaUxGraduationChannelTest"
     }
   ]
 }
