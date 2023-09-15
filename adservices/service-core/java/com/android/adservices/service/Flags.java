@@ -3276,6 +3276,47 @@ public interface Flags {
         return MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE;
     }
 
+    boolean MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED = true;
+
+    /** Returns whether to persist this job across device reboots for delete uninstalled job. */
+    default boolean getMeasurementDeleteUninstalledJobPersisted() {
+        return MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED;
+    }
+
+    long MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(24);
+
+    /**
+     * Returns the min time period (in millis) between each uninstalled-record deletion maintenance
+     * job run.
+     */
+    default long getMeasurementDeleteUninstalledJobPeriodMs() {
+        return MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS;
+    }
+
+    boolean MEASUREMENT_DELETE_EXPIRED_JOB_PERSISTED = true;
+
+    /** Returns whether to persist this job across device reboots for delete expired job. */
+    default boolean getMeasurementDeleteExpiredJobPersisted() {
+        return MEASUREMENT_DELETE_EXPIRED_JOB_PERSISTED;
+    }
+
+    boolean MEASUREMENT_DELETE_EXPIRED_JOB_REQUIRES_DEVICE_IDLE = true;
+
+    /** Returns whether to require device to be idle for delete expired job. */
+    default boolean getMeasurementDeleteExpiredJobRequiresDeviceIdle() {
+        return MEASUREMENT_DELETE_EXPIRED_JOB_REQUIRES_DEVICE_IDLE;
+    }
+
+    long MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(24);
+
+    /**
+     * Returns the min time period (in millis) between each expired-record deletion maintenance job
+     * run.
+     */
+    default long getMeasurementDeleteExpiredJobPeriodMs() {
+        return MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS;
+    }
+
     /** Default U18 UX feature flag.. */
     boolean DEFAULT_U18_UX_ENABLED = false;
 
