@@ -1666,6 +1666,20 @@ public class AdSelectionScriptEngineTest {
     }
 
     @Test
+    public void testEncodeEmptySignals()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        String encodeSignalsJS =
+                "function encodeSignals(signals, maxSize) {\n"
+                        + "    return {'status' : 0, 'results' : signals.length};\n"
+                        + "}\n";
+        ListenableFuture<String> jsOutcome =
+                mAdSelectionScriptEngine.encodeSignals(encodeSignalsJS, Collections.EMPTY_MAP, 10);
+        String result = jsOutcome.get(5, TimeUnit.SECONDS);
+
+        Assert.assertEquals("The result should have been empty", "", result);
+    }
+
+    @Test
     public void testHandleEncodingEmptyOutput() {
         IllegalStateException exception =
                 assertThrows(

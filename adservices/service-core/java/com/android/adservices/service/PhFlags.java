@@ -669,6 +669,15 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public int getMeasurementMaxDistinctRepOrigPerPublXDestInSource() {
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_SOURCE,
+                MEASUREMENT_MAX_DISTINCT_REP_ORIG_PER_PUBLISHER_X_DEST_IN_SOURCE);
+    }
+
+    @Override
     public long getFledgeCustomAudienceMaxCount() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
@@ -2607,6 +2616,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getConsentManagerLazyEnableMode() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_CONSENT_MANAGER_LAZY_ENABLE_MODE,
+                /* defaultValue */ CONSENT_MANAGER_LAZY_ENABLE_MODE);
+    }
+
+    @Override
     public String getConsentNotificationResetToken() {
         return DeviceConfig.getString(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -3636,6 +3653,11 @@ public final class PhFlags implements Flags {
                         .KEY_MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW
                         + " = "
                         + getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_SOURCE
+                        + " = "
+                        + getMeasurementMaxDistinctRepOrigPerPublXDestInSource());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT

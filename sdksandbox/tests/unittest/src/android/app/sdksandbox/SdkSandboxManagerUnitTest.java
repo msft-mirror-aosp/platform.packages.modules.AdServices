@@ -169,12 +169,16 @@ public class SdkSandboxManagerUnitTest {
     @Test
     public void testGetSandboxedSdks() throws Exception {
         List<SandboxedSdk> sandboxedSdks = List.of();
-        Mockito.when(mBinder.getSandboxedSdks(Mockito.anyString(), Mockito.anyLong()))
+        Mockito.when(
+                        mBinder.getSandboxedSdks(
+                                Mockito.anyString(), Mockito.any(SandboxLatencyInfo.class)))
                 .thenReturn(sandboxedSdks);
 
         assertThat(mSdkSandboxManager.getSandboxedSdks()).isSameInstanceAs(sandboxedSdks);
         Mockito.verify(mBinder)
-                .getSandboxedSdks(Mockito.eq(mContext.getPackageName()), Mockito.anyLong());
+                .getSandboxedSdks(
+                        Mockito.eq(mContext.getPackageName()),
+                        Mockito.any(SandboxLatencyInfo.class));
     }
 
     @Test

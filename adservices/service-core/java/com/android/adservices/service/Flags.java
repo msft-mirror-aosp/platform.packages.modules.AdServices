@@ -507,6 +507,15 @@ public interface Flags {
         return MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW;
     }
 
+    int MEASUREMENT_MAX_DISTINCT_REP_ORIG_PER_PUBLISHER_X_DEST_IN_SOURCE = 100;
+    /**
+     * Max distinct reporting origins with source registration per { Publisher X Advertiser X
+     * TimePeriod }.
+     */
+    default int getMeasurementMaxDistinctRepOrigPerPublXDestInSource() {
+        return MEASUREMENT_MAX_DISTINCT_REP_ORIG_PER_PUBLISHER_X_DEST_IN_SOURCE;
+    }
+
     boolean MEASUREMENT_FLEX_LITE_API_ENABLED = true;
 
     /** Returns true if flex lite api is enabled else false. */
@@ -1486,6 +1495,12 @@ public interface Flags {
 
     default String getMddTopicsClassifierManifestFileUrl() {
         return MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
+    }
+
+    boolean CONSENT_MANAGER_LAZY_ENABLE_MODE = true;
+
+    default boolean getConsentManagerLazyEnableMode() {
+        return CONSENT_MANAGER_LAZY_ENABLE_MODE;
     }
 
     long CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS =

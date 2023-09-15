@@ -199,6 +199,9 @@ public final class FlagsConstants {
             KEY_MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW =
                     "measurement_max_reporting_origins_per_source_reporting_site_per_window";
 
+    public static final String KEY_MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_SOURCE =
+            "measurement_max_distinct_reporting_origins_in_source";
+
     public static final String KEY_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS =
             "measurement_enable_coarse_event_report_destinations";
 
@@ -662,6 +665,9 @@ public final class FlagsConstants {
     // Consent Notification debug mode keys.
     public static final String KEY_CONSENT_NOTIFICATION_DEBUG_MODE =
             "consent_notification_debug_mode";
+
+    public static final String KEY_CONSENT_MANAGER_LAZY_ENABLE_MODE =
+            "consent_manager_lazy_enable_mode";
 
     // Consent Manager debug mode keys.
     public static final String KEY_CONSENT_MANAGER_DEBUG_MODE = "consent_manager_debug_mode";
