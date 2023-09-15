@@ -42,7 +42,7 @@ import org.junit.runners.JUnit4;
 import java.util.List;
 
 @RunWith(JUnit4.class)
-public class CtsSmallModuleTests {
+public class CtsSmallModuleTests extends SandboxKillerBeforeTest {
     private static final String SDK_NAME = "com.android.emptysdkprovider";
 
     @Rule
