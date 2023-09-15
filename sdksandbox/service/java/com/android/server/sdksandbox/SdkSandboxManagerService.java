@@ -27,7 +27,6 @@ import static android.app.sdksandbox.SdkSandboxManager.REQUEST_SURFACE_PACKAGE_S
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE;
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
 
-import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__UNLOAD_SDK;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX;
@@ -1154,11 +1153,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             int displayId,
             int width,
             int height,
-            long timeAppCalledSystemServer,
+            SandboxLatencyInfo sandboxLatencyInfo,
             Bundle params,
             IRequestSurfacePackageCallback callback) {
         try {
-            final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
+            sandboxLatencyInfo.setTimeSystemServerReceivedCallFromApp(mInjector.getCurrentTime());
 
             LogUtil.d(
                     TAG,
@@ -1169,15 +1168,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             final CallingInfo callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
             enforceCallerOrItsSandboxRunInForeground(callingInfo);
 
-            SdkSandboxStatsLog.write(
-                    SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                    SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE,
-                    /*latency=*/ (int)
-                            (timeSystemServerReceivedCallFromApp - timeAppCalledSystemServer),
-                    /*success=*/ true,
-                    SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER,
-                    callingUid);
-
             final long token = Binder.clearCallingIdentity();
             try {
                 requestSurfacePackageWithClearIdentity(
@@ -1187,7 +1177,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         displayId,
                         width,
                         height,
-                        timeSystemServerReceivedCallFromApp,
+                        sandboxLatencyInfo,
                         params,
                         callback);
             } finally {
@@ -1198,7 +1188,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 callback.onSurfacePackageError(
                         IRequestSurfacePackageFromSdkCallback.SURFACE_PACKAGE_INTERNAL_ERROR,
                         e.getMessage(),
-                        mInjector.getCurrentTime());
+                        sandboxLatencyInfo);
             } catch (RemoteException ex) {
                 Log.e(TAG, "Failed to send onLoadCodeFailure", e);
             }
@@ -1212,7 +1202,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             int displayId,
             int width,
             int height,
-            long timeSystemServerReceivedCallFromApp,
+            SandboxLatencyInfo sandboxLatencyInfo,
             Bundle params,
             IRequestSurfacePackageCallback callback) {
         LoadSdkSession loadSdkSession = null;
@@ -1226,20 +1216,17 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     TAG,
                     callingInfo + " requested surface package, but could not find SDK " + sdkName);
 
-            final long timeSystemServerCalledApp = mInjector.getCurrentTime();
-            SdkSandboxStatsLog.write(
-                    SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                    SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE,
-                    (int) (timeSystemServerCalledApp - timeSystemServerReceivedCallFromApp),
-                    /*successAtStage*/ false,
-                    SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
-                    callingInfo.getUid());
+            final long timeSystemServerProcessedCall = mInjector.getCurrentTime();
+            sandboxLatencyInfo.setTimeFailedAtSystemServer(timeSystemServerProcessedCall);
+            sandboxLatencyInfo.setTimeSystemServerCalledApp(timeSystemServerProcessedCall);
+            sandboxLatencyInfo.setSandboxStatus(
+                    SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
 
             try {
                 callback.onSurfacePackageError(
                         REQUEST_SURFACE_PACKAGE_SDK_NOT_LOADED,
                         "SDK " + sdkName + " is not loaded",
-                        timeSystemServerCalledApp);
+                        sandboxLatencyInfo);
             } catch (RemoteException e) {
                 Log.w(TAG, "Failed to send onSurfacePackageError", e);
             }
@@ -1247,13 +1234,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
 
         loadSdkSession.requestSurfacePackage(
-                hostToken,
-                displayId,
-                width,
-                height,
-                timeSystemServerReceivedCallFromApp,
-                params,
-                callback);
+                hostToken, displayId, width, height, sandboxLatencyInfo, params, callback);
     }
 
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
@@ -1496,34 +1477,14 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 callingUid);
     }
 
-    @Override
-    public void logLatencyFromSystemServerToApp(String method, int latency) {
-        SdkSandboxStatsLog.write(
-                SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                convertToStatsLogMethodCode(method),
-                latency,
-                /*success=*/ true,
-                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_APP,
-                Binder.getCallingUid());
-    }
-
     private int convertToStatsLogMethodCode(int method) {
         switch (method) {
             case SandboxLatencyInfo.METHOD_LOAD_SDK:
                 return SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK;
             case SandboxLatencyInfo.METHOD_GET_SANDBOXED_SDKS:
                 return SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__GET_SANDBOXED_SDKS;
-            default:
-                return SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__METHOD_UNSPECIFIED;
-        }
-    }
-
-    private int convertToStatsLogMethodCode(String method) {
-        switch (method) {
-            case ISdkSandboxManager.REQUEST_SURFACE_PACKAGE:
+            case SandboxLatencyInfo.METHOD_REQUEST_SURFACE_PACKAGE:
                 return SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE;
-            case ISdkSandboxManager.LOAD_SDK:
-                return SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK;
             default:
                 return SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__METHOD_UNSPECIFIED;
         }
@@ -2590,8 +2551,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     private void notifyInstrumentationStarted(CallingInfo callingInfo) {
-        Log.d(TAG, "notifyInstrumentationStarted: clientApp = " + callingInfo.getPackageName()
-                + " clientAppUid = " + callingInfo.getUid());
+        Log.d(
+                TAG,
+                "notifyInstrumentationStarted: clientApp = "
+                        + callingInfo.getPackageName()
+                        + " clientAppUid = "
+                        + callingInfo.getUid());
         synchronized (mLock) {
             mServiceProvider.unbindService(callingInfo);
             int sdkSandboxUid = Process.toSdkSandboxUid(callingInfo.getUid());

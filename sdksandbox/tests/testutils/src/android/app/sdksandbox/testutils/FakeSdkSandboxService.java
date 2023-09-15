@@ -218,7 +218,7 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
     public void sendSurfacePackageError(
             int errorCode, String errorMsg, FakeRequestSurfacePackageCallbackBinder callback)
             throws RemoteException {
-        callback.onSurfacePackageError(errorCode, errorMsg, System.currentTimeMillis());
+        callback.onSurfacePackageError(errorCode, errorMsg, new SandboxLatencyInfo());
     }
 
     public boolean wasVisibilityPatchChecked() {
