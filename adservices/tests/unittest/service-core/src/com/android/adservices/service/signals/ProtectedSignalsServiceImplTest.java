@@ -18,12 +18,16 @@ package com.android.adservices.service.signals;
 
 import static com.android.adservices.service.common.Throttler.ApiKey.PROTECTED_SIGNAL_API_FETCH_SIGNAL_UPDATES;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
@@ -48,26 +52,24 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
+import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
+import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
-import java.net.URI;
 import java.util.concurrent.ExecutorService;
 
 public class ProtectedSignalsServiceImplTest {
-
-    @Rule public final MockitoRule mockito = MockitoJUnit.rule();
 
     // TODO(b/296586554) Add API id
     private static final int API_NAME = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
@@ -77,6 +79,7 @@ public class ProtectedSignalsServiceImplTest {
     private static final String PACKAGE = CommonFixture.TEST_PACKAGE_NAME_1;
     private static final String EXCEPTION_MESSAGE = "message";
 
+    private MockitoSession mStaticMockSession = null;
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final ExecutorService DIRECT_EXECUTOR = MoreExecutors.newDirectExecutorService();
     @Mock private FetchOrchestrator mFetchOrchestratorMock;
@@ -97,6 +100,14 @@ public class ProtectedSignalsServiceImplTest {
 
     @Before
     public void setup() {
+
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .mockStatic(PeriodicEncodingJobService.class)
+                        .strictness(Strictness.LENIENT)
+                        .initMocks(this)
+                        .startMocking();
+
         mProtectedSignalsService =
                 new ProtectedSignalsServiceImpl(
                         CONTEXT,
@@ -109,6 +120,7 @@ public class ProtectedSignalsServiceImplTest {
                         mFlagsMock,
                         mCallingAppUidSupplierMock,
                         mCustomAudienceServiceFilterMock);
+
         mDevContext =
                 DevContext.builder()
                         .setDevOptionsEnabled(false)
@@ -137,6 +149,18 @@ public class ProtectedSignalsServiceImplTest {
         emptyReturn.set(new Object());
         when(mFetchOrchestratorMock.orchestrateFetch(eq(URI), eq(ADTECH), eq(PACKAGE)))
                 .thenReturn(FluentFuture.from(emptyReturn));
+        doNothing()
+                .when(
+                        () ->
+                                PeriodicEncodingJobService.scheduleIfNeeded(
+                                        any(), any(), anyBoolean()));
+    }
+
+    @After
+    public void teardown() {
+        if (mStaticMockSession != null) {
+            mStaticMockSession.finishMocking();
+        }
     }
 
     @SuppressWarnings("FutureReturnValueIgnored")
@@ -166,6 +190,9 @@ public class ProtectedSignalsServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(API_NAME), eq(AdServicesStatusUtils.STATUS_SUCCESS), eq(0));
+        verify(
+                () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
+                times(1));
     }
 
     @Test
@@ -177,6 +204,9 @@ public class ProtectedSignalsServiceImplTest {
                                 null, mFetchSignalUpdatesCallbackMock));
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(API_NAME, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
+        verify(
+                () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
+                times(0));
     }
 
     @Test
@@ -186,6 +216,9 @@ public class ProtectedSignalsServiceImplTest {
                 () -> mProtectedSignalsService.fetchSignalUpdates(mInput, null));
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(API_NAME, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
+        verify(
+                () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
+                times(0));
     }
 
     @Test
@@ -199,6 +232,9 @@ public class ProtectedSignalsServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(API_NAME), eq(AdServicesStatusUtils.STATUS_INTERNAL_ERROR), eq(0));
+        verify(
+                () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
+                times(0));
     }
 
     @Test
@@ -221,6 +257,9 @@ public class ProtectedSignalsServiceImplTest {
         assertEquals(AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED, actual.getStatusCode());
         assertEquals(EXCEPTION_MESSAGE, actual.getErrorMessage());
         verifyZeroInteractions(mAdServicesLoggerMock);
+        verify(
+                () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
+                times(0));
     }
 
     @Test
@@ -239,6 +278,9 @@ public class ProtectedSignalsServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(API_NAME), eq(AdServicesStatusUtils.STATUS_INVALID_ARGUMENT), eq(0));
+        verify(
+                () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
+                times(0));
     }
 
     @Test
@@ -250,6 +292,9 @@ public class ProtectedSignalsServiceImplTest {
                 .logFledgeApiCallStats(
                         eq(API_NAME), eq(AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED), eq(0));
         verify(mFetchSignalUpdatesCallbackMock).onSuccess();
+        verify(
+                () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
+                times(0));
     }
 
     @Test
@@ -259,5 +304,8 @@ public class ProtectedSignalsServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(API_NAME), eq(AdServicesStatusUtils.STATUS_INTERNAL_ERROR), eq(0));
+        verify(
+                () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
+                times(1));
     }
 }
