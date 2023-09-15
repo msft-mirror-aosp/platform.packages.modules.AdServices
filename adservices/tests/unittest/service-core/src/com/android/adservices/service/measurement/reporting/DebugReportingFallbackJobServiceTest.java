@@ -43,6 +43,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
@@ -67,12 +68,14 @@ import org.mockito.quality.Strictness;
 
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class DebugReportingFallbackJobServiceTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final int MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID =
             MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 1_000L;
+    private static final long JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(4);
     private JobScheduler mMockJobScheduler;
     private DebugReportingFallbackJobService mSpyService;
     private DatastoreManager mMockDatastoreManager;
@@ -88,6 +91,11 @@ public class DebugReportingFallbackJobServiceTest {
         mSpyLogger =
                 spy(new AdservicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mockStatsdLogger));
         mMockFlags = mock(Flags.class);
+        when(mMockFlags.getMeasurementDebugReportingFallbackJobPersisted()).thenReturn(true);
+        when(mMockFlags.getMeasurementDebugReportingFallbackJobRequiredNetworkType())
+                .thenReturn(JobInfo.NETWORK_TYPE_ANY);
+        when(mMockFlags.getMeasurementDebugReportingFallbackJobPeriodMs())
+                .thenReturn(JOB_PERIOD_MS);
     }
 
     @Test
@@ -265,9 +273,6 @@ public class DebugReportingFallbackJobServiceTest {
                     doReturn(mMockJobScheduler)
                             .when(spyContext)
                             .getSystemService(JobScheduler.class);
-                    long periodMs =
-                            FlagsFactory.getFlags()
-                                    .getMeasurementDebugReportingFallbackJobPeriodMs();
                     final JobInfo mockJobInfo =
                             new JobInfo.Builder(
                                             MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID,
@@ -275,7 +280,7 @@ public class DebugReportingFallbackJobServiceTest {
                                                     spyContext,
                                                     DebugReportingFallbackJobService.class))
                                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                                    .setPeriodic(periodMs)
+                                    .setPeriodic(JOB_PERIOD_MS)
                                     .setPersisted(true)
                                     .build();
                     doReturn(mockJobInfo)
@@ -305,9 +310,6 @@ public class DebugReportingFallbackJobServiceTest {
                     doReturn(mMockJobScheduler)
                             .when(spyContext)
                             .getSystemService(JobScheduler.class);
-                    long periodMs =
-                            FlagsFactory.getFlags()
-                                    .getMeasurementDebugReportingFallbackJobPeriodMs();
                     final JobInfo mockJobInfo =
                             new JobInfo.Builder(
                                             MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID,
@@ -316,7 +318,7 @@ public class DebugReportingFallbackJobServiceTest {
                                                     DebugReportingFallbackJobService.class))
                                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                                     // Difference
-                                    .setPeriodic(periodMs - 1)
+                                    .setPeriodic(JOB_PERIOD_MS - 1)
                                     .setPersisted(true)
                                     .build();
                     doReturn(mockJobInfo)
@@ -329,7 +331,7 @@ public class DebugReportingFallbackJobServiceTest {
 
                     // Validate
                     ExtendedMockito.verify(
-                            () -> DebugReportingFallbackJobService.schedule(any(), any()), never());
+                            () -> DebugReportingFallbackJobService.schedule(any(), any()));
                     verify(mMockJobScheduler, times(1))
                             .getPendingJob(eq(MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID));
                 });
