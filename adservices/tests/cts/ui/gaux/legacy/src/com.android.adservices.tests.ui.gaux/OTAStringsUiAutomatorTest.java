@@ -75,6 +75,8 @@ public class OTAStringsUiAutomatorTest {
         sCommonManager = sContext.getSystemService(AdServicesCommonManager.class);
 
         UiUtils.setupOTAStrings(sContext, sDevice, sCommonManager, MDD_URL);
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
     @AfterClass
@@ -104,15 +106,15 @@ public class OTAStringsUiAutomatorTest {
 
     @After
     public void tearDown() throws Exception {
-        UiUtils.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + mTestName + "_");
         ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
     }
 
     @Test
     public void checkOTAStringsNotificationAndSettingsPageTest()
-            throws UiObjectNotFoundException, InterruptedException {
+            throws UiObjectNotFoundException, Exception {
+        UiUtils.enableBeta();
+        AdservicesTestHelper.killAdservicesProcess(sContext);
         sCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
-
         UiUtils.verifyNotificationAndSettingsPage(sContext, sDevice, true);
     }
 }

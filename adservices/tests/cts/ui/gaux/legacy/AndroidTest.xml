@@ -27,7 +27,7 @@
             value="device_config put adservices consent_notification_activity_debug_mode false"/>
         <option
             name="run-command"
-            value="device_config put adservices ui_ota_strings_feature_enabled false"/>
+            value="device_config put adservices ui_ota_strings_feature_enabled true"/>
         <option name="run-command" value="device_config put adservices global_kill_switch false"/>
         <option
             name="run-command"
