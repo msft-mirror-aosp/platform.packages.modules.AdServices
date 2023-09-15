@@ -47,7 +47,7 @@ interface ISdkSandboxManager {
     oneway void requestSurfacePackage(in String callingPackageName, in String sdkName, in IBinder hostToken, int displayId, int width, int height, in SandboxLatencyInfo sandboxLatencyInfo, in Bundle params, IRequestSurfacePackageCallback callback);
     List<AppOwnedSdkSandboxInterface> getAppOwnedSdkSandboxInterfaces(in String callingPackageName, long timeAppCalledSystemServer);
     List<SandboxedSdk> getSandboxedSdks(in String callingPackageName, in SandboxLatencyInfo sandboxLatencyInfo);
-    oneway void syncDataFromClient(in String callingPackageName, long timeAppCalledSystemServer, in SharedPreferencesUpdate update, in ISharedPreferencesSyncCallback callback);
+    oneway void syncDataFromClient(in String callingPackageName, in SandboxLatencyInfo sandboxLatencyInfo, in SharedPreferencesUpdate update, in ISharedPreferencesSyncCallback callback);
     void stopSdkSandbox(in String callingPackageName);
     void logLatencies(in SandboxLatencyInfo sandboxLatencyInfo);
 
