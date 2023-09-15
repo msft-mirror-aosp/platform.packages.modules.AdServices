@@ -34,10 +34,13 @@ public class SdkSandboxTestHelper {
 
     private static final long UI_NAVIGATION_WAIT_MS = 5000;
     private static final long UI_WAIT_LOADSDK_MS = 500;
+
+    private static final long UI_WAIT_REMOTE_RENDER_MS = 2000;
     private static final long UI_RETRIES_WAIT_LOADSDK = 10;
     private static final String SANDBOX_TEST_CLIENT_APP = "com.android.sdksandboxclient";
     private static final String LOAD_BUTTON = "load_sdks_button";
     private static final String RENDER_BUTTON = "new_banner_ad_button";
+    private static final String BOTTOM_BANNER_VIEW = "bottom_banner_view";
 
     /** Open sandbox client test app using shell command line. */
     public void openClientApp() throws Exception {
@@ -74,6 +77,8 @@ public class SdkSandboxTestHelper {
         } else {
             throw new RuntimeException("Did not find 'New Banner Ad' button.");
         }
+        SystemClock.sleep(UI_WAIT_REMOTE_RENDER_MS);
+        assertThat(getBannerAdView()).isNotNull();
     }
 
     public static void closeClientApp() throws IOException {
@@ -89,6 +94,12 @@ public class SdkSandboxTestHelper {
     private UiObject2 getNewBannerAdButton() {
         return sUiDevice.wait(
                 Until.findObject(By.res(SANDBOX_TEST_CLIENT_APP, RENDER_BUTTON)),
+                UI_NAVIGATION_WAIT_MS);
+    }
+
+    private UiObject2 getBannerAdView() {
+        return sUiDevice.wait(
+                Until.findObject(By.res(SANDBOX_TEST_CLIENT_APP, BOTTOM_BANNER_VIEW)),
                 UI_NAVIGATION_WAIT_MS);
     }
 }
