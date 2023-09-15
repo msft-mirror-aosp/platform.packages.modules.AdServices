@@ -171,6 +171,7 @@ public class ReconsentNotificationTriggerTest {
 
         UiUtils.setAsEuDevice();
         UiUtils.enableBeta();
+        AdservicesTestHelper.killAdservicesProcess(sContext);
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
         AdservicesWorkflows.testClickNotificationFlow(
                 sContext,
@@ -182,9 +183,8 @@ public class ReconsentNotificationTriggerTest {
                 /* consent opt-in */ true);
 
         mDevice.pressHome();
-        UiUtils.restartAdservices();
         UiUtils.enableGa();
-
+        AdservicesTestHelper.killAdservicesProcess(sContext);
         ListenableFuture<Boolean> adServicesStatusResponse = getAdservicesStatus();
 
         adServicesStatusResponse.get();
