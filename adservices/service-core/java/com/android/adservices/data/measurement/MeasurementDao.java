@@ -1697,6 +1697,58 @@ class MeasurementDao implements IMeasurementDao {
                         DataType.DEBUG_REPORT_RETRY_COUNT.toString()
                     });
         }
+
+        // Cleanup unnecessary AggregateReport Retry Counts
+        subQuery =
+                "SELECT "
+                        + MeasurementTables.AggregateReport.ID
+                        + " FROM "
+                        + MeasurementTables.AggregateReport.TABLE;
+        db.delete(
+                MeasurementTables.KeyValueDataContract.TABLE,
+                MeasurementTables.KeyValueDataContract.DATA_TYPE
+                        + " = ? "
+                        + " AND "
+                        + MeasurementTables.KeyValueDataContract.KEY
+                        + " NOT IN "
+                        + "("
+                        + subQuery
+                        + ")",
+                new String[] {DataType.AGGREGATE_REPORT_RETRY_COUNT.toString()});
+        // Cleanup unnecessary DebugReport Retry Counts
+        subQuery =
+                "SELECT "
+                        + MeasurementTables.DebugReportContract.ID
+                        + " FROM "
+                        + MeasurementTables.DebugReportContract.TABLE;
+        db.delete(
+                MeasurementTables.KeyValueDataContract.TABLE,
+                MeasurementTables.KeyValueDataContract.DATA_TYPE
+                        + " = ? "
+                        + " AND "
+                        + MeasurementTables.KeyValueDataContract.KEY
+                        + " NOT IN "
+                        + "("
+                        + subQuery
+                        + ")",
+                new String[] {DataType.DEBUG_REPORT_RETRY_COUNT.toString()});
+        // Cleanup unnecessary EventReport Retry Counts
+        subQuery =
+                "SELECT "
+                        + MeasurementTables.EventReportContract.ID
+                        + " FROM "
+                        + MeasurementTables.EventReportContract.TABLE;
+        db.delete(
+                MeasurementTables.KeyValueDataContract.TABLE,
+                MeasurementTables.KeyValueDataContract.DATA_TYPE
+                        + " = ? "
+                        + " AND "
+                        + MeasurementTables.KeyValueDataContract.KEY
+                        + " NOT IN "
+                        + "("
+                        + subQuery
+                        + ")",
+                new String[] {DataType.EVENT_REPORT_RETRY_COUNT.toString()});
     }
 
     @Override
