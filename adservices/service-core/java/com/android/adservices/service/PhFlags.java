@@ -18,6 +18,11 @@ package com.android.adservices.service;
 
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_EXPIRED_JOB_PERSISTED;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_EXPIRED_JOB_REQUIRES_DEVICE_IDLE;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED;
 
 import static java.lang.Float.parseFloat;
 
@@ -4483,6 +4488,31 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED
                         + " = "
                         + isU18SupervisedAccountEnabled());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED
+                        + " = "
+                        + getMeasurementDeleteUninstalledJobPersisted());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS
+                        + " = "
+                        + getMeasurementDeleteUninstalledJobPeriodMs());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_DELETE_EXPIRED_JOB_PERSISTED
+                        + " = "
+                        + getMeasurementDeleteExpiredJobPersisted());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_DELETE_EXPIRED_JOB_REQUIRES_DEVICE_IDLE
+                        + " = "
+                        + getMeasurementDeleteExpiredJobRequiresDeviceIdle());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS
+                        + " = "
+                        + getMeasurementDeleteExpiredJobPeriodMs());
     }
 
     @VisibleForTesting
@@ -4795,6 +4825,46 @@ public final class PhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE,
                 /* defaultValue */ MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE);
+    }
+
+    @Override
+    public boolean getMeasurementDeleteUninstalledJobPersisted() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED,
+                /* defaultValue */ MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED);
+    }
+
+    @Override
+    public long getMeasurementDeleteUninstalledJobPeriodMs() {
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS,
+                /* defaultValue */ MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS);
+    }
+
+    @Override
+    public boolean getMeasurementDeleteExpiredJobPersisted() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_DELETE_EXPIRED_JOB_PERSISTED,
+                /* defaultValue */ MEASUREMENT_DELETE_EXPIRED_JOB_PERSISTED);
+    }
+
+    @Override
+    public boolean getMeasurementDeleteExpiredJobRequiresDeviceIdle() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_DELETE_EXPIRED_JOB_REQUIRES_DEVICE_IDLE,
+                /* defaultValue */ MEASUREMENT_DELETE_EXPIRED_JOB_REQUIRES_DEVICE_IDLE);
+    }
+
+    @Override
+    public long getMeasurementDeleteExpiredJobPeriodMs() {
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS,
+                /* defaultValue */ MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS);
     }
 
     @Override
