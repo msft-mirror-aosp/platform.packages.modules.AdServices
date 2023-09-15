@@ -1492,7 +1492,7 @@ public class SdkSandboxManagerServiceUnitTest {
      */
     @Test
     public void testCanRegisterBroadcastReceiver_deviceConfigUnsetProtectedBroadcasts() {
-        ExtendedMockito.when(Process.isSdkSandboxUid(Mockito.anyInt())).thenReturn(true);
+        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
         assertThat(
                         sSdkSandboxManagerLocal.canRegisterBroadcastReceiver(
                                 new IntentFilter(Intent.ACTION_SCREEN_OFF),
@@ -1504,7 +1504,7 @@ public class SdkSandboxManagerServiceUnitTest {
     /** Tests expected behavior when restrictions are enabled and no protected broadcast. */
     @Test
     public void testCanRegisterBroadcastReceiver_deviceConfigUnsetUnprotectedBroadcasts() {
-        ExtendedMockito.when(Process.isSdkSandboxUid(Mockito.anyInt())).thenReturn(true);
+        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
         assertThat(
                         sSdkSandboxManagerLocal.canRegisterBroadcastReceiver(
                                 new IntentFilter(Intent.ACTION_SEND),
@@ -1516,7 +1516,7 @@ public class SdkSandboxManagerServiceUnitTest {
     /** Tests expected behavior when broadcast receiver restrictions are not applied. */
     @Test
     public void testCanRegisterBroadcastReceiver_restrictionsNotApplied() {
-        ExtendedMockito.when(Process.isSdkSandboxUid(Mockito.anyInt())).thenReturn(true);
+        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
         sSdkSandboxSettingsListener.onPropertiesChanged(
                 new DeviceConfig.Properties(
                         DeviceConfig.NAMESPACE_ADSERVICES,
@@ -1532,7 +1532,7 @@ public class SdkSandboxManagerServiceUnitTest {
     /** Tests expected behavior when broadcast receiver restrictions are applied. */
     @Test
     public void testCanRegisterBroadcastReceiver_restrictionsApplied() {
-        ExtendedMockito.when(Process.isSdkSandboxUid(Mockito.anyInt())).thenReturn(true);
+        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
         sSdkSandboxSettingsListener.onPropertiesChanged(
                 new DeviceConfig.Properties(
                         DeviceConfig.NAMESPACE_ADSERVICES,
@@ -1559,7 +1559,7 @@ public class SdkSandboxManagerServiceUnitTest {
     /** Tests expected behavior when IntentFilter is blank. */
     @Test
     public void testCanRegisterBroadcastReceiver_blankIntentFilter() {
-        ExtendedMockito.when(Process.isSdkSandboxUid(Mockito.anyInt())).thenReturn(true);
+        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
         assertThat(
                         sSdkSandboxManagerLocal.canRegisterBroadcastReceiver(
                                 new IntentFilter(),
@@ -1574,7 +1574,7 @@ public class SdkSandboxManagerServiceUnitTest {
      */
     @Test
     public void testCanRegisterBroadcastReceiver_protectedBroadcast() {
-        ExtendedMockito.when(Process.isSdkSandboxUid(Mockito.anyInt())).thenReturn(true);
+        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
         sSdkSandboxSettingsListener.onPropertiesChanged(
                 new DeviceConfig.Properties(
                         DeviceConfig.NAMESPACE_ADSERVICES,
@@ -3681,7 +3681,7 @@ public class SdkSandboxManagerServiceUnitTest {
         /** Ensuring that the property is not present in DeviceConfig */
         DeviceConfig.deleteProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_ENFORCE_RESTRICTIONS);
-        ExtendedMockito.when(Process.isSdkSandboxUid(Mockito.anyInt())).thenReturn(true);
+        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
         // The default value of the flag enforcing restrictions is true and access should be
         // restricted.
         assertThat(
@@ -3692,7 +3692,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void testSdkSandboxSettings_canAccessContentProviderFromSdkSandbox_AccessNotAllowed() {
-        ExtendedMockito.when(Process.isSdkSandboxUid(Mockito.anyInt())).thenReturn(true);
+        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
         sSdkSandboxSettingsListener.onPropertiesChanged(
                 new DeviceConfig.Properties(
                         DeviceConfig.NAMESPACE_ADSERVICES,
@@ -3705,7 +3705,8 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void testSdkSandboxSettings_canAccessContentProviderFromSdkSandbox_AccessAllowed() {
-        ExtendedMockito.when(Process.isSdkSandboxUid(Mockito.anyInt())).thenReturn(true);
+        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
+
         sSdkSandboxSettingsListener.onPropertiesChanged(
                 new DeviceConfig.Properties(
                         DeviceConfig.NAMESPACE_ADSERVICES,
