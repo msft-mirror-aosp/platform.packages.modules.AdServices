@@ -246,6 +246,26 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE =
             "measurement_throw_unknown_exception_sampling_rate";
+
+    public static final String KEY_MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW =
+            "measurement_event_reporting_job_required_battery_not_low";
+
+    public static final String KEY_MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE =
+            "measurement_event_reporting_job_required_network_type";
+
+    public static final String KEY_MEASUREMENT_EVENT_REPORTING_JOB_PERSISTED =
+            "measurement_event_reporting_job_persisted";
+
+    public static final String
+            KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW =
+                    "measurement_event_fallback_reporting_job_required_battery_not_low";
+
+    public static final String KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE =
+            "measurement_event_fallback_reporting_job_required_network_type";
+
+    public static final String KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERSISTED =
+            "measurement_event_fallback_reporting_job_persisted";
+
     static final String KEY_MEASUREMENT_REPORT_RETRY_LIMIT = "measurement_report_retry_limit";
     static final String KEY_MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED =
             "measurement_report_retry_limit_enabled";
