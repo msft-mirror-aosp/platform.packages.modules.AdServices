@@ -41,9 +41,11 @@ import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
-import com.android.adservices.service.js.JSScriptEngine;
+import com.android.adservices.common.SupportedByConditionRule;
+import com.android.adservices.common.WebViewSupportUtil;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -54,7 +56,6 @@ import com.google.mockwebserver.MockWebServer;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 
@@ -92,7 +93,19 @@ public abstract class FledgeScenarioTest extends ForegroundDebuggableCtsTest {
     private int mCacheBuster;
     private String mPreviousAppAllowList;
 
-    @Rule
+    @Rule(order = 0)
+    public final AdServicesDeviceSupportedRule deviceSupported =
+            new AdServicesDeviceSupportedRule();
+
+    @Rule(order = 1)
+    public final SupportedByConditionRule webViewSupportsJSSandbox =
+            WebViewSupportUtil.createJSSandboxAvailableRule();
+
+    @Rule(order = 2)
+    public final SupportedByConditionRule webViewSupportsConfigurableHeapSize =
+            WebViewSupportUtil.createJSSandboxConfigurableHeapSizeRule(CONTEXT);
+
+    @Rule(order = 3)
     public MockWebServerRule mMockWebServerRule =
             MockWebServerRule.forHttps(
                     CONTEXT, "adservices_untrusted_test_server.p12", "adservices_test");
@@ -110,10 +123,6 @@ public abstract class FledgeScenarioTest extends ForegroundDebuggableCtsTest {
 
     @Before
     public void setUp() throws Exception {
-        // Skip the test if it runs on unsupported platforms
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
-
         if (SdkLevel.isAtLeastT()) {
             assertForegroundActivityStarted();
         } else {
