@@ -63,7 +63,7 @@ public class PeriodicEncodingJobWorker {
 
     private static final int PER_BUYER_ENCODING_TIMEOUT_SECONDS = 5;
 
-    private static final int PAYLOAD_MAX_SIZE_BYTES = (int) (1.5 * 1024); // 1.5 KB
+    private final int mEncodedPayLoadMaxSizeBytes;
 
     private static final Object SINGLETON_LOCK = new Object();
 
@@ -100,6 +100,7 @@ public class PeriodicEncodingJobWorker {
         mBackgroundExecutor = backgroundExecutor;
         mLightWeightExecutor = lightWeightExecutor;
         mFlags = flags;
+        mEncodedPayLoadMaxSizeBytes = mFlags.getProtectedSignalsEncodedPayloadMaxSizeBytes();
     }
 
     /**
@@ -178,11 +179,10 @@ public class PeriodicEncodingJobWorker {
         Map<String, List<ProtectedSignal>> signals = mSignalStorageManager.getSignals(buyer);
 
         return FluentFuture.from(
-                        mScriptEngine.encodeSignals(encodingLogic, signals, PAYLOAD_MAX_SIZE_BYTES))
+                        mScriptEngine.encodeSignals(
+                                encodingLogic, signals, mEncodedPayLoadMaxSizeBytes))
                 .transform(
-                        encodedPayload ->
-                                validateAndPersistPayload(
-                                        buyer, encodedPayload, version, PAYLOAD_MAX_SIZE_BYTES),
+                        encodedPayload -> validateAndPersistPayload(buyer, encodedPayload, version),
                         mBackgroundExecutor)
                 .catching(
                         Exception.class,
@@ -198,8 +198,7 @@ public class PeriodicEncodingJobWorker {
     }
 
     @VisibleForTesting
-    boolean validateAndPersistPayload(
-            AdTechIdentifier buyer, String encodedPayload, int version, int maxSize) {
+    boolean validateAndPersistPayload(AdTechIdentifier buyer, String encodedPayload, int version) {
         byte[] encodedBytes;
         try {
             encodedBytes = Base64.getDecoder().decode(encodedPayload);
@@ -207,7 +206,7 @@ public class PeriodicEncodingJobWorker {
             sLogger.e("Malformed encoded payload returned by buyer: %s", buyer);
             return false;
         }
-        if (encodedBytes.length > maxSize) {
+        if (encodedBytes.length > mEncodedPayLoadMaxSizeBytes) {
             // Do not persist encoded payload if the encoding logic violates the size constraints
             sLogger.e("Buyer:%s encoded payload exceeded max size limit", buyer);
             return false;

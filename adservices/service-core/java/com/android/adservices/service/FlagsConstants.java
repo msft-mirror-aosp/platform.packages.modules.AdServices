@@ -358,6 +358,8 @@ public final class FlagsConstants {
             "protected_signals_periodic_encoding_job_period_ms";
     public static final String KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS =
             "protected_signals_periodic_encoding_job_flex_ms";
+    public static final String KEY_PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES =
+            "protected_signals_encoded_payload_max_size_bytes";
 
     // FLEDGE Ad Selection keys
     public static final String KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT =
