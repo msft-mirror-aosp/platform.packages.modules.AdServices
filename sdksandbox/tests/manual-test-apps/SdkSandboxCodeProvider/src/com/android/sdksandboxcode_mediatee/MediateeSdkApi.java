@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,20 +16,12 @@
 
 package com.android.sdksandboxcode_mediatee;
 
-import android.app.sdksandbox.SandboxedSdk;
-import android.app.sdksandbox.SandboxedSdkProvider;
-import android.content.Context;
-import android.os.Bundle;
-import android.view.View;
+import android.app.sdksandbox.interfaces.IMediateeSdkApi;
 
-public class SandboxedSdkMediateeProvider extends SandboxedSdkProvider {
-    @Override
-    public SandboxedSdk onLoadSdk(Bundle params) {
-        return new SandboxedSdk(new MediateeSdkApi());
-    }
+public class MediateeSdkApi extends IMediateeSdkApi.Stub {
 
     @Override
-    public View getView(Context windowContext, Bundle params, int width, int height) {
-        return null;
+    public String getMessage() {
+        return "Message from sdk in the sandbox process";
     }
 }

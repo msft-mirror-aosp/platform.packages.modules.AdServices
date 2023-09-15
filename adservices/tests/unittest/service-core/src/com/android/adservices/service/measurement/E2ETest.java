@@ -226,7 +226,7 @@ public abstract class E2ETest {
         private Integer mNavigationTriggerDataCardinality;
         private Integer mMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution;
         private Integer mMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource;
-        private Integer mMaxDistinctEnrollmentsPerPublisherXDestinationInSource;
+        private Integer mMaxDistinctReportingOriginsPerPublisherXDestinationInSource;
         // System health params
         private Integer mMaxSourcesPerPublisher;
         private Integer mMaxEventReportsPerDestination;
@@ -266,12 +266,12 @@ public abstract class E2ETest {
             }
             if (!json.isNull(ApiConfigKeys
                     .RATE_LIMIT_MAX_SOURCE_REGISTRATION_REPORTING_ORIGINS)) {
-                mMaxDistinctEnrollmentsPerPublisherXDestinationInSource = json.getInt(
-                        ApiConfigKeys.RATE_LIMIT_MAX_SOURCE_REGISTRATION_REPORTING_ORIGINS);
+                mMaxDistinctReportingOriginsPerPublisherXDestinationInSource =
+                        json.getInt(
+                                ApiConfigKeys.RATE_LIMIT_MAX_SOURCE_REGISTRATION_REPORTING_ORIGINS);
             } else {
-                mMaxDistinctEnrollmentsPerPublisherXDestinationInSource =
-                        PrivacyParams
-                                .getMaxDistinctEnrollmentsPerPublisherXDestinationInSource();
+                mMaxDistinctReportingOriginsPerPublisherXDestinationInSource =
+                        Flags.MEASUREMENT_MAX_DISTINCT_REP_ORIG_PER_PUBLISHER_X_DEST_IN_SOURCE;
             }
             // System health params
             if (!json.isNull(ApiConfigKeys.MAX_SOURCES_PER_ORIGIN)) {
@@ -312,8 +312,8 @@ public abstract class E2ETest {
             return mMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource;
         }
 
-        public Integer getMaxDistinctEnrollmentsPerPublisherXDestinationInSource() {
-            return mMaxDistinctEnrollmentsPerPublisherXDestinationInSource;
+        public Integer getMaxDistinctOriginsPerPubXDestInSource() {
+            return mMaxDistinctReportingOriginsPerPublisherXDestinationInSource;
         }
 
         // System health params

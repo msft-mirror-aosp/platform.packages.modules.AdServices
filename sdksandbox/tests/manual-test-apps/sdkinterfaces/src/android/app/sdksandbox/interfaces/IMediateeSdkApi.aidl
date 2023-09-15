@@ -14,6 +14,6 @@
 
 package android.app.sdksandbox.interfaces;
 
-interface IAppOwnedSdkApi {
+interface IMediateeSdkApi {
     String getMessage();
 }

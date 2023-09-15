@@ -16,7 +16,6 @@
 package com.android.adservices.tests.adid;
 
 import static com.google.common.truth.Truth.assertWithMessage;
-
 import static org.junit.Assert.fail;
 
 import android.adservices.adid.AdId;
@@ -29,10 +28,12 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.OutcomeReceiverForTests;
 import com.android.adservices.common.RequiresLowRamDevice;
 import com.android.adservices.common.SdkLevelSupportRule;
 
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -67,6 +68,8 @@ public final class AdIdManagerTest {
 
     @Before
     public void setup() throws Exception {
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+
         Log.v(TAG, "setup(): sleeping 1s");
         TimeUnit.SECONDS.sleep(1);
 

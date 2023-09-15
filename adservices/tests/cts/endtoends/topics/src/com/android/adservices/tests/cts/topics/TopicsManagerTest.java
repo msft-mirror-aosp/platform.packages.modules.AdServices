@@ -368,19 +368,23 @@ public class TopicsManagerTest {
                 .that(topic.getTaxonomyVersion())
                 .isEqualTo(EXPECTED_TAXONOMY_VERSION);
 
-        // Top 5 classifications for empty string with v4 model are:
-        // S-: [10420, 10189, 10301, 10230, 10010].
-        // T+: [10166, 10332, 10280, 10230, 10184].
-        // V4 model uses package name as part of input, which differs between
+        // Top 5 classifications and corresponding input for v5 model are:
+        // S-:
+        //  Input string: ". android adextservices tests cts endtoendtest"
+        //  Predictions: [10301, 10009, 10230, 10010, 10184].
+        // T+:
+        //  Input string: ". android adservices tests cts endtoendtest"
+        //  Predictions: [10166, 10010, 10301, 10230, 10184].
+        // V5 model uses package name as part of input, which differs between
         // versions for back-compat, changing the returned topics for each version.
         // This is computed by running the model on the device; topics are checked
         // depending on whether the package name is that for S- or T+.
         // Returned topic is one of the 5 classification topics of the test app.
         List<Integer> expectedTopTopicIds;
         if (ADSERVICES_PACKAGE_NAME.contains("ext.services")) {
-            expectedTopTopicIds = Arrays.asList(10420, 10189, 10301, 10230, 10010);
+            expectedTopTopicIds = Arrays.asList(10301, 10009, 10230, 10010, 10184);
         } else {
-            expectedTopTopicIds = Arrays.asList(10166, 10332, 10280, 10230, 10184);
+            expectedTopTopicIds = Arrays.asList(10166, 10010, 10301, 10230, 10184);
         }
         assertThat(topic.getTopicId()).isIn(expectedTopTopicIds);
     }
