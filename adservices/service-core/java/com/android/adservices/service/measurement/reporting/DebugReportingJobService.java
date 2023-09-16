@@ -31,6 +31,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
@@ -111,7 +112,8 @@ public final class DebugReportingJobService extends JobService {
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
-        if (FlagsFactory.getFlags().getMeasurementJobDebugReportingKillSwitch()) {
+        Flags flags = FlagsFactory.getFlags();
+        if (flags.getMeasurementJobDebugReportingKillSwitch()) {
             LogUtil.d("DebugReportingJobService is disabled, skip scheduling");
             return;
         }
@@ -124,7 +126,7 @@ public final class DebugReportingJobService extends JobService {
 
         final JobInfo scheduledJobInfo = jobScheduler.getPendingJob(DEBUG_REPORT_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
-        JobInfo job = buildJobInfo(context);
+        JobInfo job = buildJobInfo(context, flags);
         if (forceSchedule || !job.equals(scheduledJobInfo)) {
             schedule(jobScheduler, job);
             LogUtil.d("Scheduled DebugReportingJobService");
@@ -133,11 +135,11 @@ public final class DebugReportingJobService extends JobService {
         }
     }
 
-    private static JobInfo buildJobInfo(Context context) {
+    private static JobInfo buildJobInfo(Context context, Flags flags) {
         return new JobInfo.Builder(
                         DEBUG_REPORT_JOB_ID,
                         new ComponentName(context, DebugReportingJobService.class))
-                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                .setRequiredNetworkType(flags.getMeasurementDebugReportingJobRequiredNetworkType())
                 .build();
     }
 

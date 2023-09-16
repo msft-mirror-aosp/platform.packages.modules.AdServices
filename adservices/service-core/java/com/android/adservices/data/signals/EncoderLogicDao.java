@@ -23,6 +23,8 @@ import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 
+import java.util.List;
+
 /** Dao to persist, access and delete encoding logic for buyers */
 @Dao
 public interface EncoderLogicDao {
@@ -47,6 +49,12 @@ public interface EncoderLogicDao {
      */
     @Query("SELECT EXISTS(SELECT 1 FROM encoder_logics WHERE buyer = :buyer)")
     boolean doesEncoderExist(AdTechIdentifier buyer);
+
+    /**
+     * @return list of all the buyers which have their encoder logic registered
+     */
+    @Query("SELECT DISTINCT buyer FROM encoder_logics")
+    List<AdTechIdentifier> getAllBuyersWithRegisteredEncoders();
 
     /**
      * @param buyer Ad-tech identifier whose encoding logic we delete

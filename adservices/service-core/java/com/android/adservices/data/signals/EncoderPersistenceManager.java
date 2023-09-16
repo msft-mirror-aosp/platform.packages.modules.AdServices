@@ -31,14 +31,13 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
- * Manager that handles persistence and retrieval of encoding logic for buyers. Imposes per buyer
- * read, write & delete atomicity
+ * Manager that handles persistence and retrieval of encoding logic for buyers. By leveraging Atomic
+ * files it ensures that we do not read half written encoders. This persistence layer is not
+ * strictly sequential, and will honor the last completed write for parallel writes. Multiple
+ * encoder write updates are unlikely to happen.
  */
 public class EncoderPersistenceManager {
 
@@ -57,12 +56,9 @@ public class EncoderPersistenceManager {
     private static final Object SINGLETON_LOCK = new Object();
     private static volatile EncoderPersistenceManager sInstance;
 
-    @VisibleForTesting final Map<String, ReentrantReadWriteLock> mFileLocks;
-
     @SuppressLint("NewAdServicesFile")
     private EncoderPersistenceManager(Context context) {
         this.mFilesDir = context.getFilesDir();
-        this.mFileLocks = new HashMap<>();
     }
 
     /** Provides a singleton instance of {@link EncoderPersistenceManager} */
@@ -83,10 +79,7 @@ public class EncoderPersistenceManager {
     }
 
     /**
-     * Stores encoding logic for a buyer.
-     *
-     * <p>Acquires lock specific to the buyer. This ensures Atomic transactions across reads, writes
-     * and delete per buyer, and does not block other buyers
+     * Stores encoding logic for a buyer
      *
      * @param buyer Ad tech for which encoding logic needs to be persisted
      * @param encodingLogic for encoding raw signals
@@ -94,25 +87,13 @@ public class EncoderPersistenceManager {
      */
     public boolean persistEncoder(@NonNull AdTechIdentifier buyer, @NonNull String encodingLogic) {
         File encoderDir = createEncodersDirectoryIfDoesNotExist();
-
         String uniqueFileNamePerBuyer = generateFileNameForBuyer(buyer);
-        ReentrantReadWriteLock lock = getFileLock(uniqueFileNamePerBuyer);
-        boolean isSuccessful = false;
-        if (lock.writeLock().tryLock()) {
-            File encoderFile = createFileInDirectory(encoderDir, uniqueFileNamePerBuyer);
-            isSuccessful = writeDataToFile(encoderFile, encodingLogic);
-            lock.writeLock().unlock();
-        } else {
-            sLogger.v("Could not capture write lock");
-        }
-        return isSuccessful;
+        File encoderFile = createFileInDirectory(encoderDir, uniqueFileNamePerBuyer);
+        return writeDataToFile(encoderFile, encodingLogic);
     }
 
     /**
      * Fetches encoding logic for a buyer
-     *
-     * <p>Acquires lock specific to the buyer. This ensures Atomic transactions across reads, writes
-     * and delete per buyer, and does not block other buyers
      *
      * @param buyer Ad tech for which encoding logic is persisted
      * @return the encoding logic as a String, if not present or in error returns an empty string
@@ -121,33 +102,19 @@ public class EncoderPersistenceManager {
         File encoderDir = createEncodersDirectoryIfDoesNotExist();
 
         String uniqueFileNamePerBuyer = generateFileNameForBuyer(buyer);
-        ReentrantReadWriteLock lock = getFileLock(uniqueFileNamePerBuyer);
-        String data = "";
-        if (lock.readLock().tryLock()) {
-            data = readDataFromFile(encoderDir, uniqueFileNamePerBuyer);
-            lock.readLock().unlock();
-        } else {
-            sLogger.v("Could not capture read lock");
-        }
-        return data;
+        return readDataFromFile(encoderDir, uniqueFileNamePerBuyer);
     }
 
     /**
      * Deletes encoding logic for a buyer
-     *
-     * <p>Acquires lock specific to the buyer. This ensures Atomic transactions across reads, writes
-     * and delete per buyer, and does not block other buyers
      *
      * @param buyer Ad tech for which encoding logic needs to be deleted
      * @return true if the encoding logic never existed or was successfully deleted
      */
     public boolean deleteEncoder(@NonNull AdTechIdentifier buyer) {
         String uniqueFileNamePerBuyer = generateFileNameForBuyer(buyer);
-        ReentrantReadWriteLock lock = getFileLock(uniqueFileNamePerBuyer);
-        boolean deletionComplete = false;
-        if (lock.writeLock().tryLock()) {
-
             File file = new File(new File(mFilesDir, ENCODERS_DIR), uniqueFileNamePerBuyer);
+        boolean deletionComplete = false;
             if (!file.exists()) {
                 deletionComplete = true;
             } else {
@@ -155,18 +122,11 @@ public class EncoderPersistenceManager {
                 atomicFile.delete();
                 deletionComplete = !file.exists();
             }
-            lock.writeLock().unlock();
-        } else {
-            sLogger.v("Could not capture write lock");
-        }
         return deletionComplete;
     }
 
     /**
      * Deletes all encoders persisted ever persisted
-     *
-     * <p>Acquires lock specific to the buyer. So any ongoing read or writes will prevent their
-     * encoder from being deleted, while allowing rest to be removed
      *
      * @return true if the encoding logics were all deleted
      */
@@ -227,7 +187,6 @@ public class EncoderPersistenceManager {
             sLogger.e(String.format("Could not find file: %s", file.getName()));
         } catch (IOException e) {
             sLogger.e(String.format("Could not write to file: %s", file.getName()));
-        } finally {
             if (fos != null) {
                 atomicFile.failWrite(fos);
             }
@@ -246,7 +205,7 @@ public class EncoderPersistenceManager {
         } catch (IOException e) {
             sLogger.e(String.format("Exception trying to read file: %s", fileName));
         }
-        return "";
+        return null;
     }
 
     @VisibleForTesting
@@ -259,12 +218,8 @@ public class EncoderPersistenceManager {
                             String.format(
                                     "Deleting from path: %s , file: %s",
                                     child.getPath(), child.getName()));
-                    ReentrantReadWriteLock lock = getFileLock(child.getName());
-                    if (lock.writeLock().tryLock()) {
                         AtomicFile atomicFile = new AtomicFile(child);
                         atomicFile.delete();
-                        lock.writeLock().unlock();
-                    }
                 }
             }
         }
@@ -286,24 +241,5 @@ public class EncoderPersistenceManager {
     String generateFileNameForBuyer(@NonNull AdTechIdentifier buyer) {
         Objects.requireNonNull(buyer);
         return ADSERVICES_PREFIX + buyer + ENCODER_FILE_SUFFIX;
-    }
-
-    /**
-     * For increased performance we have per file locks, this prevents blocking reads and writes for
-     * other files across buyers.
-     *
-     * <p>We use re-entrant locks so that multiple reads are allowed in parallel, but only single
-     * write
-     */
-    @VisibleForTesting
-    ReentrantReadWriteLock getFileLock(String fileName) {
-        synchronized (mFileLocks) {
-            ReentrantReadWriteLock lock = mFileLocks.get(fileName);
-            if (lock == null) {
-                lock = new ReentrantReadWriteLock();
-                mFileLocks.put(fileName, lock);
-            }
-            return lock;
-        }
     }
 }

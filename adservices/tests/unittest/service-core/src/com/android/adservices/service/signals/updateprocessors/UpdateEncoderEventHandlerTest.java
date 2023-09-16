@@ -59,20 +59,6 @@ public class UpdateEncoderEventHandlerTest {
     }
 
     @Test
-    public void testNullBuyerUpdate() {
-        assertThrows(
-                NullPointerException.class,
-                () -> {
-                    mHandler.handle(
-                            null,
-                            UpdateEncoderEvent.builder()
-                                    .setUpdateType(UpdateEncoderEvent.UpdateType.DELETE)
-                                    .build());
-                });
-        verifyZeroInteractions(mEncoderEndpointsDaoMock, mEncoderLogicHandlerMock);
-    }
-
-    @Test
     public void testNullEventUpdate() {
         AdTechIdentifier buyer = CommonFixture.VALID_BUYER_1;
         assertThrows(
@@ -136,17 +122,5 @@ public class UpdateEncoderEventHandlerTest {
                                     .build());
                 });
         verifyZeroInteractions(mEncoderEndpointsDaoMock, mEncoderLogicHandlerMock);
-    }
-
-    @Test
-    public void testUpdateEventDelete() {
-        AdTechIdentifier buyer = CommonFixture.VALID_BUYER_1;
-        mHandler.handle(
-                buyer,
-                UpdateEncoderEvent.builder()
-                        .setUpdateType(UpdateEncoderEvent.UpdateType.DELETE)
-                        .build());
-        verify(mEncoderEndpointsDaoMock).deleteEncoderEndpoint(buyer);
-        verifyZeroInteractions(mEncoderLogicHandlerMock);
     }
 }

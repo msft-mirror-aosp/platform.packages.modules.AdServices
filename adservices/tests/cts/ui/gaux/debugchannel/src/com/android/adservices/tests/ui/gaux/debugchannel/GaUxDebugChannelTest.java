@@ -21,6 +21,7 @@ import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesStates;
 import android.content.Context;
 import android.os.OutcomeReceiver;
+import android.platform.test.rule.ScreenRecordRule;
 
 import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -36,6 +37,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -43,16 +45,21 @@ import java.util.concurrent.Executors;
 
 /** Test for verifying user consent notification trigger behaviors. */
 @RunWith(AndroidJUnit4.class)
+@ScreenRecordRule.ScreenRecord
 public class GaUxDebugChannelTest {
 
     private AdServicesCommonManager mCommonManager;
 
     private UiDevice mDevice;
 
+    private String mTestName;
+
     private OutcomeReceiver<Boolean, Exception> mCallback;
 
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();
+
+    @Rule public final ScreenRecordRule sScreenRecordRule = new ScreenRecordRule();
 
     @Before
     public void setUp() throws Exception {
@@ -68,6 +75,8 @@ public class GaUxDebugChannelTest {
         // consent debug mode is turned on for this test class as we only care about the
         // first trigger (API call).
         UiUtils.enableConsentDebugMode();
+        UiUtils.disableNotificationFlowV2();
+        UiUtils.disableOtaStrings();
 
         mCallback =
                 new OutcomeReceiver<>() {
@@ -89,7 +98,10 @@ public class GaUxDebugChannelTest {
     public void tearDown() throws Exception {
         if (!AdservicesTestHelper.isDeviceSupported()) return;
 
+        UiUtils.takeScreenshot(mDevice, getClass().getSimpleName() + "_" + mTestName + "_");
+
         mDevice.pressHome();
+
         AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
@@ -97,6 +109,8 @@ public class GaUxDebugChannelTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testApiDisabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.turnOffEnableAdsServicesAPI();
 
         mCommonManager.enableAdServices(
@@ -132,8 +146,12 @@ public class GaUxDebugChannelTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testEntryPointDisabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsRowDevice();
         UiUtils.enableGa();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
@@ -156,8 +174,12 @@ public class GaUxDebugChannelTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testFromEntryPointRequest() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsEuDevice();
         UiUtils.enableGa();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
@@ -181,8 +203,12 @@ public class GaUxDebugChannelTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testNonAdultAccount() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsRowDevice();
         UiUtils.enableGa();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
@@ -208,8 +234,12 @@ public class GaUxDebugChannelTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testGaRowAdIdEnabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsRowDevice();
         UiUtils.enableGa();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
@@ -234,8 +264,12 @@ public class GaUxDebugChannelTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testGaRowAdIdDisabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsRowDevice();
         UiUtils.enableGa();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
@@ -260,8 +294,12 @@ public class GaUxDebugChannelTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testGaEuAdIdEnabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsEuDevice();
         UiUtils.enableGa();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
@@ -284,8 +322,12 @@ public class GaUxDebugChannelTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testGaEuAdIdDisabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsEuDevice();
         UiUtils.enableGa();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()

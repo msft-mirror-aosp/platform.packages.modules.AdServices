@@ -424,6 +424,9 @@ public class DebugReportingJobServiceTest {
         Flags mockFlags = Mockito.mock(Flags.class);
         ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
         ExtendedMockito.doReturn(value).when(mockFlags).getMeasurementJobDebugReportingKillSwitch();
+        ExtendedMockito.doReturn(JobInfo.NETWORK_TYPE_ANY)
+                .when(mockFlags)
+                .getMeasurementDebugReportingJobRequiredNetworkType();
     }
 
     private CountDownLatch createCountDownLatch() {

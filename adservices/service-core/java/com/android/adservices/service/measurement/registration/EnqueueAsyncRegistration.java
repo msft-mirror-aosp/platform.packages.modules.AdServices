@@ -17,6 +17,7 @@
 package com.android.adservices.service.measurement.registration;
 
 import android.adservices.measurement.RegistrationRequest;
+import android.adservices.measurement.SourceRegistrationRequestInternal;
 import android.adservices.measurement.WebSourceParams;
 import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.adservices.measurement.WebTriggerParams;
@@ -48,9 +49,9 @@ public class EnqueueAsyncRegistration {
     public static boolean appSourceOrTriggerRegistrationRequest(
             RegistrationRequest registrationRequest,
             boolean adIdPermission,
-            Uri registrant,
+            @NonNull Uri registrant,
             long requestTime,
-            @Nullable Source.SourceType sourceType,
+            @NonNull Source.SourceType sourceType,
             @Nullable String postBody,
             @NonNull DatastoreManager datastoreManager,
             @NonNull ContentResolver contentResolver) {
@@ -58,7 +59,7 @@ public class EnqueueAsyncRegistration {
         Objects.requireNonNull(datastoreManager);
         return datastoreManager.runInTransaction(
                 (dao) -> {
-                    if (isValid(registrationRequest)) {
+                    if (hasValidScheme(registrationRequest.getRegistrationUri())) {
                         insertAsyncRegistration(
                                 UUID.randomUUID().toString(),
                                 registrationRequest.getRegistrationUri(),
@@ -92,7 +93,7 @@ public class EnqueueAsyncRegistration {
     public static boolean webSourceRegistrationRequest(
             WebSourceRegistrationRequest webSourceRegistrationRequest,
             boolean adIdPermission,
-            Uri registrant,
+            @NonNull Uri registrant,
             long requestTime,
             @Nullable Source.SourceType sourceType,
             @NonNull DatastoreManager datastoreManager,
@@ -104,7 +105,7 @@ public class EnqueueAsyncRegistration {
                 (dao) -> {
                     for (WebSourceParams webSourceParams :
                             webSourceRegistrationRequest.getSourceParams()) {
-                        if (isValid(webSourceParams)) {
+                        if (hasValidScheme(webSourceParams.getRegistrationUri())) {
                             insertAsyncRegistration(
                                     UUID.randomUUID().toString(),
                                     webSourceParams.getRegistrationUri(),
@@ -136,7 +137,7 @@ public class EnqueueAsyncRegistration {
     public static boolean webTriggerRegistrationRequest(
             WebTriggerRegistrationRequest webTriggerRegistrationRequest,
             boolean adIdPermission,
-            Uri registrant,
+            @NonNull Uri registrant,
             long requestTime,
             @NonNull DatastoreManager datastoreManager,
             @NonNull ContentResolver contentResolver) {
@@ -147,7 +148,7 @@ public class EnqueueAsyncRegistration {
                 (dao) -> {
                     for (WebTriggerParams webTriggerParams :
                             webTriggerRegistrationRequest.getTriggerParams()) {
-                        if (isValid(webTriggerParams)) {
+                        if (hasValidScheme(webTriggerParams.getRegistrationUri())) {
                             insertAsyncRegistration(
                                     UUID.randomUUID().toString(),
                                     webTriggerParams.getRegistrationUri(),
@@ -163,6 +164,51 @@ public class EnqueueAsyncRegistration {
                                     adIdPermission,
                                     /* adIdValue */ null, // null for web
                                     /* postBody */ null,
+                                    registrationId,
+                                    dao,
+                                    contentResolver);
+                        }
+                    }
+                });
+    }
+
+    /**
+     * Inserts an App Sources Registration request into the Async Registration Queue table.
+     *
+     * @param requestInternal a {@link RegistrationRequest} to be queued.
+     */
+    public static boolean appSourcesRegistrationRequest(
+            @NonNull SourceRegistrationRequestInternal requestInternal,
+            boolean adIdPermission,
+            @NonNull Uri registrant,
+            long requestTime,
+            @NonNull Source.SourceType sourceType,
+            @Nullable String postBody,
+            @NonNull DatastoreManager datastoreManager,
+            @NonNull ContentResolver contentResolver) {
+        Objects.requireNonNull(contentResolver);
+        Objects.requireNonNull(datastoreManager);
+        String registrationId = UUID.randomUUID().toString();
+        return datastoreManager.runInTransaction(
+                (dao) -> {
+                    for (Uri registrationUri :
+                            requestInternal.getSourceRegistrationRequest().getRegistrationUris()) {
+                        if (hasValidScheme(registrationUri)) {
+                            insertAsyncRegistration(
+                                    UUID.randomUUID().toString(),
+                                    registrationUri,
+                                    /* mWebDestination */ null,
+                                    /* mOsDestination */ null,
+                                    registrant,
+                                    /* verifiedDestination */ null,
+                                    registrant,
+                                    AsyncRegistration.RegistrationType.APP_SOURCES,
+                                    sourceType,
+                                    requestTime,
+                                    false,
+                                    adIdPermission,
+                                    requestInternal.getAdIdValue(),
+                                    postBody,
                                     registrationId,
                                     dao,
                                     contentResolver);
@@ -224,18 +270,6 @@ public class EnqueueAsyncRegistration {
         } catch (RemoteException e) {
             LogUtil.e(e, "AsyncRegistration Content Provider invocation failed.");
         }
-    }
-
-    private static boolean isValid(RegistrationRequest registrationRequest) {
-        return hasValidScheme(registrationRequest.getRegistrationUri());
-    }
-
-    private static boolean isValid(WebSourceParams webSourceParams) {
-        return hasValidScheme(webSourceParams.getRegistrationUri());
-    }
-
-    private static boolean isValid(WebTriggerParams webTriggerParams) {
-        return hasValidScheme(webTriggerParams.getRegistrationUri());
     }
 
     private static boolean hasValidScheme(Uri registrationUri) {

@@ -25,6 +25,7 @@ import android.adservices.topics.Topic;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
@@ -102,6 +103,7 @@ public final class PreviewApiTest {
     }
 
     @Test
+    @FlakyTest(bugId = 298870400)
     public void testRecordObservation() throws Exception {
         // The Test app has 2 SDKs: sdk1 calls the Topics API. This will record the usage for Sdk1
         // by default, recordObservation is true.

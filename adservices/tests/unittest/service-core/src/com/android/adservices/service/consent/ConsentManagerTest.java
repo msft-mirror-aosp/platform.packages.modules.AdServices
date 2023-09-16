@@ -417,6 +417,96 @@ public class ConsentManagerTest {
     }
 
     @Test
+    public void testConsentManager_LazyEnable() throws Exception {
+
+        boolean isGiven = true;
+        int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(isGiven, consentSourceOfTruth);
+        doReturn(ConsentParcel.createGivenConsent(ConsentParcel.ALL_API))
+                .when(mMockIAdServicesManager)
+                .getConsent(ConsentParcel.ALL_API);
+
+        doReturn(true).when(mMockFlags).getConsentManagerLazyEnableMode();
+        spyConsentManager.enable(mContextSpy);
+        spyConsentManager.enable(mContextSpy);
+        assertThat(spyConsentManager.getConsent().isGiven()).isTrue();
+        verify(spyConsentManager, times(0)).setConsentToPpApi(isGiven);
+        verifyResetApiCalled(spyConsentManager, 0);
+    }
+
+    @Test
+    public void testConsentManager_LazyDisabled() throws Exception {
+        boolean isGiven = true;
+        int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(isGiven, consentSourceOfTruth);
+        doReturn(ConsentParcel.createGivenConsent(ConsentParcel.ALL_API))
+                .when(mMockIAdServicesManager)
+                .getConsent(ConsentParcel.ALL_API);
+        doReturn(false).when(mMockFlags).getConsentManagerLazyEnableMode();
+        spyConsentManager.enable(mContextSpy);
+
+        assertThat(spyConsentManager.getConsent().isGiven()).isTrue();
+        verify(spyConsentManager, times(1)).setConsentToPpApi(isGiven);
+        verifyResetApiCalled(spyConsentManager, 1);
+    }
+
+    @Test
+    public void testConsentManagerPreApi_LazyEnable() throws Exception {
+        boolean isGiven = true;
+        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(isGiven, consentSourceOfTruth);
+        doReturn(ConsentParcel.createGivenConsent(ConsentParcel.MEASUREMENT))
+                .when(mMockIAdServicesManager)
+                .getConsent(ConsentParcel.MEASUREMENT);
+
+        doReturn(true).when(mMockFlags).getConsentManagerLazyEnableMode();
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+        spyConsentManager.enable(mContextSpy, AdServicesApiType.MEASUREMENTS);
+        assertThat(spyConsentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven()).isTrue();
+        verify(
+                () ->
+                        ConsentManager.setPerApiConsentToSystemServer(
+                                any(),
+                                eq(AdServicesApiType.MEASUREMENTS.toConsentApiType()),
+                                eq(isGiven)),
+                never());
+        verify(spyConsentManager, never()).resetByApi(eq(AdServicesApiType.MEASUREMENTS));
+    }
+
+    @Test
+    public void testConsentManagerPreApi_LazyDisabled() throws Exception {
+        boolean isGiven = true;
+        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(isGiven, consentSourceOfTruth);
+        doReturn(ConsentParcel.createGivenConsent(ConsentParcel.MEASUREMENT))
+                .when(mMockIAdServicesManager)
+                .getConsent(ConsentParcel.MEASUREMENT);
+        doReturn(false).when(mMockFlags).getConsentManagerLazyEnableMode();
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+        spyConsentManager.enable(mContextSpy, AdServicesApiType.MEASUREMENTS);
+        assertThat(spyConsentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven()).isTrue();
+
+        verify(
+                () ->
+                        ConsentManager.setPerApiConsentToSystemServer(
+                                any(),
+                                eq(AdServicesApiType.MEASUREMENTS.toConsentApiType()),
+                                eq(isGiven)));
+        verify(spyConsentManager, times(1)).resetByApi(eq(AdServicesApiType.MEASUREMENTS));
+    }
+
+    private static void verifyResetApiCalled(
+            ConsentManager spyConsentManager, int wantedNumOfInvocations) throws IOException {
+        verify(spyConsentManager, times(wantedNumOfInvocations)).resetTopicsAndBlockedTopics();
+        verify(spyConsentManager, times(wantedNumOfInvocations)).resetAppsAndBlockedApps();
+        verify(spyConsentManager, times(wantedNumOfInvocations)).resetMeasurement();
+    }
+
+    @Test
     public void testConsentIsGivenAfterEnabling_notSupportedFlag() throws RemoteException {
         boolean isGiven = true;
         int invalidConsentSourceOfTruth = 4;
