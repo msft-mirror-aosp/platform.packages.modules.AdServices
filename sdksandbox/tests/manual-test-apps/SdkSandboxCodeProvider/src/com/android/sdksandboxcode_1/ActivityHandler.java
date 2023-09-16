@@ -18,6 +18,8 @@ package com.android.sdksandboxcode_1;
 
 import static android.widget.LinearLayout.VERTICAL;
 
+import static com.android.sdksandbox.flags.Flags.sandboxActivitySdkBasedContext;
+
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.app.Activity;
@@ -58,15 +60,71 @@ public class ActivityHandler implements SensorEventListener {
     private TextView mAxisX;
     private final SensorManager mSensorManager;
     private final Sensor mGyroSensor;
+    private final boolean mIsCustomizedSdkContextEnabled;
 
-    public ActivityHandler(Activity activity, Context sdkContext, View view) {
+    public ActivityHandler(
+            Activity activity,
+            Context sdkContext,
+            View view,
+            boolean isCustomizedSdkContextEnabled) {
         mActivity = activity;
         mView = view;
         mSensorManager = sdkContext.getSystemService(SensorManager.class);
         mGyroSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        mIsCustomizedSdkContextEnabled = isCustomizedSdkContextEnabled;
     }
 
     public void buildLayout() {
+        final LinearLayout mediaViewContainer;
+        if (sandboxActivitySdkBasedContext() && mIsCustomizedSdkContextEnabled) {
+            makeToast("Context flags are enabled, building layout from resources");
+            mediaViewContainer = buildLayoutFromResources();
+        } else {
+            makeToast("Context flags are disabled, building layout programmatically");
+            mediaViewContainer = buildLayoutProgrammatically();
+        }
+
+        if (mView.getParent() != null) {
+            ((ViewGroup) mView.getParent()).removeView(mView);
+        }
+        mView.setLayoutParams(
+                new ViewGroup.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.MATCH_PARENT));
+        mediaViewContainer.addView(mView);
+
+        registerBackEnableButton();
+        registerPortraitButton();
+        registerLandscapeButton();
+        registerDestroyActivityButton();
+        registerOpenLandingPageButton();
+
+        registerLifecycleListener();
+    }
+
+    /**
+     * Using the SDK resources to build the activity layout.
+     *
+     * @return the container layout for the media view (WebView or media)
+     */
+    public LinearLayout buildLayoutFromResources() {
+        mActivity.setContentView(R.layout.sdk_activity_layout);
+
+        mBackButton = mActivity.findViewById(R.id.back_button);
+        mOrientationPortraitButton = mActivity.findViewById(R.id.portrait_orientation_button);
+        mOrientationLandscapeButton = mActivity.findViewById(R.id.landscape_orientation_button);
+        mDestroyButton = mActivity.findViewById(R.id.destroy_activity_button);
+        mOpenLandingPage = mActivity.findViewById(R.id.landing_page_button);
+        mAxisX = mActivity.findViewById(R.id.x_axis_button);
+        return mActivity.findViewById(R.id.media_view_container);
+    }
+
+    /**
+     * Building the activity layout programmatically.
+     *
+     * @return the container layout for the media view (WebView or media)
+     */
+    public LinearLayout buildLayoutProgrammatically() {
         LinearLayout mainLayout = new LinearLayout(mActivity);
         mainLayout.setOrientation(VERTICAL);
         mainLayout.setLayoutParams(
@@ -96,23 +154,7 @@ public class ActivityHandler implements SensorEventListener {
         mainLayout.addView(mAxisX);
 
         mActivity.setContentView(mainLayout);
-
-        if (mView.getParent() != null) {
-            ((ViewGroup) mView.getParent()).removeView(mView);
-        }
-        mView.setLayoutParams(
-                new ViewGroup.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.MATCH_PARENT));
-        mainLayout.addView(mView);
-
-        registerBackEnableButton();
-        registerPortraitButton();
-        registerLandscapeButton();
-        registerDestroyActivityButton();
-        registerOpenLandingPageButton();
-
-        registerLifecycleListener();
+        return mainLayout;
     }
 
     private void registerBackEnableButton() {
