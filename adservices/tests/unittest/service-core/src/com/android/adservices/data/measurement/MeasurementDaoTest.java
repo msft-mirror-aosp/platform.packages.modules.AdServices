@@ -853,7 +853,7 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testCountDistinctDestinationsPerPublisherInActiveSource_atWindow() {
+    public void testCountDistinctDestinations_atWindow() {
         Uri publisher = Uri.parse("android-app://publisher.app");
         List<Source> activeSourcesWithAppAndWebDestinations =
                 getSourcesWithDifferentDestinations(
@@ -874,13 +874,26 @@ public class MeasurementDaoTest {
                     assertEquals(
                             Integer.valueOf(3),
                             measurementDao
-                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                    .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
                                             publisher,
                                             EventSurfaceType.APP,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                                             excludedDestinations,
                                             EventSurfaceType.WEB,
                                             4500000000L,
+                                            6000000000L));
+                });
+        mDatastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(3),
+                            measurementDao
+                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                            publisher,
+                                            EventSurfaceType.APP,
+                                            SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                                            excludedDestinations,
+                                            EventSurfaceType.WEB,
                                             6000000000L));
                 });
         mDatastoreManager.runInTransaction(
@@ -899,7 +912,7 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testCountDistinctDestinationsPerPublisherInActiveSource_expiredSource() {
+    public void testCountDistinctDestinations_expiredSource() {
         Uri publisher = Uri.parse("android-app://publisher.app");
         List<Source> activeSourcesWithAppAndWebDestinations =
                 getSourcesWithDifferentDestinations(
@@ -934,13 +947,26 @@ public class MeasurementDaoTest {
                     assertEquals(
                             Integer.valueOf(3),
                             measurementDao
-                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                    .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
                                             publisher,
                                             EventSurfaceType.APP,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                                             excludedDestinations,
                                             EventSurfaceType.WEB,
                                             4500000000L,
+                                            6000000000L));
+                });
+        mDatastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(3),
+                            measurementDao
+                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                            publisher,
+                                            EventSurfaceType.APP,
+                                            SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                                            excludedDestinations,
+                                            EventSurfaceType.WEB,
                                             6000000000L));
                 });
         mDatastoreManager.runInTransaction(
@@ -959,7 +985,7 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testCountDistinctDestinationsPerPublisherInActiveSource_beyondWindow() {
+    public void testCountDistinctDestinations_beyondWindow() {
         Uri publisher = Uri.parse("android-app://publisher.app");
         List<Source> activeSourcesWithAppAndWebDestinations =
                 getSourcesWithDifferentDestinations(
@@ -980,13 +1006,26 @@ public class MeasurementDaoTest {
                     assertEquals(
                             Integer.valueOf(0),
                             measurementDao
-                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                    .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
                                             publisher,
                                             EventSurfaceType.APP,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                                             excludedDestinations,
                                             EventSurfaceType.WEB,
                                             4500000000L,
+                                            6000000000L));
+                });
+        mDatastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(3),
+                            measurementDao
+                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                            publisher,
+                                            EventSurfaceType.APP,
+                                            SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                                            excludedDestinations,
+                                            EventSurfaceType.WEB,
                                             6000000000L));
                 });
         mDatastoreManager.runInTransaction(
@@ -1005,7 +1044,7 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testCountDistinctDestinationsPerPublisherInActiveSource_appPublisher() {
+    public void testCountDistinctDestinations_appPublisher() {
         Uri publisher = Uri.parse("android-app://publisher.app");
         List<Source> activeSourcesWithAppAndWebDestinations =
                 getSourcesWithDifferentDestinations(
@@ -1074,13 +1113,26 @@ public class MeasurementDaoTest {
                     assertEquals(
                             Integer.valueOf(3),
                             measurementDao
-                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                    .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
                                             publisher,
                                             EventSurfaceType.APP,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                                             excludedDestinations,
                                             EventSurfaceType.WEB,
                                             4000000000L,
+                                            6000000000L));
+                });
+        mDatastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(9),
+                            measurementDao
+                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                            publisher,
+                                            EventSurfaceType.APP,
+                                            SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                                            excludedDestinations,
+                                            EventSurfaceType.WEB,
                                             6000000000L));
                 });
         mDatastoreManager.runInTransaction(
@@ -1169,13 +1221,26 @@ public class MeasurementDaoTest {
                     assertEquals(
                             Integer.valueOf(0),
                             measurementDao
-                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                    .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
                                             publisher,
                                             EventSurfaceType.APP,
                                             "unmatched-enrollment-id",
                                             excludedDestinations,
                                             EventSurfaceType.WEB,
                                             4000000000L,
+                                            6000000000L));
+                });
+        mDatastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(0),
+                            measurementDao
+                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                            publisher,
+                                            EventSurfaceType.APP,
+                                            "unmatched-enrollment-id",
+                                            excludedDestinations,
+                                            EventSurfaceType.WEB,
                                             6000000000L));
                 });
         mDatastoreManager.runInTransaction(
@@ -1194,7 +1259,7 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testCountDistinctDestinationsPerPublisherInActiveSource_webPublisher_exactMatch() {
+    public void testCountDistinctDestinations_webPublisher_exactMatch() {
         Uri publisher = WebUtil.validUri("https://publisher.test");
         List<Source> activeSourcesWithAppAndWebDestinations =
                 getSourcesWithDifferentDestinations(
@@ -1263,13 +1328,26 @@ public class MeasurementDaoTest {
                     assertEquals(
                             Integer.valueOf(3),
                             measurementDao
-                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                    .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
                                             publisher,
                                             EventSurfaceType.WEB,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                                             excludedDestinations,
                                             EventSurfaceType.WEB,
                                             4000000000L,
+                                            6000000000L));
+                });
+        mDatastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(9),
+                            measurementDao
+                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                            publisher,
+                                            EventSurfaceType.WEB,
+                                            SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                                            excludedDestinations,
+                                            EventSurfaceType.WEB,
                                             6000000000L));
                 });
         mDatastoreManager.runInTransaction(
@@ -1287,7 +1365,6 @@ public class MeasurementDaoTest {
                 });
     }
 
-    // (Testing countDistinctDestinationsPerPublisherXEnrollmentInActiveSource)
     @Test
     public void testCountDistinctDestinations_webPublisher_doesNotMatchDomainAsSuffix() {
         Uri publisher = WebUtil.validUri("https://publisher.test");
@@ -1325,7 +1402,7 @@ public class MeasurementDaoTest {
                         true,
                         true,
                         50000000000L,
-                        publisher,
+                        publisherAsSuffix,
                         SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                         Source.Status.ACTIVE);
         List<Source> ignoredSources =
@@ -1359,13 +1436,26 @@ public class MeasurementDaoTest {
                     assertEquals(
                             Integer.valueOf(2),
                             measurementDao
-                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                    .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
                                             publisher,
                                             EventSurfaceType.WEB,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                                             excludedDestinations,
                                             EventSurfaceType.WEB,
                                             4000000000L,
+                                            6000000000L));
+                });
+        mDatastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(2),
+                            measurementDao
+                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                            publisher,
+                                            EventSurfaceType.WEB,
+                                            SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                                            excludedDestinations,
+                                            EventSurfaceType.WEB,
                                             6000000000L));
                 });
         mDatastoreManager.runInTransaction(
@@ -1383,7 +1473,6 @@ public class MeasurementDaoTest {
                 });
     }
 
-    // (Testing countDistinctDestinationsPerPublisherXEnrollmentInActiveSource)
     @Test
     public void testCountDistinctDestinations_webPublisher_doesNotMatchDifferentScheme() {
         Uri publisher = WebUtil.validUri("https://publisher.test");
@@ -1455,13 +1544,26 @@ public class MeasurementDaoTest {
                     assertEquals(
                             Integer.valueOf(2),
                             measurementDao
-                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                    .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
                                             publisher,
                                             EventSurfaceType.WEB,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                                             excludedDestinations,
                                             EventSurfaceType.WEB,
                                             4000000000L,
+                                            6000000000L));
+                });
+        mDatastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(9),
+                            measurementDao
+                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                            publisher,
+                                            EventSurfaceType.WEB,
+                                            SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                                            excludedDestinations,
+                                            EventSurfaceType.WEB,
                                             6000000000L));
                 });
         mDatastoreManager.runInTransaction(
@@ -1479,9 +1581,8 @@ public class MeasurementDaoTest {
                 });
     }
 
-    // countDistinctDestinationsPerPublisherXEnrollmentInActiveSource
     @Test
-    public void countDistinctDestinationsPerPublisher_webPublisher_multipleDestinations() {
+    public void testCountDistinctDestinations_webPublisher_multipleDestinations() {
         Uri publisher = WebUtil.validUri("https://publisher.test");
         // One source with multiple destinations
         Source activeSourceWithAppAndWebDestinations =
@@ -1551,13 +1652,26 @@ public class MeasurementDaoTest {
                     assertEquals(
                             Integer.valueOf(1),
                             measurementDao
-                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                    .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
                                             publisher,
                                             EventSurfaceType.WEB,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                                             excludedDestinations,
                                             EventSurfaceType.WEB,
                                             4000000000L,
+                                            6000000000L));
+                });
+        mDatastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(8),
+                            measurementDao
+                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                            publisher,
+                                            EventSurfaceType.WEB,
+                                            SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                                            excludedDestinations,
+                                            EventSurfaceType.WEB,
                                             6000000000L));
                 });
         mDatastoreManager.runInTransaction(

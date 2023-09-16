@@ -409,7 +409,7 @@ public class AsyncRegistrationQueueRunner {
         long windowStartTime = source.getEventTime()
                 - FlagsFactory.getFlags().getMeasurementDestinationRateLimitWindow();
         int destinationReportingCount =
-                dao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                dao.countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
                         publisher,
                         publisherType,
                         enrollmentId,
@@ -472,17 +472,29 @@ public class AsyncRegistrationQueueRunner {
             long requestTime,
             IMeasurementDao dao)
             throws DatastoreException {
-        int destinationCount =
-                dao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
-                        publisher,
-                        publisherType,
-                        enrollmentId,
-                        destinations,
-                        destinationType,
-                        windowStartTime,
-                        requestTime);
-        int maxDistinctDestinations =
-                FlagsFactory.getFlags().getMeasurementMaxDistinctDestinationsInActiveSource();
+        Flags flags = FlagsFactory.getFlags();
+        int destinationCount;
+        if (flags.getMeasurementEnableDestinationRateLimit()) {
+            destinationCount =
+                    dao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                            publisher,
+                            publisherType,
+                            enrollmentId,
+                            destinations,
+                            destinationType,
+                            requestTime);
+        } else {
+            destinationCount =
+                    dao.countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+                            publisher,
+                            publisherType,
+                            enrollmentId,
+                            destinations,
+                            destinationType,
+                            windowStartTime,
+                            requestTime);
+        }
+        int maxDistinctDestinations = flags.getMeasurementMaxDistinctDestinationsInActiveSource();
         if (destinationCount + destinations.size() > maxDistinctDestinations) {
             LoggerFactory.getMeasurementLogger()
                     .d(
@@ -504,7 +516,7 @@ public class AsyncRegistrationQueueRunner {
                         windowStartTime,
                         requestTime);
         if (distinctReportingOriginCount
-                >= FlagsFactory.getFlags().getMeasurementMaxDistinctRepOrigPerPublXDestInSource()) {
+                >= flags.getMeasurementMaxDistinctRepOrigPerPublXDestInSource()) {
             debugReportApi.scheduleSourceSuccessDebugReport(source, dao);
             LoggerFactory.getMeasurementLogger()
                     .d(
