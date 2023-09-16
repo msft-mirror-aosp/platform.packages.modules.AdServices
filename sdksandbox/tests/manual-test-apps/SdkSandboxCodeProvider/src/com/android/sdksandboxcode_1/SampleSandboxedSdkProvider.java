@@ -19,8 +19,7 @@ package com.android.sdksandboxcode_1;
 import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkProvider;
-import android.app.sdksandbox.interfaces.IAppOwnedSdkApi;
-import android.app.sdksandbox.interfaces.ISdkApi;
+import android.app.sdksandbox.interfaces.IMediateeSdkApi;
 import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.Context;
 import android.content.Intent;
@@ -49,8 +48,6 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
-
-import com.android.apiimplementation.SdkApi;
 
 import java.util.List;
 import java.util.Random;
@@ -212,7 +209,7 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
                     }
                     try {
                         IBinder binder = mediateeSdk.getInterface();
-                        ISdkApi sdkApi = ISdkApi.Stub.asInterface(binder);
+                        IMediateeSdkApi sdkApi = IMediateeSdkApi.Stub.asInterface(binder);
                         message = sdkApi.getMessage();
                     } catch (RemoteException e) {
                         throw new IllegalStateException(e);
@@ -230,8 +227,8 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
                                         .filter(s -> s.getName().contains(APP_OWNED_SDK_NAME))
                                         .findAny()
                                         .get();
-                        IAppOwnedSdkApi appOwnedSdkApi =
-                                IAppOwnedSdkApi.Stub.asInterface(appOwnedSdk.getInterface());
+                        IMediateeSdkApi appOwnedSdkApi =
+                                IMediateeSdkApi.Stub.asInterface(appOwnedSdk.getInterface());
                         message = appOwnedSdkApi.getMessage();
                     } catch (RemoteException e) {
                         throw new IllegalStateException(e);

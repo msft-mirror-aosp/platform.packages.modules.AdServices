@@ -71,9 +71,11 @@ public class UxStatesManager {
     /** Returns an instance of the UxStatesManager. */
     @NonNull
     public static UxStatesManager getInstance(Context context) {
+        LogUtil.d("UxStates getInstance() called.");
         if (sUxStatesManager == null) {
             synchronized (LOCK) {
                 if (sUxStatesManager == null) {
+                    LogUtil.d("Creaeting new UxStatesManager.");
                     sUxStatesManager =
                             new UxStatesManager(
                                     context,

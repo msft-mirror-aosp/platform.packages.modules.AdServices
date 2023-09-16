@@ -32,6 +32,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
@@ -126,7 +127,8 @@ public class DebugReportingFallbackJobService extends JobService {
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
-        if (FlagsFactory.getFlags().getMeasurementDebugReportingFallbackJobKillSwitch()) {
+        Flags flags = FlagsFactory.getFlags();
+        if (flags.getMeasurementDebugReportingFallbackJobKillSwitch()) {
             LogUtil.e("DebugReportingFallbackJobService is disabled, skip scheduling");
             return;
         }
@@ -140,7 +142,7 @@ public class DebugReportingFallbackJobService extends JobService {
         final JobInfo scheduledJob =
                 jobScheduler.getPendingJob(MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
-        JobInfo jobInfo = buildJobInfo(context);
+        JobInfo jobInfo = buildJobInfo(context, flags);
         if (forceSchedule || !jobInfo.equals(scheduledJob)) {
             schedule(jobScheduler, jobInfo);
             LogUtil.d("Scheduled DebugReportingFallbackJobService");
@@ -168,14 +170,14 @@ public class DebugReportingFallbackJobService extends JobService {
         return false;
     }
 
-    private static JobInfo buildJobInfo(Context context) {
+    private static JobInfo buildJobInfo(Context context, Flags flags) {
         return new JobInfo.Builder(
                         MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID,
                         new ComponentName(context, DebugReportingFallbackJobService.class))
-                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                .setPeriodic(
-                        FlagsFactory.getFlags().getMeasurementDebugReportingFallbackJobPeriodMs())
-                .setPersisted(true)
+                .setRequiredNetworkType(
+                        flags.getMeasurementDebugReportingFallbackJobRequiredNetworkType())
+                .setPeriodic(flags.getMeasurementDebugReportingFallbackJobPeriodMs())
+                .setPersisted(flags.getMeasurementDebugReportingFallbackJobPersisted())
                 .build();
     }
 

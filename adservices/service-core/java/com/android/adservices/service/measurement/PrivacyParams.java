@@ -192,16 +192,6 @@ public final class PrivacyParams {
      */
     public static final int MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION = 3;
 
-    /**
-     * Max distinct enrollments with source registration per
-     * { Publisher X Advertiser X TimePeriod }.
-     */
-    private static final int MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_SOURCE = 100;
-
-    public static int getMaxDistinctEnrollmentsPerPublisherXDestinationInSource() {
-        return MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_SOURCE;
-    }
-
     private static final int PRIVACY_EPSILON = 14;
 
     public static int getPrivacyEpsilon() {

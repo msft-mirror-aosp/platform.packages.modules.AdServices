@@ -23,6 +23,7 @@ import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesStates;
 import android.content.Context;
 import android.os.OutcomeReceiver;
+import android.platform.test.rule.ScreenRecordRule;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.runner.AndroidJUnit4;
@@ -39,6 +40,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -46,16 +48,21 @@ import java.util.concurrent.Executors;
 
 /** Test for verifying user consent notification trigger behaviors. */
 @RunWith(AndroidJUnit4.class)
+@ScreenRecordRule.ScreenRecord
 public class GaUxReconsentChannelTest {
 
     private AdServicesCommonManager mCommonManager;
 
     private UiDevice mDevice;
 
+    private String mTestName;
+
     private OutcomeReceiver<Boolean, Exception> mCallback;
 
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();
+
+    @Rule public final ScreenRecordRule sScreenRecordRule = new ScreenRecordRule();
 
     @Before
     public void setUp() throws Exception {
@@ -66,10 +73,14 @@ public class GaUxReconsentChannelTest {
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
         UiUtils.refreshConsentResetToken();
-        AdservicesTestHelper.killAdservicesProcess(sContext);
         UiUtils.turnOnEnableAdsServicesAPI();
         UiUtils.disableConsentDebugMode();
         UiUtils.disableSchedulingParams();
+        UiUtils.disableNotificationFlowV2();
+        UiUtils.disableOtaStrings();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
+
         mCommonManager = AdServicesCommonManager.get(sContext);
 
         // General purpose callback used for expected success calls.
@@ -120,6 +131,8 @@ public class GaUxReconsentChannelTest {
     public void tearDown() throws Exception {
         if (!AdservicesTestHelper.isDeviceSupported()) return;
 
+        UiUtils.takeScreenshot(mDevice, getClass().getSimpleName() + "_" + mTestName + "_");
+
         AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
@@ -129,6 +142,8 @@ public class GaUxReconsentChannelTest {
      */
     @Test
     public void testBetaRowOptoutNoReconsent() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         reconsentTestHelper(false, false, false, true, false);
     }
 
@@ -138,6 +153,8 @@ public class GaUxReconsentChannelTest {
      */
     @Test
     public void testBetaRowAdIdDisabledOptoutNoReconsent() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         reconsentTestHelper(false, false, true, false, false);
     }
 
@@ -147,6 +164,8 @@ public class GaUxReconsentChannelTest {
      */
     @Test
     public void testBetaEuAdIdDisabledOptoutNoReconsent() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         reconsentTestHelper(false, true, true, false, false);
     }
 
@@ -156,6 +175,8 @@ public class GaUxReconsentChannelTest {
      */
     @Test
     public void testBetaRowOptinReconsent() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         reconsentTestHelper(true, false, false, true, true);
     }
 
@@ -165,6 +186,8 @@ public class GaUxReconsentChannelTest {
      */
     @Test
     public void testBetaRowAdIdDisabledOptinReconsent() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         reconsentTestHelper(true, false, true, false, true);
     }
 
@@ -174,6 +197,8 @@ public class GaUxReconsentChannelTest {
      */
     @Test
     public void testBetaEuAdIdDisabledOptinReconsent() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         reconsentTestHelper(true, true, true, false, true);
     }
 
@@ -190,6 +215,8 @@ public class GaUxReconsentChannelTest {
             UiUtils.setAsRowDevice();
         }
         UiUtils.enableBeta();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         AdServicesStates adServicesStates =
                 new AdServicesStates.Builder()
@@ -212,7 +239,9 @@ public class GaUxReconsentChannelTest {
         // Wait for consent operation finish
         Thread.sleep(LAUNCH_TIMEOUT_MS);
         UiUtils.enableGa();
+
         AdservicesTestHelper.killAdservicesProcess(sContext);
+
         // Notifications should not be shown if beta consent false.
         mCommonManager.enableAdServices(
                 adServicesStates, Executors.newCachedThreadPool(), mCallback);

@@ -391,22 +391,22 @@ public class AsyncRegistrationQueueRunner {
             return false;
         }
 
-        int destinationEnrollmentCount =
-                dao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
+        int distinctReportingOriginCount =
+                dao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
                         publisher,
                         publisherType,
                         destinations,
-                        enrollmentId,
+                        source.getRegistrationOrigin(),
                         windowStartTime,
                         requestTime);
-        if (destinationEnrollmentCount
-                >= PrivacyParams.getMaxDistinctEnrollmentsPerPublisherXDestinationInSource()) {
+        if (distinctReportingOriginCount
+                >= FlagsFactory.getFlags().getMeasurementMaxDistinctRepOrigPerPublXDestInSource()) {
             debugReportApi.scheduleSourceSuccessDebugReport(source, dao);
             LogUtil.d(
                     "AsyncRegistrationQueueRunner: "
                             + (destinationType == EventSurfaceType.APP ? "App" : "Web")
-                            + " enrollment count >= "
-                            + "MaxDistinctEnrollmentsPerPublisherXDestinationInSource");
+                            + " distinct reporting origin count >= "
+                            + "MaxDistinctRepOrigPerPublisherXDestInSource exceeded");
             return false;
         }
         return true;

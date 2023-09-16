@@ -25,11 +25,12 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 @Scenario
 @RunWith(JUnit4.class)
 public class LoadSdk {
+
+    private static final int WAIT_TIME_BEFORE_END_TEST_MS = 3000;
 
     private SdkSandboxTestHelper mSdkSandboxTestHelper = new SdkSandboxTestHelper();
 
@@ -46,7 +47,6 @@ public class LoadSdk {
     @Test
     public void testLoadSdk() {
         mSdkSandboxTestHelper.loadSandboxSdk();
-
-        SystemClock.sleep(TimeUnit.SECONDS.toMillis(2));
+        SystemClock.sleep(WAIT_TIME_BEFORE_END_TEST_MS);
     }
 }
