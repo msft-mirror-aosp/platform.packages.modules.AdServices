@@ -16,9 +16,6 @@
 
 package android.adservices.debuggablects;
 
-import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
-import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
-
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
@@ -26,121 +23,24 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionOutcome;
-import android.adservices.adselection.ReportEventRequest;
-import android.adservices.adselection.ReportImpressionRequest;
-import android.adservices.clients.adselection.AdSelectionClient;
-import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
-import android.adservices.common.AdData;
-import android.adservices.common.AdSelectionSignals;
-import android.adservices.common.AdTechIdentifier;
-import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
-import android.adservices.customaudience.JoinCustomAudienceRequest;
-import android.adservices.customaudience.TrustedBiddingData;
-import android.adservices.utils.MockWebServerRule;
 import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.Scenarios;
-import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
 
-import androidx.test.core.app.ApplicationProvider;
-
-import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
-import com.android.adservices.service.js.JSScriptEngine;
 import com.android.compatibility.common.util.ShellUtils;
-import com.android.modules.utils.build.SdkLevel;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.mockwebserver.MockWebServer;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.junit.After;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Locale;
-import java.util.Random;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
-public class AdSelectionTest extends ForegroundDebuggableCtsTest {
-    private static final String TAG = "android.adservices.debuggablects";
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
-    private static final int TIMEOUT = 120;
-    private static final int NUM_ADS_PER_AUDIENCE = 4;
-    private static final String SHOES_CA = "shoes";
-    private static final String SHIRTS_CA = "shirts";
-    private static final String PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
-    private AdvertisingCustomAudienceClient mCustomAudienceClient;
-    private AdSelectionClient mAdSelectionClient;
-    private String mServerBaseAddress;
-    private AdTechIdentifier mAdTechIdentifier;
-    private MockWebServer mMockWebServer;
-
-    @Rule
-    public MockWebServerRule mMockWebServerRule =
-            MockWebServerRule.forHttps(
-                    CONTEXT, "adservices_untrusted_test_server.p12", "adservices_test");
-
-    // Prefix added to all requests to bust cache.
-    private int mCacheBuster;
-    private final Random mCacheBusterRandom = new Random();
-    private String mPreviousAppAllowList;
-
-    @Before
-    public void setUp() throws Exception {
-        // Skip the test if it runs on unsupported platforms
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
-
-        if (SdkLevel.isAtLeastT()) {
-            assertForegroundActivityStarted();
-        } else {
-            mPreviousAppAllowList =
-                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
-                            sContext.getPackageName());
-            CompatAdServicesTestUtils.setFlags();
-        }
-
-        AdservicesTestHelper.killAdservicesProcess(sContext);
-        ExecutorService executor = Executors.newCachedThreadPool();
-        mCustomAudienceClient =
-                new AdvertisingCustomAudienceClient.Builder()
-                        .setContext(CONTEXT)
-                        .setExecutor(executor)
-                        .build();
-        mAdSelectionClient =
-                new AdSelectionClient.Builder().setContext(CONTEXT).setExecutor(executor).build();
-        mCacheBuster = mCacheBusterRandom.nextInt();
-    }
-
-    @After
-    public void tearDown() throws IOException {
-        if (mMockWebServer != null) {
-            mMockWebServer.shutdown();
-        }
-        if (!AdservicesTestHelper.isDeviceSupported()) {
-            return;
-        }
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
-    }
+public class AdSelectionTest extends FledgeScenarioTest {
 
     /**
      * End-to-end test for ad selection.
@@ -167,36 +67,6 @@ public class AdSelectionTest extends ForegroundDebuggableCtsTest {
             assertThat(result.hasOutcome()).isTrue();
         } finally {
             leaveCustomAudience(SHIRTS_CA);
-        }
-
-        assertThat(dispatcher.getCalledPaths())
-                .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
-    }
-
-    /**
-     * End-to-end test for report impression.
-     *
-     * <p>Covers the following Remarketing CUJs:
-     *
-     * <ul>
-     *   <li><b>007</b>: As a buyer/seller I will receive a notification of impression for a winning
-     *       ad on an URL I can return from a script I can provide
-     * </ul>
-     */
-    @Test
-    public void testAdSelection_withReportImpression_happyPath() throws Exception {
-        ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-reportimpression.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
-        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
-
-        try {
-            joinCustomAudience(SHOES_CA);
-            doReportImpression(
-                    doSelectAds(adSelectionConfig).getAdSelectionId(), adSelectionConfig);
-        } finally {
-            leaveCustomAudience(SHOES_CA);
         }
 
         assertThat(dispatcher.getCalledPaths())
@@ -483,181 +353,5 @@ public class AdSelectionTest extends ForegroundDebuggableCtsTest {
 
         assertThat(dispatcher.getCalledPaths())
                 .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
-    }
-
-    private AdSelectionOutcome doSelectAds(AdSelectionConfig adSelectionConfig)
-            throws ExecutionException, InterruptedException, TimeoutException {
-        AdSelectionOutcome result =
-                mAdSelectionClient.selectAds(adSelectionConfig).get(TIMEOUT, TimeUnit.SECONDS);
-        Log.d(TAG, "Ran ad selection.");
-        return result;
-    }
-
-    private void doReportEvent(long adSelectionId, String eventName)
-            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
-        mAdSelectionClient
-                .reportEvent(
-                        new ReportEventRequest.Builder(
-                                        adSelectionId,
-                                        eventName,
-                                        new JSONObject().put("key", "value").toString(),
-                                        FLAG_REPORTING_DESTINATION_SELLER
-                                                | FLAG_REPORTING_DESTINATION_BUYER)
-                                .build())
-                .get(TIMEOUT, TimeUnit.SECONDS);
-        Log.d(TAG, "Ran report ad click for ad selection id: " + adSelectionId);
-    }
-
-    private void doReportImpression(long adSelectionId, AdSelectionConfig adSelectionConfig)
-            throws ExecutionException, InterruptedException, TimeoutException {
-        mAdSelectionClient
-                .reportImpression(new ReportImpressionRequest(adSelectionId, adSelectionConfig))
-                .get(TIMEOUT, TimeUnit.SECONDS);
-        Log.d(TAG, "Ran report impression for ad selection id: " + adSelectionId);
-    }
-
-    private void joinCustomAudience(String customAudienceName)
-            throws ExecutionException, InterruptedException, TimeoutException {
-        JoinCustomAudienceRequest joinCustomAudienceRequest =
-                makeJoinCustomAudienceRequest(customAudienceName);
-        mCustomAudienceClient
-                .joinCustomAudience(joinCustomAudienceRequest.getCustomAudience())
-                .get(5, TimeUnit.SECONDS);
-        Log.d(TAG, "Joined Custom Audience: " + customAudienceName);
-    }
-
-    private void leaveCustomAudience(String customAudienceName)
-            throws ExecutionException, InterruptedException, TimeoutException {
-        CustomAudience customAudience = makeCustomAudience(customAudienceName);
-        mCustomAudienceClient
-                .leaveCustomAudience(customAudience.getBuyer(), customAudience.getName())
-                .get(TIMEOUT, TimeUnit.SECONDS);
-        Log.d(TAG, "Left Custom Audience: " + customAudienceName);
-    }
-
-    private String getServerBaseAddress() {
-        return String.format(
-                "https://%s:%s%s/",
-                mMockWebServer.getHostName(), mMockWebServer.getPort(), getCacheBusterPrefix());
-    }
-
-    private void overrideCpcBillingEnabled(boolean enabled) {
-        ShellUtils.runShellCommand(
-                String.format(
-                        "device_config put adservices fledge_cpc_billing_enabled %s",
-                        enabled ? "true" : "false"));
-    }
-
-    private void overrideRegisterAdBeaconEnabled(boolean enabled) {
-        ShellUtils.runShellCommand(
-                String.format(
-                        "device_config put adservices fledge_register_ad_beacon_enabled %s",
-                        enabled ? "true" : "false"));
-    }
-
-    private void setDebugReportingEnabledForTesting(boolean enabled) {
-        overrideBiddingLogicVersionToV3(enabled);
-        ShellUtils.runShellCommand(
-                String.format(
-                        "device_config put adservices fledge_event_level_debug_reporting_enabled"
-                                + " %s",
-                        enabled ? "true" : "false"));
-        ShellUtils.runShellCommand(
-                String.format(
-                        "device_config put adservices"
-                                + " fledge_event_level_debug_report_send_immediately %s",
-                        enabled ? "true" : "false"));
-    }
-
-    private static void overrideBiddingLogicVersionToV3(boolean useVersion3) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices fledge_ad_selection_bidding_logic_js_version %s",
-                useVersion3 ? "3" : "2");
-    }
-
-    private AdSelectionConfig makeAdSelectionConfig() {
-        AdSelectionSignals signals = makeAdSelectionSignals();
-        Log.d(TAG, "Ad tech: " + mAdTechIdentifier.toString());
-        return new AdSelectionConfig.Builder()
-                .setSeller(mAdTechIdentifier)
-                .setPerBuyerSignals(ImmutableMap.of(mAdTechIdentifier, signals))
-                .setCustomAudienceBuyers(ImmutableList.of(mAdTechIdentifier))
-                .setAdSelectionSignals(signals)
-                .setSellerSignals(signals)
-                .setDecisionLogicUri(Uri.parse(mServerBaseAddress + Scenarios.SCORING_LOGIC_PATH))
-                .setTrustedScoringSignalsUri(
-                        Uri.parse(mServerBaseAddress + Scenarios.SCORING_SIGNALS_PATH))
-                .build();
-    }
-
-    private void setupDefaultMockWebServer(ScenarioDispatcher dispatcher) throws Exception {
-        if (mMockWebServer != null) {
-            mMockWebServer.shutdown();
-        }
-        mMockWebServer = mMockWebServerRule.startMockWebServer(dispatcher);
-        mServerBaseAddress = getServerBaseAddress();
-        mAdTechIdentifier = AdTechIdentifier.fromString(mMockWebServer.getHostName());
-        Log.d(TAG, "Started default MockWebServer.");
-    }
-
-    private String getCacheBusterPrefix() {
-        return String.format("/%s", mCacheBuster);
-    }
-
-    private static AdSelectionSignals makeAdSelectionSignals() {
-        return AdSelectionSignals.fromString(
-                String.format("{\"valid\": true, \"publisher\": \"%s\"}", PACKAGE_NAME));
-    }
-
-    private JoinCustomAudienceRequest makeJoinCustomAudienceRequest(String customAudienceName) {
-        return new JoinCustomAudienceRequest.Builder()
-                .setCustomAudience(makeCustomAudience(customAudienceName))
-                .build();
-    }
-
-    private CustomAudience makeCustomAudience(String customAudienceName) {
-        Uri trustedBiddingUri = Uri.parse(mServerBaseAddress + Scenarios.BIDDING_SIGNALS_PATH);
-        Uri dailyUpdateUri =
-                Uri.parse(mServerBaseAddress + Scenarios.getDailyUpdatePath(customAudienceName));
-        return new CustomAudience.Builder()
-                .setName(customAudienceName)
-                .setDailyUpdateUri(dailyUpdateUri)
-                .setTrustedBiddingData(
-                        new TrustedBiddingData.Builder()
-                                .setTrustedBiddingKeys(ImmutableList.of())
-                                .setTrustedBiddingUri(trustedBiddingUri)
-                                .build())
-                .setUserBiddingSignals(AdSelectionSignals.fromString("{}"))
-                .setAds(makeAds(customAudienceName))
-                .setBiddingLogicUri(
-                        Uri.parse(String.format(mServerBaseAddress + Scenarios.BIDDING_LOGIC_PATH)))
-                .setBuyer(mAdTechIdentifier)
-                .setActivationTime(Instant.now())
-                .setExpirationTime(Instant.now().plus(5, ChronoUnit.DAYS))
-                .build();
-    }
-
-    private ImmutableList<AdData> makeAds(String customAudienceName) {
-        ImmutableList.Builder<AdData> ads = new ImmutableList.Builder<>();
-        for (int i = 0; i < NUM_ADS_PER_AUDIENCE; i++) {
-            ads.add(makeAd(/* adNumber= */ i, customAudienceName));
-        }
-        return ads.build();
-    }
-
-    private AdData makeAd(int adNumber, String customAudienceName) {
-        return new AdData.Builder()
-                .setMetadata(
-                        String.format(
-                                Locale.ENGLISH,
-                                "{\"bid\": 5, \"ad_number\": %d, \"target\": \"%s\"}",
-                                adNumber,
-                                PACKAGE_NAME))
-                .setRenderUri(
-                        Uri.parse(
-                                String.format(
-                                        "%s/render/%s/%s",
-                                        mServerBaseAddress, customAudienceName, adNumber)))
-                .build();
     }
 }

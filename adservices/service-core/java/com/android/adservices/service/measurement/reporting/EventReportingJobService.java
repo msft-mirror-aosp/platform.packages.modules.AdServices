@@ -31,7 +31,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
-import com.android.adservices.service.AdServicesConfig;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.SystemHealthParams;
@@ -146,7 +146,8 @@ public final class EventReportingJobService extends JobService {
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
-        if (FlagsFactory.getFlags().getMeasurementJobEventReportingKillSwitch()) {
+        Flags flags = FlagsFactory.getFlags();
+        if (flags.getMeasurementJobEventReportingKillSwitch()) {
             LogUtil.d("EventReportingJobService is disabled, skip scheduling");
             return;
         }
@@ -160,7 +161,7 @@ public final class EventReportingJobService extends JobService {
         final JobInfo scheduledJob =
                 jobScheduler.getPendingJob(MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
-        JobInfo jobInfo = buildJobInfo(context);
+        JobInfo jobInfo = buildJobInfo(context, flags);
         if (forceSchedule || !jobInfo.equals(scheduledJob)) {
             schedule(jobScheduler, jobInfo);
             LogUtil.d("Scheduled EventReportingJobService");
@@ -169,14 +170,15 @@ public final class EventReportingJobService extends JobService {
         }
     }
 
-    private static JobInfo buildJobInfo(Context context) {
+    private static JobInfo buildJobInfo(Context context, Flags flags) {
         return new JobInfo.Builder(
                         MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID,
                         new ComponentName(context, EventReportingJobService.class))
-                .setRequiresBatteryNotLow(true)
-                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
-                .setPeriodic(AdServicesConfig.getMeasurementEventMainReportingJobPeriodMs())
-                .setPersisted(true)
+                .setRequiresBatteryNotLow(
+                        flags.getMeasurementEventReportingJobRequiredBatteryNotLow())
+                .setRequiredNetworkType(flags.getMeasurementEventReportingJobRequiredNetworkType())
+                .setPeriodic(flags.getMeasurementEventMainReportingJobPeriodMs())
+                .setPersisted(flags.getMeasurementEventReportingJobPersisted())
                 .build();
     }
 

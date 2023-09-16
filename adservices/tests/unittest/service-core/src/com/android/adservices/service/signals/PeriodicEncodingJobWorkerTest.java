@@ -74,7 +74,7 @@ public class PeriodicEncodingJobWorkerTest {
     private static final AdTechIdentifier BUYER_2 = CommonFixture.VALID_BUYER_2;
 
     private static final int TIMEOUT_SECONDS = 5;
-    private static final int MAX_SIZE_BYTES = (int) (1.5 * 1024); // 1.5 KB;
+    private static final int MAX_SIZE_BYTES = 100;
 
     @Rule public MockitoRule rule = MockitoJUnit.rule();
 
@@ -96,6 +96,7 @@ public class PeriodicEncodingJobWorkerTest {
 
     @Before
     public void setup() {
+        when(mFlags.getProtectedSignalsEncodedPayloadMaxSizeBytes()).thenReturn(MAX_SIZE_BYTES);
         mJobWorker =
                 new PeriodicEncodingJobWorker(
                         mEncoderLogicDao,
@@ -112,9 +113,7 @@ public class PeriodicEncodingJobWorkerTest {
     public void testValidateAndPersistPayloadSuccess() {
         String encodedPayload = getBase64String("Valid payload");
         int version = 1;
-        assertTrue(
-                mJobWorker.validateAndPersistPayload(
-                        BUYER, encodedPayload, version, MAX_SIZE_BYTES));
+        assertTrue(mJobWorker.validateAndPersistPayload(BUYER, encodedPayload, version));
 
         verify(mEncodedPayloadDao).persistEncodedPayload(mEncodedPayloadCaptor.capture());
         assertEquals(BUYER, mEncodedPayloadCaptor.getValue().getBuyer());
@@ -129,15 +128,15 @@ public class PeriodicEncodingJobWorkerTest {
     public void testValidateAndPersistPayloadInvalidBase64() {
         String encodedPayload = "Invalid, non base64 payload";
         int version = 1;
-        assertFalse(
-                mJobWorker.validateAndPersistPayload(
-                        BUYER, encodedPayload, version, MAX_SIZE_BYTES));
+        assertFalse(mJobWorker.validateAndPersistPayload(BUYER, encodedPayload, version));
         Mockito.verifyZeroInteractions(mEncodedPayloadDao);
     }
 
     @Test
     public void testValidateAndPersistLargePayloadSkips() {
         int reallySmallMaxSizeLimit = 5;
+        when(mFlags.getProtectedSignalsEncodedPayloadMaxSizeBytes())
+                .thenReturn(reallySmallMaxSizeLimit);
         mJobWorker =
                 new PeriodicEncodingJobWorker(
                         mEncoderLogicDao,
@@ -150,9 +149,7 @@ public class PeriodicEncodingJobWorkerTest {
                         mFlags);
         String encodedPayload = getBase64String("Valid, but really large payload");
         int version = 1;
-        assertFalse(
-                mJobWorker.validateAndPersistPayload(
-                        BUYER, encodedPayload, version, reallySmallMaxSizeLimit));
+        assertFalse(mJobWorker.validateAndPersistPayload(BUYER, encodedPayload, version));
 
         Mockito.verifyZeroInteractions(mEncodedPayloadDao);
     }

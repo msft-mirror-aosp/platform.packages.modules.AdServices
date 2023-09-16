@@ -76,6 +76,20 @@ public class ScenarioDispatcherTest {
         server.shutdown();
     }
 
+    @Test
+    public void testScenarioDispatcher_withVerifyNotCalled_success() throws Exception {
+        ScenarioDispatcher dispatcher =
+                ScenarioDispatcher.fromScenario("scenarios/scenario-test-003.json", "");
+        MockWebServer server = mMockWebServerRule.startMockWebServer(dispatcher);
+
+        String baseAddress = mMockWebServerRule.getServerBaseAddress();
+        makeSimpleGetRequest(new URL(baseAddress + "/bidding")); // Call something else.
+
+        assertThat(dispatcher.getCalledPaths())
+                .doesNotContain(dispatcher.getVerifyNotCalledPaths());
+        server.shutdown();
+    }
+
     @SuppressWarnings("UnusedReturnValue")
     public static String makeSimpleGetRequest(URL url) throws Exception {
         StringBuilder result = new StringBuilder();

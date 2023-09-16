@@ -100,6 +100,22 @@ public class ScenarioDispatcher extends Dispatcher {
     }
 
     /**
+     * Get all paths of calls to this server that were NOT expected.
+     *
+     * @return String list of paths.
+     */
+    public ImmutableSet<String> getVerifyNotCalledPaths() {
+        ImmutableSet.Builder<String> builder = ImmutableSet.builder();
+        mRequestToResponseMap.forEach(
+                (s, response) -> {
+                    if (response.getVerifyNotCalled()) {
+                        builder.add("/" + s.getPath());
+                    }
+                });
+        return builder.build();
+    }
+
+    /**
      * Get all paths of calls to this server that were expected.
      *
      * <p>These are defined by the `verify_called` and `verify_not_called` fields in the test
@@ -170,16 +186,21 @@ public class ScenarioDispatcher extends Dispatcher {
             throw new IllegalArgumentException("request or response JSON object is null.");
         }
 
-        boolean verifyCalled;
-        try {
-            verifyCalled = mock.getBoolean("verify_called");
-        } catch (JSONException e) {
-            verifyCalled = false;
-        }
-
         Request request = parseRequest(requestJson);
-        Response response = parseResponse(responseJson).setVerifyCalled(verifyCalled).build();
+        Response response =
+                parseResponse(responseJson)
+                        .setVerifyCalled(getBooleanOptional("verify_called", mock))
+                        .setVerifyNotCalled(getBooleanOptional("verify_not_called", mock))
+                        .build();
         return Pair.create(request, response);
+    }
+
+    private static boolean getBooleanOptional(String field, JSONObject json) {
+        try {
+            return json.getBoolean(field);
+        } catch (JSONException e) {
+            return false;
+        }
     }
 
     private static Request parseRequest(JSONObject json) {
@@ -315,6 +336,8 @@ public class ScenarioDispatcher extends Dispatcher {
 
         abstract boolean getVerifyCalled();
 
+        abstract boolean getVerifyNotCalled();
+
         abstract ImmutableMap<String, String> getHeaders();
 
         static Response.Builder newBuilder() {
@@ -326,6 +349,8 @@ public class ScenarioDispatcher extends Dispatcher {
             abstract Builder setBody(String body);
 
             abstract Builder setVerifyCalled(boolean verifyCalled);
+
+            abstract Builder setVerifyNotCalled(boolean verifyNotCalled);
 
             abstract Builder setHeaders(Map<String, String> headers);
 

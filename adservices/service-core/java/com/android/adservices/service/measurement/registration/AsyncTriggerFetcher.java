@@ -650,8 +650,9 @@ public class AsyncTriggerFetcher {
         JSONArray validAttributionConfigsArray = new JSONArray();
         for (int i = 0; i < attributionConfigsArray.length(); i++) {
             AttributionConfig attributionConfig =
-                    new AttributionConfig.Builder(attributionConfigsArray.getJSONObject(i)).build();
-            validAttributionConfigsArray.put(attributionConfig.serializeAsJson());
+                    new AttributionConfig.Builder(attributionConfigsArray.getJSONObject(i), mFlags)
+                            .build();
+            validAttributionConfigsArray.put(attributionConfig.serializeAsJson(mFlags));
         }
         return validAttributionConfigsArray.toString();
     }

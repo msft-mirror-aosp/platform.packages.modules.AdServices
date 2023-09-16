@@ -354,7 +354,13 @@ public class LoadSdkSessionUnitTest {
         FakeRequestSurfacePackageCallbackBinder surfacePackageCallback =
                 new FakeRequestSurfacePackageCallbackBinder();
         sdkSession.requestSurfacePackage(
-                new Binder(), 0, 500, 500, -1, new Bundle(), surfacePackageCallback);
+                new Binder(),
+                0,
+                500,
+                500,
+                mSandboxLatencyInfo,
+                new Bundle(),
+                surfacePackageCallback);
         mSdkSandboxService.sendSurfacePackageReady(mSandboxLatencyInfo);
         assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isTrue();
     }
@@ -376,7 +382,13 @@ public class LoadSdkSessionUnitTest {
         FakeRequestSurfacePackageCallbackBinder surfacePackageCallback =
                 new FakeRequestSurfacePackageCallbackBinder();
         sdkSession.requestSurfacePackage(
-                new Binder(), 0, 500, 500, -1, new Bundle(), surfacePackageCallback);
+                new Binder(),
+                0,
+                500,
+                500,
+                mSandboxLatencyInfo,
+                new Bundle(),
+                surfacePackageCallback);
 
         assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isFalse();
         assertThat(surfacePackageCallback.getSurfacePackageErrorCode())
@@ -392,7 +404,13 @@ public class LoadSdkSessionUnitTest {
         FakeRequestSurfacePackageCallbackBinder surfacePackageCallback =
                 new FakeRequestSurfacePackageCallbackBinder();
         sdkSession.requestSurfacePackage(
-                new Binder(), 0, 500, 500, -1, new Bundle(), surfacePackageCallback);
+                new Binder(),
+                0,
+                500,
+                500,
+                mSandboxLatencyInfo,
+                new Bundle(),
+                surfacePackageCallback);
 
         // Kill the sandbox in between.
         sdkSession.onSandboxDeath();
