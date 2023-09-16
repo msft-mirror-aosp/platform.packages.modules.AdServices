@@ -35,6 +35,7 @@ android_test {
         "androidx.test.rules",
         "androidx.test.ext.truth",
         "androidx.test.ext.junit",
+        "SdkSandboxTestUtils",
         "truth-prebuilt",
     ],
     test_suites: ["general-tests"],

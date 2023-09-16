@@ -214,6 +214,15 @@ public class SdkSandboxServiceProviderImplUnitTest {
         assertThat(mServiceProvider.getSdkSandboxServiceForApp(mCallingInfo)).isNull();
     }
 
+    @Test
+    public void testSandboxProcessNameForInstrumentation() {
+        String processName = "testprocess";
+
+        assertThat(mServiceProvider.toSandboxProcessNameForInstrumentation(processName))
+                .isEqualTo(
+                        processName + SdkSandboxServiceProvider.SANDBOX_INSTR_PROCESS_NAME_SUFFIX);
+    }
+
     private void bindService(CallingInfo callingInfo, FakeServiceConnection serviceConnection)
             throws Exception {
         bindService(callingInfo, serviceConnection, true);

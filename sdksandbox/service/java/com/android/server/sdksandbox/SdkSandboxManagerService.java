@@ -111,6 +111,7 @@ import com.android.server.sdksandbox.proto.Services.AllowedService;
 import com.android.server.sdksandbox.proto.Services.AllowedServices;
 import com.android.server.sdksandbox.proto.Services.ServiceAllowlists;
 import com.android.server.wm.ActivityInterceptorCallback;
+import com.android.server.wm.ActivityInterceptorCallback.ActivityInterceptorInfo;
 import com.android.server.wm.ActivityInterceptorCallbackRegistry;
 
 import com.google.protobuf.Parser;
@@ -503,42 +504,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     private void registerSandboxActivityInterceptor() {
         final ActivityInterceptorCallback mActivityInterceptorCallback =
-                info -> {
-                    final Intent intent = info.getIntent();
-                    final String sdkSandboxPackageName =
-                            mContext.getPackageManager().getSdkSandboxPackageName();
-                    // Only intercept if action and package are both defined and refer to the
-                    // sandbox activity.
-                    if (intent == null
-                            || intent.getPackage() == null
-                            || !intent.getPackage().equals(sdkSandboxPackageName)
-                            || intent.getAction() == null
-                            || !intent.getAction().equals(ACTION_START_SANDBOXED_ACTIVITY)) {
-                        return null;
-                    }
-
-                    // If component is set, it should refer to the sandbox package to intercept.
-                    if (intent.getComponent() != null) {
-                        final String componentPackageName = intent.getComponent().getPackageName();
-                        if (!componentPackageName.equals(sdkSandboxPackageName)) {
-                            return null;
-                        }
-                    }
-
-                    final String sandboxProcessName =
-                            this.mInjector
-                                    .getSdkSandboxServiceProvider()
-                                    .toSandboxProcessName(info.getCallingPackage());
-                    final int sandboxUid = Process.toSdkSandboxUid(info.getCallingUid());
-
-                    // Update process name and uid to match sandbox process for the calling app.
-                    ActivityInfo activityInfo = info.getActivityInfo();
-                    activityInfo.applicationInfo.uid = sandboxUid;
-                    activityInfo.processName = sandboxProcessName;
-
-                    return new ActivityInterceptorCallback.ActivityInterceptResult(
-                            info.getIntent(), info.getCheckedOptions(), true);
-                };
+                new SdkSandboxInterceptorCallback();
         ActivityInterceptorCallbackRegistry registry =
                 ActivityInterceptorCallbackRegistry.getInstance();
         registry.registerActivityInterceptorCallback(
@@ -2582,6 +2548,33 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
     }
 
+    private boolean isSdkSandboxAllowedToStartActivities(int pid, int uid) {
+        return mContext.checkPermission(
+                        "android.permission.START_ACTIVITIES_FROM_SDK_SANDBOX", pid, uid)
+                == PackageManager.PERMISSION_GRANTED;
+    }
+
+    //TODO(b/299109198): refactor with the {@link Intent#isSandboxActivity}.
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    boolean isSdkSandboxActivity(Intent intent) {
+        if (intent == null) {
+            return false;
+        }
+        if (intent.getAction() != null
+                && intent.getAction().equals(ACTION_START_SANDBOXED_ACTIVITY)) {
+            return true;
+        }
+        final String sandboxPackageName = mContext.getPackageManager().getSdkSandboxPackageName();
+        if (intent.getPackage() != null && intent.getPackage().equals(sandboxPackageName)) {
+            return true;
+        }
+        if (intent.getComponent() != null
+                && intent.getComponent().getPackageName().equals(sandboxPackageName)) {
+            return true;
+        }
+        return false;
+    }
+
     /** @hide */
     public static class Lifecycle extends SystemService {
         @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
@@ -2604,6 +2597,97 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         public void onUserUnlocking(TargetUser user) {
             final int userId = user.getUserHandle().getIdentifier();
             mService.onUserUnlocking(userId);
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+    private class SdkSandboxInterceptorCallback implements ActivityInterceptorCallback {
+
+        private enum InterceptCase {
+            SANDBOXED_ACTIVITY,
+            INSTRUMENTATION_ACTIVITY,
+            NO_INTERCEPT
+        }
+
+        private InterceptCase shouldIntercept(ActivityInterceptorInfo info) {
+            final Intent intent = info.getIntent();
+            if (intent == null) {
+                return InterceptCase.NO_INTERCEPT;
+            }
+
+            if (isSdkSandboxActivity(intent)) {
+                final String sdkSandboxPackageName =
+                        mContext.getPackageManager().getSdkSandboxPackageName();
+                // Only intercept if action and package are both defined and refer to the
+                // sandbox activity.
+                if (intent.getPackage() == null
+                        || !intent.getPackage().equals(sdkSandboxPackageName)
+                        || intent.getAction() == null
+                        || !intent.getAction().equals(ACTION_START_SANDBOXED_ACTIVITY)) {
+                    return InterceptCase.NO_INTERCEPT;
+                }
+
+                // If component is set, it should refer to the sandbox package to intercept.
+                if (intent.getComponent() != null) {
+                    if (!intent.getComponent().getPackageName().equals(sdkSandboxPackageName)) {
+                        return InterceptCase.NO_INTERCEPT;
+                    }
+                }
+                return InterceptCase.SANDBOXED_ACTIVITY;
+            }
+
+            if (info.getActivityInfo() == null
+                    || !Process.isSdkSandboxUid(info.getCallingUid())
+                    || !SdkLevel.isAtLeastV()) {
+                return InterceptCase.NO_INTERCEPT;
+            }
+            final ApplicationInfo applicationInfo = info.getActivityInfo().applicationInfo;
+            synchronized (mLock) {
+                if (applicationInfo.packageName != null
+                        && mRunningInstrumentations.contains(
+                                new CallingInfo(applicationInfo.uid, applicationInfo.packageName))
+                        && isSdkSandboxAllowedToStartActivities(
+                                info.getCallingPid(), info.getCallingUid())) {
+                    return InterceptCase.INSTRUMENTATION_ACTIVITY;
+                }
+            }
+
+            return InterceptCase.NO_INTERCEPT;
+        }
+
+        @Override
+        public ActivityInterceptResult onInterceptActivityLaunch(
+                @NonNull ActivityInterceptorInfo info) {
+            final ActivityInfo activityInfo = info.getActivityInfo();
+
+            // Do not add any lines before checking if interception should apply, this interception
+            // happens for every single activity and adding logic might add significant performance
+            // overhead.
+            switch (shouldIntercept(info)) {
+                case SANDBOXED_ACTIVITY:
+                    // Update process name and uid to match sandbox process for the calling app.
+                    activityInfo.applicationInfo.uid =
+                            Process.toSdkSandboxUid(info.getCallingUid());
+                    activityInfo.processName =
+                            mInjector
+                                    .getSdkSandboxServiceProvider()
+                                    .toSandboxProcessName(info.getCallingPackage());
+                    break;
+                case INSTRUMENTATION_ACTIVITY:
+                    // Tests instrumented to run in the Sandbox already use a sandbox Uid.
+                    activityInfo.applicationInfo.uid = info.getCallingUid();
+                    activityInfo.processName =
+                            mInjector
+                                    .getSdkSandboxServiceProvider()
+                                    .toSandboxProcessNameForInstrumentation(
+                                            activityInfo.applicationInfo.packageName);
+                    break;
+                default: // NO_INTERCEPT
+                    return null;
+            }
+
+            return new ActivityInterceptorCallback.ActivityInterceptResult(
+                    info.getIntent(), info.getCheckedOptions(), true);
         }
     }
 
@@ -2879,7 +2963,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         @Override
         public String getSdkSandboxProcessNameForInstrumentation(
                 @NonNull ApplicationInfo clientAppInfo) {
-            return clientAppInfo.processName + "_sdk_sandbox_instr";
+            return mServiceProvider.toSandboxProcessNameForInstrumentation(
+                    clientAppInfo.packageName);
         }
 
         @NonNull
@@ -2939,6 +3024,22 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
             if (doesInputMatchAnyWildcardPattern(getActivityAllowlist(), intent.getAction())) {
                 return;
+            }
+            // During CTS-in-sandbox testing, we store the package name of the instrumented test in
+            // the intent identifier to match it against the running instrumentations.
+            final String instrumentationPackageName = intent.getIdentifier();
+            final int callingUid = Binder.getCallingUid();
+            final int appUid = Process.getAppUidForSdkSandboxUid(callingUid);
+            synchronized (mLock) {
+                if (instrumentationPackageName != null
+                        && Process.isSdkSandboxUid(callingUid)
+                        && mRunningInstrumentations.contains(
+                                new CallingInfo(appUid, instrumentationPackageName))
+                        && isSdkSandboxAllowedToStartActivities(
+                                Binder.getCallingPid(), callingUid)) {
+                    // allow launching activities for sdk-in-sandbox instrumented tests.
+                    return;
+                }
             }
             throw new SecurityException(
                     "Intent "

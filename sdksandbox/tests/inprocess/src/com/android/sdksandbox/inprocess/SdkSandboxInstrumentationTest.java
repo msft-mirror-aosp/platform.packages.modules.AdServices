@@ -16,17 +16,23 @@
 
 package com.android.sdksandbox.inprocess;
 
+import static com.android.compatibility.common.util.SystemUtil.runWithShellPermissionIdentity;
+
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
+import android.app.Activity;
+import android.app.sdksandbox.testutils.EmptyActivity;
 import android.content.Context;
 import android.os.Process;
 
 import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.rule.ActivityTestRule;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -37,6 +43,13 @@ public class SdkSandboxInstrumentationTest {
 
     private Context mContext;
     private Context mTargetContext;
+
+    @Rule
+    public final ActivityTestRule mActivityRule =
+            new ActivityTestRule<>(
+                    EmptyActivity.class,
+                    /* initialTouchMode= */ false,
+                    /* launchActivity= */ false);
 
     @Before
     public void setup() {
@@ -58,6 +71,35 @@ public class SdkSandboxInstrumentationTest {
         assertWithMessage("getContext and getTargetContext should return the same object.")
                 .that(mContext)
                 .isSameInstanceAs(mTargetContext);
+    }
+
+    @Test
+    public void testLaunchEmptyActivity() throws Exception {
+        Activity activity = null;
+
+        try {
+            activity = mActivityRule.launchActivity(/* intent */ null);
+        } catch (Exception e) {
+            // The activity launch should fail.
+        }
+
+        assertWithMessage("Launching activities not allowed without shell permission.")
+                .that(activity)
+                .isNull();
+    }
+
+    @Test
+    public void testLaunchEmptyActivity_sdkInSandbox() throws Exception {
+        assumeTrue(isSdkInSandbox());
+
+        Activity activity =
+                runWithShellPermissionIdentity(
+                        () -> {
+                            return mActivityRule.launchActivity(/* intent */ null);
+                        },
+                        android.Manifest.permission.START_ACTIVITIES_FROM_SDK_SANDBOX);
+
+        assertWithMessage("Activity should be launched successfully.").that(activity).isNotNull();
     }
 
     private boolean isSdkInSandbox() {

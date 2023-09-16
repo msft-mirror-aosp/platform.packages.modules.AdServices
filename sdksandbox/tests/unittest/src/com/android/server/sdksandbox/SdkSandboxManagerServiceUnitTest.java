@@ -33,10 +33,8 @@ import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_AP
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_SANDBOX_TO_APP;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_APP;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_SANDBOX;
+import static com.android.server.sdksandbox.SdkSandboxServiceProvider.SANDBOX_INSTR_PROCESS_NAME_SUFFIX;
 import static com.android.server.wm.ActivityInterceptorCallback.MAINLINE_SDK_SANDBOX_ORDER_ID;
-
-import com.android.modules.utils.build.SdkLevel;
-import com.android.sdksandbox.IComputeSdkStorageCallback;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -92,6 +90,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSessionBuilder;
 import com.android.modules.utils.build.SdkLevel;
+import com.android.sdksandbox.IComputeSdkStorageCallback;
 import com.android.sdksandbox.ISdkSandboxService;
 import com.android.sdksandbox.IUnloadSdkCallback;
 import com.android.sdksandbox.service.stats.SdkSandboxStatsLog;
@@ -104,7 +103,6 @@ import com.android.server.sdksandbox.proto.Services.AllowedService;
 import com.android.server.sdksandbox.proto.Services.AllowedServices;
 import com.android.server.wm.ActivityInterceptorCallback;
 import com.android.server.wm.ActivityInterceptorCallbackRegistry;
-
 
 import org.junit.After;
 import org.junit.Before;
@@ -1208,6 +1206,26 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
+    public void testSdkSandboxActivity() {
+        final String sandboxPackageName =
+                InstrumentationRegistry.getInstrumentation()
+                        .getContext()
+                        .getPackageManager()
+                        .getSdkSandboxPackageName();
+
+        assertThat(mService.isSdkSandboxActivity(new Intent())).isFalse();
+        assertThat(mService.isSdkSandboxActivity(new Intent(ACTION_START_SANDBOXED_ACTIVITY)))
+                .isTrue();
+        assertThat(mService.isSdkSandboxActivity(new Intent().setPackage(sandboxPackageName)))
+                .isTrue();
+        assertThat(
+                        mService.isSdkSandboxActivity(
+                                new Intent()
+                                        .setComponent(new ComponentName(sandboxPackageName, ""))))
+                .isTrue();
+    }
+
+    @Test
     public void testEnforceAllowedToHostSandboxedActivityFailIfCalledFromSandboxUid()
             throws RemoteException {
         loadSdk(SDK_NAME);
@@ -1453,7 +1471,7 @@ public class SdkSandboxManagerServiceUnitTest {
         final ApplicationInfo info = pm.getApplicationInfo(TEST_PACKAGE, 0);
         final String processName =
                 sSdkSandboxManagerLocal.getSdkSandboxProcessNameForInstrumentation(info);
-        assertThat(processName).isEqualTo(TEST_PACKAGE + "_sdk_sandbox_instr");
+        assertThat(processName).isEqualTo(TEST_PACKAGE + SANDBOX_INSTR_PROCESS_NAME_SUFFIX);
     }
 
     @Test
@@ -1466,7 +1484,8 @@ public class SdkSandboxManagerServiceUnitTest {
                 sSdkSandboxManagerLocal.getSdkSandboxApplicationInfoForInstrumentation(
                         clientAppInfo, /* userId= */ 0, /* isSdkInSandbox= */ false);
 
-        assertThat(sdkSandboxInfo.processName).isEqualTo(TEST_PACKAGE + "_sdk_sandbox_instr");
+        assertThat(sdkSandboxInfo.processName)
+                .isEqualTo(TEST_PACKAGE + SANDBOX_INSTR_PROCESS_NAME_SUFFIX);
         assertThat(sdkSandboxInfo.packageName).isEqualTo(pm.getSdkSandboxPackageName());
         assertThat(sdkSandboxInfo.sourceDir).startsWith("/apex/com.android.adservices");
     }
@@ -1481,7 +1500,8 @@ public class SdkSandboxManagerServiceUnitTest {
                 sSdkSandboxManagerLocal.getSdkSandboxApplicationInfoForInstrumentation(
                         clientAppInfo, /* userId= */ 0, /* isSdkInSandbox= */ true);
 
-        assertThat(sdkSandboxInfo.processName).isEqualTo(TEST_PACKAGE + "_sdk_sandbox_instr");
+        assertThat(sdkSandboxInfo.processName)
+                .isEqualTo(TEST_PACKAGE + SANDBOX_INSTR_PROCESS_NAME_SUFFIX);
         assertThat(sdkSandboxInfo.packageName).isEqualTo(pm.getSdkSandboxPackageName());
         assertThat(sdkSandboxInfo.sourceDir).startsWith("/data/app");
     }
@@ -4245,6 +4265,52 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
+    public void testRegisterActivityInterceptorCallbackForInstrumentationActivities() {
+        assumeTrue(SdkLevel.isAtLeastV());
+        disableKillUid();
+        ExtendedMockito.when(Process.isSdkSandboxUid(Mockito.anyInt())).thenReturn(true);
+        sSdkSandboxManagerLocal.notifyInstrumentationStarted(TEST_PACKAGE, mClientAppUid);
+
+        Intent intent = new Intent().setAction(Intent.ACTION_VIEW);
+        ActivityInfo activityInfo = new ActivityInfo();
+        activityInfo.processName = TEST_PACKAGE;
+        activityInfo.applicationInfo = new ApplicationInfo();
+        activityInfo.applicationInfo.packageName = TEST_PACKAGE;
+        activityInfo.applicationInfo.uid = mClientAppUid;
+
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(
+                        // Required to intercept activities during CTS-in-sandbox tests.
+                        android.Manifest.permission.START_ACTIVITIES_FROM_SDK_SANDBOX,
+                        // Required for test tearDown.
+                        Manifest.permission.READ_DEVICE_CONFIG,
+                        Manifest.permission.WRITE_DEVICE_CONFIG);
+        ActivityInterceptorCallback.ActivityInterceptResult result =
+                mInterceptorCallbackArgumentCaptor
+                        .getValue()
+                        .onInterceptActivityLaunch(
+                                new ActivityInterceptorCallback.ActivityInterceptorInfo.Builder(
+                                                mClientAppUid,
+                                                Process.myPid(),
+                                                /* realCallingUid= */ 0,
+                                                /* realCallingPid= */ 0,
+                                                /* userId= */ 0,
+                                                intent,
+                                                /* rInfo= */ null,
+                                                activityInfo)
+                                        .setCallingPackage(TEST_PACKAGE)
+                                        .build());
+
+        assertThat(result.getIntent()).isEqualTo(intent);
+        assertThat(result.getActivityOptions()).isNull();
+        assertThat(result.isActivityResolved()).isTrue();
+        assertThat(activityInfo.processName)
+                .isEqualTo(TEST_PACKAGE + SANDBOX_INSTR_PROCESS_NAME_SUFFIX);
+        assertThat(activityInfo.applicationInfo.uid).isEqualTo(mClientAppUid);
+    }
+
+    @Test
     public void testWildcardPatternMatch() {
         String pattern1 = "abcd*";
         verifyPatternMatch(pattern1, "abcd", /*matchOnNullInput=*/ false, true);
@@ -4522,6 +4588,12 @@ public class SdkSandboxManagerServiceUnitTest {
         @Override
         public String toSandboxProcessName(@NonNull String packageName) {
             return TEST_PACKAGE + SANDBOX_PROCESS_NAME_SUFFIX;
+        }
+
+        @NonNull
+        @Override
+        public String toSandboxProcessNameForInstrumentation(@NonNull String packageName) {
+            return packageName + SANDBOX_INSTR_PROCESS_NAME_SUFFIX;
         }
     }
 
