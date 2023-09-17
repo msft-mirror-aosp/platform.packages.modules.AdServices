@@ -3,8 +3,8 @@
     "property": "version_info",
     "taxonomy_type": "chrome_and_mobile_taxonomy",
     "taxonomy_version": "2",
-    "build_id": "1800",
-    "updated_date": "2022-09-10"
+    "build_id": "1986",
+    "updated_date": "2023-06-20"
   },
   {
     "asset_name": "labels_topics",
@@ -29,9 +29,9 @@
   },
   {
     "asset_name": "tflite_model",
-    "asset_version": "4",
+    "asset_version": "5",
     "path": "assets/classifier/model.tflite",
-    "checksum": "1d5c1a58f60e08eac8aca356b65f38bf7b9d1486bf256641069ba9998bd7c05f",
-    "updated_date": "2023-04-26"
+    "checksum": "2dbaf48fc1f40179a2dd81e306a8ddac8cce1e426c4258890ab83cc12f8ad3d0",
+    "updated_date": "2023-06-20"
   }
 ]

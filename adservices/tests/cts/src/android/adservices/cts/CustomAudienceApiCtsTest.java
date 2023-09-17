@@ -54,8 +54,10 @@ import android.util.Pair;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
@@ -68,6 +70,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -91,11 +94,17 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
     private final ArrayList<Pair<AdTechIdentifier, String>> mCustomAudiencesToCleanUp =
             new ArrayList<>();
 
+    // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    // Skip the test if it runs on unsupported platforms.
+    @Rule(order = 1)
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
     @Before
     public void setup() throws InterruptedException {
-        // Skip the test if it runs on unsupported platforms
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-
         if (SdkLevel.isAtLeastT()) {
             assertForegroundActivityStarted();
         } else {
@@ -130,10 +139,6 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
 
     @After
     public void tearDown() throws ExecutionException, InterruptedException, TimeoutException {
-        if (!AdservicesTestHelper.isDeviceSupported()) {
-            return;
-        }
-
         leaveJoinedCustomAudiences();
         PhFlagsFixture.overrideEnableEnrollmentSeed(false);
 

@@ -46,6 +46,7 @@ import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.AggregateReportingJob;
 import com.android.adservices.service.measurement.actions.EventReportingJob;
 import com.android.adservices.service.measurement.actions.InstallApp;
+import com.android.adservices.service.measurement.actions.RegisterListSources;
 import com.android.adservices.service.measurement.actions.RegisterSource;
 import com.android.adservices.service.measurement.actions.RegisterTrigger;
 import com.android.adservices.service.measurement.actions.RegisterWebSource;
@@ -162,6 +163,7 @@ public abstract class E2ETest {
         String TEST_OUTPUT_KEY = "output";
         String SOURCE_REGISTRATIONS_KEY = "sources";
         String WEB_SOURCES_KEY = "web_sources";
+        String LIST_SOURCES_KEY = "list_sources";
         String SOURCE_PARAMS_REGISTRATIONS_KEY = "source_params";
         String TRIGGER_KEY = "triggers";
         String WEB_TRIGGERS_KEY = "web_triggers";
@@ -178,6 +180,7 @@ public abstract class E2ETest {
         String SOURCE_WEB_DESTINATION_URI_KEY = "web_destination";
         String SOURCE_VERIFIED_DESTINATION_URI_KEY = "verified_destination";
         String REGISTRATION_URI_KEY = "attribution_src_url";
+        String REGISTRATION_URIS_KEY = "attribution_src_urls";
         String HAS_AD_ID_PERMISSION = "has_ad_id_permission";
         String DEBUG_KEY = "debug_key";
         String DEBUG_PERMISSION_KEY = "debug_permission";
@@ -226,7 +229,7 @@ public abstract class E2ETest {
         private Integer mNavigationTriggerDataCardinality;
         private Integer mMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution;
         private Integer mMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource;
-        private Integer mMaxDistinctEnrollmentsPerPublisherXDestinationInSource;
+        private Integer mMaxDistinctReportingOriginsPerPublisherXDestinationInSource;
         // System health params
         private Integer mMaxSourcesPerPublisher;
         private Integer mMaxEventReportsPerDestination;
@@ -266,12 +269,12 @@ public abstract class E2ETest {
             }
             if (!json.isNull(ApiConfigKeys
                     .RATE_LIMIT_MAX_SOURCE_REGISTRATION_REPORTING_ORIGINS)) {
-                mMaxDistinctEnrollmentsPerPublisherXDestinationInSource = json.getInt(
-                        ApiConfigKeys.RATE_LIMIT_MAX_SOURCE_REGISTRATION_REPORTING_ORIGINS);
+                mMaxDistinctReportingOriginsPerPublisherXDestinationInSource =
+                        json.getInt(
+                                ApiConfigKeys.RATE_LIMIT_MAX_SOURCE_REGISTRATION_REPORTING_ORIGINS);
             } else {
-                mMaxDistinctEnrollmentsPerPublisherXDestinationInSource =
-                        PrivacyParams
-                                .getMaxDistinctEnrollmentsPerPublisherXDestinationInSource();
+                mMaxDistinctReportingOriginsPerPublisherXDestinationInSource =
+                        Flags.MEASUREMENT_MAX_DISTINCT_REP_ORIG_PER_PUBLISHER_X_DEST_IN_SOURCE;
             }
             // System health params
             if (!json.isNull(ApiConfigKeys.MAX_SOURCES_PER_ORIGIN)) {
@@ -312,8 +315,8 @@ public abstract class E2ETest {
             return mMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource;
         }
 
-        public Integer getMaxDistinctEnrollmentsPerPublisherXDestinationInSource() {
-            return mMaxDistinctEnrollmentsPerPublisherXDestinationInSource;
+        public Integer getMaxDistinctOriginsPerPubXDestInSource() {
+            return mMaxDistinctReportingOriginsPerPublisherXDestinationInSource;
         }
 
         // System health params
@@ -528,6 +531,8 @@ public abstract class E2ETest {
                 processAction((RegisterWebSource) action);
             } else if (action instanceof RegisterWebTrigger) {
                 processAction((RegisterWebTrigger) action);
+            } else if (action instanceof RegisterListSources) {
+                processAction((RegisterListSources) action);
             } else if (action instanceof EventReportingJob) {
                 processAction((EventReportingJob) action);
             } else if (action instanceof AggregateReportingJob) {
@@ -563,6 +568,10 @@ public abstract class E2ETest {
      * Override with HTTP response mocks, for example.
      */
     abstract void prepareRegistrationServer(RegisterSource sourceRegistration)
+            throws IOException;
+
+    /** Override with HTTP response mocks, for example. */
+    abstract void prepareRegistrationServer(RegisterListSources sourceRegistration)
             throws IOException;
 
     /**
@@ -1206,6 +1215,26 @@ public abstract class E2ETest {
             }
         }
 
+        if (!input.isNull(TestFormatJsonMapping.LIST_SOURCES_KEY)) {
+            JSONArray listSourceRegistrationArray =
+                    input.getJSONArray(TestFormatJsonMapping.LIST_SOURCES_KEY);
+            for (int j = 0; j < listSourceRegistrationArray.length(); j++) {
+                RegisterListSources listSources =
+                        new RegisterListSources(listSourceRegistrationArray.getJSONObject(j));
+                actions.add(listSources);
+                // Add corresponding reporting job time actions
+                eventReportingJobActions.addAll(
+                        maybeAddEventReportingJobTimes(
+                                listSources
+                                                .mRegistrationRequest
+                                                .getSourceRegistrationRequest()
+                                                .getInputEvent()
+                                        == null,
+                                listSources.mTimestamp,
+                                listSources.mUriToResponseHeadersMap.values()));
+            }
+        }
+
         actions.addAll(eventReportingJobActions);
         return actions;
     }
@@ -1363,6 +1392,9 @@ public abstract class E2ETest {
             throws IOException, JSONException;
 
     abstract void processAction(RegisterWebSource sourceRegistration)
+            throws IOException, JSONException;
+
+    abstract void processAction(RegisterListSources sourceRegistration)
             throws IOException, JSONException;
 
     abstract void processAction(RegisterTrigger triggerRegistration)

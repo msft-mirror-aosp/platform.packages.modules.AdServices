@@ -22,6 +22,7 @@ import static com.android.adservices.tests.ui.libs.UiConstants.ENTRY_POINT_ENABL
 import android.adservices.common.AdServicesCommonManager;
 import android.content.Context;
 import android.os.OutcomeReceiver;
+import android.platform.test.rule.ScreenRecordRule;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
 import androidx.test.filters.FlakyTest;
@@ -39,6 +40,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -47,11 +49,16 @@ import java.util.concurrent.Executors;
 
 /** Test for verifying user consent notification trigger behaviors. */
 @RunWith(AndroidJUnit4.class)
+@ScreenRecordRule.ScreenRecord
 public class ReconsentNotificationTriggerTest {
 
     private AdServicesCommonManager mCommonManager;
     private UiDevice mDevice;
+    private String mTestName;
+
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
+
+    @Rule public final ScreenRecordRule sScreenRecordRule = new ScreenRecordRule();
 
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();
@@ -82,7 +89,10 @@ public class ReconsentNotificationTriggerTest {
     public void tearDown() throws Exception {
         if (!AdservicesTestHelper.isDeviceSupported()) return;
 
+        UiUtils.takeScreenshot(mDevice, getClass().getSimpleName() + "_" + mTestName + "_");
+
         mDevice.pressHome();
+
         AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
@@ -94,6 +104,8 @@ public class ReconsentNotificationTriggerTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testRowAdIdDisabledGaUxEnabledReConsent() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         reconsentNotificationTriggerHelper(true, false, true, AD_ID_DISABLED, true);
     }
 
@@ -105,6 +117,8 @@ public class ReconsentNotificationTriggerTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testRowAdIdEnabledGaUxEnabledReConsent() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         reconsentNotificationTriggerHelper(true, false, false, AD_ID_ENABLED, true);
     }
 
@@ -116,6 +130,8 @@ public class ReconsentNotificationTriggerTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testRowAdIdEnabledGaUxEnabledReConsentSecondNotDisplayed() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         reconsentNotificationTriggerHelper(true, false, false, AD_ID_ENABLED, true);
 
         mDevice.pressHome();
@@ -138,6 +154,8 @@ public class ReconsentNotificationTriggerTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testRowAdIdEnabledConsentOptoutGaUxEnabledReConsent() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         reconsentNotificationTriggerHelper(false, false, false, AD_ID_ENABLED, false);
     }
 
@@ -149,8 +167,11 @@ public class ReconsentNotificationTriggerTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testEuAdIdEnabledGaUxEnabledReconsent() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsEuDevice();
         UiUtils.enableBeta();
+        AdservicesTestHelper.killAdservicesProcess(sContext);
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
         AdservicesWorkflows.testClickNotificationFlow(
                 sContext,
@@ -162,9 +183,8 @@ public class ReconsentNotificationTriggerTest {
                 /* consent opt-in */ true);
 
         mDevice.pressHome();
-        UiUtils.restartAdservices();
         UiUtils.enableGa();
-
+        AdservicesTestHelper.killAdservicesProcess(sContext);
         ListenableFuture<Boolean> adServicesStatusResponse = getAdservicesStatus();
 
         adServicesStatusResponse.get();
@@ -180,6 +200,8 @@ public class ReconsentNotificationTriggerTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testDeleteStatus() {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.clearSavedStatus();
         AdservicesTestHelper.killAdservicesProcess(sContext);
     }

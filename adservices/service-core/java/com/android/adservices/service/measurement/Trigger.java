@@ -21,6 +21,7 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
 
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateDeduplicationKey;
@@ -250,13 +251,13 @@ public class Trigger {
      * Returns the AggregatableAttributionTrigger object, which is constructed using the aggregate
      * trigger data string and aggregate values string in Trigger.
      */
-    public Optional<AggregatableAttributionTrigger> getAggregatableAttributionTrigger()
+    public Optional<AggregatableAttributionTrigger> getAggregatableAttributionTrigger(Flags flags)
             throws JSONException {
         if (mAggregatableAttributionTrigger != null) {
             return mAggregatableAttributionTrigger;
         }
 
-        mAggregatableAttributionTrigger = parseAggregateTrigger();
+        mAggregatableAttributionTrigger = parseAggregateTrigger(flags);
         return mAggregatableAttributionTrigger;
     }
 
@@ -362,7 +363,7 @@ public class Trigger {
      * Generates AggregatableAttributionTrigger from aggregate trigger data string and aggregate
      * values string in Trigger.
      */
-    private Optional<AggregatableAttributionTrigger> parseAggregateTrigger()
+    private Optional<AggregatableAttributionTrigger> parseAggregateTrigger(Flags flags)
             throws JSONException, NumberFormatException {
         if (this.mAggregateValues == null) {
             return Optional.empty();
@@ -371,6 +372,7 @@ public class Trigger {
                 ? new JSONArray()
                 : new JSONArray(this.mAggregateTriggerData);
         List<AggregateTriggerData> triggerDataList = new ArrayList<>();
+        Filter filter = new Filter(flags);
         for (int i = 0; i < triggerDataArray.length(); i++) {
             JSONObject triggerDatum = triggerDataArray.getJSONObject(i);
             // Remove "0x" prefix.
@@ -387,13 +389,13 @@ public class Trigger {
                             .setSourceKeys(sourceKeySet);
             if (triggerDatum.has("filters") && !triggerDatum.isNull("filters")) {
                 List<FilterMap> filterSet =
-                        Filter.deserializeFilterSet(triggerDatum.getJSONArray("filters"));
+                        filter.deserializeFilterSet(triggerDatum.getJSONArray("filters"));
                 builder.setFilterSet(filterSet);
             }
             if (triggerDatum.has("not_filters")
                     && !triggerDatum.isNull("not_filters")) {
                 List<FilterMap> notFilterSet =
-                        Filter.deserializeFilterSet(triggerDatum.getJSONArray("not_filters"));
+                        filter.deserializeFilterSet(triggerDatum.getJSONArray("not_filters"));
                 builder.setNotFilterSet(notFilterSet);
             }
             if (!triggerDatum.isNull("x_network_data")) {
@@ -421,12 +423,12 @@ public class Trigger {
                 }
                 if (dedupKeyObject.has("filters") && !dedupKeyObject.isNull("filters")) {
                     List<FilterMap> filterSet =
-                            Filter.deserializeFilterSet(dedupKeyObject.getJSONArray("filters"));
+                            filter.deserializeFilterSet(dedupKeyObject.getJSONArray("filters"));
                     builder.setFilterSet(filterSet);
                 }
                 if (dedupKeyObject.has("not_filters") && !dedupKeyObject.isNull("not_filters")) {
                     List<FilterMap> notFilterSet =
-                            Filter.deserializeFilterSet(dedupKeyObject.getJSONArray("not_filters"));
+                            filter.deserializeFilterSet(dedupKeyObject.getJSONArray("not_filters"));
                     builder.setNotFilterSet(notFilterSet);
                 }
                 dedupKeyList.add(builder.build());
@@ -446,10 +448,10 @@ public class Trigger {
      * @return list of {@link EventTrigger}s
      * @throws JSONException if JSON parsing fails
      */
-    public List<EventTrigger> parseEventTriggers(boolean readValue) throws JSONException {
+    public List<EventTrigger> parseEventTriggers(Flags flags) throws JSONException {
         JSONArray jsonArray = new JSONArray(this.mEventTriggers);
         List<EventTrigger> eventTriggers = new ArrayList<>();
-
+        boolean readValue = flags.getMeasurementFlexibleEventReportingApiEnabled();
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject eventTrigger = jsonArray.getJSONObject(i);
 
@@ -478,15 +480,18 @@ public class Trigger {
 
             if (!eventTrigger.isNull(EventTriggerContract.FILTERS)) {
                 List<FilterMap> filterSet =
-                        Filter.deserializeFilterSet(
-                                eventTrigger.getJSONArray(EventTriggerContract.FILTERS));
+                        new Filter(flags)
+                                .deserializeFilterSet(
+                                        eventTrigger.getJSONArray(EventTriggerContract.FILTERS));
                 eventTriggerBuilder.setFilterSet(filterSet);
             }
 
             if (!eventTrigger.isNull(EventTriggerContract.NOT_FILTERS)) {
                 List<FilterMap> notFilterSet =
-                        Filter.deserializeFilterSet(
-                                eventTrigger.getJSONArray(EventTriggerContract.NOT_FILTERS));
+                        new Filter(flags)
+                                .deserializeFilterSet(
+                                        eventTrigger.getJSONArray(
+                                                EventTriggerContract.NOT_FILTERS));
                 eventTriggerBuilder.setNotFilterSet(notFilterSet);
             }
             eventTriggers.add(eventTriggerBuilder.build());

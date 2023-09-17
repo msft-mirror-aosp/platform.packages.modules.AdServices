@@ -4921,8 +4921,8 @@ public final class AsyncTriggerFetcherTest {
         JSONArray expectedAttributionConfigJsonArray =
                 new JSONArray(
                         Arrays.asList(
-                                attributionConfig1.serializeAsJson(),
-                                attributionConfig2.serializeAsJson()));
+                                attributionConfig1.serializeAsJson(mFlags),
+                                attributionConfig2.serializeAsJson(mFlags)));
 
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
@@ -5028,8 +5028,8 @@ public final class AsyncTriggerFetcherTest {
         JSONArray expectedAttributionConfigJsonArray =
                 new JSONArray(
                         Arrays.asList(
-                                attributionConfig1.serializeAsJson(),
-                                attributionConfig2.serializeAsJson()));
+                                attributionConfig1.serializeAsJson(mFlags),
+                                attributionConfig2.serializeAsJson(mFlags)));
 
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();

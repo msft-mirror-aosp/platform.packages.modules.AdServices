@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_IO_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.view.MotionEvent.ACTION_BUTTON_PRESS;
 
@@ -35,6 +36,8 @@ import static org.mockito.Mockito.when;
 
 import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.DeletionRequest;
+import android.adservices.measurement.SourceRegistrationRequest;
+import android.adservices.measurement.SourceRegistrationRequestInternal;
 import android.adservices.measurement.WebSourceParams;
 import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.adservices.measurement.WebSourceRegistrationRequestInternal;
@@ -183,6 +186,16 @@ public final class MeasurementImplTest {
                         DEFAULT_CONTEXT.getPackageName(),
                         SDK_PACKAGE_NAME,
                         REQUEST_TIME)
+                .build();
+    }
+
+    private static SourceRegistrationRequestInternal createSourceRegistrationRequest() {
+        SourceRegistrationRequest request =
+                new SourceRegistrationRequest.Builder(
+                                Arrays.asList(REGISTRATION_URI_1, REGISTRATION_URI_2))
+                        .build();
+        return new SourceRegistrationRequestInternal.Builder(
+                        request, DEFAULT_CONTEXT.getPackageName(), SDK_PACKAGE_NAME, REQUEST_TIME)
                 .build();
     }
 
@@ -871,6 +884,23 @@ public final class MeasurementImplTest {
 
         // Verify that the code doesn't accidentally fall through into the Android S part.
         ExtendedMockito.verify(FlagsFactory::getFlags, never());
+    }
+
+    @Test
+    public void testRegisterSources_success() {
+        final int result =
+                mMeasurementImpl.registerSources(
+                        createSourceRegistrationRequest(), System.currentTimeMillis());
+        assertEquals(STATUS_SUCCESS, result);
+    }
+
+    @Test
+    public void testRegisterSources_ioError() {
+        doReturn(false).when(mDatastoreManager).runInTransaction(any());
+        final int result =
+                mMeasurementImpl.registerSources(
+                        createSourceRegistrationRequest(), System.currentTimeMillis());
+        assertEquals(STATUS_IO_ERROR, result);
     }
 
     private void disableRollbackDeletion() {

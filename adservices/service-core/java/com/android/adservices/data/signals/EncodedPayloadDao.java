@@ -23,6 +23,8 @@ import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 
+import java.util.List;
+
 /** Dao to persist, access and delete encoded signals payload for buyers */
 @Dao
 public interface EncodedPayloadDao {
@@ -40,6 +42,12 @@ public interface EncodedPayloadDao {
      */
     @Query("SELECT * FROM encoded_payload WHERE buyer = :buyer")
     DBEncodedPayload getEncodedPayload(AdTechIdentifier buyer);
+
+    /**
+     * @return an list of all {@link DBEncodedPayload} stored
+     */
+    @Query("SELECT * FROM encoded_payload")
+    List<DBEncodedPayload> getAllEncodedPayloads();
 
     /**
      * @param buyer Ad-tech owner for the encoded payload
