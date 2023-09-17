@@ -61,6 +61,7 @@ public final class Tracing {
     public static final String GET_BUYERS_CA = "BuyerInputGenerator#getBuyersCustomAudience";
     public static final String GET_FILTERED_BUYERS_CA =
             "BuyerInputGenerator#getFilteredCustomAudiences";
+    public static final String GET_BUYERS_PS = "BuyerInputGenerator#getBuyersProtectedSignals";
     public static final String CREATE_BUYER_INPUTS = "BuyerInputGenerator#createBuyerInputs";
     public static final String ORCHESTRATE_GET_AD_SELECTION_DATA =
             "GetAdSelectionDataRunner#orchestrateGetAdSelectionDataRunner";

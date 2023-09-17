@@ -1226,6 +1226,7 @@ class MeasurementDao implements IMeasurementDao {
                         });
     }
 
+    @Override
     public Integer countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
             Uri registrationOrigin,
             Uri publisher,
@@ -1261,22 +1262,22 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public Integer countDistinctEnrollmentsPerPublisherXDestinationInSource(
+    public Integer countDistinctReportingOriginsPerPublisherXDestinationInSource(
             Uri publisher,
             @EventSurfaceType int publisherType,
             List<Uri> destinations,
-            String excludedEnrollmentId,
+            Uri excludedReportingOrigin,
             long windowStartTime,
             long windowEndTime)
             throws DatastoreException {
         // Each destination can be paired with the given publisher. Return the maximum count of
-        // distinct enrollments among the pairs of destination-and-publisher.
+        // distinct reporting origins among the pairs of destination-and-publisher.
         String query =
                 String.format(
                         Locale.ENGLISH,
                         "WITH joined as ("
                                 + "SELECT source."
-                                + MeasurementTables.SourceContract.ENROLLMENT_ID
+                                + MeasurementTables.SourceContract.REGISTRATION_ORIGIN
                                 + ", "
                                 + "source_dest."
                                 + MeasurementTables.SourceDestination.DESTINATION
@@ -1295,7 +1296,7 @@ class MeasurementDao implements IMeasurementDao {
                                 + ") "
                                 + "WHERE %1$s "
                                 + "AND source."
-                                + MeasurementTables.SourceContract.ENROLLMENT_ID
+                                + MeasurementTables.SourceContract.REGISTRATION_ORIGIN
                                 + " != ? "
                                 + "AND source."
                                 + MeasurementTables.SourceContract.EVENT_TIME
@@ -1308,14 +1309,11 @@ class MeasurementDao implements IMeasurementDao {
                                 + " > ? "
                                 + "AND source_dest."
                                 + MeasurementTables.SourceDestination.DESTINATION
-                                + " "
-                                + "IN %2$s"
-                                + "), distinct_enrollments as ("
-                                + "SELECT DENSE_RANK() OVER ("
-                                + "PARTITION BY destination ORDER BY enrollment_id"
-                                + ") AS distinct_enrollment "
-                                + "FROM joined"
-                                + ") SELECT MAX(distinct_enrollment) FROM distinct_enrollments",
+                                + " IN %2$s), distinct_registration_origins as (SELECT DENSE_RANK()"
+                                + " OVER (PARTITION BY destination ORDER BY registration_origin) AS"
+                                + " distinct_registration_origin FROM joined) SELECT"
+                                + " MAX(distinct_registration_origin) FROM"
+                                + " distinct_registration_origins",
                         getPublisherWhereStatement(publisher, publisherType),
                         getUriValueList(destinations));
 
@@ -1324,7 +1322,7 @@ class MeasurementDao implements IMeasurementDao {
                         mSQLTransaction.getDatabase(),
                         query,
                         new String[] {
-                            excludedEnrollmentId,
+                            excludedReportingOrigin.toString(),
                             String.valueOf(windowStartTime),
                             String.valueOf(windowEndTime),
                             String.valueOf(windowEndTime)
@@ -1670,6 +1668,88 @@ class MeasurementDao implements IMeasurementDao {
                         + subQuery
                         + ")",
                 new String[] {KeyValueData.DataType.REGISTRATION_REDIRECT_COUNT.toString()});
+
+        // When Limiting Retries, consider Verbose Debug Reports Expired when Exceeds Limit.
+        if (mReportingRetryLimitEnabledSupplier.get()) {
+            db.delete(
+                    MeasurementTables.DebugReportContract.TABLE,
+                    MeasurementTables.DebugReportContract.ID
+                            + " IN ("
+                            + "SELECT "
+                            + MeasurementTables.DebugReportContract.ID
+                            + " FROM "
+                            + MeasurementTables.DebugReportContract.TABLE
+                            + " LEFT JOIN "
+                            + MeasurementTables.KeyValueDataContract.TABLE
+                            + " ON ("
+                            + MeasurementTables.DebugReportContract.ID
+                            + " = "
+                            + MeasurementTables.KeyValueDataContract.KEY
+                            + ") "
+                            + "WHERE CAST("
+                            + MeasurementTables.KeyValueDataContract.VALUE
+                            + " AS INTEGER) >= ? "
+                            + "AND "
+                            + MeasurementTables.KeyValueDataContract.DATA_TYPE
+                            + " = ? "
+                            + ")",
+                    new String[] {
+                        mReportingRetryLimitSupplier.get().toString(),
+                        DataType.DEBUG_REPORT_RETRY_COUNT.toString()
+                    });
+        }
+
+        // Cleanup unnecessary AggregateReport Retry Counts
+        subQuery =
+                "SELECT "
+                        + MeasurementTables.AggregateReport.ID
+                        + " FROM "
+                        + MeasurementTables.AggregateReport.TABLE;
+        db.delete(
+                MeasurementTables.KeyValueDataContract.TABLE,
+                MeasurementTables.KeyValueDataContract.DATA_TYPE
+                        + " = ? "
+                        + " AND "
+                        + MeasurementTables.KeyValueDataContract.KEY
+                        + " NOT IN "
+                        + "("
+                        + subQuery
+                        + ")",
+                new String[] {DataType.AGGREGATE_REPORT_RETRY_COUNT.toString()});
+        // Cleanup unnecessary DebugReport Retry Counts
+        subQuery =
+                "SELECT "
+                        + MeasurementTables.DebugReportContract.ID
+                        + " FROM "
+                        + MeasurementTables.DebugReportContract.TABLE;
+        db.delete(
+                MeasurementTables.KeyValueDataContract.TABLE,
+                MeasurementTables.KeyValueDataContract.DATA_TYPE
+                        + " = ? "
+                        + " AND "
+                        + MeasurementTables.KeyValueDataContract.KEY
+                        + " NOT IN "
+                        + "("
+                        + subQuery
+                        + ")",
+                new String[] {DataType.DEBUG_REPORT_RETRY_COUNT.toString()});
+        // Cleanup unnecessary EventReport Retry Counts
+        subQuery =
+                "SELECT "
+                        + MeasurementTables.EventReportContract.ID
+                        + " FROM "
+                        + MeasurementTables.EventReportContract.TABLE;
+        db.delete(
+                MeasurementTables.KeyValueDataContract.TABLE,
+                MeasurementTables.KeyValueDataContract.DATA_TYPE
+                        + " = ? "
+                        + " AND "
+                        + MeasurementTables.KeyValueDataContract.KEY
+                        + " NOT IN "
+                        + "("
+                        + subQuery
+                        + ")",
+                new String[] {DataType.EVENT_REPORT_RETRY_COUNT.toString()});
     }
 
     @Override

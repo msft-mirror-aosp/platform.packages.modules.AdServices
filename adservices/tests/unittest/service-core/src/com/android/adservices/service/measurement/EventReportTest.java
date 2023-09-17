@@ -234,7 +234,7 @@ public final class EventReportTest {
         Trigger trigger = createTriggerForTest(
                 baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION, EventSurfaceType.APP);
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -290,7 +290,7 @@ public final class EventReportTest {
                         APP_DESTINATION,
                         EventSurfaceType.APP);
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -333,7 +333,7 @@ public final class EventReportTest {
         Trigger trigger = createTriggerForTest(
                 baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION, EventSurfaceType.APP);
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventTrigger eventTrigger = spy(eventTriggers.get(0));
         when(eventTrigger.getTriggerData()).thenReturn(new UnsignedLong(-50003L));
         EventReport report =
@@ -380,7 +380,7 @@ public final class EventReportTest {
         Trigger trigger = createTriggerForTest(
                 baseTime + TimeUnit.SECONDS.toMillis(10), WEB_DESTINATION, EventSurfaceType.WEB);
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -420,7 +420,7 @@ public final class EventReportTest {
         Trigger trigger = createTriggerForTest(
                 baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION, EventSurfaceType.APP);
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -461,7 +461,7 @@ public final class EventReportTest {
         Trigger trigger = createTriggerForTest(
                 baseTime + TimeUnit.SECONDS.toMillis(10), WEB_DESTINATION, EventSurfaceType.WEB);
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -500,7 +500,7 @@ public final class EventReportTest {
         Trigger trigger = createTriggerForTest(
                 baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION, EventSurfaceType.APP);
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -542,7 +542,7 @@ public final class EventReportTest {
         Trigger trigger = createTriggerForTest(
                 baseTime + TimeUnit.SECONDS.toMillis(10), WEB_DESTINATION, EventSurfaceType.WEB);
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -584,7 +584,7 @@ public final class EventReportTest {
         Trigger trigger = createTriggerForTest(
                 baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION, EventSurfaceType.APP);
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -631,7 +631,7 @@ public final class EventReportTest {
         Trigger trigger = createTriggerForTest(
                 baseTime + TimeUnit.SECONDS.toMillis(10), WEB_DESTINATION, EventSurfaceType.WEB);
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -689,7 +689,7 @@ public final class EventReportTest {
                         WEB_DESTINATION,
                         EventSurfaceType.WEB);
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -794,7 +794,7 @@ public final class EventReportTest {
                         .setRegistrationOrigin(triggerRegistrationUrl)
                         .build();
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -851,7 +851,7 @@ public final class EventReportTest {
                         + "]\n";
         Trigger trigger = getValidTriggerBuilder().setEventTriggers(eventTriggers1).build();
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report1 =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -941,7 +941,8 @@ public final class EventReportTest {
                         + "]\n";
         Trigger trigger = getValidTriggerBuilder().setEventTriggers(eventTriggers1).build();
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(true);
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report1 =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -1021,7 +1022,8 @@ public final class EventReportTest {
                         .setTriggerTime(baseTime + 8000)
                         .build();
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(true);
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report1 =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -1082,7 +1084,8 @@ public final class EventReportTest {
                         .setTriggerTime(baseTime + 8000)
                         .build();
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(true);
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report1 =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -1142,7 +1145,8 @@ public final class EventReportTest {
                         .setTriggerTime(baseTime + 18000000)
                         .build();
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(true);
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report1 =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(

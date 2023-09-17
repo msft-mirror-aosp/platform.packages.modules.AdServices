@@ -16,22 +16,38 @@
 
 package com.android.adservices.service.signals;
 
+import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.content.Context;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.adselection.SharedStorageDatabase;
+import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.EncoderLogicDao;
 import com.android.adservices.data.signals.EncoderPersistenceManager;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
+import com.android.adservices.service.adselection.AdSelectionScriptEngine;
+import com.android.adservices.service.common.SingletonRunner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
+import java.time.Instant;
+import java.util.Base64;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * Handles the periodic encoding responsibilities, such as fetching the raw signals and triggering
@@ -39,22 +55,31 @@ import java.util.Objects;
  */
 public class PeriodicEncodingJobWorker {
 
-    @SuppressWarnings("unused")
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
+    public static final String JOB_DESCRIPTION = "Protected-Signals Periodic Encoding";
+
+    public static final String PAYLOAD_PERSISTENCE_ERROR_MSG = "Failed to persist encoded payload";
+
+    private static final int PER_BUYER_ENCODING_TIMEOUT_SECONDS = 5;
+
+    private final int mEncodedPayLoadMaxSizeBytes;
+
     private static final Object SINGLETON_LOCK = new Object();
+
     private static volatile PeriodicEncodingJobWorker sPeriodicEncodingJobWorker;
 
-    @SuppressWarnings("unused")
     private final EncoderLogicDao mEncoderLogicDao;
-
-    @SuppressWarnings("unused")
     private final EncoderPersistenceManager mEncoderPersistenceManager;
-
-    @SuppressWarnings("unused")
     private final EncodedPayloadDao mEncodedPayloadDao;
+    private final SignalStorageManager mSignalStorageManager;
+    private final AdSelectionScriptEngine mScriptEngine;
+    private final ListeningExecutorService mBackgroundExecutor;
+    private final ListeningExecutorService mLightWeightExecutor;
 
-    @SuppressWarnings("unused")
+    private final SingletonRunner<Void> mSingletonRunner =
+            new SingletonRunner<>(JOB_DESCRIPTION, this::doRun);
+
     private final Flags mFlags;
 
     @VisibleForTesting
@@ -62,11 +87,20 @@ public class PeriodicEncodingJobWorker {
             @NonNull EncoderLogicDao encoderLogicDao,
             @NonNull EncoderPersistenceManager encoderPersistenceManager,
             @NonNull EncodedPayloadDao encodedPayloadDao,
+            @NonNull SignalStorageManagerImpl signalStorageManager,
+            @NonNull AdSelectionScriptEngine scriptEngine,
+            @NonNull ListeningExecutorService backgroundExecutor,
+            @NonNull ListeningExecutorService lightWeightExecutor,
             @NonNull Flags flags) {
         mEncoderLogicDao = encoderLogicDao;
         mEncoderPersistenceManager = encoderPersistenceManager;
         mEncodedPayloadDao = encodedPayloadDao;
+        mSignalStorageManager = signalStorageManager;
+        mScriptEngine = scriptEngine;
+        mBackgroundExecutor = backgroundExecutor;
+        mLightWeightExecutor = lightWeightExecutor;
         mFlags = flags;
+        mEncodedPayLoadMaxSizeBytes = mFlags.getProtectedSignalsEncodedPayloadMaxSizeBytes();
     }
 
     /**
@@ -90,6 +124,24 @@ public class PeriodicEncodingJobWorker {
                                 signalsDatabase.getEncoderLogicDao(),
                                 EncoderPersistenceManager.getInstance(context),
                                 signalsDatabase.getEncodedPayloadDao(),
+                                new SignalStorageManagerImpl(signalsDatabase.protectedSignalsDao()),
+                                new AdSelectionScriptEngine(
+                                        context,
+                                        () ->
+                                                FlagsFactory.getFlags()
+                                                        .getEnforceIsolateMaxHeapSize(),
+                                        () -> FlagsFactory.getFlags().getIsolateMaxHeapSizeBytes(),
+                                        new AdFilteringFeatureFactory(
+                                                        SharedStorageDatabase.getInstance(context)
+                                                                .appInstallDao(),
+                                                        SharedStorageDatabase.getInstance(context)
+                                                                .frequencyCapDao(),
+                                                        FlagsFactory.getFlags())
+                                                .getAdCounterKeyCopier(),
+                                        null, // not used in encoding
+                                        false), // not used in encoding
+                                AdServicesExecutors.getBackgroundExecutor(),
+                                AdServicesExecutors.getLightWeightExecutor(),
                                 FlagsFactory.getFlags());
             }
         }
@@ -98,7 +150,76 @@ public class PeriodicEncodingJobWorker {
 
     /** Initiates the encoding of raw signals */
     public FluentFuture<Void> encodeProtectedSignals() {
-        // TODO(b/294900378) JS changes to encode Protected Signals
-        return FluentFuture.from(Futures.immediateFuture(null));
+        sLogger.v("Starting %s", JOB_DESCRIPTION);
+        return mSingletonRunner.runSingleInstance();
+    }
+
+    private FluentFuture<Void> doRun(@NonNull Supplier<Boolean> shouldStop) {
+        List<AdTechIdentifier> buyers = mEncoderLogicDao.getAllBuyersWithRegisteredEncoders();
+        List<ListenableFuture<Boolean>> buyerEncodings =
+                buyers.stream()
+                        .map(
+                                buyer ->
+                                        runEncodingPerBuyer(
+                                                buyer, PER_BUYER_ENCODING_TIMEOUT_SECONDS))
+                        .collect(Collectors.toList());
+        return FluentFuture.from(Futures.successfulAsList(buyerEncodings))
+                .transform(ignored -> null, mLightWeightExecutor);
+    }
+
+    /** Requests that any ongoing work be stopped gracefully and waits for work to be stopped. */
+    public void stopWork() {
+        mSingletonRunner.stopWork();
+    }
+
+    @VisibleForTesting
+    FluentFuture<Boolean> runEncodingPerBuyer(AdTechIdentifier buyer, int timeout) {
+        String encodingLogic = mEncoderPersistenceManager.getEncoder(buyer);
+        int version = mEncoderLogicDao.getEncoder(buyer).getVersion();
+        Map<String, List<ProtectedSignal>> signals = mSignalStorageManager.getSignals(buyer);
+
+        return FluentFuture.from(
+                        mScriptEngine.encodeSignals(
+                                encodingLogic, signals, mEncodedPayLoadMaxSizeBytes))
+                .transform(
+                        encodedPayload -> validateAndPersistPayload(buyer, encodedPayload, version),
+                        mBackgroundExecutor)
+                .catching(
+                        Exception.class,
+                        e -> {
+                            sLogger.e(
+                                    "Exception trying to validate and persist encoded payload for"
+                                            + " buyer: %s",
+                                    buyer);
+                            throw new IllegalStateException(PAYLOAD_PERSISTENCE_ERROR_MSG, e);
+                        },
+                        mLightWeightExecutor)
+                .withTimeout(timeout, TimeUnit.SECONDS, AdServicesExecutors.getScheduler());
+    }
+
+    @VisibleForTesting
+    boolean validateAndPersistPayload(AdTechIdentifier buyer, String encodedPayload, int version) {
+        byte[] encodedBytes;
+        try {
+            encodedBytes = Base64.getDecoder().decode(encodedPayload);
+        } catch (IllegalArgumentException e) {
+            sLogger.e("Malformed encoded payload returned by buyer: %s", buyer);
+            return false;
+        }
+        if (encodedBytes.length > mEncodedPayLoadMaxSizeBytes) {
+            // Do not persist encoded payload if the encoding logic violates the size constraints
+            sLogger.e("Buyer:%s encoded payload exceeded max size limit", buyer);
+            return false;
+        }
+
+        DBEncodedPayload dbEncodedPayload =
+                DBEncodedPayload.builder()
+                        .setBuyer(buyer)
+                        .setCreationTime(Instant.now())
+                        .setVersion(version)
+                        .setEncodedPayload(encodedBytes)
+                        .build();
+        mEncodedPayloadDao.persistEncodedPayload(dbEncodedPayload);
+        return true;
     }
 }

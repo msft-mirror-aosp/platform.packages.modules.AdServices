@@ -231,13 +231,11 @@ class FetcherUtil {
     }
 
     static String getSourceRegistrantToLog(AsyncRegistration asyncRegistration) {
-        switch (asyncRegistration.getType()) {
-            case APP_SOURCE:
-            case WEB_SOURCE:
-                return asyncRegistration.getRegistrant().toString();
-            default:
-                return "";
+        if (asyncRegistration.isSourceRequest()) {
+            return asyncRegistration.getRegistrant().toString();
         }
+
+        return "";
     }
 
     static void emitHeaderMetrics(
@@ -316,11 +314,9 @@ class FetcherUtil {
     }
 
     private static int getRegistrationType(AsyncRegistration asyncRegistration) {
-        if (asyncRegistration.getType() == AsyncRegistration.RegistrationType.APP_SOURCE
-                || asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_SOURCE) {
+        if (asyncRegistration.isSourceRequest()) {
             return RegistrationEnumsValues.TYPE_SOURCE;
-        } else if (asyncRegistration.getType() == AsyncRegistration.RegistrationType.APP_TRIGGER
-                || asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_TRIGGER) {
+        } else if (asyncRegistration.isTriggerRequest()) {
             return RegistrationEnumsValues.TYPE_TRIGGER;
         } else {
             return RegistrationEnumsValues.TYPE_UNKNOWN;
@@ -338,11 +334,9 @@ class FetcherUtil {
     }
 
     private static int getSurfaceType(AsyncRegistration asyncRegistration) {
-        if (asyncRegistration.getType() == AsyncRegistration.RegistrationType.APP_SOURCE
-                || asyncRegistration.getType() == AsyncRegistration.RegistrationType.APP_TRIGGER) {
+        if (asyncRegistration.isAppRequest()) {
             return RegistrationEnumsValues.SURFACE_TYPE_APP;
-        } else if (asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_SOURCE
-                || asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_TRIGGER) {
+        } else if (asyncRegistration.isWebRequest()) {
             return RegistrationEnumsValues.SURFACE_TYPE_WEB;
         } else {
             return RegistrationEnumsValues.SURFACE_TYPE_UNKNOWN;

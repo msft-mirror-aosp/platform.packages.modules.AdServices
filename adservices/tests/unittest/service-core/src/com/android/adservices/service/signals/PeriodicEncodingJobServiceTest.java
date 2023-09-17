@@ -652,7 +652,11 @@ public class PeriodicEncodingJobServiceTest {
                 };
         doReturn(flagsWithoutLogging).when(FlagsFactory::getFlags);
 
+        doReturn(mPeriodicEncodingJobWorker)
+                .when(() -> PeriodicEncodingJobWorker.getInstance(any()));
+        doNothing().when(mPeriodicEncodingJobWorker).stopWork();
         assertTrue(mEncodingJobServiceSpy.onStopJob(mJobParametersMock));
+        verify(mPeriodicEncodingJobWorker).stopWork();
 
         // Verify logging methods are not invoked.
         verify(mSpyLogger, never()).persistJobExecutionData(anyInt(), anyLong());
@@ -670,7 +674,11 @@ public class PeriodicEncodingJobServiceTest {
                 };
         doReturn(flagsWithLogging).when(FlagsFactory::getFlags);
 
+        doReturn(mPeriodicEncodingJobWorker)
+                .when(() -> PeriodicEncodingJobWorker.getInstance(any()));
+        doNothing().when(mPeriodicEncodingJobWorker).stopWork();
         assertTrue(mEncodingJobServiceSpy.onStopJob(mJobParametersMock));
+        verify(mPeriodicEncodingJobWorker).stopWork();
 
         // Verify logging methods are invoked.
         verify(mSpyLogger).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());

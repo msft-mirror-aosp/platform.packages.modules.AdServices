@@ -59,6 +59,8 @@ import com.android.adservices.data.adselection.datahandlers.AdSelectionInitializ
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.data.signals.EncodedPayloadDao;
+import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.ohttp.algorithms.UnsupportedHpkeAlgorithmException;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -117,6 +119,7 @@ public class GetAdSelectionDataRunnerTest {
     private ExecutorService mBackgroundExecutorService;
     private ScheduledThreadPoolExecutor mScheduledExecutor;
     private CustomAudienceDao mCustomAudienceDao;
+    private EncodedPayloadDao mEncodedPayloadDao;
     @Spy private AdSelectionEntryDao mAdSelectionEntryDaoSpy;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptorMock;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
@@ -140,6 +143,10 @@ public class GetAdSelectionDataRunnerTest {
                         .addTypeConverter(new DBCustomAudience.Converters(true, true))
                         .build()
                         .customAudienceDao();
+        mEncodedPayloadDao =
+                Room.inMemoryDatabaseBuilder(mContext, ProtectedSignalsDatabase.class)
+                        .build()
+                        .getEncodedPayloadDao();
         mAdSelectionEntryDaoSpy =
                 Room.inMemoryDatabaseBuilder(mContext, AdSelectionDatabase.class)
                         .build()
@@ -323,6 +330,7 @@ public class GetAdSelectionDataRunnerTest {
                         mObliviousHttpEncryptorMock,
                         mAdSelectionEntryDaoSpy,
                         mCustomAudienceDao,
+                        mEncodedPayloadDao,
                         mAdSelectionServiceFilterMock,
                         mAdFiltererSpy,
                         mBackgroundExecutorService,
@@ -364,6 +372,7 @@ public class GetAdSelectionDataRunnerTest {
                 mObliviousHttpEncryptorMock,
                 mAdSelectionEntryDaoSpy,
                 mCustomAudienceDao,
+                mEncodedPayloadDao,
                 mAdSelectionServiceFilterMock,
                 mAdFiltererSpy,
                 mBackgroundExecutorService,

@@ -239,9 +239,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                             .orchestrateFetch(
                                     input.getFetchUri(), buyer, input.getCallerPackageName())
                             .get();
-                    // TODO(b/294900127) Schedule background job for periodically running encoding
-                    // logic
-                    // PeriodicEncodingJobService.scheduleIfNeeded(mContext, mFlags, false);
+                    PeriodicEncodingJobService.scheduleIfNeeded(mContext, mFlags, false);
                     resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
                 } else {
                     sLogger.v("Consent revoked");

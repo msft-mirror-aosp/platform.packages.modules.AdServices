@@ -196,6 +196,21 @@ message AuctionResult {
   // Error thrown during the SelectAd request. If there is no error and the
   // request completes successfully, this field will be empty.
   Error error = 12;
+
+  // Specifies type of the ad. It can help differentiate between ads when
+  // B&A is supporting multiple ad targeting use cases concurrently.
+  enum AdType {
+    UNKNOWN = 0;
+
+    // Remarketing ad.
+    REMARKETING_AD = 1;
+
+    // An app install ad.
+    APP_INSTALL_AD = 2;
+  }
+
+  // Type of the winning ad.
+  AdType ad_type = 14;
 }
 
 // The reporting urls registered during the execution of reportResult() and

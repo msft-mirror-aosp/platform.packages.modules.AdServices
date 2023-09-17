@@ -31,6 +31,9 @@ import androidx.test.core.app.ApplicationProvider;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
 public class EncoderLogicDaoTest {
 
     public static AdTechIdentifier BUYER_1 = CommonFixture.VALID_BUYER_1;
@@ -91,6 +94,32 @@ public class EncoderLogicDaoTest {
                 "Version should have been 2",
                 v2.getVersion(),
                 mEncoderLogicDao.getEncoder(BUYER_1).getVersion());
+    }
+
+    @Test
+    public void testGetAllBuyersWithRegisteredEncoders() {
+        assertNull("Initial state should have been empty", mEncoderLogicDao.getEncoder(BUYER_1));
+        assertNull("Initial state should have been empty", mEncoderLogicDao.getEncoder(BUYER_2));
+
+        DBEncoderLogic logic1 =
+                DBEncoderLogicFixture.anEncoderLogicBuilder(BUYER_1).setVersion(1).build();
+        DBEncoderLogic logic2 =
+                DBEncoderLogicFixture.anEncoderLogicBuilder(BUYER_2).setVersion(1).build();
+
+        assertEquals(
+                "First entry should have been inserted",
+                1,
+                mEncoderLogicDao.persistEncoder(logic1));
+        assertEquals(
+                "Second entry should have been inserted",
+                2,
+                mEncoderLogicDao.persistEncoder(logic2));
+
+        Set<AdTechIdentifier> actualRegisteredBuyers =
+                mEncoderLogicDao.getAllBuyersWithRegisteredEncoders().stream()
+                        .collect(Collectors.toSet());
+        Set<AdTechIdentifier> expectedRegisteredBuyers = Set.of(BUYER_1, BUYER_2);
+        assertEquals(expectedRegisteredBuyers, actualRegisteredBuyers);
     }
 
     @Test
