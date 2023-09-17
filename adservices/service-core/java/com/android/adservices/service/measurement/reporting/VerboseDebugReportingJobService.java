@@ -31,6 +31,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.util.JobLockHolder;
@@ -112,7 +113,8 @@ public final class VerboseDebugReportingJobService extends JobService {
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
-        if (FlagsFactory.getFlags().getMeasurementJobVerboseDebugReportingKillSwitch()) {
+        Flags flags = FlagsFactory.getFlags();
+        if (flags.getMeasurementJobVerboseDebugReportingKillSwitch()) {
             LogUtil.d("VerboseDebugReportingJobService is disabled, skip scheduling");
             return;
         }
@@ -125,7 +127,7 @@ public final class VerboseDebugReportingJobService extends JobService {
 
         final JobInfo scheduledJob = jobScheduler.getPendingJob(VERBOSE_DEBUG_REPORT_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
-        JobInfo jobInfo = buildJobInfo(context);
+        JobInfo jobInfo = buildJobInfo(context, flags);
         if (forceSchedule || !jobInfo.equals(scheduledJob)) {
             schedule(jobScheduler, jobInfo);
             LogUtil.d("Scheduled VerboseDebugReportingJobService");
@@ -134,11 +136,12 @@ public final class VerboseDebugReportingJobService extends JobService {
         }
     }
 
-    private static JobInfo buildJobInfo(Context context) {
+    private static JobInfo buildJobInfo(Context context, Flags flags) {
         return new JobInfo.Builder(
                         VERBOSE_DEBUG_REPORT_JOB_ID,
                         new ComponentName(context, VerboseDebugReportingJobService.class))
-                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                .setRequiredNetworkType(
+                        flags.getMeasurementVerboseDebugReportingJobRequiredNetworkType())
                 .build();
     }
 

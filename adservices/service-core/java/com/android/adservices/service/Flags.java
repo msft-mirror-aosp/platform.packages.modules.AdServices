@@ -20,6 +20,7 @@ import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREG
 
 import android.annotation.IntDef;
 import android.annotation.NonNull;
+import android.app.job.JobInfo;
 
 import androidx.annotation.Nullable;
 
@@ -507,6 +508,15 @@ public interface Flags {
         return MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW;
     }
 
+    int MEASUREMENT_MAX_DISTINCT_REP_ORIG_PER_PUBLISHER_X_DEST_IN_SOURCE = 100;
+    /**
+     * Max distinct reporting origins with source registration per { Publisher X Advertiser X
+     * TimePeriod }.
+     */
+    default int getMeasurementMaxDistinctRepOrigPerPublXDestInSource() {
+        return MEASUREMENT_MAX_DISTINCT_REP_ORIG_PER_PUBLISHER_X_DEST_IN_SOURCE;
+    }
+
     boolean MEASUREMENT_FLEX_LITE_API_ENABLED = true;
 
     /** Returns true if flex lite api is enabled else false. */
@@ -845,6 +855,7 @@ public interface Flags {
     boolean PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED = false;
     long PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS = 1L * 60L * 60L * 1000L; // 1 hour
     long PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS = 5L * 60L * 1000L; // 5 minutes
+    int PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES = (int) (1.5 * 1024); // 1.5 KB
 
     /** Returns {@code true} if the Periodic encoding of Protected Signals is enabled. */
     default boolean getProtectedSignalsPeriodicEncodingEnabled() {
@@ -863,6 +874,13 @@ public interface Flags {
      */
     default long getProtectedSignalsPeriodicEncodingJobFlexMs() {
         return PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS;
+    }
+
+    /**
+     * @return the max size in bytes for encoded payload
+     */
+    default int getProtectedSignalsEncodedPayloadMaxSizeBytes() {
+        return PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES;
     }
 
     int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT = 10_000;
@@ -1488,6 +1506,12 @@ public interface Flags {
         return MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
     }
 
+    boolean CONSENT_MANAGER_LAZY_ENABLE_MODE = true;
+
+    default boolean getConsentManagerLazyEnableMode() {
+        return CONSENT_MANAGER_LAZY_ENABLE_MODE;
+    }
+
     long CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS =
             /* hours */ 9 * /* minutes */ 60 * /* seconds */ 60 * /* milliseconds */ 1000; // 9 AM
 
@@ -1719,6 +1743,24 @@ public interface Flags {
         return getGlobalKillSwitch()
                 || getMeasurementKillSwitch()
                 || MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH;
+    }
+
+    /**
+     * Measurement API Register Sources Kill Switch. The default value is false which means Register
+     * Sources API is enabled. This flag is used for emergency turning off the Register Sources API.
+     */
+    boolean MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Measurement API Register Sources. The API will be disabled
+     * if either the Global Kill Switch, Measurement Kill Switch, or the Measurement API Register
+     * Sources Kill Switch value is true.
+     */
+    default boolean getMeasurementApiRegisterSourcesKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH;
     }
 
     /**
@@ -2553,6 +2595,7 @@ public interface Flags {
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_SOURCE = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS = true;
+    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCES = true;
     boolean MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH = true;
 
     /**
@@ -2601,6 +2644,14 @@ public interface Flags {
      */
     default boolean getEnforceForegroundStatusForMeasurementStatus() {
         return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS;
+    }
+
+    /**
+     * @return true if Measurement Get Status API should require that the calling API is running in
+     *     foreground.
+     */
+    default boolean getEnforceForegroundStatusForMeasurementRegisterSources() {
+        return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCES;
     }
 
     /** @return true if the Enrollment match is based on url origin matching */
@@ -3259,6 +3310,131 @@ public interface Flags {
     /** Sampling rate to decide whether to throw unknown exceptions for measurement. */
     default float getMeasurementThrowUnknownExceptionSamplingRate() {
         return MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE;
+    }
+
+    boolean MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED = true;
+
+    /** Returns whether to persist this job across device reboots for delete uninstalled job. */
+    default boolean getMeasurementDeleteUninstalledJobPersisted() {
+        return MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED;
+    }
+
+    long MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(24);
+
+    /**
+     * Returns the min time period (in millis) between each uninstalled-record deletion maintenance
+     * job run.
+     */
+    default long getMeasurementDeleteUninstalledJobPeriodMs() {
+        return MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS;
+    }
+
+    boolean MEASUREMENT_DELETE_EXPIRED_JOB_PERSISTED = true;
+
+    /** Returns whether to persist this job across device reboots for delete expired job. */
+    default boolean getMeasurementDeleteExpiredJobPersisted() {
+        return MEASUREMENT_DELETE_EXPIRED_JOB_PERSISTED;
+    }
+
+    boolean MEASUREMENT_DELETE_EXPIRED_JOB_REQUIRES_DEVICE_IDLE = true;
+
+    /** Returns whether to require device to be idle for delete expired job. */
+    default boolean getMeasurementDeleteExpiredJobRequiresDeviceIdle() {
+        return MEASUREMENT_DELETE_EXPIRED_JOB_REQUIRES_DEVICE_IDLE;
+    }
+
+    long MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(24);
+
+    /**
+     * Returns the min time period (in millis) between each expired-record deletion maintenance job
+     * run.
+     */
+    default long getMeasurementDeleteExpiredJobPeriodMs() {
+        return MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS;
+    }
+
+    boolean MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW = true;
+
+    /** Returns whether to require battery not low for event reporting job . */
+    default boolean getMeasurementEventReportingJobRequiredBatteryNotLow() {
+        return MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
+    }
+
+    int MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE = JobInfo.NETWORK_TYPE_UNMETERED;
+
+    /** Returns the required network type for event reporting job . */
+    default int getMeasurementEventReportingJobRequiredNetworkType() {
+        return MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
+    }
+
+    boolean MEASUREMENT_EVENT_REPORTING_JOB_PERSISTED = true;
+
+    /** Returns whether to persist this job across device reboots for event reporting job. */
+    default boolean getMeasurementEventReportingJobPersisted() {
+        return MEASUREMENT_EVENT_REPORTING_JOB_PERSISTED;
+    }
+
+    boolean MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW = true;
+
+    /** Returns whether to require battery not low for event fallback reporting job . */
+    default boolean getMeasurementEventFallbackReportingJobRequiredBatteryNotLow() {
+        return MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
+    }
+
+    int MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE = JobInfo.NETWORK_TYPE_ANY;
+
+    /** Returns the required network type for event fallback reporting job . */
+    default int getMeasurementEventFallbackReportingJobRequiredNetworkType() {
+        return MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
+    }
+
+    boolean MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERSISTED = true;
+
+    /**
+     * Returns whether to persist this job across device reboots for event fallback reporting job.
+     */
+    default boolean getMeasurementEventFallbackReportingJobPersisted() {
+        return MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERSISTED;
+    }
+
+    int MEASUREMENT_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE = JobInfo.NETWORK_TYPE_ANY;
+
+    /** Returns the required network type for debug reporting job . */
+    default int getMeasurementDebugReportingJobRequiredNetworkType() {
+        return MEASUREMENT_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
+    }
+
+    int MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_REQUIRED_NETWORK_TYPE = JobInfo.NETWORK_TYPE_ANY;
+
+    /** Returns the required network type for debug reporting fallback job . */
+    default int getMeasurementDebugReportingFallbackJobRequiredNetworkType() {
+        return MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_REQUIRED_NETWORK_TYPE;
+    }
+
+    boolean MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED = true;
+
+    /**
+     * Returns whether to persist this job across device reboots for debug fallback reporting job.
+     */
+    default boolean getMeasurementDebugReportingFallbackJobPersisted() {
+        return MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
+    }
+
+    int MEASUREMENT_VERBOSE_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE = JobInfo.NETWORK_TYPE_ANY;
+
+    /** Returns the required network type for verbose debug reporting job . */
+    default int getMeasurementVerboseDebugReportingJobRequiredNetworkType() {
+        return MEASUREMENT_VERBOSE_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
+    }
+
+    boolean MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED = true;
+
+    /**
+     * Returns whether to persist this job across device reboots for verbose debug fallback
+     * reporting job.
+     */
+    default boolean getMeasurementVerboseDebugReportingFallbackJobPersisted() {
+        return MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
     }
 
     /** Default U18 UX feature flag.. */

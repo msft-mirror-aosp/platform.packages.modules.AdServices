@@ -29,7 +29,7 @@ import android.content.Context;
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
-import com.android.adservices.service.AdServicesConfig;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
@@ -114,7 +114,8 @@ public final class DeleteExpiredJobService extends JobService {
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
-        if (FlagsFactory.getFlags().getMeasurementJobDeleteExpiredKillSwitch()) {
+        Flags flags = FlagsFactory.getFlags();
+        if (flags.getMeasurementJobDeleteExpiredKillSwitch()) {
             LogUtil.e("DeleteExpiredJobService is disabled, skip scheduling");
             return;
         }
@@ -127,7 +128,7 @@ public final class DeleteExpiredJobService extends JobService {
 
         final JobInfo scheduledJob = jobScheduler.getPendingJob(MEASUREMENT_DELETE_EXPIRED_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
-        JobInfo jobInfo = buildJobInfo(context);
+        JobInfo jobInfo = buildJobInfo(context, flags);
         if (forceSchedule || !jobInfo.equals(scheduledJob)) {
             schedule(jobScheduler, jobInfo);
             LogUtil.d("Scheduled DeleteExpiredJobService");
@@ -136,13 +137,13 @@ public final class DeleteExpiredJobService extends JobService {
         }
     }
 
-    private static JobInfo buildJobInfo(Context context) {
+    private static JobInfo buildJobInfo(Context context, Flags flags) {
         return new JobInfo.Builder(
                         MEASUREMENT_DELETE_EXPIRED_JOB_ID,
                         new ComponentName(context, DeleteExpiredJobService.class))
-                .setRequiresDeviceIdle(true)
-                .setPeriodic(AdServicesConfig.getMeasurementDeleteExpiredJobPeriodMs())
-                .setPersisted(true)
+                .setRequiresDeviceIdle(flags.getMeasurementDeleteExpiredJobRequiresDeviceIdle())
+                .setPeriodic(flags.getMeasurementDeleteExpiredJobPeriodMs())
+                .setPersisted(flags.getMeasurementDeleteExpiredJobPersisted())
                 .build();
     }
 

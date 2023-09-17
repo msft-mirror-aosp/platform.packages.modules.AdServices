@@ -34,7 +34,7 @@
     },
     {
       "request": {
-        "path": "buyer/reportImpression"
+        "path": "buyer/reportImpression?ca=shoes"
       },
       "response": {
         "body": "DefaultResponse.txt"
@@ -43,7 +43,7 @@
     },
     {
       "request": {
-        "path": "seller/reportImpression"
+        "path": "seller/reportImpression?render_uri=https://localhost:38383/render/shoes/0?bid=10"
       },
       "response": {
         "body": "DefaultResponse.txt"

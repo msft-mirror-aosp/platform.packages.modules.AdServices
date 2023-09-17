@@ -21,6 +21,7 @@ import static com.android.adservices.tests.ui.libs.UiConstants.ENTRY_POINT_ENABL
 
 import android.adservices.common.AdServicesCommonManager;
 import android.content.Context;
+import android.platform.test.rule.ScreenRecordRule;
 
 import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -35,19 +36,25 @@ import com.android.adservices.tests.ui.libs.UiUtils;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /** Test for verifying user consent notification trigger behaviors. */
 @RunWith(AndroidJUnit4.class)
+@ScreenRecordRule.ScreenRecord
 public class GaUxNotificationTriggerTest {
 
     private AdServicesCommonManager mCommonManager;
 
     private UiDevice mDevice;
 
+    private String mTestName;
+
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();
+
+    @Rule public final ScreenRecordRule sScreenRecordRule = new ScreenRecordRule();
 
     @Before
     public void setUp() throws Exception {
@@ -75,7 +82,10 @@ public class GaUxNotificationTriggerTest {
     public void tearDown() throws Exception {
         if (!AdservicesTestHelper.isDeviceSupported()) return;
 
+        UiUtils.takeScreenshot(mDevice, getClass().getSimpleName() + "_" + mTestName + "_");
+
         mDevice.pressHome();
+
         AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
@@ -86,8 +96,12 @@ public class GaUxNotificationTriggerTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testGaRowAdIdEnabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsRowDevice();
         UiUtils.enableGa();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
 
@@ -105,8 +119,12 @@ public class GaUxNotificationTriggerTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testGaRowAdIdDisabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsRowDevice();
         UiUtils.enableGa();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_DISABLED);
 
@@ -124,8 +142,12 @@ public class GaUxNotificationTriggerTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testGaEuAdIdEnabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsEuDevice();
         UiUtils.enableGa();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
 
@@ -141,8 +163,12 @@ public class GaUxNotificationTriggerTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testGaEuAdIdDisabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsEuDevice();
         UiUtils.enableGa();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_DISABLED);
 
