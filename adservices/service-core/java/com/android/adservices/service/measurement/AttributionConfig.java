@@ -35,6 +35,7 @@ import android.annotation.Nullable;
 import android.util.Pair;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.MathUtils;
 
@@ -181,7 +182,7 @@ public class AttributionConfig {
      * @return serialized JSON object
      */
     @Nullable
-    public JSONObject serializeAsJson() {
+    public JSONObject serializeAsJson(Flags flags) {
         try {
             JSONObject attributionConfig = new JSONObject();
             attributionConfig.put(SOURCE_NETWORK, mSourceAdtech);
@@ -193,13 +194,14 @@ public class AttributionConfig {
                 attributionConfig.put(SOURCE_PRIORITY_RANGE, sourcePriorityRange);
             }
 
+            Filter filter = new Filter(flags);
             if (mSourceFilters != null) {
-                attributionConfig.put(SOURCE_FILTERS, Filter.serializeFilterSet(mSourceFilters));
+                attributionConfig.put(SOURCE_FILTERS, filter.serializeFilterSet(mSourceFilters));
             }
 
             if (mSourceNotFilters != null) {
                 attributionConfig.put(
-                        SOURCE_NOT_FILTERS, Filter.serializeFilterSet(mSourceNotFilters));
+                        SOURCE_NOT_FILTERS, filter.serializeFilterSet(mSourceNotFilters));
             }
 
             if (mSourceExpiryOverride != null) {
@@ -215,7 +217,7 @@ public class AttributionConfig {
             }
 
             if (mFilterData != null) {
-                attributionConfig.put(FILTER_DATA, Filter.serializeFilterSet(mFilterData));
+                attributionConfig.put(FILTER_DATA, filter.serializeFilterSet(mFilterData));
             }
 
             if (mPostInstallExclusivityWindow != null) {
@@ -249,7 +251,8 @@ public class AttributionConfig {
          *
          * @throws JSONException if JSON parsing fails
          */
-        public Builder(@NonNull JSONObject attributionConfigsJson) throws JSONException {
+        public Builder(@NonNull JSONObject attributionConfigsJson, Flags flags)
+                throws JSONException {
             if (attributionConfigsJson == null) {
                 throw new JSONException(
                         "AttributionConfig.Builder: Empty or null attributionConfigsJson");
@@ -260,7 +263,7 @@ public class AttributionConfig {
             }
 
             mSourceAdtech = attributionConfigsJson.getString(SOURCE_NETWORK);
-
+            Filter filter = new Filter(flags);
             if (!attributionConfigsJson.isNull(SOURCE_PRIORITY_RANGE)) {
                 JSONObject sourcePriorityRangeJson =
                         attributionConfigsJson.getJSONObject(SOURCE_PRIORITY_RANGE);
@@ -272,12 +275,12 @@ public class AttributionConfig {
             if (!attributionConfigsJson.isNull(SOURCE_FILTERS)) {
                 JSONArray filterSet =
                         Filter.maybeWrapFilters(attributionConfigsJson, SOURCE_FILTERS);
-                mSourceFilters = Filter.deserializeFilterSet(filterSet);
+                mSourceFilters = filter.deserializeFilterSet(filterSet);
             }
             if (!attributionConfigsJson.isNull(SOURCE_NOT_FILTERS)) {
                 JSONArray filterSet =
                         Filter.maybeWrapFilters(attributionConfigsJson, SOURCE_NOT_FILTERS);
-                mSourceNotFilters = Filter.deserializeFilterSet(filterSet);
+                mSourceNotFilters = filter.deserializeFilterSet(filterSet);
             }
             if (!attributionConfigsJson.isNull(SOURCE_EXPIRY_OVERRIDE)) {
                 long override = attributionConfigsJson.getLong(SOURCE_EXPIRY_OVERRIDE);
@@ -300,7 +303,7 @@ public class AttributionConfig {
             }
             if (!attributionConfigsJson.isNull(FILTER_DATA)) {
                 JSONArray filterSet = Filter.maybeWrapFilters(attributionConfigsJson, FILTER_DATA);
-                mFilterData = Filter.deserializeFilterSet(filterSet);
+                mFilterData = filter.deserializeFilterSet(filterSet);
             }
             if (!attributionConfigsJson.isNull(POST_INSTALL_EXCLUSIVITY_WINDOW)) {
                 mPostInstallExclusivityWindow =

@@ -109,6 +109,8 @@ public class GaUxDebugChannelTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testApiDisabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.turnOffEnableAdsServicesAPI();
 
         mCommonManager.enableAdServices(
@@ -144,6 +146,8 @@ public class GaUxDebugChannelTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testEntryPointDisabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsRowDevice();
         UiUtils.enableGa();
 
@@ -170,6 +174,8 @@ public class GaUxDebugChannelTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testFromEntryPointRequest() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsEuDevice();
         UiUtils.enableGa();
 
@@ -197,6 +203,8 @@ public class GaUxDebugChannelTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testNonAdultAccount() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsRowDevice();
         UiUtils.enableGa();
 
@@ -226,6 +234,8 @@ public class GaUxDebugChannelTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testGaRowAdIdEnabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsRowDevice();
         UiUtils.enableGa();
 
@@ -254,6 +264,8 @@ public class GaUxDebugChannelTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testGaRowAdIdDisabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsRowDevice();
         UiUtils.enableGa();
 
@@ -282,6 +294,8 @@ public class GaUxDebugChannelTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testGaEuAdIdEnabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsEuDevice();
         UiUtils.enableGa();
 
@@ -308,6 +322,8 @@ public class GaUxDebugChannelTest {
     @Test
     @FlakyTest(bugId = 297347345)
     public void testGaEuAdIdDisabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsEuDevice();
         UiUtils.enableGa();
 

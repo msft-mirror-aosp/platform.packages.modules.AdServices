@@ -151,6 +151,8 @@ public final class FlagsConstants {
             "measurement_enforce_foreground_status_delete_registrations";
     public static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS =
             "measurement_enforce_foreground_status_get_status";
+    public static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCES =
+            "measurement_enforce_foreground_status_register_sources";
     public static final String KEY_MEASUREMENT_ENABLE_XNA = "measurement_enable_xna";
     public static final String KEY_MEASUREMENT_ENABLE_SHARED_SOURCE_DEBUG_KEY =
             "measurement_enable_shared_source_debug_key";
@@ -246,11 +248,61 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE =
             "measurement_throw_unknown_exception_sampling_rate";
+
+    public static final String KEY_MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW =
+            "measurement_event_reporting_job_required_battery_not_low";
+
+    public static final String KEY_MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE =
+            "measurement_event_reporting_job_required_network_type";
+
+    public static final String KEY_MEASUREMENT_EVENT_REPORTING_JOB_PERSISTED =
+            "measurement_event_reporting_job_persisted";
+
+    public static final String
+            KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW =
+                    "measurement_event_fallback_reporting_job_required_battery_not_low";
+
+    public static final String KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE =
+            "measurement_event_fallback_reporting_job_required_network_type";
+
+    public static final String KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERSISTED =
+            "measurement_event_fallback_reporting_job_persisted";
+
+    public static final String KEY_MEASUREMENT_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE =
+            "measurement_debug_reporting_job_required_network_type";
+
+    public static final String KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_REQUIRED_NETWORK_TYPE =
+            "measurement_debug_reporting_fallback_job_required_network_type";
+
+    public static final String KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED =
+            "measurement_debug_reporting_fallback_job_persisted";
+
+    public static final String KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE =
+            "measurement_verbose_debug_reporting_job_required_network_type";
+
+    public static final String KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED =
+            "measurement_verbose_debug_reporting_fallback_job_persisted";
+
     static final String KEY_MEASUREMENT_REPORT_RETRY_LIMIT = "measurement_report_retry_limit";
     static final String KEY_MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED =
             "measurement_report_retry_limit_enabled";
     public static final String KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST =
             "measurement_app_package_name_logging_allowlist";
+
+    public static final String KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED =
+            "measurement_delete_uninstalled_job_persisted";
+
+    public static final String KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS =
+            "measurement_delete_uninstalled_job_period_ms";
+
+    public static final String KEY_MEASUREMENT_DELETE_EXPIRED_JOB_PERSISTED =
+            "measurement_delete_expired_job_persisted";
+
+    public static final String KEY_MEASUREMENT_DELETE_EXPIRED_JOB_REQUIRES_DEVICE_IDLE =
+            "measurement_delete_expired_job_requires_device_idle";
+
+    public static final String KEY_MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS =
+            "measurement_delete_expired_job_period_ms";
 
     // FLEDGE Custom Audience keys
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT =
@@ -323,6 +375,8 @@ public final class FlagsConstants {
             "protected_signals_periodic_encoding_job_period_ms";
     public static final String KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS =
             "protected_signals_periodic_encoding_job_flex_ms";
+    public static final String KEY_PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES =
+            "protected_signals_encoded_payload_max_size_bytes";
 
     // FLEDGE Ad Selection keys
     public static final String KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT =
@@ -526,6 +580,8 @@ public final class FlagsConstants {
             "measurement_api_status_kill_switch";
     public static final String KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH =
             "measurement_api_register_source_kill_switch";
+    public static final String KEY_MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH =
+            "measurement_api_register_web_sources_kill_switch";
     public static final String KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH =
             "measurement_api_register_trigger_kill_switch";
     public static final String KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH =

@@ -5597,6 +5597,66 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void deleteExpiredRecords_RetryKeyValueData() {
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        // Non-stale join record
+        DebugReport debugReport = createDebugReport();
+        mDatastoreManager.runInTransaction((dao) -> dao.insertDebugReport(debugReport));
+
+        // Should Remain
+        ContentValues nonStaleValues = new ContentValues();
+        nonStaleValues.put(
+                MeasurementTables.KeyValueDataContract.DATA_TYPE,
+                DataType.DEBUG_REPORT_RETRY_COUNT.toString());
+        nonStaleValues.put(MeasurementTables.KeyValueDataContract.KEY, debugReport.getId());
+        nonStaleValues.put(MeasurementTables.KeyValueDataContract.VALUE, "1");
+        db.insert(MeasurementTables.KeyValueDataContract.TABLE, null, nonStaleValues);
+
+        // Should Delete
+        ContentValues staleValues = new ContentValues();
+        staleValues.put(
+                MeasurementTables.KeyValueDataContract.DATA_TYPE,
+                DataType.DEBUG_REPORT_RETRY_COUNT.toString());
+        staleValues.put(MeasurementTables.KeyValueDataContract.KEY, "stale-key");
+        staleValues.put(MeasurementTables.KeyValueDataContract.VALUE, "1");
+        db.insert(MeasurementTables.KeyValueDataContract.TABLE, null, staleValues);
+
+        mDatastoreManager.runInTransaction(dao -> dao.deleteExpiredRecords(0, 0));
+
+        // Assert Non-Stale record remains.
+        assertEquals(
+                1,
+                DatabaseUtils.longForQuery(
+                        db,
+                        "SELECT COUNT("
+                                + MeasurementTables.KeyValueDataContract.KEY
+                                + ") FROM "
+                                + MeasurementTables.KeyValueDataContract.TABLE
+                                + " WHERE "
+                                + MeasurementTables.KeyValueDataContract.KEY
+                                + " = ?",
+                        new String[] {
+                            nonStaleValues.getAsString(MeasurementTables.KeyValueDataContract.KEY)
+                        }));
+
+        // Assert Stale Record Removed
+        assertEquals(
+                0,
+                DatabaseUtils.longForQuery(
+                        db,
+                        "SELECT COUNT("
+                                + MeasurementTables.KeyValueDataContract.KEY
+                                + ") FROM "
+                                + MeasurementTables.KeyValueDataContract.TABLE
+                                + " WHERE "
+                                + MeasurementTables.KeyValueDataContract.KEY
+                                + " = ?",
+                        new String[] {
+                            staleValues.getAsString(MeasurementTables.KeyValueDataContract.KEY)
+                        }));
+    }
+
+    @Test
     public void getRegistrationRedirectCount_keyMissing() {
         Optional<KeyValueData> optKeyValueData =
                 mDatastoreManager.runInTransactionWithResult(
@@ -8730,10 +8790,7 @@ public class MeasurementDaoTest {
                 .populateFromSourceAndTrigger(
                         source,
                         trigger,
-                        trigger.parseEventTriggers(
-                                        FlagsFactory.getFlagsForTest()
-                                                .getMeasurementFlexibleEventReportingApiEnabled())
-                                .get(0),
+                        trigger.parseEventTriggers(FlagsFactory.getFlagsForTest()).get(0),
                         new Pair<>(null, null),
                         new EventReportWindowCalcDelegate(mFlags),
                         new SourceNoiseHandler(mFlags),
