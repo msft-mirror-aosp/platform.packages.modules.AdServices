@@ -1021,9 +1021,9 @@ public class AuctionServerE2ETest {
 
         Map<String, AdTechIdentifier> nameAndBuyersMap =
                 Map.of(
-                        "Shoes CA of Buyer 1", WINNER_BUYER,
-                        "Shirts CA of Buyer 1", WINNER_BUYER,
-                        "Shoes CA Of Buyer 2", DIFFERENT_BUYER);
+                        "Shoes CA of Buyer 1", BUYER_1,
+                        "Shirts CA of Buyer 1", BUYER_1,
+                        "Shoes CA Of Buyer 2", BUYER_2);
         createAndPersistDBCustomAudiences(nameAndBuyersMap);
 
         DBEncryptionKey dbEncryptionKey =
@@ -1062,7 +1062,7 @@ public class AuctionServerE2ETest {
                                 new AdSelectionEncryptionKeyManager(
                                         mEncryptionKeyDao,
                                         mFlags,
-                                        mAdServicesHttpsClientSpy,
+                                        mAdServicesHttpsClientMock,
                                         mLightweightExecutorService),
                                 mEncryptionContextDao,
                                 seedBytes,
