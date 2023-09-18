@@ -156,5 +156,6 @@ public class ConsentNotificationResetChannelTest {
         verify(mConsentManager).recordNotificationDisplayed(false);
         verify(mConsentManager).recordGaUxNotificationDisplayed(false);
         verify(mConsentManager).setU18NotificationDisplayed(false);
+        verify(mConsentManager).setU18Account(false);
     }
 }
