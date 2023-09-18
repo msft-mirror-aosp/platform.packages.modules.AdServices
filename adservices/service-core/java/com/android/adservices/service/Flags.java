@@ -3437,6 +3437,27 @@ public interface Flags {
         return MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
     }
 
+    boolean MEASUREMENT_ATTRIBUTION_JOB_PERSISTED = false;
+
+    /** Returns whether to persist this job across device reboots for attribution job. */
+    default boolean getMeasurementAttributionJobPersisted() {
+        return MEASUREMENT_ATTRIBUTION_JOB_PERSISTED;
+    }
+
+    long MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
+
+    /** Delay for attribution job triggering. */
+    default long getMeasurementAttributionJobTriggeringDelayMs() {
+        return MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS;
+    }
+
+    boolean MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERSISTED = true;
+
+    /** Returns whether to persist this job across device reboots for attribution fallback job. */
+    default boolean getMeasurementAttributionFallbackJobPersisted() {
+        return MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERSISTED;
+    }
+
     /** Default U18 UX feature flag.. */
     boolean DEFAULT_U18_UX_ENABLED = false;
 

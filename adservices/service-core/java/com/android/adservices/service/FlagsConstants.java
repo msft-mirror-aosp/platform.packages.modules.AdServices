@@ -304,6 +304,15 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS =
             "measurement_delete_expired_job_period_ms";
 
+    public static final String KEY_MEASUREMENT_ATTRIBUTION_JOB_PERSISTED =
+            "measurement_attribution_job_persisted";
+
+    public static final String KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS =
+            "measurement_attribution_job_triggering_delay_ms";
+
+    public static final String KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERSISTED =
+            "measurement_attribution_fallback_job_persisted";
+
     // FLEDGE Custom Audience keys
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT =
             "fledge_custom_audience_max_count";
