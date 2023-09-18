@@ -2246,8 +2246,7 @@ public class SdkSandboxManagerServiceUnitTest {
     @Test
     public void test_syncDataFromClient_verifiesCallingPackageName() {
         FakeSharedPreferencesSyncCallback callback = new FakeSharedPreferencesSyncCallback();
-        mService.syncDataFromClient(
-                "does.not.exist", TIME_APP_CALLED_SYSTEM_SERVER, TEST_UPDATE, callback);
+        mService.syncDataFromClient("does.not.exist", mSandboxLatencyInfo, TEST_UPDATE, callback);
 
         assertEquals(PREFERENCES_SYNC_INTERNAL_ERROR, callback.getErrorCode());
         assertThat(callback.getErrorMsg()).contains("does.not.exist not found");
@@ -2257,11 +2256,7 @@ public class SdkSandboxManagerServiceUnitTest {
     public void test_syncDataFromClient_sandboxServiceIsNotBound() {
         // Sync data from client
         final FakeSharedPreferencesSyncCallback callback = new FakeSharedPreferencesSyncCallback();
-        mService.syncDataFromClient(
-                TEST_PACKAGE,
-                /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
-                TEST_UPDATE,
-                callback);
+        mService.syncDataFromClient(TEST_PACKAGE, mSandboxLatencyInfo, TEST_UPDATE, callback);
 
         // Verify when sandbox is not bound, manager service does not try to sync
         assertThat(mSdkSandboxService.getLastSyncUpdate()).isNull();
@@ -2277,8 +2272,7 @@ public class SdkSandboxManagerServiceUnitTest {
             throws Exception {
         // Sync data from client
         final FakeSharedPreferencesSyncCallback callback = new FakeSharedPreferencesSyncCallback();
-        mService.syncDataFromClient(
-                TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, TEST_UPDATE, callback);
+        mService.syncDataFromClient(TEST_PACKAGE, mSandboxLatencyInfo, TEST_UPDATE, callback);
 
         // Verify on error was called
         assertThat(callback.hasError()).isTrue();
@@ -2301,11 +2295,7 @@ public class SdkSandboxManagerServiceUnitTest {
         // Sync data from client
         final Bundle data = new Bundle();
         final FakeSharedPreferencesSyncCallback callback = new FakeSharedPreferencesSyncCallback();
-        mService.syncDataFromClient(
-                TEST_PACKAGE,
-                /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
-                TEST_UPDATE,
-                callback);
+        mService.syncDataFromClient(TEST_PACKAGE, mSandboxLatencyInfo, TEST_UPDATE, callback);
 
         // Verify that manager service calls sandbox to sync data
         assertThat(mSdkSandboxService.getLastSyncUpdate()).isSameInstanceAs(TEST_UPDATE);
@@ -2746,11 +2736,17 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
-    public void testLatencyMetrics_IpcFromAppToSystemServer_SyncDataFromClient() {
+    public void testLatencyMetrics_SyncDataFromClient() {
+        SandboxLatencyInfo sandboxLatencyInfo =
+                new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_SYNC_DATA_FROM_CLIENT);
+        Mockito.when(mInjector.getCurrentTime())
+                .thenReturn(TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP);
+
+        sandboxLatencyInfo.setTimeAppCalledSystemServer(TIME_APP_CALLED_SYSTEM_SERVER);
         // Sync data from client
         mService.syncDataFromClient(
                 TEST_PACKAGE,
-                TIME_APP_CALLED_SYSTEM_SERVER,
+                sandboxLatencyInfo,
                 TEST_UPDATE,
                 Mockito.mock(ISharedPreferencesSyncCallback.class));
         ExtendedMockito.verify(
