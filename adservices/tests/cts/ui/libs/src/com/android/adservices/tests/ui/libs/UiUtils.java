@@ -497,21 +497,8 @@ public class UiUtils {
         ShellUtils.runShellCommand("cmd wifi connect-network VirtWifi open");
     }
 
-    public static void turnOffWifi(UiDevice device)
-            throws UiObjectNotFoundException, InterruptedException {
-        UiUtils.startAndroidSettingsApp(device);
-
-        // Navigate to Wi-Fi
-        scrollToThenClickElementContainingText(device, "Network");
-        scrollToThenClickElementContainingText(device, "Internet");
-
-        // flip Wi-Fi switch if off
-        UiObject WifiSwitch =
-                device.findObject(new UiSelector().className("android.widget.Switch"));
-        WifiSwitch.waitForExists(LAUNCH_TIMEOUT);
-        if (WifiSwitch.isChecked()) {
-            WifiSwitch.click();
-        }
+    public static void turnOffWifi(UiDevice device) {
+        ShellUtils.runShellCommand("svc wifi disable");
     }
 
     private static void startAndroidSettingsApp(UiDevice device) {
