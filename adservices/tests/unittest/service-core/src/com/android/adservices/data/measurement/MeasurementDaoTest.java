@@ -5570,10 +5570,13 @@ public class MeasurementDaoTest {
                         .setRegistrationOrigin(REGISTRATION_ORIGIN)
                         .build();
 
-        mDatastoreManager.runInTransaction((dao) -> dao.insertDebugReport(debugReport1));
-        mDatastoreManager.runInTransaction((dao) -> dao.insertDebugReport(debugReport2));
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction((dao) -> dao.insertDebugReport(debugReport1));
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction((dao) -> dao.insertDebugReport(debugReport2));
 
-        mDatastoreManager.runInTransaction(dao -> dao.deleteExpiredRecords(0, 0));
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(dao -> dao.deleteExpiredRecords(0, 0));
         assertEquals(
                 2,
                 DatabaseUtils.longForQuery(
@@ -5584,12 +5587,14 @@ public class MeasurementDaoTest {
                                 + MeasurementTables.DebugReportContract.TABLE,
                         null));
         // Increment Attempt Record 1
-        mDatastoreManager.runInTransaction(
-                (dao) ->
-                        dao.incrementAndGetReportingRetryCount(
-                                debugReport1.getId(), DataType.DEBUG_REPORT_RETRY_COUNT));
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        (dao) ->
+                                dao.incrementAndGetReportingRetryCount(
+                                        debugReport1.getId(), DataType.DEBUG_REPORT_RETRY_COUNT));
         // Delete Expired (Record 1)
-        mDatastoreManager.runInTransaction(dao -> dao.deleteExpiredRecords(0, 0));
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(dao -> dao.deleteExpiredRecords(0, 0));
 
         // Assert Record 2 remains.
         assertEquals(
@@ -5630,14 +5635,17 @@ public class MeasurementDaoTest {
 
         DebugReport debugReport = createDebugReport();
         // Insert
-        mDatastoreManager.runInTransaction((dao) -> dao.insertDebugReport(debugReport));
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction((dao) -> dao.insertDebugReport(debugReport));
         // Increment Attempt
-        mDatastoreManager.runInTransaction(
-                (dao) ->
-                        dao.incrementAndGetReportingRetryCount(
-                                debugReport.getId(), DataType.DEBUG_REPORT_RETRY_COUNT));
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        (dao) ->
+                                dao.incrementAndGetReportingRetryCount(
+                                        debugReport.getId(), DataType.DEBUG_REPORT_RETRY_COUNT));
         // Delete Expired
-        mDatastoreManager.runInTransaction(dao -> dao.deleteExpiredRecords(0, 0));
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(dao -> dao.deleteExpiredRecords(0, 0));
         try (Cursor cursor =
                 MeasurementDbHelper.getInstance(sContext)
                         .getReadableDatabase()
@@ -5661,7 +5669,8 @@ public class MeasurementDaoTest {
         SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         // Non-stale join record
         DebugReport debugReport = createDebugReport();
-        mDatastoreManager.runInTransaction((dao) -> dao.insertDebugReport(debugReport));
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction((dao) -> dao.insertDebugReport(debugReport));
 
         // Should Remain
         ContentValues nonStaleValues = new ContentValues();
@@ -5681,7 +5690,8 @@ public class MeasurementDaoTest {
         staleValues.put(MeasurementTables.KeyValueDataContract.VALUE, "1");
         db.insert(MeasurementTables.KeyValueDataContract.TABLE, null, staleValues);
 
-        mDatastoreManager.runInTransaction(dao -> dao.deleteExpiredRecords(0, 0));
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(dao -> dao.deleteExpiredRecords(0, 0));
 
         // Assert Non-Stale record remains.
         assertEquals(
