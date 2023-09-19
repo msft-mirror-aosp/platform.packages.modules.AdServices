@@ -42,34 +42,3 @@ android_test {
     min_sdk_version: "Tiramisu",
     test_mainline_modules: ["com.google.android.adservices.apex"],
 }
-
-android_test {
-    name: "CtsAdExtServicesMddTests",
-    srcs: [
-        "src/**/*.java",
-    ],
-    static_libs: [
-        "androidx.concurrent_concurrent-futures",
-        "compatibility-device-util-axt", // Needed for ShellUtils.runShellCommand
-        "truth-prebuilt",
-        "adservices-clients",
-        "adservices-test-utility",
-    ],
-    libs: [
-        "android.ext.adservices",
-        "android.test.base",
-        "framework-adservices",
-        "framework-sdksandbox.impl",
-    ],
-    test_suites: [
-        "cts",
-        "general-tests",
-        "mts-extservices",
-    ],
-    sdk_version: "module_current",
-    min_sdk_version: "31",
-    max_sdk_version: "32",
-    test_mainline_modules: ["com.google.android.extservices.apex"],
-    test_config: "AndroidTest.ExtServices.xml",
-    manifest: "AndroidManifestExtServices.xml",
-}
