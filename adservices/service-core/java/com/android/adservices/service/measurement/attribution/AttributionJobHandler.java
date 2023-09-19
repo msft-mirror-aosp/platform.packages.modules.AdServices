@@ -176,6 +176,8 @@ class AttributionJobHandler {
         return mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     Trigger trigger = measurementDao.getTrigger(triggerId);
+                    attributionStatus.setAttributionDelay(
+                            System.currentTimeMillis() - trigger.getTriggerTime());
 
                     if (trigger.getStatus() != Trigger.Status.PENDING) {
                         attributionStatus.setFailureTypeFromTriggerStatus(trigger.getStatus());
@@ -258,8 +260,6 @@ class AttributionJobHandler {
                                     trigger.getEnrollmentId());
                         }
                         attributeTriggerAndInsertAttribution(trigger, source, measurementDao);
-                        long endTime = System.currentTimeMillis();
-                        attributionStatus.setAttributionDelay(endTime - trigger.getTriggerTime());
                         attributionStatus.setAttributionResult(
                                 AttributionStatus.AttributionResult.SUCCESS,
                                 isAggregateTriggeringStatusAttributed,
@@ -1215,10 +1215,6 @@ class AttributionJobHandler {
     }
 
     private void logAttributionStats(AttributionStatus attributionStatus) {
-        if (!attributionStatus.getAttributionDelay().isPresent()) {
-            attributionStatus.setAttributionDelay(0L);
-        }
-
         mLogger.logMeasurementAttributionStats(
                 new MeasurementAttributionStats.Builder()
                         .setCode(AD_SERVICES_MEASUREMENT_ATTRIBUTION)
@@ -1228,7 +1224,7 @@ class AttributionJobHandler {
                         .setFailureType(attributionStatus.getFailureType().ordinal())
                         .setSourceDerived(attributionStatus.isSourceDerived())
                         .setInstallAttribution(attributionStatus.isInstallAttribution())
-                        .setAttributionDelay(attributionStatus.getAttributionDelay().get())
+                        .setAttributionDelay(attributionStatus.getAttributionDelay())
                         .setSourceRegistrant(attributionStatus.getSourceRegistrant())
                         .build());
     }
