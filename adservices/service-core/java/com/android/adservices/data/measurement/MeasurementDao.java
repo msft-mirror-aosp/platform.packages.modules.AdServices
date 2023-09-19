@@ -18,6 +18,8 @@ package com.android.adservices.data.measurement;
 
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE;
 
+import static com.android.adservices.service.measurement.SystemHealthParams.MAX_DELAYED_SOURCE_REGISTRATION_WINDOW;
+
 import android.adservices.measurement.DeletionRequest;
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -30,7 +32,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
@@ -616,8 +617,6 @@ class MeasurementDao implements IMeasurementDao {
         String sourceOrderByStatement =
                 String.format(" ORDER BY %1$s ASC", MeasurementTables.SourceContract.EVENT_TIME);
         String sourceLimitStatement = String.format(" LIMIT %1$s", 1);
-        long maxDelayedSourceRegistrationWindow =
-                FlagsFactory.getFlags().getMeasurementMaxDelayedSourceRegistrationWindow();
 
         try (Cursor cursor =
                 mSQLTransaction
@@ -634,7 +633,7 @@ class MeasurementDao implements IMeasurementDao {
                                     String.valueOf(trigger.getTriggerTime()),
                                     String.valueOf(
                                             trigger.getTriggerTime()
-                                                    + maxDelayedSourceRegistrationWindow),
+                                                    + MAX_DELAYED_SOURCE_REGISTRATION_WINDOW),
                                     String.valueOf(trigger.getTriggerTime()),
                                     String.valueOf(Source.Status.ACTIVE)
                                 })) {
