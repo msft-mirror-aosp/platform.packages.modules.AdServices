@@ -80,6 +80,7 @@ import java.util.stream.Collectors;
 
 public class BuyerInputGeneratorTest {
     private static final boolean ENABLE_AD_FILTER = true;
+    private static final boolean ENABLE_PERIODIC_SIGNALS = true;
     private static final long API_RESPONSE_TIMEOUT_SECONDS = 10_000L;
     private static final AdTechIdentifier BUYER_1 = AdSelectionConfigFixture.BUYER_1;
     private static final AdTechIdentifier BUYER_2 = AdSelectionConfigFixture.BUYER_2;
@@ -129,6 +130,7 @@ public class BuyerInputGeneratorTest {
                         mBackgroundExecutorService,
                         FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS,
                         ENABLE_AD_FILTER,
+                        ENABLE_PERIODIC_SIGNALS,
                         mDataCompressor);
 
         // Required by CustomAudienceDao.
@@ -207,10 +209,10 @@ public class BuyerInputGeneratorTest {
                     BuyerInput.parseFrom(
                             mDataCompressor.decompress(buyerAndBuyerInputs.get(buyer)).getData());
             ProtectedAppSignals appSignals = buyerInput.getProtectedAppSignals();
-            assertEquals(appSignals.getEncodingVersion(), encodedPayloads.get(buyer).getVersion());
+            assertEquals(encodedPayloads.get(buyer).getVersion(), appSignals.getEncodingVersion());
             assertEquals(
-                    appSignals.getAppInstallSignals(),
-                    ByteString.copyFrom(encodedPayloads.get(buyer).getEncodedPayload()));
+                    ByteString.copyFrom(encodedPayloads.get(buyer).getEncodedPayload()),
+                    appSignals.getAppInstallSignals());
         }
         verify(mAdFiltererMock).filterCustomAudiences(any());
     }
@@ -246,10 +248,69 @@ public class BuyerInputGeneratorTest {
                     BuyerInput.parseFrom(
                             mDataCompressor.decompress(buyerAndBuyerInputs.get(buyer)).getData());
             ProtectedAppSignals appSignals = buyerInput.getProtectedAppSignals();
-            assertEquals(appSignals.getEncodingVersion(), encodedPayloads.get(buyer).getVersion());
+            assertEquals(encodedPayloads.get(buyer).getVersion(), appSignals.getEncodingVersion());
             assertEquals(
-                    appSignals.getAppInstallSignals(),
-                    ByteString.copyFrom(encodedPayloads.get(buyer).getEncodedPayload()));
+                    ByteString.copyFrom(encodedPayloads.get(buyer).getEncodedPayload()),
+                    appSignals.getAppInstallSignals());
+        }
+
+        // CustomAudience of BUYER_3 did not contain ad render id and so, should be filtered out.
+        assertFalse(buyerAndBuyerInputs.containsKey(BUYER_3));
+
+        BuyerInput buyerInput =
+                BuyerInput.parseFrom(
+                        mDataCompressor.decompress(buyerAndBuyerInputs.get(BUYER_1)).getData());
+        for (BuyerInput.CustomAudience buyerInputsCA : buyerInput.getCustomAudiencesList()) {
+            String buyerInputsCAName = buyerInputsCA.getName();
+            assertTrue(namesAndCustomAudiences.containsKey(buyerInputsCAName));
+            DBCustomAudience deviceCA = namesAndCustomAudiences.get(buyerInputsCAName);
+            Assert.assertEquals(deviceCA.getName(), buyerInputsCAName);
+            Assert.assertEquals(deviceCA.getBuyer(), BUYER_1);
+            assertEqual(buyerInputsCA, deviceCA);
+        }
+
+        verify(mAdFiltererMock).filterCustomAudiences(any());
+    }
+
+    @Test
+    public void testBuyerInputGenerator_returnsBuyerInputs_CAsAndSignalsCombined_SignalDisabled()
+            throws ExecutionException, InterruptedException, TimeoutException,
+                    InvalidProtocolBufferException {
+        // Set AdFiltering to return all custom audiences in the input argument.
+        when(mAdFiltererMock.filterCustomAudiences(any())).thenAnswer(i -> i.getArguments()[0]);
+        // Custom Audiences
+        Map<String, AdTechIdentifier> nameAndBuyersMap = Map.of("Shoes CA of Buyer 1", BUYER_1);
+        Map<String, DBCustomAudience> namesAndCustomAudiences =
+                createAndPersistDBCustomAudiencesWithAdRenderId(nameAndBuyersMap);
+        // Insert a CA without ad render id. This should get filtered out.
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                DBCustomAudienceFixture.getValidBuilderByBuyer(BUYER_3).build(), Uri.EMPTY);
+
+        BuyerInputGenerator buyerInputGeneratorSignalsDisabled =
+                new BuyerInputGenerator(
+                        mCustomAudienceDao,
+                        mEncodedPayloadDao,
+                        mAdFiltererMock,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS,
+                        ENABLE_AD_FILTER,
+                        false,
+                        mDataCompressor);
+
+        Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerAndBuyerInputs =
+                buyerInputGeneratorSignalsDisabled
+                        .createCompressedBuyerInputs()
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.MILLISECONDS);
+
+        for (AdTechIdentifier buyer : buyerAndBuyerInputs.keySet()) {
+            BuyerInput buyerInput =
+                    BuyerInput.parseFrom(
+                            mDataCompressor.decompress(buyerAndBuyerInputs.get(buyer)).getData());
+            ProtectedAppSignals appSignals = buyerInput.getProtectedAppSignals();
+            assertTrue(
+                    "Encoded signals should have been empty",
+                    appSignals.getAppInstallSignals().isEmpty());
         }
 
         // CustomAudience of BUYER_3 did not contain ad render id and so, should be filtered out.
@@ -284,6 +345,7 @@ public class BuyerInputGeneratorTest {
                         mBackgroundExecutorService,
                         FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS,
                         false,
+                        ENABLE_PERIODIC_SIGNALS,
                         mDataCompressor);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(BUYER_1, "testCA")
