@@ -33,6 +33,7 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.AdServicesConfig;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.SystemHealthParams;
@@ -149,14 +150,16 @@ public final class AggregateFallbackReportingJobService extends JobService {
         jobScheduler.schedule(jobInfo);
     }
 
-    private static JobInfo buildJobInfo(Context context) {
+    private static JobInfo buildJobInfo(Context context, Flags flags) {
         return new JobInfo.Builder(
                         MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID,
                         new ComponentName(context, AggregateFallbackReportingJobService.class))
-                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                .setRequiresBatteryNotLow(true)
-                .setPeriodic(AdServicesConfig.getMeasurementAggregateFallbackReportingJobPeriodMs())
-                .setPersisted(true)
+                .setRequiredNetworkType(
+                        flags.getMeasurementAggregateFallbackReportingJobRequiredNetworkType())
+                .setRequiresBatteryNotLow(
+                        flags.getMeasurementAggregateFallbackReportingJobRequiredBatteryNotLow())
+                .setPeriodic(flags.getMeasurementAggregateFallbackReportingJobPeriodMs())
+                .setPersisted(flags.getMeasurementAggregateFallbackReportingJobPersisted())
                 .build();
     }
 
@@ -167,7 +170,8 @@ public final class AggregateFallbackReportingJobService extends JobService {
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
-        if (FlagsFactory.getFlags().getMeasurementJobAggregateFallbackReportingKillSwitch()) {
+        Flags flags = FlagsFactory.getFlags();
+        if (flags.getMeasurementJobAggregateFallbackReportingKillSwitch()) {
             LogUtil.d("AggregateFallbackReportingJobService is disabled, skip scheduling");
             return;
         }
@@ -181,7 +185,7 @@ public final class AggregateFallbackReportingJobService extends JobService {
         final JobInfo scheduledJob =
                 jobScheduler.getPendingJob(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
-        JobInfo jobInfo = buildJobInfo(context);
+        JobInfo jobInfo = buildJobInfo(context, flags);
         if (forceSchedule || !jobInfo.equals(scheduledJob)) {
             schedule(jobScheduler, jobInfo);
             LogUtil.d("Scheduled AggregateFallbackReportingJobService");
