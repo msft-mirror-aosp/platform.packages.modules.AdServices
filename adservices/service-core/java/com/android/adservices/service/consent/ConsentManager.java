@@ -1745,7 +1745,7 @@ public class ConsentManager {
                 .logMeasurementWipeoutStats(
                         new MeasurementWipeoutStats.Builder()
                                 .setCode(AD_SERVICES_MEASUREMENT_WIPEOUT)
-                                .setWipeoutType(wipeoutStatus.getWipeoutType().ordinal())
+                                .setWipeoutType(wipeoutStatus.getWipeoutType().getValue())
                                 .build());
     }
 
