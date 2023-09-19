@@ -309,6 +309,7 @@ public final class AsyncSourceFetcherTest {
                                         .setAdTechDomain(null)
                                         .build()));
         verify(mUrlConnection).setRequestMethod("POST");
+        verify(mUrlConnection).setRequestProperty("Attribution-Reporting-Source-Info", "event");
     }
 
     @Test
