@@ -47,6 +47,7 @@ import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.AggregateReportingJob;
 import com.android.adservices.service.measurement.actions.EventReportingJob;
 import com.android.adservices.service.measurement.actions.InstallApp;
+import com.android.adservices.service.measurement.actions.RegisterListSources;
 import com.android.adservices.service.measurement.actions.RegisterSource;
 import com.android.adservices.service.measurement.actions.RegisterTrigger;
 import com.android.adservices.service.measurement.actions.RegisterWebSource;
@@ -205,6 +206,21 @@ public abstract class E2EMockTest extends E2ETest {
     }
 
     @Override
+    void prepareRegistrationServer(RegisterListSources sourceRegistration) throws IOException {
+        for (String uri : sourceRegistration.mUriToResponseHeadersMap.keySet()) {
+            if (sourceRegistration.mUriConfigMap.get(uri).shouldEnroll()) {
+                updateEnrollment(uri);
+            }
+            HttpsURLConnection urlConnection = mock(HttpsURLConnection.class);
+            when(urlConnection.getResponseCode()).thenReturn(200);
+            Answer<Map<String, List<String>>> headerFieldsMockAnswer =
+                    invocation -> getNextResponse(sourceRegistration.mUriToResponseHeadersMap, uri);
+            Mockito.doAnswer(headerFieldsMockAnswer).when(urlConnection).getHeaderFields();
+            Mockito.doReturn(urlConnection).when(mAsyncSourceFetcher).openUrl(new URL(uri));
+        }
+    }
+
+    @Override
     void prepareRegistrationServer(RegisterTrigger triggerRegistration) throws IOException {
         for (String uri : triggerRegistration.mUriToResponseHeadersMap.keySet()) {
             if (triggerRegistration.mUriConfigMap.get(uri).shouldEnroll()) {
@@ -277,6 +293,20 @@ public abstract class E2EMockTest extends E2ETest {
                         sourceRegistration.mRegistrationRequest,
                         sourceRegistration.mAdIdPermission,
                         sourceRegistration.mTimestamp));
+        mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        if (sourceRegistration.mDebugReporting) {
+            processActualDebugReportApiJob();
+        }
+    }
+
+    @Override
+    void processAction(RegisterListSources sourceRegistration) throws IOException, JSONException {
+        prepareRegistrationServer(sourceRegistration);
+        Assert.assertEquals(
+                "MeasurementImpl.registerWebSource failed",
+                RESULT_OK,
+                mMeasurementImpl.registerSources(
+                        sourceRegistration.mRegistrationRequest, sourceRegistration.mTimestamp));
         mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
         if (sourceRegistration.mDebugReporting) {
             processActualDebugReportApiJob();
