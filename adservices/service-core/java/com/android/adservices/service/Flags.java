@@ -24,9 +24,6 @@ import android.app.job.JobInfo;
 
 import androidx.annotation.Nullable;
 
-// NOTE: do not import adservices classes that are only used on javadoc as this class is used by
-// tests that don't have them in the classpath - use the FQCN in the javadoc instead
-
 import com.android.adservices.cobalt.CobaltConstants;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -3435,6 +3432,68 @@ public interface Flags {
      */
     default boolean getMeasurementVerboseDebugReportingFallbackJobPersisted() {
         return MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
+    }
+
+    boolean MEASUREMENT_ATTRIBUTION_JOB_PERSISTED = false;
+
+    /** Returns whether to persist this job across device reboots for attribution job. */
+    default boolean getMeasurementAttributionJobPersisted() {
+        return MEASUREMENT_ATTRIBUTION_JOB_PERSISTED;
+    }
+
+    long MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
+
+    /** Delay for attribution job triggering. */
+    default long getMeasurementAttributionJobTriggeringDelayMs() {
+        return MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS;
+    }
+
+    boolean MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERSISTED = true;
+
+    /** Returns whether to persist this job across device reboots for attribution fallback job. */
+    default boolean getMeasurementAttributionFallbackJobPersisted() {
+        return MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERSISTED;
+    }
+
+    int MEASUREMENT_ASYNC_REGISTRATION_QUEUE_JOB_REQUIRED_NETWORK_TYPE = JobInfo.NETWORK_TYPE_ANY;
+
+    /** Returns the required network type for async registration queue job. */
+    default int getMeasurementAsyncRegistrationQueueJobRequiredNetworkType() {
+        return MEASUREMENT_ASYNC_REGISTRATION_QUEUE_JOB_REQUIRED_NETWORK_TYPE;
+    }
+
+    boolean MEASUREMENT_ASYNC_REGISTRATION_QUEUE_JOB_PERSISTED = false;
+
+    /**
+     * Returns whether to persist this job across device reboots for async registration queue job.
+     */
+    default boolean getMeasurementAsyncRegistrationQueueJobPersisted() {
+        return MEASUREMENT_ASYNC_REGISTRATION_QUEUE_JOB_PERSISTED;
+    }
+
+    boolean MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_REQUIRED_BATTERY_NOT_LOW = true;
+
+    /** Returns whether to require battery not low for async registration queue fallback job. */
+    default boolean getMeasurementAsyncRegistrationFallbackJobRequiredBatteryNotLow() {
+        return MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_REQUIRED_BATTERY_NOT_LOW;
+    }
+
+    int MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_REQUIRED_NETWORK_TYPE =
+            JobInfo.NETWORK_TYPE_ANY;
+
+    /** Returns the required network type for async registration queue fallback job. */
+    default int getMeasurementAsyncRegistrationFallbackJobRequiredNetworkType() {
+        return MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_REQUIRED_NETWORK_TYPE;
+    }
+
+    boolean MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_PERSISTED = true;
+
+    /**
+     * Returns whether to persist this job across device reboots for async registration queue
+     * fallback job.
+     */
+    default boolean getMeasurementAsyncRegistrationFallbackJobPersisted() {
+        return MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_PERSISTED;
     }
 
     /** Default U18 UX feature flag.. */

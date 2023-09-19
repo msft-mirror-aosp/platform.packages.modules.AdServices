@@ -375,10 +375,12 @@ public final class SdkSandboxManager {
     public void registerAppOwnedSdkSandboxInterface(
             @NonNull AppOwnedSdkSandboxInterface appOwnedSdkSandboxInterface) {
         try {
+            SandboxLatencyInfo sandboxLatencyInfo =
+                    new SandboxLatencyInfo(
+                            SandboxLatencyInfo.METHOD_REGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE);
+            sandboxLatencyInfo.setTimeAppCalledSystemServer(mTimeProvider.getCurrentTime());
             mService.registerAppOwnedSdkSandboxInterface(
-                    mContext.getPackageName(),
-                    appOwnedSdkSandboxInterface,
-                    /*timeAppCalledSystemServer=*/ mTimeProvider.getCurrentTime());
+                    mContext.getPackageName(), appOwnedSdkSandboxInterface, sandboxLatencyInfo);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
@@ -391,10 +393,12 @@ public final class SdkSandboxManager {
      */
     public void unregisterAppOwnedSdkSandboxInterface(@NonNull String name) {
         try {
+            SandboxLatencyInfo sandboxLatencyInfo =
+                    new SandboxLatencyInfo(
+                            SandboxLatencyInfo.METHOD_UNREGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE);
+            sandboxLatencyInfo.setTimeAppCalledSystemServer(mTimeProvider.getCurrentTime());
             mService.unregisterAppOwnedSdkSandboxInterface(
-                    mContext.getPackageName(),
-                    name,
-                    /*timeAppCalledSystemServer=*/ mTimeProvider.getCurrentTime());
+                    mContext.getPackageName(), name, sandboxLatencyInfo);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
@@ -408,9 +412,12 @@ public final class SdkSandboxManager {
      */
     public @NonNull List<AppOwnedSdkSandboxInterface> getAppOwnedSdkSandboxInterfaces() {
         try {
+            SandboxLatencyInfo sandboxLatencyInfo =
+                    new SandboxLatencyInfo(
+                            SandboxLatencyInfo.METHOD_GET_APP_OWNED_SDK_SANDBOX_INTERFACES);
+            sandboxLatencyInfo.setTimeAppCalledSystemServer(mTimeProvider.getCurrentTime());
             return mService.getAppOwnedSdkSandboxInterfaces(
-                    mContext.getPackageName(),
-                    /*timeAppCalledSystemServer=*/ mTimeProvider.getCurrentTime());
+                    mContext.getPackageName(), sandboxLatencyInfo);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }

@@ -30,6 +30,7 @@ import android.content.Context;
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.Trigger;
@@ -143,12 +144,12 @@ public class AttributionFallbackJobService extends JobService {
         jobScheduler.schedule(job);
     }
 
-    private static JobInfo buildJobInfo(Context context) {
+    private static JobInfo buildJobInfo(Context context, Flags flags) {
         return new JobInfo.Builder(
                         MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID,
                         new ComponentName(context, AttributionFallbackJobService.class))
-                .setPeriodic(FlagsFactory.getFlags().getMeasurementAttributionFallbackJobPeriodMs())
-                .setPersisted(true)
+                .setPeriodic(flags.getMeasurementAttributionFallbackJobPeriodMs())
+                .setPersisted(flags.getMeasurementAttributionFallbackJobPersisted())
                 .build();
     }
 
@@ -159,7 +160,8 @@ public class AttributionFallbackJobService extends JobService {
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
-        if (FlagsFactory.getFlags().getMeasurementAttributionFallbackJobKillSwitch()) {
+        Flags flags = FlagsFactory.getFlags();
+        if (flags.getMeasurementAttributionFallbackJobKillSwitch()) {
             LogUtil.e("AttributionFallbackJobService is disabled, skip scheduling");
             return;
         }
@@ -173,7 +175,7 @@ public class AttributionFallbackJobService extends JobService {
         final JobInfo scheduledJob =
                 jobScheduler.getPendingJob(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
-        JobInfo jobInfo = buildJobInfo(context);
+        JobInfo jobInfo = buildJobInfo(context, flags);
         if (forceSchedule || !jobInfo.equals(scheduledJob)) {
             schedule(jobScheduler, jobInfo);
             LogUtil.d("Scheduled AttributionFallbackJobService");

@@ -74,5 +74,6 @@ public class ConsentNotificationResetChannel implements PrivacySandboxEnrollment
         consentManager.recordNotificationDisplayed(false);
         consentManager.recordGaUxNotificationDisplayed(false);
         consentManager.setU18NotificationDisplayed(false);
+        consentManager.setU18Account(false);
     }
 }
