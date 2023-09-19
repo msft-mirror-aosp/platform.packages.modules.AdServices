@@ -30,6 +30,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.adid.AdIdCacheManager;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -54,7 +55,7 @@ public class AdIdFetcherTest {
         mFlags = FlagsFactory.getFlagsForTest();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mScheduledExecutor = AdServicesExecutors.getScheduler();
-        mMockAdIdWorker = new MockAdIdWorker(mContext, mFlags);
+        mMockAdIdWorker = new MockAdIdWorker(new AdIdCacheManager(mContext));
     }
 
     @Test

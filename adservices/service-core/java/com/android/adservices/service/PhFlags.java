@@ -5379,4 +5379,11 @@ public final class PhFlags implements Flags {
                 /* flagName */ FlagsConstants.KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED,
                 /* defaultValue */ IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT);
     }
+
+    public boolean getAdIdCacheEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_AD_ID_CACHE_ENABLED,
+                /* defaultValue */ DEFAULT_ADID_CACHE_ENABLED);
+    }
 }
