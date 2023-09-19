@@ -19,33 +19,24 @@ import static com.android.compatibility.common.util.ShellIdentityUtils.invokeSta
 
 import android.provider.DeviceConfig;
 
-import com.android.adservices.common.DeviceConfigHelper.SyncDisabledModeForTest;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
-import java.util.Objects;
+import com.google.errorprone.annotations.FormatMethod;
+import com.google.errorprone.annotations.FormatString;
+
 import java.util.concurrent.Callable;
 
 /** Device-side implementation of {@link DeviceConfigHelper.Interface}. */
-final class DeviceSideDeviceConfigHelper implements DeviceConfigHelper.Interface {
+final class DeviceSideDeviceConfigHelper extends DeviceConfigHelper.Interface {
 
-    private static final Logger sLogger =
-            new Logger(AndroidLogger.getInstance(), DeviceSideDeviceConfigHelper.class);
-
-    private final String mNamespace;
     // TODO(b/294423183): remove once legacy usage is gone
     private final boolean mUsedByLegacyHelper;
 
     DeviceSideDeviceConfigHelper(String namespace, boolean usedByLegacyHelper) {
-        mNamespace = Objects.requireNonNull(namespace);
-        mUsedByLegacyHelper = usedByLegacyHelper;
-    }
+        super(namespace, AndroidLogger.getInstance());
 
-    @Override
-    public void setSyncDisabledModeForTest(SyncDisabledModeForTest mode) {
-        String value = mode.name().toLowerCase();
-        sLogger.v("setSyncDisabledModeForTest(%s)", value);
-        ShellUtils.runShellCommand("device_config set_sync_disabled_for_test %s", value);
+        mUsedByLegacyHelper = usedByLegacyHelper;
     }
 
     @Override
@@ -54,31 +45,29 @@ final class DeviceSideDeviceConfigHelper implements DeviceConfigHelper.Interface
     }
 
     @Override
-    public void set(String name, String value) {
-        sLogger.v("set(%s=%s)", name, value);
-        call(() -> DeviceConfig.setProperty(mNamespace, name, value, /* makeDefault= */ false));
+    public boolean set(String name, String value) {
+        mLog.v("set(%s=%s)", name, value);
+        return call(
+                () -> DeviceConfig.setProperty(mNamespace, name, value, /* makeDefault= */ false));
     }
 
     @Override
-    public void delete(String name) {
-        sLogger.v("delete(%s)", name);
+    public boolean delete(String name) {
+        mLog.v("delete(%s)", name);
 
         if (SdkLevel.isAtLeastT()) {
-            call(() -> DeviceConfig.deleteProperty(mNamespace, name));
-            return;
+            return call(() -> DeviceConfig.deleteProperty(mNamespace, name));
         }
-        ShellUtils.runShellCommand("device_config delete %s %s", mNamespace, name);
+        // Use shell command instead
+        return super.delete(name);
     }
 
     @Override
-    public String dump() {
-        return ShellUtils.runShellCommand("device_config list %s", mNamespace).trim();
+    @FormatMethod
+    protected String runShellCommand(@FormatString String cmdFmt, @Nullable Object... cmdArgs) {
+        return ShellUtils.runShellCommand(cmdFmt, cmdArgs);
     }
 
-    @Override
-    public String toString() {
-        return DeviceSideDeviceConfigHelper.class.getSimpleName();
-    }
 
     // TODO(b/294423183): remove (and change calls above to callWithDeviceConfigPermissions()) once
     // legacy usage is gone
@@ -86,7 +75,7 @@ final class DeviceSideDeviceConfigHelper implements DeviceConfigHelper.Interface
         T result = callWithDeviceConfigPermissions(c);
         if (mUsedByLegacyHelper) {
             String permission = android.Manifest.permission.WRITE_DEVICE_CONFIG;
-            sLogger.d("re-adopting Shell permission %s for legacy purposes", permission);
+            mLog.d("re-adopting Shell permission %s for legacy purposes", permission);
             androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
                     .getUiAutomation()
                     .adoptShellPermissionIdentity(permission);
