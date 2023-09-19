@@ -250,10 +250,7 @@ class FetcherUtil {
             AdServicesLogger logger,
             AsyncRegistration asyncRegistration,
             AsyncFetchStatus asyncFetchStatus) {
-        long headerSize = 0;
-        if (asyncFetchStatus.getResponseSize().isPresent()) {
-            headerSize = asyncFetchStatus.getResponseSize().get();
-        }
+        long headerSize = asyncFetchStatus.getResponseSize();
         long maxSize = flags.getMaxResponseBasedRegistrationPayloadSizeBytes();
         String adTechDomain = null;
 
@@ -273,7 +270,7 @@ class FetcherUtil {
                                 getSurfaceType(asyncRegistration),
                                 getStatus(asyncFetchStatus),
                                 getFailureType(asyncFetchStatus),
-                                asyncFetchStatus.getRegistrationDelay().get(),
+                                asyncFetchStatus.getRegistrationDelay(),
                                 getSourceRegistrantToLog(asyncRegistration))
                         .setAdTechDomain(adTechDomain)
                         .build());
