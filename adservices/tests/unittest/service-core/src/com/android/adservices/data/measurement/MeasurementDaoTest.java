@@ -5153,7 +5153,7 @@ public class MeasurementDaoTest {
                         .runInTransaction(
                                 measurementDao -> {
                                     // Adds records to KeyValueData table for Retry Count.
-                                    measurementDao.incrementReportingRetryCount(
+                                    measurementDao.incrementAndGetReportingRetryCount(
                                             debugReport.getId(), DataType.DEBUG_REPORT_RETRY_COUNT);
                                     assertTrue(measurementDao.getDebugReportIds().isEmpty());
                                 }));
@@ -5530,6 +5530,190 @@ public class MeasurementDaoTest {
                                         .collect(Collectors.joining(","))
                                 + ")",
                         null));
+    }
+
+    @Test
+    public void deleteExpiredRecords_VerboseDebugReportsWhileLimitingRetries() {
+        // Mocking that the flags return a Max Retry of 1
+        Flags mockFlags = Mockito.mock(Flags.class);
+        ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(1).when(mockFlags).getMeasurementReportingRetryLimit();
+        ExtendedMockito.doReturn(true).when(mockFlags).getMeasurementReportingRetryLimitEnabled();
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).getReadableDatabase();
+
+        DebugReport debugReport1 =
+                new DebugReport.Builder()
+                        .setId("reportId1")
+                        .setType("trigger-event-deduplicated")
+                        .setBody(
+                                " {\n"
+                                        + "      \"attribution_destination\":"
+                                        + " \"https://destination.example\",\n"
+                                        + "      \"source_event_id\": \"45623\"\n"
+                                        + "    }")
+                        .setEnrollmentId("1")
+                        .setRegistrationOrigin(REGISTRATION_ORIGIN)
+                        .build();
+
+        DebugReport debugReport2 =
+                new DebugReport.Builder()
+                        .setId("reportId2")
+                        .setType("trigger-event-deduplicated")
+                        .setBody(
+                                " {\n"
+                                        + "      \"attribution_destination\":"
+                                        + " \"https://destination.example\",\n"
+                                        + "      \"source_event_id\": \"45623\"\n"
+                                        + "    }")
+                        .setEnrollmentId("1")
+                        .setRegistrationOrigin(REGISTRATION_ORIGIN)
+                        .build();
+
+        mDatastoreManager.runInTransaction((dao) -> dao.insertDebugReport(debugReport1));
+        mDatastoreManager.runInTransaction((dao) -> dao.insertDebugReport(debugReport2));
+
+        mDatastoreManager.runInTransaction(dao -> dao.deleteExpiredRecords(0, 0));
+        assertEquals(
+                2,
+                DatabaseUtils.longForQuery(
+                        db,
+                        "SELECT COUNT("
+                                + MeasurementTables.DebugReportContract.ID
+                                + ") FROM "
+                                + MeasurementTables.DebugReportContract.TABLE,
+                        null));
+        // Increment Attempt Record 1
+        mDatastoreManager.runInTransaction(
+                (dao) ->
+                        dao.incrementAndGetReportingRetryCount(
+                                debugReport1.getId(), DataType.DEBUG_REPORT_RETRY_COUNT));
+        // Delete Expired (Record 1)
+        mDatastoreManager.runInTransaction(dao -> dao.deleteExpiredRecords(0, 0));
+
+        // Assert Record 2 remains.
+        assertEquals(
+                1,
+                DatabaseUtils.longForQuery(
+                        db,
+                        "SELECT COUNT("
+                                + MeasurementTables.DebugReportContract.ID
+                                + ") FROM "
+                                + MeasurementTables.DebugReportContract.TABLE
+                                + " WHERE "
+                                + MeasurementTables.DebugReportContract.ID
+                                + " = ?",
+                        new String[] {debugReport2.getId()}));
+
+        // Assert Record 1 Removed
+        assertEquals(
+                0,
+                DatabaseUtils.longForQuery(
+                        db,
+                        "SELECT COUNT("
+                                + MeasurementTables.DebugReportContract.ID
+                                + ") FROM "
+                                + MeasurementTables.DebugReportContract.TABLE
+                                + " WHERE "
+                                + MeasurementTables.DebugReportContract.ID
+                                + " = ?",
+                        new String[] {debugReport1.getId()}));
+    }
+
+    @Test
+    public void deleteExpiredRecords_VerboseDebugReportsWhileNotLimitingRetries() {
+        // Mocking that the retry Limiting Disable, but has limit number,
+        Flags mockFlags = Mockito.mock(Flags.class);
+        ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(1).when(mockFlags).getMeasurementReportingRetryLimit();
+        ExtendedMockito.doReturn(false).when(mockFlags).getMeasurementReportingRetryLimitEnabled();
+
+        DebugReport debugReport = createDebugReport();
+        // Insert
+        mDatastoreManager.runInTransaction((dao) -> dao.insertDebugReport(debugReport));
+        // Increment Attempt
+        mDatastoreManager.runInTransaction(
+                (dao) ->
+                        dao.incrementAndGetReportingRetryCount(
+                                debugReport.getId(), DataType.DEBUG_REPORT_RETRY_COUNT));
+        // Delete Expired
+        mDatastoreManager.runInTransaction(dao -> dao.deleteExpiredRecords(0, 0));
+        try (Cursor cursor =
+                MeasurementDbHelper.getInstance(sContext)
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.DebugReportContract.TABLE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null)) {
+            // Assert Record not removed while Limiting Disabled
+            assertTrue(cursor.moveToNext());
+            DebugReport report = SqliteObjectMapper.constructDebugReportFromCursor(cursor);
+            assertNotNull(report);
+        }
+    }
+
+    @Test
+    public void deleteExpiredRecords_RetryKeyValueData() {
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        // Non-stale join record
+        DebugReport debugReport = createDebugReport();
+        mDatastoreManager.runInTransaction((dao) -> dao.insertDebugReport(debugReport));
+
+        // Should Remain
+        ContentValues nonStaleValues = new ContentValues();
+        nonStaleValues.put(
+                MeasurementTables.KeyValueDataContract.DATA_TYPE,
+                DataType.DEBUG_REPORT_RETRY_COUNT.toString());
+        nonStaleValues.put(MeasurementTables.KeyValueDataContract.KEY, debugReport.getId());
+        nonStaleValues.put(MeasurementTables.KeyValueDataContract.VALUE, "1");
+        db.insert(MeasurementTables.KeyValueDataContract.TABLE, null, nonStaleValues);
+
+        // Should Delete
+        ContentValues staleValues = new ContentValues();
+        staleValues.put(
+                MeasurementTables.KeyValueDataContract.DATA_TYPE,
+                DataType.DEBUG_REPORT_RETRY_COUNT.toString());
+        staleValues.put(MeasurementTables.KeyValueDataContract.KEY, "stale-key");
+        staleValues.put(MeasurementTables.KeyValueDataContract.VALUE, "1");
+        db.insert(MeasurementTables.KeyValueDataContract.TABLE, null, staleValues);
+
+        mDatastoreManager.runInTransaction(dao -> dao.deleteExpiredRecords(0, 0));
+
+        // Assert Non-Stale record remains.
+        assertEquals(
+                1,
+                DatabaseUtils.longForQuery(
+                        db,
+                        "SELECT COUNT("
+                                + MeasurementTables.KeyValueDataContract.KEY
+                                + ") FROM "
+                                + MeasurementTables.KeyValueDataContract.TABLE
+                                + " WHERE "
+                                + MeasurementTables.KeyValueDataContract.KEY
+                                + " = ?",
+                        new String[] {
+                            nonStaleValues.getAsString(MeasurementTables.KeyValueDataContract.KEY)
+                        }));
+
+        // Assert Stale Record Removed
+        assertEquals(
+                0,
+                DatabaseUtils.longForQuery(
+                        db,
+                        "SELECT COUNT("
+                                + MeasurementTables.KeyValueDataContract.KEY
+                                + ") FROM "
+                                + MeasurementTables.KeyValueDataContract.TABLE
+                                + " WHERE "
+                                + MeasurementTables.KeyValueDataContract.KEY
+                                + " = ?",
+                        new String[] {
+                            staleValues.getAsString(MeasurementTables.KeyValueDataContract.KEY)
+                        }));
     }
 
     @Test
@@ -8308,7 +8492,7 @@ public class MeasurementDaoTest {
                 dm.runInTransactionWithResult(
                         (dao) -> {
                             // Adds records to KeyValueData table for Retry Count.
-                            dao.incrementReportingRetryCount(
+                            dao.incrementAndGetReportingRetryCount(
                                     ar31.getId(), DataType.AGGREGATE_REPORT_RETRY_COUNT);
                             return dao.getPendingAggregateReportIdsByCoordinatorInWindow(
                                     AggregateReportFixture.ValidAggregateReportParams.TRIGGER_TIME,
@@ -8431,7 +8615,7 @@ public class MeasurementDaoTest {
                 dm.runInTransactionWithResult(
                         (dao) -> {
                             // Adds records to KeyValueData table for Retry Count.
-                            dao.incrementReportingRetryCount(
+                            dao.incrementAndGetReportingRetryCount(
                                     ar31.getId(), DataType.AGGREGATE_REPORT_RETRY_COUNT);
                             return dao.getPendingAggregateDebugReportIdsByCoordinator();
                         });
@@ -8498,7 +8682,7 @@ public class MeasurementDaoTest {
                 dm.runInTransactionWithResult(
                         (dao) -> {
                             // Adds records to KeyValueData table for Retry Count.
-                            dao.incrementReportingRetryCount(
+                            dao.incrementAndGetReportingRetryCount(
                                     "1", DataType.EVENT_REPORT_RETRY_COUNT);
                             return dao.getPendingEventReportIdsInWindow(
                                     EventReportFixture.ValidEventReportParams.TRIGGER_TIME,
@@ -8550,7 +8734,7 @@ public class MeasurementDaoTest {
                 dm.runInTransactionWithResult(
                         (dao) -> {
                             // Adds records to KeyValueData table for Retry Count.
-                            dao.incrementReportingRetryCount(
+                            dao.incrementAndGetReportingRetryCount(
                                     "1", DataType.EVENT_REPORT_RETRY_COUNT);
                             return dao.getPendingDebugEventReportIds();
                         });
@@ -8638,10 +8822,12 @@ public class MeasurementDaoTest {
         DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
         datastoreManager.runInTransaction(
                 (dao) -> {
-                    dao.incrementReportingRetryCount(eventId, DataType.EVENT_REPORT_RETRY_COUNT);
-                    dao.incrementReportingRetryCount(
+                    dao.incrementAndGetReportingRetryCount(
+                            eventId, DataType.EVENT_REPORT_RETRY_COUNT);
+                    dao.incrementAndGetReportingRetryCount(
                             aggregateId, DataType.AGGREGATE_REPORT_RETRY_COUNT);
-                    dao.incrementReportingRetryCount(debugId, DataType.DEBUG_REPORT_RETRY_COUNT);
+                    dao.incrementAndGetReportingRetryCount(
+                            debugId, DataType.DEBUG_REPORT_RETRY_COUNT);
                 });
         Optional<KeyValueData> eventCount =
                 datastoreManager.runInTransactionWithResult(
@@ -8664,8 +8850,9 @@ public class MeasurementDaoTest {
 
         datastoreManager.runInTransaction(
                 (dao) -> {
-                    dao.incrementReportingRetryCount(eventId, DataType.EVENT_REPORT_RETRY_COUNT);
-                    dao.incrementReportingRetryCount(
+                    dao.incrementAndGetReportingRetryCount(
+                            eventId, DataType.EVENT_REPORT_RETRY_COUNT);
+                    dao.incrementAndGetReportingRetryCount(
                             aggregateId, DataType.AGGREGATE_REPORT_RETRY_COUNT);
                 });
         eventCount =

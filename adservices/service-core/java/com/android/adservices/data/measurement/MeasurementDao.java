@@ -1667,6 +1667,88 @@ class MeasurementDao implements IMeasurementDao {
                         + subQuery
                         + ")",
                 new String[] {KeyValueData.DataType.REGISTRATION_REDIRECT_COUNT.toString()});
+
+        // When Limiting Retries, consider Verbose Debug Reports Expired when Exceeds Limit.
+        if (mReportingRetryLimitEnabledSupplier.get()) {
+            db.delete(
+                    MeasurementTables.DebugReportContract.TABLE,
+                    MeasurementTables.DebugReportContract.ID
+                            + " IN ("
+                            + "SELECT "
+                            + MeasurementTables.DebugReportContract.ID
+                            + " FROM "
+                            + MeasurementTables.DebugReportContract.TABLE
+                            + " LEFT JOIN "
+                            + MeasurementTables.KeyValueDataContract.TABLE
+                            + " ON ("
+                            + MeasurementTables.DebugReportContract.ID
+                            + " = "
+                            + MeasurementTables.KeyValueDataContract.KEY
+                            + ") "
+                            + "WHERE CAST("
+                            + MeasurementTables.KeyValueDataContract.VALUE
+                            + " AS INTEGER) >= ? "
+                            + "AND "
+                            + MeasurementTables.KeyValueDataContract.DATA_TYPE
+                            + " = ? "
+                            + ")",
+                    new String[] {
+                        mReportingRetryLimitSupplier.get().toString(),
+                        DataType.DEBUG_REPORT_RETRY_COUNT.toString()
+                    });
+        }
+
+        // Cleanup unnecessary AggregateReport Retry Counts
+        subQuery =
+                "SELECT "
+                        + MeasurementTables.AggregateReport.ID
+                        + " FROM "
+                        + MeasurementTables.AggregateReport.TABLE;
+        db.delete(
+                MeasurementTables.KeyValueDataContract.TABLE,
+                MeasurementTables.KeyValueDataContract.DATA_TYPE
+                        + " = ? "
+                        + " AND "
+                        + MeasurementTables.KeyValueDataContract.KEY
+                        + " NOT IN "
+                        + "("
+                        + subQuery
+                        + ")",
+                new String[] {DataType.AGGREGATE_REPORT_RETRY_COUNT.toString()});
+        // Cleanup unnecessary DebugReport Retry Counts
+        subQuery =
+                "SELECT "
+                        + MeasurementTables.DebugReportContract.ID
+                        + " FROM "
+                        + MeasurementTables.DebugReportContract.TABLE;
+        db.delete(
+                MeasurementTables.KeyValueDataContract.TABLE,
+                MeasurementTables.KeyValueDataContract.DATA_TYPE
+                        + " = ? "
+                        + " AND "
+                        + MeasurementTables.KeyValueDataContract.KEY
+                        + " NOT IN "
+                        + "("
+                        + subQuery
+                        + ")",
+                new String[] {DataType.DEBUG_REPORT_RETRY_COUNT.toString()});
+        // Cleanup unnecessary EventReport Retry Counts
+        subQuery =
+                "SELECT "
+                        + MeasurementTables.EventReportContract.ID
+                        + " FROM "
+                        + MeasurementTables.EventReportContract.TABLE;
+        db.delete(
+                MeasurementTables.KeyValueDataContract.TABLE,
+                MeasurementTables.KeyValueDataContract.DATA_TYPE
+                        + " = ? "
+                        + " AND "
+                        + MeasurementTables.KeyValueDataContract.KEY
+                        + " NOT IN "
+                        + "("
+                        + subQuery
+                        + ")",
+                new String[] {DataType.EVENT_REPORT_RETRY_COUNT.toString()});
     }
 
     @Override
@@ -2739,16 +2821,14 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public void incrementReportingRetryCount(String id, DataType reportType)
+    public int incrementAndGetReportingRetryCount(String id, DataType reportType)
             throws DatastoreException {
         KeyValueData eventRetry = getKeyValueData(id, reportType);
         eventRetry.setReportRetryCount(eventRetry.getReportRetryCount() + 1);
         insertOrUpdateKeyValueData(eventRetry);
-        LogUtil.d(
-                "Incrementing: "
-                        + reportType
-                        + " Retry Count: "
-                        + eventRetry.getReportRetryCount());
+        int retryCount = eventRetry.getReportRetryCount();
+        LogUtil.d("Incrementing: " + reportType + " Retry Count: " + retryCount);
+        return retryCount;
     }
 
     @Override
