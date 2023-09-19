@@ -453,6 +453,84 @@ public interface Flags {
         return DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS;
     }
 
+    long DEFAULT_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
+
+    /** Delay from trigger registration to attribution job triggering */
+    default long getMeasurementAttributionJobTriggerDelayMs() {
+        return DEFAULT_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS;
+    }
+
+    int DEFAULT_MEASUREMENT_MAX_ATTRIBUTIONS_PER_INVOCATION = 100;
+
+    /** Max number of {@link Trigger} to process per job for {@link AttributionJobService} */
+    default int getMeasurementMaxAttributionsPerInvocation() {
+        return DEFAULT_MEASUREMENT_MAX_ATTRIBUTIONS_PER_INVOCATION;
+    }
+
+    long DEFAULT_MEASUREMENT_MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS = TimeUnit.DAYS.toMillis(28);
+
+    /** Maximum event report upload retry window. */
+    default long getMeasurementMaxEventReportUploadRetryWindowMs() {
+        return DEFAULT_MEASUREMENT_MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS;
+    }
+
+    long DEFAULT_MEASUREMENT_MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS =
+            TimeUnit.DAYS.toMillis(28);
+
+    /** Maximum aggregate report upload retry window. */
+    default long getMeasurementMaxAggregateReportUploadRetryWindowMs() {
+        return DEFAULT_MEASUREMENT_MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS;
+    }
+
+    long DEFAULT_MEASUREMENT_MAX_DELAYED_SOURCE_REGISTRATION_WINDOW = TimeUnit.MINUTES.toMillis(2);
+
+    /** Maximum window for a delayed source to be considered valid instead of missed. */
+    default long getMeasurementMaxDelayedSourceRegistrationWindow() {
+        return DEFAULT_MEASUREMENT_MAX_DELAYED_SOURCE_REGISTRATION_WINDOW;
+    }
+
+    int DEFAULT_MEASUREMENT_MAX_BYTES_PER_ATTRIBUTION_FILTER_STRING = 25;
+
+    /** Maximum number of bytes allowed in an attribution filter string. */
+    default int getMeasurementMaxBytesPerAttributionFilterString() {
+        return DEFAULT_MEASUREMENT_MAX_BYTES_PER_ATTRIBUTION_FILTER_STRING;
+    }
+
+    int DEFAULT_MEASUREMENT_MAX_FILTER_MAPS_PER_FILTER_SET = 5;
+
+    /** Maximum number of filter maps allowed in an attribution filter set. */
+    default int getMeasurementMaxFilterMapsPerFilterSet() {
+        return DEFAULT_MEASUREMENT_MAX_FILTER_MAPS_PER_FILTER_SET;
+    }
+
+    int DEFAULT_MEASUREMENT_MAX_VALUES_PER_ATTRIBUTION_FILTER = 50;
+
+    /** Maximum number of values allowed in an attribution filter. */
+    default int getMeasurementMaxValuesPerAttributionFilter() {
+        return DEFAULT_MEASUREMENT_MAX_VALUES_PER_ATTRIBUTION_FILTER;
+    }
+
+    int DEFAULT_MEASUREMENT_MAX_ATTRIBUTION_FILTERS = 50;
+
+    /** Maximum number of attribution filters allowed for a source. */
+    default int getMeasurementMaxAttributionFilters() {
+        return DEFAULT_MEASUREMENT_MAX_ATTRIBUTION_FILTERS;
+    }
+
+    int DEFAULT_MEASUREMENT_MAX_BYTES_PER_ATTRIBUTION_AGGREGATE_KEY_ID = 25;
+
+    /** Maximum number of bytes allowed in an aggregate key ID. */
+    default int getMeasurementMaxBytesPerAttributionAggregateKeyId() {
+        return DEFAULT_MEASUREMENT_MAX_BYTES_PER_ATTRIBUTION_AGGREGATE_KEY_ID;
+    }
+
+    int DEFAULT_MEASUREMENT_MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION = 50;
+
+    /** Maximum number of aggregate deduplication keys allowed during trigger registration. */
+    default int getMeasurementMaxAggregateDeduplicationKeysPerRegistration() {
+        return DEFAULT_MEASUREMENT_MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION;
+    }
+
     boolean MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH = false;
 
     /** Returns the kill switch for Attribution Fallback Job . */

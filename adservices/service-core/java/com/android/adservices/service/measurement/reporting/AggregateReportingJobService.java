@@ -35,7 +35,6 @@ import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
-import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
 import com.android.adservices.service.measurement.util.JobLockHolder;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -104,7 +103,8 @@ public final class AggregateReportingJobService extends JobService {
         if (lock.tryLock()) {
             try {
                 long maxAggregateReportUploadRetryWindowMs =
-                        SystemHealthParams.MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS;
+                        FlagsFactory.getFlags()
+                                .getMeasurementMaxAggregateReportUploadRetryWindowMs();
                 DatastoreManager datastoreManager =
                         DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
                 new AggregateReportingJobHandler(
