@@ -19,28 +19,27 @@ import static android.Manifest.permission.POST_NOTIFICATIONS;
 
 import static com.android.adservices.tests.ui.libs.UiConstants.AD_ID_ENABLED;
 import static com.android.adservices.tests.ui.libs.UiConstants.ENTRY_POINT_ENABLED;
-import static com.android.adservices.tests.ui.libs.UiConstants.LAUNCH_TIMEOUT_MS;
 import static com.android.adservices.tests.ui.libs.UiConstants.PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS;
-import static com.android.adservices.tests.ui.libs.UiConstants.SCROLL_TIMEOUT;
-import static com.android.adservices.tests.ui.libs.UiConstants.SYSTEM_UI_NAME;
 import static com.android.adservices.tests.ui.libs.UiConstants.SYSTEM_UI_RESOURCE_ID;
 
 import static com.google.common.truth.Truth.assertThat;
+
 
 import android.adservices.common.AdServicesCommonManager;
 import android.app.Instrumentation;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Point;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
+import androidx.test.uiautomator.BySelector;
+import androidx.test.uiautomator.Direction;
+import androidx.test.uiautomator.SearchCondition;
 import androidx.test.uiautomator.UiDevice;
-import androidx.test.uiautomator.UiObject;
-import androidx.test.uiautomator.UiObjectNotFoundException;
-import androidx.test.uiautomator.UiScrollable;
-import androidx.test.uiautomator.UiSelector;
+import androidx.test.uiautomator.UiObject2;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.LogUtil;
@@ -51,8 +50,10 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 public class UiUtils {
     private static final String PRIVACY_SANDBOX_PACKAGE_NAME = "android.adservices.ui.SETTINGS";
@@ -61,7 +62,7 @@ public class UiUtils {
     private static final int LONG_TIMEOUT = 15000;
     public static final int PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT = 500;
     public static final int SCROLL_WAIT_TIME = 1000;
-    private static final int MAX_SWIPES = 7;
+    private static final int MAX_MORE_CLICK = 10;
 
     private static final String ANDROID_WIDGET_SCROLLVIEW = "android.widget.ScrollView";
 
@@ -221,9 +222,6 @@ public class UiUtils {
             boolean isEuTest,
             UiConstants.UX ux)
             throws Exception {
-        device.openNotification();
-        Thread.sleep(LAUNCH_TIMEOUT_MS);
-
         int notificationTitle = -1;
         int notificationHeader = -1;
         switch (ux) {
@@ -253,39 +251,12 @@ public class UiUtils {
                 break;
         }
 
-        UiSelector notificationCardSelector =
-                new UiSelector().text(getString(context, notificationTitle));
-
-        UiObject scroller =
-                device.findObject(
-                        new UiSelector()
-                                .packageName(SYSTEM_UI_NAME)
-                                .resourceId(SYSTEM_UI_RESOURCE_ID));
-
-        UiObject notificationCard = scroller.getChild(notificationCardSelector);
-        if (!isDisplayed) {
-            assertThat(notificationCard.exists()).isFalse();
-            return;
-        }
-        assertThat(notificationCard.exists()).isTrue();
-
-        notificationCard.click();
-        Thread.sleep(LAUNCH_TIMEOUT_MS);
-        UiObject title = getElement(context, device, notificationHeader);
-        assertThat(title.exists()).isTrue();
+        verifyNotification(context, device, isDisplayed, notificationTitle, notificationHeader);
     }
 
     public static void verifyNotification(
             Context context, UiDevice device, boolean isDisplayed, boolean isEuTest, boolean isGa)
             throws Exception {
-        device.openNotification();
-        Thread.sleep(LAUNCH_TIMEOUT_MS);
-        UiObject scroller =
-                device.findObject(
-                        new UiSelector()
-                                .packageName(SYSTEM_UI_NAME)
-                                .resourceId(SYSTEM_UI_RESOURCE_ID));
-
         int notificationTitle =
                 isEuTest
                         ? isGa
@@ -304,53 +275,66 @@ public class UiUtils {
                                 ? R.string.notificationUI_header_ga_title
                                 : R.string.notificationUI_header_title;
 
-        UiSelector notificationCardSelector =
-                new UiSelector().text(getString(context, notificationTitle));
+        verifyNotification(context, device, isDisplayed, notificationTitle, notificationHeader);
+    }
 
-        UiObject notificationCard = scroller.getChild(notificationCardSelector);
+    public static void verifyNotification(
+            Context context,
+            UiDevice device,
+            boolean isDisplayed,
+            int notificationTitle,
+            int notificationHeader)
+            throws Exception {
+        device.openNotification();
+        device.waitForIdle(LAUNCH_TIMEOUT);
+        // Wait few seconds for Adservices notification to show, waitForIdle is not enough.
+        Thread.sleep(LAUNCH_TIMEOUT);
+        UiObject2 scroller = device.findObject(By.res(SYSTEM_UI_RESOURCE_ID));
+
+        BySelector notificationTitleSelector = By.text(getString(context, notificationTitle));
         if (!isDisplayed) {
-            assertThat(notificationCard.exists()).isFalse();
+            assertThat(scroller.hasObject(notificationTitleSelector)).isFalse();
             return;
         }
+        assertThat(scroller.hasObject(notificationTitleSelector)).isTrue();
+        UiObject2 notificationCard =
+                scroller.findObject(By.text(getString(context, notificationTitle)));
 
-        assertThat(notificationCard.exists()).isTrue();
         notificationCard.click();
-        Thread.sleep(LAUNCH_TIMEOUT_MS);
-        UiObject title = getElement(context, device, notificationHeader);
-        assertThat(title.exists()).isTrue();
+        device.waitForIdle(LAUNCH_TIMEOUT);
+        Thread.sleep(LAUNCH_TIMEOUT);
+        UiObject2 title = getElement(context, device, notificationHeader);
+        assertThat(title).isNotNull();
     }
 
     public static void consentConfirmationScreen(
             Context context, UiDevice device, boolean isEuDevice, boolean dialogsOn)
-            throws UiObjectNotFoundException, InterruptedException {
-        UiObject leftControlButton =
-                getElement(
-                        context,
-                        device,
-                        isEuDevice
-                                ? R.string.notificationUI_left_control_button_text_eu
-                                : R.string.notificationUI_left_control_button_text);
-        UiObject rightControlButton =
-                getElement(
-                        context,
-                        device,
-                        isEuDevice
-                                ? R.string.notificationUI_right_control_button_text_eu
-                                : R.string.notificationUI_right_control_button_text);
-        UiObject moreButton = getElement(context, device, R.string.notificationUI_more_button_text);
-        assertThat(leftControlButton.exists()).isFalse();
-        assertThat(rightControlButton.exists()).isFalse();
-        assertThat(moreButton.exists()).isTrue();
+            throws InterruptedException {
+        // TODO(b/300934314) clean up consentConfirmationScreen, getLeftControlButton,
+        // getRightControlButton
+        UiObject2 leftControlButton = getLeftControlButton(context, device, isEuDevice);
+        UiObject2 rightControlButton = getRightControlButton(context, device, isEuDevice);
+        UiObject2 moreButton =
+                getElement(context, device, R.string.notificationUI_more_button_text);
 
-        while (moreButton.exists()) {
+        assertThat(leftControlButton).isNull();
+        assertThat(rightControlButton).isNull();
+        assertThat(moreButton).isNotNull();
+
+        for (int i = 0; i < MAX_MORE_CLICK; i++) {
             moreButton.click();
-            Thread.sleep(1000);
+            device.waitForIdle(LAUNCH_TIMEOUT);
+            moreButton = getElement(context, device, R.string.notificationUI_more_button_text);
+            if (moreButton == null) {
+                break;
+            }
         }
+        leftControlButton = getLeftControlButton(context, device, isEuDevice);
+        rightControlButton = getRightControlButton(context, device, isEuDevice);
 
-        assertThat(leftControlButton.exists()).isTrue();
-        assertThat(rightControlButton.exists()).isTrue();
-        assertThat(moreButton.exists()).isFalse();
-
+        assertThat(leftControlButton).isNotNull();
+        assertThat(rightControlButton).isNotNull();
+        assertThat(moreButton).isNull();
         if (isEuDevice) {
             if (!dialogsOn) {
                 leftControlButton.click();
@@ -366,10 +350,10 @@ public class UiUtils {
             rightControlButton.click();
         } else {
             leftControlButton.click();
-            Thread.sleep(1000);
-            UiObject mainSwitch =
-                    device.findObject(new UiSelector().className("android.widget.Switch"));
-            assertThat(mainSwitch.exists()).isTrue();
+            device.waitForIdle(LAUNCH_TIMEOUT);
+            UiObject2 mainSwitch = device.findObject(By.clazz("android.widget.Switch"));
+
+            assertThat(mainSwitch).isNotNull();
             if (dialogsOn) {
                 if (!mainSwitch.isChecked()) {
                     performSwitchClick(device, context, dialogsOn, mainSwitch);
@@ -384,9 +368,33 @@ public class UiUtils {
         }
     }
 
+    private static UiObject2 getRightControlButton(
+            Context context, UiDevice device, boolean isEuDevice) {
+        UiObject2 rightControlButton =
+                getElement(
+                        context,
+                        device,
+                        isEuDevice
+                                ? R.string.notificationUI_right_control_button_text_eu
+                                : R.string.notificationUI_right_control_button_text);
+        return rightControlButton;
+    }
+
+    private static UiObject2 getLeftControlButton(
+            Context context, UiDevice device, boolean isEuDevice) {
+        UiObject2 leftControlButton =
+                getElement(
+                        context,
+                        device,
+                        isEuDevice
+                                ? R.string.notificationUI_left_control_button_text_eu
+                                : R.string.notificationUI_left_control_button_text);
+        return leftControlButton;
+    }
+
     public static void setupOTAStrings(
             Context context, UiDevice device, AdServicesCommonManager commonManager, String mddURL)
-            throws InterruptedException, UiObjectNotFoundException {
+            throws InterruptedException {
         setAdServicesFlagsForOTATesting(mddURL);
         commonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
         Thread.sleep(LAUNCH_TIMEOUT);
@@ -408,20 +416,17 @@ public class UiUtils {
     }
 
     public static void clearNotifications(Context context, UiDevice device)
-            throws UiObjectNotFoundException, InterruptedException {
+            throws InterruptedException {
         device.openNotification();
-        device.wait(Until.hasObject(By.pkg("com.android.systemui")), LAUNCH_TIMEOUT);
-        UiObject scroller =
-                device.findObject(
-                        new UiSelector()
-                                .packageName("com.android.systemui")
-                                .resourceId("com.android.systemui:id/notification_stack_scroller"));
-        UiSelector notificationCardSelector =
-                new UiSelector()
-                        .textContains(
-                                getString(context, R.string.notificationUI_notification_title));
-        UiObject notificationCard = scroller.getChild(notificationCardSelector);
-        if (notificationCard.exists()) {
+        Thread.sleep(LAUNCH_TIMEOUT);
+        UiObject2 scroller2 =
+                device.findObject(By.res("com.android.systemui:id/notification_stack_scroller"));
+        UiObject2 notificationCard =
+                scroller2.findObject(
+                        By.textContains(
+                                getString(context, R.string.notificationUI_notification_title)));
+
+        if (notificationCard != null) {
             notificationCard.click();
         }
         Thread.sleep(LAUNCH_TIMEOUT);
@@ -429,31 +434,24 @@ public class UiUtils {
     }
 
     public static void verifyNotificationAndSettingsPage(
-            Context context, UiDevice device, Boolean isOTA)
-            throws UiObjectNotFoundException, InterruptedException {
+            Context context, UiDevice device, Boolean isOTA) throws InterruptedException {
         // open notification tray
         device.openNotification();
+        Thread.sleep(LAUNCH_TIMEOUT);
         device.wait(Until.hasObject(By.pkg("com.android.systemui")), LAUNCH_TIMEOUT);
 
         // verify notification card
-        UiObject scroller =
-                device.findObject(
-                        new UiSelector()
-                                .packageName("com.android.systemui")
-                                .resourceId("com.android.systemui:id/notification_stack_scroller"));
-        UiSelector notificationCardSelector =
-                new UiSelector()
-                        .textContains(
-                                isOTA
-                                        ? getOTAString(
-                                                context, R.string.notificationUI_notification_title)
-                                        : getString(
-                                                context,
-                                                R.string.notificationUI_notification_title));
-        UiObject notificationCard = scroller.getChild(notificationCardSelector);
-        notificationCard.waitForExists(LONG_TIMEOUT);
+        UiObject2 scroller =
+                device.findObject(By.res("com.android.systemui:id/notification_stack_scroller"));
+
+        String targetStr =
+                isOTA
+                        ? getOTAString(context, R.string.notificationUI_notification_title)
+                        : getString(context, R.string.notificationUI_notification_title);
+
+        UiObject2 notificationCard = scroller.findObject(By.text(targetStr));
         Thread.sleep(LAUNCH_TIMEOUT);
-        assertThat(notificationCard.exists()).isTrue();
+        device.waitForIdle(LONG_TIMEOUT);
 
         // click on notification card
         notificationCard.click();
@@ -462,12 +460,12 @@ public class UiUtils {
         device.wait(Until.hasObject(By.pkg(NOTIFICATION_PACKAGE_NAME).depth(0)), LAUNCH_TIMEOUT);
 
         // verify strings
-        UiObject title =
+        UiObject2 title =
                 isOTA
                         ? scrollToOTAElement(context, device, R.string.notificationUI_header_title)
                         : scrollToElement(context, device, R.string.notificationUI_header_title);
-        assertThat(title.exists()).isTrue();
 
+        assertThat(title).isNotNull();
         // open settings
         scrollToThenClickElementContainingText(
                 device,
@@ -479,17 +477,18 @@ public class UiUtils {
         device.wait(Until.hasObject(By.pkg(PRIVACY_SANDBOX_PACKAGE_NAME).depth(0)), LAUNCH_TIMEOUT);
 
         // verify strings have changed
-        UiObject appButton =
+        UiObject2 appButton =
                 isOTA
                         ? scrollToOTAElement(context, device, R.string.settingsUI_apps_title)
                         : scrollToElement(context, device, R.string.settingsUI_apps_title);
-        appButton.waitForExists(LAUNCH_TIMEOUT);
-        assertThat(appButton.exists()).isTrue();
-        UiObject topicsButton =
+
+        device.waitForIdle(LAUNCH_TIMEOUT);
+        assertThat(appButton).isNotNull();
+        UiObject2 topicsButton =
                 isOTA
                         ? scrollToOTAElement(context, device, R.string.settingsUI_topics_title)
                         : scrollToElement(context, device, R.string.settingsUI_topics_title);
-        assertThat(topicsButton.exists()).isTrue();
+        assertThat(topicsButton).isNotNull();
     }
 
     public static void connectToWifi() {
@@ -522,33 +521,25 @@ public class UiUtils {
                 LAUNCH_TIMEOUT);
     }
 
-    private static void scrollToThenClickElementContainingText(UiDevice device, String text)
-            throws UiObjectNotFoundException {
-        UiScrollable scrollView =
-                new UiScrollable(
-                        new UiSelector().scrollable(true).className(ANDROID_WIDGET_SCROLLVIEW));
-        UiObject element =
-                device.findObject(
-                        new UiSelector().childSelector(new UiSelector().textContains(text)));
-        scrollView.scrollIntoView(element);
-        if (element.exists()) {
-            element.click();
-        }
+    private static void scrollToThenClickElementContainingText(UiDevice device, String text) {
+        UiObject2 element = scrollToElement(device, text);
+        element.click();
     }
 
-    private static UiObject scrollToOTAElement(Context context, UiDevice device, int resId)
-            throws UiObjectNotFoundException {
-        scrollToBeginning();
-        UiScrollable scrollView =
-                new UiScrollable(
-                        new UiSelector().scrollable(true).className(ANDROID_WIDGET_SCROLLVIEW));
-        UiObject element =
-                device.findObject(
-                        new UiSelector()
-                                .childSelector(
-                                        new UiSelector().text(getOTAString(context, resId))));
-        scrollView.scrollIntoView(element);
-        return element;
+    private static UiObject2 scrollToOTAElement(Context context, UiDevice device, int resId) {
+        return scrollToElement(device, getOTAString(context, resId));
+    }
+
+    private static UiObject2 scrollToElement(UiDevice device, String targetStr) {
+        scrollToBeginning(device);
+        UiObject2 scrollView =
+                device.findObject(By.clazz(ANDROID_WIDGET_SCROLLVIEW).scrollable(true));
+        scrollView.findObject(By.text(targetStr));
+        return scrollView.scrollUntil(Direction.DOWN, Until.findObject(By.text(targetStr)));
+    }
+
+    private static UiObject2 scrollToElement(Context context, UiDevice device, int resId) {
+        return scrollToElement(device, getString(context, resId));
     }
 
     // Test strings for OTA have an exclamation mark appended to the end
@@ -556,32 +547,17 @@ public class UiUtils {
         return getString(context, resourceId) + "!";
     }
 
-    private static UiObject scrollToElement(Context context, UiDevice device, int resId)
-            throws UiObjectNotFoundException {
-        scrollToBeginning();
-        UiScrollable scrollView =
-                new UiScrollable(
-                        new UiSelector().scrollable(true).className(ANDROID_WIDGET_SCROLLVIEW));
-        UiObject element =
-                device.findObject(
-                        new UiSelector()
-                                .childSelector(new UiSelector().text(getString(context, resId))));
-        scrollView.scrollIntoView(element);
-        return element;
+    private static void scrollToBeginning(UiDevice device) {
+        UiObject2 scrollView =
+                device.findObject(By.clazz(ANDROID_WIDGET_SCROLLVIEW).scrollable(true));
+        scrollView.swipe(Direction.UP, 100, 50);
     }
 
-    private static void scrollToBeginning() throws UiObjectNotFoundException {
-        UiScrollable scrollView =
-                new UiScrollable(
-                        new UiSelector().scrollable(true).className(ANDROID_WIDGET_SCROLLVIEW));
-        scrollView.flingToBeginning(MAX_SWIPES);
-    }
-
-    public static UiObject getConsentSwitch(UiDevice device) throws UiObjectNotFoundException {
-        UiObject consentSwitch =
-                device.findObject(new UiSelector().className("android.widget.Switch"));
-        consentSwitch.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
-
+    public static UiObject2 getConsentSwitch(UiDevice device) {
+        UiObject2 consentSwitch =
+                device.wait(
+                        Until.findObject(By.clazz("android.widget.Switch")),
+                        PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
         // Swipe the screen by the width of the toggle so it's not blocked by the nav bar on AOSP
         // devices.
         device.swipe(
@@ -595,28 +571,27 @@ public class UiUtils {
     }
 
     public static void performSwitchClick(
-            UiDevice device, Context context, boolean dialogsOn, UiObject mainSwitch)
-            throws UiObjectNotFoundException {
+            UiDevice device, Context context, boolean dialogsOn, UiObject2 mainSwitch) {
         if (dialogsOn && mainSwitch.isChecked()) {
             mainSwitch.click();
-            UiObject dialogTitle =
+            UiObject2 dialogTitle =
                     getElement(context, device, R.string.settingsUI_dialog_opt_out_title);
-            UiObject positiveText =
+            UiObject2 positiveText =
                     getElement(context, device, R.string.settingsUI_dialog_opt_out_positive_text);
-            assertThat(dialogTitle.exists()).isTrue();
-            assertThat(positiveText.exists()).isTrue();
+
+            assertThat(dialogTitle).isNotNull();
+            assertThat(positiveText).isNotNull();
+
             positiveText.click();
         } else {
             mainSwitch.click();
         }
     }
 
-    public static void gentleSwipe(UiDevice device) throws UiObjectNotFoundException {
-        UiScrollable scrollView =
-                new UiScrollable(
-                        new UiSelector().scrollable(true).className(ANDROID_WIDGET_SCROLLVIEW));
-
-        scrollView.scrollForward(100);
+    public static void gentleSwipe(UiDevice device) {
+        UiObject2 scrollView =
+                device.findObject(By.scrollable(true).clazz(ANDROID_WIDGET_SCROLLVIEW));
+        scrollView.scroll(Direction.DOWN, /* percent */ 5);
     }
 
     public static void setFlipFlow(boolean isFlip) {
@@ -629,60 +604,56 @@ public class UiUtils {
     }
 
     public static void scrollToAndClick(Context context, UiDevice device, int resId)
-            throws UiObjectNotFoundException, InterruptedException {
+            throws InterruptedException {
         scrollTo(context, device, resId);
-        UiObject consentPageButton = getElement(context, device, resId);
-        consentPageButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
-        assertThat(consentPageButton.exists()).isTrue();
+        UiObject2 consentPageButton =
+                device.wait(
+                        getSearchCondByResId(context, resId), PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        clickTopLeft(consentPageButton);
+    }
+
+    public static SearchCondition<UiObject2> getSearchCondByResId(Context context, int resId) {
+        String targetStr = getString(context, resId);
+        return Until.findObject(By.text(Pattern.compile(targetStr, Pattern.CASE_INSENSITIVE)));
+    }
+
+    public static UiObject2 getPageElement(Context context, UiDevice device, int resId) {
+        return device.findObject(By.text(getString(context, resId)));
+    }
+
+    public static UiObject2 scrollTo(Context context, UiDevice device, int resId) {
+        UiObject2 scrollView =
+                device.findObject(By.scrollable(true).clazz(ANDROID_WIDGET_SCROLLVIEW));
+        String targetStr = getString(context, resId);
+        scrollView.scrollUntil(
+                Direction.DOWN,
+                Until.findObject(By.text(Pattern.compile(targetStr, Pattern.CASE_INSENSITIVE))));
+        return getElement(context, device, resId);
+    }
+
+    public static UiObject2 getElement(Context context, UiDevice device, int resId) {
+        return getElement(context, device, resId, 0);
+    }
+
+    public static UiObject2 getElement(Context context, UiDevice device, int resId, int index) {
+        String targetStr = getString(context, resId);
+        List<UiObject2> objList =
+                device.findObjects(By.text(Pattern.compile(targetStr, Pattern.CASE_INSENSITIVE)));
+        if (objList.size() <= index) {
+            return null;
+        }
+        return objList.get(index);
+    }
+
+    public static void click(Context context, UiDevice device, int resId) {
+        UiObject2 obj = device.findObject(By.text(getString(context, resId)));
         // objects may be partially hidden by the status bar and nav bars.
-        consentPageButton.clickTopLeft();
+        clickTopLeft(obj);
     }
 
-    public static UiObject getPageElement(Context context, UiDevice device, int resId) {
-        return device.findObject(new UiSelector().text(getString(context, resId)));
-    }
-
-    public static UiObject scrollTo(Context context, UiDevice device, int resId)
-            throws UiObjectNotFoundException {
-        UiScrollable scrollView =
-                new UiScrollable(
-                        new UiSelector().scrollable(true).className(ANDROID_WIDGET_SCROLLVIEW));
-        UiObject element = getElement(context, device, resId);
-        scrollView.scrollIntoView(element);
-        try {
-            Thread.sleep(SCROLL_TIMEOUT);
-        } catch (InterruptedException e) {
-            LogUtil.e("InterruptedException: " + e.getMessage());
-        }
-        return element;
-    }
-
-    public static UiObject getElement(Context context, UiDevice device, int resId) {
-        UiObject obj = device.findObject(new UiSelector().text(getString(context, resId)));
-        if (!obj.exists()) {
-            obj = device.findObject(new UiSelector().text(getString(context, resId).toUpperCase()));
-        }
-        return obj;
-    }
-
-    public static UiObject getElement(Context context, UiDevice device, int resId, int index) {
-        UiObject obj =
-                device.findObject(new UiSelector().text(getString(context, resId)).instance(index));
-        if (!obj.exists()) {
-            obj =
-                    device.findObject(
-                            new UiSelector()
-                                    .text(getString(context, resId).toUpperCase())
-                                    .instance(index));
-        }
-        return obj;
-    }
-
-    public static void click(Context context, UiDevice device, int resId)
-            throws UiObjectNotFoundException {
-        UiObject obj = device.findObject(new UiSelector().text(getString(context, resId)));
-        // objects may be partially hidden by the status bar and nav bars.
-        obj.clickTopLeft();
+    public static void clickTopLeft(UiObject2 obj) {
+        assertThat(obj).isNotNull();
+        obj.click(new Point(obj.getVisibleBounds().top, obj.getVisibleBounds().left));
     }
 
     public static void takeScreenshot(UiDevice device, String methodName) {
