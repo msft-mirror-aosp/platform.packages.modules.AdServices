@@ -287,7 +287,8 @@ public class AggregateReportingJobHandler {
                     return AdServicesStatusUtils.STATUS_IO_ERROR;
                 }
             } else {
-                reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.NETWORK);
+                reportingStatus.setFailureStatus(
+                        ReportingStatus.FailureStatus.UNSUCCESSFUL_HTTP_RESPONSE_CODE);
                 return AdServicesStatusUtils.STATUS_IO_ERROR;
             }
         } catch (IOException e) {
