@@ -182,39 +182,6 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS =
             "measurement_async_registration_job_trigger_max_delay_ms";
 
-    public static final String KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS =
-            "measurement_attribution_job_triggering_delay_ms";
-
-    public static final String KEY_MEASUREMENT_MAX_ATTRIBUTIONS_PER_INVOCATION =
-            "measurement_max_attributions_per_invocation";
-
-    public static final String KEY_MEASUREMENT_MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS =
-            "measurement_max_event_report_upload_retry_window_ms";
-
-    public static final String KEY_MEASUREMENT_MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS =
-            "measurement_max_aggregate_report_upload_retry_window_ms";
-
-    public static final String KEY_MEASUREMENT_MAX_DELAYED_SOURCE_REGISTRATION_WINDOW =
-            "measurement_max_delayed_source_registration_window";
-
-    public static final String KEY_MEASUREMENT_MAX_BYTES_PER_ATTRIBUTION_FILTER_STRING =
-            "measurement_max_bytes_per_attribution_filter_string";
-
-    public static final String KEY_MEASUREMENT_MAX_FILTER_MAPS_PER_FILTER_SET =
-            "measurement_max_filter_maps_per_filter_set";
-
-    public static final String KEY_MEASUREMENT_MAX_VALUES_PER_ATTRIBUTION_FILTER =
-            "measurement_max_values_per_attribution_filter";
-
-    public static final String KEY_MEASUREMENT_MAX_ATTRIBUTION_FILTERS =
-            "measurement_max_attribution_filters";
-
-    public static final String KEY_MEASUREMENT_MAX_BYTES_PER_ATTRIBUTION_AGGREGATE_KEY_ID =
-            "measurement_max_bytes_per_attribution_aggregate_key_id";
-
-    public static final String KEY_MEASUREMENT_MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION =
-            "measurement_max_aggregate_deduplication_keys_per_registration";
-
     public static final String KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH =
             "measurement_attribution_fallback_job_kill_switch";
 
@@ -339,6 +306,9 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_ATTRIBUTION_JOB_PERSISTED =
             "measurement_attribution_job_persisted";
+
+    public static final String KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS =
+            "measurement_attribution_job_triggering_delay_ms";
 
     public static final String KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERSISTED =
             "measurement_attribution_fallback_job_persisted";

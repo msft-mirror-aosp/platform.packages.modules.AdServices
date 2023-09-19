@@ -49,6 +49,7 @@ public final class E2EMockStatic implements StaticMockFixture {
     public StaticMockitoSessionBuilder setUpMockedClasses(
             StaticMockitoSessionBuilder sessionBuilder) {
         sessionBuilder.spyStatic(PrivacyParams.class);
+        sessionBuilder.spyStatic(SystemHealthParams.class);
         sessionBuilder.spyStatic(AppManifestConfigHelper.class);
         return sessionBuilder;
     }
@@ -83,14 +84,11 @@ public final class E2EMockStatic implements StaticMockFixture {
                                         .getMeasurementMaxDistinctRepOrigPerPublXDestInSource());
         // System health params
         doAnswer((Answer<Integer>) invocation -> mParams.getMaxSourcesPerPublisher())
-                .when(() -> FlagsFactory.getFlags().getMeasurementMaxSourcesPerPublisher());
+                .when(() -> SystemHealthParams.getMaxSourcesPerPublisher());
         doAnswer((Answer<Integer>) invocation -> mParams.getMaxEventReportsPerDestination())
-                .when(() -> FlagsFactory.getFlags().getMeasurementMaxEventReportsPerDestination());
+                .when(() -> SystemHealthParams.getMaxEventReportsPerDestination());
         doAnswer((Answer<Integer>) invocation -> mParams.getMaxAggregateReportsPerDestination())
-                .when(
-                        () ->
-                                FlagsFactory.getFlags()
-                                        .getMeasurementMaxAggregateReportsPerDestination());
+                .when(() -> SystemHealthParams.getMaxAggregateReportsPerDestination());
         // Pass manifest checks
         doReturn(true)
                 .when(
