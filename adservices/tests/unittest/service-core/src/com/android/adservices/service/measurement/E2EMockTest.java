@@ -372,12 +372,15 @@ public abstract class E2EMockTest extends E2ETest {
 
     // Triggers debug reports to be sent
     void processActualDebugReportJob(long timestamp, long delay) throws IOException, JSONException {
+        long maxAggregateReportUploadRetryWindowMs =
+                Flags.DEFAULT_MEASUREMENT_MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS;
         long reportTime = timestamp + delay;
         Object[] eventCaptures =
                 EventReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
                         mEnrollmentDao,
                         mDatastoreManager,
-                        reportTime - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
+                        reportTime
+                                - Flags.DEFAULT_MEASUREMENT_MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
                         reportTime,
                         true,
                         mFlags);
@@ -392,7 +395,7 @@ public abstract class E2EMockTest extends E2ETest {
                 AggregateReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
                         mEnrollmentDao,
                         mDatastoreManager,
-                        reportTime - SystemHealthParams.MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS,
+                        reportTime - maxAggregateReportUploadRetryWindowMs,
                         reportTime,
                         true,
                         mFlags);
@@ -445,7 +448,7 @@ public abstract class E2EMockTest extends E2ETest {
                         mEnrollmentDao,
                         mDatastoreManager,
                         reportingJob.mTimestamp
-                                - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
+                                - Flags.DEFAULT_MEASUREMENT_MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
                         reportingJob.mTimestamp,
                         false,
                         mFlags);
@@ -458,6 +461,8 @@ public abstract class E2EMockTest extends E2ETest {
 
     @Override
     void processAction(AggregateReportingJob reportingJob) throws IOException, JSONException {
+        long maxAggregateReportUploadRetryWindowMs =
+                Flags.DEFAULT_MEASUREMENT_MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS;
         long earliestValidInsertion =
                 reportingJob.mTimestamp - Flags.MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
         runDeleteExpiredRecordsJob(earliestValidInsertion);
@@ -466,8 +471,7 @@ public abstract class E2EMockTest extends E2ETest {
                 AggregateReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
                         mEnrollmentDao,
                         mDatastoreManager,
-                        reportingJob.mTimestamp
-                                - SystemHealthParams.MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS,
+                        reportingJob.mTimestamp - maxAggregateReportUploadRetryWindowMs,
                         reportingJob.mTimestamp,
                         false,
                         mFlags);
