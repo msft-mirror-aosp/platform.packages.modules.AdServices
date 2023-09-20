@@ -1,7 +1,7 @@
 {
   "description": "One web source and one web trigger that match. Join key matching is allowed for the AdTech. Debug keys are added to the report and debug report is generated.",
   "phflags_override": {
-    "measurement_debug_join_key_enrollment_allowlist" : "enrollment-id-ad-tech1.com"
+    "measurement_debug_join_key_enrollment_allowlist" : "enrollment-id-ad-tech1.test"
   },
   "input": {
     "web_sources": [{

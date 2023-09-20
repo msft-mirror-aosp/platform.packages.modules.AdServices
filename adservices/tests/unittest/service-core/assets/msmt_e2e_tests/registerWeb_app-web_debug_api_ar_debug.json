@@ -73,7 +73,7 @@
       "report_time": "800176400001",
       "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
       "payload": {
-        "attribution_destination": "https://1d1.com",
+        "attribution_destination": "https://1d1.test",
         "scheduled_report_time": "800176400",
         "source_event_id": "1",
         "trigger_data": "2",
