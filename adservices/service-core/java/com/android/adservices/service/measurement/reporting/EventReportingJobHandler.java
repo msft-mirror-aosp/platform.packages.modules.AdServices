@@ -261,7 +261,8 @@ public class EventReportingJobHandler {
                 }
             } else {
                 // TODO: Determine behavior for other response codes?
-                reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.NETWORK);
+                reportingStatus.setFailureStatus(
+                        ReportingStatus.FailureStatus.UNSUCCESSFUL_HTTP_RESPONSE_CODE);
                 return AdServicesStatusUtils.STATUS_IO_ERROR;
             }
         } catch (IOException e) {

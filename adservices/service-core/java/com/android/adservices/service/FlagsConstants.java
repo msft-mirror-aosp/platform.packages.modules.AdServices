@@ -330,6 +330,26 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_PERSISTED =
             "measurement_async_registration_fallback_job_persisted";
 
+    public static final String KEY_MEASUREMENT_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW =
+            "measurement_aggregate_reporting_job_required_battery_not_low";
+
+    public static final String KEY_MEASUREMENT_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE =
+            "measurement_aggregate_reporting_job_required_network_type";
+
+    public static final String KEY_MEASUREMENT_AGGREGATE_REPORTING_JOB_PERSISTED =
+            "measurement_aggregate_reporting_job_persisted";
+
+    public static final String
+            KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW =
+                    "measurement_aggregate_fallback_reporting_job_required_battery_not_low";
+
+    public static final String
+            KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE =
+                    "measurement_aggregate_fallback_reporting_job_required_network_type";
+
+    public static final String KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED =
+            "measurement_aggregate_fallback_reporting_job_persisted";
+
     // FLEDGE Custom Audience keys
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT =
             "fledge_custom_audience_max_count";

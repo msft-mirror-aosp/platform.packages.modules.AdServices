@@ -923,6 +923,7 @@ public class FledgeE2ETest {
         verifyStandardServerRequests(server);
     }
 
+    @FlakyTest(bugId = 301009903)
     @Test
     public void testFledgeFlowSuccessWithDevOverridesRegisterAdBeaconEnabled() throws Exception {
         setupConsentGivenStubs();
@@ -1053,6 +1054,7 @@ public class FledgeE2ETest {
                 server, 0, ImmutableList.of(), mRequestMatcherPrefixMatch);
     }
 
+    @FlakyTest(bugId = 301016443)
     @Test
     public void testFledgeFlowSuccessWithDevOverridesWithRevokedUserConsentForApp()
             throws Exception {

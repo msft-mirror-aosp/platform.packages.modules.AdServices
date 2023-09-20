@@ -35,6 +35,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -47,7 +48,6 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
-import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
@@ -78,6 +78,7 @@ public class AggregateReportingJobServiceTest {
     private static final int MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID =
             MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 1_000L;
+    private static final long JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(4);
 
     private DatastoreManager mMockDatastoreManager;
     private JobScheduler mMockJobScheduler;
@@ -97,6 +98,13 @@ public class AggregateReportingJobServiceTest {
         mSpyLogger =
                 spy(new AdservicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mockStatsdLogger));
         mMockFlags = mock(Flags.class);
+        when(mMockFlags.getMeasurementAggregateReportingJobPersisted()).thenReturn(true);
+        when(mMockFlags.getMeasurementAggregateReportingJobRequiredNetworkType())
+                .thenReturn(JobInfo.NETWORK_TYPE_UNMETERED);
+        when(mMockFlags.getMeasurementAggregateReportingJobRequiredBatteryNotLow())
+                .thenReturn(true);
+        when(mMockFlags.getMeasurementAggregateMainReportingJobPeriodMs())
+                .thenReturn(JOB_PERIOD_MS);
     }
 
     @Test
@@ -270,8 +278,6 @@ public class AggregateReportingJobServiceTest {
                     doReturn(mMockJobScheduler)
                             .when(spyContext)
                             .getSystemService(JobScheduler.class);
-                    long periodMs =
-                            AdServicesConfig.getMeasurementAggregateMainReportingJobPeriodMs();
                     final JobInfo scheduledJobInfo =
                             new JobInfo.Builder(
                                             MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID,
@@ -279,7 +285,7 @@ public class AggregateReportingJobServiceTest {
                                                     spyContext, AggregateReportingJobService.class))
                                     .setRequiresBatteryNotLow(true)
                                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
-                                    .setPeriodic(periodMs)
+                                    .setPeriodic(JOB_PERIOD_MS)
                                     .setPersisted(true)
                                     .build();
                     doReturn(scheduledJobInfo)
@@ -310,8 +316,6 @@ public class AggregateReportingJobServiceTest {
                     doReturn(mMockJobScheduler)
                             .when(spyContext)
                             .getSystemService(JobScheduler.class);
-                    long periodMs =
-                            AdServicesConfig.getMeasurementAggregateMainReportingJobPeriodMs();
                     final JobInfo scheduledJobInfo =
                             new JobInfo.Builder(
                                             MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID,
@@ -321,7 +325,7 @@ public class AggregateReportingJobServiceTest {
                                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
                                     .setPeriodic(
                                             // To make it different from the newly scheduled job
-                                            periodMs - 1)
+                                            JOB_PERIOD_MS - 1)
                                     .setPersisted(true)
                                     .build();
                     doReturn(scheduledJobInfo)
@@ -499,7 +503,6 @@ public class AggregateReportingJobServiceTest {
     private void runWithMocks(TestUtils.RunnableWithThrow execute) throws Exception {
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
-                        .spyStatic(AdServicesConfig.class)
                         .spyStatic(AggregateReportingJobService.class)
                         .spyStatic(DatastoreManagerFactory.class)
                         .spyStatic(EnrollmentDao.class)
@@ -517,8 +520,6 @@ public class AggregateReportingJobServiceTest {
             doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
             doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
             doReturn(Mockito.mock(Context.class)).when(mSpyService).getApplicationContext();
-            ExtendedMockito.doReturn(TimeUnit.HOURS.toMillis(4))
-                    .when(AdServicesConfig::getMeasurementAggregateMainReportingJobPeriodMs);
             ExtendedMockito.doReturn(mock(EnrollmentDao.class))
                     .when(() -> EnrollmentDao.getInstance(any()));
             ExtendedMockito.doReturn(mMockDatastoreManager)

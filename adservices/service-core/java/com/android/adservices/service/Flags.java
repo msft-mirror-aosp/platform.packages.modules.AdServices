@@ -3496,6 +3496,52 @@ public interface Flags {
         return MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_PERSISTED;
     }
 
+    boolean MEASUREMENT_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW = true;
+
+    /** Returns whether to require battery not low for aggregate reporting job. */
+    default boolean getMeasurementAggregateReportingJobRequiredBatteryNotLow() {
+        return MEASUREMENT_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
+    }
+
+    int MEASUREMENT_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE = JobInfo.NETWORK_TYPE_UNMETERED;
+
+    /** Returns the required network type for aggregate reporting job. */
+    default int getMeasurementAggregateReportingJobRequiredNetworkType() {
+        return MEASUREMENT_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
+    }
+
+    boolean MEASUREMENT_AGGREGATE_REPORTING_JOB_PERSISTED = true;
+
+    /** Returns whether to persist this job across device reboots for aggregate reporting job. */
+    default boolean getMeasurementAggregateReportingJobPersisted() {
+        return MEASUREMENT_AGGREGATE_REPORTING_JOB_PERSISTED;
+    }
+
+    boolean MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW = true;
+
+    /** Returns whether to require battery not low for aggregate fallback reporting job. */
+    default boolean getMeasurementAggregateFallbackReportingJobRequiredBatteryNotLow() {
+        return MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
+    }
+
+    int MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE =
+            JobInfo.NETWORK_TYPE_ANY;
+
+    /** Returns the required network type for aggregate fallback reporting job . */
+    default int getMeasurementAggregateFallbackReportingJobRequiredNetworkType() {
+        return MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
+    }
+
+    boolean MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED = true;
+
+    /**
+     * Returns whether to persist this job across device reboots for aggregate fallback reporting
+     * job.
+     */
+    default boolean getMeasurementAggregateFallbackReportingJobPersisted() {
+        return MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED;
+    }
+
     /** Default U18 UX feature flag.. */
     boolean DEFAULT_U18_UX_ENABLED = false;
 
