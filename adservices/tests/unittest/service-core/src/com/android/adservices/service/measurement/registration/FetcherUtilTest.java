@@ -535,7 +535,9 @@ public final class FetcherUtilTest {
                                                 UNKNOWN_STATUS,
                                                 UNKNOWN_REGISTRATION_FAILURE_TYPE,
                                                 0,
-                                                REGISTRANT_URI.toString())
+                                                REGISTRANT_URI.toString(),
+                                                0,
+                                                false)
                                         .setAdTechDomain(null)
                                         .build()));
     }
@@ -579,7 +581,9 @@ public final class FetcherUtilTest {
                                                 UNKNOWN_STATUS,
                                                 UNKNOWN_REGISTRATION_FAILURE_TYPE,
                                                 0,
-                                                REGISTRANT_URI.toString())
+                                                REGISTRANT_URI.toString(),
+                                                0,
+                                                false)
                                         .setAdTechDomain(REGISTRATION_URI.toString())
                                         .build()));
     }
@@ -626,7 +630,9 @@ public final class FetcherUtilTest {
                                                 UNKNOWN_STATUS,
                                                 UNKNOWN_REGISTRATION_FAILURE_TYPE,
                                                 0,
-                                                REGISTRANT_URI.toString())
+                                                REGISTRANT_URI.toString(),
+                                                0,
+                                                false)
                                         .setAdTechDomain(null)
                                         .build()));
     }

@@ -306,7 +306,9 @@ public final class AsyncSourceFetcherTest {
                                                 UNKNOWN_REGISTRATION_FAILURE_TYPE,
                                                 0,
                                                 ANDROID_APP_SCHEME_URI_PREFIX
-                                                        + sContext.getPackageName())
+                                                        + sContext.getPackageName(),
+                                                0,
+                                                false)
                                         .setAdTechDomain(null)
                                         .build()));
         verify(mUrlConnection).setRequestMethod("POST");
@@ -4826,7 +4828,9 @@ public final class AsyncSourceFetcherTest {
                                                 UNKNOWN_REGISTRATION_FAILURE_TYPE,
                                                 0,
                                                 ANDROID_APP_SCHEME_URI_PREFIX
-                                                        + sContext.getPackageName())
+                                                        + sContext.getPackageName(),
+                                                0,
+                                                false)
                                         .setAdTechDomain(WebUtil.validUrl("https://foo.test"))
                                         .build()));
     }

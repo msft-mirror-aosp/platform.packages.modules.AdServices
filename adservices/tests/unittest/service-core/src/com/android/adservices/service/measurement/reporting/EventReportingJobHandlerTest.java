@@ -729,8 +729,8 @@ public class EventReportingJobHandlerTest {
         verify(mMeasurementDao, times(2)).markEventReportStatus(any(), anyInt());
         verify(mSpyEventReportingJobHandler, times(2))
                 .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
-        verify(mTransaction, times(5)).begin();
-        verify(mTransaction, times(5)).end();
+        verify(mTransaction, times(7)).begin();
+        verify(mTransaction, times(7)).end();
     }
 
     @Test
