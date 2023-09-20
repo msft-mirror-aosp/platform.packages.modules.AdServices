@@ -84,9 +84,7 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
-import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
-import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
@@ -158,7 +156,6 @@ public class ReportAndRegisterEventE2ETest {
     private MockitoSession mStaticMockSession = null;
     @Mock private ConsentManager mConsentManagerMock;
     private CustomAudienceDao mCustomAudienceDao;
-    private EncodedPayloadDao mEncodedPayloadDao;
     private AdSelectionEntryDao mAdSelectionEntryDao;
     private AppInstallDao mAppInstallDao;
     private FrequencyCapDao mFrequencyCapDao;
@@ -212,11 +209,9 @@ public class ReportAndRegisterEventE2ETest {
     private static final EnrollmentData ENROLLMENT_DATA =
             new EnrollmentData.Builder().setEnrollmentId(DEFAULT_ENROLLMENT).build();
 
-    @Mock private AdServicesErrorLogger mErrorLoggerMock;
-
     @Spy
     private DatastoreManager mDatastoreManagerSpy =
-            new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLoggerMock);
+            new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
 
     @Mock private ContentResolver mContentResolverMock;
     @Mock private ClickVerifier mClickVerifierMock;
@@ -264,11 +259,6 @@ public class ReportAndRegisterEventE2ETest {
                         .addTypeConverter(new DBCustomAudience.Converters(true, true))
                         .build()
                         .customAudienceDao();
-
-        mEncodedPayloadDao =
-                Room.inMemoryDatabaseBuilder(CONTEXT, ProtectedSignalsDatabase.class)
-                        .build()
-                        .getEncodedPayloadDao();
 
         mAdSelectionEntryDao =
                 Room.inMemoryDatabaseBuilder(
@@ -981,7 +971,6 @@ public class ReportAndRegisterEventE2ETest {
                 mAdSelectionEntryDao,
                 mAppInstallDao,
                 mCustomAudienceDao,
-                mEncodedPayloadDao,
                 mFrequencyCapDao,
                 mEncryptionContextDao,
                 mEncryptionKeyDao,
