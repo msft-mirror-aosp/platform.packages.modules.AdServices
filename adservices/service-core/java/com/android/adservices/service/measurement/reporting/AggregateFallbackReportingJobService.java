@@ -36,7 +36,6 @@ import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
-import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
 import com.android.adservices.service.measurement.util.JobLockHolder;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -107,7 +106,8 @@ public final class AggregateFallbackReportingJobService extends JobService {
             try {
                 final long windowStartTime =
                         System.currentTimeMillis()
-                                - SystemHealthParams.MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS;
+                                - FlagsFactory.getFlags()
+                                        .getMeasurementMaxAggregateReportUploadRetryWindowMs();
                 final long windowEndTime =
                         System.currentTimeMillis()
                                 - AdServicesConfig
