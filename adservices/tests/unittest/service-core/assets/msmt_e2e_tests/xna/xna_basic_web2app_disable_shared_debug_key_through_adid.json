@@ -106,13 +106,13 @@
     "triggers": [
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.com",
+          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.2d1.test",
           "platform_ad_id": "12345678-1234-1234-1234-123456789012"
         },
         "responses": [
           {
-            "url": "https://www.ad-tech1.com",
+            "url": "https://www.ad-tech1.test",
             "has_ad_id_permission": true,
             "response": {
               "Attribution-Reporting-Register-Trigger": {
@@ -174,7 +174,7 @@
                 },
                 "attribution_config": [
                   {
-                    "source_network": "enrollment-id-ad-tech2.com",
+                    "source_network": "enrollment-id-ad-tech2.test",
                     "source_priority_range": {
                       "start": 1,
                       "end": 1000
@@ -204,7 +204,7 @@
     "aggregatable_results": [
       {
         "report_time": "800000600001",
-        "report_url": "https://www.ad-tech1.com/.well-known/attribution-reporting/report-aggregate-attribution",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
           "source_site": "android-app://example.1s2.test",
