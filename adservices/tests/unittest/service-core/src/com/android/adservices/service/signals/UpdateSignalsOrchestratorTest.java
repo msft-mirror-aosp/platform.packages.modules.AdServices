@@ -18,6 +18,8 @@ package com.android.adservices.service.signals;
 
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME_1;
 
+import static com.android.adservices.service.signals.SignalsFixture.DEV_CONTEXT;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -30,6 +32,7 @@ import android.net.Uri;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.common.AdTechUriValidator;
+import com.android.adservices.service.devapi.DevContext;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.SettableFuture;
@@ -71,19 +74,22 @@ public class UpdateSignalsOrchestratorTest {
         SettableFuture future = SettableFuture.create();
         future.set(new JSONObject(JSON));
         FluentFuture<JSONObject> returnValue = FluentFuture.from(future);
-        when(mUpdatesDownloader.getUpdateJson(URI, TEST_PACKAGE_NAME_1)).thenReturn(returnValue);
+        when(mUpdatesDownloader.getUpdateJson(URI, TEST_PACKAGE_NAME_1, DEV_CONTEXT))
+                .thenReturn(returnValue);
 
         mUpdateSignalsOrchestrator
-                .orchestrateUpdate(URI, CommonFixture.VALID_BUYER_1, TEST_PACKAGE_NAME_1)
+                .orchestrateUpdate(
+                        URI, CommonFixture.VALID_BUYER_1, TEST_PACKAGE_NAME_1, DEV_CONTEXT)
                 .get(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        verify(mUpdatesDownloader).getUpdateJson(eq(URI), eq(TEST_PACKAGE_NAME_1));
+        verify(mUpdatesDownloader).getUpdateJson(eq(URI), eq(TEST_PACKAGE_NAME_1), eq(DEV_CONTEXT));
         verify(mUpdateProcessingOrchestrator)
                 .processUpdates(
                         any(AdTechIdentifier.class),
                         anyString(),
                         any(Instant.class),
-                        any(JSONObject.class));
+                        any(JSONObject.class),
+                        any(DevContext.class));
         verify(mAdTechUriValidator).addValidation(eq(URI), any());
     }
 }

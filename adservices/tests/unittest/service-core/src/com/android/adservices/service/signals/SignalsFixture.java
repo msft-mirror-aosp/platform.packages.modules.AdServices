@@ -24,6 +24,7 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 
 import com.android.adservices.data.signals.DBProtectedSignal;
+import com.android.adservices.service.devapi.DevContext;
 
 import java.nio.ByteBuffer;
 import java.time.Instant;
@@ -36,6 +37,11 @@ import java.util.stream.Collectors;
 
 public class SignalsFixture {
 
+    public static final DevContext DEV_CONTEXT =
+            DevContext.builder()
+                    .setDevOptionsEnabled(false)
+                    .setCallingAppPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                    .build();
     public static final byte[] KEY_1 = {(byte) 1, (byte) 2, (byte) 3, (byte) 4};
     public static final byte[] KEY_2 = {(byte) 5, (byte) 6, (byte) 7, (byte) 8};
     public static final byte[] VALUE_1 = {(byte) 42};
