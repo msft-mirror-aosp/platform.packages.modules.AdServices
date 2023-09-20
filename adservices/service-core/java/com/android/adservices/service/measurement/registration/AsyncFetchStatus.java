@@ -48,6 +48,8 @@ public class AsyncFetchStatus {
     private long mRegistrationDelay;
 
     private boolean mIsRedirectError;
+    private int mRetryCount;
+    private boolean mIsRedirectOnly;
 
     public AsyncFetchStatus() {
         mResponseStatus = ResponseStatus.UNKNOWN;
@@ -110,6 +112,26 @@ public class AsyncFetchStatus {
     /** Set redirect error status. */
     public void setRedirectError(boolean isRedirectError) {
         mIsRedirectError = isRedirectError;
+    }
+
+    /** Get retry count. */
+    public int getRetryCount() {
+        return mRetryCount;
+    }
+
+    /** Set retry count. */
+    public void setRetryCount(int retryCount) {
+        mRetryCount = retryCount;
+    }
+
+    /** Get redirect status. */
+    public boolean isRedirectOnly() {
+        return mIsRedirectOnly;
+    }
+
+    /** Set redirect status. */
+    public void setRedirectOnlyStatus(boolean isRedirectOnly) {
+        mIsRedirectOnly = isRedirectOnly;
     }
 
     /** Returns true if request is successful. */
