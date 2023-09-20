@@ -21,8 +21,6 @@ import static android.view.MotionEvent.obtain;
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION;
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_FILTERS;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_VALUES_PER_ATTRIBUTION_FILTER;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE;
 
@@ -229,6 +227,10 @@ public final class AsyncSourceFetcherTest {
                 .when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
         when(mFlags.getMeasurementMaxAggregateKeysPerSourceRegistration()).thenReturn(
                 Flags.MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION);
+        when(mFlags.getMeasurementMaxAttributionFilters())
+                .thenReturn(Flags.DEFAULT_MEASUREMENT_MAX_ATTRIBUTION_FILTERS);
+        when(mFlags.getMeasurementMaxValuesPerAttributionFilter())
+                .thenReturn(Flags.DEFAULT_MEASUREMENT_MAX_VALUES_PER_ATTRIBUTION_FILTER);
     }
 
     public void cleanup() throws InterruptedException {
@@ -2779,7 +2781,7 @@ public final class AsyncSourceFetcherTest {
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         StringBuilder filters = new StringBuilder("{");
         filters.append(
-                IntStream.range(0, MAX_ATTRIBUTION_FILTERS + 1)
+                IntStream.range(0, Flags.DEFAULT_MEASUREMENT_MAX_ATTRIBUTION_FILTERS + 1)
                         .mapToObj(i -> "\"filter-string-" + i + "\": [\"filter-value\"]")
                         .collect(Collectors.joining(",")));
         filters.append("}");
@@ -2854,7 +2856,7 @@ public final class AsyncSourceFetcherTest {
                                 + "\"filter-string-1\": [\"filter-value-1\"],"
                                 + "\"filter-string-2\": [");
         filters.append(
-                IntStream.range(0, MAX_VALUES_PER_ATTRIBUTION_FILTER + 1)
+                IntStream.range(0, Flags.DEFAULT_MEASUREMENT_MAX_VALUES_PER_ATTRIBUTION_FILTER + 1)
                         .mapToObj(i -> "\"filter-value-" + i + "\"")
                         .collect(Collectors.joining(",")));
         filters.append("]}");

@@ -38,7 +38,6 @@ import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.KeyValueData.DataType;
 import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
-import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.attribution.TriggerContentProvider;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
@@ -294,11 +293,11 @@ public class AsyncRegistrationQueueRunner {
         long numOfSourcesPerPublisher =
                 dao.getNumSourcesPerPublisher(
                         BaseUriExtractor.getBaseUri(topOrigin), publisherType);
-
-        if (numOfSourcesPerPublisher >= SystemHealthParams.getMaxSourcesPerPublisher()) {
+        if (numOfSourcesPerPublisher
+                >= FlagsFactory.getFlags().getMeasurementMaxSourcesPerPublisher()) {
             LogUtil.d(
                     "insertSources: Max limit of %s sources for publisher - %s reached.",
-                    SystemHealthParams.getMaxSourcesPerPublisher(), publisher);
+                    FlagsFactory.getFlags().getMeasurementMaxSourcesPerPublisher(), publisher);
             debugReportApi.scheduleSourceStorageLimitDebugReport(
                     source, String.valueOf(numOfSourcesPerPublisher), dao);
             return false;
@@ -420,8 +419,8 @@ public class AsyncRegistrationQueueRunner {
             LogUtil.e("Unable to fetch number of triggers currently registered per destination.");
             return false;
         }
-
-        return triggerInsertedPerDestination < SystemHealthParams.getMaxTriggersPerDestination();
+        return triggerInsertedPerDestination
+                < FlagsFactory.getFlags().getMeasurementMaxTriggersPerDestination();
     }
 
     private static AsyncRegistration createAsyncRegistrationFromRedirect(
