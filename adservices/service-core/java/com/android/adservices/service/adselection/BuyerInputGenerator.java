@@ -39,6 +39,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.ByteString;
 
 import java.time.Clock;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +61,7 @@ public class BuyerInputGenerator {
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
     private final long mCustomAudienceActiveTimeWindowInMs;
     private final boolean mEnableAdFilter;
+    private final boolean mEnableProtectedSignals;
 
     @NonNull private final AuctionServerDataCompressor mDataCompressor;
 
@@ -71,6 +73,7 @@ public class BuyerInputGenerator {
             @NonNull final ExecutorService backgroundExecutorService,
             long customAudienceActiveTimeWindowInMs,
             boolean enableAdFilter,
+            boolean enableProtectedSignals,
             @NonNull AuctionServerDataCompressor dataCompressor) {
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(encodedSignalsDaoDao);
@@ -89,6 +92,7 @@ public class BuyerInputGenerator {
         mDataCompressor = dataCompressor;
         mCustomAudienceActiveTimeWindowInMs = customAudienceActiveTimeWindowInMs;
         mEnableAdFilter = enableAdFilter;
+        mEnableProtectedSignals = enableProtectedSignals;
     }
 
     /**
@@ -230,6 +234,10 @@ public class BuyerInputGenerator {
 
     private ListenableFuture<Map<AdTechIdentifier, DBEncodedPayload>>
             getAllEncodedProtectedSignals() {
+        // If the feature flag is turned off we short circuit, and return empty signals
+        if (!mEnableProtectedSignals) {
+            return Futures.immediateFuture(Collections.emptyMap());
+        }
         int traceCookie = Tracing.beginAsyncSection(Tracing.GET_BUYERS_PS);
         return mBackgroundExecutorService.submit(
                 () -> {
