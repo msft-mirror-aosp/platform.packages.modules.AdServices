@@ -24,9 +24,6 @@ import android.app.job.JobInfo;
 
 import androidx.annotation.Nullable;
 
-// NOTE: do not import adservices classes that are only used on javadoc as this class is used by
-// tests that don't have them in the classpath - use the FQCN in the javadoc instead
-
 import com.android.adservices.cobalt.CobaltConstants;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -135,10 +132,13 @@ public interface Flags {
 
     /** Unknown classifier option. */
     int UNKNOWN_CLASSIFIER = 0;
+
     /** Only on-device classification. */
     int ON_DEVICE_CLASSIFIER = 1;
+
     /** Only Precomputed classification. */
     int PRECOMPUTED_CLASSIFIER = 2;
+
     /** Precomputed classification values are preferred over on-device classification values. */
     int PRECOMPUTED_THEN_ON_DEVICE_CLASSIFIER = 3;
 
@@ -1567,10 +1567,13 @@ public interface Flags {
 
     /** Write and read consent from system server only. */
     int SYSTEM_SERVER_ONLY = FlagsConstants.SYSTEM_SERVER_ONLY;
+
     /** Write and read consent from PPAPI only */
     int PPAPI_ONLY = FlagsConstants.PPAPI_ONLY;
+
     /** Write consent to both PPAPI and system server. Read consent from system server only. */
     int PPAPI_AND_SYSTEM_SERVER = FlagsConstants.PPAPI_AND_SYSTEM_SERVER;
+
     /**
      * Write consent data to AppSearch only. To store consent data in AppSearch the flag
      * enable_appsearch_consent_data must also be true. This ensures that both writes and reads can
@@ -3437,6 +3440,114 @@ public interface Flags {
         return MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
     }
 
+    boolean MEASUREMENT_ATTRIBUTION_JOB_PERSISTED = false;
+
+    /** Returns whether to persist this job across device reboots for attribution job. */
+    default boolean getMeasurementAttributionJobPersisted() {
+        return MEASUREMENT_ATTRIBUTION_JOB_PERSISTED;
+    }
+
+    long MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
+
+    /** Delay for attribution job triggering. */
+    default long getMeasurementAttributionJobTriggeringDelayMs() {
+        return MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS;
+    }
+
+    boolean MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERSISTED = true;
+
+    /** Returns whether to persist this job across device reboots for attribution fallback job. */
+    default boolean getMeasurementAttributionFallbackJobPersisted() {
+        return MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERSISTED;
+    }
+
+    int MEASUREMENT_ASYNC_REGISTRATION_QUEUE_JOB_REQUIRED_NETWORK_TYPE = JobInfo.NETWORK_TYPE_ANY;
+
+    /** Returns the required network type for async registration queue job. */
+    default int getMeasurementAsyncRegistrationQueueJobRequiredNetworkType() {
+        return MEASUREMENT_ASYNC_REGISTRATION_QUEUE_JOB_REQUIRED_NETWORK_TYPE;
+    }
+
+    boolean MEASUREMENT_ASYNC_REGISTRATION_QUEUE_JOB_PERSISTED = false;
+
+    /**
+     * Returns whether to persist this job across device reboots for async registration queue job.
+     */
+    default boolean getMeasurementAsyncRegistrationQueueJobPersisted() {
+        return MEASUREMENT_ASYNC_REGISTRATION_QUEUE_JOB_PERSISTED;
+    }
+
+    boolean MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_REQUIRED_BATTERY_NOT_LOW = true;
+
+    /** Returns whether to require battery not low for async registration queue fallback job. */
+    default boolean getMeasurementAsyncRegistrationFallbackJobRequiredBatteryNotLow() {
+        return MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_REQUIRED_BATTERY_NOT_LOW;
+    }
+
+    int MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_REQUIRED_NETWORK_TYPE =
+            JobInfo.NETWORK_TYPE_ANY;
+
+    /** Returns the required network type for async registration queue fallback job. */
+    default int getMeasurementAsyncRegistrationFallbackJobRequiredNetworkType() {
+        return MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_REQUIRED_NETWORK_TYPE;
+    }
+
+    boolean MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_PERSISTED = true;
+
+    /**
+     * Returns whether to persist this job across device reboots for async registration queue
+     * fallback job.
+     */
+    default boolean getMeasurementAsyncRegistrationFallbackJobPersisted() {
+        return MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_PERSISTED;
+    }
+
+    boolean MEASUREMENT_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW = true;
+
+    /** Returns whether to require battery not low for aggregate reporting job. */
+    default boolean getMeasurementAggregateReportingJobRequiredBatteryNotLow() {
+        return MEASUREMENT_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
+    }
+
+    int MEASUREMENT_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE = JobInfo.NETWORK_TYPE_UNMETERED;
+
+    /** Returns the required network type for aggregate reporting job. */
+    default int getMeasurementAggregateReportingJobRequiredNetworkType() {
+        return MEASUREMENT_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
+    }
+
+    boolean MEASUREMENT_AGGREGATE_REPORTING_JOB_PERSISTED = true;
+
+    /** Returns whether to persist this job across device reboots for aggregate reporting job. */
+    default boolean getMeasurementAggregateReportingJobPersisted() {
+        return MEASUREMENT_AGGREGATE_REPORTING_JOB_PERSISTED;
+    }
+
+    boolean MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW = true;
+
+    /** Returns whether to require battery not low for aggregate fallback reporting job. */
+    default boolean getMeasurementAggregateFallbackReportingJobRequiredBatteryNotLow() {
+        return MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
+    }
+
+    int MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE =
+            JobInfo.NETWORK_TYPE_ANY;
+
+    /** Returns the required network type for aggregate fallback reporting job . */
+    default int getMeasurementAggregateFallbackReportingJobRequiredNetworkType() {
+        return MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
+    }
+
+    boolean MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED = true;
+
+    /**
+     * Returns whether to persist this job across device reboots for aggregate fallback reporting
+     * job.
+     */
+    default boolean getMeasurementAggregateFallbackReportingJobPersisted() {
+        return MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED;
+    }
+
     /** Default U18 UX feature flag.. */
     boolean DEFAULT_U18_UX_ENABLED = false;
 
@@ -3647,5 +3758,28 @@ public interface Flags {
     /** Returns whether the U18 supervised account is enabled. */
     default boolean isU18SupervisedAccountEnabled() {
         return IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT;
+    }
+
+    /**
+     * Default value to determine whether {@link
+     * com.android.adservices.service.adid.AdIdCacheManager} is enabled to read AdId from and for
+     * AdIdProvider to update AdId to.
+     */
+    boolean DEFAULT_ADID_CACHE_ENABLED = false;
+
+    /**
+     * Returns if {@link com.android.adservices.service.adid.AdIdCacheManager} is enabled to read
+     * AdId from and for AdIdProvider to update AdId to.
+     *
+     * <ul>
+     *   <li>When enabled, AdIdCacheManager will read AdId from the cache and AdIdProvider will
+     *       update the cache if AdId changes.
+     *   <li>When disabled, AdIdCacheManager will call AdIdProvider to get the AdId.
+     * </ul>
+     *
+     * @return if {@link com.android.adservices.service.adid.AdIdCacheManager} is enabled.
+     */
+    default boolean getAdIdCacheEnabled() {
+        return DEFAULT_ADID_CACHE_ENABLED;
     }
 }

@@ -1,7 +1,7 @@
 {
-  "description": "Given two entries in the \"Attribution-Reporting-Register-Aggregatable-Source\" header, generate an aggregate report with two contributions. Debug reporting is enabled. AdId permission is enabled. The debug report source-destination-limit, source-success are expected since there are two sources with different destinations and max_destinations_per_source_site_reporting_site is 1",
-  "api_config": {
-    "max_destinations_per_source_site_reporting_site": "1"
+  "description": "Given two entries in the \"Attribution-Reporting-Register-Aggregatable-Source\" header, generate an aggregate report with two contributions. Debug reporting is enabled. AdId permission is enabled. The debug report source-destination-limit, source-success are expected since there are two sources with different destinations and measurement_max_distinct_destinations_in_active_source is 1",
+  "phflags_override": {
+    "measurement_max_distinct_destinations_in_active_source": "1"
   },
   "input": {
     "sources": [{

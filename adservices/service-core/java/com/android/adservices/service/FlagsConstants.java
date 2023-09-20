@@ -304,6 +304,52 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS =
             "measurement_delete_expired_job_period_ms";
 
+    public static final String KEY_MEASUREMENT_ATTRIBUTION_JOB_PERSISTED =
+            "measurement_attribution_job_persisted";
+
+    public static final String KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS =
+            "measurement_attribution_job_triggering_delay_ms";
+
+    public static final String KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERSISTED =
+            "measurement_attribution_fallback_job_persisted";
+
+    public static final String KEY_MEASUREMENT_ASYNC_REGISTRATION_QUEUE_JOB_REQUIRED_NETWORK_TYPE =
+            "measurement_async_registration_queue_job_required_network_type";
+
+    public static final String KEY_MEASUREMENT_ASYNC_REGISTRATION_QUEUE_JOB_PERSISTED =
+            "measurement_async_registration_queue_job_persisted";
+
+    public static final String
+            KEY_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_REQUIRED_BATTERY_NOT_LOW =
+                    "measurement_async_registration_fallback_job_required_battery_not_low";
+
+    public static final String
+            KEY_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_REQUIRED_NETWORK_TYPE =
+                    "measurement_async_registration_fallback_job_required_network_type";
+
+    public static final String KEY_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_PERSISTED =
+            "measurement_async_registration_fallback_job_persisted";
+
+    public static final String KEY_MEASUREMENT_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW =
+            "measurement_aggregate_reporting_job_required_battery_not_low";
+
+    public static final String KEY_MEASUREMENT_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE =
+            "measurement_aggregate_reporting_job_required_network_type";
+
+    public static final String KEY_MEASUREMENT_AGGREGATE_REPORTING_JOB_PERSISTED =
+            "measurement_aggregate_reporting_job_persisted";
+
+    public static final String
+            KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW =
+                    "measurement_aggregate_fallback_reporting_job_required_battery_not_low";
+
+    public static final String
+            KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE =
+                    "measurement_aggregate_fallback_reporting_job_required_network_type";
+
+    public static final String KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED =
+            "measurement_aggregate_fallback_reporting_job_persisted";
+
     // FLEDGE Custom Audience keys
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT =
             "fledge_custom_audience_max_count";
@@ -922,4 +968,6 @@ public final class FlagsConstants {
 
     public static final String KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED =
             "is_u18_supervised_account_enabled";
+
+    public static final String KEY_AD_ID_CACHE_ENABLED = "ad_id_cache_enabled";
 }

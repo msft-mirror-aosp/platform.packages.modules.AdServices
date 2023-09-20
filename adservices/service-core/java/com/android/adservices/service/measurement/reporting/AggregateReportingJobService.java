@@ -32,7 +32,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
-import com.android.adservices.service.AdServicesConfig;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.SystemHealthParams;
@@ -151,7 +151,8 @@ public final class AggregateReportingJobService extends JobService {
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
-        if (FlagsFactory.getFlags().getMeasurementJobAggregateReportingKillSwitch()) {
+        Flags flags = FlagsFactory.getFlags();
+        if (flags.getMeasurementJobAggregateReportingKillSwitch()) {
             LogUtil.d("AggregateReportingJobService is disabled, skip scheduling");
             return;
         }
@@ -164,7 +165,7 @@ public final class AggregateReportingJobService extends JobService {
 
         final JobInfo scheduledJobInfo =
                 jobScheduler.getPendingJob(MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID);
-        JobInfo jobInfo = buildJobInfo(context);
+        JobInfo jobInfo = buildJobInfo(context, flags);
         // Schedule if it hasn't been scheduled already or force rescheduling
         if (forceSchedule || !jobInfo.equals(scheduledJobInfo)) {
             schedule(jobScheduler, jobInfo);
@@ -174,16 +175,17 @@ public final class AggregateReportingJobService extends JobService {
         }
     }
 
-    private static JobInfo buildJobInfo(Context context) {
+    private static JobInfo buildJobInfo(Context context, Flags flags) {
         final JobInfo job =
                 new JobInfo.Builder(
                                 MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID,
                                 new ComponentName(context, AggregateReportingJobService.class))
-                        .setRequiresBatteryNotLow(true)
-                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
-                        .setPeriodic(
-                                AdServicesConfig.getMeasurementAggregateMainReportingJobPeriodMs())
-                        .setPersisted(true)
+                        .setRequiresBatteryNotLow(
+                                flags.getMeasurementAggregateReportingJobRequiredBatteryNotLow())
+                        .setRequiredNetworkType(
+                                flags.getMeasurementAggregateReportingJobRequiredNetworkType())
+                        .setPeriodic(flags.getMeasurementAggregateMainReportingJobPeriodMs())
+                        .setPersisted(flags.getMeasurementAggregateReportingJobPersisted())
                         .build();
         return job;
     }

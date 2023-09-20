@@ -67,8 +67,22 @@ public class E2EInteropMockTest extends E2EMockTest {
             AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
     private static final Map<String, String> sApiConfigPhFlags =
             Map.of(
+                    // measurement_max_attribution_per_rate_limit_window
+                    "rate_limit_max_attributions",
+                    "measurement_max_attribution_per_rate_limit_window",
+                    // measurement_max_distinct_enrollments_in_attribution
+                    "rate_limit_max_attribution_reporting_origins",
+                    "measurement_max_distinct_enrollments_in_attribution",
+                    // measurement_max_distinct_reporting_origins_in_source
+                    "rate_limit_max_source_registration_reporting_origins",
+                    "measurement_max_distinct_reporting_origins_in_source",
+                    // measurement_max_distinct_destinations_in_active_source
+                    "max_destinations_per_source_site_reporting_site",
+                    "measurement_max_distinct_destinations_in_active_source",
+                    // measurement_flex_api_max_information_gain_event
                     "max_event_info_gain",
                     "measurement_flex_api_max_information_gain_event",
+                    // measurement_max_reporting_origins_per_source_reporting_site_per_window
                     "rate_limit_max_reporting_origins_per_source_reporting_site",
                     "measurement_max_reporting_origins_per_source_reporting_site_per_window");
 

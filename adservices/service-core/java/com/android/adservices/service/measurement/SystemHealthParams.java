@@ -64,9 +64,6 @@ public class SystemHealthParams {
         return FlagsFactory.getFlags().getMeasurementAsyncRegistrationJobTriggerMaxDelayMs();
     }
 
-    /** Delay for attribution job triggering. */
-    public static final long ATTRIBUTION_JOB_TRIGGERING_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
-
     /** Delay for async registration job triggering. */
     public static final long ASYNC_REGISTRATION_JOB_TRIGGERING_DELAY_MS =
             TimeUnit.MINUTES.toMillis(2);

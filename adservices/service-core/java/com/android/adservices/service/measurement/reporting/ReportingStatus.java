@@ -89,7 +89,8 @@ public class ReportingStatus {
         REPORT_NOT_PENDING(4),
         JOB_RETRY_LIMIT_REACHED(5),
         SERIALIZATION_ERROR(6),
-        ENCRYPTION_ERROR(7);
+        ENCRYPTION_ERROR(7),
+        UNSUCCESSFUL_HTTP_RESPONSE_CODE(8);
         private final int mValue;
 
         FailureStatus(int value) {

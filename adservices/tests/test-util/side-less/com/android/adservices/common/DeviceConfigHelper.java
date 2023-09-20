@@ -17,6 +17,9 @@ package com.android.adservices.common;
 
 import com.android.adservices.common.Logger.RealLogger;
 
+import com.google.errorprone.annotations.FormatMethod;
+import com.google.errorprone.annotations.FormatString;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -48,7 +51,7 @@ final class DeviceConfigHelper {
             throw new IllegalArgumentException(
                     "factory " + interfaceFactory + " returned null interface");
         }
-        mLog = new Logger(Objects.requireNonNull(logger), DeviceConfigHelper.class);
+        mLog = mInterface.mLog;
         mLog.v("Constructor: interface=%s, logger=%s, namespace=%s", mInterface, logger, namespace);
     }
 
@@ -112,11 +115,17 @@ final class DeviceConfigHelper {
     }
 
     private void setOnly(String name, String value) {
-        mInterface.set(name, value);
+        if (!mInterface.set(name, value)) {
+            // TODO(b/294423183): throw exception instead, to make it clear why it failed
+            mLog.e("Fail to set %s=%s", name, value);
+        }
     }
 
     private void delete(String name) {
-        mInterface.delete(name);
+        if (!mInterface.delete(name)) {
+            // TODO(b/294423183): throw exception instead, to make it clear why it failed
+            mLog.e("Fail to delete %s", name);
+        }
     }
 
     enum SyncDisabledModeForTest {
@@ -125,18 +134,81 @@ final class DeviceConfigHelper {
         UNTIL_REBOOT
     }
 
-    /** Low-level interface for {@link android.provider.DeviceConfig}. */
-    interface Interface {
+    // TODO(b/294423183); move to a separate file (and rename it?)?
+    /**
+     * Low-level interface for {@link android.provider.DeviceConfig}.
+     *
+     * <p>By default it uses {@code cmd device_config} to implement all methods, but subclasses
+     * could override them (for example, device-side implementation could use {@code DeviceConfig}
+     * instead.
+     */
+    protected abstract static class Interface {
 
-        void setSyncDisabledModeForTest(SyncDisabledModeForTest mode);
+        protected final Logger mLog;
+        protected final String mNamespace;
 
-        String get(String name, @Nullable String defaultValue);
+        protected Interface(String namespace, RealLogger logger) {
+            mNamespace = Objects.requireNonNull(namespace);
+            mLog = new Logger(Objects.requireNonNull(logger), DeviceConfigHelper.class);
+        }
 
-        void set(String name, @Nullable String value);
+        void setSyncDisabledModeForTest(SyncDisabledModeForTest mode) {
+            String value = mode.name().toLowerCase();
+            mLog.v("SyncDisabledModeForTest(%s)", value);
+            runShellCommand("device_config set_sync_disabled_for_test %s", value);
+        }
 
-        void delete(String name);
+        public String get(String name, String defaultValue) {
+            mLog.d("get(%s, %s): using runShellCommand", name, defaultValue);
+            String value = runShellCommand("device_config get %s %s", mNamespace, name).trim();
+            mLog.v(
+                    "get(%s, %s): raw value is '%s' (is null: %b)",
+                    name, defaultValue, value, value == null);
+            if (!value.equals("null")) {
+                return value;
+            }
+            // "null" could mean the value doesn't exist, or it's the string "null", so we need to
+            // check
+            // them
+            String allFlags = runShellCommand("device_config list %s", mNamespace);
+            for (String line : allFlags.split("\n")) {
+                if (line.equals(name + "=null")) {
+                    mLog.v("Value of flag %s is indeed \"%s\"", name, value);
+                    return value;
+                }
+            }
+            return defaultValue;
+        }
 
-        String dump();
+        // TODO(b/294423183): throw exception instead, to make it clear why it failed
+        public boolean set(String name, @Nullable String value) {
+            mLog.d("set(%s, %s): using runShellCommand", name, value);
+            runShellCommand("device_config put %s %s %s", mNamespace, name, value);
+            // TODO(b/294423183): parse result
+            return true;
+        }
+
+        public boolean delete(String name) {
+            mLog.d("delete(%s): using runShellCommand", name);
+            runShellCommand("device_config delete %s %s", mNamespace, name);
+            // TODO(b/294423183): parse result
+            return true;
+        }
+
+        public String dump() {
+            return runShellCommand("device_config list %s", mNamespace).trim();
+        }
+
+        @FormatMethod
+        protected String runShellCommand(@FormatString String cmdFmt, @Nullable Object... cmdArgs) {
+            throw new UnsupportedOperationException(
+                    "Subclass must either implement this or the methods that use it");
+        }
+
+        @Override
+        public String toString() {
+            return getClass().getSimpleName();
+        }
     }
 
     /** Factory for {@link Interface} objects. */
