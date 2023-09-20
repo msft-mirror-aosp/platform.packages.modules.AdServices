@@ -31,6 +31,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FluentFuture;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -40,6 +42,7 @@ import java.util.Objects;
 public class UpdateEncoderEventHandler {
     @NonNull private final EncoderEndpointsDao mEncoderEndpointsDao;
     @NonNull private final EncoderLogicHandler mEncoderLogicHandler;
+    private List<Observer> mUpdatesObserver;
 
     @VisibleForTesting
     public UpdateEncoderEventHandler(
@@ -49,6 +52,7 @@ public class UpdateEncoderEventHandler {
         Objects.requireNonNull(encoderLogicHandler);
         mEncoderEndpointsDao = encoderEndpointsDao;
         mEncoderLogicHandler = encoderLogicHandler;
+        mUpdatesObserver = new ArrayList<>();
     }
 
     public UpdateEncoderEventHandler(@NonNull Context context) {
@@ -90,12 +94,43 @@ public class UpdateEncoderEventHandler {
 
                 if (previousRegisteredEncoder == null) {
                     // We immediately download and update if no previous encoder existed
-                    FluentFuture<Boolean> unused = mEncoderLogicHandler.downloadAndUpdate(buyer);
+                    FluentFuture<Boolean> downloadAndUpdate =
+                            mEncoderLogicHandler.downloadAndUpdate(buyer);
+                    notifyObservers(buyer, event.getUpdateType().toString(), downloadAndUpdate);
                 }
                 break;
             default:
                 throw new IllegalArgumentException(
                         "Unexpected value for update event type: " + event.getUpdateType());
         }
+    }
+
+    /**
+     * @param observer that will be notified of the update events
+     */
+    public void addObserver(Observer observer) {
+        mUpdatesObserver.add(observer);
+    }
+
+    /**
+     * @param buyer buyer for which the update happens
+     * @param eventType the type of event that got completed
+     * @param event the actual event result
+     */
+    public void notifyObservers(AdTechIdentifier buyer, String eventType, FluentFuture<?> event) {
+        mUpdatesObserver.parallelStream().forEach(o -> o.update(buyer, eventType, event));
+    }
+
+    /**
+     * An observer interface that helps subscribe to the update encoder events. Helps get notified
+     * when an event gets completed rather than polling the DB state.
+     */
+    public interface Observer {
+        /**
+         * @param buyer buyer for which the update happens
+         * @param eventType the type of event that got completed
+         * @param event the actual event result
+         */
+        void update(AdTechIdentifier buyer, String eventType, FluentFuture<?> event);
     }
 }
