@@ -15,10 +15,6 @@
  */
 package com.android.adservices.service.measurement.registration;
 
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_FILTERS;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_BYTES_PER_ATTRIBUTION_AGGREGATE_KEY_ID;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_FILTER_MAPS_PER_FILTER_SET;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_VALUES_PER_ATTRIBUTION_FILTER;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS;
 
 import static org.junit.Assert.assertEquals;
@@ -254,7 +250,9 @@ public final class FetcherUtilTest {
     @Test
     public void testIsValidAggregateKeyId_tooLong() {
         StringBuilder keyId = new StringBuilder("");
-        for (int i = 0; i < MAX_BYTES_PER_ATTRIBUTION_AGGREGATE_KEY_ID + 1; i++) {
+        for (int i = 0;
+                i < Flags.DEFAULT_MEASUREMENT_MAX_BYTES_PER_ATTRIBUTION_AGGREGATE_KEY_ID + 1;
+                i++) {
             keyId.append("a");
         }
         assertFalse(FetcherUtil.isValidAggregateKeyId(keyId.toString()));
@@ -392,9 +390,10 @@ public final class FetcherUtilTest {
     @Test
     public void testAreValidAttributionFilters_filterSet_tooManyFilters() throws JSONException {
         StringBuilder json = new StringBuilder("[{");
-        json.append(IntStream.range(0, MAX_ATTRIBUTION_FILTERS + 1)
-                .mapToObj(i -> "\"filter-string-" + i + "\": [\"filter-value\"]")
-                .collect(Collectors.joining(",")));
+        json.append(
+                IntStream.range(0, Flags.DEFAULT_MEASUREMENT_MAX_ATTRIBUTION_FILTERS + 1)
+                        .mapToObj(i -> "\"filter-string-" + i + "\": [\"filter-value\"]")
+                        .collect(Collectors.joining(",")));
         json.append("}]");
         JSONArray filters = new JSONArray(json.toString());
         assertFalse(FetcherUtil.areValidAttributionFilters(filters, mFlags, false));
@@ -403,9 +402,10 @@ public final class FetcherUtilTest {
     @Test
     public void testAreValidAttributionFilters_filterMap_tooManyFilters() throws JSONException {
         StringBuilder json = new StringBuilder("{");
-        json.append(IntStream.range(0, MAX_ATTRIBUTION_FILTERS + 1)
-                .mapToObj(i -> "\"filter-string-" + i + "\": [\"filter-value\"]")
-                .collect(Collectors.joining(",")));
+        json.append(
+                IntStream.range(0, Flags.DEFAULT_MEASUREMENT_MAX_ATTRIBUTION_FILTERS + 1)
+                        .mapToObj(i -> "\"filter-string-" + i + "\": [\"filter-value\"]")
+                        .collect(Collectors.joining(",")));
         json.append("}");
         JSONObject filters = new JSONObject(json.toString());
         assertFalse(FetcherUtil.areValidAttributionFilters(filters, mFlags, false));
@@ -434,10 +434,15 @@ public final class FetcherUtilTest {
     @Test
     public void testAreValidAttributionFilters_filterSet_tooManyFilterMaps() throws JSONException {
         StringBuilder json = new StringBuilder("[");
-        json.append(IntStream.range(0, MAX_FILTER_MAPS_PER_FILTER_SET + 1)
-                .mapToObj(i -> "{\"filter-string-1\": [\"filter-value-1\"],"
-                        + "\"filter-string-2\": [\"filter-value-" + i + "\"]}")
-                .collect(Collectors.joining(",")));
+        json.append(
+                IntStream.range(0, Flags.DEFAULT_MEASUREMENT_MAX_FILTER_MAPS_PER_FILTER_SET + 1)
+                        .mapToObj(
+                                i ->
+                                        "{\"filter-string-1\": [\"filter-value-1\"],"
+                                                + "\"filter-string-2\": [\"filter-value-"
+                                                + i
+                                                + "\"]}")
+                        .collect(Collectors.joining(",")));
         json.append("]");
         JSONArray filters = new JSONArray(json.toString());
         assertFalse(FetcherUtil.areValidAttributionFilters(filters, mFlags, false));
@@ -448,9 +453,10 @@ public final class FetcherUtilTest {
         StringBuilder json = new StringBuilder("[{"
                 + "\"filter-string-1\": [\"filter-value-1\"],"
                 + "\"filter-string-2\": [");
-        json.append(IntStream.range(0, MAX_VALUES_PER_ATTRIBUTION_FILTER + 1)
-                .mapToObj(i -> "\"filter-value-" + i + "\"")
-                .collect(Collectors.joining(",")));
+        json.append(
+                IntStream.range(0, Flags.DEFAULT_MEASUREMENT_MAX_VALUES_PER_ATTRIBUTION_FILTER + 1)
+                        .mapToObj(i -> "\"filter-value-" + i + "\"")
+                        .collect(Collectors.joining(",")));
         json.append("]}]");
         JSONArray filters = new JSONArray(json.toString());
         assertFalse(FetcherUtil.areValidAttributionFilters(filters, mFlags, false));
@@ -461,9 +467,10 @@ public final class FetcherUtilTest {
         StringBuilder json = new StringBuilder("{"
                 + "\"filter-string-1\": [\"filter-value-1\"],"
                 + "\"filter-string-2\": [");
-        json.append(IntStream.range(0, MAX_VALUES_PER_ATTRIBUTION_FILTER + 1)
-                .mapToObj(i -> "\"filter-value-" + i + "\"")
-                .collect(Collectors.joining(",")));
+        json.append(
+                IntStream.range(0, Flags.DEFAULT_MEASUREMENT_MAX_VALUES_PER_ATTRIBUTION_FILTER + 1)
+                        .mapToObj(i -> "\"filter-value-" + i + "\"")
+                        .collect(Collectors.joining(",")));
         json.append("]}");
         JSONObject filters = new JSONObject(json.toString());
         assertFalse(FetcherUtil.areValidAttributionFilters(filters, mFlags, false));
