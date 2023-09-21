@@ -148,6 +148,7 @@ public class GetAdSelectionDataRunner {
                         mBackgroundExecutorService,
                         mFlags.getFledgeCustomAudienceActiveTimeWindowInMs(),
                         mFlags.getFledgeAuctionServerEnableAdFilterInGetAdSelectionData(),
+                        mFlags.getProtectedSignalsPeriodicEncodingEnabled(),
                         AuctionServerDataCompressorFactory.getDataCompressor(
                                 mFlags.getFledgeAuctionServerCompressionAlgorithmVersion()));
         mDataCompressor =
@@ -213,6 +214,7 @@ public class GetAdSelectionDataRunner {
                         mBackgroundExecutorService,
                         mFlags.getFledgeCustomAudienceActiveTimeWindowInMs(),
                         mFlags.getFledgeAuctionServerEnableAdFilterInGetAdSelectionData(),
+                        mFlags.getProtectedSignalsPeriodicEncodingEnabled(),
                         AuctionServerDataCompressorFactory.getDataCompressor(
                                 mFlags.getFledgeAuctionServerCompressionAlgorithmVersion()));
         mDataCompressor =

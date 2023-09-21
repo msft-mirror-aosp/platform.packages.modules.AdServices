@@ -68,6 +68,9 @@ public class AdSelectionDataE2ETest {
     private static final String CUSTOM_AUDIENCE_NO_AD_RENDER_ID = "CustomAudienceNoAdRenderId.json";
     private static final String SELLER = "example.com";
 
+    private static final String AD_WINNER_DOMAIN =
+            "https://performance-fledge-static-5jyy5ulagq-uc.a.run.app/";
+
     private static final int API_RESPONSE_TIMEOUT_SECONDS = 100;
     private static final AdSelectionClient AD_SELECTION_CLIENT =
             new AdSelectionClient.Builder()
@@ -135,7 +138,9 @@ public class AdSelectionDataE2ETest {
 
         CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
 
-        Assert.assertEquals("test-winningCA.com/1a", adSelectionOutcome.getRenderUri().toString());
+        Assert.assertEquals(
+                AD_WINNER_DOMAIN + getWinningAdRenderIdForDummyScripts(customAudiences),
+                adSelectionOutcome.getRenderUri().toString());
     }
 
     @Test
@@ -175,7 +180,9 @@ public class AdSelectionDataE2ETest {
 
         CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
 
-        Assert.assertEquals("test-winningCA.com/1a", adSelectionOutcome.getRenderUri().toString());
+        Assert.assertEquals(
+                AD_WINNER_DOMAIN + getWinningAdRenderIdForDummyScripts(customAudiences),
+                adSelectionOutcome.getRenderUri().toString());
     }
 
     @Test
@@ -214,5 +221,16 @@ public class AdSelectionDataE2ETest {
         CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
 
         Assert.assertTrue(adSelectionOutcome.getRenderUri().toString().isEmpty());
+    }
+
+    private String getWinningAdRenderIdForDummyScripts(List<CustomAudience> customAudiences) {
+        for (CustomAudience ca : customAudiences) {
+            // Logic obtained from our custom dummy bidding script where we bid the highest
+            // for the first ad in the CA winningCA
+            if (ca.getName().equals("winningCA")) {
+                return ca.getAds().get(0).getAdRenderId();
+            }
+        }
+        return "";
     }
 }
