@@ -27,6 +27,7 @@ import android.adservices.adid.IGetAdIdCallback;
 import android.annotation.NonNull;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.adid.AdIdWorker;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -52,6 +53,7 @@ public class AdIdFetcher {
     @NonNull private final AdIdWorker mAdIdWorker;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
     @NonNull private final ScheduledThreadPoolExecutor mScheduledExecutor;
+    @NonNull private final Flags mFlags;
 
     /**
      * Default constructor
@@ -63,14 +65,17 @@ public class AdIdFetcher {
     public AdIdFetcher(
             @NonNull AdIdWorker adIdWorker,
             @NonNull final ExecutorService lightweightExecutorService,
-            @NonNull final ScheduledThreadPoolExecutor scheduledExecutor) {
+            @NonNull final ScheduledThreadPoolExecutor scheduledExecutor,
+            @NonNull final Flags flags) {
         Objects.requireNonNull(adIdWorker);
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(scheduledExecutor);
+        Objects.requireNonNull(flags);
 
         mAdIdWorker = adIdWorker;
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
         mScheduledExecutor = scheduledExecutor;
+        mFlags = flags;
     }
 
     /**
@@ -84,6 +89,13 @@ public class AdIdFetcher {
      */
     public ListenableFuture<Boolean> isLimitedAdTrackingEnabled(
             @NonNull String packageName, int callingUid) {
+        if (mFlags.getAdIdKillSwitch()) {
+            sLogger.v(
+                    "AdIdService kill switch is enabled, returning isLimitedAdTrackingEnabled as"
+                            + " %b",
+                    DEFAULT_IS_LAT_ENABLED);
+            return Futures.immediateFuture(DEFAULT_IS_LAT_ENABLED);
+        }
         return FluentFuture.from(
                         getFutureWithTimeout(
                                 convertToCallback(packageName, callingUid),
@@ -94,7 +106,8 @@ public class AdIdFetcher {
                         TimeoutException.class,
                         timeoutException -> {
                             sLogger.v(
-                                    "Timeout after %d ms while calling getAdId api. Returning %b",
+                                    "Timeout after %d ms while calling getAdId api. Returning"
+                                            + " isLimitedAdTrackingEnabled %b",
                                     AD_ID_TIMEOUT_IN_MS, DEFAULT_IS_LAT_ENABLED);
                             return DEFAULT_IS_LAT_ENABLED;
                         },
@@ -103,7 +116,8 @@ public class AdIdFetcher {
                         IllegalStateException.class,
                         illegalStateException -> {
                             sLogger.v(
-                                    "IllegalStateException while calling getAdId api. Returning %b",
+                                    "IllegalStateException while calling getAdId api. Returning"
+                                            + " isLimitedAdTrackingEnabled %b",
                                     DEFAULT_IS_LAT_ENABLED);
                             return DEFAULT_IS_LAT_ENABLED;
                         },
