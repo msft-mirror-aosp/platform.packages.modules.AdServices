@@ -1270,7 +1270,7 @@ public abstract class E2ETest {
         // Aggregate reports are scheduled close to trigger time. Add aggregate report jobs to cover
         // the time span outlined by triggers.
         List<Action> aggregateReportingJobActions = new ArrayList<>();
-        long window = SystemHealthParams.MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS - 10;
+        long window = Flags.DEFAULT_MEASUREMENT_MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS - 10;
         long t = firstTriggerTime;
 
         do {

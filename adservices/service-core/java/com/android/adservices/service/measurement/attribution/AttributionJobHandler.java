@@ -44,7 +44,6 @@ import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.ReportSpec;
 import com.android.adservices.service.measurement.ReportSpecUtil;
 import com.android.adservices.service.measurement.Source;
-import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
@@ -147,8 +146,10 @@ class AttributionJobHandler {
         }
         List<String> pendingTriggers = pendingTriggersOpt.get();
 
-        for (int i = 0; i < pendingTriggers.size()
-                && i < SystemHealthParams.MAX_ATTRIBUTIONS_PER_INVOCATION; i++) {
+        for (int i = 0;
+                i < pendingTriggers.size()
+                        && i < mFlags.getMeasurementMaxAttributionsPerInvocation();
+                i++) {
             AttributionStatus attributionStatus = new AttributionStatus();
             boolean success = performAttribution(pendingTriggers.get(i), attributionStatus);
             logAttributionStats(attributionStatus);
@@ -160,7 +161,7 @@ class AttributionJobHandler {
         }
 
         // Reschedule if there are unprocessed pending triggers.
-        return SystemHealthParams.MAX_ATTRIBUTIONS_PER_INVOCATION >= pendingTriggers.size();
+        return mFlags.getMeasurementMaxAttributionsPerInvocation() >= pendingTriggers.size();
     }
 
     /**
@@ -292,14 +293,14 @@ class AttributionJobHandler {
                 measurementDao.getNumAggregateReportsPerDestination(
                         trigger.getAttributionDestination(), trigger.getDestinationType());
 
-        if (numReportsPerDestination >= SystemHealthParams.getMaxAggregateReportsPerDestination()) {
+        if (numReportsPerDestination >= mFlags.getMeasurementMaxAggregateReportsPerDestination()) {
             LogUtil.d(
                     String.format(
                             Locale.ENGLISH,
                             "Aggregate reports for destination %1$s exceeds system health limit of"
                                     + " %2$d.",
                             trigger.getAttributionDestination(),
-                            SystemHealthParams.getMaxAggregateReportsPerDestination()));
+                            mFlags.getMeasurementMaxAggregateReportsPerDestination()));
             mDebugReportApi.scheduleTriggerDebugReport(
                     source,
                     trigger,
@@ -617,14 +618,14 @@ class AttributionJobHandler {
                 measurementDao.getNumEventReportsPerDestination(
                         trigger.getAttributionDestination(), trigger.getDestinationType());
 
-        if (numReports >= SystemHealthParams.getMaxEventReportsPerDestination()) {
+        if (numReports >= mFlags.getMeasurementMaxEventReportsPerDestination()) {
             LogUtil.d(
                     String.format(
                             Locale.ENGLISH,
                             "Event reports for destination %1$s exceeds system health limit of"
                                     + " %2$d.",
                             trigger.getAttributionDestination(),
-                            SystemHealthParams.getMaxEventReportsPerDestination()));
+                            mFlags.getMeasurementMaxEventReportsPerDestination()));
             mDebugReportApi.scheduleTriggerDebugReport(
                     source,
                     trigger,

@@ -63,7 +63,6 @@ import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
-import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.TriggerFixture;
 import com.android.adservices.service.measurement.WebUtil;
@@ -1960,7 +1959,7 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mLogger));
 
         // Execution
-        doReturn((long) SystemHealthParams.getMaxSourcesPerPublisher())
+        doReturn((long) Flags.MEASUREMENT_MAX_SOURCES_PER_PUBLISHER)
                 .when(mMeasurementDao)
                 .getNumSourcesPerPublisher(any(), anyInt());
         boolean status =
@@ -2112,7 +2111,7 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mSourceNoiseHandler,
                                 mFlags,
                                 mLogger));
-        doReturn((long) SystemHealthParams.getMaxSourcesPerPublisher())
+        doReturn((long) Flags.MEASUREMENT_MAX_SOURCES_PER_PUBLISHER)
                 .when(mMeasurementDao)
                 .getNumSourcesPerPublisher(any(), anyInt());
 
@@ -2145,7 +2144,7 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mFlags,
                                 mLogger));
 
-        doReturn((long) SystemHealthParams.getMaxSourcesPerPublisher())
+        doReturn((long) Flags.MEASUREMENT_MAX_SOURCES_PER_PUBLISHER)
                 .when(mMeasurementDao)
                 .getNumSourcesPerPublisher(any(), anyInt());
 

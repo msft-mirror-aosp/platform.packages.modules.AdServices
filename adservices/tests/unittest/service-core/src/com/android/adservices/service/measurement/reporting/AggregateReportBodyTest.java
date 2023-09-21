@@ -252,6 +252,9 @@ public class AggregateReportBodyTest {
         JSONObject aggregateServicePayloads = aggregationServicePayloadsJson.getJSONObject(0);
 
         assertEquals(key.getKeyId(), aggregateServicePayloads.get("key_id"));
+        assertEquals(
+                AggregateCryptoConverter.encode(DEBUG_CLEARTEXT_PAYLOAD),
+                aggregateServicePayloads.opt("debug_cleartext_payload"));
         assertEncodedDebugPayload(aggregateServicePayloads);
         assertEncryptedPayload(aggregateServicePayloads);
     }
@@ -268,9 +271,7 @@ public class AggregateReportBodyTest {
         JSONObject aggregateServicePayloads = aggregationServicePayloadsJson.getJSONObject(0);
 
         assertEquals(key.getKeyId(), aggregateServicePayloads.get("key_id"));
-        assertEquals(
-                AggregateCryptoConverter.encode(DEBUG_CLEARTEXT_PAYLOAD),
-                aggregateServicePayloads.opt("debug_cleartext_payload"));
+        assertNull(aggregateServicePayloads.opt("debug_cleartext_payload"));
         assertEncodedDebugPayload(aggregateServicePayloads);
         assertEncryptedPayload(aggregateServicePayloads);
     }
