@@ -310,7 +310,7 @@ public class FledgeE2ETest {
     private AdSelectionServiceImpl mAdSelectionService;
 
     private static final Flags DEFAULT_FLAGS =
-            new FledgeE2ETestFlags(false, true, true, true, false, false, false, false);
+            new FledgeE2ETestFlags(false, true, true, true, false, false, false, false, false);
     private MockWebServerRule.RequestMatcher<String> mRequestMatcherPrefixMatch;
     private Uri mLocalhostBuyerDomain;
 
@@ -387,7 +387,11 @@ public class FledgeE2ETest {
                         .getAdSelectionDebugReportDao();
         mMockAdIdWorker = new MockAdIdWorker(CONTEXT_SPY, DEFAULT_FLAGS);
         mAdIdFetcher =
-                new AdIdFetcher(mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor);
+                new AdIdFetcher(
+                        mMockAdIdWorker,
+                        mLightweightExecutorService,
+                        mScheduledExecutor,
+                        DEFAULT_FLAGS);
         initClients(false, true, false, false);
 
         mRequestMatcherPrefixMatch = (a, b) -> !b.isEmpty() && a.startsWith(b);
@@ -1876,7 +1880,7 @@ public class FledgeE2ETest {
 
     @Test
     public void testFledgeFlowSuccessWithDebugReportingSentImmediately() throws Exception {
-        initClients(false, false, true, false, false, true, false, true);
+        initClients(false, false, true, false, false, true, false, true, false);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         setupAdSelectionConfig();
         joinCustomAudienceAndAssertSuccess(
@@ -1931,7 +1935,7 @@ public class FledgeE2ETest {
 
     @Test
     public void testFledgeFlowSuccessWithDebugReportingSentInBatch() throws Exception {
-        initClients(false, false, true, false, false, true, false, false);
+        initClients(false, false, true, false, false, true, false, false, false);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         setupAdSelectionConfig();
         joinCustomAudienceAndAssertSuccess(
@@ -2024,7 +2028,7 @@ public class FledgeE2ETest {
 
     @Test
     public void testFledgeFlowSuccessWithDebugReportingDisabledWhenLatEnabled() throws Exception {
-        initClients(false, false, true, false, false, true, false, false);
+        initClients(false, false, true, false, false, true, false, false, false);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         setupAdSelectionConfig();
         joinCustomAudienceAndAssertSuccess(
@@ -2061,6 +2065,74 @@ public class FledgeE2ETest {
         doNothing()
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
         doNothing().when(() -> DebugReportSenderJobService.scheduleIfNeeded(any(), anyBoolean()));
+        mMockAdIdWorker.setResult(MockAdIdWorker.MOCK_AD_ID, true);
+
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelectionAndWaitForFullCallback(
+                        mAdSelectionService, mAdSelectionConfig, CommonFixture.TEST_PACKAGE_NAME);
+
+        assertTrue(resultsCallback.mIsSuccess);
+        mMockWebServerRule.verifyMockServerRequests(
+                server,
+                5,
+                ImmutableList.of(
+                        SELLER_DECISION_LOGIC_URI_PATH,
+                        BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1,
+                        BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_2,
+                        BUYER_TRUSTED_SIGNAL_URI_PATH,
+                        SELLER_TRUSTED_SIGNAL_URI_PATH + SELLER_TRUSTED_SIGNAL_PARAMS),
+                mRequestMatcherPrefixMatch);
+        List<DBAdSelectionDebugReport> debugReports =
+                mAdSelectionDebugReportDao.getDebugReportsBeforeTime(
+                        CommonFixture.FIXED_NEXT_ONE_DAY, 1000);
+        assertNotNull(debugReports);
+        assertTrue(debugReports.isEmpty());
+        verify(
+                () -> DebugReportSenderJobService.scheduleIfNeeded(any(Context.class), eq(false)),
+                never());
+    }
+
+    @Test
+    public void testFledgeFlowSuccessWithDebugReportingDisabledWhenAdIdServiceDisabled()
+            throws Exception {
+        initClients(false, false, true, false, false, true, false, false, true);
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        setupAdSelectionConfig();
+        joinCustomAudienceAndAssertSuccess(
+                createCustomAudience(
+                        mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_1, BIDS_FOR_BUYER_1));
+        joinCustomAudienceAndAssertSuccess(
+                createCustomAudience(
+                        mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_2, BIDS_FOR_BUYER_2));
+        MockWebServer server =
+                getMockWebServer(
+                        getDecisionLogicJsWithDebugReporting(
+                                mLocalhostBuyerDomain
+                                                .buildUpon()
+                                                .path(SELLER_DEBUG_REPORT_WIN_PATH)
+                                                .build()
+                                        + DEBUG_REPORT_WINNING_BID_PARAM,
+                                mLocalhostBuyerDomain
+                                                .buildUpon()
+                                                .path(SELLER_DEBUG_REPORT_LOSS_PATH)
+                                                .build()
+                                        + DEBUG_REPORT_WINNING_BID_PARAM),
+                        getBiddingLogicWithDebugReporting(
+                                mLocalhostBuyerDomain
+                                                .buildUpon()
+                                                .path(BUYER_DEBUG_REPORT_WIN_PATH)
+                                                .build()
+                                        + DEBUG_REPORT_WINNING_BID_PARAM,
+                                mLocalhostBuyerDomain
+                                                .buildUpon()
+                                                .path(BUYER_DEBUG_REPORT_LOSS_PATH)
+                                                .build()
+                                        + DEBUG_REPORT_WINNING_BID_PARAM),
+                        /* debugReportingLatch= */ null);
+        doNothing()
+                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
+        doNothing().when(() -> DebugReportSenderJobService.scheduleIfNeeded(any(), anyBoolean()));
+        mMockAdIdWorker.setResult(MockAdIdWorker.MOCK_AD_ID, false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelectionAndWaitForFullCallback(
@@ -2090,7 +2162,7 @@ public class FledgeE2ETest {
     @Test
     public void testFledgeFlowSuccessWithMockServer_DoesNotReportToBuyerWhenEnrollmentFails()
             throws Exception {
-        initClients(false, true, true, false, false, false, false, false);
+        initClients(false, true, true, false, false, false, false, false, false);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         doReturn(false)
                 .when(mConsentManagerMock)
@@ -3179,7 +3251,7 @@ public class FledgeE2ETest {
 
     @Test
     public void testFledgeFlowSuccessWithAppInstallFlagOffWithMockServer() throws Exception {
-        initClients(false, true, false, true, false, false, false, false);
+        initClients(false, true, false, true, false, false, false, false, false);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         doReturn(false)
                 .when(mConsentManagerMock)
@@ -4217,6 +4289,7 @@ public class FledgeE2ETest {
                 cpcBillingEnabled,
                 false,
                 dataVersionHeaderEnabled,
+                false,
                 false);
     }
 
@@ -4228,7 +4301,8 @@ public class FledgeE2ETest {
             boolean cpcBillingEnabled,
             boolean debugReportingEnabled,
             boolean dataVersionHeaderEnabled,
-            boolean debugReportSendImmediately) {
+            boolean debugReportSendImmediately,
+            boolean adIdKillSwitch) {
         Flags flags =
                 new FledgeE2ETestFlags(
                         gaUXEnabled,
@@ -4238,7 +4312,8 @@ public class FledgeE2ETest {
                         cpcBillingEnabled,
                         debugReportingEnabled,
                         dataVersionHeaderEnabled,
-                        debugReportSendImmediately);
+                        debugReportSendImmediately,
+                        adIdKillSwitch);
 
         mCustomAudienceService =
                 new CustomAudienceServiceImpl(
@@ -4277,7 +4352,9 @@ public class FledgeE2ETest {
                 .thenReturn(DevContext.createForDevOptionsDisabled());
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, flags);
-
+        mAdIdFetcher =
+                new AdIdFetcher(
+                        mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor, flags);
         // Create an instance of AdSelection Service with real dependencies
         mAdSelectionService =
                 new AdSelectionServiceImpl(
@@ -4811,6 +4888,7 @@ public class FledgeE2ETest {
         private final boolean mDebugReportingEnabled;
         private final boolean mDataVersionHeaderEnabled;
         private final boolean mDebugReportsSendImmediately;
+        private final boolean mAdIdKillSwitch;
 
         FledgeE2ETestFlags(
                 boolean isGaUxEnabled,
@@ -4820,7 +4898,8 @@ public class FledgeE2ETest {
                 boolean cpcBillingEnabled,
                 boolean debugReportingEnabled,
                 boolean dataVersionHeaderEnabled,
-                boolean debugReportsSendImmediately) {
+                boolean debugReportsSendImmediately,
+                boolean adIdKillSwitch) {
             mIsGaUxEnabled = isGaUxEnabled;
             mRegisterAdBeaconEnabled = registerAdBeaconEnabled;
             mFiltersEnabled = filtersEnabled;
@@ -4829,6 +4908,7 @@ public class FledgeE2ETest {
             mDebugReportingEnabled = debugReportingEnabled;
             mDataVersionHeaderEnabled = dataVersionHeaderEnabled;
             mDebugReportsSendImmediately = debugReportsSendImmediately;
+            mAdIdKillSwitch = adIdKillSwitch;
         }
 
         @Override
@@ -4912,8 +4992,14 @@ public class FledgeE2ETest {
             return false;
         }
 
+        @Override
         public boolean getFledgeEventLevelDebugReportSendImmediately() {
             return mDebugReportsSendImmediately;
+        }
+
+        @Override
+        public boolean getAdIdKillSwitch() {
+            return mAdIdKillSwitch;
         }
     }
 }
