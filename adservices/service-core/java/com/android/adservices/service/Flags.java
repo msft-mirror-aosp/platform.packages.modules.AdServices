@@ -980,7 +980,7 @@ public interface Flags {
         return FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS;
     }
 
-    boolean PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED = false;
+    boolean PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED = true;
     long PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS = 1L * 60L * 60L * 1000L; // 1 hour
     long PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS = 5L * 60L * 1000L; // 5 minutes
     int PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES = (int) (1.5 * 1024); // 1.5 KB
@@ -1568,7 +1568,7 @@ public interface Flags {
     }
 
     // Protected signals cleanup feature flag disabled by default
-    boolean PROTECTED_SIGNALS_CLEANUP_ENABLED = false;
+    boolean PROTECTED_SIGNALS_CLEANUP_ENABLED = true;
 
     /** Returns {@code true} if protected signals cleanup is enabled. */
     default boolean getProtectedSignalsCleanupEnabled() {
