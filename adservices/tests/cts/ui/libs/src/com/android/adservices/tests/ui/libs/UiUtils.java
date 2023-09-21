@@ -475,7 +475,7 @@ public class UiUtils {
         scrollToThenClickElementContainingText(
                 device,
                 isOTA
-                        ? getOTAString(context, R.string.notificationUI_left_control_button_text)
+                        ? "Manage privacy settings!"
                         : getString(context, R.string.notificationUI_left_control_button_text));
 
         // Wait for the app to appear
@@ -539,8 +539,8 @@ public class UiUtils {
         scrollToBeginning(device);
         UiObject2 scrollView =
                 device.findObject(By.clazz(ANDROID_WIDGET_SCROLLVIEW).scrollable(true));
-        scrollView.findObject(By.text(targetStr));
-        return scrollView.scrollUntil(Direction.DOWN, Until.findObject(By.text(targetStr)));
+        scrollView.scrollUntil(Direction.DOWN, Until.findObject(By.textContains(targetStr)));
+        return device.findObject(By.textContains(targetStr));
     }
 
     private static UiObject2 scrollToElement(Context context, UiDevice device, int resId) {
@@ -555,7 +555,7 @@ public class UiUtils {
     private static void scrollToBeginning(UiDevice device) {
         UiObject2 scrollView =
                 device.findObject(By.clazz(ANDROID_WIDGET_SCROLLVIEW).scrollable(true));
-        scrollView.swipe(Direction.UP, 100, 50);
+        scrollView.swipe(Direction.DOWN, 0.7f, 500);
     }
 
     public static UiObject2 getConsentSwitch(UiDevice device) {
