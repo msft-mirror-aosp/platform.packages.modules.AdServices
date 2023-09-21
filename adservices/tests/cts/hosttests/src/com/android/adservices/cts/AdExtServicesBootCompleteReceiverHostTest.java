@@ -45,7 +45,8 @@ public class AdExtServicesBootCompleteReceiverHostTest extends AdServicesHostSid
     // Sets flags used in the test (and automatically reset them at the end)
     @Rule(order = 1)
     public final AdServicesHostSideFlagsSetterRule flags =
-            AdServicesHostSideFlagsSetterRule.forCompatModeEnabledTests();
+            AdServicesHostSideFlagsSetterRule.forCompatModeEnabledTests()
+                    .setAdServicesEnabled(true);
 
     // TODO(b/295269584): improve rule to support range of versions.
     @Test
