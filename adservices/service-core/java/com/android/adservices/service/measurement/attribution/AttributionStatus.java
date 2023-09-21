@@ -20,9 +20,7 @@ import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 
-import java.util.Optional;
 
-import javax.annotation.Nullable;
 
 /** POJO for storing attribution status */
 public class AttributionStatus {
@@ -67,7 +65,7 @@ public class AttributionStatus {
     private FailureType mFailureType;
     private boolean mIsSourceDerived;
     private boolean mIsInstallAttribution;
-    @Nullable private Long mAttributionDelay;
+    private long mAttributionDelay;
     private String mSourceRegistrant;
 
     public AttributionStatus() {
@@ -78,6 +76,7 @@ public class AttributionStatus {
         mIsSourceDerived = false;
         mIsInstallAttribution = false;
         mSourceRegistrant = "";
+        mAttributionDelay = 0L;
     }
 
     /** Get the type of the source that is getting attributed. */
@@ -196,12 +195,12 @@ public class AttributionStatus {
     }
 
     /** Get attribution delay. */
-    public Optional<Long> getAttributionDelay() {
-        return Optional.ofNullable(mAttributionDelay);
+    public long getAttributionDelay() {
+        return mAttributionDelay;
     }
 
     /** Set attribution delay. */
-    public void setAttributionDelay(Long attributionDelay) {
+    public void setAttributionDelay(long attributionDelay) {
         mAttributionDelay = attributionDelay;
     }
 

@@ -221,6 +221,7 @@ public class EventReportingJobHandler {
             return AdServicesStatusUtils.STATUS_IO_ERROR;
         }
         EventReport eventReport = eventReportOpt.get();
+        reportingStatus.setReportingDelay(System.currentTimeMillis() - eventReport.getReportTime());
         reportingStatus.setSourceRegistrant(getAppPackageName(eventReport));
         if (mIsDebugInstance
                 && eventReport.getDebugReportStatus() != EventReport.DebugReportStatus.PENDING) {
@@ -252,17 +253,15 @@ public class EventReportingJobHandler {
                                 });
 
                 if (success) {
-                    long deliveryTime = System.currentTimeMillis();
-                    reportingStatus.setReportingDelay(deliveryTime - eventReport.getReportTime());
                     return AdServicesStatusUtils.STATUS_SUCCESS;
                 } else {
                     reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.DATASTORE);
                     return AdServicesStatusUtils.STATUS_IO_ERROR;
                 }
             } else {
-                // TODO: Determine behavior for other response codes?
                 reportingStatus.setFailureStatus(
                         ReportingStatus.FailureStatus.UNSUCCESSFUL_HTTP_RESPONSE_CODE);
+                // TODO: Determine behavior for other response codes?
                 return AdServicesStatusUtils.STATUS_IO_ERROR;
             }
         } catch (IOException e) {
@@ -348,9 +347,6 @@ public class EventReportingJobHandler {
     }
 
     private void logReportingStats(ReportingStatus reportingStatus) {
-        if (!reportingStatus.getReportingDelay().isPresent()) {
-            reportingStatus.setReportingDelay(0L);
-        }
         mLogger.logMeasurementReports(
                 new MeasurementReportsStats.Builder()
                         .setCode(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED)
@@ -358,7 +354,7 @@ public class EventReportingJobHandler {
                         .setResultCode(reportingStatus.getUploadStatus().getValue())
                         .setFailureType(reportingStatus.getFailureStatus().getValue())
                         .setUploadMethod(reportingStatus.getUploadMethod().getValue())
-                        .setReportingDelay(reportingStatus.getReportingDelay().get())
+                        .setReportingDelay(reportingStatus.getReportingDelay())
                         .setSourceRegistrant(reportingStatus.getSourceRegistrant())
                         .build());
     }
