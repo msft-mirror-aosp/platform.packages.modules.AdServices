@@ -113,6 +113,7 @@ public class OTAStringsUiAutomatorTest {
     public void checkOTAStringsNotificationAndSettingsPageTest()
             throws UiObjectNotFoundException, Exception {
         UiUtils.enableBeta();
+        UiUtils.setAsRowDevice();
         AdservicesTestHelper.killAdservicesProcess(sContext);
         sCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
         UiUtils.verifyNotificationAndSettingsPage(sContext, sDevice, true);
