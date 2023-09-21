@@ -46,6 +46,7 @@ import com.android.adservices.errorlogging.AdServicesErrorStats;
 import com.android.adservices.errorlogging.StatsdAdServicesErrorLogger;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.spe.stats.ExecutionReportedStats;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
@@ -85,6 +86,15 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
         return sStatsdAdServicesLogger;
     }
 
+    private String getAllowlistedAppPackageName(String appPackageName) {
+        if (!mFlags.getMeasurementEnableAppPackageNameLogging()
+                || !AllowLists.isPackageAllowListed(
+                        mFlags.getMeasurementAppPackageNameLoggingAllowlist(), appPackageName)) {
+            return "";
+        }
+        return appPackageName;
+    }
+
     /** log method for measurement reporting. */
     public void logMeasurementReports(MeasurementReportsStats measurementReportsStats) {
         AdServicesStatsLog.write(
@@ -93,7 +103,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 measurementReportsStats.getResultCode(),
                 measurementReportsStats.getFailureType(),
                 measurementReportsStats.getUploadMethod(),
-                measurementReportsStats.getReportingDelay());
+                measurementReportsStats.getReportingDelay(),
+                getAllowlistedAppPackageName(measurementReportsStats.getSourceRegistrant()));
     }
 
     /** log method for API call stats. */
@@ -137,7 +148,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 stats.getSurfaceType(),
                 stats.getRegistrationStatus(),
                 stats.getFailureType(),
-                stats.getRegistrationDelay());
+                stats.getRegistrationDelay(),
+                getAllowlistedAppPackageName(stats.getSourceRegistrant()));
     }
 
     @Override
@@ -323,7 +335,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 stats.getAttributionType(),
                 stats.isMatched(),
                 stats.getDebugJoinKeyHashedValue(),
-                stats.getDebugJoinKeyHashLimit());
+                stats.getDebugJoinKeyHashLimit(),
+                getAllowlistedAppPackageName(stats.getSourceRegistrant()));
     }
 
     @Override
@@ -334,7 +347,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 stats.getAttributionType(),
                 stats.isMatched(),
                 stats.getNumUniqueAdIds(),
-                stats.getNumUniqueAdIdsLimit());
+                stats.getNumUniqueAdIdsLimit(),
+                getAllowlistedAppPackageName(stats.getSourceRegistrant()));
     }
 
     @Override
@@ -371,13 +385,16 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 measurementAttributionStats.getFailureType(),
                 measurementAttributionStats.isSourceDerived(),
                 measurementAttributionStats.isInstallAttribution(),
-                measurementAttributionStats.getAttributionDelay());
+                measurementAttributionStats.getAttributionDelay(),
+                getAllowlistedAppPackageName(measurementAttributionStats.getSourceRegistrant()));
     }
 
     /** log method for measurement wipeout. */
     public void logMeasurementWipeoutStats(MeasurementWipeoutStats measurementWipeoutStats) {
         AdServicesStatsLog.write(
-                measurementWipeoutStats.getCode(), measurementWipeoutStats.getWipeoutType());
+                measurementWipeoutStats.getCode(),
+                measurementWipeoutStats.getWipeoutType(),
+                getAllowlistedAppPackageName(measurementWipeoutStats.getSourceRegistrant()));
     }
 
     /** log method for measurement attribution. */
@@ -386,7 +403,9 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
         AdServicesStatsLog.write(
                 measurementDelayedSourceRegistrationStats.getCode(),
                 measurementDelayedSourceRegistrationStats.getRegistrationStatus(),
-                measurementDelayedSourceRegistrationStats.getRegistrationDelay());
+                measurementDelayedSourceRegistrationStats.getRegistrationDelay(),
+                getAllowlistedAppPackageName(
+                        measurementDelayedSourceRegistrationStats.getRegistrant()));
     }
 
     /** log method for consent migrations. */

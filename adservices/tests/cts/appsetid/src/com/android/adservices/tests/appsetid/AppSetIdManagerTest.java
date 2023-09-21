@@ -15,7 +15,9 @@
  */
 package com.android.adservices.tests.appsetid;
 
+import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import android.adservices.appsetid.AppSetId;
@@ -25,6 +27,7 @@ import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
 import android.os.SystemProperties;
 import android.text.TextUtils;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
@@ -32,7 +35,11 @@ import androidx.test.filters.FlakyTest;
 import androidx.test.runner.AndroidJUnit4;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.adservices.common.OutcomeReceiverForTests;
+import com.android.adservices.common.RequiresLowRamDevice;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.compatibility.common.util.ConnectivityUtils;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
@@ -56,13 +63,19 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @RunWith(AndroidJUnit4.class)
 public class AppSetIdManagerTest {
+    private static final String TAG = AppSetIdManagerTest.class.getSimpleName();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final float DEFAULT_APPSETID_REQUEST_PERMITS_PER_SECOND = 5f;
 
     private static String sPreviousAppAllowList;
 
-    @Rule
+    // Ignore tests when device is not at least S
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    // Ignore tests when device is not supported
+    @Rule(order = 1)
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
             new AdServicesDeviceSupportedRule();
 
@@ -77,6 +90,8 @@ public class AppSetIdManagerTest {
 
     @Before
     public void setup() throws Exception {
+        // Skip the test if it runs on unsupported platforms
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
         overrideAppSetIdKillSwitch(true);
         // Cool-off rate limiter in case it was initialized by another test
         TimeUnit.SECONDS.sleep(1);
@@ -120,6 +135,7 @@ public class AppSetIdManagerTest {
 
                     @Override
                     public void onError(Exception error) {
+                        Log.e(TAG, "Failed to get AppSet Id!", error);
                         Assert.fail();
                     }
                 };
@@ -155,6 +171,23 @@ public class AppSetIdManagerTest {
                 (System.currentTimeMillis() - nowInMillis) < (1_000 / requestPerSecond);
         if (executedInLessThanOneSec) {
             assertTrue(reachedLimit);
+        }
+    }
+
+    @Test
+    @RequiresLowRamDevice
+    public void testAppSetIdManager_whenDeviceNotSupported() {
+        AppSetIdManager appSetIdManager = AppSetIdManager.get(sContext);
+        assertWithMessage("appSetIdManager").that(appSetIdManager).isNotNull();
+        OutcomeReceiverForTests<AppSetId> receiver = new OutcomeReceiverForTests<>();
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> appSetIdManager.getAppSetId(CALLBACK_EXECUTOR, receiver));
+
+        // TODO(b/295235571): remove assertThrows above and instead check the callback:
+        if (false) {
+            receiver.assertFailure(IllegalStateException.class);
         }
     }
 

@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement;
 
+import android.net.Uri;
+
 import com.android.adservices.service.measurement.util.Validation;
 
 import java.util.Objects;
@@ -37,6 +39,7 @@ public class Attribution {
     private final String mRegistrant;
     private final String mSourceId;
     private final String mTriggerId;
+    private final Uri mRegistrationOrigin;
 
     private Attribution(Builder builder) {
         this.mId = builder.mId;
@@ -49,6 +52,7 @@ public class Attribution {
         this.mRegistrant = builder.mRegistrant;
         this.mSourceId = builder.mSourceId;
         this.mTriggerId = builder.mTriggerId;
+        this.mRegistrationOrigin = builder.mRegistrationOrigin;
     }
 
     @Override
@@ -65,7 +69,8 @@ public class Attribution {
                 && Objects.equals(mEnrollmentId, attr.mEnrollmentId)
                 && Objects.equals(mRegistrant, attr.mRegistrant)
                 && Objects.equals(mSourceId, attr.mSourceId)
-                && Objects.equals(mTriggerId, attr.mTriggerId);
+                && Objects.equals(mTriggerId, attr.mTriggerId)
+                && Objects.equals(mRegistrationOrigin, attr.mRegistrationOrigin);
     }
 
     @Override
@@ -79,7 +84,8 @@ public class Attribution {
                 mTriggerTime,
                 mRegistrant,
                 mSourceId,
-                mTriggerId);
+                mTriggerId,
+                mRegistrationOrigin);
     }
 
     /** @return unique identifier for {@link Attribution} */
@@ -132,6 +138,13 @@ public class Attribution {
         return mTriggerId;
     }
 
+    /**
+     * @return {@link Trigger} registration origin
+     */
+    public Uri getRegistrationOrigin() {
+        return mRegistrationOrigin;
+    }
+
     /** Builder for AttributionRateLimit */
     public static final class Builder {
         private String mId;
@@ -144,6 +157,7 @@ public class Attribution {
         private String mRegistrant;
         private String mSourceId;
         private String mTriggerId;
+        private Uri mRegistrationOrigin;
 
         /** See {@link Attribution#getId()}. */
         public Builder setId(String id) {
@@ -202,6 +216,12 @@ public class Attribution {
         /** See {@link Attribution#getTriggerId()}. */
         public Builder setTriggerId(String triggerId) {
             mTriggerId = triggerId;
+            return this;
+        }
+
+        /** See {@link Attribution#getRegistrationOrigin()} ()}. */
+        public Builder setRegistrationOrigin(Uri registrationOrigin) {
+            mRegistrationOrigin = registrationOrigin;
             return this;
         }
 

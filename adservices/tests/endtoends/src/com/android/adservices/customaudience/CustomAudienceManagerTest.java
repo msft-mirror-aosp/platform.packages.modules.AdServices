@@ -39,7 +39,7 @@ import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.common.OutcomeReceiverForTests;
-import com.android.adservices.common.RequiresDeviceNotSupported;
+import com.android.adservices.common.RequiresLowRamDevice;
 import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.compatibility.common.util.ShellUtils;
@@ -74,12 +74,14 @@ public final class CustomAudienceManagerTest {
     // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
     // Ignore tests when device is not at least S
     @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevelRule = SdkLevelSupportRule.isAtLeastS();
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     // Skip the test if it runs on unsupported platforms.
     @Rule(order = 1)
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
             new AdServicesDeviceSupportedRule();
+
+    // TODO(b/294423183): refactor to use AdServicesFlagsSetterRule instead of PhFlagsFixture
 
     @Before
     public void setUp() throws TimeoutException {
@@ -209,8 +211,8 @@ public final class CustomAudienceManagerTest {
 
     @Ignore("TODO(b/295231590): remove annotation when bug is fixed")
     @Test
-    @RequiresDeviceNotSupported
-    public void testGetchAndJoinCustomAudience_onUnsupportedDevice() {
+    @RequiresLowRamDevice
+    public void testGetchAndJoinCustomAudience_lowRamDevice() {
         OutcomeReceiverForTests<Object> receiver = new OutcomeReceiverForTests<>();
 
         CustomAudienceManager manager = CustomAudienceManager.get(CONTEXT);
@@ -228,8 +230,8 @@ public final class CustomAudienceManagerTest {
 
     @Ignore("TODO(b/295231590): remove annotation when bug is fixed")
     @Test
-    @RequiresDeviceNotSupported
-    public void testLeaveCustomAudienceRequest_onUnsupportedDevice() {
+    @RequiresLowRamDevice
+    public void testLeaveCustomAudienceRequest_lowRamDevice() {
         OutcomeReceiverForTests<Object> receiver = new OutcomeReceiverForTests<>();
         CustomAudienceManager manager = CustomAudienceManager.get(CONTEXT);
         assertWithMessage("manager").that(manager).isNotNull();

@@ -71,6 +71,14 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
+     * Queries and returns the {@link Source}.
+     *
+     * @param sourceId ID of the requested Source
+     * @return the source registrant from requested Source
+     */
+    String getSourceRegistrant(@NonNull String sourceId) throws DatastoreException;
+
+    /**
      * Queries and returns the {@link Trigger}.
      *
      * @param triggerId Id of the request Trigger
@@ -123,13 +131,13 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
-     * Gets the count of distinct IDs of enrollments in the Attribution table in a time window with
-     * matching publisher and destination, excluding a given enrollment ID.
+     * Gets the count of distinct reporting origins in the Attribution table in a time window with
+     * matching publisher and destination, excluding a given reporting origin.
      */
-    Integer countDistinctEnrollmentsPerPublisherXDestinationInAttribution(
+    Integer countDistinctReportingOriginsPerPublisherXDestInAttribution(
             Uri sourceSite,
             Uri destination,
-            String excludedEnrollmentId,
+            Uri excludedReportingOrigin,
             long windowStartTime,
             long windowEndTime)
             throws DatastoreException;
@@ -165,11 +173,11 @@ public interface IMeasurementDao {
      * Gets the count of distinct IDs of enrollments in the Source table in a time window with
      * matching publisher and destination, excluding a given enrollment ID.
      */
-    Integer countDistinctEnrollmentsPerPublisherXDestinationInSource(
+    Integer countDistinctReportingOriginsPerPublisherXDestinationInSource(
             Uri publisher,
             @EventSurfaceType int publisherType,
             List<Uri> destinations,
-            String excludedEnrollmentId,
+            Uri excludedReportingOrigin,
             long windowStartTime,
             long windowEndTime)
             throws DatastoreException;
@@ -650,6 +658,17 @@ public interface IMeasurementDao {
      * @param enrollmentId enrollment ID
      */
     void insertIgnoredSourceForEnrollment(@NonNull String sourceId, @NonNull String enrollmentId)
+            throws DatastoreException;
+
+    /**
+     * Increments Retry Counter for EventReporting Records and return the updated retry count. This
+     * is used for Retry Limiting.
+     *
+     * @param id Primary key id of Record in Measurement Event Report Table.
+     * @param reportType KeyValueData.DataType corresponding with Record type being incremented.
+     * @return current report count
+     */
+    int incrementAndGetReportingRetryCount(String id, DataType reportType)
             throws DatastoreException;
 
     /**

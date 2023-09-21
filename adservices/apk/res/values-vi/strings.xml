@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Cho phép ứng dụng truy cập vào AdServices Consent API."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Truy cập vào Ad ID API"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Cho phép ứng dụng truy cập vào Ad ID API."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"Truy cập vào AdServices Cobalt Upload API"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Cho phép ứng dụng truy cập vào AdServices Cobalt Upload API."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Truy cập vào App Set ID API"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Cho phép ứng dụng truy cập vào App Set ID API."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Truy cập vào Consent Service API"</string>
@@ -40,7 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Cho phép ứng dụng truy cập API trạng thái bật của AdService."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Truy cập vào các AdServicesManager API"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Cho phép ứng dụng truy cập vào các AdServicesManager API."</string>
-    <string name="app_label" msgid="5985320129629013968">"Hệ thống Android"</string>
+    <string name="app_label" msgid="5844694701336604490">"Quyền riêng tư trong quảng cáo"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Tham gia phiên bản beta về quyền riêng tư trong quảng cáo của Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android đang khám phá nhiều cách bảo mật hơn để các ứng dụng có thể hiển thị quảng cáo cho bạn"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Tìm hiểu thêm"</string>

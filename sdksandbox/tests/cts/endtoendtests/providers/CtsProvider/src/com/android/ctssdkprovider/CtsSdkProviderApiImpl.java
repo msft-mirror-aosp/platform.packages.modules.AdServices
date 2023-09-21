@@ -33,6 +33,7 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
+import android.net.Uri;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -40,6 +41,8 @@ import android.os.ParcelFileDescriptor;
 import android.os.Process;
 import android.os.RemoteException;
 import android.text.TextUtils;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.window.OnBackInvokedCallback;
 import android.window.OnBackInvokedDispatcher;
 
@@ -220,6 +223,8 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
         SdkSandboxActivityHandler activityHandler =
                 activity -> {
                     actionExecutor.setActivity(activity);
+                    final String textToCheck = extras.getString("TEXT_KEY");
+                    buildActivityLayout(activity, textToCheck);
                     registerLifecycleEvents(iActivityStarter, activity, actionExecutor);
                 };
         assert controller != null;
@@ -361,6 +366,20 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
                 });
     }
 
+    private void buildActivityLayout(Activity activity, String textToCheck) {
+        final LinearLayout layout = new LinearLayout(activity);
+        layout.setLayoutParams(
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT));
+        layout.setOrientation(LinearLayout.HORIZONTAL);
+        final TextView tv1 = new TextView(activity);
+        int orientation = activity.getResources().getConfiguration().orientation;
+        tv1.setText(textToCheck + "_orientation: " + orientation);
+        layout.addView(tv1);
+        activity.setContentView(layout);
+    }
+
     private static class ActivityActionExecutor extends IActivityActionExecutor.Stub {
         private final OnBackInvokedCallback mBackNavigationDisablingCallback;
         private OnBackInvokedDispatcher mDispatcher;
@@ -371,6 +390,11 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
         }
 
         private Activity mActivity;
+
+        @Override
+        public String getDataDir() {
+            return mActivity.getApplicationInfo().dataDir;
+        }
 
         @Override
         public void disableBackButton() {
@@ -401,6 +425,21 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
         @Override
         public void setOrientationToPortrait() {
             mActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        }
+
+        @Override
+        public void openLandingPage() {
+            String url = "http://www.google.com";
+            Intent visitUrl = new Intent(Intent.ACTION_VIEW);
+            visitUrl.setData(Uri.parse(url));
+            visitUrl.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+            mActivity.startActivity(visitUrl);
+        }
+
+        @Override
+        public void finish() {
+            mActivity.finish();
         }
 
         public void setActivity(Activity activity) {

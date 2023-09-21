@@ -21,17 +21,13 @@ import com.android.adservices.common.AndroidLogger;
 /** See {@link AbstractSdkSandboxDeviceSupportedRule}. */
 public final class SdkSandboxDeviceSupportedRule extends AbstractSdkSandboxDeviceSupportedRule {
 
-    private static final AndroidLogger sLogger =
-            new AndroidLogger(SdkSandboxDeviceSupportedRule.class);
-
-    /** Default constructor */
     public SdkSandboxDeviceSupportedRule() {
-        super(sLogger);
+        super(AndroidLogger.getInstance());
     }
 
     @Override
     public boolean isSdkSandboxSupportedOnDevice() {
-        boolean isSupported = AdServicesSupportHelper.isDeviceSupported();
+        boolean isSupported = AdServicesSupportHelper.getInstance().isDeviceSupported();
         mLog.v("isSdkSandboxSupportedOnDevice(): %b", isSupported);
         return isSupported;
     }

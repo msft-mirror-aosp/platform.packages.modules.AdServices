@@ -42,6 +42,7 @@ import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
 import android.adservices.adselection.AdSelectionFromOutcomesInput;
 import android.adservices.adselection.AdSelectionResponse;
+import android.adservices.adselection.AdSelectionService;
 import android.adservices.adselection.CustomAudienceSignalsFixture;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
@@ -63,20 +64,24 @@ import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
+import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
-import com.android.adservices.data.adselection.AuctionServerAdSelectionDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.EncryptionContextDao;
 import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
+import com.android.adservices.data.adselection.datahandlers.AdSelectionInitialization;
+import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBidAndUri;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.data.signals.EncodedPayloadDao;
+import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
@@ -111,6 +116,7 @@ import org.mockito.quality.Strictness;
 
 import java.io.File;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -122,7 +128,7 @@ public class AdSelectionFromOutcomesE2ETest {
     private static final int CALLER_UID = Process.myUid();
     private static final String SELECTION_PICK_HIGHEST_LOGIC_JS_PATH = "/selectionPickHighestJS/";
     private static final String SELECTION_PICK_NONE_LOGIC_JS_PATH = "/selectionPickNoneJS/";
-    private static final String SELECTION_WATERFALL_LOGIC_JS_PATH = "/selectionWaterfallJS/";
+    static final String SELECTION_WATERFALL_LOGIC_JS_PATH = "/selectionWaterfallJS/";
     private static final String SELECTION_FAULTY_LOGIC_JS_PATH = "/selectionFaultyJS/";
     private static final String SELECTION_PICK_HIGHEST_LOGIC_JS =
             "function selectOutcome(outcomes, selection_signals) {\n"
@@ -140,7 +146,7 @@ public class AdSelectionFromOutcomesE2ETest {
             "function selectOutcome(outcomes, selection_signals) {\n"
                     + "    return {'status': 0, 'result': null};\n"
                     + "}";
-    private static final String SELECTION_WATERFALL_LOGIC_JS =
+    static final String SELECTION_WATERFALL_LOGIC_JS =
             "function selectOutcome(outcomes, selection_signals) {\n"
                     + "    if (outcomes.length != 1 || selection_signals.bid_floor =="
                     + " undefined) return null;\n"
@@ -154,7 +160,7 @@ public class AdSelectionFromOutcomesE2ETest {
                     + "    return {'status': 0, 'result': {\"id\": outcomes[0].id + 1, \"bid\": "
                     + "outcomes[0].bid}};\n"
                     + "}";
-    private static final String BID_FLOOR_SELECTION_SIGNAL_TEMPLATE = "{\"bid_floor\":%s}";
+    static final String BID_FLOOR_SELECTION_SIGNAL_TEMPLATE = "{\"bid_floor\":%s}";
 
     private static final AdTechIdentifier SELLER_INCONSISTENT_WITH_SELECTION_URI =
             AdTechIdentifier.fromString("inconsistent.developer.android.com");
@@ -163,6 +169,7 @@ public class AdSelectionFromOutcomesE2ETest {
     private static final long AD_SELECTION_ID_1 = 12345L;
     private static final long AD_SELECTION_ID_2 = 123456L;
     private static final long AD_SELECTION_ID_3 = 1234567L;
+    private static final long AD_SELECTION_ID_4 = 12345678L;
 
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
@@ -188,18 +195,20 @@ public class AdSelectionFromOutcomesE2ETest {
     private ExecutorService mBackgroundExecutorService;
     private ScheduledThreadPoolExecutor mScheduledExecutor;
     private CustomAudienceDao mCustomAudienceDao;
+    private EncodedPayloadDao mEncodedPayloadDao;
     private AppInstallDao mAppInstallDao;
     private FrequencyCapDao mFrequencyCapDao;
     private EncryptionKeyDao mEncryptionKeyDao;
     private EncryptionContextDao mEncryptionContextDao;
-    private AuctionServerAdSelectionDao mAuctionServerAdSelectionDao;
     @Spy private AdSelectionEntryDao mAdSelectionEntryDaoSpy;
     private AdServicesHttpsClient mAdServicesHttpsClient;
-    private AdSelectionServiceImpl mAdSelectionService;
+    private AdSelectionService mAdSelectionService;
     private Dispatcher mDispatcher;
     private AdFilteringFeatureFactory mAdFilteringFeatureFactory;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptor;
+    @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
+    @Mock private AdIdFetcher mAdIdFetcher;
 
     @Before
     public void setUp() throws Exception {
@@ -230,6 +239,10 @@ public class AdSelectionFromOutcomesE2ETest {
                         .addTypeConverter(new DBCustomAudience.Converters(true, true))
                         .build()
                         .customAudienceDao();
+        mEncodedPayloadDao =
+                Room.inMemoryDatabaseBuilder(mContext, ProtectedSignalsDatabase.class)
+                        .build()
+                        .getEncodedPayloadDao();
         SharedStorageDatabase sharedDb =
                 Room.inMemoryDatabaseBuilder(mContext, SharedStorageDatabase.class).build();
         mAppInstallDao = sharedDb.appInstallDao();
@@ -238,7 +251,6 @@ public class AdSelectionFromOutcomesE2ETest {
                 Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class).build();
         mEncryptionContextDao = serverDb.encryptionContextDao();
         mEncryptionKeyDao = serverDb.encryptionKeyDao();
-        mAuctionServerAdSelectionDao = serverDb.auctionServerAdSelectionDao();
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mFlags);
         mAdServicesHttpsClient =
@@ -256,10 +268,10 @@ public class AdSelectionFromOutcomesE2ETest {
                         mAdSelectionEntryDaoSpy,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mEncodedPayloadDao,
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -273,7 +285,9 @@ public class AdSelectionFromOutcomesE2ETest {
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor);
+                        mObliviousHttpEncryptor,
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         // Create a dispatcher that helps map a request -> response in mockWebServer
         mDispatcher =
@@ -342,6 +356,75 @@ public class AdSelectionFromOutcomesE2ETest {
         assertThat(resultsCallback.mIsSuccess).isTrue();
         assertThat(resultsCallback.mAdSelectionResponse).isNotNull();
         assertEquals(resultsCallback.mAdSelectionResponse.getAdSelectionId(), AD_SELECTION_ID_3);
+        mMockWebServerRule.verifyMockServerRequests(
+                server, 1, Collections.singletonList(selectionLogicPath), String::equals);
+    }
+
+    @Test
+    public void testSelectAdsFromOutcomesPickHighestSuccessDifferentTables() throws Exception {
+        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
+
+        Flags auctionServerEnabledFlags =
+                new TestFlags() {
+                    @Override
+                    public boolean getFledgeAuctionServerEnabledForSelectAdsMediation() {
+                        return true;
+                    }
+                };
+
+        MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
+        final String selectionLogicPath = SELECTION_PICK_HIGHEST_LOGIC_JS_PATH;
+
+        // On-device ids
+        Map<Long, Double> onDeviceAdSelectionIdToBid =
+                Map.of(
+                        AD_SELECTION_ID_1, 10.0,
+                        AD_SELECTION_ID_2, 20.0,
+                        AD_SELECTION_ID_3, 30.0);
+        persistAdSelectionEntryDaoResults(onDeviceAdSelectionIdToBid);
+        Map<Long, Double> serverAdSelectionIdToBid = Map.of(AD_SELECTION_ID_4, 40.0);
+        persistAdSelectionEntryInServerAuctionTable(serverAdSelectionIdToBid);
+
+        List<Long> adSelectionIds = new ArrayList<>(onDeviceAdSelectionIdToBid.keySet());
+        adSelectionIds.addAll(serverAdSelectionIdToBid.keySet());
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
+                        adSelectionIds,
+                        AdSelectionSignals.EMPTY,
+                        mMockWebServerRule.uriForPath(selectionLogicPath));
+
+        AdSelectionService adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDaoSpy,
+                        mAppInstallDao,
+                        mCustomAudienceDao,
+                        mEncodedPayloadDao,
+                        mFrequencyCapDao,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mAdServicesHttpsClient,
+                        mDevContextFilter,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mContext,
+                        mAdServicesLoggerMock,
+                        auctionServerEnabledFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilter,
+                        mAdSelectionServiceFilter,
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptor,
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
+
+        AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback resultsCallback =
+                invokeSelectAdsFromOutcomes(adSelectionService, config, CALLER_PACKAGE_NAME);
+
+        assertThat(resultsCallback.mIsSuccess).isTrue();
+        assertThat(resultsCallback.mAdSelectionResponse).isNotNull();
+        assertEquals(AD_SELECTION_ID_3, resultsCallback.mAdSelectionResponse.getAdSelectionId());
         mMockWebServerRule.verifyMockServerRequests(
                 server, 1, Collections.singletonList(selectionLogicPath), String::equals);
     }
@@ -563,7 +646,7 @@ public class AdSelectionFromOutcomesE2ETest {
 
     private AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback
             invokeSelectAdsFromOutcomes(
-                    AdSelectionServiceImpl adSelectionService,
+                    AdSelectionService adSelectionService,
                     AdSelectionFromOutcomesConfig adSelectionFromOutcomesConfig,
                     String callerPackageName)
                     throws InterruptedException, RemoteException {
@@ -586,11 +669,6 @@ public class AdSelectionFromOutcomesE2ETest {
     }
 
     private void persistAdSelectionEntryDaoResults(Map<Long, Double> adSelectionIdToBidMap) {
-        persistAdSelectionEntryDaoResults(adSelectionIdToBidMap, CALLER_PACKAGE_NAME);
-    }
-
-    private void persistAdSelectionEntryDaoResults(
-            Map<Long, Double> adSelectionIdToBidMap, String callerPackageName) {
         final Uri biddingLogicUri1 = Uri.parse("https://www.domain.com/logic/1");
         final Uri renderUri = Uri.parse("https://www.domain.com/advert/");
         final Instant activationTime = Instant.now();
@@ -608,9 +686,30 @@ public class AdSelectionFromOutcomesE2ETest {
                             .setWinningAdRenderUri(renderUri)
                             .setWinningAdBid(entry.getValue())
                             .setCreationTimestamp(activationTime)
-                            .setCallerPackageName(callerPackageName)
+                            .setCallerPackageName(CALLER_PACKAGE_NAME)
                             .build();
             mAdSelectionEntryDaoSpy.persistAdSelection(dbAdSelectionEntry);
+        }
+    }
+
+    private void persistAdSelectionEntryInServerAuctionTable(
+            Map<Long, Double> adSelectionIdToBidMap) {
+        final Uri renderUri = Uri.parse("https://www.domain.com/advert/");
+        for (Map.Entry<Long, Double> entry : adSelectionIdToBidMap.entrySet()) {
+            final AdSelectionInitialization adSelectionInitialization =
+                    AdSelectionInitialization.builder()
+                            .setSeller(SAMPLE_SELLER)
+                            .setCallerPackageName(CALLER_PACKAGE_NAME)
+                            .setCreationInstant(Instant.now())
+                            .build();
+            final AdSelectionResultBidAndUri idWithBidAndRenderUri =
+                    AdSelectionResultBidAndUri.builder()
+                            .setAdSelectionId(entry.getKey())
+                            .setWinningAdBid(entry.getValue())
+                            .setWinningAdRenderUri(renderUri)
+                            .build();
+            mAdSelectionEntryDaoSpy.persistAdSelectionInitialization(
+                    idWithBidAndRenderUri.getAdSelectionId(), adSelectionInitialization);
         }
     }
 

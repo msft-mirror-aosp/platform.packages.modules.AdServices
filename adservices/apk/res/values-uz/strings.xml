@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Ilovaga AdServices Consent API ishlatish ruxsatini beradi."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID API taʼminotiga ruxsat"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Ilovaga Ad ID API ruxsatini beradi."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"AdServices Cobalt Upload API ruxsati"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Ilovaga AdServices Cobalt Upload API ruxsatini beradi."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"App Set ID API taʼminotiga ruxsat"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Ilovaga App Set ID API uchun ruxsat beradi."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service API ishlatish"</string>
@@ -40,7 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Ilovaga AdService yoqish holati APIsiga kirishga ruxsat beradi."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManager API taʼminotiga ruxsat"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Ilovaga AdServicesManager API ruxsatini beradi."</string>
-    <string name="app_label" msgid="5985320129629013968">"Android tizimi"</string>
+    <string name="app_label" msgid="5844694701336604490">"Reklamada maxfiylik"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Androidda reklamalardagi maxfiylik beta dasturida ishtirok eting"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android ilovalarning sizga yanada maxfiy reklama chiqarishi usullari ustida ishlamoqda"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Batafsil"</string>
@@ -71,7 +73,7 @@
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"Reklamalardagi maxfiylikka oid yangi funksiyalar"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"Reklama mavzulari va yangi parametrlar sizga chiqadigan reklamalarni yanada aniqroq sozlash imkonini beradi"</string>
     <string name="notificationUI_header_ga_title" msgid="3557937325021173836">"Yangi reklamalarda maxfiylik funksiyalari ishga tushirildi"</string>
-    <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android yaqinda ishlatilgan ilovalar asosida qiziqish mavzularini qayd qiladi. Shuningdek, ilovalar ham qiziqishlarni aniqlashi mumkin. Keyinchalik ilovalar reklamalarni moslashtirishda ushbu maʼlumotlarni olishga ruxsat soʻrashi mumkin. Sizga sizga chiqadigan reklamalarni aniqlashda ishlatiladigan mavzular va ilovalarni tanlashingiz mumkin."</string>
+    <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android yaqinda ishlatilgan ilovalar asosida qiziqish mavzularini qayd qiladi. Shuningdek, ilovalar ham qiziqishlarni aniqlashi mumkin. Keyinchalik ilovalar reklamalarni moslashtirishda ushbu maʼlumotlarni olishga ruxsat soʻrashi mumkin. Sizga chiqadigan reklamalarni aniqlashda ishlatiladigan mavzular va ilovalarni tanlashingiz mumkin."</string>
     <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"Reklamalar unumdorligini hisoblash uchun ilovalar orasida ayrim turdagi maʼlumotlar ulashiladi."</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"Android qurilmalarida reklamalar haqida batafsil"</string>
     <string name="notificationUI_how_it_works_row_subtitle1" msgid="8685034725335826096">"Yanada foydali reklamalar"</string>

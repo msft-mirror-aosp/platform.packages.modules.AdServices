@@ -46,7 +46,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public class CustomizedSdkContextTest {
+public class CustomizedSdkContextTest extends SandboxKillerBeforeTest {
     private static final String SDK_NAME_1 = "com.android.ctssdkprovider";
     private static final String SDK_NAME_2 = "com.android.emptysdkprovider";
 

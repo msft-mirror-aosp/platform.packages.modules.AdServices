@@ -27,6 +27,7 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
@@ -70,9 +71,11 @@ public class UxStatesManager {
     /** Returns an instance of the UxStatesManager. */
     @NonNull
     public static UxStatesManager getInstance(Context context) {
+        LogUtil.d("UxStates getInstance() called.");
         if (sUxStatesManager == null) {
             synchronized (LOCK) {
                 if (sUxStatesManager == null) {
+                    LogUtil.d("Creaeting new UxStatesManager.");
                     sUxStatesManager =
                             new UxStatesManager(
                                     context,
@@ -88,7 +91,10 @@ public class UxStatesManager {
     public void persistAdServicesStates(AdServicesStates adServicesStates) {
         // Only a subset of states should be persisted.
         mConsentManager.setAdIdEnabled(adServicesStates.isAdIdEnabled());
-        mConsentManager.setU18Account(adServicesStates.isU18Account());
+        // TO-DO (b/285005057): Remove the if statement when users can graduate.
+        if (!mConsentManager.isU18Account()) {
+            mConsentManager.setU18Account(adServicesStates.isU18Account());
+        }
         mConsentManager.setAdultAccount(adServicesStates.isAdultAccount());
         mConsentManager.setEntryPointEnabled(adServicesStates.isPrivacySandboxUiEnabled());
     }
@@ -144,15 +150,17 @@ public class UxStatesManager {
         // them as supervised accounts for now, it actually also contains robot account, but we
         // don't have a capability for that, we will update this when we have the new capability.
         // TODO: when new capability is available, update with new capability.
+        boolean isSupervisedAccountEnabled =
+                getFlag(FlagsConstants.KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED);
         boolean isSupervisedUser =
                 !mConsentManager.isU18Account() && !mConsentManager.isAdultAccount();
         // In case supervised account logging in second time and not able to set the ux to u18
-        if (isSupervisedUser) {
+        if (isSupervisedAccountEnabled && isSupervisedUser) {
             LogUtil.d("supervised user get");
             mConsentManager.setUx(PrivacySandboxUxCollection.U18_UX);
         }
         if (!isNotificationDisplayed) {
-            if (isSupervisedUser) {
+            if (isSupervisedAccountEnabled && isSupervisedUser) {
                 // We initial the default consent and notification.
                 LogUtil.d("supervised user initial");
                 mConsentManager.setU18NotificationDisplayed(true);

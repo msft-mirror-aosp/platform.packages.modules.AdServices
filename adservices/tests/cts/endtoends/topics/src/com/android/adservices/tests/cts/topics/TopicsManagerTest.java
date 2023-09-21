@@ -34,7 +34,7 @@ import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.OutcomeReceiverForTests;
-import com.android.adservices.common.RequiresDeviceNotSupported;
+import com.android.adservices.common.RequiresLowRamDevice;
 import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.compatibility.common.util.ShellUtils;
@@ -61,7 +61,7 @@ public class TopicsManagerTest {
     // Override the Epoch Job Period to this value to speed up the epoch computation.
     private static final long TEST_EPOCH_JOB_PERIOD_MS = 5000;
     // Expected model versions.
-    private static final long EXPECTED_MODEL_VERSION = 4L;
+    private static final long EXPECTED_MODEL_VERSION = 5L;
     // Expected taxonomy version.
     private static final long EXPECTED_TAXONOMY_VERSION = 2L;
 
@@ -104,7 +104,7 @@ public class TopicsManagerTest {
                     + " apex.";
 
     @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevelSupportRule = SdkLevelSupportRule.isAtLeastR();
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAnyLevel();
 
     // Skip the test if it runs on unsupported platforms.
     @Rule(order = 1)
@@ -151,12 +151,29 @@ public class TopicsManagerTest {
                         .build();
 
         // As the kill switch for Topics API is enabled, we should expect failure here.
-        assertThat(
+        Exception e =
                 assertThrows(
-                        ExecutionException.class,
-                        () -> advertisingTopicsClient.getTopics().get())
-                        .getMessage())
-                .isEqualTo("java.lang.IllegalStateException: Service is not available.");
+                        ExecutionException.class, () -> advertisingTopicsClient.getTopics().get());
+        assertThat(e).hasCauseThat().isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    public void testTopicsManager_disableDirectAppCalls_testEmptySdkNameRequests()
+            throws Exception {
+        flags.setTopicsDisableDirectAppCalls(true);
+
+        AdvertisingTopicsClient advertisingTopicsClient =
+                new AdvertisingTopicsClient.Builder()
+                        .setContext(sContext)
+                        .setSdkName("")
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .setUseGetMethodToCreateManagerInstance(false)
+                        .build();
+
+        Exception e =
+                assertThrows(
+                        ExecutionException.class, () -> advertisingTopicsClient.getTopics().get());
+        assertThat(e).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -351,17 +368,21 @@ public class TopicsManagerTest {
                 .that(topic.getTaxonomyVersion())
                 .isEqualTo(EXPECTED_TAXONOMY_VERSION);
 
-        // Top 5 classifications for empty string with v4 model are:
-        // S-: [10420, 10189, 10301, 10230, 10010].
-        // T+: [10166, 10010, 10301, 10230, 10184].
-        // V4 model uses package name as part of input, which differs between
+        // Top 5 classifications and corresponding input for v5 model are:
+        // S-:
+        //  Input string: ". android adextservices tests cts endtoendtest"
+        //  Predictions: [10301, 10009, 10230, 10010, 10184].
+        // T+:
+        //  Input string: ". android adservices tests cts endtoendtest"
+        //  Predictions: [10166, 10010, 10301, 10230, 10184].
+        // V5 model uses package name as part of input, which differs between
         // versions for back-compat, changing the returned topics for each version.
         // This is computed by running the model on the device; topics are checked
         // depending on whether the package name is that for S- or T+.
         // Returned topic is one of the 5 classification topics of the test app.
         List<Integer> expectedTopTopicIds;
         if (ADSERVICES_PACKAGE_NAME.contains("ext.services")) {
-            expectedTopTopicIds = Arrays.asList(10420, 10189, 10301, 10230, 10010);
+            expectedTopTopicIds = Arrays.asList(10301, 10009, 10230, 10010, 10184);
         } else {
             expectedTopTopicIds = Arrays.asList(10166, 10010, 10301, 10230, 10184);
         }
@@ -430,9 +451,9 @@ public class TopicsManagerTest {
     }
 
     @Test
-    @RequiresDeviceNotSupported
+    @RequiresLowRamDevice
     @RequiresSdkLevelAtLeastS(reason = "OutcomeReceiver is not available on R")
-    public void testGetTopics_whenDeviceNotSupported() throws Exception {
+    public void testGetTopics_lowRamDevice() throws Exception {
         TopicsManager manager = TopicsManager.get(sContext);
         assertWithMessage("manager").that(manager).isNotNull();
         OutcomeReceiverForTests<GetTopicsResponse> receiver = new OutcomeReceiverForTests<>();

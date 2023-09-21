@@ -17,6 +17,7 @@ package android.adservices.measurement;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION;
 
+import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.common.OutcomeReceiverConverter;
 import android.annotation.CallbackExecutor;
 import android.annotation.IntDef;
@@ -129,6 +130,7 @@ public class MeasurementManager {
      *     event).
      * @param executor used by callback to dispatch results.
      * @param callback intended to notify asynchronously the API result.
+     * @throws IllegalArgumentException if the scheme for {@code attributionSource} is not HTTPS
      */
     @RequiresApi(Build.VERSION_CODES.S)
     @RequiresPermission(ACCESS_ADSERVICES_ATTRIBUTION)
@@ -141,7 +143,7 @@ public class MeasurementManager {
                 attributionSource,
                 inputEvent,
                 executor,
-                OutcomeReceiverConverter.toCustomOutcomeReceiver(callback));
+                OutcomeReceiverConverter.toAdServicesOutcomeReceiver(callback));
     }
 
     /**
@@ -161,7 +163,7 @@ public class MeasurementManager {
             @NonNull Uri attributionSource,
             @Nullable InputEvent inputEvent,
             @Nullable @CallbackExecutor Executor executor,
-            @Nullable android.adservices.common.OutcomeReceiver<Object, Exception> callback) {
+            @Nullable AdServicesOutcomeReceiver<Object, Exception> callback) {
         mImpl.registerSource(attributionSource, inputEvent, executor, callback);
     }
 
@@ -173,13 +175,14 @@ public class MeasurementManager {
      * @param executor used by callback to dispatch results
      * @param callback intended to notify asynchronously the API result
      */
+    @RequiresApi(Build.VERSION_CODES.S)
     @RequiresPermission(ACCESS_ADSERVICES_ATTRIBUTION)
     public void registerSource(
             @NonNull SourceRegistrationRequest request,
             @Nullable @CallbackExecutor Executor executor,
             @Nullable OutcomeReceiver<Object, Exception> callback) {
         mImpl.registerSource(
-                request, executor, OutcomeReceiverConverter.toCustomOutcomeReceiver(callback));
+                request, executor, OutcomeReceiverConverter.toAdServicesOutcomeReceiver(callback));
     }
 
     /**
@@ -195,7 +198,7 @@ public class MeasurementManager {
     public void registerSource(
             @NonNull SourceRegistrationRequest request,
             @Nullable @CallbackExecutor Executor executor,
-            @Nullable android.adservices.common.OutcomeReceiver<Object, Exception> callback) {
+            @Nullable AdServicesOutcomeReceiver<Object, Exception> callback) {
         mImpl.registerSource(request, executor, callback);
     }
 
@@ -219,7 +222,7 @@ public class MeasurementManager {
             @Nullable Executor executor,
             @Nullable OutcomeReceiver<Object, Exception> callback) {
         mImpl.registerWebSource(
-                request, executor, OutcomeReceiverConverter.toCustomOutcomeReceiver(callback));
+                request, executor, OutcomeReceiverConverter.toAdServicesOutcomeReceiver(callback));
     }
 
     /**
@@ -242,7 +245,7 @@ public class MeasurementManager {
     public void registerWebSource(
             @NonNull WebSourceRegistrationRequest request,
             @Nullable Executor executor,
-            @Nullable android.adservices.common.OutcomeReceiver<Object, Exception> callback) {
+            @Nullable AdServicesOutcomeReceiver<Object, Exception> callback) {
         mImpl.registerWebSource(request, executor, callback);
     }
 
@@ -265,7 +268,7 @@ public class MeasurementManager {
             @Nullable Executor executor,
             @Nullable OutcomeReceiver<Object, Exception> callback) {
         mImpl.registerWebTrigger(
-                request, executor, OutcomeReceiverConverter.toCustomOutcomeReceiver(callback));
+                request, executor, OutcomeReceiverConverter.toAdServicesOutcomeReceiver(callback));
     }
 
     /**
@@ -287,7 +290,7 @@ public class MeasurementManager {
     public void registerWebTrigger(
             @NonNull WebTriggerRegistrationRequest request,
             @Nullable Executor executor,
-            @Nullable android.adservices.common.OutcomeReceiver<Object, Exception> callback) {
+            @Nullable AdServicesOutcomeReceiver<Object, Exception> callback) {
         mImpl.registerWebTrigger(request, executor, callback);
     }
 
@@ -299,6 +302,7 @@ public class MeasurementManager {
      *     sources during the attribution process.
      * @param executor used by callback to dispatch results.
      * @param callback intended to notify asynchronously the API result.
+     * @throws IllegalArgumentException if the scheme for {@code trigger} is not HTTPS
      */
     @RequiresApi(Build.VERSION_CODES.S)
     @RequiresPermission(ACCESS_ADSERVICES_ATTRIBUTION)
@@ -307,7 +311,7 @@ public class MeasurementManager {
             @Nullable @CallbackExecutor Executor executor,
             @Nullable OutcomeReceiver<Object, Exception> callback) {
         mImpl.registerTrigger(
-                trigger, executor, OutcomeReceiverConverter.toCustomOutcomeReceiver(callback));
+                trigger, executor, OutcomeReceiverConverter.toAdServicesOutcomeReceiver(callback));
     }
 
     /**
@@ -324,7 +328,7 @@ public class MeasurementManager {
     public void registerTrigger(
             @NonNull Uri trigger,
             @Nullable @CallbackExecutor Executor executor,
-            @Nullable android.adservices.common.OutcomeReceiver<Object, Exception> callback) {
+            @Nullable AdServicesOutcomeReceiver<Object, Exception> callback) {
         mImpl.registerTrigger(trigger, executor, callback);
     }
 
@@ -346,7 +350,7 @@ public class MeasurementManager {
         mImpl.deleteRegistrations(
                 deletionRequest,
                 executor,
-                OutcomeReceiverConverter.toCustomOutcomeReceiver(callback));
+                OutcomeReceiverConverter.toAdServicesOutcomeReceiver(callback));
     }
 
     /**
@@ -365,7 +369,7 @@ public class MeasurementManager {
     public void deleteRegistrations(
             @NonNull DeletionRequest deletionRequest,
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull android.adservices.common.OutcomeReceiver<Object, Exception> callback) {
+            @NonNull AdServicesOutcomeReceiver<Object, Exception> callback) {
         mImpl.deleteRegistrations(deletionRequest, executor, callback);
     }
 
@@ -383,7 +387,7 @@ public class MeasurementManager {
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<Integer, Exception> callback) {
         mImpl.getMeasurementApiStatus(
-                executor, OutcomeReceiverConverter.toCustomOutcomeReceiver(callback));
+                executor, OutcomeReceiverConverter.toAdServicesOutcomeReceiver(callback));
     }
 
     /**
@@ -398,7 +402,7 @@ public class MeasurementManager {
     @RequiresPermission(ACCESS_ADSERVICES_ATTRIBUTION)
     public void getMeasurementApiStatus(
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull android.adservices.common.OutcomeReceiver<Integer, Exception> callback) {
+            @NonNull AdServicesOutcomeReceiver<Integer, Exception> callback) {
         mImpl.getMeasurementApiStatus(executor, callback);
     }
 

@@ -32,7 +32,9 @@ import static com.android.adservices.service.consent.ConsentManager.resetSharedP
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_WHILE_GET_CONSENT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PRIVACY_SANDBOX_SAVE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX;
+import static com.android.adservices.spe.AdservicesJobInfo.COBALT_LOGGING_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.CONSENT_NOTIFICATION_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.FLEDGE_AD_SELECTION_DEBUG_REPORT_SENDER_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MAINTENANCE_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
@@ -41,12 +43,17 @@ import static com.android.adservices.spe.AdservicesJobInfo.MDD_MAINTENANCE_PERIO
 import static com.android.adservices.spe.AdservicesJobInfo.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ASYNC_REGISTRATION_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ATTRIBUTION_FALLBACK_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ATTRIBUTION_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DELETE_EXPIRED_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DELETE_UNINSTALLED_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_EVENT_MAIN_REPORTING_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.PERIODIC_SIGNALS_ENCODING_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.TOPICS_EPOCH_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyBoolean;
@@ -94,6 +101,7 @@ import androidx.test.core.content.pm.ApplicationInfoBuilder;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.AdServicesCommon;
+import com.android.adservices.cobalt.CobaltJobService;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
@@ -117,12 +125,16 @@ import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.DeleteUninstalledJobService;
 import com.android.adservices.service.measurement.MeasurementImpl;
+import com.android.adservices.service.measurement.attribution.AttributionFallbackJobService;
 import com.android.adservices.service.measurement.attribution.AttributionJobService;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJobService;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.AggregateReportingJobService;
+import com.android.adservices.service.measurement.reporting.DebugReportingFallbackJobService;
 import com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.EventReportingJobService;
+import com.android.adservices.service.measurement.reporting.VerboseDebugReportingFallbackJobService;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ConsentMigrationStats;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
@@ -220,7 +232,9 @@ public class ConsentManagerTest {
                         .spyStatic(AggregateFallbackReportingJobService.class)
                         .spyStatic(AggregateReportingJobService.class)
                         .spyStatic(AsyncRegistrationQueueJobService.class)
+                        .spyStatic(AsyncRegistrationFallbackJobService.class)
                         .spyStatic(AttributionJobService.class)
+                        .spyStatic(AttributionFallbackJobService.class)
                         .spyStatic(BackgroundJobsManager.class)
                         .spyStatic(ConsentManager.class)
                         .spyStatic(DeleteExpiredJobService.class)
@@ -230,9 +244,12 @@ public class ConsentManagerTest {
                         .spyStatic(ErrorLogUtil.class)
                         .spyStatic(EventFallbackReportingJobService.class)
                         .spyStatic(EventReportingJobService.class)
+                        .spyStatic(DebugReportingFallbackJobService.class)
+                        .spyStatic(VerboseDebugReportingFallbackJobService.class)
                         .spyStatic(FlagsFactory.class)
                         .spyStatic(MaintenanceJobService.class)
                         .spyStatic(MddJobService.class)
+                        .spyStatic(CobaltJobService.class)
                         .spyStatic(UiStatsLogger.class)
                         .spyStatic(StatsdAdServicesLogger.class)
                         .mockStatic(PackageManagerCompatUtils.class)
@@ -273,6 +290,19 @@ public class ConsentManagerTest {
                         () ->
                                 AggregateFallbackReportingJobService.scheduleIfNeeded(
                                         any(), anyBoolean()));
+        doNothing().when(() -> AttributionFallbackJobService.scheduleIfNeeded(any(), anyBoolean()));
+        doNothing()
+                .when(
+                        () ->
+                                AsyncRegistrationFallbackJobService.scheduleIfNeeded(
+                                        any(), anyBoolean()));
+        doNothing()
+                .when(
+                        () ->
+                                VerboseDebugReportingFallbackJobService.scheduleIfNeeded(
+                                        any(), anyBoolean()));
+        doNothing()
+                .when(() -> DebugReportingFallbackJobService.scheduleIfNeeded(any(), anyBoolean()));
         doNothing().when(() -> AttributionJobService.scheduleIfNeeded(any(), anyBoolean()));
         doReturn(true).when(() -> EpochJobService.scheduleIfNeeded(any(), anyBoolean()));
         doReturn(true).when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
@@ -284,6 +314,7 @@ public class ConsentManagerTest {
         doReturn(true).when(() -> MaintenanceJobService.scheduleIfNeeded(any(), anyBoolean()));
         doNothing()
                 .when(() -> AsyncRegistrationQueueJobService.scheduleIfNeeded(any(), anyBoolean()));
+        doReturn(true).when(() -> CobaltJobService.scheduleIfNeeded(any(), anyBoolean()));
         doNothing().when(() -> UiStatsLogger.logOptInSelected(any()));
         doNothing().when(() -> UiStatsLogger.logOptOutSelected(any()));
         doNothing().when(() -> UiStatsLogger.logOptInSelected(any(), any()));
@@ -383,6 +414,96 @@ public class ConsentManagerTest {
                 /* hasReadFromSystemServer */ false);
         verify(mAppSearchConsentManagerMock, atLeastOnce()).getConsent(CONSENT_KEY_FOR_ALL);
         verifyDataCleanup(spyConsentManager);
+    }
+
+    @Test
+    public void testConsentManager_LazyEnable() throws Exception {
+
+        boolean isGiven = true;
+        int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(isGiven, consentSourceOfTruth);
+        doReturn(ConsentParcel.createGivenConsent(ConsentParcel.ALL_API))
+                .when(mMockIAdServicesManager)
+                .getConsent(ConsentParcel.ALL_API);
+
+        doReturn(true).when(mMockFlags).getConsentManagerLazyEnableMode();
+        spyConsentManager.enable(mContextSpy);
+        spyConsentManager.enable(mContextSpy);
+        assertThat(spyConsentManager.getConsent().isGiven()).isTrue();
+        verify(spyConsentManager, times(0)).setConsentToPpApi(isGiven);
+        verifyResetApiCalled(spyConsentManager, 0);
+    }
+
+    @Test
+    public void testConsentManager_LazyDisabled() throws Exception {
+        boolean isGiven = true;
+        int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(isGiven, consentSourceOfTruth);
+        doReturn(ConsentParcel.createGivenConsent(ConsentParcel.ALL_API))
+                .when(mMockIAdServicesManager)
+                .getConsent(ConsentParcel.ALL_API);
+        doReturn(false).when(mMockFlags).getConsentManagerLazyEnableMode();
+        spyConsentManager.enable(mContextSpy);
+
+        assertThat(spyConsentManager.getConsent().isGiven()).isTrue();
+        verify(spyConsentManager, times(1)).setConsentToPpApi(isGiven);
+        verifyResetApiCalled(spyConsentManager, 1);
+    }
+
+    @Test
+    public void testConsentManagerPreApi_LazyEnable() throws Exception {
+        boolean isGiven = true;
+        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(isGiven, consentSourceOfTruth);
+        doReturn(ConsentParcel.createGivenConsent(ConsentParcel.MEASUREMENT))
+                .when(mMockIAdServicesManager)
+                .getConsent(ConsentParcel.MEASUREMENT);
+
+        doReturn(true).when(mMockFlags).getConsentManagerLazyEnableMode();
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+        spyConsentManager.enable(mContextSpy, AdServicesApiType.MEASUREMENTS);
+        assertThat(spyConsentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven()).isTrue();
+        verify(
+                () ->
+                        ConsentManager.setPerApiConsentToSystemServer(
+                                any(),
+                                eq(AdServicesApiType.MEASUREMENTS.toConsentApiType()),
+                                eq(isGiven)),
+                never());
+        verify(spyConsentManager, never()).resetByApi(eq(AdServicesApiType.MEASUREMENTS));
+    }
+
+    @Test
+    public void testConsentManagerPreApi_LazyDisabled() throws Exception {
+        boolean isGiven = true;
+        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(isGiven, consentSourceOfTruth);
+        doReturn(ConsentParcel.createGivenConsent(ConsentParcel.MEASUREMENT))
+                .when(mMockIAdServicesManager)
+                .getConsent(ConsentParcel.MEASUREMENT);
+        doReturn(false).when(mMockFlags).getConsentManagerLazyEnableMode();
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+        spyConsentManager.enable(mContextSpy, AdServicesApiType.MEASUREMENTS);
+        assertThat(spyConsentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven()).isTrue();
+
+        verify(
+                () ->
+                        ConsentManager.setPerApiConsentToSystemServer(
+                                any(),
+                                eq(AdServicesApiType.MEASUREMENTS.toConsentApiType()),
+                                eq(isGiven)));
+        verify(spyConsentManager, times(1)).resetByApi(eq(AdServicesApiType.MEASUREMENTS));
+    }
+
+    private static void verifyResetApiCalled(
+            ConsentManager spyConsentManager, int wantedNumOfInvocations) throws IOException {
+        verify(spyConsentManager, times(wantedNumOfInvocations)).resetTopicsAndBlockedTopics();
+        verify(spyConsentManager, times(wantedNumOfInvocations)).resetAppsAndBlockedApps();
+        verify(spyConsentManager, times(wantedNumOfInvocations)).resetMeasurement();
     }
 
     @Test
@@ -496,6 +617,7 @@ public class ConsentManagerTest {
         doReturn(false).when(mMockFlags).getFledgeSelectAdsKillSwitch();
         doReturn(false).when(mMockFlags).getMeasurementKillSwitch();
         doReturn(false).when(mMockFlags).getMddBackgroundTaskKillSwitch();
+        doReturn(true).when(mMockFlags).getCobaltLoggingEnabled();
 
         mConsentManager.enable(mContextSpy);
 
@@ -510,6 +632,19 @@ public class ConsentManagerTest {
                 () ->
                         AggregateFallbackReportingJobService.scheduleIfNeeded(
                                 any(Context.class), eq(false)));
+        verify(() -> AttributionFallbackJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        verify(
+                () ->
+                        AsyncRegistrationFallbackJobService.scheduleIfNeeded(
+                                any(Context.class), eq(false)));
+        verify(
+                () ->
+                        VerboseDebugReportingFallbackJobService.scheduleIfNeeded(
+                                any(Context.class), eq(false)));
+        verify(
+                () ->
+                        DebugReportingFallbackJobService.scheduleIfNeeded(
+                                any(Context.class), eq(false)));
         verify(() -> AttributionJobService.scheduleIfNeeded(any(Context.class), eq(false)));
         verify(() -> EventReportingJobService.scheduleIfNeeded(any(Context.class), eq(false)));
         verify(
@@ -522,6 +657,7 @@ public class ConsentManagerTest {
                 () ->
                         AsyncRegistrationQueueJobService.scheduleIfNeeded(
                                 any(Context.class), eq(false)));
+        verify(() -> CobaltJobService.scheduleIfNeeded(any(Context.class), eq(false)));
     }
 
     @Test
@@ -530,6 +666,7 @@ public class ConsentManagerTest {
         doReturn(true).when(mMockFlags).getFledgeSelectAdsKillSwitch();
         doReturn(true).when(mMockFlags).getMeasurementKillSwitch();
         doReturn(true).when(mMockFlags).getMddBackgroundTaskKillSwitch();
+        doReturn(false).when(mMockFlags).getCobaltLoggingEnabled();
 
         mConsentManager.enable(mContextSpy);
 
@@ -545,6 +682,24 @@ public class ConsentManagerTest {
         verify(
                 () ->
                         AggregateFallbackReportingJobService.scheduleIfNeeded(
+                                any(Context.class), eq(false)),
+                never());
+        verify(
+                () -> AttributionFallbackJobService.scheduleIfNeeded(any(Context.class), eq(false)),
+                never());
+        verify(
+                () ->
+                        AsyncRegistrationFallbackJobService.scheduleIfNeeded(
+                                any(Context.class), eq(false)),
+                never());
+        verify(
+                () ->
+                        VerboseDebugReportingFallbackJobService.scheduleIfNeeded(
+                                any(Context.class), eq(false)),
+                never());
+        verify(
+                () ->
+                        DebugReportingFallbackJobService.scheduleIfNeeded(
                                 any(Context.class), eq(false)),
                 never());
         verify(
@@ -569,6 +724,7 @@ public class ConsentManagerTest {
                         AsyncRegistrationQueueJobService.scheduleIfNeeded(
                                 any(Context.class), eq(false)),
                 never());
+        verify(() -> CobaltJobService.scheduleIfNeeded(any(Context.class), eq(false)), never());
     }
 
     @Test
@@ -588,12 +744,20 @@ public class ConsentManagerTest {
         verify(mJobSchedulerMock).cancel(MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(MEASUREMENT_ASYNC_REGISTRATION_JOB.getJobId());
+        verify(mJobSchedulerMock).cancel(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB.getJobId());
+        verify(mJobSchedulerMock).cancel(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB.getJobId());
+        verify(mJobSchedulerMock)
+                .cancel(MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB.getJobId());
+        verify(mJobSchedulerMock).cancel(MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(FLEDGE_BACKGROUND_FETCH_JOB.getJobId());
+        verify(mJobSchedulerMock).cancel(FLEDGE_AD_SELECTION_DEBUG_REPORT_SENDER_JOB.getJobId());
+        verify(mJobSchedulerMock).cancel(PERIODIC_SIGNALS_ENCODING_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(CONSENT_NOTIFICATION_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(MDD_MAINTENANCE_PERIODIC_TASK_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(MDD_CHARGING_PERIODIC_TASK_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId());
+        verify(mJobSchedulerMock).cancel(COBALT_LOGGING_JOB.getJobId());
 
         verifyNoMoreInteractions(mJobSchedulerMock);
     }

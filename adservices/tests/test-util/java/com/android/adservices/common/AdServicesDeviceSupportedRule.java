@@ -19,13 +19,6 @@ package com.android.adservices.common;
 public final class AdServicesDeviceSupportedRule extends AbstractAdServicesDeviceSupportedRule {
 
     public AdServicesDeviceSupportedRule() {
-        super(new AndroidLogger(AdServicesDeviceSupportedRule.class));
-    }
-
-    @Override
-    public boolean isAdServicesSupportedOnDevice() {
-        boolean isSupported = AdServicesSupportHelper.isDeviceSupported();
-        mLog.v("isAdServicesSupportedOnDevice(): %b", isSupported);
-        return isSupported;
+        super(AndroidLogger.getInstance(), AdServicesSupportHelper.getInstance());
     }
 }

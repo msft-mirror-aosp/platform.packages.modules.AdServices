@@ -24,7 +24,10 @@ import android.cts.statsdatom.lib.AtomTestUtils;
 import android.cts.statsdatom.lib.ConfigUtils;
 import android.cts.statsdatom.lib.ReportUtils;
 
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdServicesHostSideDeviceSupportedRule;
+import com.android.adservices.common.AdServicesHostSideFlagsSetterRule;
+import com.android.adservices.common.AdServicesHostSideTestCase;
+import com.android.adservices.common.HostSideSdkLevelSupportRule;
 import com.android.internal.os.StatsdConfigProto.StatsdConfig;
 import com.android.os.AtomsProto;
 import com.android.os.AtomsProto.AdServicesSettingsUsageReported;
@@ -34,7 +37,6 @@ import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner.TestMetrics;
-import com.android.tradefed.testtype.IDeviceTest;
 
 import org.junit.After;
 import org.junit.Before;
@@ -49,12 +51,9 @@ import java.util.List;
  *
  * <p>The activity simply called Ui Settings Page which trigger the log event, and then check it in
  * statsD.
- *
- * <p>Instead of extending DeviceTestCase, this JUnit4 test extends {@link IDeviceTest} and is run
- * with tradefed's DeviceJUnit4ClassRunner
  */
 @RunWith(DeviceJUnit4ClassRunner.class)
-public final class UiApiLoggingHostTest implements IDeviceTest {
+public final class UiApiLoggingHostTest extends AdServicesHostSideTestCase {
     private static final String CLASS =
             "com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity";
     private static final String TARGET_PACKAGE = "com.google.android.adservices.api";
@@ -62,61 +61,44 @@ public final class UiApiLoggingHostTest implements IDeviceTest {
 
     private static final String TARGET_EXT_ADSERVICES_PACKAGE = "com.google.android.ext.services";
     private static final String TARGET_EXT_ADSERVICES_PACKAGE_AOSP = "com.android.ext.services";
-    private static final int PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH = 2;
-    private static final int APPSEARCH_ONLY = 3;
-    private static final int ANDROID_T_API_LEVEL = 33;
-    private int mApiLevel;
     private String mTargetPackage;
     private String mTargetPackageAosp;
 
     @Rule(order = 0)
-    public AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesDeviceSupportedRule();
+    public final HostSideSdkLevelSupportRule sdkLevel = HostSideSdkLevelSupportRule.forAnyLevel();
 
     @Rule(order = 1)
+    public final AdServicesHostSideDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesHostSideDeviceSupportedRule();
+
+    @Rule(order = 2)
+    public final AdServicesHostSideFlagsSetterRule flags =
+            AdServicesHostSideFlagsSetterRule.forCompatModeEnabledTests()
+                    .setTopicsKillSwitch(false)
+                    .setAdServicesEnabled(true)
+                    .setMddBackgroundTaskKillSwitch(true)
+                    .setConsentManagerDebugMode(true)
+                    .setDisableTopicsEnrollmentCheckForTests(true);
+
+    @Rule(order = 3)
     public TestMetrics metricsRule = new TestMetrics();
-
-    private ITestDevice mDevice;
-
-    @Override
-    public void setDevice(ITestDevice device) {
-        mDevice = device;
-        adServicesDeviceSupportedRule.setDevice(device);
-    }
-
-    @Override
-    public ITestDevice getDevice() {
-        return mDevice;
-    }
 
     @Before
     public void setUp() throws Exception {
         ConfigUtils.removeConfig(getDevice());
         ReportUtils.clearReports(getDevice());
-        disableGlobalKillSwitch();
-        disableMddBackgroundTasks(true);
-        overrideDisableTopicsEnrollmentCheck(/* enrolmentCheckFlag */ "1");
-        stopPacakageAPI();
-        mApiLevel = getDevice().getApiLevel();
 
         // Set flags for test to run on devices with api level lower than 33 (S-)
-        if (mApiLevel < ANDROID_T_API_LEVEL) {
+        if (!sdkLevel.isAtLeastT()) {
             mTargetPackage = TARGET_EXT_ADSERVICES_PACKAGE;
             mTargetPackageAosp = TARGET_EXT_ADSERVICES_PACKAGE_AOSP;
-            setFlags();
         } else {
             mTargetPackage = TARGET_PACKAGE;
             mTargetPackageAosp = TARGET_PACKAGE_AOSP;
         }
     }
-
     @After
     public void tearDown() throws Exception {
-        disableMddBackgroundTasks(false);
-        if (mApiLevel < ANDROID_T_API_LEVEL) {
-            resetFlagsToDefault();
-        }
-        stopPacakageAPI();
         ConfigUtils.removeConfig(getDevice());
         ReportUtils.clearReports(getDevice());
     }
@@ -156,7 +138,7 @@ public final class UiApiLoggingHostTest implements IDeviceTest {
     }
 
     private void rebootIfSMinus() throws DeviceNotAvailableException, InterruptedException {
-        if (mApiLevel < ANDROID_T_API_LEVEL) {
+        if (!sdkLevel.isAtLeastT()) {
             ITestDevice device = getDevice();
             device.reboot();
             device.waitForDeviceAvailable();
@@ -177,106 +159,9 @@ public final class UiApiLoggingHostTest implements IDeviceTest {
         Thread.sleep(AtomTestUtils.WAIT_TIME_SHORT);
     }
 
-    // Switch on/off for MDD service. Default value is false, which means MDD is enabled.
-    private void disableMddBackgroundTasks(boolean isSwitchedOff)
-            throws DeviceNotAvailableException {
-        getDevice()
-                .executeShellCommand(
-                        "device_config put adservices mdd_background_task_kill_switch "
-                                + isSwitchedOff);
-    }
-
-    // Override the flag to disable Topics enrollment check.
-    private void overrideDisableTopicsEnrollmentCheck(String val)
-            throws DeviceNotAvailableException {
-        // Setting it to 1 here disables the Topics' enrollment check.
-        getDevice()
-                .executeShellCommand(
-                        "setprop debug.adservices.disable_topics_enrollment_check " + val);
-    }
-
-    // Disable global_kill_switch to ignore the effect of actual PH values.
-    private void disableGlobalKillSwitch() throws DeviceNotAvailableException {
-        getDevice().executeShellCommand("device_config put adservices global_kill_switch false");
-    }
-
     public void startUiMainActivity(ITestDevice device, boolean isAosp)
             throws DeviceNotAvailableException {
         String packageName = isAosp ? mTargetPackageAosp : mTargetPackage;
         device.executeShellCommand("am start -n " + packageName + "/" + CLASS);
-    }
-
-    public void stopPacakageAPI() throws DeviceNotAvailableException {
-        getDevice().executeShellCommand("am force-stop " + mTargetPackage);
-        getDevice().executeShellCommand("am force-stop " + mTargetPackageAosp);
-    }
-
-    public void setFlags() throws DeviceNotAvailableException {
-        disableMendelSync();
-        setAdServicesEnabled(true);
-        setEnableBackCompatFlag(true);
-        setBlockedTopicsSourceOfTruth(APPSEARCH_ONLY);
-        setConsentSourceOfTruth(APPSEARCH_ONLY);
-        setEnableAppSearchConsentData(true);
-        // Measurement rollback check requires loading AdServicesManagerService's Binder from the
-        // SdkSandboxManager via getSystemService() which is not supported on S-. By disabling
-        // measurement rollback (i.e. setting the kill switch), we omit invoking that code.
-        setMeasurementRollbackDeleteKillSwitch(true);
-    }
-
-    public void resetFlagsToDefault() throws DeviceNotAvailableException {
-        setAdServicesEnabled(false);
-        setEnableBackCompatFlag(false);
-        setBlockedTopicsSourceOfTruth(PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH);
-        setConsentSourceOfTruth(PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH);
-        setEnableAppSearchConsentData(false);
-        setMeasurementRollbackDeleteKillSwitch(false);
-        enableMendelSync();
-    }
-
-    private void disableMendelSync() throws DeviceNotAvailableException {
-        getDevice().executeShellCommand("device_config set_sync_disabled_for_tests persistent");
-    }
-
-    private void enableMendelSync() throws DeviceNotAvailableException {
-        getDevice().executeShellCommand("device_config set_sync_disabled_for_tests none");
-    }
-
-    private void setAdServicesEnabled(boolean isEnabled) throws DeviceNotAvailableException {
-        getDevice()
-                .executeShellCommand("device_config put adservices adservice_enabled " + isEnabled);
-    }
-
-    private void setEnableBackCompatFlag(boolean isEnabled) throws DeviceNotAvailableException {
-        getDevice()
-                .executeShellCommand(
-                        "device_config put adservices enable_back_compat " + isEnabled);
-    }
-
-    private void setBlockedTopicsSourceOfTruth(int source) throws DeviceNotAvailableException {
-        getDevice()
-                .executeShellCommand(
-                        "device_config put adservices blocked_topics_source_of_truth " + source);
-    }
-
-    private void setMeasurementRollbackDeleteKillSwitch(boolean isEnabled)
-            throws DeviceNotAvailableException {
-        getDevice()
-                .executeShellCommand(
-                        "device_config put adservices measurement_rollback_deletion_kill_switch "
-                                + isEnabled);
-    }
-
-    private void setConsentSourceOfTruth(int source) throws DeviceNotAvailableException {
-        getDevice()
-                .executeShellCommand(
-                        "device_config put adservices consent_source_of_truth " + source);
-    }
-
-    private void setEnableAppSearchConsentData(boolean isEnabled)
-            throws DeviceNotAvailableException {
-        getDevice()
-                .executeShellCommand(
-                        "device_config put adservices enable_appsearch_consent_data " + isEnabled);
     }
 }

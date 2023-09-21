@@ -17,67 +17,51 @@ package com.android.adservices.common;
 
 import static com.android.compatibility.common.util.ShellIdentityUtils.invokeStaticMethodWithShellPermissions;
 
+import android.app.ActivityManager;
 import android.content.Context;
-import android.content.pm.PackageManager;
-import android.os.SystemProperties;
-import android.text.TextUtils;
-import android.util.Log;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.service.PhFlags;
 
+// TODO(b/297248322): move this class to sideless as the logic is duplicated on hostside
 /** Helper to check if AdServices is supported / enabled in a device. */
-public final class AdServicesSupportHelper {
+public final class AdServicesSupportHelper extends AbstractDeviceSupportHelper {
 
-    private static final String TAG = AdServicesSupportHelper.class.getSimpleName();
+    private static final AdServicesSupportHelper sInstance = new AdServicesSupportHelper();
 
-    private static final String SYSPROP_ADSERVICES_SUPPORTED = "debug.adservices.supported";
+    private final Context mContext;
 
-    private static final Context sContext =
-            InstrumentationRegistry.getInstrumentation().getTargetContext();
-
-    private static boolean isDeviceSupportedByDefault(Context context) {
-        PackageManager pm = context.getPackageManager();
-        return !pm.hasSystemFeature(PackageManager.FEATURE_RAM_LOW) // Android Go Devices
-                && !pm.hasSystemFeature(PackageManager.FEATURE_WATCH)
-                && !pm.hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE)
-                && !pm.hasSystemFeature(PackageManager.FEATURE_LEANBACK);
-    }
-
-    /** Checks whether AdServices is supported by the device / form factor. */
-    public static boolean isDeviceSupported() {
-        if (AdservicesTestHelper.isDebuggable()) {
-            String overriddenValue = SystemProperties.get(SYSPROP_ADSERVICES_SUPPORTED);
-            if (!TextUtils.isEmpty(overriddenValue)) {
-                boolean supported = Boolean.valueOf(overriddenValue);
-                Log.i(
-                        TAG,
-                        "isDeviceSupported(): returning"
-                                + supported
-                                + " as defined by system property "
-                                + SYSPROP_ADSERVICES_SUPPORTED
-                                + " ("
-                                + overriddenValue
-                                + ")");
-                return supported;
-            }
-        }
-
-        boolean supported = isDeviceSupportedByDefault(sContext);
-        Log.v(TAG, "isDeviceSupported(): returning hardcoded value (" + supported + ")");
-        return supported;
+    public static AdServicesSupportHelper getInstance() {
+        return sInstance;
     }
 
     /** Gets the value of AdServices global kill switch. */
     public static boolean getGlobalKillSwitch() throws Exception {
         PhFlags flags = PhFlags.getInstance();
         boolean value = invokeStaticMethodWithShellPermissions(() -> flags.getGlobalKillSwitch());
-        Log.v(TAG, "getGlobalKillSwitch(): " + value);
+        sInstance.mLog.v("getGlobalKillSwitch(): %b", value);
         return value;
     }
 
+    @Override
+    protected boolean hasPackageManagerFeature(String feature) {
+        return mContext.getPackageManager().hasSystemFeature(feature);
+    }
+
+    @Override
+    protected boolean isLowRamDeviceByDefault() {
+        return mContext.getSystemService(ActivityManager.class).isLowRamDevice();
+    }
+
+    @Override
+    protected boolean isDebuggable() {
+        return AdservicesTestHelper.isDebuggable();
+    }
+
     private AdServicesSupportHelper() {
-        throw new UnsupportedOperationException("Provides only static methods");
+        super(AndroidLogger.getInstance(), DeviceSideSystemPropertiesHelper.getInstance());
+
+        mContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
     }
 }

@@ -25,15 +25,20 @@ import com.android.adservices.ohttp.EncapsulatedSharedSecret;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.ohttp.ObliviousHttpRequestContext;
 
+import java.time.Clock;
 import java.util.Objects;
 
 /** Marshalls DBEncryptionContext into ObliviousHttpRequestContext and vice-versa. */
 public class ObliviousHttpRequestContextMarshaller {
     private final EncryptionContextDao mEncryptionContextDao;
+    private final Clock mClock;
 
     public ObliviousHttpRequestContextMarshaller(EncryptionContextDao encryptionContextDao) {
         Objects.requireNonNull(encryptionContextDao);
         mEncryptionContextDao = encryptionContextDao;
+        // TODO(b/235841960): Use the same injected clock as AdSelectionRunner
+        //  after aligning on Clock usage
+        mClock = Clock.systemUTC();
     }
 
     /** Fetches from EncryptionContextDao the ObliviousHttpRequestContext for given contextId. */
@@ -63,6 +68,7 @@ public class ObliviousHttpRequestContextMarshaller {
                 DBEncryptionContext.builder()
                         .setContextId(contextId)
                         .setEncryptionKeyType(EncryptionKeyConstants.from(AUCTION))
+                        .setCreationInstant(mClock.instant())
                         .setSeed(requestContext.seed())
                         .setKeyConfig(requestContext.keyConfig().serializeKeyConfigToBytes())
                         .setSharedSecret(

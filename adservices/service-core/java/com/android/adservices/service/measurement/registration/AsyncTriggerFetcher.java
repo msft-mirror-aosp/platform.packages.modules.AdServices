@@ -16,9 +16,6 @@
 package com.android.adservices.service.measurement.registration;
 
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATABLE_TRIGGER_DATA;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_EVENT_TRIGGER_DATA;
 
 import android.annotation.NonNull;
 import android.content.Context;
@@ -186,7 +183,7 @@ public class AsyncTriggerFetcher {
             }
             if (!json.isNull(TriggerHeaderContract.FILTERS)) {
                 JSONArray filters = Filter.maybeWrapFilters(json, TriggerHeaderContract.FILTERS);
-                if (!FetcherUtil.areValidAttributionFilters(filters)) {
+                if (!FetcherUtil.areValidAttributionFilters(filters, mFlags, true)) {
                     LogUtil.d("parseTrigger: filters are invalid.");
                     asyncFetchStatus.setEntityStatus(
                             AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
@@ -197,7 +194,7 @@ public class AsyncTriggerFetcher {
             if (!json.isNull(TriggerHeaderContract.NOT_FILTERS)) {
                 JSONArray notFilters =
                         Filter.maybeWrapFilters(json, TriggerHeaderContract.NOT_FILTERS);
-                if (!FetcherUtil.areValidAttributionFilters(notFilters)) {
+                if (!FetcherUtil.areValidAttributionFilters(notFilters, mFlags, true)) {
                     LogUtil.d("parseTrigger: not-filters are invalid.");
                     asyncFetchStatus.setEntityStatus(
                             AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
@@ -312,6 +309,11 @@ public class AsyncTriggerFetcher {
             AsyncRedirect asyncRedirect) {
         HttpURLConnection urlConnection = null;
         Map<String, List<String>> headers;
+        if (!asyncRegistration.getRegistrationUri().getScheme().equalsIgnoreCase("https")) {
+            LogUtil.d("Invalid scheme for registrationUri.");
+            asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.INVALID_URL);
+            return Optional.empty();
+        }
         // TODO(b/276825561): Fix code duplication between fetchSource & fetchTrigger request flow
         try {
             urlConnection =
@@ -378,12 +380,6 @@ public class AsyncTriggerFetcher {
     }
 
     private Optional<String> getValidEventTriggerData(JSONArray eventTriggerDataArr) {
-        if (eventTriggerDataArr.length() > MAX_ATTRIBUTION_EVENT_TRIGGER_DATA) {
-            LogUtil.d(
-                    "Event trigger data list has more entries than permitted. %s",
-                    eventTriggerDataArr.length());
-            return Optional.empty();
-        }
         JSONArray validEventTriggerData = new JSONArray();
         for (int i = 0; i < eventTriggerDataArr.length(); i++) {
             JSONObject validEventTriggerDatum = new JSONObject();
@@ -464,7 +460,8 @@ public class AsyncTriggerFetcher {
                 }
                 if (!eventTriggerDatum.isNull("filters")) {
                     JSONArray filters = Filter.maybeWrapFilters(eventTriggerDatum, "filters");
-                    if (!FetcherUtil.areValidAttributionFilters(filters)) {
+                    if (!FetcherUtil.areValidAttributionFilters(
+                            filters, mFlags, /* canIncludeLookbackWindow= */ true)) {
                         LogUtil.d("getValidEventTriggerData: filters are invalid.");
                         return Optional.empty();
                     }
@@ -473,7 +470,8 @@ public class AsyncTriggerFetcher {
                 if (!eventTriggerDatum.isNull("not_filters")) {
                     JSONArray notFilters =
                             Filter.maybeWrapFilters(eventTriggerDatum, "not_filters");
-                    if (!FetcherUtil.areValidAttributionFilters(notFilters)) {
+                    if (!FetcherUtil.areValidAttributionFilters(
+                            notFilters, mFlags, /* canIncludeLookbackWindow= */ true)) {
                         LogUtil.d("getValidEventTriggerData: not-filters are invalid.");
                         return Optional.empty();
                     }
@@ -496,12 +494,6 @@ public class AsyncTriggerFetcher {
 
     private Optional<String> getValidAggregateTriggerData(JSONArray aggregateTriggerDataArr)
             throws JSONException {
-        if (aggregateTriggerDataArr.length() > MAX_AGGREGATABLE_TRIGGER_DATA) {
-            LogUtil.d(
-                    "Aggregate trigger data list has more entries than permitted. %s",
-                    aggregateTriggerDataArr.length());
-            return Optional.empty();
-        }
         JSONArray validAggregateTriggerData = new JSONArray();
         for (int i = 0; i < aggregateTriggerDataArr.length(); i++) {
             JSONObject aggregateTriggerData = aggregateTriggerDataArr.getJSONObject(i);
@@ -546,7 +538,8 @@ public class AsyncTriggerFetcher {
             }
             if (!aggregateTriggerData.isNull("filters")) {
                 JSONArray filters = Filter.maybeWrapFilters(aggregateTriggerData, "filters");
-                if (!FetcherUtil.areValidAttributionFilters(filters)) {
+                if (!FetcherUtil.areValidAttributionFilters(
+                        filters, mFlags, /* canIncludeLookbackWindow= */ true)) {
                     LogUtil.d("Aggregate trigger data filters are invalid.");
                     return Optional.empty();
                 }
@@ -554,7 +547,8 @@ public class AsyncTriggerFetcher {
             }
             if (!aggregateTriggerData.isNull("not_filters")) {
                 JSONArray notFilters = Filter.maybeWrapFilters(aggregateTriggerData, "not_filters");
-                if (!FetcherUtil.areValidAttributionFilters(notFilters)) {
+                if (!FetcherUtil.areValidAttributionFilters(
+                        notFilters, mFlags, /* canIncludeLookbackWindow= */ true)) {
                     LogUtil.d("Aggregate trigger data not-filters are invalid.");
                     return Optional.empty();
                 }
@@ -600,7 +594,8 @@ public class AsyncTriggerFetcher {
             JSONArray aggregateDeduplicationKeys) throws JSONException {
         JSONArray validAggregateDeduplicationKeys = new JSONArray();
         if (aggregateDeduplicationKeys.length()
-                > MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION) {
+                > FlagsFactory.getFlags()
+                        .getMeasurementMaxAggregateDeduplicationKeysPerRegistration()) {
             LogUtil.d(
                     "Aggregate deduplication keys have more keys than permitted. %s",
                     aggregateDeduplicationKeys.length());
@@ -628,7 +623,8 @@ public class AsyncTriggerFetcher {
             }
             if (!deduplicationKeyObj.isNull("filters")) {
                 JSONArray filters = Filter.maybeWrapFilters(deduplicationKeyObj, "filters");
-                if (!FetcherUtil.areValidAttributionFilters(filters)) {
+                if (!FetcherUtil.areValidAttributionFilters(
+                        filters, mFlags, /* canIncludeLookbackWindow= */ true)) {
                     LogUtil.d("Aggregate deduplication key: " + i + " contains invalid filters.");
                     return Optional.empty();
                 }
@@ -636,7 +632,8 @@ public class AsyncTriggerFetcher {
             }
             if (!deduplicationKeyObj.isNull("not_filters")) {
                 JSONArray notFilters = Filter.maybeWrapFilters(deduplicationKeyObj, "not_filters");
-                if (!FetcherUtil.areValidAttributionFilters(notFilters)) {
+                if (!FetcherUtil.areValidAttributionFilters(
+                        notFilters, mFlags, /* canIncludeLookbackWindow= */ true)) {
                     LogUtil.d(
                             "Aggregate deduplication key: " + i + " contains invalid not filters.");
                     return Optional.empty();
@@ -653,8 +650,9 @@ public class AsyncTriggerFetcher {
         JSONArray validAttributionConfigsArray = new JSONArray();
         for (int i = 0; i < attributionConfigsArray.length(); i++) {
             AttributionConfig attributionConfig =
-                    new AttributionConfig.Builder(attributionConfigsArray.getJSONObject(i)).build();
-            validAttributionConfigsArray.put(attributionConfig.serializeAsJson());
+                    new AttributionConfig.Builder(attributionConfigsArray.getJSONObject(i), mFlags)
+                            .build();
+            validAttributionConfigsArray.put(attributionConfig.serializeAsJson(mFlags));
         }
         return validAttributionConfigsArray.toString();
     }

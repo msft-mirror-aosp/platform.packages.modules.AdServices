@@ -20,25 +20,31 @@ import static com.android.adservices.tests.ui.libs.UiConstants.ENTRY_POINT_ENABL
 
 import android.adservices.common.AdServicesCommonManager;
 import android.content.Context;
+import android.platform.test.rule.ScreenRecordRule;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.Until;
 
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.tests.ui.libs.UiUtils;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(AndroidJUnit4.class)
+@ScreenRecordRule.ScreenRecord
 public class OTAStringsCorruptFileUiAutomatorTest {
     private static final int LAUNCH_TIMEOUT = 5000;
     private static final String CORRUPT_ARSC_FILE_MDD_URL =
@@ -49,17 +55,24 @@ public class OTAStringsCorruptFileUiAutomatorTest {
                     + "6dfca2c744a33a250b8cb6e7aa37e7b170d9152b";
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();
+
+    @Rule public final ScreenRecordRule sScreenRecordRule = new ScreenRecordRule();
+
     private static UiDevice sDevice;
 
     private static AdServicesCommonManager sCommonManager;
 
     @BeforeClass
     public static void initTestClass() throws InterruptedException, UiObjectNotFoundException {
+        // Skip the test if it runs on unsupported platforms.
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+
         // Initialize statics
         sDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
         sCommonManager = sContext.getSystemService(AdServicesCommonManager.class);
         // enable wifi
-        UiUtils.connectToWifi(sDevice);
+        UiUtils.connectToWifi();
 
         // wait for wifi to connect
         Thread.sleep(LAUNCH_TIMEOUT);
@@ -72,6 +85,8 @@ public class OTAStringsCorruptFileUiAutomatorTest {
 
     @Before
     public void initTestCase() {
+        // Skip the test if it runs on unsupported platforms.
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
         // Start from the home screen
         sDevice.pressHome();
@@ -93,6 +108,7 @@ public class OTAStringsCorruptFileUiAutomatorTest {
     }
 
     @Test
+    @FlakyTest(bugId = 297347345)
     public void checkCorruptedARSCFile_OTAFailTest()
             throws UiObjectNotFoundException, InterruptedException {
         // download test OTA strings
@@ -104,6 +120,7 @@ public class OTAStringsCorruptFileUiAutomatorTest {
     }
 
     @Test
+    @FlakyTest(bugId = 297347345)
     public void checkXMLFile_OTAFailTest() throws UiObjectNotFoundException, InterruptedException {
         // download test OTA strings
         UiUtils.setupOTAStrings(sContext, sDevice, sCommonManager, XML_FIL_MDD_URL);

@@ -26,10 +26,15 @@ import android.util.Pair;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.service.Flags;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -39,8 +44,10 @@ import java.util.Set;
 
 /** Unit tests for {@link AttributionConfig} */
 @SmallTest
+@RunWith(MockitoJUnitRunner.class)
 public final class AttributionConfigTest {
     private static final String SOURCE_AD_TECH = "AdTech1-Ads";
+    @Mock private Flags mFlags;
 
     @Test
     public void testCreation() throws Exception {
@@ -138,7 +145,7 @@ public final class AttributionConfigTest {
 
         // Action
         AttributionConfig actual =
-                new AttributionConfig.Builder(createExampleAttributionConfigJson()).build();
+                new AttributionConfig.Builder(createExampleAttributionConfigJson(), mFlags).build();
 
         // Assertion
         assertEquals(expected, actual);
@@ -153,7 +160,7 @@ public final class AttributionConfigTest {
         // Assertion
         assertThrows(
                 JSONException.class,
-                () -> new AttributionConfig.Builder(attributionConfigJson).build());
+                () -> new AttributionConfig.Builder(attributionConfigJson, mFlags).build());
     }
 
     @Test
@@ -165,7 +172,7 @@ public final class AttributionConfigTest {
         // Assertion
         assertEquals(
                 new AttributionConfig.Builder().setSourceAdtech(SOURCE_AD_TECH).build(),
-                new AttributionConfig.Builder(attributionConfigJson).build());
+                new AttributionConfig.Builder(attributionConfigJson, mFlags).build());
     }
 
     @Test
@@ -176,7 +183,8 @@ public final class AttributionConfigTest {
         // Assertion
         assertEquals(
                 attributionConfig,
-                new AttributionConfig.Builder(attributionConfig.serializeAsJson()).build());
+                new AttributionConfig.Builder(attributionConfig.serializeAsJson(mFlags), mFlags)
+                        .build());
     }
 
     private JSONObject createExampleAttributionConfigJson() throws JSONException {

@@ -42,7 +42,7 @@ import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_CA_AND_CONTEXTUAL_ADS_AVAILABLE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_VALID_BIDS_OR_CONTEXTUAL_ADS_FOR_SCORING;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_WINNING_AD_FOUND;
-import static com.android.adservices.service.adselection.AdSelectionRunner.JS_SANDBOX_IS_NOT_AVAILABLE;
+import static com.android.adservices.service.adselection.AdSelectionRunner.ON_DEVICE_AUCTION_KILL_SWITCH_ENABLED;
 import static com.android.adservices.service.adselection.AdSelectionScriptEngine.NUM_BITS_STOCHASTIC_ROUNDING;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.BIDDING_STAGE_END_TIMESTAMP;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.BIDDING_STAGE_START_TIMESTAMP;
@@ -79,7 +79,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyList;
 
@@ -155,7 +154,6 @@ import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.function.ThrowingRunnable;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
@@ -436,6 +434,7 @@ public class OnDeviceAdSelectionRunnerTest {
                                         .getBuyerDecisionLogicJs())
                         // TODO(b/230569187) add contextual signals once supported in the main logic
                         .setBuyerContextualSignals("{}")
+                        .setSellerContextualSignals("{}")
                         .setCreationTimestamp(adSelectionCreationTs)
                         .build();
 
@@ -572,6 +571,129 @@ public class OnDeviceAdSelectionRunnerTest {
                                         .getBuyerDecisionLogicJs())
                         // TODO(b/230569187) add contextual signals once supported in the main logic
                         .setBuyerContextualSignals(buyerContextualSignals2.toString())
+                        .setSellerContextualSignals("{}")
+                        .setCreationTimestamp(adSelectionCreationTs)
+                        .build();
+
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
+
+        verify(mPerBuyerBiddingRunnerMock)
+                .runBidding(
+                        BUYER_1,
+                        ImmutableList.of(mDBCustomAudienceForBuyer1),
+                        mFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
+                        adSelectionConfig);
+        verify(mPerBuyerBiddingRunnerMock)
+                .runBidding(
+                        BUYER_2,
+                        ImmutableList.of(mDBCustomAudienceForBuyer2),
+                        mFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
+                        adSelectionConfig);
+
+        verify(mMockAdsScoreGenerator).runAdScoring(mAdBiddingOutcomeList, adSelectionConfig);
+
+        assertTrue(resultsCallback.mIsSuccess);
+        assertEquals(
+                expectedAdSelectionResult.getAdSelectionId(),
+                resultsCallback.mAdSelectionResponse.getAdSelectionId());
+        assertEquals(
+                expectedAdSelectionResult.getWinningAdRenderUri(),
+                resultsCallback.mAdSelectionResponse.getRenderUri());
+        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
+        assertEquals(
+                expectedAdSelectionResult,
+                mAdSelectionEntryDao.getAdSelectionEntityById(AD_SELECTION_ID));
+        verifyLogForSuccessfulBiddingProcess(mAdBiddingOutcomeList);
+        verifyLogForSuccessfulAdSelectionProcess();
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_SUCCESS),
+                        eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS));
+    }
+
+    @Test
+    public void testRunAdSelectionSuccessWithSellerDataVersionHeader() throws AdServicesException {
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+        when(mClockSpy.instant()).thenReturn(Clock.systemUTC().instant());
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        mAdBiddingOutcomeForBuyer1 =
+                AdBiddingOutcomeFixture.anAdBiddingOutcomeBuilder(BUYER_1, 1.0).build();
+        mAdBiddingOutcomeForBuyer2 =
+                AdBiddingOutcomeFixture.anAdBiddingOutcomeBuilder(BUYER_2, 2.0).build();
+        mAdBiddingOutcomeList =
+                Arrays.asList(mAdBiddingOutcomeForBuyer1, mAdBiddingOutcomeForBuyer2);
+
+        SellerContextualSignals sellerContextualSignals =
+                SellerContextualSignals.builder().setDataVersion(DATA_VERSION_1).build();
+
+        mAdScoringOutcomeForBuyer1 =
+                AdScoringOutcomeFixture.anAdScoringBuilderWithSellerContextualSignals(
+                                BUYER_1, 2.0, sellerContextualSignals)
+                        .build();
+        mAdScoringOutcomeForBuyer2 =
+                AdScoringOutcomeFixture.anAdScoringBuilderWithSellerContextualSignals(
+                                BUYER_2, 3.0, sellerContextualSignals)
+                        .build();
+        mAdScoringOutcomeList =
+                Arrays.asList(mAdScoringOutcomeForBuyer1, mAdScoringOutcomeForBuyer2);
+
+        verifyAndSetupCommonSuccessScenario(adSelectionConfig);
+        mAdSelectionRunner =
+                new OnDeviceAdSelectionRunner(
+                        mContextSpy,
+                        mCustomAudienceDao,
+                        mAdSelectionEntryDao,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mMockAdsScoreGenerator,
+                        mMockAdSelectionIdGenerator,
+                        mClockSpy,
+                        mAdServicesLoggerMock,
+                        mFlags,
+                        CALLER_UID,
+                        mAdSelectionServiceFilterMock,
+                        mAdSelectionExecutionLogger,
+                        mPerBuyerBiddingRunnerMock,
+                        mAdFilterer,
+                        mAdCounterKeyCopier,
+                        mAdCounterHistogramUpdater,
+                        mFrequencyCapAdDataValidator,
+                        mDebugReportingMock);
+        // Populating the Custom Audience DB
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                mDBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                mDBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+        Instant adSelectionCreationTs = Clock.systemUTC().instant().truncatedTo(ChronoUnit.MILLIS);
+        when(mClockSpy.instant()).thenReturn(adSelectionCreationTs);
+        DBAdSelectionEntry expectedAdSelectionResult =
+                new DBAdSelectionEntry.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setBiddingLogicUri(mDBCustomAudienceForBuyer2.getBiddingLogicUri())
+                        .setWinningAdBid(
+                                mAdScoringOutcomeForBuyer2.getAdWithScore().getAdWithBid().getBid())
+                        .setCustomAudienceSignals(
+                                mAdScoringOutcomeForBuyer2.getCustomAudienceSignals())
+                        .setWinningAdRenderUri(
+                                mAdScoringOutcomeForBuyer2
+                                        .getAdWithScore()
+                                        .getAdWithBid()
+                                        .getAdData()
+                                        .getRenderUri())
+                        .setBuyerDecisionLogicJs(
+                                mAdBiddingOutcomeForBuyer1
+                                        .getCustomAudienceBiddingInfo()
+                                        .getBuyerDecisionLogicJs())
+                        // TODO(b/230569187) add contextual signals once supported in the main logic
+                        .setBuyerContextualSignals("{}")
+                        .setSellerContextualSignals(sellerContextualSignals.toString())
                         .setCreationTimestamp(adSelectionCreationTs)
                         .build();
 
@@ -618,7 +740,7 @@ public class OnDeviceAdSelectionRunnerTest {
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
         when(mClockSpy.instant()).thenReturn(Clock.systemUTC().instant());
         Flags flagsWithFilteringDisabled =
-                new Flags() {
+                new OnDeviceAdSelectionRunnerTestFlags() {
                     @Override
                     public long getAdSelectionOverallTimeoutMs() {
                         return 300;
@@ -715,6 +837,7 @@ public class OnDeviceAdSelectionRunnerTest {
                                         .getBuyerDecisionLogicJs())
                         // TODO(b/230569187) add contextual signals once supported in the main logic
                         .setBuyerContextualSignals("{}")
+                        .setSellerContextualSignals("{}")
                         .setCreationTimestamp(adSelectionCreationTs)
                         .build();
 
@@ -748,7 +871,7 @@ public class OnDeviceAdSelectionRunnerTest {
                 expectedAdSelectionResult,
                 mAdSelectionEntryDao.getAdSelectionEntityById(AD_SELECTION_ID));
         DBAdSelectionHistogramInfo histogramInfo =
-                mAdSelectionEntryDao.getAdSelectionHistogramInfo(
+                mAdSelectionEntryDao.getAdSelectionHistogramInfoInOnDeviceTable(
                         resultsCallback.mAdSelectionResponse.getAdSelectionId(),
                         MY_APP_PACKAGE_NAME);
         assertThat(histogramInfo).isNotNull();
@@ -823,6 +946,7 @@ public class OnDeviceAdSelectionRunnerTest {
                                         .getBuyerDecisionLogicJs())
                         // TODO(b/230569187) add contextual signals once supported in the main logic
                         .setBuyerContextualSignals("{}")
+                        .setSellerContextualSignals("{}")
                         .setCreationTimestamp(adSelectionCreationTs)
                         .build();
 
@@ -841,6 +965,7 @@ public class OnDeviceAdSelectionRunnerTest {
                                         .getRenderUri())
                         // TODO(b/230569187) add contextual signals once supported in the main logic
                         .setBuyerContextualSignals("{}")
+                        .setSellerContextualSignals("{}")
                         .setCreationTimestamp(adSelectionCreationTs)
                         .setCallerPackageName(MY_APP_PACKAGE_NAME)
                         .setBiddingLogicUri(mAdScoringOutcomeForBuyer2.getBiddingLogicUri())
@@ -1055,6 +1180,7 @@ public class OnDeviceAdSelectionRunnerTest {
                                         .getRenderUri())
                         .setBiddingLogicUri(mAdScoringOutcomeForBuyer2.getBiddingLogicUri())
                         .setBuyerContextualSignals("{}")
+                        .setSellerContextualSignals("{}")
                         .setCallerPackageName(MY_APP_PACKAGE_NAME)
                         .build();
 
@@ -1246,7 +1372,7 @@ public class OnDeviceAdSelectionRunnerTest {
     @Test
     public void testRunAdSelectionCallerNotInForegroundFlagDisabled_doesNotFailValidation() {
         Flags flags =
-                new Flags() {
+                new OnDeviceAdSelectionRunnerTestFlags() {
                     @Override
                     public boolean getEnforceForegroundStatusForFledgeRunAdSelection() {
                         return false;
@@ -1370,6 +1496,7 @@ public class OnDeviceAdSelectionRunnerTest {
                                         .getBuyerDecisionLogicJs())
                         // TODO(b/230569187) add contextual signals once supported in the main logic
                         .setBuyerContextualSignals("{}")
+                        .setSellerContextualSignals("{}")
                         .setCreationTimestamp(adSelectionCreationTs)
                         .build();
 
@@ -1505,6 +1632,7 @@ public class OnDeviceAdSelectionRunnerTest {
                                         .getRenderUri())
                         .setBiddingLogicUri(mAdScoringOutcomeForBuyer1.getBiddingLogicUri())
                         .setBuyerContextualSignals("{}")
+                        .setSellerContextualSignals("{}")
                         .setCallerPackageName(MY_APP_PACKAGE_NAME)
                         .build();
 
@@ -1929,6 +2057,7 @@ public class OnDeviceAdSelectionRunnerTest {
                                         .getRenderUri())
                         .setBiddingLogicUri(mAdScoringOutcomeForBuyer1.getBiddingLogicUri())
                         .setBuyerContextualSignals("{}")
+                        .setSellerContextualSignals("{}")
                         .setCallerPackageName(MY_APP_PACKAGE_NAME)
                         .build();
 
@@ -2048,6 +2177,54 @@ public class OnDeviceAdSelectionRunnerTest {
     }
 
     @Test
+    public void testRunAdSelection_withOnDeviceAuctionDisabled_throwsIllegalStateException() {
+        Flags flagsWithOnDeviceAuctionDisabled =
+                new OnDeviceAdSelectionRunnerTestFlags() {
+                    @Override
+                    public boolean getFledgeOnDeviceAuctionKillSwitch() {
+                        return true;
+                    }
+                };
+        mAdSelectionExecutionLogger =
+                new AdSelectionExecutionLogger(
+                        sCallerMetadata,
+                        mAdSelectionExecutionLoggerClockMock,
+                        mContextSpy,
+                        mAdServicesLoggerMock);
+        AdSelectionRunner runner =
+                new OnDeviceAdSelectionRunner(
+                        mContextSpy,
+                        mCustomAudienceDao,
+                        mAdSelectionEntryDao,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mMockAdsScoreGenerator,
+                        mMockAdSelectionIdGenerator,
+                        mClockSpy,
+                        mAdServicesLoggerMock,
+                        flagsWithOnDeviceAuctionDisabled,
+                        CALLER_UID,
+                        mAdSelectionServiceFilterMock,
+                        mAdSelectionExecutionLogger,
+                        mPerBuyerBiddingRunnerMock,
+                        mAdFilterer,
+                        mAdCounterKeyCopier,
+                        mAdCounterHistogramUpdater,
+                        mFrequencyCapAdDataValidator,
+                        mDebugReportingMock);
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        AdSelectionTestCallback callback =
+                invokeRunAdSelection(runner, adSelectionConfig, MY_APP_PACKAGE_NAME);
+
+        verifyErrorMessageIsCorrect(
+                callback.mFledgeErrorResponse.getErrorMessage(),
+                ON_DEVICE_AUCTION_KILL_SWITCH_ENABLED);
+    }
+
+    @Test
     public void testmMockDBAdSeleciton() throws AdServicesException {
         when(mClockSpy.instant()).thenReturn(Clock.systemUTC().instant());
         doReturn(mFlags).when(FlagsFactory::getFlags);
@@ -2156,7 +2333,7 @@ public class OnDeviceAdSelectionRunnerTest {
     @Test
     public void testRunAdSelectionPerBuyerTimeout() throws AdServicesException {
         Flags flagsWithSmallPerBuyerTimeout =
-                new Flags() {
+                new OnDeviceAdSelectionRunnerTestFlags() {
                     @Override
                     public long getAdSelectionOverallTimeoutMs() {
                         return 5000;
@@ -2241,6 +2418,7 @@ public class OnDeviceAdSelectionRunnerTest {
                                         .getBuyerDecisionLogicJs())
                         // TODO(b/230569187) add contextual signals once supported in the main logic
                         .setBuyerContextualSignals("{}")
+                        .setSellerContextualSignals("{}")
                         .setCreationTimestamp(adSelectionCreationTs)
                         .build();
 
@@ -2377,46 +2555,6 @@ public class OnDeviceAdSelectionRunnerTest {
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(STATUS_RATE_LIMIT_REACHED),
                         eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS));
-    }
-
-    @Test
-    public void testAdSelectionRunnerInstanceNotCreatedIfJSSandboxNotInWebView() {
-        doReturn(null).when(WebView::getCurrentWebViewPackage);
-
-        mAdSelectionExecutionLogger =
-                new AdSelectionExecutionLogger(
-                        sCallerMetadata,
-                        mAdSelectionExecutionLoggerClockMock,
-                        mContextSpy,
-                        mAdServicesLoggerMock);
-
-        ThrowingRunnable initializeAdSelectionRunner =
-                () ->
-                        new OnDeviceAdSelectionRunner(
-                                mContextSpy,
-                                mCustomAudienceDao,
-                                mAdSelectionEntryDao,
-                                mAdServicesHttpsClient,
-                                mLightweightExecutorService,
-                                mBackgroundExecutorService,
-                                mScheduledExecutor,
-                                mMockAdsScoreGenerator,
-                                mMockAdSelectionIdGenerator,
-                                mClockSpy,
-                                mAdServicesLoggerMock,
-                                mFlags,
-                                CALLER_UID,
-                                mAdSelectionServiceFilterMock,
-                                mAdSelectionExecutionLogger,
-                                mPerBuyerBiddingRunnerMock,
-                                mAdFilterer,
-                                mAdCounterKeyCopier,
-                                mAdCounterHistogramUpdater,
-                                mFrequencyCapAdDataValidator,
-                                mDebugReportingMock);
-        Throwable throwable =
-                assertThrows(IllegalArgumentException.class, initializeAdSelectionRunner);
-        verifyErrorMessageIsCorrect(throwable.getMessage(), JS_SANDBOX_IS_NOT_AVAILABLE);
     }
 
     @Test
@@ -2677,7 +2815,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         .build();
 
         final Flags flags =
-                new Flags() {
+                new OnDeviceAdSelectionRunnerTestFlags() {
                     @Override
                     public long getAdSelectionOverallTimeoutMs() {
                         return 300;
@@ -2748,7 +2886,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         .setBuyerContextualAds(createContextualAds())
                         .build();
         final Flags flags =
-                new Flags() {
+                new OnDeviceAdSelectionRunnerTestFlags() {
                     @Override
                     public boolean getDisableFledgeEnrollmentCheck() {
                         return true;
@@ -2817,7 +2955,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         .build();
 
         final Flags flags =
-                new Flags() {
+                new OnDeviceAdSelectionRunnerTestFlags() {
                     @Override
                     public boolean getDisableFledgeEnrollmentCheck() {
                         return true;
@@ -2943,6 +3081,7 @@ public class OnDeviceAdSelectionRunnerTest {
                                         .getRenderUri())
                         .setBiddingLogicUri(mAdScoringOutcomeForBuyer1.getBiddingLogicUri())
                         .setBuyerContextualSignals("{}")
+                        .setSellerContextualSignals("{}")
                         .setAdCounterIntKeys(AdDataFixture.getAdCounterKeys());
 
         doReturn(dbAdSelectionBuilder)
@@ -2969,7 +3108,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         callback.mAdSelectionResponse.getAdSelectionId()));
 
         DBAdSelectionHistogramInfo histogramInfo =
-                mAdSelectionEntryDao.getAdSelectionHistogramInfo(
+                mAdSelectionEntryDao.getAdSelectionHistogramInfoInOnDeviceTable(
                         callback.mAdSelectionResponse.getAdSelectionId(), MY_APP_PACKAGE_NAME);
         assertThat(histogramInfo).isNotNull();
         assertThat(histogramInfo.getBuyer()).isEqualTo(BUYER_1);
@@ -3147,7 +3286,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         .build();
 
         adSelectionRunner.runAdSelection(
-                input, adSelectionTestCallback, DevContext.createForDevOptionsDisabled());
+                input, adSelectionTestCallback, DevContext.createForDevOptionsDisabled(), null);
         try {
             adSelectionTestCallback.mCountDownLatch.await();
         } catch (InterruptedException e) {
@@ -3506,6 +3645,11 @@ public class OnDeviceAdSelectionRunnerTest {
         @Override
         public long getReportImpressionOverallTimeoutMs() {
             return EXTENDED_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
+        }
+
+        @Override
+        public boolean getFledgeOnDeviceAuctionKillSwitch() {
+            return false;
         }
     }
 

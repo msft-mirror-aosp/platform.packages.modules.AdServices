@@ -169,9 +169,14 @@ public class AppSetIdWorker {
                             }
                         }
 
+                        // TODO(b/296928283): Handle the Security Exception thrown from Provider
+                        // properly.
                         @Override
                         public void onError(String errorMessage) {
                             try {
+                                LogUtil.e(
+                                        "Get AppSetId Error Message from Provider: %s",
+                                        errorMessage);
                                 callback.onError(STATUS_INTERNAL_ERROR);
                             } catch (RemoteException e) {
                                 LogUtil.e("RemoteException");

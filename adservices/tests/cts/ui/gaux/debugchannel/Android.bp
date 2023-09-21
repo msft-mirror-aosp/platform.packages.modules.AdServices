@@ -28,6 +28,7 @@ android_test {
         "truth-prebuilt",
         "adservices-test-utility",
         "adservices-ui-cts-root-test-lib",
+        "platform-test-rules",
     ],
     libs: [
         "android.test.base",

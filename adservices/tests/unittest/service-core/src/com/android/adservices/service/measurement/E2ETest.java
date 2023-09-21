@@ -46,6 +46,7 @@ import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.AggregateReportingJob;
 import com.android.adservices.service.measurement.actions.EventReportingJob;
 import com.android.adservices.service.measurement.actions.InstallApp;
+import com.android.adservices.service.measurement.actions.RegisterListSources;
 import com.android.adservices.service.measurement.actions.RegisterSource;
 import com.android.adservices.service.measurement.actions.RegisterTrigger;
 import com.android.adservices.service.measurement.actions.RegisterWebSource;
@@ -162,6 +163,7 @@ public abstract class E2ETest {
         String TEST_OUTPUT_KEY = "output";
         String SOURCE_REGISTRATIONS_KEY = "sources";
         String WEB_SOURCES_KEY = "web_sources";
+        String LIST_SOURCES_KEY = "list_sources";
         String SOURCE_PARAMS_REGISTRATIONS_KEY = "source_params";
         String TRIGGER_KEY = "triggers";
         String WEB_TRIGGERS_KEY = "web_triggers";
@@ -178,6 +180,7 @@ public abstract class E2ETest {
         String SOURCE_WEB_DESTINATION_URI_KEY = "web_destination";
         String SOURCE_VERIFIED_DESTINATION_URI_KEY = "verified_destination";
         String REGISTRATION_URI_KEY = "attribution_src_url";
+        String REGISTRATION_URIS_KEY = "attribution_src_urls";
         String HAS_AD_ID_PERMISSION = "has_ad_id_permission";
         String DEBUG_KEY = "debug_key";
         String DEBUG_PERMISSION_KEY = "debug_permission";
@@ -203,15 +206,8 @@ public abstract class E2ETest {
 
     private interface ApiConfigKeys {
         // Privacy params
-        String RATE_LIMIT_MAX_ATTRIBUTIONS = "rate_limit_max_attributions";
         String NAVIGATION_SOURCE_TRIGGER_DATA_CARDINALITY =
                 "navigation_source_trigger_data_cardinality";
-        String RATE_LIMIT_MAX_ATTRIBUTION_REPORTING_ORIGINS =
-                "rate_limit_max_attribution_reporting_origins";
-        String MAX_DESTINATIONS_PER_SOURCE_SITE_REPORTING_SITE =
-                "max_destinations_per_source_site_reporting_site";
-        String RATE_LIMIT_MAX_SOURCE_REGISTRATION_REPORTING_ORIGINS =
-                "rate_limit_max_source_registration_reporting_origins";
         // System health params
         String MAX_SOURCES_PER_ORIGIN = "max_sources_per_origin";
         String MAX_EVENT_LEVEL_REPORTS_PER_DESTINATION =
@@ -222,11 +218,7 @@ public abstract class E2ETest {
 
     public static class ParamsProvider {
         // Privacy params
-        private Integer mMaxAttributionPerRateLimitWindow;
         private Integer mNavigationTriggerDataCardinality;
-        private Integer mMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution;
-        private Integer mMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource;
-        private Integer mMaxDistinctEnrollmentsPerPublisherXDestinationInSource;
         // System health params
         private Integer mMaxSourcesPerPublisher;
         private Integer mMaxEventReportsPerDestination;
@@ -234,44 +226,12 @@ public abstract class E2ETest {
 
         public ParamsProvider(JSONObject json) throws JSONException {
             // Privacy params
-            if (!json.isNull(ApiConfigKeys.RATE_LIMIT_MAX_ATTRIBUTIONS)) {
-                mMaxAttributionPerRateLimitWindow = json.getInt(
-                        ApiConfigKeys.RATE_LIMIT_MAX_ATTRIBUTIONS);
-            } else {
-                mMaxAttributionPerRateLimitWindow =
-                        Flags.MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
-            }
             if (!json.isNull(ApiConfigKeys.NAVIGATION_SOURCE_TRIGGER_DATA_CARDINALITY)) {
                 mNavigationTriggerDataCardinality = json.getInt(
                         ApiConfigKeys.NAVIGATION_SOURCE_TRIGGER_DATA_CARDINALITY);
             } else {
                 mNavigationTriggerDataCardinality =
                         PrivacyParams.getNavigationTriggerDataCardinality();
-            }
-            if (!json.isNull(ApiConfigKeys
-                    .RATE_LIMIT_MAX_ATTRIBUTION_REPORTING_ORIGINS)) {
-                mMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution = json.getInt(
-                        ApiConfigKeys.RATE_LIMIT_MAX_ATTRIBUTION_REPORTING_ORIGINS);
-            } else {
-                mMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution =
-                        Flags.MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION;
-            }
-            if (!json.isNull(ApiConfigKeys
-                    .MAX_DESTINATIONS_PER_SOURCE_SITE_REPORTING_SITE)) {
-                mMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource = json.getInt(
-                        ApiConfigKeys.MAX_DESTINATIONS_PER_SOURCE_SITE_REPORTING_SITE);
-            } else {
-                mMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource =
-                        Flags.MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE;
-            }
-            if (!json.isNull(ApiConfigKeys
-                    .RATE_LIMIT_MAX_SOURCE_REGISTRATION_REPORTING_ORIGINS)) {
-                mMaxDistinctEnrollmentsPerPublisherXDestinationInSource = json.getInt(
-                        ApiConfigKeys.RATE_LIMIT_MAX_SOURCE_REGISTRATION_REPORTING_ORIGINS);
-            } else {
-                mMaxDistinctEnrollmentsPerPublisherXDestinationInSource =
-                        PrivacyParams
-                                .getMaxDistinctEnrollmentsPerPublisherXDestinationInSource();
             }
             // System health params
             if (!json.isNull(ApiConfigKeys.MAX_SOURCES_PER_ORIGIN)) {
@@ -296,24 +256,8 @@ public abstract class E2ETest {
         }
 
         // Privacy params
-        public Integer getMaxAttributionPerRateLimitWindow() {
-            return mMaxAttributionPerRateLimitWindow;
-        }
-
         public Integer getNavigationTriggerDataCardinality() {
             return mNavigationTriggerDataCardinality;
-        }
-
-        public Integer getMaxDistinctEnrollmentsInAttribution() {
-            return mMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution;
-        }
-
-        public Integer getMaxDistinctDestinationsInActiveSource() {
-            return mMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource;
-        }
-
-        public Integer getMaxDistinctEnrollmentsPerPublisherXDestinationInSource() {
-            return mMaxDistinctEnrollmentsPerPublisherXDestinationInSource;
         }
 
         // System health params
@@ -332,6 +276,11 @@ public abstract class E2ETest {
 
     static Collection<Object[]> data(String testDirName, Function<String, String> preprocessor)
             throws IOException, JSONException {
+        return data(testDirName, preprocessor, new HashMap<>());
+    }
+
+    static Collection<Object[]> data(String testDirName, Function<String, String> preprocessor,
+            Map<String, String> apiConfigPhFlags) throws IOException, JSONException {
         AssetManager assetManager = sContext.getAssets();
         List<InputStream> inputStreams = new ArrayList<>();
         List<String> dirPathList = new ArrayList<>(Collections.singletonList(testDirName));
@@ -349,7 +298,10 @@ public abstract class E2ETest {
             }
         }
         return getTestCasesFrom(
-                inputStreams, testFileList.stream().toArray(String[]::new), preprocessor);
+                inputStreams,
+                testFileList.stream().toArray(String[]::new),
+                preprocessor,
+                apiConfigPhFlags);
     }
 
     private static boolean isDirectory(String testAssetName) throws IOException {
@@ -520,6 +472,8 @@ public abstract class E2ETest {
                 processAction((RegisterWebSource) action);
             } else if (action instanceof RegisterWebTrigger) {
                 processAction((RegisterWebTrigger) action);
+            } else if (action instanceof RegisterListSources) {
+                processAction((RegisterListSources) action);
             } else if (action instanceof EventReportingJob) {
                 processAction((EventReportingJob) action);
             } else if (action instanceof AggregateReportingJob) {
@@ -555,6 +509,10 @@ public abstract class E2ETest {
      * Override with HTTP response mocks, for example.
      */
     abstract void prepareRegistrationServer(RegisterSource sourceRegistration)
+            throws IOException;
+
+    /** Override with HTTP response mocks, for example. */
+    abstract void prepareRegistrationServer(RegisterListSources sourceRegistration)
             throws IOException;
 
     /**
@@ -1089,9 +1047,11 @@ public abstract class E2ETest {
      * {@code [Collection<Object> actions, ReportObjects expectedOutput,
      * ParamsProvider paramsProvider, String name]}
      */
-    private static Collection<Object[]> getTestCasesFrom(List<InputStream> inputStreams,
-            String[] filenames, Function<String, String> preprocessor)
-            throws IOException, JSONException {
+    private static Collection<Object[]> getTestCasesFrom(
+            List<InputStream> inputStreams,
+            String[] filenames,
+            Function<String, String> preprocessor,
+            Map<String, String> apiConfigPhFlags) throws IOException, JSONException {
         List<Object[]> testCases = new ArrayList<>();
 
         for (int i = 0; i < inputStreams.size(); i++) {
@@ -1118,23 +1078,37 @@ public abstract class E2ETest {
 
             ReportObjects expectedOutput = getExpectedOutput(output);
 
-            JSONObject ApiConfigObj = testObj.isNull(TestFormatJsonMapping.API_CONFIG_KEY)
+            JSONObject apiConfigObj = testObj.isNull(TestFormatJsonMapping.API_CONFIG_KEY)
                     ? new JSONObject()
                     : testObj.getJSONObject(TestFormatJsonMapping.API_CONFIG_KEY);
 
-            ParamsProvider paramsProvider = new ParamsProvider(ApiConfigObj);
+            ParamsProvider paramsProvider = new ParamsProvider(apiConfigObj);
 
             testCases.add(
                     new Object[] {
-                        actions, expectedOutput, paramsProvider, name, extractPhFlags(testObj)
+                        actions,
+                        expectedOutput,
+                        paramsProvider,
+                        name,
+                        extractPhFlags(testObj, apiConfigObj, apiConfigPhFlags)
                     });
         }
 
         return testCases;
     }
 
-    private static Map<String, String> extractPhFlags(JSONObject testObj) {
+    private static Map<String, String> extractPhFlags(JSONObject testObj, JSONObject apiConfigObj,
+            // Interop tests may have some configurations in the "api_config" field that correspond
+            // with Ph Flags.
+            Map<String, String> apiConfigPhFlags) {
         Map<String, String> phFlagsMap = new HashMap<>();
+        apiConfigPhFlags.keySet().forEach(
+                (key) -> {
+                        if (!apiConfigObj.isNull(key)) {
+                            phFlagsMap.put(apiConfigPhFlags.get(key), apiConfigObj.optString(key));
+                        }
+                }
+        );
         if (testObj.isNull(TestFormatJsonMapping.PH_FLAGS_OVERRIDE_KEY)) {
             return phFlagsMap;
         }
@@ -1182,6 +1156,26 @@ public abstract class E2ETest {
             }
         }
 
+        if (!input.isNull(TestFormatJsonMapping.LIST_SOURCES_KEY)) {
+            JSONArray listSourceRegistrationArray =
+                    input.getJSONArray(TestFormatJsonMapping.LIST_SOURCES_KEY);
+            for (int j = 0; j < listSourceRegistrationArray.length(); j++) {
+                RegisterListSources listSources =
+                        new RegisterListSources(listSourceRegistrationArray.getJSONObject(j));
+                actions.add(listSources);
+                // Add corresponding reporting job time actions
+                eventReportingJobActions.addAll(
+                        maybeAddEventReportingJobTimes(
+                                listSources
+                                                .mRegistrationRequest
+                                                .getSourceRegistrationRequest()
+                                                .getInputEvent()
+                                        == null,
+                                listSources.mTimestamp,
+                                listSources.mUriToResponseHeadersMap.values()));
+            }
+        }
+
         actions.addAll(eventReportingJobActions);
         return actions;
     }
@@ -1217,7 +1211,7 @@ public abstract class E2ETest {
         // Aggregate reports are scheduled close to trigger time. Add aggregate report jobs to cover
         // the time span outlined by triggers.
         List<Action> aggregateReportingJobActions = new ArrayList<>();
-        long window = SystemHealthParams.MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS - 10;
+        long window = Flags.DEFAULT_MEASUREMENT_MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS - 10;
         long t = firstTriggerTime;
 
         do {
@@ -1341,6 +1335,9 @@ public abstract class E2ETest {
     abstract void processAction(RegisterWebSource sourceRegistration)
             throws IOException, JSONException;
 
+    abstract void processAction(RegisterListSources sourceRegistration)
+            throws IOException, JSONException;
+
     abstract void processAction(RegisterTrigger triggerRegistration)
             throws IOException, JSONException;
 
@@ -1371,11 +1368,14 @@ public abstract class E2ETest {
         mPhFlagsMap
                 .keySet()
                 .forEach(
-                        key ->
+                        key -> {
+                                log(String.format(
+                                        "Setting PhFlag %s to %s", key, mPhFlagsMap.get(key)));
                                 DeviceConfig.setProperty(
                                         DeviceConfig.NAMESPACE_ADSERVICES,
                                         key,
                                         mPhFlagsMap.get(key),
-                                        false));
+                                        false);
+                        });
     }
 }

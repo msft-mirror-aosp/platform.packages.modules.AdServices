@@ -16,5 +16,11 @@
   -->
 
 <resources>
+    <string name="disable_back">Disable Back Navigation</string>
+    <string name="enable_back">Enable Back Navigation</string>
+    <string name="portrait_orientation">Set SCREEN_ORIENTATION_PORTRAIT</string>
+    <string name="landscape_orientation">Set SCREEN_ORIENTATION_LANDSCAPE</string>
+    <string name="destroy_activity">Destroy Activity</string>
+    <string name="open_landing_page">Open Landing Page</string>
     <string name="view_message">Rendered view</string>
 </resources>

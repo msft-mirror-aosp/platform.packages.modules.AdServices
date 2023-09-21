@@ -44,10 +44,14 @@ import java.lang.annotation.RetentionPolicy;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * POJO for Source.
@@ -156,9 +160,21 @@ public class Source {
     @Nullable
     public static List<Pair<Long, Long>> parseEventReportWindows(
             @NonNull String eventReportWindows) {
-        List<Pair<Long, Long>> result = new ArrayList<>();
         try {
             JSONObject jsonObject = new JSONObject(eventReportWindows);
+            return parseEventReportWindows(jsonObject);
+        } catch (JSONException e) {
+            LogUtil.e(e, "Invalid JSON encountered: event_report_windows");
+            return null;
+        }
+    }
+
+    /** Parses the provided eventReportWindows. Returns null if parsing fails */
+    @Nullable
+    public static List<Pair<Long, Long>> parseEventReportWindows(
+            @NonNull JSONObject jsonObject) {
+        List<Pair<Long, Long>> result = new ArrayList<>();
+        try {
             long startDuration = 0;
             if (!jsonObject.isNull("start_time")) {
                 startDuration = jsonObject.getLong("start_time");
@@ -221,7 +237,7 @@ public class Source {
         EventReportWindowCalcDelegate eventReportWindowCalcDelegate =
                 new EventReportWindowCalcDelegate(flags);
         boolean installCase = SourceNoiseHandler.isInstallDetectionEnabled(this);
-        int numStates =
+        long numStates =
                 Combinatorics.getNumStatesArithmetic(
                         eventReportWindowCalcDelegate.getMaxReportCount(this, installCase),
                         getTriggerDataCardinality(),
@@ -728,7 +744,14 @@ public class Source {
      * Returns the AggregatableAttributionSource object, which is constructed using the aggregate
      * source string and aggregate filter data string in Source.
      */
-    public Optional<AggregatableAttributionSource> getAggregatableAttributionSource()
+    public Optional<AggregatableAttributionSource> getAggregatableAttributionSource(
+            @NonNull Trigger trigger, Flags flags) throws JSONException {
+        return flags.getMeasurementEnableLookbackWindowFilter()
+                ? getAggregatableAttributionSourceV2(trigger)
+                : getAggregatableAttributionSource();
+    }
+
+    private Optional<AggregatableAttributionSource> getAggregatableAttributionSource()
             throws JSONException {
         if (mAggregatableAttributionSource == null) {
             if (mAggregateSource == null) {
@@ -737,7 +760,9 @@ public class Source {
             }
             JSONObject jsonObject = new JSONObject(mAggregateSource);
             TreeMap<String, BigInteger> aggregateSourceMap = new TreeMap<>();
-            for (String key : jsonObject.keySet()) {
+            Iterator<String> keys = jsonObject.keys();
+            while (keys.hasNext()) {
+                String key = keys.next();
                 // Remove "0x" prefix.
                 String hexString = jsonObject.getString(key).substring(2);
                 BigInteger bigInteger = new BigInteger(hexString, 16);
@@ -752,6 +777,26 @@ public class Source {
         }
 
         return mAggregatableAttributionSource;
+    }
+
+    private Optional<AggregatableAttributionSource> getAggregatableAttributionSourceV2(
+            @NonNull Trigger trigger) throws JSONException {
+        if (mAggregateSource == null) {
+            return Optional.empty();
+        }
+        JSONObject jsonObject = new JSONObject(mAggregateSource);
+        TreeMap<String, BigInteger> aggregateSourceMap = new TreeMap<>();
+        for (String key : jsonObject.keySet()) {
+            // Remove "0x" prefix.
+            String hexString = jsonObject.getString(key).substring(2);
+            BigInteger bigInteger = new BigInteger(hexString, 16);
+            aggregateSourceMap.put(key, bigInteger);
+        }
+        return Optional.of(
+                new AggregatableAttributionSource.Builder()
+                        .setAggregatableSource(aggregateSourceMap)
+                        .setFilterMap(getFilterData(trigger))
+                        .build());
     }
 
     /** Returns the registration id. */
@@ -897,10 +942,16 @@ public class Source {
     }
 
     /**
-     * Generates AggregatableFilterData from aggregate filter string in Source, including an entry
-     * for source type.
+     * Generates AggregatableFilterData from aggregate filter string in Source, including entries
+     * for source type and duration from source to trigger if lookback window filter is enabled.
      */
-    public FilterMap getFilterData() throws JSONException {
+    public FilterMap getFilterData(@NonNull Trigger trigger, Flags flags) throws JSONException {
+        return flags.getMeasurementEnableLookbackWindowFilter()
+                ? getFilterData(trigger)
+                : getFilterData();
+    }
+
+    private FilterMap getFilterData() throws JSONException {
         if (mFilterData != null) {
             return mFilterData;
         }
@@ -917,6 +968,55 @@ public class Source {
                 .getAttributionFilterMap()
                 .put("source_type", Collections.singletonList(mSourceType.getValue()));
         return mFilterData;
+    }
+
+    private FilterMap getFilterData(@NonNull Trigger trigger) throws JSONException {
+        FilterMap.Builder builder = new FilterMap.Builder();
+        if (mFilterDataString != null && !mFilterDataString.isEmpty()) {
+            builder.buildFilterDataV2(new JSONObject(mFilterDataString));
+        }
+        builder.addStringListValue("source_type", Collections.singletonList(mSourceType.getValue()))
+                .addLongValue(
+                        FilterMap.LOOKBACK_WINDOW,
+                        TimeUnit.MILLISECONDS.toSeconds(trigger.getTriggerTime() - mEventTime));
+        return builder.build();
+    }
+
+    private <V> Map<String, V> extractSharedFilterMapFromJson(Map<String, V> attributionFilterMap)
+            throws JSONException {
+        Map<String, V> sharedAttributionFilterMap = new HashMap<>();
+        JSONArray sharedFilterDataKeysArray = new JSONArray(mSharedFilterDataKeys);
+        for (int i = 0; i < sharedFilterDataKeysArray.length(); ++i) {
+            String filterKey = sharedFilterDataKeysArray.getString(i);
+            if (attributionFilterMap.containsKey(filterKey)) {
+                sharedAttributionFilterMap.put(filterKey, attributionFilterMap.get(filterKey));
+            }
+        }
+        return sharedAttributionFilterMap;
+    }
+
+    /**
+     * Generates AggregatableFilterData from aggregate filter string in Source, including entries
+     * for source type and duration from source to trigger if lookback window filter is enabled.
+     */
+    public FilterMap getSharedFilterData(@NonNull Trigger trigger, Flags flags)
+            throws JSONException {
+        FilterMap filterMap = getFilterData(trigger, flags);
+        if (mSharedFilterDataKeys == null) {
+            return filterMap;
+        }
+        if (flags.getMeasurementEnableLookbackWindowFilter()) {
+            return new FilterMap.Builder()
+                    .setAttributionFilterMapWithLongValue(
+                            extractSharedFilterMapFromJson(
+                                    filterMap.getAttributionFilterMapWithLongValue()))
+                    .build();
+        } else {
+            return new FilterMap.Builder()
+                    .setAttributionFilterMap(
+                            extractSharedFilterMapFromJson(filterMap.getAttributionFilterMap()))
+                    .build();
+        }
     }
 
     @Nullable

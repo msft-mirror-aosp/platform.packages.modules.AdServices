@@ -178,6 +178,47 @@ public final class EpochJobService extends JobService {
                         "0 errors, 1 warnings")
     }
 
+    @Test
+    fun invalidJobService_getLogger_throws() {
+        lint().files(java("""
+package com.android.adservices.service.topics;
+
+import android.app.job.JobParameters;
+import android.app.job.JobService;
+import com.android.adservices.LoggerFactory;
+
+public final class EpochJobService extends JobService {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getLogger();
+    @Override
+    public boolean onStartJob(JobParameters params) {
+        return true;
+    }
+
+    @Override
+    public boolean onStopJob(JobParameters params) {
+        return true;
+    }
+}
+                """).indented(),
+                *stubs
+        )
+                .issues(BackCompatJobServiceDetector.ISSUE)
+                .run()
+                .expect("src/com/android/adservices/service/topics/EpochJobService.java:8: Warning:" +
+                        " Avoid using new classes in AdServices JobService field Initializers." +
+                        " Due to the fact that ExtServices can OTA to any AdServices build," +
+                        " JobServices code needs to be properly gated to avoid" +
+                        " NoClassDefFoundError. NoClassDefFoundError can happen when new class" +
+                        " is used in ExtServices build, and the error happens when the device" +
+                        " OTA to old AdServices build on T which does not contain the new class" +
+                        " definition (go/rbc-jobservice-lint). [InvalidAdServicesJobService]\n" +
+                        "    private static final LoggerFactory.Logger sLogger =" +
+                        " LoggerFactory.getLogger();\n" +
+                        "                                                       " +
+                        " ~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                        "0 errors, 1 warnings")
+    }
+
     private val jobParameters: TestFile =
             java(
                     """
@@ -228,6 +269,10 @@ public final class EpochJobService extends JobService {
             package com.android.adservices;
             public class LoggerFactory {
                 public static Logger getTopicsLogger() {
+                    return null;
+                }
+
+                public static Logger getLogger() {
                     return null;
                 }
             }

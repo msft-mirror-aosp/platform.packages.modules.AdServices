@@ -21,12 +21,14 @@ import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesStates;
 import android.content.Context;
 import android.os.OutcomeReceiver;
+import android.platform.test.rule.ScreenRecordRule;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.tests.ui.libs.AdservicesWorkflows;
 import com.android.adservices.tests.ui.libs.UiConstants.UX;
 import com.android.adservices.tests.ui.libs.UiUtils;
 
@@ -36,6 +38,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -43,23 +46,32 @@ import java.util.concurrent.Executors;
 
 /** Test for verifying user consent notification trigger behaviors. */
 @RunWith(AndroidJUnit4.class)
+@ScreenRecordRule.ScreenRecord
 public class GaUxGraduationChannelTest {
 
     private AdServicesCommonManager mCommonManager;
 
     private UiDevice mDevice;
 
+    private String mTestName;
+
     private OutcomeReceiver<Boolean, Exception> mCallback;
 
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();
 
+    @Rule public final ScreenRecordRule sScreenRecordRule = new ScreenRecordRule();
+
     @Before
     public void setUp() throws Exception {
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
+        UiUtils.resetAdServicesConsentData(sContext);
+
         UiUtils.enableNotificationPermission();
         UiUtils.enableGa();
+        UiUtils.disableNotificationFlowV2();
+        UiUtils.disableOtaStrings();
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -113,6 +125,8 @@ public class GaUxGraduationChannelTest {
     public void tearDown() throws Exception {
         if (!AdservicesTestHelper.isDeviceSupported()) return;
 
+        UiUtils.takeScreenshot(mDevice, getClass().getSimpleName() + "_" + mTestName + "_");
+
         AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
@@ -122,8 +136,12 @@ public class GaUxGraduationChannelTest {
      */
     @Test
     public void testRowU18ToGaAdIdEnabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsRowDevice();
-        UiUtils.enableU18Ux();
+        UiUtils.enableU18();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         AdServicesStates u18States =
                 new AdServicesStates.Builder()
@@ -135,11 +153,11 @@ public class GaUxGraduationChannelTest {
 
         mCommonManager.enableAdServices(u18States, Executors.newCachedThreadPool(), mCallback);
 
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, UX.U18_UX);
 
         UiUtils.enableGa();
-
+        AdservicesTestHelper.killAdservicesProcess(sContext);
         AdServicesStates adultStates =
                 new AdServicesStates.Builder()
                         .setU18Account(false)
@@ -151,7 +169,7 @@ public class GaUxGraduationChannelTest {
         mCommonManager.enableAdServices(adultStates, Executors.newCachedThreadPool(), mCallback);
 
         // No notifications should be shown as graduation channel is disabled.
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, UX.GA_UX);
     }
 
@@ -161,8 +179,12 @@ public class GaUxGraduationChannelTest {
      */
     @Test
     public void testRowU18ToBetaAdIdEnabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsRowDevice();
-        UiUtils.enableU18Ux();
+        UiUtils.enableU18();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         AdServicesStates u18States =
                 new AdServicesStates.Builder()
@@ -174,11 +196,11 @@ public class GaUxGraduationChannelTest {
 
         mCommonManager.enableAdServices(u18States, Executors.newCachedThreadPool(), mCallback);
 
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, UX.U18_UX);
 
         UiUtils.enableBeta();
-
+        AdservicesTestHelper.killAdservicesProcess(sContext);
         AdServicesStates adultStates =
                 new AdServicesStates.Builder()
                         .setU18Account(false)
@@ -190,7 +212,7 @@ public class GaUxGraduationChannelTest {
         mCommonManager.enableAdServices(adultStates, Executors.newCachedThreadPool(), mCallback);
 
         // No notifications should be shown as there is no enrollment channel from U18 to Beta UX.
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, UX.BETA_UX);
     }
 }

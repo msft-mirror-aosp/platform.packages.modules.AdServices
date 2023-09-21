@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Zezwala na dostęp aplikacji do interfejsu AdServices Consent API."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Dostęp do Ad ID API"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Zezwala na dostęp aplikacji do interfejsów Ad ID API."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"Dostęp do interfejsu AdServices Cobalt Upload API"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Zezwala aplikacji na dostęp do interfejsu AdServices Cobalt Upload API."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Dostęp do App Set ID API"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Zezwala na dostęp aplikacji do interfejsów App Set ID API."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Dostęp do interfejsu Consent Service API"</string>
@@ -40,7 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Zezwala na dostęp aplikacji do interfejsu API stanu włączenia AdService."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Dostęp do interfejsu API AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Zezwala na dostęp aplikacji do interfejsów API AdServicesManager."</string>
-    <string name="app_label" msgid="5985320129629013968">"System Android"</string>
+    <string name="app_label" msgid="5844694701336604490">"Prywatność w reklamach"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Weź udział w testach wersji beta prywatności w reklamach na Androidzie"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android odkrywa sposoby wyświetlania reklam pozwalające lepiej chronić Twoją prywatność"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Więcej informacji"</string>
@@ -222,10 +224,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Zablokowane aplikacje"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Zresetuj dane dotyczące sugestii aplikacji"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Aplikacje często zapamiętują, co Cię interesuje, aby móc personalizować Twoje wrażenia. Aplikacje mogą też przechowywać w Androidzie informacje na temat dotyczących Cię tematów.\n\nJeśli np. używasz aplikacji poświęconej trenowaniu przed maratonem, może ona uznać, że zainteresują Cię buty do biegania. Później w innej aplikacji możesz zobaczyć reklamę butów zaproponowanych przez pierwszą aplikację.\n\nAndroid regularnie automatycznie usuwa dane dotyczące propozycji reklam. Aplikacja, której użyjesz ponownie, może znów pojawić się na liście. Możesz też zablokować możliwość sugerowania reklam przez wybrane aplikacje.\n\nTo, czy w aplikacjach zobaczysz personalizowane reklamy, będzie zależało od tego ustawienia, ustawienia tematów reklam, ustawień Twojego identyfikatora wyświetlania reklam, a także obsługi personalizacji reklam przez aplikacje, których używasz"</string>
-    <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"Dostępna jest nowa funkcja ochrony prywatności w reklamach"</string>
+    <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"Nowa funkcja ochrony prywatności w reklamach jest już dostępna"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"W celu pomiaru skuteczności reklam między aplikacjami udostępniane są tylko nieliczne informacje"</string>
-    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Wprowadzamy nową funkcję ochrony prywatności w reklamach – pomiar skuteczności reklam. W celu pomiaru skuteczności reklam między aplikacjami na Androidzie udostępniane są tylko niektóre informacje – np. o tym, kiedy dana reklama została wyświetlona."</string>
-    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Możesz wprowadzić zmiany w ustawieniach prywatności w reklamach."</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Wprowadzamy pomiar skuteczności reklam – nową funkcję ochrony prywatności w reklamach. Android udostępnia między aplikacjami bardzo ograniczone informacje (np. o tym, kiedy reklama się wyświetliła), aby pomagać im w ocenie skuteczności reklam."</string>
+    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Możesz wprowadzić zmiany w ustawieniach dotyczących prywatności w reklamach."</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Używane przez Ciebie aplikacje mogą prosić Androida o informacje, które pomogą im zmierzyć skuteczność prezentowanych reklam. Android pozwala aplikacjom gromadzić tylko niektóre typy danych."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Kolorowa ilustracja z symbolami reprezentującymi tematy zainteresowań takie jak muzyka, wiadomości i sport"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Kolorowa ilustracja z kłódką w okręgu"</string>

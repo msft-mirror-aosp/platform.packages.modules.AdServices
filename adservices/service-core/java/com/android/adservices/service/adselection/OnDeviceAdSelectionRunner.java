@@ -118,6 +118,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
         mAdFilterer = adFilterer;
         mAdCounterKeyCopier = adCounterKeyCopier;
         boolean cpcBillingEnabled = BinderFlagReader.readFlag(mFlags::getFledgeCpcBillingEnabled);
+        boolean dataVersionHeaderEnabled =
+                BinderFlagReader.readFlag(mFlags::getFledgeDataVersionHeaderEnabled);
         mAdsScoreGenerator =
                 new AdsScoreGeneratorImpl(
                         new AdSelectionScriptEngine(
@@ -135,7 +137,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                         mAdSelectionEntryDao,
                         flags,
                         adSelectionExecutionLogger,
-                        mDebugReporting);
+                        mDebugReporting,
+                        dataVersionHeaderEnabled);
         mPerBuyerBiddingRunner =
                 new PerBuyerBiddingRunner(
                         new AdBidGeneratorImpl(
@@ -149,12 +152,14 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                                 mAdCounterKeyCopier,
                                 flags,
                                 mDebugReporting,
-                                cpcBillingEnabled),
+                                cpcBillingEnabled,
+                                dataVersionHeaderEnabled),
                         new TrustedBiddingDataFetcher(
                                 adServicesHttpsClient,
                                 devContext,
                                 new CustomAudienceDevOverridesHelper(devContext, customAudienceDao),
-                                lightweightExecutorService),
+                                lightweightExecutorService,
+                                dataVersionHeaderEnabled),
                         mScheduledExecutor,
                         mBackgroundExecutorService,
                         flags);
@@ -422,6 +427,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
         DBAdSelection.Builder dbAdSelectionBuilder = new DBAdSelection.Builder();
         sLogger.v("Creating Ad Selection result from scoring winner");
         String buyerContextualSignalsString;
+        String sellerContextualSignalsString;
         // There should always be a winner.
         AdScoringOutcome scoringWinner = winningAdScoringOutcomeAndContext.first;
         if (Objects.isNull(scoringWinner.getBuyerContextualSignals())) {
@@ -430,13 +436,20 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             buyerContextualSignalsString = scoringWinner.getBuyerContextualSignals().toString();
         }
 
+        if (Objects.isNull(scoringWinner.getSellerContextualSignals())) {
+            sellerContextualSignalsString = "{}";
+        } else {
+            sellerContextualSignalsString = scoringWinner.getSellerContextualSignals().toString();
+        }
+
         dbAdSelectionBuilder
                 .setWinningAdBid(scoringWinner.getAdWithScore().getAdWithBid().getBid())
                 .setCustomAudienceSignals(scoringWinner.getCustomAudienceSignals())
                 .setWinningAdRenderUri(
                         scoringWinner.getAdWithScore().getAdWithBid().getAdData().getRenderUri())
                 .setBiddingLogicUri(scoringWinner.getBiddingLogicUri())
-                .setBuyerContextualSignals(buyerContextualSignalsString);
+                .setBuyerContextualSignals(buyerContextualSignalsString)
+                .setSellerContextualSignals(sellerContextualSignalsString);
         // TODO(b/230569187): get the contextualSignal securely = "invoking app name"
 
         final DBAdSelection.Builder copiedDBAdSelectionBuilder =

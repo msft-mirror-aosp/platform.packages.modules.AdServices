@@ -30,6 +30,8 @@ android_test {
         "SdkSandboxTestUtils",
         "CtsSdkProviderApi",
         "CtsMediationTestSdkApi",
+        "sdk_sandbox_flags_lib",
+        "flag-junit",
     ],
     libs: [
         "android.test.base",

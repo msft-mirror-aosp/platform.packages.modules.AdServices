@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Allows an application to access AdServices Consent API."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Access to ad ID API"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Allows an application to access ad ID API."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"Access to AdServices Cobalt Upload API"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Allows an application to access AdServices Cobalt Upload API."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Access to app set ID API"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Allows an application to access app set ID API."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Access to Consent Service API"</string>
@@ -40,7 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Allows an application to access AdService’s enablement state API."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Access to AdServicesManager’s APIs"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Allows an application to access AdServicesManager’s APIs."</string>
-    <string name="app_label" msgid="5985320129629013968">"Android system"</string>
+    <string name="app_label" msgid="5844694701336604490">"Ad privacy"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Join Android’s ads privacy beta"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android is exploring more private ways for apps to show you ads"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Learn more"</string>
@@ -190,11 +192,11 @@
     <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Ad topics is on"</string>
     <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android will start noting topics of interest, but it may take a while for your first topics to appear."</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Turn off ad topics?"</string>
-    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"This list of topics will be deleted. Android won’t note topics of interest anymore, but you may still see relevant ads."</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"This list of topics will be deleted. Android won’t note topics of interest any more, but you may still see relevant ads."</string>
     <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"App-suggested ads is on"</string>
     <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Apps may start suggesting ads. You’ll see a list of apps once they start suggesting ads."</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Turn off app-suggested ads?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"All ad suggestion data will be deleted. Apps won’t be able to suggest ads anymore, but you may still see relevant ads."</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"All ad suggestion data will be deleted. Apps won’t be able to suggest ads any more, but you may still see relevant ads."</string>
     <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Ad measurement is on"</string>
     <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android can share only very limited information with apps to help apps measure the performance of their ads."</string>
     <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Turn off ad measurement?"</string>
@@ -224,8 +226,8 @@
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"It’s common for apps that you use to remember things that you’re interested in to personalise your experience. Apps can also store information with Android about your topics.\n\nFor example, if you use an app about marathon training, the app might decide that you’re interested in running shoes. Later, if you use a different app, that app can show you an ad for running shoes suggested by the first app.\n\nAndroid auto-deletes app-suggested data regularly. An app you use again might reappear on the list. Or you can block an app from suggesting ads for you.\n\nIn your apps, an ad you see may be personalised, depending on this setting, the ad topics setting, your advertising ID settings and whether the app that you’re using personalises ads."</string>
     <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"New ads privacy feature now available"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Only very limited info is shared between apps to help measure ad performance"</string>
-    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"We\'re launching a new ads privacy feature called ads measurement. Android only shares very limited information between apps, such as when an ad was shown to you, to help apps measure the performance of ads."</string>
-    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"You can make changes in ads privacy settings."</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"We\'re launching a new ads privacy feature called ad measurement. Android only shares very limited information between apps, such as when an ad was shown to you, to help apps measure the performance of ads."</string>
+    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"You can make changes in ad privacy settings."</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Apps that you use can ask Android for information to help them measure the performance of their ads. Android lets apps collect limited types of data only."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Colourful illustration of symbols representing topics of interest like music, news and sports"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Colourful illustration of a lock inside a circle"</string>

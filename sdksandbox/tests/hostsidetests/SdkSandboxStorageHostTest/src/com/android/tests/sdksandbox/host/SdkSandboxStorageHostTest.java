@@ -484,6 +484,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
     @Test
     @LargeTest // Device reboot
+    @Ignore("b/300051780")
     public void testSdkDataPackageDirectory_IsReconciled_DeleteKeepData() throws Exception {
 
         installPackage(TEST_APP_STORAGE_APK);

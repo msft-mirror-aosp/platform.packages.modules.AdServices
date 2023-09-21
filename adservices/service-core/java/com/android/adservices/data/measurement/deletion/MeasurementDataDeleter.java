@@ -36,6 +36,7 @@ import com.android.adservices.service.measurement.WipeoutStatus;
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementWipeoutStats;
 import com.android.internal.annotations.VisibleForTesting;
@@ -57,10 +58,18 @@ public class MeasurementDataDeleter {
 
     private final DatastoreManager mDatastoreManager;
     private final Flags mFlags;
+    private final AdServicesLogger mLogger;
 
     public MeasurementDataDeleter(DatastoreManager datastoreManager, Flags flags) {
+        this(datastoreManager, flags, AdServicesLoggerImpl.getInstance());
+    }
+
+    @VisibleForTesting
+    public MeasurementDataDeleter(
+            DatastoreManager datastoreManager, Flags flags, AdServicesLogger logger) {
         mDatastoreManager = datastoreManager;
         mFlags = flags;
+        mLogger = logger;
     }
 
     /**
@@ -173,11 +182,13 @@ public class MeasurementDataDeleter {
                     dao.updateSourceStatus(sourceIds, Source.Status.MARKED_TO_DELETE);
                     dao.updateTriggerStatus(triggerIds, Trigger.Status.MARKED_TO_DELETE);
 
-                    // Log wipeout event triggered by request (from Chrome) to delete data of
-                    // package on device for parity
+                    // Log wipeout event triggered by request (from the delete registrations API)
                     WipeoutStatus wipeoutStatus = new WipeoutStatus();
-                    wipeoutStatus.setWipeoutType(WipeoutStatus.WipeoutType.UNKNOWN);
-                    logWipeoutStats(wipeoutStatus);
+                    wipeoutStatus.setWipeoutType(
+                            WipeoutStatus.WipeoutType.DELETE_REGISTRATIONS_API);
+                    logWipeoutStats(
+                            wipeoutStatus,
+                            getRegistrant(deletionParam.getAppPackageName()).toString());
                 });
     }
 
@@ -272,13 +283,13 @@ public class MeasurementDataDeleter {
         return Uri.parse(ANDROID_APP_SCHEME + "://" + packageName);
     }
 
-    private void logWipeoutStats(WipeoutStatus wipeoutStatus) {
-        AdServicesLoggerImpl.getInstance()
-                .logMeasurementWipeoutStats(
-                        new MeasurementWipeoutStats.Builder()
-                                .setCode(AD_SERVICES_MEASUREMENT_WIPEOUT)
-                                .setWipeoutType(wipeoutStatus.getWipeoutType().ordinal())
-                                .build());
+    private void logWipeoutStats(WipeoutStatus wipeoutStatus, String sourceRegistrant) {
+        mLogger.logMeasurementWipeoutStats(
+                new MeasurementWipeoutStats.Builder()
+                        .setCode(AD_SERVICES_MEASUREMENT_WIPEOUT)
+                        .setWipeoutType(wipeoutStatus.getWipeoutType().getValue())
+                        .setSourceRegistrant(sourceRegistrant)
+                        .build());
     }
 
     List<EventReport> filterReportFlexibleEventsAPI(

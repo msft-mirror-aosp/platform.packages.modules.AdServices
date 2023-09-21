@@ -15,11 +15,6 @@
  */
 package com.android.adservices.service.measurement.registration;
 
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_FILTERS;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_BYTES_PER_ATTRIBUTION_AGGREGATE_KEY_ID;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_BYTES_PER_ATTRIBUTION_FILTER_STRING;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_FILTER_MAPS_PER_FILTER_SET;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_VALUES_PER_ATTRIBUTION_FILTER;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS;
 
 import android.annotation.NonNull;
@@ -29,6 +24,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.WebAddresses;
+import com.android.adservices.service.measurement.FilterMap;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -112,11 +108,33 @@ class FetcherUtil {
         }
     }
 
+    private static Optional<Long> extractLookbackWindow(JSONObject obj) {
+        try {
+            long lookbackWindow = Long.parseLong(obj.optString(FilterMap.LOOKBACK_WINDOW));
+            if (lookbackWindow <= 0) {
+                LogUtil.d(
+                        "extractLookbackWindow: non positive lookback window found: %d",
+                        lookbackWindow);
+                return Optional.empty();
+            }
+            return Optional.of(lookbackWindow);
+        } catch (NumberFormatException e) {
+            LogUtil.d(
+                    e,
+                    "extractLookbackWindow: caught exception. Key: %s",
+                    FilterMap.LOOKBACK_WINDOW);
+            return Optional.empty();
+        }
+    }
+
     /**
      * Validate aggregate key ID.
      */
     static boolean isValidAggregateKeyId(String id) {
-        return id != null && id.getBytes().length <= MAX_BYTES_PER_ATTRIBUTION_AGGREGATE_KEY_ID;
+        return id != null
+                && id.getBytes().length
+                        <= FlagsFactory.getFlags()
+                                .getMeasurementMaxBytesPerAttributionAggregateKeyId();
     }
 
     /** Validate aggregate deduplication key. */
@@ -161,47 +179,70 @@ class FetcherUtil {
         }
     }
 
-    /**
-     * Validate attribution filters JSONArray.
-     */
-    static boolean areValidAttributionFilters(@NonNull JSONArray filterSet) {
-        if (filterSet.length() > MAX_FILTER_MAPS_PER_FILTER_SET) {
+    /** Validate attribution filters JSONArray. */
+    static boolean areValidAttributionFilters(
+            @NonNull JSONArray filterSet, Flags flags, boolean canIncludeLookbackWindow) {
+        if (filterSet.length()
+                > FlagsFactory.getFlags().getMeasurementMaxFilterMapsPerFilterSet()) {
             return false;
         }
         for (int i = 0; i < filterSet.length(); i++) {
-            if (!areValidAttributionFilters(filterSet.optJSONObject(i))) {
+            if (!areValidAttributionFilters(
+                    filterSet.optJSONObject(i), flags, canIncludeLookbackWindow)) {
                 return false;
             }
         }
         return true;
     }
 
-    /**
-     * Validate attribution filters JSONObject.
-     */
-    static boolean areValidAttributionFilters(JSONObject filtersObj) {
-        if (filtersObj == null || filtersObj.length() > MAX_ATTRIBUTION_FILTERS) {
+    /** Validate attribution filters JSONObject. */
+    static boolean areValidAttributionFilters(
+            JSONObject filtersObj, Flags flags, boolean canIncludeLookbackWindow) {
+        if (filtersObj == null
+                || filtersObj.length()
+                        > FlagsFactory.getFlags().getMeasurementMaxAttributionFilters()) {
             return false;
         }
         Iterator<String> keys = filtersObj.keys();
         while (keys.hasNext()) {
             String key = keys.next();
-            if (key.getBytes().length > MAX_BYTES_PER_ATTRIBUTION_FILTER_STRING) {
+            if (key.getBytes().length
+                    > FlagsFactory.getFlags().getMeasurementMaxBytesPerAttributionFilterString()) {
                 return false;
             }
+            if (flags.getMeasurementEnableLookbackWindowFilter()
+                    && FilterMap.LOOKBACK_WINDOW.equals(key)) {
+                if (!canIncludeLookbackWindow || extractLookbackWindow(filtersObj).isEmpty()) {
+                    return false;
+                }
+                continue;
+            }
             JSONArray values = filtersObj.optJSONArray(key);
-            if (values == null || values.length() > MAX_VALUES_PER_ATTRIBUTION_FILTER) {
+            if (values == null
+                    || values.length()
+                            > FlagsFactory.getFlags()
+                                    .getMeasurementMaxValuesPerAttributionFilter()) {
                 return false;
             }
             for (int i = 0; i < values.length(); i++) {
                 String value = values.optString(i);
                 if (value == null
-                        || value.getBytes().length > MAX_BYTES_PER_ATTRIBUTION_FILTER_STRING) {
+                        || value.getBytes().length
+                                > FlagsFactory.getFlags()
+                                        .getMeasurementMaxBytesPerAttributionFilterString()) {
                     return false;
                 }
             }
         }
         return true;
+    }
+
+    static String getSourceRegistrantToLog(AsyncRegistration asyncRegistration) {
+        if (asyncRegistration.isSourceRequest()) {
+            return asyncRegistration.getRegistrant().toString();
+        }
+
+        return "";
     }
 
     static void emitHeaderMetrics(
@@ -232,7 +273,8 @@ class FetcherUtil {
                                 getSurfaceType(asyncRegistration),
                                 getStatus(asyncFetchStatus),
                                 getFailureType(asyncFetchStatus),
-                                asyncFetchStatus.getRegistrationDelay().get())
+                                asyncFetchStatus.getRegistrationDelay().get(),
+                                getSourceRegistrantToLog(asyncRegistration))
                         .setAdTechDomain(adTechDomain)
                         .build());
     }
@@ -279,11 +321,9 @@ class FetcherUtil {
     }
 
     private static int getRegistrationType(AsyncRegistration asyncRegistration) {
-        if (asyncRegistration.getType() == AsyncRegistration.RegistrationType.APP_SOURCE
-                || asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_SOURCE) {
+        if (asyncRegistration.isSourceRequest()) {
             return RegistrationEnumsValues.TYPE_SOURCE;
-        } else if (asyncRegistration.getType() == AsyncRegistration.RegistrationType.APP_TRIGGER
-                || asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_TRIGGER) {
+        } else if (asyncRegistration.isTriggerRequest()) {
             return RegistrationEnumsValues.TYPE_TRIGGER;
         } else {
             return RegistrationEnumsValues.TYPE_UNKNOWN;
@@ -301,11 +341,9 @@ class FetcherUtil {
     }
 
     private static int getSurfaceType(AsyncRegistration asyncRegistration) {
-        if (asyncRegistration.getType() == AsyncRegistration.RegistrationType.APP_SOURCE
-                || asyncRegistration.getType() == AsyncRegistration.RegistrationType.APP_TRIGGER) {
+        if (asyncRegistration.isAppRequest()) {
             return RegistrationEnumsValues.SURFACE_TYPE_APP;
-        } else if (asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_SOURCE
-                || asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_TRIGGER) {
+        } else if (asyncRegistration.isWebRequest()) {
             return RegistrationEnumsValues.SURFACE_TYPE_WEB;
         } else {
             return RegistrationEnumsValues.SURFACE_TYPE_UNKNOWN;

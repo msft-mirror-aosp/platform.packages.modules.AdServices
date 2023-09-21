@@ -21,9 +21,11 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARG
 import static android.adservices.common.AdServicesStatusUtils.STATUS_IO_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
+import android.adservices.adid.AdId;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.RegistrationRequest;
+import android.adservices.measurement.SourceRegistrationRequestInternal;
 import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.adservices.measurement.WebSourceRegistrationRequestInternal;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
@@ -40,6 +42,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.SystemClock;
 import android.view.InputEvent;
 
 import androidx.annotation.RequiresApi;
@@ -61,6 +64,7 @@ import com.android.modules.utils.build.SdkLevel;
 import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -100,7 +104,7 @@ public final class MeasurementImpl {
     }
 
     @VisibleForTesting
-    MeasurementImpl(
+    public MeasurementImpl(
             Context context,
             DatastoreManager datastoreManager,
             ClickVerifier clickVerifier,
@@ -169,6 +173,7 @@ public final class MeasurementImpl {
                                             : getSourceType(
                                                     request.getInputEvent(),
                                                     request.getRequestTime()),
+                                    /* postBody */ null,
                                     mDatastoreManager,
                                     mContentResolver)
                             ? STATUS_SUCCESS
@@ -177,6 +182,32 @@ public final class MeasurementImpl {
                 default:
                     return STATUS_INVALID_ARGUMENT;
             }
+        } finally {
+            mReadWriteLock.readLock().unlock();
+        }
+    }
+
+    /**
+     * Implement a sources registration request, returning a {@link
+     * AdServicesStatusUtils.StatusCode}.
+     */
+    @AdServicesStatusUtils.StatusCode
+    int registerSources(@NonNull SourceRegistrationRequestInternal request, long requestTime) {
+        mReadWriteLock.readLock().lock();
+        try {
+            return EnqueueAsyncRegistration.appSourcesRegistrationRequest(
+                            request,
+                            isAdIdPermissionGranted(request.getAdIdValue()),
+                            getRegistrant(request.getAppPackageName()),
+                            requestTime,
+                            getSourceType(
+                                    request.getSourceRegistrationRequest().getInputEvent(),
+                                    request.getBootRelativeRequestTime()),
+                            /* postBody*/ null,
+                            mDatastoreManager,
+                            mContentResolver)
+                    ? STATUS_SUCCESS
+                    : STATUS_IO_ERROR;
         } finally {
             mReadWriteLock.readLock().unlock();
         }
@@ -256,15 +287,46 @@ public final class MeasurementImpl {
     }
 
     /** Implement a source registration request from a report event */
-    public void registerEvent(
+    public int registerEvent(
             @NonNull Uri registrationUri,
             @NonNull String appPackageName,
             @NonNull String sdkPackageName,
-            @NonNull boolean isAdIdEnabled,
+            boolean isAdIdEnabled,
             @Nullable String postBody,
             @Nullable InputEvent inputEvent,
             @Nullable String adIdValue) {
-        // TODO(b/295410450): Add registerEvent API implementation later
+        Objects.requireNonNull(registrationUri);
+        Objects.requireNonNull(appPackageName);
+        Objects.requireNonNull(sdkPackageName);
+
+        final long apiRequestTime = System.currentTimeMillis();
+        final RegistrationRequest.Builder builder =
+                new RegistrationRequest.Builder(
+                                RegistrationRequest.REGISTER_SOURCE,
+                                registrationUri,
+                                appPackageName,
+                                sdkPackageName)
+                        .setAdIdPermissionGranted(isAdIdEnabled)
+                        .setRequestTime(SystemClock.uptimeMillis())
+                        .setAdIdValue(adIdValue);
+        RegistrationRequest request = builder.build();
+
+        mReadWriteLock.readLock().lock();
+        try {
+            return EnqueueAsyncRegistration.appSourceOrTriggerRegistrationRequest(
+                            request,
+                            request.isAdIdPermissionGranted(),
+                            registrationUri,
+                            apiRequestTime,
+                            getSourceType(inputEvent, request.getRequestTime()),
+                            postBody,
+                            mDatastoreManager,
+                            mContentResolver)
+                    ? STATUS_SUCCESS
+                    : STATUS_IO_ERROR;
+        } finally {
+            mReadWriteLock.readLock().unlock();
+        }
     }
 
     /**
@@ -345,6 +407,10 @@ public final class MeasurementImpl {
         } finally {
             mReadWriteLock.writeLock().unlock();
         }
+    }
+
+    private static boolean isAdIdPermissionGranted(@Nullable String adIdValue) {
+        return adIdValue != null && !adIdValue.isEmpty() && !AdId.ZERO_OUT.equals(adIdValue);
     }
 
     private List<Uri> getCurrentInstalledApplicationsList(Context context) {

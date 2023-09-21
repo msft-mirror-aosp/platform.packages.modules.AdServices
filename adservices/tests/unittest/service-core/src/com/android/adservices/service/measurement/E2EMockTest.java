@@ -38,6 +38,7 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
+import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.WebAddresses;
@@ -47,6 +48,7 @@ import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.AggregateReportingJob;
 import com.android.adservices.service.measurement.actions.EventReportingJob;
 import com.android.adservices.service.measurement.actions.InstallApp;
+import com.android.adservices.service.measurement.actions.RegisterListSources;
 import com.android.adservices.service.measurement.actions.RegisterSource;
 import com.android.adservices.service.measurement.actions.RegisterTrigger;
 import com.android.adservices.service.measurement.actions.RegisterWebSource;
@@ -119,10 +121,10 @@ public abstract class E2EMockTest extends E2ETest {
     AsyncRegistrationQueueRunner mAsyncRegistrationQueueRunner;
     AsyncSourceFetcher mAsyncSourceFetcher;
     AsyncTriggerFetcher mAsyncTriggerFetcher;
+    AdServicesErrorLogger mErrorLogger;
 
     EnrollmentDao mEnrollmentDao;
-    static DatastoreManager sDatastoreManager =
-            new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
+    DatastoreManager mDatastoreManager;
 
     ContentResolver mMockContentResolver;
     ContentProviderClient mMockContentProviderClient;
@@ -142,8 +144,11 @@ public abstract class E2EMockTest extends E2ETest {
         super(actions, expectedOutput, name, phFlagsMap);
         mClickVerifier = mock(ClickVerifier.class);
         mFlags = FlagsFactory.getFlags();
+        mErrorLogger = mock(AdServicesErrorLogger.class);
+        mDatastoreManager =
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
         mE2EMockStaticRule = new E2EMockStatic.E2EMockStaticRule(paramsProvider);
-        mMeasurementDataDeleter = spy(new MeasurementDataDeleter(sDatastoreManager, mFlags));
+        mMeasurementDataDeleter = spy(new MeasurementDataDeleter(mDatastoreManager, mFlags));
 
         mEnrollmentDao =
                 new EnrollmentDao(
@@ -168,12 +173,14 @@ public abstract class E2EMockTest extends E2ETest {
                                 mEnrollmentDao,
                                 mFlags,
                                 AdServicesLoggerImpl.getInstance()));
-        mDebugReportApi = new DebugReportApi(
-                sContext,
-                mFlags,
-                new EventReportWindowCalcDelegate(mFlags),
-                new SourceNoiseHandler(mFlags),
-                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest()));
+        mDebugReportApi =
+                new DebugReportApi(
+                        sContext,
+                        mFlags,
+                        new EventReportWindowCalcDelegate(mFlags),
+                        new SourceNoiseHandler(mFlags),
+                        new SQLDatastoreManager(
+                                DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger));
         mMockContentResolver = mock(ContentResolver.class);
         mMockContentProviderClient = mock(ContentProviderClient.class);
         when(mMockContentResolver.acquireContentProviderClient(TriggerContentProvider.TRIGGER_URI))
@@ -191,6 +198,21 @@ public abstract class E2EMockTest extends E2ETest {
 
     @Override
     void prepareRegistrationServer(RegisterSource sourceRegistration) throws IOException {
+        for (String uri : sourceRegistration.mUriToResponseHeadersMap.keySet()) {
+            if (sourceRegistration.mUriConfigMap.get(uri).shouldEnroll()) {
+                updateEnrollment(uri);
+            }
+            HttpsURLConnection urlConnection = mock(HttpsURLConnection.class);
+            when(urlConnection.getResponseCode()).thenReturn(200);
+            Answer<Map<String, List<String>>> headerFieldsMockAnswer =
+                    invocation -> getNextResponse(sourceRegistration.mUriToResponseHeadersMap, uri);
+            Mockito.doAnswer(headerFieldsMockAnswer).when(urlConnection).getHeaderFields();
+            Mockito.doReturn(urlConnection).when(mAsyncSourceFetcher).openUrl(new URL(uri));
+        }
+    }
+
+    @Override
+    void prepareRegistrationServer(RegisterListSources sourceRegistration) throws IOException {
         for (String uri : sourceRegistration.mUriToResponseHeadersMap.keySet()) {
             if (sourceRegistration.mUriConfigMap.get(uri).shouldEnroll()) {
                 updateEnrollment(uri);
@@ -284,6 +306,20 @@ public abstract class E2EMockTest extends E2ETest {
     }
 
     @Override
+    void processAction(RegisterListSources sourceRegistration) throws IOException, JSONException {
+        prepareRegistrationServer(sourceRegistration);
+        Assert.assertEquals(
+                "MeasurementImpl.registerWebSource failed",
+                RESULT_OK,
+                mMeasurementImpl.registerSources(
+                        sourceRegistration.mRegistrationRequest, sourceRegistration.mTimestamp));
+        mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        if (sourceRegistration.mDebugReporting) {
+            processActualDebugReportApiJob();
+        }
+    }
+
+    @Override
     void processAction(RegisterTrigger triggerRegistration) throws IOException, JSONException {
         prepareRegistrationServer(triggerRegistration);
         Assert.assertEquals(
@@ -336,14 +372,18 @@ public abstract class E2EMockTest extends E2ETest {
 
     // Triggers debug reports to be sent
     void processActualDebugReportJob(long timestamp, long delay) throws IOException, JSONException {
+        long maxAggregateReportUploadRetryWindowMs =
+                Flags.DEFAULT_MEASUREMENT_MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS;
         long reportTime = timestamp + delay;
         Object[] eventCaptures =
                 EventReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
                         mEnrollmentDao,
-                        sDatastoreManager,
-                        reportTime - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
+                        mDatastoreManager,
+                        reportTime
+                                - Flags.DEFAULT_MEASUREMENT_MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
                         reportTime,
-                        true);
+                        true,
+                        mFlags);
 
         processActualDebugEventReports(
                 timestamp,
@@ -354,10 +394,11 @@ public abstract class E2EMockTest extends E2ETest {
         Object[] aggregateCaptures =
                 AggregateReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
                         mEnrollmentDao,
-                        sDatastoreManager,
-                        reportTime - SystemHealthParams.MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS,
+                        mDatastoreManager,
+                        reportTime - maxAggregateReportUploadRetryWindowMs,
                         reportTime,
-                        true);
+                        true,
+                        mFlags);
 
         processActualDebugAggregateReports(
                 (List<AggregateReport>) aggregateCaptures[0],
@@ -369,7 +410,7 @@ public abstract class E2EMockTest extends E2ETest {
     protected void processActualDebugReportApiJob() throws IOException, JSONException {
         Object[] reportCaptures =
                 DebugReportingJobHandlerWrapper.spyPerformScheduledPendingReports(
-                        mEnrollmentDao, sDatastoreManager);
+                        mEnrollmentDao, mDatastoreManager);
 
         processActualDebugReports(
                 (List<Uri>) reportCaptures[1], (List<JSONObject>) reportCaptures[2]);
@@ -379,7 +420,7 @@ public abstract class E2EMockTest extends E2ETest {
     void processAction(InstallApp installApp) {
         Assert.assertTrue(
                 "measurementDao.doInstallAttribution failed",
-                sDatastoreManager.runInTransaction(
+                mDatastoreManager.runInTransaction(
                         measurementDao ->
                                 measurementDao.doInstallAttribution(
                                         installApp.mUri, installApp.mTimestamp)));
@@ -389,7 +430,7 @@ public abstract class E2EMockTest extends E2ETest {
     void processAction(UninstallApp uninstallApp) {
         Assert.assertTrue(
                 "measurementDao.undoInstallAttribution failed",
-                sDatastoreManager.runInTransaction(
+                mDatastoreManager.runInTransaction(
                         measurementDao -> {
                             measurementDao.deleteAppRecords(uninstallApp.mUri);
                             measurementDao.undoInstallAttribution(uninstallApp.mUri);
@@ -405,11 +446,12 @@ public abstract class E2EMockTest extends E2ETest {
         Object[] eventCaptures =
                 EventReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
                         mEnrollmentDao,
-                        sDatastoreManager,
+                        mDatastoreManager,
                         reportingJob.mTimestamp
-                                - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
+                                - Flags.DEFAULT_MEASUREMENT_MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
                         reportingJob.mTimestamp,
-                        false);
+                        false,
+                        mFlags);
 
         processActualEventReports(
                 (List<EventReport>) eventCaptures[0],
@@ -419,6 +461,8 @@ public abstract class E2EMockTest extends E2ETest {
 
     @Override
     void processAction(AggregateReportingJob reportingJob) throws IOException, JSONException {
+        long maxAggregateReportUploadRetryWindowMs =
+                Flags.DEFAULT_MEASUREMENT_MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS;
         long earliestValidInsertion =
                 reportingJob.mTimestamp - Flags.MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
         runDeleteExpiredRecordsJob(earliestValidInsertion);
@@ -426,11 +470,11 @@ public abstract class E2EMockTest extends E2ETest {
         Object[] aggregateCaptures =
                 AggregateReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
                         mEnrollmentDao,
-                        sDatastoreManager,
-                        reportingJob.mTimestamp
-                                - SystemHealthParams.MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS,
+                        mDatastoreManager,
+                        reportingJob.mTimestamp - maxAggregateReportUploadRetryWindowMs,
                         reportingJob.mTimestamp,
-                        false);
+                        false,
+                        mFlags);
 
         processActualAggregateReports(
                 (List<AggregateReport>) aggregateCaptures[0],
@@ -456,7 +500,7 @@ public abstract class E2EMockTest extends E2ETest {
         List<JSONObject> eventReportObjects =
                 getActualEventReportObjects(eventReports, destinations, payloads);
         for (JSONObject obj : eventReportObjects) {
-            obj.put(TestFormatJsonMapping.REPORT_TIME_KEY, triggerTime);
+            obj.put(TestFormatJsonMapping.REPORT_TIME_KEY, String.valueOf(triggerTime));
         }
         mActualOutput.mDebugEventReportObjects.addAll(eventReportObjects);
     }
@@ -618,9 +662,8 @@ public abstract class E2EMockTest extends E2ETest {
 
     private void runDeleteExpiredRecordsJob(long earliestValidInsertion) {
         int retryLimit = Flags.MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
-        sDatastoreManager
-                .runInTransaction(
-                        dao -> dao.deleteExpiredRecords(earliestValidInsertion, retryLimit));
+        mDatastoreManager.runInTransaction(
+                dao -> dao.deleteExpiredRecords(earliestValidInsertion, retryLimit));
     }
 
     void updateEnrollment(String uri) {

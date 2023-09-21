@@ -21,12 +21,15 @@ import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesStates;
 import android.content.Context;
 import android.os.OutcomeReceiver;
+import android.platform.test.rule.ScreenRecordRule;
 
+import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.tests.ui.libs.AdservicesWorkflows;
 import com.android.adservices.tests.ui.libs.UiConstants;
 import com.android.adservices.tests.ui.libs.UiUtils;
 
@@ -34,6 +37,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -41,21 +45,28 @@ import java.util.concurrent.Executors;
 
 /** Test for verifying user consent notification trigger behaviors. */
 @RunWith(AndroidJUnit4.class)
+@ScreenRecordRule.ScreenRecord
 public class GaUxDebugChannelTest {
 
     private AdServicesCommonManager mCommonManager;
 
     private UiDevice mDevice;
 
+    private String mTestName;
+
     private OutcomeReceiver<Boolean, Exception> mCallback;
 
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();
 
+    @Rule public final ScreenRecordRule sScreenRecordRule = new ScreenRecordRule();
+
     @Before
     public void setUp() throws Exception {
         // Skip the test if it runs on unsupported platforms.
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+
+        UiUtils.resetAdServicesConsentData(sContext);
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -66,6 +77,8 @@ public class GaUxDebugChannelTest {
         // consent debug mode is turned on for this test class as we only care about the
         // first trigger (API call).
         UiUtils.enableConsentDebugMode();
+        UiUtils.disableNotificationFlowV2();
+        UiUtils.disableOtaStrings();
 
         mCallback =
                 new OutcomeReceiver<>() {
@@ -87,13 +100,19 @@ public class GaUxDebugChannelTest {
     public void tearDown() throws Exception {
         if (!AdservicesTestHelper.isDeviceSupported()) return;
 
+        UiUtils.takeScreenshot(mDevice, getClass().getSimpleName() + "_" + mTestName + "_");
+
         mDevice.pressHome();
+
         AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
     /** Verify that the API returns false when API is disabled. */
     @Test
+    @FlakyTest(bugId = 297347345)
     public void testApiDisabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.turnOffEnableAdsServicesAPI();
 
         mCommonManager.enableAdServices(
@@ -115,7 +134,7 @@ public class GaUxDebugChannelTest {
                     }
                 });
 
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext,
                 mDevice, /* isDisplayed */
                 false, /* isEuTest */
@@ -127,9 +146,14 @@ public class GaUxDebugChannelTest {
 
     /** Verify that entry point disabled can not trigger consent notification. */
     @Test
+    @FlakyTest(bugId = 297347345)
     public void testEntryPointDisabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsRowDevice();
         UiUtils.enableGa();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
@@ -140,15 +164,24 @@ public class GaUxDebugChannelTest {
                 Executors.newCachedThreadPool(),
                 mCallback);
 
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, /* isGa */ true);
+        AdservicesWorkflows.verifyNotification(
+                sContext,
+                mDevice, /* isDisplayed */
+                false, /* isEuTest */
+                false, /* isGa */
+                UiConstants.UX.GA_UX);
     }
 
     /** Verify that when request sent from entry point, we won't trigger notification. */
     @Test
+    @FlakyTest(bugId = 297347345)
     public void testFromEntryPointRequest() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsEuDevice();
         UiUtils.enableGa();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
@@ -160,7 +193,7 @@ public class GaUxDebugChannelTest {
                 Executors.newCachedThreadPool(),
                 mCallback);
 
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext,
                 mDevice, /* isDisplayed */
                 false, /* isEuTest */
@@ -170,9 +203,14 @@ public class GaUxDebugChannelTest {
 
     /** Verify that non-adult account can not trigger consent notification. */
     @Test
+    @FlakyTest(bugId = 297347345)
     public void testNonAdultAccount() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsRowDevice();
         UiUtils.enableGa();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
@@ -183,7 +221,7 @@ public class GaUxDebugChannelTest {
                 Executors.newCachedThreadPool(),
                 mCallback);
 
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext,
                 mDevice, /* isDisplayed */
                 false, /* isEuTest */
@@ -196,9 +234,14 @@ public class GaUxDebugChannelTest {
      * displayed.
      */
     @Test
+    @FlakyTest(bugId = 297347345)
     public void testGaRowAdIdEnabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsRowDevice();
         UiUtils.enableGa();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
@@ -209,7 +252,7 @@ public class GaUxDebugChannelTest {
                 Executors.newCachedThreadPool(),
                 mCallback);
 
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext,
                 mDevice, /* isDisplayed */
                 true, /* isEuTest */
@@ -221,9 +264,14 @@ public class GaUxDebugChannelTest {
      * Verify that for GA, ROW devices with zeroed-out AdId, the GA EU notification is displayed.
      */
     @Test
+    @FlakyTest(bugId = 297347345)
     public void testGaRowAdIdDisabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsRowDevice();
         UiUtils.enableGa();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
@@ -234,7 +282,7 @@ public class GaUxDebugChannelTest {
                 Executors.newCachedThreadPool(),
                 mCallback);
 
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext,
                 mDevice, /* isDisplayed */
                 true, /* isEuTest */
@@ -246,9 +294,14 @@ public class GaUxDebugChannelTest {
      * Verify that for GA, EU devices with non zeroed-out AdId, the GA EU notification is displayed.
      */
     @Test
+    @FlakyTest(bugId = 297347345)
     public void testGaEuAdIdEnabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsEuDevice();
         UiUtils.enableGa();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
@@ -269,9 +322,14 @@ public class GaUxDebugChannelTest {
 
     /** Verify that for GA, EU devices with zeroed-out AdId, the EU notification is displayed. */
     @Test
+    @FlakyTest(bugId = 297347345)
     public void testGaEuAdIdDisabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsEuDevice();
         UiUtils.enableGa();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
@@ -282,7 +340,7 @@ public class GaUxDebugChannelTest {
                 Executors.newCachedThreadPool(),
                 mCallback);
 
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext,
                 mDevice, /* isDisplayed */
                 true, /* isEuTest */
