@@ -22,7 +22,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
@@ -42,6 +41,7 @@ import com.android.adservices.data.topics.migration.TopicsDbMigratorV7;
 import com.android.adservices.data.topics.migration.TopicsDbMigratorV8;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
@@ -77,11 +77,10 @@ public class DbHelper extends SQLiteOpenHelper {
      * @param dbName Name of database to query
      * @param dbVersion db version
      */
-    @SuppressLint("NewAdServicesFile")
     @VisibleForTesting
     public DbHelper(@NonNull Context context, @NonNull String dbName, int dbVersion) {
         super(context, dbName, null, dbVersion);
-        mDbFile = context.getDatabasePath(dbName);
+        mDbFile = FileCompatUtils.getDatabasePathHelper(context, dbName);
         this.mDbVersion = dbVersion;
     }
 
