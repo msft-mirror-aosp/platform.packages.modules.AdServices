@@ -289,7 +289,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 new AdIdFetcher(
                         AdIdWorker.getInstance(context),
                         AdServicesExecutors.getLightWeightExecutor(),
-                        AdServicesExecutors.getScheduler()));
+                        AdServicesExecutors.getScheduler(),
+                        FlagsFactory.getFlags()));
     }
 
     @Override

@@ -34,7 +34,6 @@ import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
-import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.measurement.util.JobLockHolder;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
@@ -104,7 +103,7 @@ public final class EventFallbackReportingJobService extends JobService {
         if (lock.tryLock()) {
             try {
                 long maxEventReportUploadRetryWindowMs =
-                        SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS;
+                        FlagsFactory.getFlags().getMeasurementMaxEventReportUploadRetryWindowMs();
                 long eventMainReportingJobPeriodMs =
                         AdServicesConfig.getMeasurementEventMainReportingJobPeriodMs();
                 new EventReportingJobHandler(
