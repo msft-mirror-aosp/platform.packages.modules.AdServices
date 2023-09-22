@@ -27,6 +27,7 @@ import android.cts.statsdatom.lib.ReportUtils;
 import com.android.adservices.common.AdServicesHostSideDeviceSupportedRule;
 import com.android.adservices.common.AdServicesHostSideFlagsSetterRule;
 import com.android.adservices.common.AdServicesHostSideTestCase;
+import com.android.adservices.common.BackgroundLogReceiver;
 import com.android.adservices.common.HostSideSdkLevelSupportRule;
 import com.android.internal.os.StatsdConfigProto.StatsdConfig;
 import com.android.os.AtomsProto;
@@ -44,7 +45,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * Test to check that Ui API logging to StatsD
@@ -58,6 +61,10 @@ public final class UiApiLoggingHostTest extends AdServicesHostSideTestCase {
             "com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity";
     private static final String TARGET_PACKAGE_SUFFIX_TPLUS = "android.adservices.api";
     private static final String TARGET_PACKAGE_SUFFIX_SMINUS = "android.ext.services";
+    private static final String LOGCAT_COMMAND = "logcat -s adservices";
+    private static final String LOG_FROM_BOOTCOMPLETE_RECEIVER =
+            "AdExtBootCompletedReceiver onReceive invoked";
+
     private String mTargetPackage;
 
     @Rule(order = 0)
@@ -120,13 +127,27 @@ public final class UiApiLoggingHostTest extends AdServicesHostSideTestCase {
     }
 
     private void rebootIfSMinus() throws DeviceNotAvailableException, InterruptedException {
-        if (!sdkLevel.isAtLeastT()) {
-            ITestDevice device = getDevice();
-            device.reboot();
-            device.waitForDeviceAvailable();
-            // Sleep 5 mins to wait for AdExtBootCompletedReceiver execution
-            Thread.sleep(300 * 1000 /* ms */);
+        if (sdkLevel.isAtLeastT()) {
+            return;
         }
+
+        ITestDevice device = getDevice();
+        device.reboot();
+        device.waitForDeviceAvailable();
+
+        // Start log collection, keep going until the boot complete receiver runs or times out.
+        // Wait for up to 5 minutes for AdBootCompletedReceiver execution
+        BackgroundLogReceiver logcatReceiver =
+                new BackgroundLogReceiver.Builder()
+                        .setDevice(mDevice)
+                        .setLogCatCommand(LOGCAT_COMMAND)
+                        .setEarlyStopCondition(stopIfBootCompleteReceiverLogOccurs())
+                        .build();
+        logcatReceiver.collectLogs(/* timeoutMilliseconds= */ 5 * 60 * 1000);
+    }
+
+    private Predicate<String[]> stopIfBootCompleteReceiverLogOccurs() {
+        return (s) -> Arrays.stream(s).anyMatch(t -> t.contains(LOG_FROM_BOOTCOMPLETE_RECEIVER));
     }
 
     private void startSettingMainActivity(String apiName, ITestDevice device) throws Exception {
