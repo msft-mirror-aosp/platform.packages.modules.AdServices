@@ -16,9 +16,9 @@
 
 package com.android.adservices.data.signals;
 
-import static com.android.adservices.data.signals.EncoderPersistenceManager.ADSERVICES_PREFIX;
-import static com.android.adservices.data.signals.EncoderPersistenceManager.ENCODERS_DIR;
-import static com.android.adservices.data.signals.EncoderPersistenceManager.ENCODER_FILE_SUFFIX;
+import static com.android.adservices.data.signals.EncoderPersistenceDao.ADSERVICES_PREFIX;
+import static com.android.adservices.data.signals.EncoderPersistenceDao.ENCODERS_DIR;
+import static com.android.adservices.data.signals.EncoderPersistenceDao.ENCODER_FILE_SUFFIX;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -37,7 +37,7 @@ import org.junit.Test;
 
 import java.io.File;
 
-public class EncoderPersistenceManagerTest {
+public class EncoderPersistenceDaoTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
 
     private static final AdTechIdentifier BUYER_1 = CommonFixture.VALID_BUYER_1;
@@ -46,31 +46,31 @@ public class EncoderPersistenceManagerTest {
     private static final String ENCODER_2 =
             "function bye() {\n" + "  console.log(\"Goodbye World!\");\n" + "}";
 
-    private EncoderPersistenceManager mEncoderPersistenceManager;
+    private EncoderPersistenceDao mEncoderPersistenceDao;
 
     @Before
     public void setup() {
-        mEncoderPersistenceManager = EncoderPersistenceManager.getInstance(CONTEXT);
+        mEncoderPersistenceDao = EncoderPersistenceDao.getInstance(CONTEXT);
     }
 
     @After
     public void tearDown() {
-        mEncoderPersistenceManager.deleteAllEncoders();
+        mEncoderPersistenceDao.deleteAllEncoders();
     }
 
     @Test
     public void testPersistenceIsSingleton() {
         assertEquals(
                 "Both objects should have been the same instance",
-                mEncoderPersistenceManager,
-                EncoderPersistenceManager.getInstance(CONTEXT.getApplicationContext()));
+                mEncoderPersistenceDao,
+                EncoderPersistenceDao.getInstance(CONTEXT.getApplicationContext()));
     }
 
     @Test
     public void testGenerateFileName() {
         assertEquals(
                 ADSERVICES_PREFIX + BUYER_1.toString() + ENCODER_FILE_SUFFIX,
-                mEncoderPersistenceManager.generateFileNameForBuyer(BUYER_1));
+                mEncoderPersistenceDao.generateFileNameForBuyer(BUYER_1));
     }
 
     @Test
@@ -78,7 +78,7 @@ public class EncoderPersistenceManagerTest {
         File encoderDir = new File(CONTEXT.getFilesDir(), ENCODERS_DIR);
         assertFalse("Directory should not have existed so far", encoderDir.exists());
 
-        encoderDir = mEncoderPersistenceManager.createEncodersDirectoryIfDoesNotExist();
+        encoderDir = mEncoderPersistenceDao.createEncodersDirectoryIfDoesNotExist();
         assertTrue("Directory should have been created", encoderDir.exists());
         assertEquals(
                 "Created Directory name does not match expected",
@@ -88,13 +88,13 @@ public class EncoderPersistenceManagerTest {
 
     @Test
     public void testCreateFileInDirectory() {
-        File encoderDir = mEncoderPersistenceManager.createEncodersDirectoryIfDoesNotExist();
-        String fileName = mEncoderPersistenceManager.generateFileNameForBuyer(BUYER_1);
+        File encoderDir = mEncoderPersistenceDao.createEncodersDirectoryIfDoesNotExist();
+        String fileName = mEncoderPersistenceDao.generateFileNameForBuyer(BUYER_1);
         File encoderFile = new File(encoderDir, fileName);
 
         assertFalse("File should not have existed", encoderFile.exists());
 
-        encoderFile = mEncoderPersistenceManager.createFileInDirectory(encoderDir, fileName);
+        encoderFile = mEncoderPersistenceDao.createFileInDirectory(encoderDir, fileName);
         assertTrue("File should have been created", encoderFile.exists());
         assertEquals(
                 "Created name does not match expected",
@@ -104,60 +104,60 @@ public class EncoderPersistenceManagerTest {
 
     @Test
     public void testPersistAndGetEncoder() {
-        assertTrue(mEncoderPersistenceManager.persistEncoder(BUYER_1, ENCODER));
+        assertTrue(mEncoderPersistenceDao.persistEncoder(BUYER_1, ENCODER));
         assertEquals(
                 "Encoder read should have matched the encoder persisted",
                 ENCODER,
-                mEncoderPersistenceManager.getEncoder(BUYER_1));
+                mEncoderPersistenceDao.getEncoder(BUYER_1));
     }
 
     @Test
     public void testPersistWipeAndThenGetEmpty() {
         assertNull(
                 "Persisted encoder should have been null",
-                mEncoderPersistenceManager.getEncoder(BUYER_1));
+                mEncoderPersistenceDao.getEncoder(BUYER_1));
 
-        assertTrue(mEncoderPersistenceManager.persistEncoder(BUYER_1, ENCODER));
+        assertTrue(mEncoderPersistenceDao.persistEncoder(BUYER_1, ENCODER));
         assertEquals(
                 "Persisted encoder should have matched the encoder read back",
                 ENCODER,
-                mEncoderPersistenceManager.getEncoder(BUYER_1));
+                mEncoderPersistenceDao.getEncoder(BUYER_1));
 
-        assertTrue(mEncoderPersistenceManager.deleteAllEncoders());
+        assertTrue(mEncoderPersistenceDao.deleteAllEncoders());
         assertNull(
                 "Persisted encoder should have been null again",
-                mEncoderPersistenceManager.getEncoder(BUYER_1));
+                mEncoderPersistenceDao.getEncoder(BUYER_1));
     }
 
     @Test
     public void testPersistOverwrites() {
-        assertTrue(mEncoderPersistenceManager.persistEncoder(BUYER_1, ENCODER));
+        assertTrue(mEncoderPersistenceDao.persistEncoder(BUYER_1, ENCODER));
         assertEquals(
                 "Persisted encoder should have matched the encoder read back",
                 ENCODER,
-                mEncoderPersistenceManager.getEncoder(BUYER_1));
+                mEncoderPersistenceDao.getEncoder(BUYER_1));
 
-        assertTrue(mEncoderPersistenceManager.persistEncoder(BUYER_1, ENCODER_2));
+        assertTrue(mEncoderPersistenceDao.persistEncoder(BUYER_1, ENCODER_2));
         assertEquals(
                 "Persisted encoder should have been replaced",
                 ENCODER_2,
-                mEncoderPersistenceManager.getEncoder(BUYER_1));
+                mEncoderPersistenceDao.getEncoder(BUYER_1));
     }
 
     @Test
     public void testWipeAllEncoders() {
-        File encoderDir = mEncoderPersistenceManager.createEncodersDirectoryIfDoesNotExist();
-        String fileName = mEncoderPersistenceManager.generateFileNameForBuyer(BUYER_1);
+        File encoderDir = mEncoderPersistenceDao.createEncodersDirectoryIfDoesNotExist();
+        String fileName = mEncoderPersistenceDao.generateFileNameForBuyer(BUYER_1);
         File encoderFile = new File(encoderDir, fileName);
 
         assertFalse("File should not have existed", encoderFile.exists());
 
-        encoderFile = mEncoderPersistenceManager.createFileInDirectory(encoderDir, fileName);
+        encoderFile = mEncoderPersistenceDao.createFileInDirectory(encoderDir, fileName);
         assertTrue("File should have been created", encoderFile.exists());
 
         assertTrue(
                 "All encoders and directory should have been deleted",
-                mEncoderPersistenceManager.deleteAllEncoders());
+                mEncoderPersistenceDao.deleteAllEncoders());
         encoderDir = new File(CONTEXT.getFilesDir(), ENCODERS_DIR);
         assertFalse("Directory should have been wiped", encoderDir.exists());
     }
@@ -169,16 +169,15 @@ public class EncoderPersistenceManagerTest {
 
         assertTrue(
                 "The deletion of non-existing directory should have been true",
-                mEncoderPersistenceManager.deleteAllEncoders());
+                mEncoderPersistenceDao.deleteAllEncoders());
     }
 
     @Test
     public void testWriteAndReadForFile() {
         File tempFile = new File(CONTEXT.getFilesDir(), "temp_file");
-        mEncoderPersistenceManager.writeDataToFile(tempFile, ENCODER);
+        mEncoderPersistenceDao.writeDataToFile(tempFile, ENCODER);
         String readData =
-                mEncoderPersistenceManager.readDataFromFile(
-                        CONTEXT.getFilesDir(), tempFile.getName());
+                mEncoderPersistenceDao.readDataFromFile(CONTEXT.getFilesDir(), tempFile.getName());
         assertEquals(
                 "Data written to the file should have matched data read from file",
                 ENCODER,
