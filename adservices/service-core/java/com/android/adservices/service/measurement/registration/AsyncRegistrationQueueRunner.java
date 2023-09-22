@@ -16,7 +16,8 @@
 
 package com.android.adservices.service.measurement.registration;
 
-
+import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -43,6 +44,7 @@ import com.android.adservices.service.measurement.attribution.TriggerContentProv
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
@@ -472,6 +474,7 @@ public class AsyncRegistrationQueueRunner {
                                                 mSourceNoiseHandler.getRandomAttributionProbability(
                                                         source))
                                         .setRegistrationOrigin(source.getRegistrationOrigin())
+                                        .setSourceDebugKey(getSourceDebugKeyForNoisedReport(source))
                                         .build())
                 .collect(Collectors.toList());
     }
@@ -633,5 +636,15 @@ public class AsyncRegistrationQueueRunner {
         } catch (RemoteException e) {
             LogUtil.e(e, "Trigger Content Provider invocation failed.");
         }
+    }
+
+    @Nullable
+    private UnsignedLong getSourceDebugKeyForNoisedReport(@NonNull Source source) {
+        if ((source.getPublisherType() == EventSurfaceType.APP && source.hasAdIdPermission())
+                || (source.getPublisherType() == EventSurfaceType.WEB
+                        && source.hasArDebugPermission())) {
+            return source.getDebugKey();
+        }
+        return null;
     }
 }

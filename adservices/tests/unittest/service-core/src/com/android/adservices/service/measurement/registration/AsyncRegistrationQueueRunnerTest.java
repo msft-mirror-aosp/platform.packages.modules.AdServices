@@ -19,6 +19,7 @@ import static com.android.adservices.service.measurement.attribution.TriggerCont
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -1759,13 +1760,15 @@ public class AsyncRegistrationQueueRunnerTest {
         doAnswer(falseAttributionAnswer)
                 .when(mSourceNoiseHandler)
                 .assignAttributionModeAndGenerateFakeReports(source);
+        ArgumentCaptor<EventReport> fakeEventReportCaptor =
+                ArgumentCaptor.forClass(EventReport.class);
 
         // Execution
         asyncRegistrationQueueRunner.insertSourceFromTransaction(source, mMeasurementDao);
 
         // Assertion
         verify(mMeasurementDao).insertSource(source);
-        verify(mMeasurementDao, times(2)).insertEventReport(any());
+        verify(mMeasurementDao, times(2)).insertEventReport(fakeEventReportCaptor.capture());
         verify(mMeasurementDao, times(2))
                 .insertAttribution(attributionRateLimitArgCaptor.capture());
         assertEquals(
@@ -1793,6 +1796,89 @@ public class AsyncRegistrationQueueRunnerTest {
                         .setRegistrationOrigin(source.getRegistrationOrigin())
                         .build(),
                 attributionRateLimitArgCaptor.getAllValues().get(1));
+        fakeEventReportCaptor
+                .getAllValues()
+                .forEach(
+                        (report) -> {
+                            assertNull(report.getSourceDebugKey());
+                            assertNull(report.getTriggerDebugKey());
+                        });
+    }
+
+    @Test
+    public void insertSource_appSourceHasAdIdPermission_fakeReportHasDebugKey()
+            throws DatastoreException {
+        // Setup
+        Source source =
+                spy(
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setAppDestinations(
+                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                                .setWebDestinations(
+                                        SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
+                                .setAdIdPermission(true)
+                                .setDebugKey(SourceFixture.ValidSourceParams.DEBUG_KEY)
+                                .build());
+        commonTestDebugKeyPresenceInFakeReport(source, SourceFixture.ValidSourceParams.DEBUG_KEY);
+    }
+
+    @Test
+    public void insertSource_webSourceWithArDebugPermission_fakeReportHasDebugKey()
+            throws DatastoreException {
+        // Setup
+        int fakeReportsCount = 2;
+        Source source =
+                spy(
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setPublisher(SourceFixture.ValidSourceParams.WEB_PUBLISHER)
+                                .setPublisherType(EventSurfaceType.WEB)
+                                .setAppDestinations(
+                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                                .setWebDestinations(
+                                        SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
+                                .setArDebugPermission(true)
+                                .setDebugKey(SourceFixture.ValidSourceParams.DEBUG_KEY)
+                                .build());
+        commonTestDebugKeyPresenceInFakeReport(source, SourceFixture.ValidSourceParams.DEBUG_KEY);
+    }
+
+    @Test
+    public void insertSource_appSourceHasArDebugButNotAdIdPermission_fakeReportHasNoDebugKey()
+            throws DatastoreException {
+        // Setup
+        int fakeReportsCount = 2;
+        Source source =
+                spy(
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setAppDestinations(
+                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                                .setWebDestinations(
+                                        SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
+                                .setAdIdPermission(false)
+                                .setArDebugPermission(true)
+                                .setDebugKey(SourceFixture.ValidSourceParams.DEBUG_KEY)
+                                .build());
+        commonTestDebugKeyPresenceInFakeReport(source, null);
+    }
+
+    @Test
+    public void insertSource_webSourceHasAdIdButNotArDebugPermission_fakeReportHasNoDebugKey()
+            throws DatastoreException {
+        // Setup
+        Source source =
+                spy(
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setPublisher(SourceFixture.ValidSourceParams.WEB_PUBLISHER)
+                                .setPublisherType(EventSurfaceType.WEB)
+                                .setAppDestinations(
+                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                                .setWebDestinations(
+                                        SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
+                                .setAdIdPermission(true)
+                                .setArDebugPermission(false)
+                                .setDebugKey(SourceFixture.ValidSourceParams.DEBUG_KEY)
+                                .build());
+        commonTestDebugKeyPresenceInFakeReport(source, null);
     }
 
     @Test
@@ -2901,6 +2987,45 @@ public class AsyncRegistrationQueueRunnerTest {
                         mSourceNoiseHandler,
                         mFlags,
                         mLogger));
+    }
+
+    private void commonTestDebugKeyPresenceInFakeReport(
+            Source source, UnsignedLong expectedSourceDebugKey) throws DatastoreException {
+        int fakeReportsCount = 2;
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                getSpyAsyncRegistrationQueueRunner();
+
+        List<Source.FakeReport> fakeReports =
+                createFakeReports(
+                        source,
+                        fakeReportsCount,
+                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS);
+
+        Answer<?> falseAttributionAnswer =
+                (arg) -> {
+                    source.setAttributionMode(Source.AttributionMode.FALSELY);
+                    return fakeReports;
+                };
+        doAnswer(falseAttributionAnswer)
+                .when(mSourceNoiseHandler)
+                .assignAttributionModeAndGenerateFakeReports(source);
+        ArgumentCaptor<EventReport> fakeEventReportCaptor =
+                ArgumentCaptor.forClass(EventReport.class);
+
+        // Execution
+        asyncRegistrationQueueRunner.insertSourceFromTransaction(source, mMeasurementDao);
+
+        // Assertion
+        verify(mMeasurementDao).insertSource(source);
+        verify(mMeasurementDao, times(2)).insertEventReport(fakeEventReportCaptor.capture());
+        assertEquals(2, fakeEventReportCaptor.getAllValues().size());
+        fakeEventReportCaptor
+                .getAllValues()
+                .forEach(
+                        (report) -> {
+                            assertEquals(expectedSourceDebugKey, report.getSourceDebugKey());
+                            assertNull(report.getTriggerDebugKey());
+                        });
     }
 
     private static void emptyTables(SQLiteDatabase db) {
