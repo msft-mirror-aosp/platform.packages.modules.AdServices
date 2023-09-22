@@ -16,9 +16,7 @@
 
 package com.android.adservices.service.measurement.registration;
 
-import java.util.Optional;
 
-import javax.annotation.Nullable;
 
 /** POJO for storing source and trigger fetcher status */
 public class AsyncFetchStatus {
@@ -45,9 +43,9 @@ public class AsyncFetchStatus {
 
     private EntityStatus mEntityStatus;
 
-    @Nullable private Long mResponseSize;
+    private long mResponseSize;
 
-    @Nullable private Long mRegistrationDelay;
+    private long mRegistrationDelay;
 
     private boolean mIsRedirectError;
 
@@ -55,6 +53,8 @@ public class AsyncFetchStatus {
         mResponseStatus = ResponseStatus.UNKNOWN;
         mEntityStatus = EntityStatus.UNKNOWN;
         mIsRedirectError = false;
+        mResponseSize = 0L;
+        mRegistrationDelay = 0L;
     }
 
     /** Get the status of a communication with an Ad Tech server. */
@@ -83,22 +83,22 @@ public class AsyncFetchStatus {
     }
 
     /** Get response header size. */
-    public Optional<Long> getResponseSize() {
-        return Optional.ofNullable(mResponseSize);
+    public long getResponseSize() {
+        return mResponseSize;
     }
 
     /** Set response header size. */
-    public void setResponseSize(Long responseSize) {
+    public void setResponseSize(long responseSize) {
         mResponseSize = responseSize;
     }
 
     /** Get registration delay. */
-    public Optional<Long> getRegistrationDelay() {
-        return Optional.ofNullable(mRegistrationDelay);
+    public long getRegistrationDelay() {
+        return mRegistrationDelay;
     }
 
     /** Set registration delay. */
-    public void setRegistrationDelay(Long registrationDelay) {
+    public void setRegistrationDelay(long registrationDelay) {
         mRegistrationDelay = registrationDelay;
     }
 

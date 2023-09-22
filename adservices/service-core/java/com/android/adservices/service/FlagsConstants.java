@@ -19,7 +19,7 @@ package com.android.adservices.service;
  * Defines constants used by {@code Flags}, {@code PhFlags} and testing infra (both device and host
  * side).
  *
- * <p><b>NOTE: </b>cannot have any dependency on Android or other AdServices code.
+ * <p><b>NOTE: </b>cannot have any dependency on Android or other AdServices code.>>>
  */
 public final class FlagsConstants {
 
@@ -365,6 +365,7 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED =
             "measurement_aggregate_fallback_reporting_job_persisted";
+
 
     // FLEDGE Custom Audience keys
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT =

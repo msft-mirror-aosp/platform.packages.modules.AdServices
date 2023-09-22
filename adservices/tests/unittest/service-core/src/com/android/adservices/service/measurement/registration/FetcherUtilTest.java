@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import android.net.Uri;
 
@@ -298,7 +299,7 @@ public final class FetcherUtilTest {
                 + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"]"
                 + "}]";
         JSONArray filters = new JSONArray(json);
-        assertTrue(FetcherUtil.areValidAttributionFilters(filters));
+        assertTrue(FetcherUtil.areValidAttributionFilters(filters, mFlags, false));
     }
 
     @Test
@@ -308,13 +309,82 @@ public final class FetcherUtilTest {
                 + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"]"
                 + "}";
         JSONObject filters = new JSONObject(json);
-        assertTrue(FetcherUtil.areValidAttributionFilters(filters));
+        assertTrue(FetcherUtil.areValidAttributionFilters(filters, mFlags, false));
+    }
+
+    @Test
+    public void areValidAttributionFilters_lookbackWindowAllowedAndInvalid_returnsTrue()
+            throws JSONException {
+        String json =
+                "[{"
+                        + "\"filter-string-1\": [\"filter-value-1\"],"
+                        + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"],"
+                        + "\"_lookback_window\": 123"
+                        + "}]";
+        JSONArray filters = new JSONArray(json);
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        assertTrue(FetcherUtil.areValidAttributionFilters(filters, mFlags, true));
+    }
+
+    @Test
+    public void areValidAttributionFilters_lookbackWindowAllowedButInvalid_returnsFalse()
+            throws JSONException {
+        String json =
+                "[{"
+                        + "\"filter-string-1\": [\"filter-value-1\"],"
+                        + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"],"
+                        + "\"_lookback_window\": abcd"
+                        + "}]";
+        JSONArray filters = new JSONArray(json);
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        assertFalse(FetcherUtil.areValidAttributionFilters(filters, mFlags, true));
+    }
+
+    @Test
+    public void areValidAttributionFilters_lookbackWindowDisllowed_returnsFalse()
+            throws JSONException {
+        String json =
+                "[{"
+                        + "\"filter-string-1\": [\"filter-value-1\"],"
+                        + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"],"
+                        + "\"_lookback_window\": 123"
+                        + "}]";
+        JSONArray filters = new JSONArray(json);
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        assertFalse(FetcherUtil.areValidAttributionFilters(filters, mFlags, false));
+    }
+
+    @Test
+    public void areValidAttributionFilters_zeroLookbackWindow_returnsFalse() throws JSONException {
+        String json =
+                "[{"
+                        + "\"filter-string-1\": [\"filter-value-1\"],"
+                        + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"],"
+                        + "\"_lookback_window\": 0"
+                        + "}]";
+        JSONArray filters = new JSONArray(json);
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        assertFalse(FetcherUtil.areValidAttributionFilters(filters, mFlags, true));
+    }
+
+    @Test
+    public void areValidAttributionFilters_negativeLookbackWindow_returnsFalse()
+            throws JSONException {
+        String json =
+                "[{"
+                        + "\"filter-string-1\": [\"filter-value-1\"],"
+                        + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"],"
+                        + "\"_lookback_window\": -123"
+                        + "}]";
+        JSONArray filters = new JSONArray(json);
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        assertFalse(FetcherUtil.areValidAttributionFilters(filters, mFlags, true));
     }
 
     @Test
     public void testAreValidAttributionFilters_filterMap_null() {
         JSONObject nullFilterMap = null;
-        assertFalse(FetcherUtil.areValidAttributionFilters(nullFilterMap));
+        assertFalse(FetcherUtil.areValidAttributionFilters(nullFilterMap, mFlags, false));
     }
 
     @Test
@@ -326,7 +396,7 @@ public final class FetcherUtilTest {
                         .collect(Collectors.joining(",")));
         json.append("}]");
         JSONArray filters = new JSONArray(json.toString());
-        assertFalse(FetcherUtil.areValidAttributionFilters(filters));
+        assertFalse(FetcherUtil.areValidAttributionFilters(filters, mFlags, false));
     }
 
     @Test
@@ -338,7 +408,7 @@ public final class FetcherUtilTest {
                         .collect(Collectors.joining(",")));
         json.append("}");
         JSONObject filters = new JSONObject(json.toString());
-        assertFalse(FetcherUtil.areValidAttributionFilters(filters));
+        assertFalse(FetcherUtil.areValidAttributionFilters(filters, mFlags, false));
     }
 
     @Test
@@ -348,7 +418,7 @@ public final class FetcherUtilTest {
                 + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"]"
                 + "}]";
         JSONArray filters = new JSONArray(json);
-        assertFalse(FetcherUtil.areValidAttributionFilters(filters));
+        assertFalse(FetcherUtil.areValidAttributionFilters(filters, mFlags, false));
     }
 
     @Test
@@ -358,7 +428,7 @@ public final class FetcherUtilTest {
                 + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"]"
                 + "}";
         JSONObject filters = new JSONObject(json);
-        assertFalse(FetcherUtil.areValidAttributionFilters(filters));
+        assertFalse(FetcherUtil.areValidAttributionFilters(filters, mFlags, false));
     }
 
     @Test
@@ -375,7 +445,7 @@ public final class FetcherUtilTest {
                         .collect(Collectors.joining(",")));
         json.append("]");
         JSONArray filters = new JSONArray(json.toString());
-        assertFalse(FetcherUtil.areValidAttributionFilters(filters));
+        assertFalse(FetcherUtil.areValidAttributionFilters(filters, mFlags, false));
     }
 
     @Test
@@ -389,7 +459,7 @@ public final class FetcherUtilTest {
                         .collect(Collectors.joining(",")));
         json.append("]}]");
         JSONArray filters = new JSONArray(json.toString());
-        assertFalse(FetcherUtil.areValidAttributionFilters(filters));
+        assertFalse(FetcherUtil.areValidAttributionFilters(filters, mFlags, false));
     }
 
     @Test
@@ -403,7 +473,7 @@ public final class FetcherUtilTest {
                         .collect(Collectors.joining(",")));
         json.append("]}");
         JSONObject filters = new JSONObject(json.toString());
-        assertFalse(FetcherUtil.areValidAttributionFilters(filters));
+        assertFalse(FetcherUtil.areValidAttributionFilters(filters, mFlags, false));
     }
 
     @Test
@@ -413,7 +483,7 @@ public final class FetcherUtilTest {
                 + "\"filter-string-2\": [\"filter-value-2\", \"" + LONG_FILTER_STRING + "\"]"
                 + "}]";
         JSONArray filters = new JSONArray(json);
-        assertFalse(FetcherUtil.areValidAttributionFilters(filters));
+        assertFalse(FetcherUtil.areValidAttributionFilters(filters, mFlags, false));
     }
 
     @Test
@@ -423,7 +493,7 @@ public final class FetcherUtilTest {
                 + "\"filter-string-2\": [\"filter-value-2\", \"" + LONG_FILTER_STRING + "\"]"
                 + "}";
         JSONObject filters = new JSONObject(json);
-        assertFalse(FetcherUtil.areValidAttributionFilters(filters));
+        assertFalse(FetcherUtil.areValidAttributionFilters(filters, mFlags, false));
     }
 
     @Test

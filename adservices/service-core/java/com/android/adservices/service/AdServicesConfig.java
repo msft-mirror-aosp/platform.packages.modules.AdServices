@@ -16,8 +16,6 @@
 
 package com.android.adservices.service;
 
-import java.util.concurrent.TimeUnit;
-
 /**
  * Hard Coded Configs for AdServices.
  *
@@ -27,16 +25,6 @@ public class AdServicesConfig {
 
     public static long getMeasurementEventMainReportingJobPeriodMs() {
         return FlagsFactory.getFlags().getMeasurementEventMainReportingJobPeriodMs();
-    }
-
-    public static long MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(24);
-
-    /**
-     * Returns the min time period (in millis) between each expired-record deletion maintenance job
-     * run.
-     */
-    public static long getMeasurementDeleteExpiredJobPeriodMs() {
-        return MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS;
     }
 
     /** Returns the min time period (in millis) between each event fallback reporting job run. */
@@ -72,14 +60,4 @@ public class AdServicesConfig {
     public static long getMeasurementAggregateFallbackReportingJobPeriodMs() {
         return FlagsFactory.getFlags().getMeasurementAggregateFallbackReportingJobPeriodMs();
     }
-
-    /**
-     * Returns the min time period (in millis) between each uninstalled-record deletion maintenance
-     * job run.
-     */
-    public static long getMeasurementDeleteUninstalledJobPeriodMs() {
-        return MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS;
-    }
-
-    public static long MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(24);
 }

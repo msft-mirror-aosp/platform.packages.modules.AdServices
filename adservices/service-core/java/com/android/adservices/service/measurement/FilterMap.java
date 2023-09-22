@@ -19,6 +19,7 @@ package com.android.adservices.service.measurement;
 import android.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.Flags;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -84,6 +85,13 @@ public class FilterMap {
         return mAttributionFilterMapWithLongValue.get(key).longValue();
     }
 
+    /** Returns whether the attribution filter map is empty. */
+    public boolean isEmpty(Flags flags) {
+        return flags.getMeasurementEnableLookbackWindowFilter()
+                ? mAttributionFilterMapWithLongValue.isEmpty()
+                : mAttributionFilterMap.isEmpty();
+    }
+
     /**
      * Returns the string list value given the key. {@code key} must be present and the value kind
      * must be {@link FilterValue.Kind#STRING_LIST_VALUE}.
@@ -96,11 +104,16 @@ public class FilterMap {
      * Serializes the object into a {@link JSONObject}.
      *
      * @return serialized {@link JSONObject}.
-     * @deprecated use {@link #serializeAsJsonV2} instead.
      */
-    @Deprecated
     @Nullable
-    public JSONObject serializeAsJson() {
+    public JSONObject serializeAsJson(Flags flags) {
+        return flags.getMeasurementEnableLookbackWindowFilter()
+                ? serializeAsJsonV2()
+                : serializeAsJson();
+    }
+
+    @Nullable
+    private JSONObject serializeAsJson() {
         if (mAttributionFilterMap == null) {
             return null;
         }
@@ -118,13 +131,8 @@ public class FilterMap {
         }
     }
 
-    /**
-     * Serializes the object into a {@link JSONObject}.
-     *
-     * @return serialized {@link JSONObject}.
-     */
     @Nullable
-    public JSONObject serializeAsJsonV2() {
+    private JSONObject serializeAsJsonV2() {
         if (mAttributionFilterMapWithLongValue == null) {
             return null;
         }
@@ -185,6 +193,13 @@ public class FilterMap {
         public Builder setAttributionFilterMap(Map<String, List<String>> attributionFilterMap) {
             mBuilding.mAttributionFilterMap = attributionFilterMap;
             return this;
+        }
+
+        /** Builds FilterMap from JSONObject. */
+        public Builder buildFilterData(JSONObject jsonObject, Flags flags) throws JSONException {
+            return flags.getMeasurementEnableLookbackWindowFilter()
+                    ? buildFilterDataV2(jsonObject)
+                    : buildFilterData(jsonObject);
         }
 
         /**
