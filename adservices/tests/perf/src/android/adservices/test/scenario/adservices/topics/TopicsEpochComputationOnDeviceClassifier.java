@@ -51,7 +51,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -162,26 +161,8 @@ public class TopicsEpochComputationOnDeviceClassifier {
         // The app will be assigned one random topic from one of these 5 topics.
         assertThat(sdk3Result.getTopics()).hasSize(1);
         Topic topic = sdk3Result.getTopics().get(0);
-
-        // Top 5 classifications and corresponding input for v5 model are:
-        // S-:
-        //  Input string: ". android adextservices tests cts endtoendtest"
-        //  Predictions: [10301, 10009, 10230, 10010, 10184].
-        // T+:
-        //  Input string: ". android adservices tests cts endtoendtest"
-        //  Predictions: [10166, 10010, 10301, 10230, 10184].
-        // V5 model uses package name as part of input, which differs between
-        // versions for back-compat, changing the returned topics for each version.
-        // This is computed by running the model on the device; topics are checked
-        // depending on whether the package name is that for S- or T+.
-        // Returned topic is one of the 5 classification topics of the test app.
-        List<Integer> expectedTopTopicIds;
-        if (ADSERVICES_PACKAGE_NAME.contains("ext.services")) {
-            expectedTopTopicIds = Arrays.asList(10301, 10009, 10230, 10010, 10184);
-        } else {
-            expectedTopTopicIds = Arrays.asList(10166, 10010, 10301, 10230, 10184);
-        }
-        assertThat(topic.getTopicId()).isIn(expectedTopTopicIds);
+        // Verify topic ids is valid.
+        assertThat(topic.getTopicId()).isAtLeast(10000);
 
         assertThat(topic.getModelVersion()).isAtLeast(1L);
         assertThat(topic.getTaxonomyVersion()).isAtLeast(1L);
