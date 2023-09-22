@@ -23,6 +23,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.data.common.BooleanFileDatastore;
+import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.internal.annotations.VisibleForTesting;
@@ -34,10 +35,14 @@ import java.util.Objects;
 @RequiresApi(Build.VERSION_CODES.S)
 public class UxStatesDao {
     @VisibleForTesting public static final int DATASTORE_VERSION = 1;
-    @VisibleForTesting public static final String DATASTORE_NAME = "adservices.uxstates.xml";
 
     @VisibleForTesting
-    public static final String TEST_DATASTORE_NAME = "adservices.uxstates.test.xml";
+    public static final String DATASTORE_NAME =
+            FileCompatUtils.getAdservicesFilename("adservices.uxstates.xml");
+
+    @VisibleForTesting
+    public static final String TEST_DATASTORE_NAME =
+            FileCompatUtils.getAdservicesFilename("adservices.uxstates.test.xml");
 
     private static final Object LOCK = new Object();
 
