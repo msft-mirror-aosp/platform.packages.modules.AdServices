@@ -420,6 +420,13 @@ public class UiUtils {
                 "device_config put adservices mdd_ui_ota_strings_manifest_file_url " + mddURL);
     }
 
+    public static void setOTADownloadTimeout(long timeout) {
+        ShellUtils.runShellCommand(
+                String.format(
+                        "device_config put adservices ui_ota_strings_download_deadline %d",
+                        timeout));
+    }
+
     public static void clearNotifications(Context context, UiDevice device)
             throws InterruptedException {
         device.openNotification();
