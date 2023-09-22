@@ -164,38 +164,18 @@ public class AggregateReportingJobHandler {
 
                     if (result == AdServicesStatusUtils.STATUS_SUCCESS) {
                         reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.SUCCESS);
-                        logReportingStats(reportingStatus);
                     } else {
                         reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.FAILURE);
-                        logReportingStats(reportingStatus);
-                        boolean isMarkedForDeletionFlagEnabled =
-                                mFlags.getMeasurementEnableReportDeletionOnUnrecoverableException();
-                        boolean isMarkedForDeletion =
-                                reportingStatus.getFailureStatus()
-                                                == ReportingStatus.FailureStatus.SERIALIZATION_ERROR
-                                        && isMarkedForDeletionFlagEnabled;
-                        mDatastoreManager.runInTransaction(
-                                (dao) -> {
-                                    int retryCount =
-                                            dao.incrementAndGetReportingRetryCount(
-                                                    aggregateReportId,
-                                                    KeyValueData.DataType
-                                                            .AGGREGATE_REPORT_RETRY_COUNT);
-                                    if (retryCount >= mFlags.getMeasurementReportingRetryLimit()
-                                            && !isMarkedForDeletion) {
-                                        reportingStatus.setFailureStatus(
-                                                ReportingStatus.FailureStatus
-                                                        .JOB_RETRY_LIMIT_REACHED);
-                                    }
-                                });
                     }
-
-                    // log final attempt separately
-                    // edge case: retry limit reach and the error was serialization: don't log
-                    if (reportingStatus.getFailureStatus()
-                            == ReportingStatus.FailureStatus.JOB_RETRY_LIMIT_REACHED) {
-                        logReportingStats(reportingStatus);
-                    }
+                    mDatastoreManager.runInTransaction(
+                            (dao) -> {
+                                int retryCount =
+                                        dao.incrementAndGetReportingRetryCount(
+                                                aggregateReportId,
+                                                KeyValueData.DataType.AGGREGATE_REPORT_RETRY_COUNT);
+                                reportingStatus.setRetryCount(retryCount);
+                            });
+                    logReportingStats(reportingStatus);
                 }
             } else {
                 LogUtil.w("The number of keys do not align with the number of reports");
@@ -402,6 +382,7 @@ public class AggregateReportingJobHandler {
                         .setUploadMethod(reportingStatus.getUploadMethod().getValue())
                         .setReportingDelay(reportingStatus.getReportingDelay())
                         .setSourceRegistrant(reportingStatus.getSourceRegistrant())
+                        .setRetryCount(reportingStatus.getRetryCount())
                         .build());
     }
 }

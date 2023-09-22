@@ -177,6 +177,7 @@ public class AsyncRegistrationQueueRunner {
     private void processSourceRegistration(
             AsyncRegistration asyncRegistration, Set<Uri> failedOrigins) {
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        asyncFetchStatus.setRetryCount(Long.valueOf(asyncRegistration.getRetryCount()).intValue());
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         long startTime = asyncRegistration.getRequestTime();
         Optional<Source> resultSource =
@@ -230,6 +231,7 @@ public class AsyncRegistrationQueueRunner {
     private void processTriggerRegistration(
             AsyncRegistration asyncRegistration, Set<Uri> failedOrigins) {
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        asyncFetchStatus.setRetryCount(Long.valueOf(asyncRegistration.getRetryCount()).intValue());
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         long startTime = asyncRegistration.getRequestTime();
         Optional<Trigger> resultTrigger = mAsyncTriggerFetcher.fetchTrigger(

@@ -126,6 +126,8 @@ public class ReportingStatus {
 
     private String mSourceRegistrant;
 
+    private int mRetryCount;
+
     public ReportingStatus() {
         mReportType = ReportType.UNKNOWN;
         mUploadStatus = UploadStatus.UNKNOWN;
@@ -248,5 +250,15 @@ public class ReportingStatus {
     /** Set source registrant. */
     public void setSourceRegistrant(String sourceRegistrant) {
         mSourceRegistrant = sourceRegistrant;
+    }
+
+    /** Get retry count. */
+    public int getRetryCount() {
+        return mRetryCount;
+    }
+
+    /** Set retry count. */
+    public void setRetryCount(int retryCount) {
+        mRetryCount = retryCount;
     }
 }
