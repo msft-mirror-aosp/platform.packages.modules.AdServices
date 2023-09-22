@@ -15,11 +15,6 @@
  */
 package com.android.adservices.service.measurement.registration;
 
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_FILTERS;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_BYTES_PER_ATTRIBUTION_AGGREGATE_KEY_ID;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_BYTES_PER_ATTRIBUTION_FILTER_STRING;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_FILTER_MAPS_PER_FILTER_SET;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_VALUES_PER_ATTRIBUTION_FILTER;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS;
 
 import android.annotation.NonNull;
@@ -136,7 +131,10 @@ class FetcherUtil {
      * Validate aggregate key ID.
      */
     static boolean isValidAggregateKeyId(String id) {
-        return id != null && id.getBytes().length <= MAX_BYTES_PER_ATTRIBUTION_AGGREGATE_KEY_ID;
+        return id != null
+                && id.getBytes().length
+                        <= FlagsFactory.getFlags()
+                                .getMeasurementMaxBytesPerAttributionAggregateKeyId();
     }
 
     /** Validate aggregate deduplication key. */
@@ -184,7 +182,8 @@ class FetcherUtil {
     /** Validate attribution filters JSONArray. */
     static boolean areValidAttributionFilters(
             @NonNull JSONArray filterSet, Flags flags, boolean canIncludeLookbackWindow) {
-        if (filterSet.length() > MAX_FILTER_MAPS_PER_FILTER_SET) {
+        if (filterSet.length()
+                > FlagsFactory.getFlags().getMeasurementMaxFilterMapsPerFilterSet()) {
             return false;
         }
         for (int i = 0; i < filterSet.length(); i++) {
@@ -199,13 +198,16 @@ class FetcherUtil {
     /** Validate attribution filters JSONObject. */
     static boolean areValidAttributionFilters(
             JSONObject filtersObj, Flags flags, boolean canIncludeLookbackWindow) {
-        if (filtersObj == null || filtersObj.length() > MAX_ATTRIBUTION_FILTERS) {
+        if (filtersObj == null
+                || filtersObj.length()
+                        > FlagsFactory.getFlags().getMeasurementMaxAttributionFilters()) {
             return false;
         }
         Iterator<String> keys = filtersObj.keys();
         while (keys.hasNext()) {
             String key = keys.next();
-            if (key.getBytes().length > MAX_BYTES_PER_ATTRIBUTION_FILTER_STRING) {
+            if (key.getBytes().length
+                    > FlagsFactory.getFlags().getMeasurementMaxBytesPerAttributionFilterString()) {
                 return false;
             }
             if (flags.getMeasurementEnableLookbackWindowFilter()
@@ -216,13 +218,18 @@ class FetcherUtil {
                 continue;
             }
             JSONArray values = filtersObj.optJSONArray(key);
-            if (values == null || values.length() > MAX_VALUES_PER_ATTRIBUTION_FILTER) {
+            if (values == null
+                    || values.length()
+                            > FlagsFactory.getFlags()
+                                    .getMeasurementMaxValuesPerAttributionFilter()) {
                 return false;
             }
             for (int i = 0; i < values.length(); i++) {
                 String value = values.optString(i);
                 if (value == null
-                        || value.getBytes().length > MAX_BYTES_PER_ATTRIBUTION_FILTER_STRING) {
+                        || value.getBytes().length
+                                > FlagsFactory.getFlags()
+                                        .getMeasurementMaxBytesPerAttributionFilterString()) {
                     return false;
                 }
             }
@@ -243,10 +250,7 @@ class FetcherUtil {
             AdServicesLogger logger,
             AsyncRegistration asyncRegistration,
             AsyncFetchStatus asyncFetchStatus) {
-        long headerSize = 0;
-        if (asyncFetchStatus.getResponseSize().isPresent()) {
-            headerSize = asyncFetchStatus.getResponseSize().get();
-        }
+        long headerSize = asyncFetchStatus.getResponseSize();
         long maxSize = flags.getMaxResponseBasedRegistrationPayloadSizeBytes();
         String adTechDomain = null;
 
@@ -266,7 +270,7 @@ class FetcherUtil {
                                 getSurfaceType(asyncRegistration),
                                 getStatus(asyncFetchStatus),
                                 getFailureType(asyncFetchStatus),
-                                asyncFetchStatus.getRegistrationDelay().get(),
+                                asyncFetchStatus.getRegistrationDelay(),
                                 getSourceRegistrantToLog(asyncRegistration))
                         .setAdTechDomain(adTechDomain)
                         .build());

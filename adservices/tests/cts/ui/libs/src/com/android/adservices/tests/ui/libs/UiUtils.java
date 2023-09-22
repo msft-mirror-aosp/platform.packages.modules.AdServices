@@ -26,11 +26,13 @@ import static com.google.common.truth.Truth.assertThat;
 
 
 import android.adservices.common.AdServicesCommonManager;
+import android.adservices.common.AdServicesStates;
 import android.app.Instrumentation;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Point;
+import android.os.OutcomeReceiver;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -46,6 +48,8 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
 import com.android.compatibility.common.util.ShellUtils;
 
+import com.google.common.util.concurrent.SettableFuture;
+
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -53,6 +57,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
 
 public class UiUtils {
@@ -470,7 +475,7 @@ public class UiUtils {
         scrollToThenClickElementContainingText(
                 device,
                 isOTA
-                        ? getOTAString(context, R.string.notificationUI_left_control_button_text)
+                        ? "Manage privacy settings!"
                         : getString(context, R.string.notificationUI_left_control_button_text));
 
         // Wait for the app to appear
@@ -534,8 +539,8 @@ public class UiUtils {
         scrollToBeginning(device);
         UiObject2 scrollView =
                 device.findObject(By.clazz(ANDROID_WIDGET_SCROLLVIEW).scrollable(true));
-        scrollView.findObject(By.text(targetStr));
-        return scrollView.scrollUntil(Direction.DOWN, Until.findObject(By.text(targetStr)));
+        scrollView.scrollUntil(Direction.DOWN, Until.findObject(By.textContains(targetStr)));
+        return device.findObject(By.textContains(targetStr));
     }
 
     private static UiObject2 scrollToElement(Context context, UiDevice device, int resId) {
@@ -550,7 +555,7 @@ public class UiUtils {
     private static void scrollToBeginning(UiDevice device) {
         UiObject2 scrollView =
                 device.findObject(By.clazz(ANDROID_WIDGET_SCROLLVIEW).scrollable(true));
-        scrollView.swipe(Direction.UP, 100, 50);
+        scrollView.swipe(Direction.DOWN, 0.7f, 500);
     }
 
     public static UiObject2 getConsentSwitch(UiDevice device) {
@@ -680,5 +685,41 @@ public class UiUtils {
         return !pm.hasSystemFeature(PackageManager.FEATURE_WATCH)
                 && !pm.hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE)
                 && !pm.hasSystemFeature(PackageManager.FEATURE_LEANBACK);
+    }
+
+    public static void resetAdServicesConsentData(Context context) throws Exception {
+        // Neeed to disable debug mode since it takes precedence over reset channel.
+        disableConsentDebugMode();
+
+        AdServicesCommonManager mCommonManager = AdServicesCommonManager.get(context);
+
+        // Reset consent and thereby AdServices data before each test.
+        UiUtils.refreshConsentResetToken();
+
+        SettableFuture<Boolean> responseFuture = SettableFuture.create();
+
+        mCommonManager.enableAdServices(
+                new AdServicesStates.Builder()
+                        .setAdIdEnabled(true)
+                        .setAdultAccount(true)
+                        .setU18Account(true)
+                        .setPrivacySandboxUiEnabled(true)
+                        .setPrivacySandboxUiRequest(false)
+                        .build(),
+                Executors.newCachedThreadPool(),
+                new OutcomeReceiver<Boolean, Exception>() {
+                    @Override
+                    public void onResult(Boolean result) {
+                        responseFuture.set(result);
+                    }
+
+                    @Override
+                    public void onError(Exception exception) {
+                        responseFuture.setException(exception);
+                    }
+                });
+
+        Boolean response = responseFuture.get();
+        assertThat(response).isTrue();
     }
 }

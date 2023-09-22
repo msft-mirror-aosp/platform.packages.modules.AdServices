@@ -22,7 +22,6 @@ import android.content.Context;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.EncoderLogicDao;
@@ -30,8 +29,9 @@ import com.android.adservices.data.signals.EncoderPersistenceManager;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
+import com.android.adservices.service.adselection.AdCounterKeyCopierNoOpImpl;
 import com.android.adservices.service.adselection.AdSelectionScriptEngine;
+import com.android.adservices.service.adselection.DebugReportingScriptDisabledStrategy;
 import com.android.adservices.service.common.SingletonRunner;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -131,14 +131,8 @@ public class PeriodicEncodingJobWorker {
                                                 FlagsFactory.getFlags()
                                                         .getEnforceIsolateMaxHeapSize(),
                                         () -> FlagsFactory.getFlags().getIsolateMaxHeapSizeBytes(),
-                                        new AdFilteringFeatureFactory(
-                                                        SharedStorageDatabase.getInstance(context)
-                                                                .appInstallDao(),
-                                                        SharedStorageDatabase.getInstance(context)
-                                                                .frequencyCapDao(),
-                                                        FlagsFactory.getFlags())
-                                                .getAdCounterKeyCopier(),
-                                        null, // not used in encoding
+                                        new AdCounterKeyCopierNoOpImpl(),
+                                        new DebugReportingScriptDisabledStrategy(),
                                         false), // not used in encoding
                                 AdServicesExecutors.getBackgroundExecutor(),
                                 AdServicesExecutors.getLightWeightExecutor(),
@@ -203,7 +197,9 @@ public class PeriodicEncodingJobWorker {
         try {
             encodedBytes = Base64.getDecoder().decode(encodedPayload);
         } catch (IllegalArgumentException e) {
-            sLogger.e("Malformed encoded payload returned by buyer: %s", buyer);
+            sLogger.e(
+                    "Malformed encoded payload returned by buyer: %s, encoded payload: %s",
+                    buyer, encodedPayload);
             return false;
         }
         if (encodedBytes.length > mEncodedPayLoadMaxSizeBytes) {

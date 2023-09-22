@@ -529,10 +529,10 @@ public class AdServicesLoggerImplTest {
         MeasurementAttributionStats stats =
                 new MeasurementAttributionStats.Builder()
                         .setCode(AD_SERVICES_MEASUREMENT_ATTRIBUTION)
-                        .setSourceType(AttributionStatus.SourceType.EVENT.ordinal())
-                        .setSurfaceType(AttributionStatus.AttributionSurface.APP_WEB.ordinal())
-                        .setResult(AttributionStatus.AttributionResult.SUCCESS.ordinal())
-                        .setFailureType(AttributionStatus.FailureType.UNKNOWN.ordinal())
+                        .setSourceType(AttributionStatus.SourceType.VIEW.getValue())
+                        .setSurfaceType(AttributionStatus.AttributionSurface.APP_WEB.getValue())
+                        .setResult(AttributionStatus.AttributionResult.SUCCESS.getValue())
+                        .setFailureType(AttributionStatus.FailureType.UNKNOWN.getValue())
                         .setSourceDerived(false)
                         .setInstallAttribution(true)
                         .setAttributionDelay(100L)
@@ -545,16 +545,16 @@ public class AdServicesLoggerImplTest {
         assertEquals(argumentCaptor.getValue().getCode(), AD_SERVICES_MEASUREMENT_ATTRIBUTION);
         assertEquals(
                 argumentCaptor.getValue().getSourceType(),
-                AttributionStatus.SourceType.EVENT.ordinal());
+                AttributionStatus.SourceType.VIEW.getValue());
         assertEquals(
                 argumentCaptor.getValue().getSurfaceType(),
-                AttributionStatus.AttributionSurface.APP_WEB.ordinal());
+                AttributionStatus.AttributionSurface.APP_WEB.getValue());
         assertEquals(
                 argumentCaptor.getValue().getResult(),
-                AttributionStatus.AttributionResult.SUCCESS.ordinal());
+                AttributionStatus.AttributionResult.SUCCESS.getValue());
         assertEquals(
                 argumentCaptor.getValue().getFailureType(),
-                AttributionStatus.FailureType.UNKNOWN.ordinal());
+                AttributionStatus.FailureType.UNKNOWN.getValue());
         assertEquals(argumentCaptor.getValue().isSourceDerived(), false);
         assertEquals(argumentCaptor.getValue().isInstallAttribution(), true);
         assertEquals(argumentCaptor.getValue().getAttributionDelay(), 100L);

@@ -133,6 +133,9 @@ public class EncoderLogicHandler {
                         .setUseCache(false)
                         .setResponseHeaderKeys(mDownloadRequestProperties)
                         .build();
+        sLogger.v(
+                "Initiating encoder download request for buyer: %s, uri: %s",
+                buyer, encoderEndpoint.getDownloadUri());
         FluentFuture<AdServicesHttpClientResponse> response =
                 FluentFuture.from(mAdServicesHttpsClient.fetchPayload(downloadRequest));
 
@@ -143,6 +146,12 @@ public class EncoderLogicHandler {
     @VisibleForTesting
     protected boolean extractAndPersistEncoder(
             AdTechIdentifier buyer, AdServicesHttpClientResponse response) {
+
+        if (response == null || response.getResponseBody().isEmpty()) {
+            sLogger.e("Empty response from from client for downloading encoder");
+            return false;
+        }
+
         String encoderLogicBody = response.getResponseBody();
 
         int version = FALLBACK_VERSION;
@@ -157,7 +166,7 @@ public class EncoderLogicHandler {
             }
 
         } catch (NumberFormatException e) {
-            sLogger.e("Invalid or missing version, setting to fallback:" + FALLBACK_VERSION);
+            sLogger.e("Invalid or missing version, setting to fallback: " + FALLBACK_VERSION);
         }
 
         DBEncoderLogic encoderLogicEntry =
