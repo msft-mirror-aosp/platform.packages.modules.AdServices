@@ -190,7 +190,7 @@ public class TopicsEpochComputationOnDeviceClassifier {
     private void overridingBeforeTest() {
         disableGlobalKillSwitch();
         disableTopicsKillSwitch();
-        overridingAdservicesLoggingLevel("DEBUG");
+        overridingAdservicesLoggingLevel("VERBOSE");
 
         overrideDisableTopicsEnrollmentCheck("1");
         overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
