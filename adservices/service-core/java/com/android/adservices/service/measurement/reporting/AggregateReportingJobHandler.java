@@ -156,12 +156,8 @@ public class AggregateReportingJobHandler {
                     }
 
                     ReportingStatus reportingStatus = new ReportingStatus();
-                    if (mReportType != null) {
-                        reportingStatus.setReportType(mReportType);
-                    }
-                    if (mUploadMethod != null) {
-                        reportingStatus.setUploadMethod(mUploadMethod);
-                    }
+                    reportingStatus.setReportType(mReportType);
+                    reportingStatus.setUploadMethod(mUploadMethod);
                     final String aggregateReportId = reportIds.get(i);
                     @AdServicesStatusUtils.StatusCode
                     int result = performReport(aggregateReportId, keys.get(i), reportingStatus);
@@ -246,6 +242,8 @@ public class AggregateReportingJobHandler {
             return AdServicesStatusUtils.STATUS_IO_ERROR;
         }
         AggregateReport aggregateReport = aggregateReportOpt.get();
+        reportingStatus.setReportingDelay(
+                System.currentTimeMillis() - aggregateReport.getScheduledReportTime());
         reportingStatus.setSourceRegistrant(getAppPackageName(aggregateReport));
         if (mIsDebugInstance
                 && aggregateReport.getDebugReportStatus()
@@ -278,9 +276,6 @@ public class AggregateReportingJobHandler {
                                 });
 
                 if (success) {
-                    long deliveryTime = System.currentTimeMillis();
-                    reportingStatus.setReportingDelay(
-                            deliveryTime - aggregateReport.getScheduledReportTime());
                     return AdServicesStatusUtils.STATUS_SUCCESS;
                 } else {
                     reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.DATASTORE);
@@ -302,8 +297,8 @@ public class AggregateReportingJobHandler {
             return AdServicesStatusUtils.STATUS_IO_ERROR;
         } catch (JSONException e) {
             LogUtil.d(e, "Serialization error occurred at aggregate report delivery.");
-            // TODO(b/298330312): Change to defined error codes
             reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.SERIALIZATION_ERROR);
+            // TODO(b/298330312): Change to defined error codes
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED,
@@ -327,8 +322,8 @@ public class AggregateReportingJobHandler {
             return AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } catch (CryptoException e) {
             LogUtil.e(e, e.toString());
-            // TODO(b/298330312): Change to defined error codes
             reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.ENCRYPTION_ERROR);
+            // TODO(b/298330312): Change to defined error codes
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED,
@@ -398,9 +393,6 @@ public class AggregateReportingJobHandler {
     }
 
     private void logReportingStats(ReportingStatus reportingStatus) {
-        if (!reportingStatus.getReportingDelay().isPresent()) {
-            reportingStatus.setReportingDelay(0L);
-        }
         mLogger.logMeasurementReports(
                 new MeasurementReportsStats.Builder()
                         .setCode(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED)
@@ -408,7 +400,7 @@ public class AggregateReportingJobHandler {
                         .setResultCode(reportingStatus.getUploadStatus().getValue())
                         .setFailureType(reportingStatus.getFailureStatus().getValue())
                         .setUploadMethod(reportingStatus.getUploadMethod().getValue())
-                        .setReportingDelay(reportingStatus.getReportingDelay().get())
+                        .setReportingDelay(reportingStatus.getReportingDelay())
                         .setSourceRegistrant(reportingStatus.getSourceRegistrant())
                         .build());
     }

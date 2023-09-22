@@ -315,7 +315,8 @@ public class AuctionServerE2ETest {
                 spy(adSelectionDebugReportingDatabase.getAdSelectionDebugReportDao());
         mMockAdIdWorker = new MockAdIdWorker(new AdIdCacheManager(mContext));
         mAdIdFetcher =
-                new AdIdFetcher(mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor);
+                new AdIdFetcher(
+                        mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor, mFlags);
 
         mAdSelectionService = createAdSelectionService();
 
