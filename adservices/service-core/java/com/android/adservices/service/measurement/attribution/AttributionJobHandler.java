@@ -241,10 +241,12 @@ class AttributionJobHandler {
                     }
 
                     TriggeringStatus aggregateTriggeringStatus =
-                            maybeGenerateAggregateReport(source, trigger, measurementDao);
+                            maybeGenerateAggregateReport(
+                                    source, trigger, measurementDao, attributionStatus);
 
                     TriggeringStatus eventTriggeringStatus =
-                            maybeGenerateEventReport(source, trigger, measurementDao);
+                            maybeGenerateEventReport(
+                                    source, trigger, measurementDao, attributionStatus);
 
                     boolean isEventTriggeringStatusAttributed =
                             eventTriggeringStatus == TriggeringStatus.ATTRIBUTED;
@@ -285,7 +287,10 @@ class AttributionJobHandler {
     }
 
     private TriggeringStatus maybeGenerateAggregateReport(
-            Source source, Trigger trigger, IMeasurementDao measurementDao)
+            Source source,
+            Trigger trigger,
+            IMeasurementDao measurementDao,
+            AttributionStatus attributionStatus)
             throws DatastoreException {
 
         if (trigger.getTriggerTime() >= source.getAggregatableReportWindow()) {
@@ -434,6 +439,11 @@ class AttributionJobHandler {
 
             finalizeAggregateReportCreation(
                     source, aggregateDeduplicationKeyOptional, aggregateReport, measurementDao);
+            incrementAggregateReportCountBy(attributionStatus, 1);
+            if (aggregateReport.getDebugReportStatus()
+                    == AggregateReport.DebugReportStatus.PENDING) {
+                incrementAggregateDebugReportCountBy(attributionStatus, 1);
+            }
             // TODO (b/230618328): read from DB and upload unencrypted aggregate report.
             return TriggeringStatus.ATTRIBUTED;
         } catch (JSONException e) {
@@ -566,7 +576,10 @@ class AttributionJobHandler {
     }
 
     private TriggeringStatus maybeGenerateEventReport(
-            Source source, Trigger trigger, IMeasurementDao measurementDao)
+            Source source,
+            Trigger trigger,
+            IMeasurementDao measurementDao,
+            AttributionStatus attributionStatus)
             throws DatastoreException {
 
         if (source.getParentId() != null) {
@@ -676,7 +689,12 @@ class AttributionJobHandler {
             } else {
                 finalizeEventReportCreation(source, eventTrigger, newEventReport, measurementDao);
             }
+            incrementEventReportCountBy(attributionStatus, 1);
+            if (newEventReport.getDebugReportStatus() == EventReport.DebugReportStatus.PENDING) {
+                incrementEventDebugReportCountBy(attributionStatus, 1);
+            }
         } else {
+
             if (!provisionEventReportFlexEventApiQuota(
                     source, newEventReport, measurementDao, eventTrigger)) {
                 return TriggeringStatus.DROPPED;
@@ -1320,5 +1338,25 @@ class AttributionJobHandler {
                 }
             }
         }
+    }
+
+    private void incrementEventReportCountBy(AttributionStatus attributionStatus, int count) {
+        attributionStatus.setEventReportCount(attributionStatus.getEventReportCount() + count);
+    }
+
+    private void incrementEventDebugReportCountBy(AttributionStatus attributionStatus, int count) {
+        attributionStatus.setEventDebugReportCount(
+                attributionStatus.getEventDebugReportCount() + count);
+    }
+
+    private void incrementAggregateReportCountBy(AttributionStatus attributionStatus, int count) {
+        attributionStatus.setAggregateReportCount(
+                attributionStatus.getAggregateReportCount() + count);
+    }
+
+    private void incrementAggregateDebugReportCountBy(
+            AttributionStatus attributionStatus, int count) {
+        attributionStatus.setAggregateDebugReportCount(
+                attributionStatus.getAggregateDebugReportCount() + count);
     }
 }

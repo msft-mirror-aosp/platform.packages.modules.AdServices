@@ -351,6 +351,7 @@ public class AsyncTriggerFetcher {
 
         if (!isTriggerHeaderPresent(headers)) {
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.HEADER_MISSING);
+            asyncFetchStatus.setRedirectOnlyStatus(true);
             return Optional.empty();
         }
 
