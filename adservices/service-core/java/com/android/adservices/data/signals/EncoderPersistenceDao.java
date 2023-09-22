@@ -34,12 +34,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 /**
- * Manager that handles persistence and retrieval of encoding logic for buyers. By leveraging Atomic
- * files it ensures that we do not read half written encoders. This persistence layer is not
- * strictly sequential, and will honor the last completed write for parallel writes. Multiple
- * encoder write updates are unlikely to happen.
+ * Handles persistence and retrieval of encoding logic for buyers. By leveraging Atomic files it
+ * ensures that we do not read half written encoders. This persistence layer is not strictly
+ * sequential, and will honor the last completed write for parallel writes. Multiple encoder write
+ * updates are unlikely to happen.
  */
-public class EncoderPersistenceManager {
+public class EncoderPersistenceDao {
 
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
@@ -54,25 +54,25 @@ public class EncoderPersistenceManager {
 
     @NonNull private File mFilesDir;
     private static final Object SINGLETON_LOCK = new Object();
-    private static volatile EncoderPersistenceManager sInstance;
+    private static volatile EncoderPersistenceDao sInstance;
 
     @SuppressLint("NewAdServicesFile")
-    private EncoderPersistenceManager(Context context) {
+    private EncoderPersistenceDao(Context context) {
         this.mFilesDir = context.getFilesDir();
     }
 
-    /** Provides a singleton instance of {@link EncoderPersistenceManager} */
-    public static EncoderPersistenceManager getInstance(@NonNull Context context) {
+    /** Provides a singleton instance of {@link EncoderPersistenceDao} */
+    public static EncoderPersistenceDao getInstance(@NonNull Context context) {
         Objects.requireNonNull(context, "Context must not be null");
 
-        EncoderPersistenceManager singleInstance = sInstance;
+        EncoderPersistenceDao singleInstance = sInstance;
         if (singleInstance != null) {
             return singleInstance;
         }
 
         synchronized (SINGLETON_LOCK) {
             if (sInstance == null) {
-                sInstance = new EncoderPersistenceManager(context);
+                sInstance = new EncoderPersistenceDao(context);
             }
         }
         return sInstance;
