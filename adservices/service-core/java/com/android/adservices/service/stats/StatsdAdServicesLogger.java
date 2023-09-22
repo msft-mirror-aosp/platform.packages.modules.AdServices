@@ -104,7 +104,10 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 measurementReportsStats.getFailureType(),
                 measurementReportsStats.getUploadMethod(),
                 measurementReportsStats.getReportingDelay(),
-                getAllowlistedAppPackageName(measurementReportsStats.getSourceRegistrant()));
+                getAllowlistedAppPackageName(measurementReportsStats.getSourceRegistrant()),
+                measurementReportsStats.getRetryCount(),
+                /* httpResponseCode */ 0,
+                /* isMarkedForDeletion */ false);
     }
 
     /** log method for API call stats. */
@@ -149,7 +152,10 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 stats.getRegistrationStatus(),
                 stats.getFailureType(),
                 stats.getRegistrationDelay(),
-                getAllowlistedAppPackageName(stats.getSourceRegistrant()));
+                getAllowlistedAppPackageName(stats.getSourceRegistrant()),
+                stats.getRetryCount(),
+                /* httpResponseCode */ 0,
+                stats.isRedirectOnly());
     }
 
     @Override
@@ -386,7 +392,12 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 measurementAttributionStats.isSourceDerived(),
                 measurementAttributionStats.isInstallAttribution(),
                 measurementAttributionStats.getAttributionDelay(),
-                getAllowlistedAppPackageName(measurementAttributionStats.getSourceRegistrant()));
+                getAllowlistedAppPackageName(measurementAttributionStats.getSourceRegistrant()),
+                measurementAttributionStats.getAggregateReportCount(),
+                measurementAttributionStats.getAggregateDebugReportCount(),
+                measurementAttributionStats.getEventReportCount(),
+                measurementAttributionStats.getEventDebugReportCount(),
+                /* retryCount */ 0);
     }
 
     /** log method for measurement wipeout. */
