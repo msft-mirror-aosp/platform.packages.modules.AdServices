@@ -523,8 +523,8 @@ public class AggregateReportingJobHandlerTest {
                         1000, 1100));
 
         verify(mMeasurementDao, times(2)).markAggregateReportStatus(any(), anyInt());
-        verify(mTransaction, times(5)).begin();
-        verify(mTransaction, times(5)).end();
+        verify(mTransaction, times(7)).begin();
+        verify(mTransaction, times(7)).end();
     }
 
     @Test

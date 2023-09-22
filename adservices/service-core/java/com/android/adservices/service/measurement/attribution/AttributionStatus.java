@@ -113,6 +113,10 @@ public class AttributionStatus {
     private boolean mIsInstallAttribution;
     private long mAttributionDelay;
     private String mSourceRegistrant;
+    private int mAggregateReportCount;
+    private int mAggregateDebugReportCount;
+    private int mEventReportCount;
+    private int mEventDebugReportCount;
 
     public AttributionStatus() {
         mSourceType = SourceType.UNKNOWN;
@@ -253,5 +257,45 @@ public class AttributionStatus {
     /** Set source registrant. */
     public void setSourceRegistrant(String sourceRegistrant) {
         mSourceRegistrant = sourceRegistrant;
+    }
+
+    /** Get aggregate report count. */
+    public int getAggregateReportCount() {
+        return mAggregateReportCount;
+    }
+
+    /** Set aggregate report count. */
+    public void setAggregateReportCount(int aggregateReportCount) {
+        mAggregateReportCount = aggregateReportCount;
+    }
+
+    /** Get aggregate debug report count. */
+    public int getAggregateDebugReportCount() {
+        return mAggregateDebugReportCount;
+    }
+
+    /** Set aggregate debug report count. */
+    public void setAggregateDebugReportCount(int aggregateDebugReportCount) {
+        mAggregateDebugReportCount = aggregateDebugReportCount;
+    }
+
+    /** Get event report count. */
+    public int getEventReportCount() {
+        return mEventReportCount;
+    }
+
+    /** Set event report count. */
+    public void setEventReportCount(int eventReportCount) {
+        mEventReportCount = eventReportCount;
+    }
+
+    /** Get evenet debug report count. */
+    public int getEventDebugReportCount() {
+        return mEventDebugReportCount;
+    }
+
+    /** Set event debug report count. */
+    public void setEventDebugReportCount(int eventDebugReportCount) {
+        mEventDebugReportCount = eventDebugReportCount;
     }
 }
