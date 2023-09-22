@@ -301,20 +301,6 @@
           "histograms": [
             {
               "key": "0x11",
-              "value": 222
-            }
-          ],
-          "source_debug_key": "111"
-        },
-        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
-        "report_time": "1643236759896"
-      },
-      {
-        "payload": {
-          "attribution_destination": "android-app://example.2d1.test",
-          "histograms": [
-            {
-              "key": "0x11",
               "value": 333
             }
           ],

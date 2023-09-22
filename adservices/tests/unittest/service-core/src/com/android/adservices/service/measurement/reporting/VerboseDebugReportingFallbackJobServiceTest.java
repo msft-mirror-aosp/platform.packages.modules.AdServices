@@ -43,6 +43,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
@@ -67,12 +68,14 @@ import org.mockito.quality.Strictness;
 
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class VerboseDebugReportingFallbackJobServiceTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final int MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_ID =
             MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 1_000L;
+    private static final long JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(4);
     private JobScheduler mMockJobScheduler;
     private VerboseDebugReportingFallbackJobService mSpyService;
     private DatastoreManager mMockDatastoreManager;
@@ -88,6 +91,11 @@ public class VerboseDebugReportingFallbackJobServiceTest {
         mSpyLogger =
                 spy(new AdservicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mockStatsdLogger));
         mMockFlags = mock(Flags.class);
+        when(mMockFlags.getMeasurementVerboseDebugReportingFallbackJobPersisted()).thenReturn(true);
+        when(mMockFlags.getMeasurementVerboseDebugReportingJobRequiredNetworkType())
+                .thenReturn(JobInfo.NETWORK_TYPE_ANY);
+        when(mMockFlags.getMeasurementVerboseDebugReportingFallbackJobPeriodMs())
+                .thenReturn(JOB_PERIOD_MS);
     }
 
     @Test
@@ -265,9 +273,6 @@ public class VerboseDebugReportingFallbackJobServiceTest {
                     doReturn(mMockJobScheduler)
                             .when(mockContext)
                             .getSystemService(JobScheduler.class);
-                    long periodMs =
-                            FlagsFactory.getFlags()
-                                    .getMeasurementVerboseDebugReportingFallbackJobPeriodMs();
                     final JobInfo mockJobInfo =
                             new JobInfo.Builder(
                                             MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_ID,
@@ -275,7 +280,7 @@ public class VerboseDebugReportingFallbackJobServiceTest {
                                                     mockContext,
                                                     VerboseDebugReportingFallbackJobService.class))
                                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                                    .setPeriodic(periodMs)
+                                    .setPeriodic(JOB_PERIOD_MS)
                                     .setPersisted(true)
                                     .build();
                     doReturn(mockJobInfo)
@@ -306,9 +311,6 @@ public class VerboseDebugReportingFallbackJobServiceTest {
                     doReturn(mMockJobScheduler)
                             .when(mockContext)
                             .getSystemService(JobScheduler.class);
-                    long periodMs =
-                            FlagsFactory.getFlags()
-                                    .getMeasurementVerboseDebugReportingFallbackJobPeriodMs();
                     final JobInfo mockJobInfo =
                             new JobInfo.Builder(
                                             MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_ID,
@@ -317,7 +319,7 @@ public class VerboseDebugReportingFallbackJobServiceTest {
                                                     VerboseDebugReportingFallbackJobService.class))
                                     // Difference
                                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_CELLULAR)
-                                    .setPeriodic(periodMs)
+                                    .setPeriodic(JOB_PERIOD_MS)
                                     .setPersisted(true)
                                     .build();
                     doReturn(mockJobInfo)

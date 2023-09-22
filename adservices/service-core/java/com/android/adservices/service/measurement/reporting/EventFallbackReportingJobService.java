@@ -32,6 +32,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.AdServicesConfig;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.util.JobLockHolder;
@@ -150,7 +151,8 @@ public final class EventFallbackReportingJobService extends JobService {
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
-        if (FlagsFactory.getFlags().getMeasurementJobEventFallbackReportingKillSwitch()) {
+        Flags flags = FlagsFactory.getFlags();
+        if (flags.getMeasurementJobEventFallbackReportingKillSwitch()) {
             LogUtil.d("EventFallbackReportingJobService is disabled, skip scheduling");
             return;
         }
@@ -164,7 +166,7 @@ public final class EventFallbackReportingJobService extends JobService {
         final JobInfo scheduledJob =
                 jobScheduler.getPendingJob(MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
-        JobInfo jobInfo = buildJobInfo(context);
+        JobInfo jobInfo = buildJobInfo(context, flags);
         if (forceSchedule || !jobInfo.equals(scheduledJob)) {
             schedule(jobScheduler, jobInfo);
             LogUtil.d("Scheduled EventFallbackReportingJobService");
@@ -173,14 +175,16 @@ public final class EventFallbackReportingJobService extends JobService {
         }
     }
 
-    private static JobInfo buildJobInfo(Context context) {
+    private static JobInfo buildJobInfo(Context context, Flags flags) {
         return new JobInfo.Builder(
                         MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID,
                         new ComponentName(context, EventFallbackReportingJobService.class))
-                .setRequiresBatteryNotLow(true)
-                .setPeriodic(AdServicesConfig.getMeasurementEventFallbackReportingJobPeriodMs())
-                .setPersisted(true)
-                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                .setRequiresBatteryNotLow(
+                        flags.getMeasurementEventFallbackReportingJobRequiredBatteryNotLow())
+                .setRequiredNetworkType(
+                        flags.getMeasurementEventFallbackReportingJobRequiredNetworkType())
+                .setPeriodic(flags.getMeasurementEventFallbackReportingJobPeriodMs())
+                .setPersisted(flags.getMeasurementEventFallbackReportingJobPersisted())
                 .build();
     }
 

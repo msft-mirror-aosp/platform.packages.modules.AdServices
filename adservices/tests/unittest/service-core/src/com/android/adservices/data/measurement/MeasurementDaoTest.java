@@ -8957,10 +8957,7 @@ public class MeasurementDaoTest {
                 .populateFromSourceAndTrigger(
                         source,
                         trigger,
-                        trigger.parseEventTriggers(
-                                        FlagsFactory.getFlagsForTest()
-                                                .getMeasurementFlexibleEventReportingApiEnabled())
-                                .get(0),
+                        trigger.parseEventTriggers(FlagsFactory.getFlagsForTest()).get(0),
                         new Pair<>(null, null),
                         new EventReportWindowCalcDelegate(mFlags),
                         new SourceNoiseHandler(mFlags),

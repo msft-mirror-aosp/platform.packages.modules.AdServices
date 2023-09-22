@@ -35,6 +35,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -67,12 +68,14 @@ import org.mockito.quality.Strictness;
 
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class AsyncRegistrationFallbackJobServiceTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final int MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID =
             MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 1_000L;
+    private static final long JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(1);
     private JobScheduler mMockJobScheduler;
     private AsyncRegistrationFallbackJobService mSpyService;
     private DatastoreManager mMockDatastoreManager;
@@ -88,6 +91,12 @@ public class AsyncRegistrationFallbackJobServiceTest {
         mSpyLogger =
                 spy(new AdservicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mockStatsdLogger));
         mMockFlags = mock(Flags.class);
+        when(mMockFlags.getMeasurementAsyncRegistrationFallbackJobRequiredBatteryNotLow())
+                .thenReturn(true);
+        when(mMockFlags.getAsyncRegistrationJobQueueIntervalMs()).thenReturn(JOB_PERIOD_MS);
+        when(mMockFlags.getMeasurementAsyncRegistrationFallbackJobRequiredNetworkType())
+                .thenReturn(JobInfo.NETWORK_TYPE_ANY);
+        when(mMockFlags.getMeasurementAsyncRegistrationFallbackJobPersisted()).thenReturn(true);
     }
 
     @Test
@@ -272,9 +281,7 @@ public class AsyncRegistrationFallbackJobServiceTest {
                                                     mockContext,
                                                     AsyncRegistrationFallbackJobService.class))
                                     .setRequiresBatteryNotLow(true)
-                                    .setPeriodic(
-                                            FlagsFactory.getFlags()
-                                                    .getAsyncRegistrationJobQueueIntervalMs())
+                                    .setPeriodic(JOB_PERIOD_MS)
                                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                                     .setPersisted(true)
                                     .build();
@@ -314,9 +321,7 @@ public class AsyncRegistrationFallbackJobServiceTest {
                                                     AsyncRegistrationFallbackJobService.class))
                                     // Difference
                                     .setRequiresBatteryNotLow(false)
-                                    .setPeriodic(
-                                            FlagsFactory.getFlags()
-                                                    .getAsyncRegistrationJobQueueIntervalMs())
+                                    .setPeriodic(JOB_PERIOD_MS)
                                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                                     .setPersisted(true)
                                     .build();

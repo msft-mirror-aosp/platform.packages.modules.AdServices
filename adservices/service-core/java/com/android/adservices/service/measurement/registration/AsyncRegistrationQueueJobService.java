@@ -29,9 +29,9 @@ import android.content.Context;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
-import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.measurement.util.JobLockHolder;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
@@ -127,7 +127,7 @@ public class AsyncRegistrationQueueJobService extends JobService {
         jobScheduler.schedule(job);
     }
 
-    private static JobInfo buildJobInfo(Context context) {
+    private static JobInfo buildJobInfo(Context context, Flags flags) {
         return new JobInfo.Builder(
                         MEASUREMENT_ASYNC_REGISTRATION_JOB_ID,
                         new ComponentName(context, AsyncRegistrationQueueJobService.class))
@@ -136,11 +136,13 @@ public class AsyncRegistrationQueueJobService extends JobService {
                                 AsyncRegistrationContentProvider.TRIGGER_URI,
                                 JobInfo.TriggerContentUri.FLAG_NOTIFY_FOR_DESCENDANTS))
                 .setTriggerContentUpdateDelay(
-                        SystemHealthParams.getMeasurementAsyncRegistrationJobQueueMinDelayMs())
+                        flags.getMeasurementAsyncRegistrationJobTriggerMinDelayMs())
                 .setTriggerContentMaxDelay(
-                        SystemHealthParams.getMeasurementAsyncRegistrationJobQueueMaxDelayMs())
-                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                .setPersisted(false) // Can't call addTriggerContentUri() on a persisted job
+                        flags.getMeasurementAsyncRegistrationJobTriggerMaxDelayMs())
+                .setRequiredNetworkType(
+                        flags.getMeasurementAsyncRegistrationQueueJobRequiredNetworkType())
+                // Can't call addTriggerContentUri() on a persisted job
+                .setPersisted(flags.getMeasurementAsyncRegistrationQueueJobPersisted())
                 .build();
     }
 
@@ -151,7 +153,8 @@ public class AsyncRegistrationQueueJobService extends JobService {
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
-        if (FlagsFactory.getFlags().getAsyncRegistrationJobQueueKillSwitch()) {
+        Flags flags = FlagsFactory.getFlags();
+        if (flags.getAsyncRegistrationJobQueueKillSwitch()) {
             LogUtil.e("AsyncRegistrationQueueJobService is disabled, skip scheduling");
             return;
         }
@@ -165,7 +168,7 @@ public class AsyncRegistrationQueueJobService extends JobService {
         final JobInfo scheduledJobInfo =
                 jobScheduler.getPendingJob(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
-        JobInfo jobInfo = buildJobInfo(context);
+        JobInfo jobInfo = buildJobInfo(context, flags);
         if (forceSchedule || !jobInfo.equals(scheduledJobInfo)) {
             schedule(jobScheduler, jobInfo);
             LogUtil.d("Scheduled AsyncRegistrationQueueJobService");

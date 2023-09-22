@@ -2526,6 +2526,102 @@ public final class AsyncTriggerFetcherTest {
     }
 
     @Test
+    public void fetchTrigger_positiveLookbackWindow_acceptsTrigger() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String filters = "{\"product\":[\"1234\"], \"ctid\":[\"id\"], \"_lookback_window\": 123}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"filters\":" + filters + "}")));
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertTrue(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void fetchTrigger_invalidLookbackWindow_rejectsTrigger() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String filters = "{\"product\":[\"1234\"], \"ctid\":[\"id\"], \"_lookback_window\": 123f}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"filters\":" + filters + "}")));
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void fetchTrigger_zeroLookbackWindow_rejectsTrigger() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String filters = "{\"product\":[\"1234\"], \"ctid\":[\"id\"], \"_lookback_window\": 0}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"filters\":" + filters + "}")));
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void fetchTrigger_negativeLookbackWindow_rejectsTrigger() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String filters = "{\"product\":[\"1234\"], \"ctid\":[\"id\"], \"_lookback_window\": -123}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"filters\":" + filters + "}")));
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
     public void testTriggerRequest_wrapsNotFilters() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         String notFilters =
@@ -4821,8 +4917,8 @@ public final class AsyncTriggerFetcherTest {
         JSONArray expectedAttributionConfigJsonArray =
                 new JSONArray(
                         Arrays.asList(
-                                attributionConfig1.serializeAsJson(),
-                                attributionConfig2.serializeAsJson()));
+                                attributionConfig1.serializeAsJson(mFlags),
+                                attributionConfig2.serializeAsJson(mFlags)));
 
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
@@ -4928,8 +5024,8 @@ public final class AsyncTriggerFetcherTest {
         JSONArray expectedAttributionConfigJsonArray =
                 new JSONArray(
                         Arrays.asList(
-                                attributionConfig1.serializeAsJson(),
-                                attributionConfig2.serializeAsJson()));
+                                attributionConfig1.serializeAsJson(mFlags),
+                                attributionConfig2.serializeAsJson(mFlags)));
 
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
