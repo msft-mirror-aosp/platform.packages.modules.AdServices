@@ -30,10 +30,12 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -55,6 +57,8 @@ public class AdIdManagerTest {
 
     @Before
     public void setup() throws Exception {
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+
         overrideAdIdKillSwitch(true);
         overridePpapiAppAllowList();
         // Cool-off rate limiter in case it was initialized by another test
