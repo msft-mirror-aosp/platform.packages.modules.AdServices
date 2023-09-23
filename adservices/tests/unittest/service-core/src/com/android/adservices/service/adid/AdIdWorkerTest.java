@@ -16,112 +16,36 @@
 
 package com.android.adservices.service.adid;
 
-import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static org.mockito.Mockito.verify;
 
-import android.adservices.adid.AdId;
-import android.adservices.adid.GetAdIdResult;
 import android.adservices.adid.IGetAdIdCallback;
-import android.adservices.adid.IGetAdIdProviderCallback;
-import android.annotation.NonNull;
-import android.os.RemoteException;
 
-import androidx.test.core.app.ApplicationProvider;
-
-import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
-
-import java.util.concurrent.CompletableFuture;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 /** Unit test for {@link com.android.adservices.service.adid.AdIdWorker}. */
 public class AdIdWorkerTest {
+    private static final String PACKAGE_NAME = "package_name";
+    private static final int DUMMY_CALLER_UID = 0;
+    private static final IGetAdIdCallback CALLBACK = new IGetAdIdCallback.Default();
 
-    private boolean mTestSuccess;
+    private AdIdWorker mAdIdWorker;
 
-    @Test
-    public void testGetAdIdOnResult() throws Exception {
-        mTestSuccess = true;
+    @Mock private AdIdCacheManager mMockAdIdCacheManager;
 
-        CompletableFuture<GetAdIdResult> future = new CompletableFuture<>();
+    @Before
+    public void setup() {
+        MockitoAnnotations.initMocks(this);
 
-        AdIdWorker spyWorker =
-                Mockito.spy(AdIdWorker.getInstance(ApplicationProvider.getApplicationContext()));
-        Mockito.doReturn(mInterface).when(spyWorker).getService();
-
-        spyWorker.getAdId(
-                "testPackageName",
-                0,
-                new IGetAdIdCallback.Stub() {
-                    @Override
-                    public void onResult(GetAdIdResult resultParcel) {
-                        future.complete(resultParcel);
-                    }
-
-                    @Override
-                    public void onError(int resultCode) {
-                        // should never be called.
-                        Assert.fail();
-                    }
-                });
-
-        GetAdIdResult result = future.get();
-        Assert.assertEquals(AdId.ZERO_OUT, result.getAdId());
-        Assert.assertEquals(false, result.isLatEnabled());
+        mAdIdWorker = new AdIdWorker(mMockAdIdCacheManager);
     }
 
     @Test
-    public void testGetAdIdOnError() throws Exception {
-        mTestSuccess = false;
-        CompletableFuture<Integer> future = new CompletableFuture<>();
+    public void testGetAdId() {
+        mAdIdWorker.getAdId(PACKAGE_NAME, DUMMY_CALLER_UID, CALLBACK);
 
-        AdIdWorker spyWorker =
-                Mockito.spy(AdIdWorker.getInstance(ApplicationProvider.getApplicationContext()));
-        Mockito.doReturn(mInterface).when(spyWorker).getService();
-
-        spyWorker.getAdId(
-                "testPackageName",
-                0,
-                new IGetAdIdCallback.Stub() {
-                    @Override
-                    public void onResult(GetAdIdResult resultParcel) {
-                        // should never be called.
-                        Assert.fail();
-                    }
-
-                    @Override
-                    public void onError(int resultCode) {
-                        future.complete(resultCode);
-                    }
-                });
-
-        int result = future.get();
-        Assert.assertEquals(/* INTERNAL_STATE_ERROR */ 1, result);
+        verify(mMockAdIdCacheManager).getAdId(PACKAGE_NAME, DUMMY_CALLER_UID, CALLBACK);
     }
-
-    private final android.adservices.adid.IAdIdProviderService mInterface =
-            new android.adservices.adid.IAdIdProviderService.Stub() {
-                @Override
-                public void getAdIdProvider(
-                        int appUID,
-                        @NonNull String packageName,
-                        @NonNull IGetAdIdProviderCallback resultCallback)
-                        throws RemoteException {
-                    try {
-                        if (mTestSuccess) {
-                            GetAdIdResult adIdInternal =
-                                    new GetAdIdResult.Builder()
-                                            .setStatusCode(STATUS_SUCCESS)
-                                            .setErrorMessage("")
-                                            .setAdId(AdId.ZERO_OUT)
-                                            .setLatEnabled(/* DEFAULT_LAT */ false)
-                                            .build();
-                            resultCallback.onResult(adIdInternal);
-                        } else {
-                            throw new Exception("testOnError");
-                        }
-                    } catch (Throwable e) {
-                        resultCallback.onError(e.getMessage());
-                    }
-                }
-            };
 }

@@ -21,6 +21,8 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
+import static com.android.adservices.service.adid.AdIdCacheManager.SHARED_PREFS_IAPC;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__ADID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_ADID;
@@ -37,6 +39,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import android.adservices.adid.AdId;
 import android.adservices.adid.GetAdIdParam;
 import android.adservices.adid.GetAdIdResult;
 import android.adservices.adid.IGetAdIdCallback;
@@ -51,7 +54,9 @@ import android.os.Process;
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.common.Throttler;
@@ -59,21 +64,21 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.Clock;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
 import org.mockito.invocation.InvocationOnMock;
+import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
 
 import java.util.concurrent.CountDownLatch;
@@ -81,6 +86,15 @@ import java.util.concurrent.TimeUnit;
 
 /** Unit test for {@link com.android.adservices.service.adid.AdIdServiceImpl}. */
 public class AdIdServiceImplTest {
+    @Rule
+    public final AdServicesExtendedMockitoRule mExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .mockStatic(Binder.class)
+                    .spyStatic(FlagsFactory.class)
+                    .setStrictness(Strictness.WARN)
+                    .build();
+
+    private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String TEST_APP_PACKAGE_NAME = "com.android.adservices.servicecoretest";
     private static final String INVALID_PACKAGE_NAME = "com.do_not_exists";
     private static final String SOME_SDK_NAME = "SomeSdkName";
@@ -89,14 +103,13 @@ public class AdIdServiceImplTest {
     private static final String ADID_API_ALLOW_LIST = "com.android.adservices.servicecoretest";
     private static final int SANDBOX_UID = 25000;
 
-    private final Context mSpyContext = spy(ApplicationProvider.getApplicationContext());
+    private final Context mSpyContext = spy(sContext);
     private final AdServicesLogger mSpyAdServicesLogger = spy(AdServicesLoggerImpl.getInstance());
 
     private CountDownLatch mGetAdIdCallbackLatch;
     private CallerMetadata mCallerMetadata;
     private AdIdWorker mAdIdWorker;
     private GetAdIdParam mRequest;
-    private MockitoSession mStaticMockitoSession;
 
     @Mock private PackageManager mMockPackageManager;
     @Mock private Flags mMockFlags;
@@ -110,8 +123,9 @@ public class AdIdServiceImplTest {
     public void setup() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        mAdIdWorker = spy(AdIdWorker.getInstance(ApplicationProvider.getApplicationContext()));
-        Mockito.doReturn(null).when(mAdIdWorker).getService();
+        AdIdCacheManager adIdCacheManager = spy(new AdIdCacheManager(sContext));
+        mAdIdWorker = new AdIdWorker(adIdCacheManager);
+        Mockito.doReturn(null).when(adIdCacheManager).getService();
 
         when(mClock.elapsedRealtime()).thenReturn(150L, 200L);
         mCallerMetadata = new CallerMetadata.Builder().setBinderElapsedTimestamp(100L).build();
@@ -135,14 +149,13 @@ public class AdIdServiceImplTest {
         when(mMockThrottler.tryAcquire(eq(Throttler.ApiKey.ADID_API_APP_PACKAGE_NAME), anyString()))
                 .thenReturn(true);
 
-        // Initialize mock static.
-        mStaticMockitoSession =
-                ExtendedMockito.mockitoSession().mockStatic(Binder.class).startMocking();
+        mockGetFlags(mMockFlags);
     }
 
+    @Before
     @After
-    public void tearDown() {
-        mStaticMockitoSession.finishMocking();
+    public void deleteSharedPreferences() {
+        sContext.deleteSharedPreferences(SHARED_PREFS_IAPC);
     }
 
     @Test
@@ -383,10 +396,7 @@ public class AdIdServiceImplTest {
     private void runGetAdId(AdIdServiceImpl adIdServiceImpl) throws Exception {
 
         GetAdIdResult expectedGetAdIdResult =
-                new GetAdIdResult.Builder()
-                        .setAdId("00000000-0000-0000-0000-000000000000")
-                        .setLatEnabled(false)
-                        .build();
+                new GetAdIdResult.Builder().setAdId(AdId.ZERO_OUT).setLatEnabled(false).build();
 
         final GetAdIdResult[] capturedResponseParcel = getAdIdResults(adIdServiceImpl);
 

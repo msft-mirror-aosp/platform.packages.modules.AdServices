@@ -103,35 +103,18 @@ public class DebugReportingJobHandler {
             int result = performReport(debugReportId, reportingStatus);
             if (result == AdServicesStatusUtils.STATUS_SUCCESS) {
                 reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.SUCCESS);
-                logReportingStats(reportingStatus);
             } else {
                 reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.FAILURE);
-                logReportingStats(reportingStatus);
-                boolean isMarkedForDeletionFlagEnabled =
-                        mFlags.getMeasurementEnableReportDeletionOnUnrecoverableException();
-                boolean isMarkedForDeletion =
-                        reportingStatus.getFailureStatus()
-                                        == ReportingStatus.FailureStatus.SERIALIZATION_ERROR
-                                && isMarkedForDeletionFlagEnabled;
-                mDatastoreManager.runInTransaction(
-                        (dao) -> {
-                            int retryCount =
-                                    dao.incrementAndGetReportingRetryCount(
-                                            debugReportId,
-                                            KeyValueData.DataType.DEBUG_REPORT_RETRY_COUNT);
-                            if (retryCount >= mFlags.getMeasurementReportingRetryLimit()
-                                    && !isMarkedForDeletion) {
-                                reportingStatus.setFailureStatus(
-                                        ReportingStatus.FailureStatus.JOB_RETRY_LIMIT_REACHED);
-                            }
-                        });
             }
-
-            // log final attempt separately
-            if (reportingStatus.getFailureStatus()
-                    == ReportingStatus.FailureStatus.JOB_RETRY_LIMIT_REACHED) {
-                logReportingStats(reportingStatus);
-            }
+            mDatastoreManager.runInTransaction(
+                    (dao) -> {
+                        int retryCount =
+                                dao.incrementAndGetReportingRetryCount(
+                                        debugReportId,
+                                        KeyValueData.DataType.DEBUG_REPORT_RETRY_COUNT);
+                        reportingStatus.setRetryCount(retryCount);
+                    });
+            logReportingStats(reportingStatus);
         }
     }
 
@@ -175,7 +158,8 @@ public class DebugReportingJobHandler {
                 }
             } else {
                 LogUtil.d("Sending debug report failed with http error");
-                reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.NETWORK);
+                reportingStatus.setFailureStatus(
+                        ReportingStatus.FailureStatus.UNSUCCESSFUL_HTTP_RESPONSE_CODE);
                 return AdServicesStatusUtils.STATUS_IO_ERROR;
             }
         } catch (IOException e) {
@@ -255,9 +239,6 @@ public class DebugReportingJobHandler {
     }
 
     private void logReportingStats(ReportingStatus reportingStatus) {
-        if (!reportingStatus.getReportingDelay().isPresent()) {
-            reportingStatus.setReportingDelay(0L);
-        }
         mLogger.logMeasurementReports(
                 new MeasurementReportsStats.Builder()
                         .setCode(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED)
@@ -265,8 +246,9 @@ public class DebugReportingJobHandler {
                         .setResultCode(reportingStatus.getUploadStatus().getValue())
                         .setFailureType(reportingStatus.getFailureStatus().getValue())
                         .setUploadMethod(reportingStatus.getUploadMethod().getValue())
-                        .setReportingDelay(reportingStatus.getReportingDelay().get())
+                        .setReportingDelay(reportingStatus.getReportingDelay())
                         .setSourceRegistrant(reportingStatus.getSourceRegistrant())
+                        .setRetryCount(reportingStatus.getRetryCount())
                         .build());
     }
 }

@@ -30,9 +30,9 @@ import android.content.Context;
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
-import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportingJobService;
@@ -149,7 +149,7 @@ public class AttributionJobService extends JobService {
         jobScheduler.schedule(jobInfo);
     }
 
-    private static JobInfo buildJobInfo(Context context) {
+    private static JobInfo buildJobInfo(Context context, Flags flags) {
         return new JobInfo.Builder(
                         MEASUREMENT_ATTRIBUTION_JOB_ID,
                         new ComponentName(context, AttributionJobService.class))
@@ -157,9 +157,9 @@ public class AttributionJobService extends JobService {
                         new JobInfo.TriggerContentUri(
                                 TriggerContentProvider.TRIGGER_URI,
                                 JobInfo.TriggerContentUri.FLAG_NOTIFY_FOR_DESCENDANTS))
-                .setTriggerContentUpdateDelay(
-                        SystemHealthParams.ATTRIBUTION_JOB_TRIGGERING_DELAY_MS)
-                .setPersisted(false) // Can't call addTriggerContentUri() on a persisted job
+                .setTriggerContentUpdateDelay(flags.getMeasurementAttributionJobTriggeringDelayMs())
+                // Can't call addTriggerContentUri() on a persisted job
+                .setPersisted(flags.getMeasurementAttributionJobPersisted())
                 .build();
     }
 
@@ -170,7 +170,8 @@ public class AttributionJobService extends JobService {
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
-        if (FlagsFactory.getFlags().getMeasurementJobAttributionKillSwitch()) {
+        Flags flags = FlagsFactory.getFlags();
+        if (flags.getMeasurementJobAttributionKillSwitch()) {
             LogUtil.e("AttributionJobService is disabled, skip scheduling");
             return;
         }
@@ -183,7 +184,7 @@ public class AttributionJobService extends JobService {
 
         final JobInfo scheduledJob = jobScheduler.getPendingJob(MEASUREMENT_ATTRIBUTION_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
-        final JobInfo job = buildJobInfo(context);
+        final JobInfo job = buildJobInfo(context, flags);
         if (forceSchedule || !job.equals(scheduledJob)) {
             schedule(jobScheduler, job);
             LogUtil.d("Scheduled AttributionJobService");

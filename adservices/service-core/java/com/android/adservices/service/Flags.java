@@ -24,9 +24,6 @@ import android.app.job.JobInfo;
 
 import androidx.annotation.Nullable;
 
-// NOTE: do not import adservices classes that are only used on javadoc as this class is used by
-// tests that don't have them in the classpath - use the FQCN in the javadoc instead
-
 import com.android.adservices.cobalt.CobaltConstants;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -135,10 +132,13 @@ public interface Flags {
 
     /** Unknown classifier option. */
     int UNKNOWN_CLASSIFIER = 0;
+
     /** Only on-device classification. */
     int ON_DEVICE_CLASSIFIER = 1;
+
     /** Only Precomputed classification. */
     int PRECOMPUTED_CLASSIFIER = 2;
+
     /** Precomputed classification values are preferred over on-device classification values. */
     int PRECOMPUTED_THEN_ON_DEVICE_CLASSIFIER = 3;
 
@@ -451,6 +451,84 @@ public interface Flags {
      */
     default long getMeasurementAsyncRegistrationJobTriggerMaxDelayMs() {
         return DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS;
+    }
+
+    long DEFAULT_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
+
+    /** Delay from trigger registration to attribution job triggering */
+    default long getMeasurementAttributionJobTriggerDelayMs() {
+        return DEFAULT_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS;
+    }
+
+    int DEFAULT_MEASUREMENT_MAX_ATTRIBUTIONS_PER_INVOCATION = 100;
+
+    /** Max number of {@link Trigger} to process per job for {@link AttributionJobService} */
+    default int getMeasurementMaxAttributionsPerInvocation() {
+        return DEFAULT_MEASUREMENT_MAX_ATTRIBUTIONS_PER_INVOCATION;
+    }
+
+    long DEFAULT_MEASUREMENT_MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS = TimeUnit.DAYS.toMillis(28);
+
+    /** Maximum event report upload retry window. */
+    default long getMeasurementMaxEventReportUploadRetryWindowMs() {
+        return DEFAULT_MEASUREMENT_MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS;
+    }
+
+    long DEFAULT_MEASUREMENT_MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS =
+            TimeUnit.DAYS.toMillis(28);
+
+    /** Maximum aggregate report upload retry window. */
+    default long getMeasurementMaxAggregateReportUploadRetryWindowMs() {
+        return DEFAULT_MEASUREMENT_MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS;
+    }
+
+    long DEFAULT_MEASUREMENT_MAX_DELAYED_SOURCE_REGISTRATION_WINDOW = TimeUnit.MINUTES.toMillis(2);
+
+    /** Maximum window for a delayed source to be considered valid instead of missed. */
+    default long getMeasurementMaxDelayedSourceRegistrationWindow() {
+        return DEFAULT_MEASUREMENT_MAX_DELAYED_SOURCE_REGISTRATION_WINDOW;
+    }
+
+    int DEFAULT_MEASUREMENT_MAX_BYTES_PER_ATTRIBUTION_FILTER_STRING = 25;
+
+    /** Maximum number of bytes allowed in an attribution filter string. */
+    default int getMeasurementMaxBytesPerAttributionFilterString() {
+        return DEFAULT_MEASUREMENT_MAX_BYTES_PER_ATTRIBUTION_FILTER_STRING;
+    }
+
+    int DEFAULT_MEASUREMENT_MAX_FILTER_MAPS_PER_FILTER_SET = 5;
+
+    /** Maximum number of filter maps allowed in an attribution filter set. */
+    default int getMeasurementMaxFilterMapsPerFilterSet() {
+        return DEFAULT_MEASUREMENT_MAX_FILTER_MAPS_PER_FILTER_SET;
+    }
+
+    int DEFAULT_MEASUREMENT_MAX_VALUES_PER_ATTRIBUTION_FILTER = 50;
+
+    /** Maximum number of values allowed in an attribution filter. */
+    default int getMeasurementMaxValuesPerAttributionFilter() {
+        return DEFAULT_MEASUREMENT_MAX_VALUES_PER_ATTRIBUTION_FILTER;
+    }
+
+    int DEFAULT_MEASUREMENT_MAX_ATTRIBUTION_FILTERS = 50;
+
+    /** Maximum number of attribution filters allowed for a source. */
+    default int getMeasurementMaxAttributionFilters() {
+        return DEFAULT_MEASUREMENT_MAX_ATTRIBUTION_FILTERS;
+    }
+
+    int DEFAULT_MEASUREMENT_MAX_BYTES_PER_ATTRIBUTION_AGGREGATE_KEY_ID = 25;
+
+    /** Maximum number of bytes allowed in an aggregate key ID. */
+    default int getMeasurementMaxBytesPerAttributionAggregateKeyId() {
+        return DEFAULT_MEASUREMENT_MAX_BYTES_PER_ATTRIBUTION_AGGREGATE_KEY_ID;
+    }
+
+    int DEFAULT_MEASUREMENT_MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION = 50;
+
+    /** Maximum number of aggregate deduplication keys allowed during trigger registration. */
+    default int getMeasurementMaxAggregateDeduplicationKeysPerRegistration() {
+        return DEFAULT_MEASUREMENT_MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION;
     }
 
     boolean MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH = false;
@@ -857,7 +935,7 @@ public interface Flags {
     long PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS = 5L * 60L * 1000L; // 5 minutes
     int PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES = (int) (1.5 * 1024); // 1.5 KB
 
-    /** Returns {@code true} if the Periodic encoding of Protected Signals is enabled. */
+    /** Returns {@code true} feature flag if Periodic encoding of Protected Signals is enabled. */
     default boolean getProtectedSignalsPeriodicEncodingEnabled() {
         return PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED;
     }
@@ -1567,10 +1645,13 @@ public interface Flags {
 
     /** Write and read consent from system server only. */
     int SYSTEM_SERVER_ONLY = FlagsConstants.SYSTEM_SERVER_ONLY;
+
     /** Write and read consent from PPAPI only */
     int PPAPI_ONLY = FlagsConstants.PPAPI_ONLY;
+
     /** Write consent to both PPAPI and system server. Read consent from system server only. */
     int PPAPI_AND_SYSTEM_SERVER = FlagsConstants.PPAPI_AND_SYSTEM_SERVER;
+
     /**
      * Write consent data to AppSearch only. To store consent data in AppSearch the flag
      * enable_appsearch_consent_data must also be true. This ensures that both writes and reads can
@@ -3437,6 +3518,114 @@ public interface Flags {
         return MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
     }
 
+    boolean MEASUREMENT_ATTRIBUTION_JOB_PERSISTED = false;
+
+    /** Returns whether to persist this job across device reboots for attribution job. */
+    default boolean getMeasurementAttributionJobPersisted() {
+        return MEASUREMENT_ATTRIBUTION_JOB_PERSISTED;
+    }
+
+    long MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
+
+    /** Delay for attribution job triggering. */
+    default long getMeasurementAttributionJobTriggeringDelayMs() {
+        return MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS;
+    }
+
+    boolean MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERSISTED = true;
+
+    /** Returns whether to persist this job across device reboots for attribution fallback job. */
+    default boolean getMeasurementAttributionFallbackJobPersisted() {
+        return MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERSISTED;
+    }
+
+    int MEASUREMENT_ASYNC_REGISTRATION_QUEUE_JOB_REQUIRED_NETWORK_TYPE = JobInfo.NETWORK_TYPE_ANY;
+
+    /** Returns the required network type for async registration queue job. */
+    default int getMeasurementAsyncRegistrationQueueJobRequiredNetworkType() {
+        return MEASUREMENT_ASYNC_REGISTRATION_QUEUE_JOB_REQUIRED_NETWORK_TYPE;
+    }
+
+    boolean MEASUREMENT_ASYNC_REGISTRATION_QUEUE_JOB_PERSISTED = false;
+
+    /**
+     * Returns whether to persist this job across device reboots for async registration queue job.
+     */
+    default boolean getMeasurementAsyncRegistrationQueueJobPersisted() {
+        return MEASUREMENT_ASYNC_REGISTRATION_QUEUE_JOB_PERSISTED;
+    }
+
+    boolean MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_REQUIRED_BATTERY_NOT_LOW = true;
+
+    /** Returns whether to require battery not low for async registration queue fallback job. */
+    default boolean getMeasurementAsyncRegistrationFallbackJobRequiredBatteryNotLow() {
+        return MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_REQUIRED_BATTERY_NOT_LOW;
+    }
+
+    int MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_REQUIRED_NETWORK_TYPE =
+            JobInfo.NETWORK_TYPE_ANY;
+
+    /** Returns the required network type for async registration queue fallback job. */
+    default int getMeasurementAsyncRegistrationFallbackJobRequiredNetworkType() {
+        return MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_REQUIRED_NETWORK_TYPE;
+    }
+
+    boolean MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_PERSISTED = true;
+
+    /**
+     * Returns whether to persist this job across device reboots for async registration queue
+     * fallback job.
+     */
+    default boolean getMeasurementAsyncRegistrationFallbackJobPersisted() {
+        return MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_PERSISTED;
+    }
+
+    boolean MEASUREMENT_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW = true;
+
+    /** Returns whether to require battery not low for aggregate reporting job. */
+    default boolean getMeasurementAggregateReportingJobRequiredBatteryNotLow() {
+        return MEASUREMENT_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
+    }
+
+    int MEASUREMENT_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE = JobInfo.NETWORK_TYPE_UNMETERED;
+
+    /** Returns the required network type for aggregate reporting job. */
+    default int getMeasurementAggregateReportingJobRequiredNetworkType() {
+        return MEASUREMENT_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
+    }
+
+    boolean MEASUREMENT_AGGREGATE_REPORTING_JOB_PERSISTED = true;
+
+    /** Returns whether to persist this job across device reboots for aggregate reporting job. */
+    default boolean getMeasurementAggregateReportingJobPersisted() {
+        return MEASUREMENT_AGGREGATE_REPORTING_JOB_PERSISTED;
+    }
+
+    boolean MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW = true;
+
+    /** Returns whether to require battery not low for aggregate fallback reporting job. */
+    default boolean getMeasurementAggregateFallbackReportingJobRequiredBatteryNotLow() {
+        return MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
+    }
+
+    int MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE =
+            JobInfo.NETWORK_TYPE_ANY;
+
+    /** Returns the required network type for aggregate fallback reporting job . */
+    default int getMeasurementAggregateFallbackReportingJobRequiredNetworkType() {
+        return MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
+    }
+
+    boolean MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED = true;
+
+    /**
+     * Returns whether to persist this job across device reboots for aggregate fallback reporting
+     * job.
+     */
+    default boolean getMeasurementAggregateFallbackReportingJobPersisted() {
+        return MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED;
+    }
+
     /** Default U18 UX feature flag.. */
     boolean DEFAULT_U18_UX_ENABLED = false;
 
@@ -3647,5 +3836,28 @@ public interface Flags {
     /** Returns whether the U18 supervised account is enabled. */
     default boolean isU18SupervisedAccountEnabled() {
         return IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT;
+    }
+
+    /**
+     * Default value to determine whether {@link
+     * com.android.adservices.service.adid.AdIdCacheManager} is enabled to read AdId from and for
+     * AdIdProvider to update AdId to.
+     */
+    boolean DEFAULT_ADID_CACHE_ENABLED = false;
+
+    /**
+     * Returns if {@link com.android.adservices.service.adid.AdIdCacheManager} is enabled to read
+     * AdId from and for AdIdProvider to update AdId to.
+     *
+     * <ul>
+     *   <li>When enabled, AdIdCacheManager will read AdId from the cache and AdIdProvider will
+     *       update the cache if AdId changes.
+     *   <li>When disabled, AdIdCacheManager will call AdIdProvider to get the AdId.
+     * </ul>
+     *
+     * @return if {@link com.android.adservices.service.adid.AdIdCacheManager} is enabled.
+     */
+    default boolean getAdIdCacheEnabled() {
+        return DEFAULT_ADID_CACHE_ENABLED;
     }
 }

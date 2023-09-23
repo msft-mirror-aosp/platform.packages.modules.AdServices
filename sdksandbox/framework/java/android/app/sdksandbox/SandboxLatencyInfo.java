@@ -45,6 +45,9 @@ public final class SandboxLatencyInfo implements Parcelable {
                 METHOD_ADD_SDK_SANDBOX_LIFECYCLE_CALLBACK,
                 METHOD_REMOVE_SDK_SANDBOX_LIFECYCLE_CALLBACK,
                 METHOD_GET_SANDBOXED_SDKS_VIA_CONTROLLER,
+                METHOD_REGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE,
+                METHOD_UNREGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE,
+                METHOD_GET_APP_OWNED_SDK_SANDBOX_INTERFACES,
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface Method {}
@@ -58,6 +61,9 @@ public final class SandboxLatencyInfo implements Parcelable {
     public static final int METHOD_ADD_SDK_SANDBOX_LIFECYCLE_CALLBACK = 8;
     public static final int METHOD_REMOVE_SDK_SANDBOX_LIFECYCLE_CALLBACK = 9;
     public static final int METHOD_GET_SANDBOXED_SDKS_VIA_CONTROLLER = 10;
+    public static final int METHOD_REGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE = 11;
+    public static final int METHOD_UNREGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE = 12;
+    public static final int METHOD_GET_APP_OWNED_SDK_SANDBOX_INTERFACES = 13;
 
     @IntDef(
             prefix = "SANDBOX_STATUS_",

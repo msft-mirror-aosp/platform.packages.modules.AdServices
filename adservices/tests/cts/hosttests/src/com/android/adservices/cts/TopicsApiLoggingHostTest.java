@@ -55,14 +55,11 @@ import java.util.List;
  */
 @RunWith(DeviceJUnit4ClassRunner.class)
 public class TopicsApiLoggingHostTest extends AdServicesHostSideTestCase {
-
     private static final String PACKAGE = "com.android.adservices.cts";
     private static final String CLASS = "TopicsApiLogActivity";
     private static final String SDK_NAME = "AdservicesCtsSdk";
-    private static final String TARGET_PACKAGE = "com.google.android.adservices.api";
-    private static final String TARGET_PACKAGE_AOSP = "com.android.adservices.api";
-    private static final String TARGET_EXT_ADSERVICES_PACKAGE = "com.google.android.ext.services";
-    private static final String TARGET_EXT_ADSERVICES_PACKAGE_AOSP = "com.android.ext.services";
+    private static final String TARGET_PACKAGE_SUFFIX_TPLUS = "android.adservices.api";
+    private static final String TARGET_PACKAGE_SUFFIX_SMINUS = "android.ext.services";
 
     @Rule(order = 0)
     public final HostSideSdkLevelSupportRule sdkLevel = HostSideSdkLevelSupportRule.forAnyLevel();
@@ -84,7 +81,6 @@ public class TopicsApiLoggingHostTest extends AdServicesHostSideTestCase {
     public TestMetrics mMetrics = new TestMetrics();
 
     private String mTargetPackage;
-    private String mTargetPackageAosp;
 
     @Before
     public void setUp() throws Exception {
@@ -92,13 +88,10 @@ public class TopicsApiLoggingHostTest extends AdServicesHostSideTestCase {
         ReportUtils.clearReports(getDevice());
 
         // Set flags for test to run on devices with api level lower than 33 (S-)
-        if (!sdkLevel.isAtLeastT()) {
-            mTargetPackage = TARGET_EXT_ADSERVICES_PACKAGE;
-            mTargetPackageAosp = TARGET_EXT_ADSERVICES_PACKAGE_AOSP;
-        } else {
-            mTargetPackage = TARGET_PACKAGE;
-            mTargetPackageAosp = TARGET_PACKAGE_AOSP;
-        }
+        String suffix =
+                sdkLevel.isAtLeastT() ? TARGET_PACKAGE_SUFFIX_TPLUS : TARGET_PACKAGE_SUFFIX_SMINUS;
+        mTargetPackage = findPackageName(suffix);
+        assertThat(mTargetPackage).isNotNull();
     }
 
     @After
@@ -107,7 +100,6 @@ public class TopicsApiLoggingHostTest extends AdServicesHostSideTestCase {
         ReportUtils.clearReports(getDevice());
     }
 
-    // TODO(b/245400146): Get package Name for Topics API instead of running the test twice.
     @Test
     public void testGetTopicsLog() throws Exception {
         ITestDevice device = getDevice();
@@ -121,15 +113,6 @@ public class TopicsApiLoggingHostTest extends AdServicesHostSideTestCase {
         List<EventMetricData> data = ReportUtils.getEventMetricDataList(device);
 
         setEnforceForeground(enforceForegroundStatus);
-
-        // Topics API Name is different in aosp and non-aosp devices. Attempt again with the other
-        // package Name if it fails at the first time;
-        if (data.isEmpty()) {
-            ConfigUtils.removeConfig(getDevice());
-            ReportUtils.clearReports(getDevice());
-            callTopicsAPI(mTargetPackageAosp, device);
-            data = ReportUtils.getEventMetricDataList(device);
-        }
 
         // We trigger only one event from activity, should only see one event in the list
         assertThat(data).hasSize(1);
@@ -176,5 +159,12 @@ public class TopicsApiLoggingHostTest extends AdServicesHostSideTestCase {
                         .executeShellCommand(
                                 "device_config get adservices topics_enforce_foreground_status");
         return enforceForegroundStatus.equals("true\n");
+    }
+
+    private String findPackageName(String suffix) throws DeviceNotAvailableException {
+        return mDevice.getInstalledPackageNames().stream()
+                .filter(s -> s.endsWith(suffix))
+                .findFirst()
+                .orElse(null);
     }
 }
