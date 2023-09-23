@@ -64,7 +64,7 @@ public class EncoderLogicHandlerTest {
 
     @Rule public MockitoRule mRule = MockitoJUnit.rule();
 
-    @Mock private EncoderPersistenceManager mEncoderPersistenceManager;
+    @Mock private EncoderPersistenceDao mEncoderPersistenceDao;
 
     @Mock private EncoderEndpointsDao mEncoderEndpointsDao;
 
@@ -83,7 +83,7 @@ public class EncoderLogicHandlerTest {
     public void setup() {
         mEncoderLogicHandler =
                 new EncoderLogicHandler(
-                        mEncoderPersistenceManager,
+                        mEncoderPersistenceDao,
                         mEncoderEndpointsDao,
                         mEncoderLogicDao,
                         mAdServicesHttpsClient,
@@ -125,7 +125,7 @@ public class EncoderLogicHandlerTest {
         ListenableFuture<AdServicesHttpClientResponse> responseFuture =
                 Futures.immediateFuture(response);
         when(mAdServicesHttpsClient.fetchPayload(request)).thenReturn(responseFuture);
-        when(mEncoderPersistenceManager.persistEncoder(buyer, body)).thenReturn(true);
+        when(mEncoderPersistenceDao.persistEncoder(buyer, body)).thenReturn(true);
 
         boolean updateSucceeded =
                 mEncoderLogicHandler.downloadAndUpdate(buyer).get(5, TimeUnit.SECONDS);
@@ -144,8 +144,7 @@ public class EncoderLogicHandlerTest {
                 mEncoderLogicHandler.downloadAndUpdate(buyer).get(5, TimeUnit.SECONDS);
         assertFalse("The call to download should have been skipped", updateSucceeded);
 
-        verifyZeroInteractions(
-                mAdServicesHttpsClient, mEncoderPersistenceManager, mEncoderLogicDao);
+        verifyZeroInteractions(mAdServicesHttpsClient, mEncoderPersistenceDao, mEncoderLogicDao);
     }
 
     @Test
@@ -163,7 +162,7 @@ public class EncoderLogicHandlerTest {
                         .setResponseHeaders(responseHeaders)
                         .build();
 
-        when(mEncoderPersistenceManager.persistEncoder(buyer, body)).thenReturn(true);
+        when(mEncoderPersistenceDao.persistEncoder(buyer, body)).thenReturn(true);
         assertTrue(mEncoderLogicHandler.extractAndPersistEncoder(buyer, response));
 
         Mockito.verify(mEncoderLogicDao).persistEncoder(mDBEncoderLogicArgumentCaptor.capture());
@@ -179,7 +178,7 @@ public class EncoderLogicHandlerTest {
 
         AdServicesHttpClientResponse response =
                 AdServicesHttpClientResponse.builder().setResponseBody(body).build();
-        when(mEncoderPersistenceManager.persistEncoder(buyer, body)).thenReturn(true);
+        when(mEncoderPersistenceDao.persistEncoder(buyer, body)).thenReturn(true);
         assertTrue(mEncoderLogicHandler.extractAndPersistEncoder(buyer, response));
 
         Mockito.verify(mEncoderLogicDao).persistEncoder(mDBEncoderLogicArgumentCaptor.capture());
@@ -207,7 +206,7 @@ public class EncoderLogicHandlerTest {
                         .setResponseHeaders(responseHeadersWithBadVersion)
                         .build();
 
-        when(mEncoderPersistenceManager.persistEncoder(buyer, body)).thenReturn(true);
+        when(mEncoderPersistenceDao.persistEncoder(buyer, body)).thenReturn(true);
         assertTrue(mEncoderLogicHandler.extractAndPersistEncoder(buyer, response));
 
         Mockito.verify(mEncoderLogicDao).persistEncoder(mDBEncoderLogicArgumentCaptor.capture());
@@ -234,7 +233,7 @@ public class EncoderLogicHandlerTest {
                         .build();
 
         // Deliberately fail the persistence on file
-        when(mEncoderPersistenceManager.persistEncoder(buyer, body)).thenReturn(false);
+        when(mEncoderPersistenceDao.persistEncoder(buyer, body)).thenReturn(false);
         assertFalse(mEncoderLogicHandler.extractAndPersistEncoder(buyer, response));
 
         Mockito.verifyZeroInteractions(mEncoderLogicDao);
@@ -266,7 +265,7 @@ public class EncoderLogicHandlerTest {
                                 "This encoder update should have failed",
                                 mEncoderLogicHandler.extractAndPersistEncoder(buyer, response));
                         Mockito.verifyZeroInteractions(mEncoderLogicDao);
-                        Mockito.verifyZeroInteractions(mEncoderPersistenceManager);
+                        Mockito.verifyZeroInteractions(mEncoderPersistenceDao);
                         writeWhileLockedLatch.countDown();
                     });
             Assert.assertTrue(writeWhileLockedLatch.await(5, TimeUnit.SECONDS));
@@ -277,7 +276,7 @@ public class EncoderLogicHandlerTest {
         CountDownLatch writeWhileUnLockedLatch = new CountDownLatch(1);
         mService.submit(
                 () -> {
-                    when(mEncoderPersistenceManager.persistEncoder(buyer, body)).thenReturn(true);
+                    when(mEncoderPersistenceDao.persistEncoder(buyer, body)).thenReturn(true);
                     assertTrue(
                             "This encoder update should have succeeded",
                             mEncoderLogicHandler.extractAndPersistEncoder(buyer, response));

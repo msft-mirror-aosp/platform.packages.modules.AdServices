@@ -443,14 +443,18 @@ public class StatsdAdServicesLoggerTest {
         MeasurementAttributionStats stats =
                 new MeasurementAttributionStats.Builder()
                         .setCode(AD_SERVICES_MEASUREMENT_ATTRIBUTION)
-                        .setSourceType(AttributionStatus.SourceType.EVENT.ordinal())
-                        .setSurfaceType(AttributionStatus.AttributionSurface.APP_WEB.ordinal())
-                        .setResult(AttributionStatus.AttributionResult.SUCCESS.ordinal())
-                        .setFailureType(AttributionStatus.FailureType.UNKNOWN.ordinal())
+                        .setSourceType(AttributionStatus.SourceType.VIEW.getValue())
+                        .setSurfaceType(AttributionStatus.AttributionSurface.APP_WEB.getValue())
+                        .setResult(AttributionStatus.AttributionResult.SUCCESS.getValue())
+                        .setFailureType(AttributionStatus.FailureType.UNKNOWN.getValue())
                         .setSourceDerived(false)
                         .setInstallAttribution(true)
                         .setAttributionDelay(100L)
                         .setSourceRegistrant(SOURCE_REGISTRANT)
+                        .setAggregateReportCount(1)
+                        .setAggregateDebugReportCount(1)
+                        .setEventReportCount(3)
+                        .setEventDebugReportCount(1)
                         .build();
         ExtendedMockito.doNothing()
                 .when(
@@ -464,7 +468,12 @@ public class StatsdAdServicesLoggerTest {
                                         anyBoolean(),
                                         anyBoolean(),
                                         anyLong(),
-                                        anyString()));
+                                        anyString(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt()));
 
         // Invoke logging call
         mLogger.logMeasurementAttributionStats(stats);
@@ -474,14 +483,19 @@ public class StatsdAdServicesLoggerTest {
                 () ->
                         AdServicesStatsLog.write(
                                 eq(AD_SERVICES_MEASUREMENT_ATTRIBUTION),
-                                eq(AttributionStatus.SourceType.EVENT.ordinal()),
-                                eq(AttributionStatus.AttributionSurface.APP_WEB.ordinal()),
-                                eq(AttributionStatus.AttributionResult.SUCCESS.ordinal()),
-                                eq(AttributionStatus.FailureType.UNKNOWN.ordinal()),
+                                eq(AttributionStatus.SourceType.VIEW.getValue()),
+                                eq(AttributionStatus.AttributionSurface.APP_WEB.getValue()),
+                                eq(AttributionStatus.AttributionResult.SUCCESS.getValue()),
+                                eq(AttributionStatus.FailureType.UNKNOWN.getValue()),
                                 eq(false),
                                 eq(true),
                                 eq(100L),
-                                eq(SOURCE_REGISTRANT));
+                                eq(SOURCE_REGISTRANT),
+                                eq(1),
+                                eq(1),
+                                eq(3),
+                                eq(1),
+                                eq(0));
 
         ExtendedMockito.verify(writeInvocation);
 

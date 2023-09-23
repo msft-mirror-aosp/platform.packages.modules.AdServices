@@ -16,6 +16,8 @@
 
 package android.adservices.cts;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.adselection.AdSelectionConfig;
@@ -37,6 +39,7 @@ import com.google.common.collect.ImmutableMap;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -80,6 +83,9 @@ public final class AdSelectionTest {
                         .setTrustedScoringSignalsUri(Uri.parse("http://example.com"))
                         .build();
 
-        assertThrows(IllegalStateException.class, () -> client.selectAds(config));
+        Exception exception =
+                assertThrows(ExecutionException.class, () -> client.selectAds(config).get());
+        assertThat(exception).hasCauseThat().isInstanceOf(IllegalStateException.class);
+        assertThat(exception).hasMessageThat().contains("Unable to find the AdSelection service");
     }
 }

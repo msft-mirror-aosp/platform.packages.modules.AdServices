@@ -20,10 +20,21 @@ package com.android.adservices.service.measurement;
 public class WipeoutStatus {
     /** Enums are tied to the AdservicesMeasurementWipeoutStatus atom */
     public enum WipeoutType {
-        UNKNOWN,
-        UNINSTALL,
-        CONSENT_FLIP,
-        CLEAR_DATA
+        UNKNOWN(0),
+        UNINSTALL(1),
+        CONSENT_FLIP(2),
+        CLEAR_DATA(3),
+        DELETE_REGISTRATIONS_API(4);
+
+        private final int mValue;
+
+        WipeoutType(int value) {
+            mValue = value;
+        }
+
+        public int getValue() {
+            return mValue;
+        }
     }
 
     private WipeoutType mWipeoutType;

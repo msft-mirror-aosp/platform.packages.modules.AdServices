@@ -49,7 +49,6 @@ public final class E2EMockStatic implements StaticMockFixture {
     public StaticMockitoSessionBuilder setUpMockedClasses(
             StaticMockitoSessionBuilder sessionBuilder) {
         sessionBuilder.spyStatic(PrivacyParams.class);
-        sessionBuilder.spyStatic(SystemHealthParams.class);
         sessionBuilder.spyStatic(AppManifestConfigHelper.class);
         return sessionBuilder;
     }
@@ -60,35 +59,18 @@ public final class E2EMockStatic implements StaticMockFixture {
     @Override
     public void setUpMockBehaviors() {
         // Privacy params
-        doAnswer((Answer<Integer>) invocation -> mParams.getMaxAttributionPerRateLimitWindow())
-                .when(
-                        () ->
-                                FlagsFactory.getFlags()
-                                        .getMeasurementMaxAttributionPerRateLimitWindow());
         doAnswer((Answer<Integer>) invocation -> mParams.getNavigationTriggerDataCardinality())
                 .when(() -> PrivacyParams.getNavigationTriggerDataCardinality());
-        doAnswer((Answer<Integer>) invocation -> mParams.getMaxDistinctEnrollmentsInAttribution())
-                .when(
-                        () ->
-                                FlagsFactory.getFlags()
-                                        .getMeasurementMaxDistinctEnrollmentsInAttribution());
-        doAnswer((Answer<Integer>) invocation -> mParams.getMaxDistinctDestinationsInActiveSource())
-                .when(
-                        () ->
-                                FlagsFactory.getFlags()
-                                        .getMeasurementMaxDistinctDestinationsInActiveSource());
-        doAnswer((Answer<Integer>) invocation -> mParams.getMaxDistinctOriginsPerPubXDestInSource())
-                .when(
-                        () ->
-                                FlagsFactory.getFlags()
-                                        .getMeasurementMaxDistinctRepOrigPerPublXDestInSource());
         // System health params
         doAnswer((Answer<Integer>) invocation -> mParams.getMaxSourcesPerPublisher())
-                .when(() -> SystemHealthParams.getMaxSourcesPerPublisher());
+                .when(() -> FlagsFactory.getFlags().getMeasurementMaxSourcesPerPublisher());
         doAnswer((Answer<Integer>) invocation -> mParams.getMaxEventReportsPerDestination())
-                .when(() -> SystemHealthParams.getMaxEventReportsPerDestination());
+                .when(() -> FlagsFactory.getFlags().getMeasurementMaxEventReportsPerDestination());
         doAnswer((Answer<Integer>) invocation -> mParams.getMaxAggregateReportsPerDestination())
-                .when(() -> SystemHealthParams.getMaxAggregateReportsPerDestination());
+                .when(
+                        () ->
+                                FlagsFactory.getFlags()
+                                        .getMeasurementMaxAggregateReportsPerDestination());
         // Pass manifest checks
         doReturn(true)
                 .when(

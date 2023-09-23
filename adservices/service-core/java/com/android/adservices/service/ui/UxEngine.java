@@ -58,6 +58,7 @@ public class UxEngine {
      * manager.
      */
     public static UxEngine getInstance(Context context) {
+        LogUtil.d("UxEngine getInstance called.");
         return new UxEngine(
                 context,
                 ConsentManager.getInstance(context),
@@ -71,6 +72,7 @@ public class UxEngine {
      */
     public void start(AdServicesStates adServicesStates) {
         mUxStatesManager.persistAdServicesStates(adServicesStates);
+        LogUtil.d("AdServices states persisted.");
 
         PrivacySandboxUxCollection eligibleUx =
                 mUxEngineUtil.getEligibleUxCollection(mConsentManager, mUxStatesManager);
@@ -95,6 +97,7 @@ public class UxEngine {
                 return;
             }
 
+            LogUtil.d("Running enrollment logic.");
             eligibleUx
                     .getUx()
                     .handleEnrollment(

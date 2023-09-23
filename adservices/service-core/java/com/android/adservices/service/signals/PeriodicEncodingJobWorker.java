@@ -22,16 +22,16 @@ import android.content.Context;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.EncoderLogicDao;
-import com.android.adservices.data.signals.EncoderPersistenceManager;
+import com.android.adservices.data.signals.EncoderPersistenceDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
+import com.android.adservices.service.adselection.AdCounterKeyCopierNoOpImpl;
 import com.android.adservices.service.adselection.AdSelectionScriptEngine;
+import com.android.adservices.service.adselection.DebugReportingScriptDisabledStrategy;
 import com.android.adservices.service.common.SingletonRunner;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -70,9 +70,9 @@ public class PeriodicEncodingJobWorker {
     private static volatile PeriodicEncodingJobWorker sPeriodicEncodingJobWorker;
 
     private final EncoderLogicDao mEncoderLogicDao;
-    private final EncoderPersistenceManager mEncoderPersistenceManager;
+    private final EncoderPersistenceDao mEncoderPersistenceDao;
     private final EncodedPayloadDao mEncodedPayloadDao;
-    private final SignalStorageManager mSignalStorageManager;
+    private final SignalsProvider mSignalsProvider;
     private final AdSelectionScriptEngine mScriptEngine;
     private final ListeningExecutorService mBackgroundExecutor;
     private final ListeningExecutorService mLightWeightExecutor;
@@ -85,17 +85,17 @@ public class PeriodicEncodingJobWorker {
     @VisibleForTesting
     protected PeriodicEncodingJobWorker(
             @NonNull EncoderLogicDao encoderLogicDao,
-            @NonNull EncoderPersistenceManager encoderPersistenceManager,
+            @NonNull EncoderPersistenceDao encoderPersistenceDao,
             @NonNull EncodedPayloadDao encodedPayloadDao,
-            @NonNull SignalStorageManagerImpl signalStorageManager,
+            @NonNull SignalsProviderImpl signalStorageManager,
             @NonNull AdSelectionScriptEngine scriptEngine,
             @NonNull ListeningExecutorService backgroundExecutor,
             @NonNull ListeningExecutorService lightWeightExecutor,
             @NonNull Flags flags) {
         mEncoderLogicDao = encoderLogicDao;
-        mEncoderPersistenceManager = encoderPersistenceManager;
+        mEncoderPersistenceDao = encoderPersistenceDao;
         mEncodedPayloadDao = encodedPayloadDao;
-        mSignalStorageManager = signalStorageManager;
+        mSignalsProvider = signalStorageManager;
         mScriptEngine = scriptEngine;
         mBackgroundExecutor = backgroundExecutor;
         mLightWeightExecutor = lightWeightExecutor;
@@ -122,23 +122,17 @@ public class PeriodicEncodingJobWorker {
                 sPeriodicEncodingJobWorker =
                         new PeriodicEncodingJobWorker(
                                 signalsDatabase.getEncoderLogicDao(),
-                                EncoderPersistenceManager.getInstance(context),
+                                EncoderPersistenceDao.getInstance(context),
                                 signalsDatabase.getEncodedPayloadDao(),
-                                new SignalStorageManagerImpl(signalsDatabase.protectedSignalsDao()),
+                                new SignalsProviderImpl(signalsDatabase.protectedSignalsDao()),
                                 new AdSelectionScriptEngine(
                                         context,
                                         () ->
                                                 FlagsFactory.getFlags()
                                                         .getEnforceIsolateMaxHeapSize(),
                                         () -> FlagsFactory.getFlags().getIsolateMaxHeapSizeBytes(),
-                                        new AdFilteringFeatureFactory(
-                                                        SharedStorageDatabase.getInstance(context)
-                                                                .appInstallDao(),
-                                                        SharedStorageDatabase.getInstance(context)
-                                                                .frequencyCapDao(),
-                                                        FlagsFactory.getFlags())
-                                                .getAdCounterKeyCopier(),
-                                        null, // not used in encoding
+                                        new AdCounterKeyCopierNoOpImpl(),
+                                        new DebugReportingScriptDisabledStrategy(),
                                         false), // not used in encoding
                                 AdServicesExecutors.getBackgroundExecutor(),
                                 AdServicesExecutors.getLightWeightExecutor(),
@@ -174,9 +168,9 @@ public class PeriodicEncodingJobWorker {
 
     @VisibleForTesting
     FluentFuture<Boolean> runEncodingPerBuyer(AdTechIdentifier buyer, int timeout) {
-        String encodingLogic = mEncoderPersistenceManager.getEncoder(buyer);
+        String encodingLogic = mEncoderPersistenceDao.getEncoder(buyer);
         int version = mEncoderLogicDao.getEncoder(buyer).getVersion();
-        Map<String, List<ProtectedSignal>> signals = mSignalStorageManager.getSignals(buyer);
+        Map<String, List<ProtectedSignal>> signals = mSignalsProvider.getSignals(buyer);
 
         return FluentFuture.from(
                         mScriptEngine.encodeSignals(
@@ -203,7 +197,9 @@ public class PeriodicEncodingJobWorker {
         try {
             encodedBytes = Base64.getDecoder().decode(encodedPayload);
         } catch (IllegalArgumentException e) {
-            sLogger.e("Malformed encoded payload returned by buyer: %s", buyer);
+            sLogger.e(
+                    "Malformed encoded payload returned by buyer: %s, encoded payload: %s",
+                    buyer, encodedPayload);
             return false;
         }
         if (encodedBytes.length > mEncodedPayLoadMaxSizeBytes) {

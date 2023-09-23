@@ -112,6 +112,7 @@ public class AdSelectionManagerTest {
         assertThat(input.getReportingDestinations()).isEqualTo(REPORTING_DESTINATIONS);
         assertThat(input.getInputEvent()).isNull();
         assertThat(input.getAdId()).isEqualTo(AD_ID);
+        assertThat(input.getCallerSdkName()).isEqualTo("");
     }
 
     @Test
@@ -141,6 +142,7 @@ public class AdSelectionManagerTest {
         assertThat(input.getReportingDestinations()).isEqualTo(REPORTING_DESTINATIONS);
         assertThat(input.getInputEvent()).isNull();
         assertThat(input.getAdId()).isNull();
+        assertThat(input.getCallerSdkName()).isEqualTo("");
     }
 
     @Test
@@ -170,6 +172,7 @@ public class AdSelectionManagerTest {
         assertThat(input.getReportingDestinations()).isEqualTo(REPORTING_DESTINATIONS);
         assertThat(input.getInputEvent()).isNull();
         assertThat(input.getAdId()).isNull();
+        assertThat(input.getCallerSdkName()).isEqualTo("");
     }
 
     // TODO(b/296886238): Remove this mock once Mockito issue is resolved.
