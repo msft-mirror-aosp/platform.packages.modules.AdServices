@@ -38,7 +38,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-public class SignalStorageManagerImplTest {
+public class SignalsProviderImplTest {
 
     @Rule public MockitoRule mRule = MockitoJUnit.rule();
 
@@ -47,11 +47,11 @@ public class SignalStorageManagerImplTest {
     private static final Instant NOW = CommonFixture.FIXED_NOW;
     @Mock private ProtectedSignalsDao mProtectedSignalsDao;
 
-    private SignalStorageManagerImpl mSignalStorage;
+    private SignalsProviderImpl mSignalStorage;
 
     @Before
     public void setup() {
-        mSignalStorage = new SignalStorageManagerImpl(mProtectedSignalsDao);
+        mSignalStorage = new SignalsProviderImpl(mProtectedSignalsDao);
     }
 
     @Test

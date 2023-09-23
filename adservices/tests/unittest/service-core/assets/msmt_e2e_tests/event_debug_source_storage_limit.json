@@ -68,7 +68,8 @@
                 "trigger_data": "2",
                 "priority": "101"
               }
-            ]
+            ],
+            "debug_key": "147982378"
           },
           "Location": null,
           "Attribution-Reporting-Redirect": null
@@ -88,7 +89,8 @@
         "trigger_data": "2",
         "source_type": "navigation",
         "randomized_trigger_rate": 0.0024263,
-        "source_debug_key": "347982378"
+        "source_debug_key": "347982378",
+        "trigger_debug_key": "147982378"
       }
     }],
     "debug_event_level_results": [{
@@ -101,7 +103,8 @@
         "trigger_data": "2",
         "source_type": "navigation",
         "randomized_trigger_rate": 0.0024263,
-        "source_debug_key": "347982378"
+        "source_debug_key": "347982378",
+        "trigger_debug_key": "147982378"
       }
     }],
     "verbose_debug_reports": [

@@ -38,7 +38,7 @@ import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.data.signals.DBEncoderLogic;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.EncoderLogicDao;
-import com.android.adservices.data.signals.EncoderPersistenceManager;
+import com.android.adservices.data.signals.EncoderPersistenceDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.AdSelectionScriptEngine;
 
@@ -79,9 +79,9 @@ public class PeriodicEncodingJobWorkerTest {
     @Rule public MockitoRule rule = MockitoJUnit.rule();
 
     @Mock private EncoderLogicDao mEncoderLogicDao;
-    @Mock private EncoderPersistenceManager mEncoderPersistenceManager;
+    @Mock private EncoderPersistenceDao mEncoderPersistenceDao;
     @Mock private EncodedPayloadDao mEncodedPayloadDao;
-    @Mock private SignalStorageManagerImpl mSignalStorageManager;
+    @Mock private SignalsProviderImpl mSignalStorageManager;
     @Mock private AdSelectionScriptEngine mScriptEngine;
     @Mock Flags mFlags;
 
@@ -100,7 +100,7 @@ public class PeriodicEncodingJobWorkerTest {
         mJobWorker =
                 new PeriodicEncodingJobWorker(
                         mEncoderLogicDao,
-                        mEncoderPersistenceManager,
+                        mEncoderPersistenceDao,
                         mEncodedPayloadDao,
                         mSignalStorageManager,
                         mScriptEngine,
@@ -140,7 +140,7 @@ public class PeriodicEncodingJobWorkerTest {
         mJobWorker =
                 new PeriodicEncodingJobWorker(
                         mEncoderLogicDao,
-                        mEncoderPersistenceManager,
+                        mEncoderPersistenceDao,
                         mEncodedPayloadDao,
                         mSignalStorageManager,
                         mScriptEngine,
@@ -168,7 +168,7 @@ public class PeriodicEncodingJobWorkerTest {
         Map<String, List<ProtectedSignal>> fakeSignals = new HashMap<>();
 
         when(mEncoderLogicDao.getEncoder(BUYER)).thenReturn(fakeEncoderLogicEntry);
-        when(mEncoderPersistenceManager.getEncoder(BUYER)).thenReturn(encoderLogic);
+        when(mEncoderPersistenceDao.getEncoder(BUYER)).thenReturn(encoderLogic);
         when(mSignalStorageManager.getSignals(BUYER)).thenReturn(fakeSignals);
 
         String validBase64Response = getBase64String("Valid payload");
@@ -200,7 +200,7 @@ public class PeriodicEncodingJobWorkerTest {
                         .setCreationTime(Instant.now())
                         .build();
         when(mEncoderLogicDao.getEncoder(BUYER)).thenReturn(fakeEncoderLogicEntry);
-        when(mEncoderPersistenceManager.getEncoder(BUYER)).thenReturn(encoderLogic);
+        when(mEncoderPersistenceDao.getEncoder(BUYER)).thenReturn(encoderLogic);
 
         Map<String, List<ProtectedSignal>> fakeSignals = new HashMap<>();
         when(mSignalStorageManager.getSignals(BUYER)).thenReturn(fakeSignals);
@@ -226,7 +226,7 @@ public class PeriodicEncodingJobWorkerTest {
                         .setCreationTime(Instant.now())
                         .build();
         when(mEncoderLogicDao.getEncoder(BUYER)).thenReturn(fakeEncoderLogicEntry);
-        when(mEncoderPersistenceManager.getEncoder(BUYER)).thenReturn(encoderLogic);
+        when(mEncoderPersistenceDao.getEncoder(BUYER)).thenReturn(encoderLogic);
 
         Map<String, List<ProtectedSignal>> fakeSignals = new HashMap<>();
         when(mSignalStorageManager.getSignals(BUYER)).thenReturn(fakeSignals);
@@ -260,7 +260,7 @@ public class PeriodicEncodingJobWorkerTest {
                         .setCreationTime(Instant.now())
                         .build();
         when(mEncoderLogicDao.getEncoder(BUYER)).thenReturn(fakeEncoderLogicEntry);
-        when(mEncoderPersistenceManager.getEncoder(BUYER)).thenReturn(encoderLogic);
+        when(mEncoderPersistenceDao.getEncoder(BUYER)).thenReturn(encoderLogic);
 
         Map<String, List<ProtectedSignal>> fakeSignals = new HashMap<>();
         when(mSignalStorageManager.getSignals(BUYER)).thenReturn(fakeSignals);
@@ -321,7 +321,7 @@ public class PeriodicEncodingJobWorkerTest {
                         .build();
         Map<String, List<ProtectedSignal>> fakeSignals = new HashMap<>();
         when(mEncoderLogicDao.getEncoder(BUYER)).thenReturn(fakeEncoderLogicEntry);
-        when(mEncoderPersistenceManager.getEncoder(BUYER)).thenReturn(encoderLogic1);
+        when(mEncoderPersistenceDao.getEncoder(BUYER)).thenReturn(encoderLogic1);
         when(mSignalStorageManager.getSignals(BUYER)).thenReturn(fakeSignals);
         String validBase64Response = getBase64String("Valid payload");
         ListenableFuture<String> successResponse = Futures.immediateFuture(validBase64Response);
@@ -338,7 +338,7 @@ public class PeriodicEncodingJobWorkerTest {
                         .setCreationTime(Instant.now())
                         .build();
         when(mEncoderLogicDao.getEncoder(BUYER_2)).thenReturn(fakeEncoderLogicEntry2);
-        when(mEncoderPersistenceManager.getEncoder(BUYER_2)).thenReturn(encoderLogic2);
+        when(mEncoderPersistenceDao.getEncoder(BUYER_2)).thenReturn(encoderLogic2);
         when(mSignalStorageManager.getSignals(BUYER_2)).thenReturn(fakeSignals);
         ListenableFuture<String> failureResponse =
                 Futures.immediateFailedFuture(new RuntimeException("Random exception"));

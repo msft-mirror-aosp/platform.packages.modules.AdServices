@@ -16,6 +16,12 @@
 
 package com.android.adservices.service.common.compat;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
+
+import androidx.room.Room;
+import androidx.room.RoomDatabase;
+
 import com.android.modules.utils.build.SdkLevel;
 
 /** Utility class for handling file names in a backward-compatible manner */
@@ -43,5 +49,18 @@ public final class FileCompatUtils {
         }
 
         return ADSERVICES_PREFIX + "_" + basename;
+    }
+
+    /**
+     * returns a RoomDatabase.Builder instance for the given context, class, and name, while
+     * ensuring the filename is prepended with "adservices" on S-.
+     */
+    @SuppressLint("NewAdServicesFile")
+    public static <T extends RoomDatabase> RoomDatabase.Builder<T> roomDatabaseBuilderHelper(
+            Context context, Class<T> klass, String name) {
+        return Room.databaseBuilder(
+                context,
+                klass,
+                getAdservicesFilename(name) /* make sure filename is valid for S- */);
     }
 }
