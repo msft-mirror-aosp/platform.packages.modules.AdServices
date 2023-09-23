@@ -52,7 +52,7 @@ import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.EncoderEndpointsDao;
 import com.android.adservices.data.signals.EncoderLogicDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
-import com.android.adservices.data.signals.EncoderPersistenceManager;
+import com.android.adservices.data.signals.EncoderPersistenceDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.FlagsFactory;
@@ -144,7 +144,7 @@ public class SignalsEncodingE2ETest {
     private UpdateProcessorSelector mUpdateProcessorSelector;
     private UpdateEncoderEventHandler mUpdateEncoderEventHandler;
     private EncodedPayloadDao mEncodedPayloadDao;
-    private SignalStorageManagerImpl mSignalStorageManager;
+    private SignalsProviderImpl mSignalStorageManager;
     private PeriodicEncodingJobWorker mPeriodicEncodingJobWorker;
     private AdSelectionScriptEngine mAdSelectionScriptEngine;
 
@@ -152,7 +152,7 @@ public class SignalsEncodingE2ETest {
     private FledgeAuthorizationFilter mFledgeAuthorizationFilter;
     private CustomAudienceServiceFilter mCustomAudienceServiceFilter;
     private EncoderLogicHandler mEncoderLogicHandler;
-    private EncoderPersistenceManager mEncoderPersistenceManager;
+    private EncoderPersistenceDao mEncoderPersistenceDao;
     private ListeningExecutorService mLightweightExecutorService;
     private ListeningExecutorService mBackgroundExecutorService;
     private AdServicesHttpsClient mAdServicesHttpsClient;
@@ -185,13 +185,13 @@ public class SignalsEncodingE2ETest {
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mUpdateProcessorSelector = new UpdateProcessorSelector();
-        mEncoderPersistenceManager = EncoderPersistenceManager.getInstance(mContextSpy);
+        mEncoderPersistenceDao = EncoderPersistenceDao.getInstance(mContextSpy);
 
         mAdServicesHttpsClient =
                 new AdServicesHttpsClient(mBackgroundExecutorService, 2000, 2000, 10000);
         mEncoderLogicHandler =
                 new EncoderLogicHandler(
-                        mEncoderPersistenceManager,
+                        mEncoderPersistenceDao,
                         mEncoderEndpointsDao,
                         mEncoderLogicDao,
                         mAdServicesHttpsClient,
@@ -249,7 +249,7 @@ public class SignalsEncodingE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         mCustomAudienceServiceFilter);
 
-        mSignalStorageManager = new SignalStorageManagerImpl(mSignalsDao);
+        mSignalStorageManager = new SignalsProviderImpl(mSignalsDao);
 
         mAdSelectionScriptEngine =
                 new AdSelectionScriptEngine(
@@ -267,7 +267,7 @@ public class SignalsEncodingE2ETest {
         mPeriodicEncodingJobWorker =
                 new PeriodicEncodingJobWorker(
                         mEncoderLogicDao,
-                        mEncoderPersistenceManager,
+                        mEncoderPersistenceDao,
                         mEncodedPayloadDao,
                         mSignalStorageManager,
                         mAdSelectionScriptEngine,
@@ -284,7 +284,7 @@ public class SignalsEncodingE2ETest {
 
     @After
     public void teardown() {
-        mEncoderPersistenceManager.deleteAllEncoders();
+        mEncoderPersistenceDao.deleteAllEncoders();
         if (mStaticMockSession != null) {
             mStaticMockSession.finishMocking();
         }
@@ -395,7 +395,7 @@ public class SignalsEncodingE2ETest {
         assertEquals(
                 "Downloaded encoder logic should have been same as one wired with encoder uri",
                 encodeSignalsJS,
-                mEncoderPersistenceManager.getEncoder(BUYER));
+                mEncoderPersistenceDao.getEncoder(BUYER));
 
         // Validate that the periodic job for encoding would have been scheduled
         ExtendedMockito.verify(

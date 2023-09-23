@@ -451,6 +451,10 @@ public class StatsdAdServicesLoggerTest {
                         .setInstallAttribution(true)
                         .setAttributionDelay(100L)
                         .setSourceRegistrant(SOURCE_REGISTRANT)
+                        .setAggregateReportCount(1)
+                        .setAggregateDebugReportCount(1)
+                        .setEventReportCount(3)
+                        .setEventDebugReportCount(1)
                         .build();
         ExtendedMockito.doNothing()
                 .when(
@@ -464,7 +468,12 @@ public class StatsdAdServicesLoggerTest {
                                         anyBoolean(),
                                         anyBoolean(),
                                         anyLong(),
-                                        anyString()));
+                                        anyString(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt()));
 
         // Invoke logging call
         mLogger.logMeasurementAttributionStats(stats);
@@ -481,7 +490,12 @@ public class StatsdAdServicesLoggerTest {
                                 eq(false),
                                 eq(true),
                                 eq(100L),
-                                eq(SOURCE_REGISTRANT));
+                                eq(SOURCE_REGISTRANT),
+                                eq(1),
+                                eq(1),
+                                eq(3),
+                                eq(1),
+                                eq(0));
 
         ExtendedMockito.verify(writeInvocation);
 

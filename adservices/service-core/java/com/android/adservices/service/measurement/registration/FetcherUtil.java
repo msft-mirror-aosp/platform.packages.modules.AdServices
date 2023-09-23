@@ -271,7 +271,9 @@ class FetcherUtil {
                                 getStatus(asyncFetchStatus),
                                 getFailureType(asyncFetchStatus),
                                 asyncFetchStatus.getRegistrationDelay(),
-                                getSourceRegistrantToLog(asyncRegistration))
+                                getSourceRegistrantToLog(asyncRegistration),
+                                asyncFetchStatus.getRetryCount(),
+                                asyncFetchStatus.isRedirectOnly())
                         .setAdTechDomain(adTechDomain)
                         .build());
     }
@@ -379,8 +381,6 @@ class FetcherUtil {
         } else if (asyncFetchStatus.getEntityStatus()
                         == AsyncFetchStatus.EntityStatus.VALIDATION_ERROR
                 || asyncFetchStatus.getEntityStatus() == AsyncFetchStatus.EntityStatus.PARSING_ERROR
-                || asyncFetchStatus.getEntityStatus()
-                        == AsyncFetchStatus.EntityStatus.HEADER_MISSING
                 || asyncFetchStatus.getEntityStatus()
                         == AsyncFetchStatus.EntityStatus.HEADER_ERROR) {
             return RegistrationEnumsValues.FAILURE_TYPE_PARSING;

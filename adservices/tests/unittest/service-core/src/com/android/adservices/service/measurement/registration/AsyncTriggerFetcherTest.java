@@ -251,7 +251,9 @@ public final class AsyncTriggerFetcherTest {
                                 SUCCESS_STATUS,
                                 UNKNOWN_REGISTRATION_FAILURE_TYPE,
                                 0,
-                                "")
+                                "",
+                                0,
+                                false)
                         .setAdTechDomain(null)
                         .build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
@@ -298,7 +300,9 @@ public final class AsyncTriggerFetcherTest {
                                 SUCCESS_STATUS,
                                 UNKNOWN_REGISTRATION_FAILURE_TYPE,
                                 0,
-                                "")
+                                "",
+                                0,
+                                false)
                         .setAdTechDomain(null)
                         .build();
         String wrappedFilters =
@@ -4826,7 +4830,9 @@ public final class AsyncTriggerFetcherTest {
                                 SUCCESS_STATUS,
                                 UNKNOWN_REGISTRATION_FAILURE_TYPE,
                                 0,
-                                "")
+                                "",
+                                0,
+                                false)
                         .setAdTechDomain(WebUtil.validUrl("https://foo.test"))
                         .build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
@@ -4840,6 +4846,7 @@ public final class AsyncTriggerFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         asyncFetchStatus.setRegistrationDelay(0L);
+        asyncFetchStatus.setRetryCount(0);
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =

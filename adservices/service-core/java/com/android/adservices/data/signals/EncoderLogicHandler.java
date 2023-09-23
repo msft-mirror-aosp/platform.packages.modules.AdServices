@@ -55,7 +55,7 @@ public class EncoderLogicHandler {
 
     @VisibleForTesting static final String ENCODER_VERSION_RESPONSE_HEADER = "X_ENCODER_VERSION";
     @VisibleForTesting static final int FALLBACK_VERSION = 0;
-    @NonNull private final EncoderPersistenceManager mEncoderPersistenceManager;
+    @NonNull private final EncoderPersistenceDao mEncoderPersistenceDao;
     @NonNull private final EncoderEndpointsDao mEncoderEndpointsDao;
     @NonNull private final EncoderLogicDao mEncoderLogicDao;
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
@@ -68,17 +68,17 @@ public class EncoderLogicHandler {
 
     @VisibleForTesting
     public EncoderLogicHandler(
-            @NonNull EncoderPersistenceManager encoderPersistenceManager,
+            @NonNull EncoderPersistenceDao encoderPersistenceDao,
             @NonNull EncoderEndpointsDao encoderEndpointsDao,
             @NonNull EncoderLogicDao encoderLogicDao,
             @NonNull AdServicesHttpsClient httpsClient,
             @NonNull ListeningExecutorService backgroundExecutorService) {
-        Objects.requireNonNull(encoderPersistenceManager);
+        Objects.requireNonNull(encoderPersistenceDao);
         Objects.requireNonNull(encoderEndpointsDao);
         Objects.requireNonNull(encoderLogicDao);
         Objects.requireNonNull(httpsClient);
         Objects.requireNonNull(backgroundExecutorService);
-        mEncoderPersistenceManager = encoderPersistenceManager;
+        mEncoderPersistenceDao = encoderPersistenceDao;
         mEncoderEndpointsDao = encoderEndpointsDao;
         mEncoderLogicDao = encoderLogicDao;
         mAdServicesHttpsClient = httpsClient;
@@ -88,7 +88,7 @@ public class EncoderLogicHandler {
 
     public EncoderLogicHandler(@NonNull Context context) {
         this(
-                EncoderPersistenceManager.getInstance(context),
+                EncoderPersistenceDao.getInstance(context),
                 ProtectedSignalsDatabase.getInstance(context).getEncoderEndpointsDao(),
                 ProtectedSignalsDatabase.getInstance(context).getEncoderLogicDao(),
                 new AdServicesHttpsClient(
@@ -106,7 +106,7 @@ public class EncoderLogicHandler {
      *   <li>3. Extract the encoder from the web-response and persist
      *       <ol>
      *         <li>3a. The encoder body is persisted in file storage using {@link
-     *             EncoderPersistenceManager}
+     *             EncoderPersistenceDao}
      *         <li>3b. The entry for the downloaded encoder and the version is persisted using
      *             {@link EncoderLogicDao}
      *       </ol>
@@ -179,7 +179,7 @@ public class EncoderLogicHandler {
 
         ReentrantLock buyerLock = getBuyerLock(buyer);
         if (buyerLock.tryLock()) {
-            updateSucceeded = mEncoderPersistenceManager.persistEncoder(buyer, encoderLogicBody);
+            updateSucceeded = mEncoderPersistenceDao.persistEncoder(buyer, encoderLogicBody);
 
             if (updateSucceeded) {
                 sLogger.v(

@@ -21,7 +21,7 @@ import android.adservices.common.AdTechIdentifier;
 import java.util.List;
 import java.util.Map;
 
-interface SignalStorageManager {
+interface SignalsProvider {
     /**
      * Retrieves signals for a given buyer.
      *
