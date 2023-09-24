@@ -33,6 +33,7 @@ import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.tests.ui.libs.UiUtils;
 import com.android.compatibility.common.util.ShellUtils;
 
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assume;
@@ -41,6 +42,7 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 
 @RunWith(AndroidJUnit4.class)
 @ScreenRecordRule.ScreenRecord
@@ -89,7 +91,6 @@ public class OTAStringsUiAutomatorTest {
 
     @Before
     public void initTestCase() {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         // Skip the test if it runs on unsupported platforms.
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
@@ -113,7 +114,10 @@ public class OTAStringsUiAutomatorTest {
     public void checkOTAStringsNotificationAndSettingsPageTest()
             throws UiObjectNotFoundException, Exception {
         UiUtils.enableBeta();
+        UiUtils.setAsRowDevice();
         AdservicesTestHelper.killAdservicesProcess(sContext);
+        // open notification tray so notification is expanded when shown to show full string
+        sDevice.openNotification();
         sCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
         UiUtils.verifyNotificationAndSettingsPage(sContext, sDevice, true);
     }

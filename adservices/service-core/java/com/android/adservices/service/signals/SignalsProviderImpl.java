@@ -30,11 +30,11 @@ import java.util.List;
 import java.util.Map;
 
 /** Reads signals from Signals DB and collects them into a map with base64 encoded String keys */
-public class SignalStorageManagerImpl implements SignalStorageManager {
+public class SignalsProviderImpl implements SignalsProvider {
 
     @NonNull private ProtectedSignalsDao mProtectedSignalsDao;
 
-    public SignalStorageManagerImpl(@NonNull ProtectedSignalsDao protectedSignalsDao) {
+    public SignalsProviderImpl(@NonNull ProtectedSignalsDao protectedSignalsDao) {
         mProtectedSignalsDao = protectedSignalsDao;
     }
 
