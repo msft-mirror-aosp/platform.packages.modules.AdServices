@@ -44,7 +44,6 @@ import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.ReportSpec;
 import com.android.adservices.service.measurement.ReportSpecUtil;
 import com.android.adservices.service.measurement.Source;
-import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
@@ -59,7 +58,6 @@ import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportApi.Type;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
-import com.android.adservices.service.measurement.util.Debug;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -149,8 +147,10 @@ class AttributionJobHandler {
         }
         List<String> pendingTriggers = pendingTriggersOpt.get();
 
-        for (int i = 0; i < pendingTriggers.size()
-                && i < SystemHealthParams.MAX_ATTRIBUTIONS_PER_INVOCATION; i++) {
+        for (int i = 0;
+                i < pendingTriggers.size()
+                        && i < mFlags.getMeasurementMaxAttributionsPerInvocation();
+                i++) {
             AttributionStatus attributionStatus = new AttributionStatus();
             boolean success = performAttribution(pendingTriggers.get(i), attributionStatus);
             logAttributionStats(attributionStatus);
@@ -162,7 +162,7 @@ class AttributionJobHandler {
         }
 
         // Reschedule if there are unprocessed pending triggers.
-        return SystemHealthParams.MAX_ATTRIBUTIONS_PER_INVOCATION >= pendingTriggers.size();
+        return mFlags.getMeasurementMaxAttributionsPerInvocation() >= pendingTriggers.size();
     }
 
     /**
@@ -175,6 +175,8 @@ class AttributionJobHandler {
         return mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     Trigger trigger = measurementDao.getTrigger(triggerId);
+                    attributionStatus.setAttributionDelay(
+                            System.currentTimeMillis() - trigger.getTriggerTime());
 
                     if (trigger.getStatus() != Trigger.Status.PENDING) {
                         attributionStatus.setFailureTypeFromTriggerStatus(trigger.getStatus());
@@ -239,10 +241,12 @@ class AttributionJobHandler {
                     }
 
                     TriggeringStatus aggregateTriggeringStatus =
-                            maybeGenerateAggregateReport(source, trigger, measurementDao);
+                            maybeGenerateAggregateReport(
+                                    source, trigger, measurementDao, attributionStatus);
 
                     TriggeringStatus eventTriggeringStatus =
-                            maybeGenerateEventReport(source, trigger, measurementDao);
+                            maybeGenerateEventReport(
+                                    source, trigger, measurementDao, attributionStatus);
 
                     boolean isEventTriggeringStatusAttributed =
                             eventTriggeringStatus == TriggeringStatus.ATTRIBUTED;
@@ -257,10 +261,7 @@ class AttributionJobHandler {
                                     trigger.getEnrollmentId());
                         }
                         attributeTriggerAndInsertAttribution(trigger, source, measurementDao);
-                        long endTime = System.currentTimeMillis();
-                        attributionStatus.setAttributionDelay(endTime - trigger.getTriggerTime());
                         attributionStatus.setAttributionResult(
-                                AttributionStatus.AttributionResult.SUCCESS,
                                 isAggregateTriggeringStatusAttributed,
                                 isEventTriggeringStatusAttributed);
                     } else {
@@ -286,7 +287,10 @@ class AttributionJobHandler {
     }
 
     private TriggeringStatus maybeGenerateAggregateReport(
-            Source source, Trigger trigger, IMeasurementDao measurementDao)
+            Source source,
+            Trigger trigger,
+            IMeasurementDao measurementDao,
+            AttributionStatus attributionStatus)
             throws DatastoreException {
 
         if (trigger.getTriggerTime() >= source.getAggregatableReportWindow()) {
@@ -303,14 +307,14 @@ class AttributionJobHandler {
                 measurementDao.getNumAggregateReportsPerDestination(
                         trigger.getAttributionDestination(), trigger.getDestinationType());
 
-        if (numReportsPerDestination >= SystemHealthParams.getMaxAggregateReportsPerDestination()) {
+        if (numReportsPerDestination >= mFlags.getMeasurementMaxAggregateReportsPerDestination()) {
             LogUtil.d(
                     String.format(
                             Locale.ENGLISH,
                             "Aggregate reports for destination %1$s exceeds system health limit of"
                                     + " %2$d.",
                             trigger.getAttributionDestination(),
-                            SystemHealthParams.getMaxAggregateReportsPerDestination()));
+                            mFlags.getMeasurementMaxAggregateReportsPerDestination()));
             mDebugReportApi.scheduleTriggerDebugReport(
                     source,
                     trigger,
@@ -392,8 +396,7 @@ class AttributionJobHandler {
             UnsignedLong triggerDebugKey = debugKeyPair.second;
 
             int debugReportStatus = AggregateReport.DebugReportStatus.NONE;
-            if (Debug.isAttributionDebugReportPermitted(
-                    source, trigger, sourceDebugKey, triggerDebugKey)) {
+            if (sourceDebugKey != null && triggerDebugKey != null) {
                 debugReportStatus = AggregateReport.DebugReportStatus.PENDING;
             }
             AggregateReport.Builder aggregateReportBuilder =
@@ -436,6 +439,11 @@ class AttributionJobHandler {
 
             finalizeAggregateReportCreation(
                     source, aggregateDeduplicationKeyOptional, aggregateReport, measurementDao);
+            incrementAggregateReportCountBy(attributionStatus, 1);
+            if (aggregateReport.getDebugReportStatus()
+                    == AggregateReport.DebugReportStatus.PENDING) {
+                incrementAggregateDebugReportCountBy(attributionStatus, 1);
+            }
             // TODO (b/230618328): read from DB and upload unencrypted aggregate report.
             return TriggeringStatus.ATTRIBUTED;
         } catch (JSONException e) {
@@ -568,7 +576,10 @@ class AttributionJobHandler {
     }
 
     private TriggeringStatus maybeGenerateEventReport(
-            Source source, Trigger trigger, IMeasurementDao measurementDao)
+            Source source,
+            Trigger trigger,
+            IMeasurementDao measurementDao,
+            AttributionStatus attributionStatus)
             throws DatastoreException {
 
         if (source.getParentId() != null) {
@@ -629,14 +640,14 @@ class AttributionJobHandler {
                 measurementDao.getNumEventReportsPerDestination(
                         trigger.getAttributionDestination(), trigger.getDestinationType());
 
-        if (numReports >= SystemHealthParams.getMaxEventReportsPerDestination()) {
+        if (numReports >= mFlags.getMeasurementMaxEventReportsPerDestination()) {
             LogUtil.d(
                     String.format(
                             Locale.ENGLISH,
                             "Event reports for destination %1$s exceeds system health limit of"
                                     + " %2$d.",
                             trigger.getAttributionDestination(),
-                            SystemHealthParams.getMaxEventReportsPerDestination()));
+                            mFlags.getMeasurementMaxEventReportsPerDestination()));
             mDebugReportApi.scheduleTriggerDebugReport(
                     source,
                     trigger,
@@ -678,7 +689,12 @@ class AttributionJobHandler {
             } else {
                 finalizeEventReportCreation(source, eventTrigger, newEventReport, measurementDao);
             }
+            incrementEventReportCountBy(attributionStatus, 1);
+            if (newEventReport.getDebugReportStatus() == EventReport.DebugReportStatus.PENDING) {
+                incrementEventDebugReportCountBy(attributionStatus, 1);
+            }
         } else {
+
             if (!provisionEventReportFlexEventApiQuota(
                     source, newEventReport, measurementDao, eventTrigger)) {
                 return TriggeringStatus.DROPPED;
@@ -1214,20 +1230,16 @@ class AttributionJobHandler {
     }
 
     private void logAttributionStats(AttributionStatus attributionStatus) {
-        if (!attributionStatus.getAttributionDelay().isPresent()) {
-            attributionStatus.setAttributionDelay(0L);
-        }
-
         mLogger.logMeasurementAttributionStats(
                 new MeasurementAttributionStats.Builder()
                         .setCode(AD_SERVICES_MEASUREMENT_ATTRIBUTION)
-                        .setSourceType(attributionStatus.getSourceType().ordinal())
-                        .setSurfaceType(attributionStatus.getAttributionSurface().ordinal())
-                        .setResult(attributionStatus.getAttributionResult().ordinal())
-                        .setFailureType(attributionStatus.getFailureType().ordinal())
+                        .setSourceType(attributionStatus.getSourceType().getValue())
+                        .setSurfaceType(attributionStatus.getAttributionSurface().getValue())
+                        .setResult(attributionStatus.getAttributionResult().getValue())
+                        .setFailureType(attributionStatus.getFailureType().getValue())
                         .setSourceDerived(attributionStatus.isSourceDerived())
                         .setInstallAttribution(attributionStatus.isInstallAttribution())
-                        .setAttributionDelay(attributionStatus.getAttributionDelay().get())
+                        .setAttributionDelay(attributionStatus.getAttributionDelay())
                         .setSourceRegistrant(attributionStatus.getSourceRegistrant())
                         .build());
     }
@@ -1326,5 +1338,25 @@ class AttributionJobHandler {
                 }
             }
         }
+    }
+
+    private void incrementEventReportCountBy(AttributionStatus attributionStatus, int count) {
+        attributionStatus.setEventReportCount(attributionStatus.getEventReportCount() + count);
+    }
+
+    private void incrementEventDebugReportCountBy(AttributionStatus attributionStatus, int count) {
+        attributionStatus.setEventDebugReportCount(
+                attributionStatus.getEventDebugReportCount() + count);
+    }
+
+    private void incrementAggregateReportCountBy(AttributionStatus attributionStatus, int count) {
+        attributionStatus.setAggregateReportCount(
+                attributionStatus.getAggregateReportCount() + count);
+    }
+
+    private void incrementAggregateDebugReportCountBy(
+            AttributionStatus attributionStatus, int count) {
+        attributionStatus.setAggregateDebugReportCount(
+                attributionStatus.getAggregateDebugReportCount() + count);
     }
 }

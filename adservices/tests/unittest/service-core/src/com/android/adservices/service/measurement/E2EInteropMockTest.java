@@ -49,14 +49,8 @@ import java.util.function.Supplier;
  * requests.
  *
  * <p>Tests in assets/msmt_interop_tests/ directory were copied from Chromium
- * src/content/test/data/attribution_reporting/interop April 21, 2023. Files destination_limit.json,
- * max_aggregatable_reports_per_source.json, parse_failures.json, rate_limit_max_attributions.json,
- * event_level_report_time.json, aggregatable_report_window.json,
- * event_source_event_report_windows.json,
- * rate_limit_max_reporting_origins_per_source_reporting_site.json, and
- * rate_limit_max_attribution_reporting_endpoints.json and
- * rate_limit_max_source_registration_reporting_origin_endpoints.json were updated with GitHub
- * commit 71b156e24f8ef67378fbfba35edfb2fef514baf0
+ * src/content/test/data/attribution_reporting/interop GitHub commit
+ * 35a0eaf2e4370eba47497f83a8faa77233b83077.
  */
 @RunWith(Parameterized.class)
 public class E2EInteropMockTest extends E2EMockTest {
@@ -67,8 +61,22 @@ public class E2EInteropMockTest extends E2EMockTest {
             AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
     private static final Map<String, String> sApiConfigPhFlags =
             Map.of(
+                    // measurement_max_attribution_per_rate_limit_window
+                    "rate_limit_max_attributions",
+                    "measurement_max_attribution_per_rate_limit_window",
+                    // measurement_max_distinct_enrollments_in_attribution
+                    "rate_limit_max_attribution_reporting_origins",
+                    "measurement_max_distinct_enrollments_in_attribution",
+                    // measurement_max_distinct_reporting_origins_in_source
+                    "rate_limit_max_source_registration_reporting_origins",
+                    "measurement_max_distinct_reporting_origins_in_source",
+                    // measurement_max_distinct_destinations_in_active_source
+                    "max_destinations_per_source_site_reporting_site",
+                    "measurement_max_distinct_destinations_in_active_source",
+                    // measurement_flex_api_max_information_gain_event
                     "max_event_info_gain",
                     "measurement_flex_api_max_information_gain_event",
+                    // measurement_max_reporting_origins_per_source_reporting_site_per_window
                     "rate_limit_max_reporting_origins_per_source_reporting_site",
                     "measurement_max_reporting_origins_per_source_reporting_site_per_window");
 
@@ -81,7 +89,8 @@ public class E2EInteropMockTest extends E2EMockTest {
 
     private static Map<String, String> sPhFlagsForInterop = Map.of(
             // TODO (b/295382171): remove this after the flag is removed.
-            "measurement_enable_max_aggregate_reports_per_source", "true");
+            "measurement_enable_max_aggregate_reports_per_source", "true",
+            "measurement_min_event_report_delay_millis", "0");
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> getData() throws IOException, JSONException {

@@ -15,10 +15,16 @@
  */
 package com.android.adservices.service.measurement.aggregation;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_PUBLIC_KEY_FETCHER_INVALID_PARAMETER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_PUBLIC_KEY_FETCHER_IO_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_PUBLIC_KEY_FETCHER_PARSING_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
+
 import android.annotation.NonNull;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
 
 import org.json.JSONArray;
@@ -132,6 +138,10 @@ final class AggregateEncryptionKeyFetcher {
             return Optional.of(aggregateEncryptionKeys);
         } catch (JSONException e) {
             LogUtil.d(e, "Invalid JSON");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_PUBLIC_KEY_FETCHER_PARSING_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             return Optional.empty();
         }
     }
@@ -148,6 +158,10 @@ final class AggregateEncryptionKeyFetcher {
             url = new URL(target.toString());
         } catch (MalformedURLException e) {
             LogUtil.d(e, "Malformed coordinator target URL");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_PUBLIC_KEY_FETCHER_INVALID_PARAMETER,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             return Optional.empty();
         }
         HttpURLConnection urlConnection;
@@ -155,6 +169,10 @@ final class AggregateEncryptionKeyFetcher {
             urlConnection = (HttpURLConnection) openUrl(url);
         } catch (IOException e) {
             LogUtil.e(e, "Failed to open coordinator target URL");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_PUBLIC_KEY_FETCHER_IO_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             return Optional.empty();
         }
         try {
@@ -180,6 +198,10 @@ final class AggregateEncryptionKeyFetcher {
             return parseResponse(responseBody.toString(), headers, eventTime, coordinatorOrigin);
         } catch (IOException e) {
             LogUtil.e(e, "Failed to get coordinator response");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_PUBLIC_KEY_FETCHER_IO_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             return Optional.empty();
         } finally {
             urlConnection.disconnect();

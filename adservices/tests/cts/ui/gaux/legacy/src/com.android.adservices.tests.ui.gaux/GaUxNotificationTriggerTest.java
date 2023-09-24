@@ -85,7 +85,7 @@ public class GaUxNotificationTriggerTest {
         UiUtils.takeScreenshot(mDevice, getClass().getSimpleName() + "_" + mTestName + "_");
 
         mDevice.pressHome();
-
+        UiUtils.setAsRowDevice();
         AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 

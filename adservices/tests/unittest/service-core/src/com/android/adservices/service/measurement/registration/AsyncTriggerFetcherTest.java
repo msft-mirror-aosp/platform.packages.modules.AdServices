@@ -16,10 +16,6 @@
 package com.android.adservices.service.measurement.registration;
 
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_FILTERS;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_FILTER_MAPS_PER_FILTER_SET;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_VALUES_PER_ATTRIBUTION_FILTER;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER;
 
@@ -160,6 +156,8 @@ public final class AsyncTriggerFetcherTest {
     private static final int UNKNOWN_REGISTRATION_FAILURE_TYPE = 0;
     private static final String PLATFORM_AD_ID_VALUE = "SAMPLE_PLATFORM_AD_ID_VALUE";
     private static final String DEBUG_AD_ID_VALUE = "SAMPLE_DEBUG_AD_ID_VALUE";
+    private static final int mMaxAggregateDeduplicationKeysPerRegistration =
+            Flags.DEFAULT_MEASUREMENT_MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION;
 
     AsyncTriggerFetcher mFetcher;
 
@@ -224,7 +222,16 @@ public final class AsyncTriggerFetcherTest {
         when(mFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist()).thenReturn("");
         when(mFlags.getMeasurementEnableAraParsingAlignmentV1())
                 .thenReturn(mAraParsingAlignmentV1Enabled);
-        when(mFlags.getMeasurementMaxAggregateKeysPerTriggerRegistration()).thenReturn(20);
+        when(mFlags.getMeasurementMaxAggregateKeysPerTriggerRegistration())
+                .thenReturn(Flags.MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION);
+        when(mFlags.getMeasurementMaxAggregateDeduplicationKeysPerRegistration())
+                .thenReturn(mMaxAggregateDeduplicationKeysPerRegistration);
+        when(mFlags.getMeasurementMaxAttributionFilters())
+                .thenReturn(Flags.DEFAULT_MEASUREMENT_MAX_ATTRIBUTION_FILTERS);
+        when(mFlags.getMeasurementMaxFilterMapsPerFilterSet())
+                .thenReturn(Flags.DEFAULT_MEASUREMENT_MAX_FILTER_MAPS_PER_FILTER_SET);
+        when(mFlags.getMeasurementMaxValuesPerAttributionFilter())
+                .thenReturn(Flags.DEFAULT_MEASUREMENT_MAX_VALUES_PER_ATTRIBUTION_FILTER);
     }
 
     public void cleanup() throws InterruptedException {
@@ -244,7 +251,9 @@ public final class AsyncTriggerFetcherTest {
                                 SUCCESS_STATUS,
                                 UNKNOWN_REGISTRATION_FAILURE_TYPE,
                                 0,
-                                "")
+                                "",
+                                0,
+                                false)
                         .setAdTechDomain(null)
                         .build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
@@ -291,7 +300,9 @@ public final class AsyncTriggerFetcherTest {
                                 SUCCESS_STATUS,
                                 UNKNOWN_REGISTRATION_FAILURE_TYPE,
                                 0,
-                                "")
+                                "",
+                                0,
+                                false)
                         .setAdTechDomain(null)
                         .build();
         String wrappedFilters =
@@ -961,7 +972,7 @@ public final class AsyncTriggerFetcherTest {
     public void testTriggerRequest_eventTriggerData_tooManyFilterMaps() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder eventTriggers = new StringBuilder("[{\"trigger_data\":\"2\",\"filters\":[");
-        for (int i = 0; i < MAX_FILTER_MAPS_PER_FILTER_SET + 1; i++) {
+        for (int i = 0; i < Flags.DEFAULT_MEASUREMENT_MAX_FILTER_MAPS_PER_FILTER_SET + 1; i++) {
             eventTriggers.append("{\"key-" + i + "\":[\"val1" + i + "\", \"val2" + i + "\"]}");
         }
         eventTriggers.append("}]");
@@ -1049,7 +1060,7 @@ public final class AsyncTriggerFetcherTest {
         StringBuilder eventTriggers = new StringBuilder(
                 "[{\"trigger_data\":\"2\",\"not_filters\":[");
         int i;
-        for (i = 0; i < MAX_FILTER_MAPS_PER_FILTER_SET; i++) {
+        for (i = 0; i < Flags.DEFAULT_MEASUREMENT_MAX_FILTER_MAPS_PER_FILTER_SET; i++) {
             eventTriggers.append("{\"key-" + i + "\":[\"val1" + i + "\", \"val2" + i + "\"]},");
         }
         eventTriggers.append("{\"key-" + i + "\":[\"val1" + i + "\", \"val2" + i + "\"]}");
@@ -1784,7 +1795,7 @@ public final class AsyncTriggerFetcherTest {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder filters = new StringBuilder("{");
         filters.append(
-                IntStream.range(0, MAX_ATTRIBUTION_FILTERS + 1)
+                IntStream.range(0, Flags.DEFAULT_MEASUREMENT_MAX_ATTRIBUTION_FILTERS + 1)
                         .mapToObj(i -> "\"filter-string-" + i + "\": [\"filter-value\"]")
                         .collect(Collectors.joining(",")));
         filters.append("}");
@@ -1844,7 +1855,7 @@ public final class AsyncTriggerFetcherTest {
                                 + "\"filter-string-1\": [\"filter-value-1\"],"
                                 + "\"filter-string-2\": [");
         filters.append(
-                IntStream.range(0, MAX_VALUES_PER_ATTRIBUTION_FILTER + 1)
+                IntStream.range(0, Flags.DEFAULT_MEASUREMENT_MAX_VALUES_PER_ATTRIBUTION_FILTER + 1)
                         .mapToObj(i -> "\"filter-value-" + i + "\"")
                         .collect(Collectors.joining(",")));
         filters.append("]}");
@@ -1959,7 +1970,7 @@ public final class AsyncTriggerFetcherTest {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder notFilters = new StringBuilder("{");
         notFilters.append(
-                IntStream.range(0, MAX_ATTRIBUTION_FILTERS + 1)
+                IntStream.range(0, Flags.DEFAULT_MEASUREMENT_MAX_ATTRIBUTION_FILTERS + 1)
                         .mapToObj(i -> "\"filter-string-" + i + "\": [\"filter-value\"]")
                         .collect(Collectors.joining(",")));
         notFilters.append("}");
@@ -2025,7 +2036,7 @@ public final class AsyncTriggerFetcherTest {
                                 + "\"filter-string-1\": [\"filter-value-1\"],"
                                 + "\"filter-string-2\": [");
         notFilters.append(
-                IntStream.range(0, MAX_VALUES_PER_ATTRIBUTION_FILTER + 1)
+                IntStream.range(0, Flags.DEFAULT_MEASUREMENT_MAX_VALUES_PER_ATTRIBUTION_FILTER + 1)
                         .mapToObj(i -> "\"filter-value-" + i + "\"")
                         .collect(Collectors.joining(",")));
         notFilters.append("]}");
@@ -2116,7 +2127,7 @@ public final class AsyncTriggerFetcherTest {
     public void testTriggerRequest_tooManyFilterMaps() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder filters = new StringBuilder("[");
-        for (int i = 0; i < MAX_FILTER_MAPS_PER_FILTER_SET + 1; i++) {
+        for (int i = 0; i < Flags.DEFAULT_MEASUREMENT_MAX_FILTER_MAPS_PER_FILTER_SET + 1; i++) {
             filters.append("{\"key-" + i + "\":[\"val1" + i + "\", \"val2" + i + "\"]}");
         }
         filters.append("]");
@@ -2165,10 +2176,12 @@ public final class AsyncTriggerFetcherTest {
 
     @Test
     public void testTriggerRequest_AggregateDeduplicationKeys_tooManyEntries() throws Exception {
+        int maxAggregateDeduplicationKeysPerRegistration =
+                Flags.DEFAULT_MEASUREMENT_MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION;
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder tooManyEntries = new StringBuilder("[");
         tooManyEntries.append(
-                IntStream.range(0, MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION + 1)
+                IntStream.range(0, maxAggregateDeduplicationKeysPerRegistration + 1)
                         .mapToObj(i -> "{\"deduplication_key\": \"" + i + "\"}")
                         .collect(Collectors.joining(",")));
         tooManyEntries.append("]");
@@ -2202,8 +2215,10 @@ public final class AsyncTriggerFetcherTest {
             throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder deduplicationKeys = new StringBuilder("[");
+        int maxAggregateDeduplicationKeysPerRegistration =
+                Flags.DEFAULT_MEASUREMENT_MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION;
         deduplicationKeys.append(
-                IntStream.range(0, MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION)
+                IntStream.range(0, maxAggregateDeduplicationKeysPerRegistration)
                         .mapToObj(i -> "{\"deduplication_key\":}")
                         .collect(Collectors.joining(",")));
         deduplicationKeys.append("]");
@@ -2234,22 +2249,24 @@ public final class AsyncTriggerFetcherTest {
 
     @Test
     public void testTriggerRequest_AggregateDeduplicationKeys_tooManyFilters() throws Exception {
+        int maxAggregateDeduplicationKeysPerRegistration =
+                Flags.DEFAULT_MEASUREMENT_MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION;
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder filters = new StringBuilder("{");
         filters.append(
-                IntStream.range(0, MAX_ATTRIBUTION_FILTERS + 1)
+                IntStream.range(0, Flags.DEFAULT_MEASUREMENT_MAX_ATTRIBUTION_FILTERS + 1)
                         .mapToObj(i -> "\"filter-string-" + i + "\": [\"filter-value\"]")
                         .collect(Collectors.joining(",")));
         filters.append("}");
         StringBuilder notFilters = new StringBuilder("{");
         notFilters.append(
-                IntStream.range(0, MAX_ATTRIBUTION_FILTERS)
+                IntStream.range(0, Flags.DEFAULT_MEASUREMENT_MAX_ATTRIBUTION_FILTERS)
                         .mapToObj(i -> "\"not-filter-string-" + i + "\": [\"not-filter-value\"]")
                         .collect(Collectors.joining(",")));
         notFilters.append("}");
         StringBuilder deduplicationKeys = new StringBuilder("[");
         deduplicationKeys.append(
-                IntStream.range(0, MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION)
+                IntStream.range(0, maxAggregateDeduplicationKeysPerRegistration)
                         .mapToObj(
                                 i ->
                                         "{\"deduplication_key\":"
@@ -2291,22 +2308,24 @@ public final class AsyncTriggerFetcherTest {
 
     @Test
     public void testTriggerRequest_AggregateDeduplicationKeys_tooManyNotFilters() throws Exception {
+        int maxAggregateDeduplicationKeysPerRegistration =
+                Flags.DEFAULT_MEASUREMENT_MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION;
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder filters = new StringBuilder("{");
         filters.append(
-                IntStream.range(0, MAX_ATTRIBUTION_FILTERS)
+                IntStream.range(0, Flags.DEFAULT_MEASUREMENT_MAX_ATTRIBUTION_FILTERS)
                         .mapToObj(i -> "\"filter-string-" + i + "\": [\"filter-value\"]")
                         .collect(Collectors.joining(",")));
         filters.append("}");
         StringBuilder notFilters = new StringBuilder("{");
         notFilters.append(
-                IntStream.range(0, MAX_ATTRIBUTION_FILTERS + 1)
+                IntStream.range(0, Flags.DEFAULT_MEASUREMENT_MAX_ATTRIBUTION_FILTERS + 1)
                         .mapToObj(i -> "\"not-filter-string-" + i + "\": [\"not-filter-value\"]")
                         .collect(Collectors.joining(",")));
         notFilters.append("}");
         StringBuilder deduplicationKeys = new StringBuilder("[");
         deduplicationKeys.append(
-                IntStream.range(0, MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION)
+                IntStream.range(0, maxAggregateDeduplicationKeysPerRegistration)
                         .mapToObj(
                                 i ->
                                         "{\"deduplication_key\":"
@@ -2408,7 +2427,7 @@ public final class AsyncTriggerFetcherTest {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder filters = new StringBuilder("{");
         filters.append(
-                IntStream.range(0, MAX_ATTRIBUTION_FILTERS + 1)
+                IntStream.range(0, Flags.DEFAULT_MEASUREMENT_MAX_ATTRIBUTION_FILTERS + 1)
                         .mapToObj(i -> "\"filter-string-" + i + "\": [\"filter-value\"]")
                         .collect(Collectors.joining(",")));
         filters.append("}");
@@ -2464,7 +2483,7 @@ public final class AsyncTriggerFetcherTest {
                                 + "\"filter-string-1\": [\"filter-value-1\"],"
                                 + "\"filter-string-2\": [");
         filters.append(
-                IntStream.range(0, MAX_VALUES_PER_ATTRIBUTION_FILTER + 1)
+                IntStream.range(0, Flags.DEFAULT_MEASUREMENT_MAX_VALUES_PER_ATTRIBUTION_FILTER + 1)
                         .mapToObj(i -> "\"filter-value-" + i + "\"")
                         .collect(Collectors.joining(",")));
         filters.append("]}");
@@ -2641,7 +2660,7 @@ public final class AsyncTriggerFetcherTest {
     public void testTriggerRequest_tooManyNotFilterMaps() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder notFilters = new StringBuilder("[");
-        for (int i = 0; i < MAX_FILTER_MAPS_PER_FILTER_SET + 1; i++) {
+        for (int i = 0; i < Flags.DEFAULT_MEASUREMENT_MAX_FILTER_MAPS_PER_FILTER_SET + 1; i++) {
             notFilters.append("{\"key-" + i + "\":[\"val1" + i + "\", \"val2" + i + "\"]}");
         }
         notFilters.append("]");
@@ -2693,7 +2712,7 @@ public final class AsyncTriggerFetcherTest {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder notFilters = new StringBuilder("{");
         notFilters.append(
-                IntStream.range(0, MAX_ATTRIBUTION_FILTERS + 1)
+                IntStream.range(0, Flags.DEFAULT_MEASUREMENT_MAX_ATTRIBUTION_FILTERS + 1)
                         .mapToObj(i -> "\"filter-string-" + i + "\": [\"filter-value\"]")
                         .collect(Collectors.joining(",")));
         notFilters.append("}");
@@ -2749,7 +2768,7 @@ public final class AsyncTriggerFetcherTest {
                                 + "\"filter-string-1\": [\"filter-value-1\"],"
                                 + "\"filter-string-2\": [");
         notFilters.append(
-                IntStream.range(0, MAX_VALUES_PER_ATTRIBUTION_FILTER + 1)
+                IntStream.range(0, Flags.DEFAULT_MEASUREMENT_MAX_VALUES_PER_ATTRIBUTION_FILTER + 1)
                         .mapToObj(i -> "\"filter-value-" + i + "\"")
                         .collect(Collectors.joining(",")));
         notFilters.append("]}");
@@ -3339,7 +3358,7 @@ public final class AsyncTriggerFetcherTest {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder filters = new StringBuilder("[");
         int i;
-        for (i = 0; i < MAX_FILTER_MAPS_PER_FILTER_SET; i++) {
+        for (i = 0; i < Flags.DEFAULT_MEASUREMENT_MAX_FILTER_MAPS_PER_FILTER_SET; i++) {
             filters.append("{\"key-" + i + "\":[\"val1" + i + "\", \"val2" + i + "\"]},");
         }
         filters.append("{\"key-" + i + "\":[\"val1" + i + "\", \"val2" + i + "\"]}");
@@ -3378,7 +3397,7 @@ public final class AsyncTriggerFetcherTest {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder notFilters = new StringBuilder("[");
         int i;
-        for (i = 0; i < MAX_FILTER_MAPS_PER_FILTER_SET; i++) {
+        for (i = 0; i < Flags.DEFAULT_MEASUREMENT_MAX_FILTER_MAPS_PER_FILTER_SET; i++) {
             notFilters.append("{\"key-" + i + "\":[\"val1" + i + "\", \"val2" + i + "\"]},");
         }
         notFilters.append("{\"key-" + i + "\":[\"val1" + i + "\", \"val2" + i + "\"]}");
@@ -3989,7 +4008,7 @@ public final class AsyncTriggerFetcherTest {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder filters = new StringBuilder("{");
         filters.append(
-                IntStream.range(0, MAX_ATTRIBUTION_FILTERS + 1)
+                IntStream.range(0, Flags.DEFAULT_MEASUREMENT_MAX_ATTRIBUTION_FILTERS + 1)
                         .mapToObj(i -> "\"filter-string-" + i + "\": [\"filter-value\"]")
                         .collect(Collectors.joining(",")));
         filters.append("}");
@@ -4066,7 +4085,7 @@ public final class AsyncTriggerFetcherTest {
                                 + "\"filter-string-1\": [\"filter-value-1\"],"
                                 + "\"filter-string-2\": [");
         filters.append(
-                IntStream.range(0, MAX_VALUES_PER_ATTRIBUTION_FILTER + 1)
+                IntStream.range(0, Flags.DEFAULT_MEASUREMENT_MAX_VALUES_PER_ATTRIBUTION_FILTER + 1)
                         .mapToObj(i -> "\"filter-value-" + i + "\"")
                         .collect(Collectors.joining(",")));
         filters.append("]}");
@@ -4139,7 +4158,7 @@ public final class AsyncTriggerFetcherTest {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder filters = new StringBuilder("{");
         filters.append(
-                IntStream.range(0, MAX_ATTRIBUTION_FILTERS + 1)
+                IntStream.range(0, Flags.DEFAULT_MEASUREMENT_MAX_ATTRIBUTION_FILTERS + 1)
                         .mapToObj(i -> "\"filter-string-" + i + "\": [\"filter-value\"]")
                         .collect(Collectors.joining(",")));
         filters.append("}");
@@ -4217,7 +4236,7 @@ public final class AsyncTriggerFetcherTest {
                                 + "\"filter-string-1\": [\"filter-value-1\"],"
                                 + "\"filter-string-2\": [");
         filters.append(
-                IntStream.range(0, MAX_VALUES_PER_ATTRIBUTION_FILTER + 1)
+                IntStream.range(0, Flags.DEFAULT_MEASUREMENT_MAX_VALUES_PER_ATTRIBUTION_FILTER + 1)
                         .mapToObj(i -> "\"filter-value-" + i + "\"")
                         .collect(Collectors.joining(",")));
         filters.append("]}");
@@ -4811,7 +4830,9 @@ public final class AsyncTriggerFetcherTest {
                                 SUCCESS_STATUS,
                                 UNKNOWN_REGISTRATION_FAILURE_TYPE,
                                 0,
-                                "")
+                                "",
+                                0,
+                                false)
                         .setAdTechDomain(WebUtil.validUrl("https://foo.test"))
                         .build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
@@ -4825,6 +4846,7 @@ public final class AsyncTriggerFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         asyncFetchStatus.setRegistrationDelay(0L);
+        asyncFetchStatus.setRetryCount(0);
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =

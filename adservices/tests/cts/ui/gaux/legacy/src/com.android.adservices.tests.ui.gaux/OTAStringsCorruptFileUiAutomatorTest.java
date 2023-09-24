@@ -105,6 +105,9 @@ public class OTAStringsCorruptFileUiAutomatorTest {
                 "rm -rf /data/data/com.google.android.adservices.api/files/"
                         + "datadownload/shared/public");
         ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
+        // Same value as the default value in Flag.java, don't want to import Flag.java which need
+        // add extra dependency.
+        UiUtils.setOTADownloadTimeout(86700000);
     }
 
     @Test
@@ -112,6 +115,7 @@ public class OTAStringsCorruptFileUiAutomatorTest {
     public void checkCorruptedARSCFile_OTAFailTest()
             throws UiObjectNotFoundException, InterruptedException {
         // download test OTA strings
+        UiUtils.setOTADownloadTimeout(0);
         UiUtils.setupOTAStrings(sContext, sDevice, sCommonManager, CORRUPT_ARSC_FILE_MDD_URL);
 
         // verify notification and settings flow
@@ -123,8 +127,8 @@ public class OTAStringsCorruptFileUiAutomatorTest {
     @FlakyTest(bugId = 297347345)
     public void checkXMLFile_OTAFailTest() throws UiObjectNotFoundException, InterruptedException {
         // download test OTA strings
+        UiUtils.setOTADownloadTimeout(0);
         UiUtils.setupOTAStrings(sContext, sDevice, sCommonManager, XML_FIL_MDD_URL);
-
         // verify notification and settings flow
         sCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
         UiUtils.verifyNotificationAndSettingsPage(sContext, sDevice, false);

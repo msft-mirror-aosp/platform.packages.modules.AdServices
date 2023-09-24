@@ -55,7 +55,7 @@ import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.data.signals.EncoderEndpointsDao;
 import com.android.adservices.data.signals.EncoderLogicDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
-import com.android.adservices.data.signals.EncoderPersistenceManager;
+import com.android.adservices.data.signals.EncoderPersistenceDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.FlagsFactory;
@@ -136,7 +136,7 @@ public class SignalsIntakeE2ETest {
     private FledgeAuthorizationFilter mFledgeAuthorizationFilter;
     private CustomAudienceServiceFilter mCustomAudienceServiceFilter;
     private EncoderLogicHandler mEncoderLogicHandler;
-    private EncoderPersistenceManager mEncoderPersistenceManager;
+    private EncoderPersistenceDao mEncoderPersistenceDao;
     private ExecutorService mLightweightExecutorService;
     private ListeningExecutorService mBackgroundExecutorService;
 
@@ -157,10 +157,10 @@ public class SignalsIntakeE2ETest {
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mUpdateProcessorSelector = new UpdateProcessorSelector();
-        mEncoderPersistenceManager = EncoderPersistenceManager.getInstance(mContextSpy);
+        mEncoderPersistenceDao = EncoderPersistenceDao.getInstance(mContextSpy);
         mEncoderLogicHandler =
                 new EncoderLogicHandler(
-                        mEncoderPersistenceManager,
+                        mEncoderPersistenceDao,
                         mEncoderEndpointsDao,
                         mEncoderLogicDao,
                         mAdServicesHttpsClientMock,

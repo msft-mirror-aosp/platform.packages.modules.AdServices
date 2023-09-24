@@ -206,15 +206,8 @@ public abstract class E2ETest {
 
     private interface ApiConfigKeys {
         // Privacy params
-        String RATE_LIMIT_MAX_ATTRIBUTIONS = "rate_limit_max_attributions";
         String NAVIGATION_SOURCE_TRIGGER_DATA_CARDINALITY =
                 "navigation_source_trigger_data_cardinality";
-        String RATE_LIMIT_MAX_ATTRIBUTION_REPORTING_ORIGINS =
-                "rate_limit_max_attribution_reporting_origins";
-        String MAX_DESTINATIONS_PER_SOURCE_SITE_REPORTING_SITE =
-                "max_destinations_per_source_site_reporting_site";
-        String RATE_LIMIT_MAX_SOURCE_REGISTRATION_REPORTING_ORIGINS =
-                "rate_limit_max_source_registration_reporting_origins";
         // System health params
         String MAX_SOURCES_PER_ORIGIN = "max_sources_per_origin";
         String MAX_EVENT_LEVEL_REPORTS_PER_DESTINATION =
@@ -225,11 +218,7 @@ public abstract class E2ETest {
 
     public static class ParamsProvider {
         // Privacy params
-        private Integer mMaxAttributionPerRateLimitWindow;
         private Integer mNavigationTriggerDataCardinality;
-        private Integer mMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution;
-        private Integer mMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource;
-        private Integer mMaxDistinctReportingOriginsPerPublisherXDestinationInSource;
         // System health params
         private Integer mMaxSourcesPerPublisher;
         private Integer mMaxEventReportsPerDestination;
@@ -237,44 +226,12 @@ public abstract class E2ETest {
 
         public ParamsProvider(JSONObject json) throws JSONException {
             // Privacy params
-            if (!json.isNull(ApiConfigKeys.RATE_LIMIT_MAX_ATTRIBUTIONS)) {
-                mMaxAttributionPerRateLimitWindow = json.getInt(
-                        ApiConfigKeys.RATE_LIMIT_MAX_ATTRIBUTIONS);
-            } else {
-                mMaxAttributionPerRateLimitWindow =
-                        Flags.MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
-            }
             if (!json.isNull(ApiConfigKeys.NAVIGATION_SOURCE_TRIGGER_DATA_CARDINALITY)) {
                 mNavigationTriggerDataCardinality = json.getInt(
                         ApiConfigKeys.NAVIGATION_SOURCE_TRIGGER_DATA_CARDINALITY);
             } else {
                 mNavigationTriggerDataCardinality =
                         PrivacyParams.getNavigationTriggerDataCardinality();
-            }
-            if (!json.isNull(ApiConfigKeys
-                    .RATE_LIMIT_MAX_ATTRIBUTION_REPORTING_ORIGINS)) {
-                mMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution = json.getInt(
-                        ApiConfigKeys.RATE_LIMIT_MAX_ATTRIBUTION_REPORTING_ORIGINS);
-            } else {
-                mMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution =
-                        Flags.MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION;
-            }
-            if (!json.isNull(ApiConfigKeys
-                    .MAX_DESTINATIONS_PER_SOURCE_SITE_REPORTING_SITE)) {
-                mMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource = json.getInt(
-                        ApiConfigKeys.MAX_DESTINATIONS_PER_SOURCE_SITE_REPORTING_SITE);
-            } else {
-                mMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource =
-                        Flags.MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE;
-            }
-            if (!json.isNull(ApiConfigKeys
-                    .RATE_LIMIT_MAX_SOURCE_REGISTRATION_REPORTING_ORIGINS)) {
-                mMaxDistinctReportingOriginsPerPublisherXDestinationInSource =
-                        json.getInt(
-                                ApiConfigKeys.RATE_LIMIT_MAX_SOURCE_REGISTRATION_REPORTING_ORIGINS);
-            } else {
-                mMaxDistinctReportingOriginsPerPublisherXDestinationInSource =
-                        Flags.MEASUREMENT_MAX_DISTINCT_REP_ORIG_PER_PUBLISHER_X_DEST_IN_SOURCE;
             }
             // System health params
             if (!json.isNull(ApiConfigKeys.MAX_SOURCES_PER_ORIGIN)) {
@@ -299,24 +256,8 @@ public abstract class E2ETest {
         }
 
         // Privacy params
-        public Integer getMaxAttributionPerRateLimitWindow() {
-            return mMaxAttributionPerRateLimitWindow;
-        }
-
         public Integer getNavigationTriggerDataCardinality() {
             return mNavigationTriggerDataCardinality;
-        }
-
-        public Integer getMaxDistinctEnrollmentsInAttribution() {
-            return mMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution;
-        }
-
-        public Integer getMaxDistinctDestinationsInActiveSource() {
-            return mMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource;
-        }
-
-        public Integer getMaxDistinctOriginsPerPubXDestInSource() {
-            return mMaxDistinctReportingOriginsPerPublisherXDestinationInSource;
         }
 
         // System health params
@@ -1186,6 +1127,9 @@ public abstract class E2ETest {
             JSONArray sourceRegistrationArray = input.getJSONArray(
                     TestFormatJsonMapping.SOURCE_REGISTRATIONS_KEY);
             for (int j = 0; j < sourceRegistrationArray.length(); j++) {
+                if (sourceRegistrationArray.isNull(j)) {
+                    continue;
+                }
                 RegisterSource sourceRegistration =
                         new RegisterSource(sourceRegistrationArray.getJSONObject(j));
                 actions.add(sourceRegistration);
@@ -1270,7 +1214,7 @@ public abstract class E2ETest {
         // Aggregate reports are scheduled close to trigger time. Add aggregate report jobs to cover
         // the time span outlined by triggers.
         List<Action> aggregateReportingJobActions = new ArrayList<>();
-        long window = SystemHealthParams.MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS - 10;
+        long window = Flags.DEFAULT_MEASUREMENT_MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS - 10;
         long t = firstTriggerTime;
 
         do {

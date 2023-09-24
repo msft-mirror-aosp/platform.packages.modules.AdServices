@@ -22,11 +22,10 @@ import android.adservices.adid.AdId;
 import android.adservices.adid.GetAdIdResult;
 import android.adservices.adid.IGetAdIdCallback;
 import android.annotation.NonNull;
-import android.content.Context;
 import android.os.RemoteException;
 
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.service.Flags;
+import com.android.adservices.service.adid.AdIdCacheManager;
 import com.android.adservices.service.adid.AdIdWorker;
 
 import java.util.concurrent.TimeUnit;
@@ -40,8 +39,8 @@ public class MockAdIdWorker extends AdIdWorker {
     private int mErrorCode;
     private long mDelayMs;
 
-    public MockAdIdWorker(Context context, Flags flags) {
-        super(context, flags);
+    public MockAdIdWorker(AdIdCacheManager adIdCacheManager) {
+        super(adIdCacheManager);
     }
 
     public void setResult(String adId, boolean isLatEnabled) {

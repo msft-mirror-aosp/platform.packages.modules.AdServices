@@ -68,6 +68,8 @@ public class GaUxReconsentChannelTest {
     public void setUp() throws Exception {
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
+        UiUtils.resetAdServicesConsentData(sContext);
+
         UiUtils.enableNotificationPermission();
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
