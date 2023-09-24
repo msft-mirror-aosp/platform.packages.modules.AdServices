@@ -50,6 +50,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -298,6 +299,11 @@ public final class CustomAudienceTest {
                         .setExpirationTime(Instant.now().plus(5, ChronoUnit.DAYS))
                         .build();
 
-        assertThrows(IllegalStateException.class, () -> client.joinCustomAudience(customAudience));
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> client.joinCustomAudience(customAudience).get());
+        assertThat(exception).hasCauseThat().isInstanceOf(IllegalStateException.class);
+        assertThat(exception).hasMessageThat().contains("service is not available");
     }
 }

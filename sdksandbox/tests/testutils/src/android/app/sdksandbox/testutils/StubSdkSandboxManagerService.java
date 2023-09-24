@@ -44,11 +44,11 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
     public void registerAppOwnedSdkSandboxInterface(
             String callingPackageName,
             AppOwnedSdkSandboxInterface appOwnedSdkSandboxInterface,
-            long timeAppCalledSystemServer) {}
+            SandboxLatencyInfo sandboxLatencyInfo) {}
 
     @Override
     public void unregisterAppOwnedSdkSandboxInterface(
-            String callingPackageName, String name, long timeAppCalledSystemServer) {}
+            String callingPackageName, String name, SandboxLatencyInfo sandboxLatencyInfo) {}
 
     @Override
     public void loadSdk(
@@ -77,7 +77,7 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     @Override
     public List<AppOwnedSdkSandboxInterface> getAppOwnedSdkSandboxInterfaces(
-            String callingPackageName, long timeAppCalledSystemServer) {
+            String callingPackageName, SandboxLatencyInfo sandboxLatencyInfo) {
         return Collections.emptyList();
     }
 
@@ -93,7 +93,7 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
     @Override
     public void syncDataFromClient(
             String callingPackageName,
-            long timeAppCalledSystemServer,
+            SandboxLatencyInfo sandboxLatencyInfo,
             SharedPreferencesUpdate update,
             ISharedPreferencesSyncCallback callback) {}
 

@@ -1033,6 +1033,7 @@ public class PackageChangedReceiverTest {
             // Verify method inside background thread executes
             assertThat(caCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
             assertThat(appInstallCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
+            assertThat(frequencyCapCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
             verify(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
             verify(mAppInstallDaoMock).deleteByPackageName(any());
             verify(mFrequencyCapDaoMock).deleteHistogramDataBySourceApp(any());

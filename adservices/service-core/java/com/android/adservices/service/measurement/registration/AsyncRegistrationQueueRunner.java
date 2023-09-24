@@ -16,7 +16,8 @@
 
 package com.android.adservices.service.measurement.registration;
 
-
+import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -38,12 +39,12 @@ import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.KeyValueData.DataType;
 import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
-import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.attribution.TriggerContentProvider;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
@@ -176,6 +177,7 @@ public class AsyncRegistrationQueueRunner {
     private void processSourceRegistration(
             AsyncRegistration asyncRegistration, Set<Uri> failedOrigins) {
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        asyncFetchStatus.setRetryCount(Long.valueOf(asyncRegistration.getRetryCount()).intValue());
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         long startTime = asyncRegistration.getRequestTime();
         Optional<Source> resultSource =
@@ -229,6 +231,7 @@ public class AsyncRegistrationQueueRunner {
     private void processTriggerRegistration(
             AsyncRegistration asyncRegistration, Set<Uri> failedOrigins) {
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        asyncFetchStatus.setRetryCount(Long.valueOf(asyncRegistration.getRetryCount()).intValue());
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         long startTime = asyncRegistration.getRequestTime();
         Optional<Trigger> resultTrigger = mAsyncTriggerFetcher.fetchTrigger(
@@ -294,11 +297,11 @@ public class AsyncRegistrationQueueRunner {
         long numOfSourcesPerPublisher =
                 dao.getNumSourcesPerPublisher(
                         BaseUriExtractor.getBaseUri(topOrigin), publisherType);
-
-        if (numOfSourcesPerPublisher >= SystemHealthParams.getMaxSourcesPerPublisher()) {
+        if (numOfSourcesPerPublisher
+                >= FlagsFactory.getFlags().getMeasurementMaxSourcesPerPublisher()) {
             LogUtil.d(
                     "insertSources: Max limit of %s sources for publisher - %s reached.",
-                    SystemHealthParams.getMaxSourcesPerPublisher(), publisher);
+                    FlagsFactory.getFlags().getMeasurementMaxSourcesPerPublisher(), publisher);
             debugReportApi.scheduleSourceStorageLimitDebugReport(
                     source, String.valueOf(numOfSourcesPerPublisher), dao);
             return false;
@@ -423,8 +426,8 @@ public class AsyncRegistrationQueueRunner {
             LogUtil.e("Unable to fetch number of triggers currently registered per destination.");
             return false;
         }
-
-        return triggerInsertedPerDestination < SystemHealthParams.getMaxTriggersPerDestination();
+        return triggerInsertedPerDestination
+                < FlagsFactory.getFlags().getMeasurementMaxTriggersPerDestination();
     }
 
     private static AsyncRegistration createAsyncRegistrationFromRedirect(
@@ -473,6 +476,7 @@ public class AsyncRegistrationQueueRunner {
                                                 mSourceNoiseHandler.getRandomAttributionProbability(
                                                         source))
                                         .setRegistrationOrigin(source.getRegistrationOrigin())
+                                        .setSourceDebugKey(getSourceDebugKeyForNoisedReport(source))
                                         .build())
                 .collect(Collectors.toList());
     }
@@ -634,5 +638,15 @@ public class AsyncRegistrationQueueRunner {
         } catch (RemoteException e) {
             LogUtil.e(e, "Trigger Content Provider invocation failed.");
         }
+    }
+
+    @Nullable
+    private UnsignedLong getSourceDebugKeyForNoisedReport(@NonNull Source source) {
+        if ((source.getPublisherType() == EventSurfaceType.APP && source.hasAdIdPermission())
+                || (source.getPublisherType() == EventSurfaceType.WEB
+                        && source.hasArDebugPermission())) {
+            return source.getDebugKey();
+        }
+        return null;
     }
 }

@@ -154,35 +154,18 @@ public class EventReportingJobHandler {
 
             if (result == AdServicesStatusUtils.STATUS_SUCCESS) {
                 reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.SUCCESS);
-                logReportingStats(reportingStatus);
             } else {
                 reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.FAILURE);
-                logReportingStats(reportingStatus);
-                boolean isMarkedForDeletionFlagEnabled =
-                        mFlags.getMeasurementEnableReportDeletionOnUnrecoverableException();
-                boolean isMarkedForDeletion =
-                        reportingStatus.getFailureStatus()
-                                        == ReportingStatus.FailureStatus.SERIALIZATION_ERROR
-                                && isMarkedForDeletionFlagEnabled;
-                mDatastoreManager.runInTransaction(
-                        (dao) -> {
-                            int retryCount =
-                                    dao.incrementAndGetReportingRetryCount(
-                                            eventReportId,
-                                            KeyValueData.DataType.EVENT_REPORT_RETRY_COUNT);
-                            if (retryCount >= mFlags.getMeasurementReportingRetryLimit()
-                                    && !isMarkedForDeletion) {
-                                reportingStatus.setFailureStatus(
-                                        ReportingStatus.FailureStatus.JOB_RETRY_LIMIT_REACHED);
-                            }
-                        });
             }
-
-            // log final attempt separately
-            if (reportingStatus.getFailureStatus()
-                    == ReportingStatus.FailureStatus.JOB_RETRY_LIMIT_REACHED) {
-                logReportingStats(reportingStatus);
-            }
+            mDatastoreManager.runInTransaction(
+                    (dao) -> {
+                        int retryCount =
+                                dao.incrementAndGetReportingRetryCount(
+                                        eventReportId,
+                                        KeyValueData.DataType.EVENT_REPORT_RETRY_COUNT);
+                        reportingStatus.setRetryCount(retryCount);
+                    });
+            logReportingStats(reportingStatus);
         }
         return true;
     }
@@ -221,6 +204,7 @@ public class EventReportingJobHandler {
             return AdServicesStatusUtils.STATUS_IO_ERROR;
         }
         EventReport eventReport = eventReportOpt.get();
+        reportingStatus.setReportingDelay(System.currentTimeMillis() - eventReport.getReportTime());
         reportingStatus.setSourceRegistrant(getAppPackageName(eventReport));
         if (mIsDebugInstance
                 && eventReport.getDebugReportStatus() != EventReport.DebugReportStatus.PENDING) {
@@ -252,16 +236,15 @@ public class EventReportingJobHandler {
                                 });
 
                 if (success) {
-                    long deliveryTime = System.currentTimeMillis();
-                    reportingStatus.setReportingDelay(deliveryTime - eventReport.getReportTime());
                     return AdServicesStatusUtils.STATUS_SUCCESS;
                 } else {
                     reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.DATASTORE);
                     return AdServicesStatusUtils.STATUS_IO_ERROR;
                 }
             } else {
+                reportingStatus.setFailureStatus(
+                        ReportingStatus.FailureStatus.UNSUCCESSFUL_HTTP_RESPONSE_CODE);
                 // TODO: Determine behavior for other response codes?
-                reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.NETWORK);
                 return AdServicesStatusUtils.STATUS_IO_ERROR;
             }
         } catch (IOException e) {
@@ -347,9 +330,6 @@ public class EventReportingJobHandler {
     }
 
     private void logReportingStats(ReportingStatus reportingStatus) {
-        if (!reportingStatus.getReportingDelay().isPresent()) {
-            reportingStatus.setReportingDelay(0L);
-        }
         mLogger.logMeasurementReports(
                 new MeasurementReportsStats.Builder()
                         .setCode(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED)
@@ -357,8 +337,9 @@ public class EventReportingJobHandler {
                         .setResultCode(reportingStatus.getUploadStatus().getValue())
                         .setFailureType(reportingStatus.getFailureStatus().getValue())
                         .setUploadMethod(reportingStatus.getUploadMethod().getValue())
-                        .setReportingDelay(reportingStatus.getReportingDelay().get())
+                        .setReportingDelay(reportingStatus.getReportingDelay())
                         .setSourceRegistrant(reportingStatus.getSourceRegistrant())
+                        .setRetryCount(reportingStatus.getRetryCount())
                         .build());
     }
 }

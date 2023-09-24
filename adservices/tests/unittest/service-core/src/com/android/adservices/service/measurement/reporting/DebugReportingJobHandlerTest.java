@@ -211,8 +211,8 @@ public class DebugReportingJobHandlerTest {
         mSpyDebugReportingJobHandler.performScheduledPendingReports();
 
         verify(mMeasurementDao, times(2)).deleteDebugReport(any());
-        verify(mTransaction, times(5)).begin();
-        verify(mTransaction, times(5)).end();
+        verify(mTransaction, times(7)).begin();
+        verify(mTransaction, times(7)).end();
     }
 
     @Test

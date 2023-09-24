@@ -16,7 +16,6 @@
 package com.android.adservices.service.measurement.registration;
 
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION;
 
 import android.annotation.NonNull;
 import android.content.Context;
@@ -352,6 +351,7 @@ public class AsyncTriggerFetcher {
 
         if (!isTriggerHeaderPresent(headers)) {
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.HEADER_MISSING);
+            asyncFetchStatus.setRedirectOnlyStatus(true);
             return Optional.empty();
         }
 
@@ -595,7 +595,8 @@ public class AsyncTriggerFetcher {
             JSONArray aggregateDeduplicationKeys) throws JSONException {
         JSONArray validAggregateDeduplicationKeys = new JSONArray();
         if (aggregateDeduplicationKeys.length()
-                > MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION) {
+                > FlagsFactory.getFlags()
+                        .getMeasurementMaxAggregateDeduplicationKeysPerRegistration()) {
             LogUtil.d(
                     "Aggregate deduplication keys have more keys than permitted. %s",
                     aggregateDeduplicationKeys.length());
