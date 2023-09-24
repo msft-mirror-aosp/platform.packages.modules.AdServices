@@ -543,10 +543,14 @@ public class UiUtils {
     }
 
     private static UiObject2 scrollToElement(UiDevice device, String targetStr) {
-        scrollToBeginning(device);
         UiObject2 scrollView =
                 device.findObject(By.clazz(ANDROID_WIDGET_SCROLLVIEW).scrollable(true));
-        scrollView.scrollUntil(Direction.DOWN, Until.findObject(By.textContains(targetStr)));
+        UiObject2 element =
+                scrollView.scrollUntil(
+                        Direction.DOWN, Until.findObject(By.textContains(targetStr)));
+        if (element != null) {
+            return element;
+        }
         return device.findObject(By.textContains(targetStr));
     }
 
