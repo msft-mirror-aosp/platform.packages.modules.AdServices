@@ -104,7 +104,7 @@ public final class MeasurementImpl {
     }
 
     @VisibleForTesting
-    MeasurementImpl(
+    public MeasurementImpl(
             Context context,
             DatastoreManager datastoreManager,
             ClickVerifier clickVerifier,

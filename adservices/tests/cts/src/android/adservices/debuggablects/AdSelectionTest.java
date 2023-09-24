@@ -30,6 +30,8 @@ import android.adservices.utils.Scenarios;
 import android.net.Uri;
 import android.util.Log;
 
+import androidx.test.filters.FlakyTest;
+
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Test;
@@ -138,6 +140,7 @@ public class AdSelectionTest extends FledgeScenarioTest {
     /**
      * Test that buyers can specify an adCost in generateBid that reported (Remarketing CUJ 161).
      */
+    @FlakyTest(bugId = 299871209)
     @Test
     public void testAdSelection_withAdCostInUrl_adCostIsReported() throws Exception {
         ScenarioDispatcher dispatcher =
@@ -279,6 +282,7 @@ public class AdSelectionTest extends FledgeScenarioTest {
     }
 
     /** Test that buyer and seller receive win and loss debug reports (Remarketing CUJ 164). */
+    @FlakyTest(bugId = 300421625)
     @Test
     public void testAdSelection_withDebugReporting_happyPath() throws Exception {
         ScenarioDispatcher dispatcher =

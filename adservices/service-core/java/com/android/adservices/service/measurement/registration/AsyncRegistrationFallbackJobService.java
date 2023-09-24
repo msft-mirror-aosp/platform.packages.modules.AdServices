@@ -29,6 +29,7 @@ import android.content.Context;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.util.JobLockHolder;
@@ -131,7 +132,8 @@ public class AsyncRegistrationFallbackJobService extends JobService {
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
-        if (FlagsFactory.getFlags().getAsyncRegistrationFallbackJobKillSwitch()) {
+        Flags flags = FlagsFactory.getFlags();
+        if (flags.getAsyncRegistrationFallbackJobKillSwitch()) {
             LogUtil.e("AsyncRegistrationFallbackJobService is disabled, skip scheduling");
             return;
         }
@@ -145,7 +147,7 @@ public class AsyncRegistrationFallbackJobService extends JobService {
         final JobInfo scheduledJob =
                 jobScheduler.getPendingJob(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
-        final JobInfo jobInfo = buildJobInfo(context);
+        final JobInfo jobInfo = buildJobInfo(context, flags);
         if (forceSchedule || !jobInfo.equals(scheduledJob)) {
             schedule(jobScheduler, jobInfo);
             LogUtil.d("Scheduled AsyncRegistrationFallbackJobService");
@@ -154,14 +156,16 @@ public class AsyncRegistrationFallbackJobService extends JobService {
         }
     }
 
-    private static JobInfo buildJobInfo(Context context) {
+    private static JobInfo buildJobInfo(Context context, Flags flags) {
         return new JobInfo.Builder(
                         MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID,
                         new ComponentName(context, AsyncRegistrationFallbackJobService.class))
-                .setRequiresBatteryNotLow(true)
-                .setPeriodic(FlagsFactory.getFlags().getAsyncRegistrationJobQueueIntervalMs())
-                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                .setPersisted(true)
+                .setRequiresBatteryNotLow(
+                        flags.getMeasurementAsyncRegistrationFallbackJobRequiredBatteryNotLow())
+                .setPeriodic(flags.getAsyncRegistrationJobQueueIntervalMs())
+                .setRequiredNetworkType(
+                        flags.getMeasurementAsyncRegistrationFallbackJobRequiredNetworkType())
+                .setPersisted(flags.getMeasurementAsyncRegistrationFallbackJobPersisted())
                 .build();
     }
 

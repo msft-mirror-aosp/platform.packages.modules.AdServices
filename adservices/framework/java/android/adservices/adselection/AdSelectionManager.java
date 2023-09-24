@@ -179,11 +179,7 @@ public class AdSelectionManager {
 
     @NonNull
     AdSelectionService doGetService() {
-        AdSelectionService service = mServiceBinder.getService();
-        if (service == null) {
-            throw new IllegalStateException("ad selection service is not available.");
-        }
-        return service;
+        return mServiceBinder.getService();
     }
 
     /**
@@ -912,7 +908,7 @@ public class AdSelectionManager {
     private String getCallerSdkName() {
         SandboxedSdkContext sandboxedSdkContext =
                 SandboxedSdkContextUtils.getAsSandboxedSdkContext(mContext);
-        return sandboxedSdkContext == null ? null : sandboxedSdkContext.getSdkPackageName();
+        return sandboxedSdkContext == null ? "" : sandboxedSdkContext.getSdkPackageName();
     }
 
     private interface AdSelectionAdIdCallback {

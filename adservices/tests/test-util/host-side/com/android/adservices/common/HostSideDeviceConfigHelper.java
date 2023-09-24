@@ -15,69 +15,19 @@
  */
 package com.android.adservices.common;
 
-import static com.android.adservices.common.TestDeviceHelper.runShellCommand;
-
-import com.android.adservices.common.DeviceConfigHelper.SyncDisabledModeForTest;
-
-import java.util.Objects;
+import com.google.errorprone.annotations.FormatMethod;
+import com.google.errorprone.annotations.FormatString;
 
 /** Host-side implementation of {@link DeviceConfigHelper.Interface}. */
-final class HostSideDeviceConfigHelper implements DeviceConfigHelper.Interface {
-
-    private static final Logger sLogger =
-            new Logger(ConsoleLogger.getInstance(), HostSideDeviceConfigHelper.class);
-
-    private final String mNamespace;
+final class HostSideDeviceConfigHelper extends DeviceConfigHelper.Interface {
 
     HostSideDeviceConfigHelper(String namespace) {
-        mNamespace = Objects.requireNonNull(namespace);
+        super(namespace, ConsoleLogger.getInstance());
     }
 
     @Override
-    public void setSyncDisabledModeForTest(SyncDisabledModeForTest mode) {
-        String value = mode.name().toLowerCase();
-        sLogger.v("SyncDisabledModeForTest(%s)", value);
-        runShellCommand("device_config set_sync_disabled_for_test %s", value);
-    }
-
-    @Override
-    public String get(String name, String defaultValue) {
-        String value = runShellCommand("device_config get %s %s", mNamespace, name).trim();
-        sLogger.v(
-                "get(%s, %s): raw value is '%s' (is null: %b)",
-                name, defaultValue, value, value == null);
-        if (!value.equals("null")) {
-            return value;
-        }
-        // "null" could mean the value doesn't exist, or it's the string "null", so we need to check
-        // them
-        String allFlags = runShellCommand("device_config list %s", mNamespace);
-        for (String line : allFlags.split("\n")) {
-            if (line.equals(name + "=null")) {
-                sLogger.v("Value of flag %s is indeed \"%s\"", name, value);
-                return value;
-            }
-        }
-        return defaultValue;
-    }
-
-    @Override
-    public void set(String name, String value) {
-        runShellCommand("device_config put %s %s %s", mNamespace, name, value);
-    }
-
-    @Override
-    public void delete(String name) {
-        runShellCommand("device_config delete %s %s", mNamespace, name);
-    }
-
-    @Override
-    public String dump() {
-        return runShellCommand("device_config list %s", mNamespace).trim();
-    }
-
-    @Override
-    public String toString() {
-        return HostSideDeviceConfigHelper.class.getSimpleName();
+    @FormatMethod
+    protected String runShellCommand(@FormatString String cmdFmt, @Nullable Object... cmdArgs) {
+        return TestDeviceHelper.runShellCommand(cmdFmt, cmdArgs);
     }
 }

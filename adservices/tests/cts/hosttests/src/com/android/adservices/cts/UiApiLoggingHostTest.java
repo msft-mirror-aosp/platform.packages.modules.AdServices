@@ -56,13 +56,9 @@ import java.util.List;
 public final class UiApiLoggingHostTest extends AdServicesHostSideTestCase {
     private static final String CLASS =
             "com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity";
-    private static final String TARGET_PACKAGE = "com.google.android.adservices.api";
-    private static final String TARGET_PACKAGE_AOSP = "com.android.adservices.api";
-
-    private static final String TARGET_EXT_ADSERVICES_PACKAGE = "com.google.android.ext.services";
-    private static final String TARGET_EXT_ADSERVICES_PACKAGE_AOSP = "com.android.ext.services";
+    private static final String TARGET_PACKAGE_SUFFIX_TPLUS = "android.adservices.api";
+    private static final String TARGET_PACKAGE_SUFFIX_SMINUS = "android.ext.services";
     private String mTargetPackage;
-    private String mTargetPackageAosp;
 
     @Rule(order = 0)
     public final HostSideSdkLevelSupportRule sdkLevel = HostSideSdkLevelSupportRule.forAnyLevel();
@@ -89,13 +85,10 @@ public final class UiApiLoggingHostTest extends AdServicesHostSideTestCase {
         ReportUtils.clearReports(getDevice());
 
         // Set flags for test to run on devices with api level lower than 33 (S-)
-        if (!sdkLevel.isAtLeastT()) {
-            mTargetPackage = TARGET_EXT_ADSERVICES_PACKAGE;
-            mTargetPackageAosp = TARGET_EXT_ADSERVICES_PACKAGE_AOSP;
-        } else {
-            mTargetPackage = TARGET_PACKAGE;
-            mTargetPackageAosp = TARGET_PACKAGE_AOSP;
-        }
+        String suffix =
+                sdkLevel.isAtLeastT() ? TARGET_PACKAGE_SUFFIX_TPLUS : TARGET_PACKAGE_SUFFIX_SMINUS;
+        mTargetPackage = findPackageName(suffix);
+        assertThat(mTargetPackage).isNotNull();
     }
     @After
     public void tearDown() throws Exception {
@@ -103,27 +96,16 @@ public final class UiApiLoggingHostTest extends AdServicesHostSideTestCase {
         ReportUtils.clearReports(getDevice());
     }
 
-    // TODO(b/245400146): Get package Name for Topics API instead of running the test twice.
     @Test
     public void testStartSettingMainActivityAndGetUiLog() throws Exception {
         ITestDevice device = getDevice();
         assertNotNull("Device not set", device);
 
         rebootIfSMinus();
-        startSettingMainActivity(mTargetPackage, device, /* isAosp */ false);
+        startSettingMainActivity(mTargetPackage, device);
 
         // Fetch a list of happened log events and their data
         List<EventMetricData> data = ReportUtils.getEventMetricDataList(device);
-
-        // Adservice Package Name is different in aosp and non-aosp devices. Attempt again with the
-        // other
-        // package Name if it fails at the first time;
-        if (data.isEmpty()) {
-            ConfigUtils.removeConfig(getDevice());
-            ReportUtils.clearReports(getDevice());
-            startSettingMainActivity(mTargetPackageAosp, device, /* isAosp */ true);
-            data = ReportUtils.getEventMetricDataList(device);
-        }
 
         // We trigger only one event from activity, should only see one event in the list
         assertThat(data).hasSize(1);
@@ -147,21 +129,25 @@ public final class UiApiLoggingHostTest extends AdServicesHostSideTestCase {
         }
     }
 
-    private void startSettingMainActivity(String apiName, ITestDevice device, boolean isAosp)
-            throws Exception {
+    private void startSettingMainActivity(String apiName, ITestDevice device) throws Exception {
         // Upload the config.
         final StatsdConfig.Builder config = ConfigUtils.createConfigBuilder(apiName);
 
         ConfigUtils.addEventMetric(config, Atom.AD_SERVICES_SETTINGS_USAGE_REPORTED_FIELD_NUMBER);
         ConfigUtils.uploadConfig(device, config);
         // Start the ui main activity, it will make a ui log call
-        startUiMainActivity(device, isAosp);
+        startUiMainActivity(device);
         Thread.sleep(AtomTestUtils.WAIT_TIME_SHORT);
     }
 
-    public void startUiMainActivity(ITestDevice device, boolean isAosp)
-            throws DeviceNotAvailableException {
-        String packageName = isAosp ? mTargetPackageAosp : mTargetPackage;
-        device.executeShellCommand("am start -n " + packageName + "/" + CLASS);
+    public void startUiMainActivity(ITestDevice device) throws DeviceNotAvailableException {
+        device.executeShellCommand("am start -n " + mTargetPackage + "/" + CLASS);
+    }
+
+    private String findPackageName(String suffix) throws DeviceNotAvailableException {
+        return mDevice.getInstalledPackageNames().stream()
+                .filter(s -> s.endsWith(suffix))
+                .findFirst()
+                .orElse(null);
     }
 }

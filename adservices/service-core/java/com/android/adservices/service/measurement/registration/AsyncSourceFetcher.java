@@ -767,7 +767,7 @@ public class AsyncSourceFetcher {
             urlConnection.setRequestMethod("POST");
             urlConnection.setRequestProperty(
                     SourceRequestContract.SOURCE_INFO,
-                    asyncRegistration.getSourceType().toString());
+                    asyncRegistration.getSourceType().getValue());
             urlConnection.setInstanceFollowRedirects(false);
             String body = asyncRegistration.getPostBody();
             if (mFlags.getFledgeMeasurementReportAndRegisterEventApiEnabled() && body != null) {
@@ -810,6 +810,7 @@ public class AsyncSourceFetcher {
 
         if (!isSourceHeaderPresent(headers)) {
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.HEADER_MISSING);
+            asyncFetchStatus.setRedirectOnlyStatus(true);
             return Optional.empty();
         }
 

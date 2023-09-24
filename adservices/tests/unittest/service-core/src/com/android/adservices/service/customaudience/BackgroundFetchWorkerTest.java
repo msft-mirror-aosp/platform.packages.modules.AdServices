@@ -47,6 +47,7 @@ import android.content.pm.PackageManager;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -382,6 +383,7 @@ public class BackgroundFetchWorkerTest {
         verify(mBackgroundFetchExecutionLoggerSpy).close(fetchDataList.size(), STATUS_SUCCESS);
     }
 
+    @FlakyTest(bugId = 300999392)
     @Test
     public void testRunBackgroundFetchUpdateCustomAudiences()
             throws ExecutionException, InterruptedException {
