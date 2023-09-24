@@ -1127,6 +1127,9 @@ public abstract class E2ETest {
             JSONArray sourceRegistrationArray = input.getJSONArray(
                     TestFormatJsonMapping.SOURCE_REGISTRATIONS_KEY);
             for (int j = 0; j < sourceRegistrationArray.length(); j++) {
+                if (sourceRegistrationArray.isNull(j)) {
+                    continue;
+                }
                 RegisterSource sourceRegistration =
                         new RegisterSource(sourceRegistrationArray.getJSONObject(j));
                 actions.add(sourceRegistration);
