@@ -485,6 +485,9 @@ public class SettingsGaUxSelectorUiAutomatorTest {
         ShellUtils.runShellCommand(
                 "device_config put adservices ui_toggle_speed_bump_enabled true");
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled true");
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
+
         ApkTestUtil.launchSettingView(sContext, sDevice, LAUNCH_TIMEOUT);
 
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_topics_ga_title);

@@ -46,6 +46,7 @@ import androidx.test.uiautomator.Until;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import com.google.common.util.concurrent.SettableFuture;
@@ -168,6 +169,10 @@ public class UiUtils {
 
     public static void enableBeta() throws Exception {
         forceSetFlag("ga_ux_enabled", false);
+    }
+
+    public static void enableOtaStrings() throws Exception {
+        forceSetFlag("ui_ota_strings_feature_enabled", true);
     }
 
     public static void disableOtaStrings() throws Exception {
@@ -399,16 +404,22 @@ public class UiUtils {
 
     public static void setupOTAStrings(
             Context context, UiDevice device, AdServicesCommonManager commonManager, String mddURL)
-            throws InterruptedException {
+            throws Exception {
         setAdServicesFlagsForOTATesting(mddURL);
+
+        AdservicesTestHelper.killAdservicesProcess(context);
+
+        // Consent is required to trigger the MDD job.
         commonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
         Thread.sleep(LAUNCH_TIMEOUT);
+
         ShellUtils.runShellCommand("cmd jobscheduler run -f com.google.android.adservices.api 14");
-        clearNotifications(context, device);
+
         Thread.sleep(LAUNCH_TIMEOUT);
+        clearNotifications(context, device);
     }
 
-    public static void setAdServicesFlagsForOTATesting(String mddURL) {
+    public static void setAdServicesFlagsForOTATesting(String mddURL) throws Exception {
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled false");
         ShellUtils.runShellCommand(
                 "device_config put adservices ui_ota_strings_feature_enabled true");
@@ -418,6 +429,9 @@ public class UiUtils {
         ShellUtils.runShellCommand("device_config put adservices global_kill_switch false");
         ShellUtils.runShellCommand(
                 "device_config put adservices mdd_ui_ota_strings_manifest_file_url " + mddURL);
+
+        // Set as ROW device for default consent opt-in.
+        UiUtils.setAsRowDevice();
     }
 
     public static void setOTADownloadTimeout(long timeout) {
@@ -463,9 +477,7 @@ public class UiUtils {
 
         UiObject2 notificationCard = scroller.findObject(By.text(targetStr));
         Thread.sleep(LAUNCH_TIMEOUT);
-        device.waitForIdle(LONG_TIMEOUT);
 
-        // click on notification card
         notificationCard.click();
 
         // Wait for the notification landing page to appear
@@ -604,10 +616,14 @@ public class UiUtils {
         }
     }
 
+    /**
+     * Swipes through the screen to show elements on the button of the page but hidden by the
+     * navigation bar.
+     */
     public static void gentleSwipe(UiDevice device) {
         UiObject2 scrollView =
                 device.findObject(By.scrollable(true).clazz(ANDROID_WIDGET_SCROLLVIEW));
-        scrollView.scroll(Direction.DOWN, /* percent */ 5);
+        scrollView.scroll(Direction.DOWN, /* percent */ 0.25F);
     }
 
     public static void setFlipFlow(boolean isFlip) {
