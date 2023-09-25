@@ -710,7 +710,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_UI_FEATURE_TYPE_
 import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_TOGGLE_SPEED_BUMP_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_MAINLINE_TRAIN_VERSION;
-import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST;
 import static com.android.adservices.service.PhFlags.NAMESPACE_ADSERVICES;
 
 import static com.google.common.truth.Truth.assertThat;
