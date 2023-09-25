@@ -372,7 +372,7 @@ public abstract class E2EMockTest extends E2ETest {
         Object[] eventCaptures =
                 EventReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
                         mEnrollmentDao,
-                        mDatastoreManager,
+                        sDatastoreManager,
                         reportTime
                                 - Flags.DEFAULT_MEASUREMENT_MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
                         reportTime,
@@ -388,7 +388,7 @@ public abstract class E2EMockTest extends E2ETest {
         Object[] aggregateCaptures =
                 AggregateReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
                         mEnrollmentDao,
-                        mDatastoreManager,
+                        sDatastoreManager,
                         reportTime - maxAggregateReportUploadRetryWindowMs,
                         reportTime,
                         true,
@@ -464,7 +464,7 @@ public abstract class E2EMockTest extends E2ETest {
         Object[] aggregateCaptures =
                 AggregateReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
                         mEnrollmentDao,
-                        mDatastoreManager,
+                        sDatastoreManager,
                         reportingJob.mTimestamp - maxAggregateReportUploadRetryWindowMs,
                         reportingJob.mTimestamp,
                         false,
