@@ -212,6 +212,18 @@ public interface Flags {
         return MAINTENANCE_JOB_FLEX_MS;
     }
 
+    default int getEncryptionKeyNetworkConnectTimeoutMs() {
+        return ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS;
+    }
+
+    int ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(5);
+
+    default int getEncryptionKeyNetworkReadTimeoutMs() {
+        return ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS;
+    }
+
+    int ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(30);
+
     /* The default min time period (in millis) between each event main reporting job run. */
     long MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS = 4 * 60 * 60 * 1000; // 4 hours.
 
