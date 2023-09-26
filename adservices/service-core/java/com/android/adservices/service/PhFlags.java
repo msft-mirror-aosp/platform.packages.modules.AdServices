@@ -329,6 +329,24 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getCobaltUploadServiceUnbindDelayMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        long cobaltUploadServiceUnbindDelayMs =
+                DeviceConfig.getLong(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        /* flagName */ FlagsConstants.KEY_COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS,
+                        /* defaultValue */ COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS);
+        if (cobaltUploadServiceUnbindDelayMs < 0) {
+            throw new IllegalArgumentException(
+                    String.format(
+                            "cobaltUploadServiceUnbindDelayMs=%d. cobaltLoggingJobPeriodMs should"
+                                    + " >= 0",
+                            cobaltUploadServiceUnbindDelayMs));
+        }
+        return cobaltUploadServiceUnbindDelayMs;
+    }
+
+    @Override
     public boolean getCobaltLoggingEnabled() {
         // We check the Global Kill switch first. As a result, it overrides all other kill switches.
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
