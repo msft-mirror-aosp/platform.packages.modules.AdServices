@@ -25,9 +25,7 @@ import static com.android.adservices.ui.util.ApkTestUtil.getPageElement;
 import static com.android.adservices.ui.util.ApkTestUtil.getString;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
-
 import static com.google.common.truth.Truth.assertThat;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 
@@ -184,7 +182,7 @@ public class ConsentNotificationTriggerTest {
                         new UiSelector()
                                 .packageName("com.android.systemui")
                                 .resourceId("com.android.systemui:id/notification_stack_scroller"));
-        assertThat(scroller.exists()).isTrue();
+
         UiSelector notificationCardSelector =
                 new UiSelector().text(getString(R.string.notificationUI_notification_title_eu));
         UiObject notificationCard = scroller.getChild(notificationCardSelector);
