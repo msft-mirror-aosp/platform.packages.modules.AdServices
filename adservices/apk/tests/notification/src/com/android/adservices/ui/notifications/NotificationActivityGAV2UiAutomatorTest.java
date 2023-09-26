@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.platform.test.rule.ScreenRecordRule;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -49,12 +50,15 @@ import org.mockito.Spy;
 import java.io.IOException;
 
 @RunWith(AndroidJUnit4.class)
+@ScreenRecordRule.ScreenRecord
 public class NotificationActivityGAV2UiAutomatorTest {
     private static final String NOTIFICATION_PACKAGE = "android.adservices.ui.NOTIFICATIONS";
     private static final int LAUNCH_TIMEOUT = 5000;
     private static final int SCROLL_WAIT_TIME = 2000;
     private static UiDevice sDevice =
             UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+    @Rule public final ScreenRecordRule screenRecordRule = new ScreenRecordRule();
     @Spy private Context mContext = InstrumentationRegistry.getInstrumentation().getContext();
     private String mTestName;
 

@@ -33,6 +33,7 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.adservices.AdServicesManager;
 import android.content.Context;
+import android.platform.test.rule.ScreenRecordRule;
 
 import androidx.core.app.NotificationManagerCompat;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -60,6 +61,7 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -71,6 +73,7 @@ import org.mockito.quality.Strictness;
 import java.io.IOException;
 
 @RunWith(AndroidJUnit4.class)
+@ScreenRecordRule.ScreenRecord
 public class ConsentNotificationTriggerTest {
     private static final String NOTIFICATION_CHANNEL_ID = "PRIVACY_SANDBOX_CHANNEL";
     private static final int LAUNCH_TIMEOUT = 5000;
@@ -80,6 +83,8 @@ public class ConsentNotificationTriggerTest {
     private NotificationManager mNotificationManager;
     private MockitoSession mStaticMockSession = null;
     private String mTestName;
+
+    @Rule public final ScreenRecordRule screenRecordRule = new ScreenRecordRule();
 
     @Mock private AdServicesLoggerImpl mAdServicesLoggerImpl;
     @Mock private NotificationManagerCompat mNotificationManagerCompat;
