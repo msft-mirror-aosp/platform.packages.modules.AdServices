@@ -40,7 +40,7 @@ import org.junit.runner.RunWith;
 public class AdExtServicesBootCompleteReceiverHostTest extends AdServicesHostSideTestCase {
 
     @Rule(order = 0)
-    public final HostSideSdkLevelSupportRule sdkLevel = HostSideSdkLevelSupportRule.forAtLeastS();
+    public final HostSideSdkLevelSupportRule sdkLevel = HostSideSdkLevelSupportRule.forAnyLevel();
 
     // Sets flags used in the test (and automatically reset them at the end)
     @Rule(order = 1)

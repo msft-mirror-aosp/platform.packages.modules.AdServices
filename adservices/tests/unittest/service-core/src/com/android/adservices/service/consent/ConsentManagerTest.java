@@ -3316,7 +3316,8 @@ public class ConsentManagerTest {
                         mUserProfileIdManagerMock,
                         mUxStatesDaoMock,
                         mMockFlags,
-                        Flags.PPAPI_ONLY);
+                        Flags.PPAPI_ONLY,
+                        true);
         doNothing().when(mBlockedTopicsManagerMock).blockTopic(any());
         doNothing().when(mBlockedTopicsManagerMock).unblockTopic(any());
         // The actual usage is to invoke clearAllTopicsData() from TopicsWorker
@@ -3812,7 +3813,8 @@ public class ConsentManagerTest {
                 mUserProfileIdManagerMock,
                 mUxStatesDaoMock,
                 mMockFlags,
-                consentSourceOfTruth);
+                consentSourceOfTruth,
+                true);
     }
 
     private ConsentManager getSpiedConsentManagerForMigrationTesting(
