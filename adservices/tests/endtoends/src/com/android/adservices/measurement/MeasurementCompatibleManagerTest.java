@@ -58,7 +58,7 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -66,6 +66,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.stubbing.Answer;
@@ -100,8 +101,6 @@ public class MeasurementCompatibleManagerTest {
                     /* sdkDeDataDir = */ null,
                     /* isCustomizedSdkContext = */ false);
 
-    private String mPreviousAppAllowList;
-
     private String getPackageName() {
         return SdkLevel.isAtLeastT()
                 ? "com.android.adservices.endtoendtest"
@@ -112,28 +111,20 @@ public class MeasurementCompatibleManagerTest {
         return spy(MeasurementCompatibleManager.get(sContext));
     }
 
+    @Rule
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
+                    .setCompatModeFlags()
+                    .setMsmtApiAppAllowList(sContext.getPackageName());
+
     @Before
     public void setUp() throws TimeoutException {
-        if (!SdkLevel.isAtLeastT()) {
-            mPreviousAppAllowList =
-                    CompatAdServicesTestUtils.getAndOverrideMsmtApiAppAllowList(
-                            sContext.getPackageName());
-            CompatAdServicesTestUtils.setFlags();
-        }
-
         // TODO(b/290394919): disable AppSearch & MeasurementRollback until implemented on R
         disableAppSearchOnR();
     }
 
     @After
     public void tearDown() {
-        resetDisableAppSearchOnR();
-
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setMsmtApiAppAllowList(mPreviousAppAllowList);
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
-
         resetOverrideConsentManagerDebugMode();
     }
 
@@ -1562,26 +1553,9 @@ public class MeasurementCompatibleManagerTest {
             return;
         }
 
-        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 1");
-        ShellUtils.runShellCommand("device_config put adservices blocked_topics_source_of_truth 1");
-        ShellUtils.runShellCommand(
-                "device_config put adservices enable_appsearch_consent_data false");
-        ShellUtils.runShellCommand(
-                "device_config put adservices measurement_rollback_deletion_app_search_kill_switch"
-                        + " true");
-    }
-
-    private void resetDisableAppSearchOnR() {
-        if (SdkLevel.isAtLeastS()) {
-            return;
-        }
-
-        ShellUtils.runShellCommand("device_config delete adservices consent_source_of_truth");
-        ShellUtils.runShellCommand(
-                "device_config delete adservices blocked_topics_source_of_truth");
-        ShellUtils.runShellCommand("device_config delete adservices enable_appsearch_consent_data");
-        ShellUtils.runShellCommand(
-                "device_config delete adservices"
-                        + " measurement_rollback_deletion_app_search_kill_switch");
+        flags.setConsentSourceOfTruth(1)
+                .setBlockedTopicsSourceOfTruth(1)
+                .setEnableAppsearchConsentData(false)
+                .setMeasurementRollbackDeletionAppSearchKillSwitch(true);
     }
 }
