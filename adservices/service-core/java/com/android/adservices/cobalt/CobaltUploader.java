@@ -80,6 +80,14 @@ final class CobaltUploader implements Uploader {
         }
     }
 
+    @Override
+    public void uploadDone() {
+        if (Log.isLoggable(TAG, Log.INFO)) {
+            Log.i(TAG, "Unbinding from upload service");
+        }
+        mServiceBinder.unbindFromService();
+    }
+
     @VisibleForTesting
     IAdServicesCobaltUploadService getService() {
         return mServiceBinder.getService();
