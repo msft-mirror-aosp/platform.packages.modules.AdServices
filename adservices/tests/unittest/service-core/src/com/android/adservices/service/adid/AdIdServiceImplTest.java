@@ -22,7 +22,6 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
-import static com.android.adservices.service.adid.AdIdCacheManager.SHARED_PREFS_IAPC;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__ADID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_ADID;
@@ -66,7 +65,6 @@ import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.Clock;
 import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
@@ -150,12 +148,6 @@ public class AdIdServiceImplTest {
                 .thenReturn(true);
 
         mockGetFlags(mMockFlags);
-    }
-
-    @Before
-    @After
-    public void deleteSharedPreferences() {
-        sContext.deleteSharedPreferences(SHARED_PREFS_IAPC);
     }
 
     @Test

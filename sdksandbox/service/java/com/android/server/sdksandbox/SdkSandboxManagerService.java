@@ -332,7 +332,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             if (serviceInfo != null) {
                 mAdServicesPackageName = serviceInfo.packageName;
             }
-            Log.w(TAG, "AdServices apk missing");
             mAdServicePackageNameResolved = true;
         }
 
@@ -397,20 +396,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         mActivityManager = mContext.getSystemService(ActivityManager.class);
         mActivityManagerLocal = LocalManagerRegistry.getManager(ActivityManagerLocal.class);
         mSdkSandboxPulledAtoms = mInjector.getSdkSandboxPulledAtoms();
-        PackageManagerLocal packageManagerLocal =
-                LocalManagerRegistry.getManager(PackageManagerLocal.class);
         mSdkSandboxStorageManager = mInjector.getSdkSandboxStorageManager();
 
         // Start the handler thread.
         HandlerThread handlerThread = new HandlerThread("SdkSandboxManagerServiceHandler");
         handlerThread.start();
         mHandler = new Handler(handlerThread.getLooper());
-
-        // Start a background handler thread.
-        HandlerThread backgroundHandlerThread =
-                new HandlerThread(
-                        "SdkSandboxManagerServiceHandler", Process.THREAD_PRIORITY_BACKGROUND);
-        backgroundHandlerThread.start();
 
         registerBroadcastReceivers();
 
@@ -476,7 +467,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             String callingPackageName, SandboxLatencyInfo sandboxLatencyInfo) {
         sandboxLatencyInfo.setTimeSystemServerReceivedCallFromApp(mInjector.getCurrentTime());
 
-        final int callingUid = Binder.getCallingUid();
         final CallingInfo callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
 
         final List<SandboxedSdk> sandboxedSdks = new ArrayList<>();
@@ -662,7 +652,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             SandboxLatencyInfo sandboxLatencyInfo) {
         sandboxLatencyInfo.setTimeSystemServerReceivedCallFromApp(mInjector.getCurrentTime());
         final CallingInfo callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
-        final int callingUid = callingInfo.getUid();
 
         synchronized (mLock) {
             if (mHeldInterfaces.containsKey(callingInfo)) {
@@ -700,7 +689,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             String callingPackageName, String name, SandboxLatencyInfo sandboxLatencyInfo) {
         sandboxLatencyInfo.setTimeSystemServerReceivedCallFromApp(mInjector.getCurrentTime());
         final CallingInfo callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
-        final int callingUid = callingInfo.getUid();
 
         synchronized (mLock) {
             if (mHeldInterfaces.containsKey(callingInfo)) {
@@ -1277,7 +1265,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             sandboxLatencyInfo.setTimeSystemServerReceivedCallFromApp(mInjector.getCurrentTime());
             logLatencies(sandboxLatencyInfo);
 
-            final int callingUid = Binder.getCallingUid();
             final CallingInfo callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
             enforceCallingPackageBelongsToUid(callingInfo);
 
