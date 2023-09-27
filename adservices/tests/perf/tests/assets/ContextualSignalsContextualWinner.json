@@ -7,12 +7,12 @@
     ],
     "buyer_timeout_ms": 60000,
     "per_buyer_config": {
-      "performance-fledge-static-5jyy5ulagq-uc.a.run.app": {
+      "ba-buyer-5jyy5ulagq-uc.a.run.app": {
         "buyer_debug_id": "buyer_123",
         "buyer_signals": "[[42]]"
       }
     },
-    "seller": "https://example.com",
+    "seller": "https://ba-seller-5jyy5ulagq-uc.a.run.app",
     "seller_debug_id": "seller_123",
     "seller_signals": "[[72]]"
   },
