@@ -35,7 +35,6 @@ import java.util.Set;
 
 /** A public key used to encrypt aggregatable reports. */
 public final class AggregateEncryptionKeyManager {
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     private final DatastoreManager mDatastoreManager;
     private final AggregateEncryptionKeyFetcher mAggregateEncryptionKeyFetcher;
     private final Clock mClock;
@@ -72,7 +71,8 @@ public final class AggregateEncryptionKeyManager {
     public List<AggregateEncryptionKey> getAggregateEncryptionKeys(
             Uri coordinatorOrigin, int numKeys) {
         if (!isAllowlisted(mAggregationCoordinatorOriginList, coordinatorOrigin.toString())) {
-            sLogger.w("Fetching aggregate encryption keys failed, invalid url.");
+            LoggerFactory.getMeasurementLogger()
+                    .w("Fetching aggregate encryption keys failed, invalid url.");
             return Collections.emptyList();
         }
         Uri aggregationCoordinatorUrl = createURL(coordinatorOrigin, mAggregationCoordinatorPath);
@@ -106,7 +106,8 @@ public final class AggregateEncryptionKeyManager {
                 mDatastoreManager.runInTransaction((dao) ->
                         dao.deleteExpiredAggregateEncryptionKeys(eventTime));
             } else {
-                sLogger.d("Fetching aggregate encryption keys over the network failed.");
+                LoggerFactory.getMeasurementLogger()
+                        .d("Fetching aggregate encryption keys over the network failed.");
             }
         }
 

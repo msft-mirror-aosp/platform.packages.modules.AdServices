@@ -46,8 +46,6 @@ import javax.net.ssl.X509TrustManager;
  */
 public class MeasurementHttpClient {
 
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
-
     enum HttpMethod {
         GET,
         POST
@@ -64,9 +62,11 @@ public class MeasurementHttpClient {
 
         final HttpsURLConnection urlConnection = (HttpsURLConnection) url.openConnection();
         if (WebAddresses.isLocalhost(Uri.parse(url.toString()))) {
-            sLogger.d(
-                    "MeasurementHttpClient::setup : setting unsafe SSL for localhost, URI: %s",
-                    url.toString());
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "MeasurementHttpClient::setup : setting unsafe SSL for localhost, URI:"
+                                    + " %s",
+                            url.toString());
             urlConnection.setSSLSocketFactory(getUnsafeSslSocketFactory());
         }
         final Flags flags = FlagsFactory.getFlags();
@@ -100,7 +100,7 @@ public class MeasurementHttpClient {
             sslContext.init(null, bypassTrustManagers, new SecureRandom());
             return sslContext.getSocketFactory();
         } catch (Exception e) {
-            sLogger.e(e, "getUnsafeSslSocketFactory caught exception");
+            LoggerFactory.getMeasurementLogger().e(e, "getUnsafeSslSocketFactory caught exception");
             return null;
         }
     }
