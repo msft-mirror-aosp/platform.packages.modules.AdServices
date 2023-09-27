@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.measurement;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONException;
@@ -26,6 +26,7 @@ import java.util.Objects;
 
 /** POJO for attributed trigger.  */
 public class AttributedTrigger {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     private final String mTriggerId;
     private final long mPriority;
     private final UnsignedLong mTriggerData;
@@ -145,7 +146,7 @@ public class AttributedTrigger {
                     mTriggerData.toString());
             json.put(JsonKeys.DEDUP_KEY, mDedupKey.toString());
         } catch (JSONException e) {
-            LogUtil.e(e, "ReportSpec::encodeToJson cannot encode AttributedTrigger to JSON");
+            sLogger.e(e, "ReportSpec::encodeToJson cannot encode AttributedTrigger to JSON");
             return null;
         }
         return json;
@@ -166,7 +167,7 @@ public class AttributedTrigger {
             }
             json.put(ReportSpecUtil.FlexEventReportJsonKeys.PRIORITY, mPriority);
         } catch (JSONException e) {
-            LogUtil.e(e, "ReportSpec::encodeToJsonFlexApi cannot encode AttributedTrigger to JSON");
+            sLogger.e(e, "ReportSpec::encodeToJsonFlexApi cannot encode AttributedTrigger to JSON");
             return null;
         }
         return json;
