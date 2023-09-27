@@ -43,7 +43,7 @@ final class PreEnrolledAdTechForTest {
                     .setAttributionTriggerRegistrationUrl(Arrays.asList("https://test.com/trigger"))
                     .setAttributionReportingUrl(Arrays.asList("https://test.com"))
                     .setRemarketingResponseBasedRegistrationUrl(Arrays.asList("https://test.com"))
-                    .setEncryptionKeyUrl(Arrays.asList("https://test.com/keys"))
+                    .setEncryptionKeyUrl("https://test.com/keys")
                     .build();
 
     private static final EnrollmentData ONE_SDK_MULTIPLE_URLS =
@@ -58,7 +58,7 @@ final class PreEnrolledAdTechForTest {
                             Arrays.asList("https://test2.com/trigger"))
                     .setAttributionReportingUrl(Arrays.asList("https://test2.com"))
                     .setRemarketingResponseBasedRegistrationUrl(Arrays.asList("https://test2.com"))
-                    .setEncryptionKeyUrl(Arrays.asList("https://test2.com/keys"))
+                    .setEncryptionKeyUrl("https://test2.com/keys")
                     .build();
 
     private static final EnrollmentData SECOND_ENROLLMENT =
@@ -71,7 +71,7 @@ final class PreEnrolledAdTechForTest {
                             Arrays.asList("https://test3.com/trigger"))
                     .setAttributionReportingUrl(Arrays.asList("https://test3.com"))
                     .setRemarketingResponseBasedRegistrationUrl(Arrays.asList("https://test3.com"))
-                    .setEncryptionKeyUrl(Arrays.asList("https://test3.com/keys"))
+                    .setEncryptionKeyUrl("https://test3.com/keys")
                     .build();
 
     private static final EnrollmentData TOPICS_SAMPLE_APPS =
@@ -85,7 +85,7 @@ final class PreEnrolledAdTechForTest {
                     .setAttributionTriggerRegistrationUrl(Arrays.asList("https://test.com/trigger"))
                     .setAttributionReportingUrl(Arrays.asList("https://test.com"))
                     .setRemarketingResponseBasedRegistrationUrl(Arrays.asList("https://test.com"))
-                    .setEncryptionKeyUrl(Arrays.asList("https://test.com/keys"))
+                    .setEncryptionKeyUrl("https://test.com/keys")
                     .build();
 
     private static final EnrollmentData MSMT_SYS_HEALTH_TEST_ENROLLMENT =
