@@ -23,7 +23,7 @@ import android.adservices.measurement.DeletionRequest;
 import android.annotation.NonNull;
 import android.net.Uri;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
@@ -55,6 +55,7 @@ import java.util.Objects;
 public class MeasurementDataDeleter {
     static final String ANDROID_APP_SCHEME = "android-app";
     private static final int AGGREGATE_CONTRIBUTIONS_VALUE_MINIMUM_LIMIT = 0;
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
 
     private final DatastoreManager mDatastoreManager;
     private final Flags mFlags;
@@ -148,7 +149,7 @@ public class MeasurementDataDeleter {
                                 triggerIds.addAll(
                                         source.getFlexEventReportSpec().getAllTriggerIds());
                             } catch (JSONException e) {
-                                LogUtil.e(
+                                sLogger.e(
                                         "MeasurementDataDeleter::delete unable to build event "
                                                 + "report spec");
                             }
@@ -198,7 +199,7 @@ public class MeasurementDataDeleter {
             throws DatastoreException {
         for (AggregateReport report : aggregateReports) {
             if (report.getSourceId() == null) {
-                LogUtil.d("SourceId is null on event report.");
+                sLogger.d("SourceId is null on event report.");
                 return;
             }
 
@@ -226,7 +227,7 @@ public class MeasurementDataDeleter {
             throws DatastoreException {
         for (EventReport report : eventReports) {
             if (report.getSourceId() == null) {
-                LogUtil.d("resetDedupKeys: SourceId on the event report is null.");
+                sLogger.d("resetDedupKeys: SourceId on the event report is null.");
                 continue;
             }
 
@@ -251,7 +252,7 @@ public class MeasurementDataDeleter {
                                     source.getId(), source.attributedTriggersToJson());
                         }
                     } catch (JSONException e) {
-                        LogUtil.e(e, "resetDedupKeys: failed to build attributed triggers.");
+                        sLogger.e(e, "resetDedupKeys: failed to build attributed triggers.");
                     }
                 }
             } else {
@@ -266,7 +267,7 @@ public class MeasurementDataDeleter {
             throws DatastoreException {
         for (AggregateReport report : aggregateReports) {
             if (report.getSourceId() == null) {
-                LogUtil.d("SourceId on the aggregate report is null.");
+                sLogger.d("SourceId on the aggregate report is null.");
                 continue;
             }
 
@@ -310,7 +311,7 @@ public class MeasurementDataDeleter {
                 try {
                     source.buildFlexibleEventReportApi();
                 } catch (JSONException e) {
-                    LogUtil.d("Unable to read JSON from Database");
+                    sLogger.d("Unable to read JSON from Database");
                     eventReportsToDelete.add(eventReport);
                     continue;
                 }

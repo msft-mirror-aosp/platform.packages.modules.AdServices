@@ -20,7 +20,7 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.util.Pair;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.AttributionConfig;
 import com.android.adservices.service.measurement.FilterMap;
@@ -50,6 +50,7 @@ import java.util.stream.Collectors;
 /** Class facilitates creation of derived source for XNA. */
 public class XnaSourceCreator {
     private static final String HEX_PREFIX = "0x";
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     private final Flags mFlags;
     private final Filter mFilter;
 
@@ -77,7 +78,7 @@ public class XnaSourceCreator {
                                 .build());
             }
         } catch (JSONException e) {
-            LogUtil.d(e, "Failed to parse attribution configs.");
+            sLogger.d(e, "Failed to parse attribution configs.");
             return Collections.emptyList();
         }
 
@@ -166,7 +167,7 @@ public class XnaSourceCreator {
                                                 filter,
                                                 match);
                                     } catch (JSONException e) {
-                                        LogUtil.d(e, "Failed to parse source filterData.");
+                                        sLogger.d(e, "Failed to parse source filterData.");
                                         return false;
                                     }
                                 })
@@ -218,7 +219,7 @@ public class XnaSourceCreator {
                                 .serializeAsJson(mFlags)
                                 .toString());
             } catch (JSONException e) {
-                LogUtil.d(e, "Failed to parse shared filter keys.");
+                sLogger.d(e, "Failed to parse shared filter keys.");
                 return Optional.empty();
             }
             builder.setSharedFilterDataKeys(null);
@@ -251,7 +252,7 @@ public class XnaSourceCreator {
 
             return new JSONObject(derivedAggregatableSource).toString();
         } catch (JSONException e) {
-            LogUtil.d(e, "Failed to set AggregatableAttributionSource for derived source.");
+            sLogger.d(e, "Failed to set AggregatableAttributionSource for derived source.");
             return null;
         }
     }
