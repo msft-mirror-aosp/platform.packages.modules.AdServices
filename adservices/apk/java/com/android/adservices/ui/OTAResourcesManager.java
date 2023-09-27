@@ -99,9 +99,7 @@ public class OTAResourcesManager {
         if (!resourcesFile.hasFileUri()) {
             ErrorLogUtil.e(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DOWNLOADED_OTA_FILE_ERROR,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX,
-                    OTAResourcesManager.class.getSimpleName(),
-                    new Object() {}.getClass().getEnclosingMethod().getName());
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
             return;
         }
         File f = new File(context.getDataDir() + Uri.parse(resourcesFile.getFileUri()).getPath());

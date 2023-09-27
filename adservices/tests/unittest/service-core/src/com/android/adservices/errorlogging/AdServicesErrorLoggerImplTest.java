@@ -63,8 +63,7 @@ public class AdServicesErrorLoggerImplTest {
         doReturn(false).when(mFlags).getAdServicesErrorLoggingEnabled();
 
         mErrorLogger.logError(
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR, PPAPI_NAME,
-                CLASS_NAME, METHOD_NAME);
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR, PPAPI_NAME);
 
         verify(mStatsdLoggerMock, never()).logAdServicesError(any());
     }
@@ -77,8 +76,7 @@ public class AdServicesErrorLoggerImplTest {
                 .getErrorCodeLoggingDenyList();
 
         mErrorLogger.logError(
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR, PPAPI_NAME,
-                CLASS_NAME, METHOD_NAME);
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR, PPAPI_NAME);
 
         verify(mStatsdLoggerMock, never()).logAdServicesError(any());
     }
@@ -87,10 +85,19 @@ public class AdServicesErrorLoggerImplTest {
     public void testLogError_errorLoggingFlagEnabled() {
         doReturn(true).when(mFlags).getAdServicesErrorLoggingEnabled();
         mErrorLogger.logError(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR, PPAPI_NAME);
+
+        verify(mStatsdLoggerMock).logAdServicesError(any());
+    }
+
+    @Test
+    public void testLogErrorInternal() {
+        Exception exception =
+                createSQLiteExceptionwith3StackTraceElements(CLASS_NAME, METHOD_NAME, LINE_NUMBER);
+        mErrorLogger.logErrorInternal(
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR,
                 PPAPI_NAME,
-                CLASS_NAME,
-                METHOD_NAME);
+                exception);
 
         AdServicesErrorStats stats =
                 AdServicesErrorStats.builder()
@@ -98,6 +105,7 @@ public class AdServicesErrorLoggerImplTest {
                         .setPpapiName(PPAPI_NAME)
                         .setClassName(CLASS_NAME)
                         .setMethodName(METHOD_NAME)
+                        .setLineNumber(LINE_NUMBER)
                         .build();
         verify(mStatsdLoggerMock).logAdServicesError(eq(stats));
     }
@@ -204,6 +212,20 @@ public class AdServicesErrorLoggerImplTest {
     Exception createSQLiteException(String className, String methodName, int lineNumber) {
         StackTraceElement[] stackTraceElements =
                 new StackTraceElement[] {
+                    new StackTraceElement(className, methodName, "file", lineNumber)
+                };
+
+        Exception exception = new SQLiteException();
+        exception.setStackTrace(stackTraceElements);
+        return exception;
+    }
+
+    Exception createSQLiteExceptionwith3StackTraceElements(
+            String className, String methodName, int lineNumber) {
+        StackTraceElement[] stackTraceElements =
+                new StackTraceElement[] {
+                    new StackTraceElement("AdServicesErrorLoggerImpl", "logError", "file", 4),
+                    new StackTraceElement("ErrorLogUtil", "e", "file", 4),
                     new StackTraceElement(className, methodName, "file", lineNumber)
                 };
 
