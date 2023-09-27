@@ -4268,6 +4268,16 @@ public interface Flags {
     }
 
     /**
+     * Default value to determine whether AdServicesExtDataStorageService related APIs are enabled.
+     */
+    boolean DEFAULT_ENABLE_ADEXT_DATA_SERVICE_APIS = true;
+
+    /** Returns whether AdServicesExtDataStorageService related APIs are enabled. */
+    default boolean getEnableAdExtDataServiceApis() {
+        return DEFAULT_ENABLE_ADEXT_DATA_SERVICE_APIS;
+    }
+
+    /**
      * Default value to determine whether {@link
      * android.adservices.common.AdServicesCommonManager#isAdServicesEnabled} is enabled.
      */
