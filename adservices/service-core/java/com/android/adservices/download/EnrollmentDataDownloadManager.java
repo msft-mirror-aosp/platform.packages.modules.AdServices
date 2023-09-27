@@ -200,10 +200,7 @@ public class EnrollmentDataDownloadManager {
                                             data[6].contains(" ")
                                                     ? Arrays.asList(data[6].split(" "))
                                                     : Arrays.asList(data[6]))
-                                    .setEncryptionKeyUrl(
-                                            data[7].contains(" ")
-                                                    ? Arrays.asList(data[7].split(" "))
-                                                    : Arrays.asList(data[7]))
+                                    .setEncryptionKeyUrl(data[7])
                                     .build();
                     newEnrollments.add(enrollmentData);
                 }
