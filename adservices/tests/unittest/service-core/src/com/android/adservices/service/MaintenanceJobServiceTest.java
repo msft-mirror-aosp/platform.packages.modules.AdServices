@@ -38,7 +38,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.spy;
@@ -642,7 +641,7 @@ public class MaintenanceJobServiceTest {
 
     @Test
     public void testScheduleIfNeeded_scheduledWithKillSwitchOn() {
-        doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt(), anyString(), anyString()));
+        doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
         // Killswitch is on.
         doReturn(true).when(mMockFlags).getTopicsKillSwitch();
 
@@ -656,9 +655,7 @@ public class MaintenanceJobServiceTest {
                 () -> {
                     ErrorLogUtil.e(
                             eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED),
-                            eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS),
-                            anyString(),
-                            anyString());
+                            eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS));
                 });
     }
 
