@@ -1,6 +1,7 @@
 {
   "description": "Event source information gain exceeds limits",
   "phflags_override": {
+    "measurement_flex_api_max_information_gain_event": 1.5,
     "measurement_flexible_event_reporting_api_enabled": "true"
   },
   "input": {
