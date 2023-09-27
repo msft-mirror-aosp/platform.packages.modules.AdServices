@@ -47,6 +47,7 @@ import android.content.ComponentName;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
@@ -249,6 +250,7 @@ public class EpochJobServiceTest {
     }
 
     @Test
+    @FlakyTest(bugId = 298886083)
     public void testOnStartJob_shouldDisableJobTrue_withLoggingEnabled()
             throws InterruptedException {
         // Logging killswitch is off.
