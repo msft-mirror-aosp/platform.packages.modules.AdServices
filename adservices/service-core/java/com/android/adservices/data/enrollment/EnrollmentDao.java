@@ -18,7 +18,6 @@ package com.android.adservices.data.enrollment;
 
 import static com.android.adservices.service.enrollment.EnrollmentUtil.ENROLLMENT_SHARED_PREF;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_DELETE_ERROR;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_SHARED_PREFERENCES_SEED_SAVE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 
 import android.adservices.common.AdTechIdentifier;
@@ -146,14 +145,10 @@ public class EnrollmentDao implements IEnrollmentDao {
                 SharedPreferences.Editor edit = prefs.edit();
                 edit.putBoolean(IS_SEEDED, true);
                 if (!edit.commit()) {
+                    // TODO(b/280579966): Add logging using CEL.
                     LogUtil.e(
                             "Saving shared preferences - %s , %s failed",
                             ENROLLMENT_SHARED_PREF, IS_SEEDED);
-                    ErrorLogUtil.e(
-                            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_SHARED_PREFERENCES_SEED_SAVE_FAILURE,
-                            AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT,
-                            this.getClass().getSimpleName(),
-                            /* methodName= */ "Seed");
                 }
             }
         }
@@ -169,14 +164,10 @@ public class EnrollmentDao implements IEnrollmentDao {
         SharedPreferences.Editor edit = prefs.edit();
         edit.putBoolean(IS_SEEDED, false);
         if (!edit.commit()) {
+            // TODO(b/280579966): Add logging using CEL.
             LogUtil.e(
                     "Saving shared preferences - %s , %s failed",
                     ENROLLMENT_SHARED_PREF, IS_SEEDED);
-            ErrorLogUtil.e(
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_SHARED_PREFERENCES_SEED_SAVE_FAILURE,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT,
-                    this.getClass().getSimpleName(),
-                    /* methodName= */ "unSeed");
         }
     }
 
