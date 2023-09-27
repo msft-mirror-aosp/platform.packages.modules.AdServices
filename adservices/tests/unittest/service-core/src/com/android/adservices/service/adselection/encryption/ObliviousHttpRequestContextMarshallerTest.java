@@ -17,6 +17,7 @@
 package com.android.adservices.service.adselection.encryption;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.CommonFixture;
 
@@ -145,5 +146,22 @@ public class ObliviousHttpRequestContextMarshallerTest {
         assertThat(expectedOhttpContext.encapsulatedSharedSecret())
                 .isEqualTo(EncapsulatedSharedSecret.create(SHARED_SECRET_BYTES));
         assertThat(expectedOhttpContext.seed()).isEqualTo(SEED_BYTES);
+    }
+
+    /** Test to verify that a getContext call where context Id is absent throws an IAE. */
+    @Test
+    public void test_getContext_contextMissing_throwsIAE() throws Exception {
+        assertThat(
+                        mEncryptionContextDao.getEncryptionContext(
+                                CONTEXT_ID_2,
+                                EncryptionKeyConstants.EncryptionKeyType
+                                        .ENCRYPTION_KEY_TYPE_AUCTION))
+                .isNull();
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        mObliviousHttpRequestContextMarshaller
+                                .getAuctionOblivioushttpRequestContext(CONTEXT_ID_2));
     }
 }

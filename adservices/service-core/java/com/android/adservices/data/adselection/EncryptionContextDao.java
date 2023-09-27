@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.adselection;
 
+import android.annotation.Nullable;
 
 import androidx.room.Dao;
 import androidx.room.Insert;
@@ -35,13 +36,12 @@ import java.time.Instant;
 public abstract class EncryptionContextDao {
 
     /** Returns the EncryptionContext of given ad selection id if it exists. */
+    @Nullable
     @Query(
-            ""
-                    + "SELECT * FROM encryption_context "
+            "SELECT * FROM encryption_context "
                     + "WHERE context_id = :contextId AND encryption_key_type = :encryptionKeyType")
     public abstract DBEncryptionContext getEncryptionContext(
-            long contextId, @EncryptionKeyConstants.EncryptionKeyType int encryptionKeyType)
-            throws Exception;
+            long contextId, @EncryptionKeyConstants.EncryptionKeyType int encryptionKeyType);
 
     /** Inserts the given EncryptionContext in table. */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
