@@ -22,7 +22,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 
 import android.util.Log;
@@ -83,7 +82,7 @@ public final class ExtendedMockitoExpectations {
      */
     public static void doNothingOnErrorLogUtilError() {
         doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
-        doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt(), anyString(), anyString()));
+        doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
     }
 
     /**
@@ -95,7 +94,7 @@ public final class ExtendedMockitoExpectations {
     }
 
     /** Verifies {@link ErrorLogUtil#e()} was called with the expected values. */
-    public static void verifyErrorLogUtilError(
+    public static void verifyErrorLogUtilErrorWithException(
             int errorCode, int ppapiName, int numberOfInvocations) {
         verify(
                 () -> {
@@ -108,12 +107,10 @@ public final class ExtendedMockitoExpectations {
     public static void verifyErrorLogUtilError(
             int errorCode,
             int ppapiName,
-            String className,
-            String methodName,
             int numberOfInvocations) {
         verify(
                 () -> {
-                    ErrorLogUtil.e(eq(errorCode), eq(ppapiName), eq(className), eq(methodName));
+                    ErrorLogUtil.e(eq(errorCode), eq(ppapiName));
                 },
                 times(numberOfInvocations));
     }
