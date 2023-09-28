@@ -282,8 +282,8 @@
     <string name="topic10049" msgid="8061992014977840818">"Kolona zanore"</string>
     <string name="topic10050" msgid="3540229495848506229">"Muzikë botërore"</string>
     <string name="topic10051" msgid="6132468331924347995">"Muzikë reggae dhe e Karaibeve"</string>
-    <string name="topic10052" msgid="8213269199807045473">"Galeritë e imazheve në linjë"</string>
-    <string name="topic10053" msgid="1378192203082454197">"Videot në linjë"</string>
+    <string name="topic10052" msgid="8213269199807045473">"Galeritë e imazheve online"</string>
+    <string name="topic10053" msgid="1378192203082454197">"Videot online"</string>
     <string name="topic10054" msgid="3727401645405134505">"Transmetim i videove të drejtpërdrejta"</string>
     <string name="topic10055" msgid="4943174831732192854">"Transmetim i filmave dhe televizionit"</string>
     <string name="topic10056" msgid="3066058636154255073">"Opera"</string>
@@ -518,7 +518,7 @@
     <string name="topic10285" msgid="7056449544316408821">"Motorë kërkimi"</string>
     <string name="topic10286" msgid="3458688996478472971">"Telefona inteligjentë"</string>
     <string name="topic10287" msgid="6766203044518402938">"Telekonferencat"</string>
-    <string name="topic10288" msgid="3883137694557636622">"Aplikacione uebi dhe vegla në linjë"</string>
+    <string name="topic10288" msgid="3883137694557636622">"Aplikacione uebi dhe vegla online"</string>
     <string name="topic10289" msgid="3392995633794787676">"Shërbime uebi"</string>
     <string name="topic10290" msgid="3118880486702986341">"Hapësira ruajtëse në renë kompjuterike"</string>
     <string name="topic10291" msgid="6025855926350955094">"Dizajn dhe zhvillim uebi"</string>
@@ -550,7 +550,7 @@
     <string name="topic10317" msgid="2412259096368647866">"Lajme sportive"</string>
     <string name="topic10318" msgid="1508449672941031904">"Moti"</string>
     <string name="topic10319" msgid="3973645291178509390">"Lajme nga bota"</string>
-    <string name="topic10320" msgid="5279440074507438174">"Komuniteti në linjë"</string>
+    <string name="topic10320" msgid="5279440074507438174">"Komuniteti online"</string>
     <string name="topic10321" msgid="7018890132742820265">"Figura dhe skedarë GIF të animuar"</string>
     <string name="topic10322" msgid="1585737438943011532">"Takime dashurie dhe personale"</string>
     <string name="topic10323" msgid="962863497957179646">"Përmbledhje e furnizimit dhe faqeshënuesit socialë"</string>
