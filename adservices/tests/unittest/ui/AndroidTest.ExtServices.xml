@@ -15,7 +15,7 @@
   ~ limitations under the License.
   -->
 <configuration description="Config for Ad Services Service-core unit test cases in ExtServices">
-    <option name="test-tag" value="AdServicesUIUnitTests"/>
+    <option name="test-tag" value="AdExtServicesUIUnitTests"/>
 
     <!-- Prevent test from running on Android T+ -->
     <object type="module_controller"
@@ -30,7 +30,7 @@
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
         <option name="check-min-sdk" value="true"/>
-        <option name="test-file-name" value="AdExtServicesServiceCoreUnitTests.apk"/>
+        <option name="test-file-name" value="AdExtServicesUIUnitTests.apk"/>
     </target_preparer>
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
         <option name="run-command" value="setprop log.tag.adservices VERBOSE" />
