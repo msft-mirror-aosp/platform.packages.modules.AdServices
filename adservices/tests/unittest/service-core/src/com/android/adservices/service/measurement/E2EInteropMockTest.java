@@ -63,7 +63,13 @@ public class E2EInteropMockTest extends E2EMockTest {
             AsyncFetchStatus.EntityStatus.PARSING_ERROR,
             AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
     private static final Map<String, String> sApiConfigPhFlags =
-            Map.of("max_event_info_gain", "measurement_flex_api_max_information_gain_event");
+            Map.of(
+                    // measurement_flex_api_max_information_gain_event
+                    "max_event_info_gain",
+                    "measurement_flex_api_max_information_gain_event",
+                    // measurement_max_distinct_destinations_in_active_source
+                    "max_destinations_per_source_site_reporting_site",
+                    "measurement_max_distinct_destinations_in_active_source");
 
     private static String preprocessor(String json) {
         return json.replaceAll("\\.test(?=[\"\\/])", ".com")
