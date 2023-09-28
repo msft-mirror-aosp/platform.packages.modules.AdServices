@@ -71,11 +71,6 @@ public final class E2EMockStatic implements StaticMockFixture {
                         () ->
                                 FlagsFactory.getFlags()
                                         .getMeasurementMaxDistinctEnrollmentsInAttribution());
-        doAnswer((Answer<Integer>) invocation -> mParams.getMaxDistinctDestinationsInActiveSource())
-                .when(
-                        () ->
-                                FlagsFactory.getFlags()
-                                        .getMeasurementMaxDistinctDestinationsInActiveSource());
         doAnswer((Answer<Integer>) invocation ->
                 mParams.getMaxDistinctEnrollmentsPerPublisherXDestinationInSource())
                     .when(() -> PrivacyParams

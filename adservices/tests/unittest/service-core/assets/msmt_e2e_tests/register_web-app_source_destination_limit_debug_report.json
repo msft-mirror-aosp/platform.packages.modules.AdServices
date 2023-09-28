@@ -1,7 +1,7 @@
 {
   "description": "W2A: given two destinations with max_destinations_per_source_site_reporting_site set 1 and ar_debug enabled. Can generate both event and aggregate reports. Expected source-destination-limit additional debug report",
-  "api_config": {
-    "max_destinations_per_source_site_reporting_site": "1"
+  "phflags_override": {
+    "measurement_max_distinct_destinations_in_active_source": "1"
   },
   "input": {
     "web_sources": [
