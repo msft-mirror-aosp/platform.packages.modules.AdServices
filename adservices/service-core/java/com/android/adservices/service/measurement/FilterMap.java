@@ -18,7 +18,7 @@ package com.android.adservices.service.measurement;
 
 import android.annotation.Nullable;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
 
 import org.json.JSONArray;
@@ -35,6 +35,7 @@ import java.util.Objects;
 /** POJO for FilterMap. */
 public class FilterMap {
 
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     private Map<String, List<String>> mAttributionFilterMap;
     private Map<String, FilterValue> mAttributionFilterMapWithLongValue;
 
@@ -126,7 +127,7 @@ public class FilterMap {
 
             return result;
         } catch (JSONException e) {
-            LogUtil.d(e, "Failed to serialize filtermap.");
+            sLogger.d(e, "Failed to serialize filtermap.");
             return null;
         }
     }
@@ -152,7 +153,7 @@ public class FilterMap {
             }
             return result;
         } catch (JSONException e) {
-            LogUtil.d(e, "Failed to serialize filtermap.");
+            sLogger.d(e, "Failed to serialize filtermap.");
             return null;
         }
     }

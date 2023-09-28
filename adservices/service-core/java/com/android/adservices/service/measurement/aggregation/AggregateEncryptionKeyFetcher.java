@@ -23,7 +23,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import android.annotation.NonNull;
 import android.net.Uri;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
 
@@ -51,6 +51,7 @@ import java.util.concurrent.TimeUnit;
  * @hide
  */
 final class AggregateEncryptionKeyFetcher {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     private final MeasurementHttpClient mNetworkConnection = new MeasurementHttpClient();
 
     /**
@@ -78,7 +79,7 @@ final class AggregateEncryptionKeyFetcher {
                         try {
                             cachedAge = Integer.parseInt(field.get(0));
                         } catch (NumberFormatException e) {
-                            LogUtil.e(e, "Error parsing age header");
+                            sLogger.e(e, "Error parsing age header");
                         }
                         remainingHeaders -= 1;
                     }
@@ -89,7 +90,7 @@ final class AggregateEncryptionKeyFetcher {
             }
         }
         if (cacheControl == null) {
-            LogUtil.d("Cache-Control header or value is missing");
+            sLogger.d("Cache-Control header or value is missing");
             return 0;
         }
         String[] tokens = cacheControl.split(",", 0);
@@ -100,13 +101,13 @@ final class AggregateEncryptionKeyFetcher {
                 try {
                     maxAge = Long.parseLong(token.substring(8));
                 } catch (NumberFormatException e) {
-                    LogUtil.d(e, "Failed to parse max-age value");
+                    sLogger.d(e, "Failed to parse max-age value");
                     return 0;
                 }
             }
         }
         if (maxAge == 0) {
-            LogUtil.d("max-age directive is missing");
+            sLogger.d("max-age directive is missing");
             return 0;
         }
         return maxAge - cachedAge;
@@ -137,7 +138,7 @@ final class AggregateEncryptionKeyFetcher {
             }
             return Optional.of(aggregateEncryptionKeys);
         } catch (JSONException e) {
-            LogUtil.d(e, "Invalid JSON");
+            sLogger.d(e, "Invalid JSON");
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_PUBLIC_KEY_FETCHER_PARSING_ERROR,
@@ -157,7 +158,7 @@ final class AggregateEncryptionKeyFetcher {
         try {
             url = new URL(target.toString());
         } catch (MalformedURLException e) {
-            LogUtil.d(e, "Malformed coordinator target URL");
+            sLogger.d(e, "Malformed coordinator target URL");
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_PUBLIC_KEY_FETCHER_INVALID_PARAMETER,
@@ -168,7 +169,7 @@ final class AggregateEncryptionKeyFetcher {
         try {
             urlConnection = (HttpURLConnection) openUrl(url);
         } catch (IOException e) {
-            LogUtil.e(e, "Failed to open coordinator target URL");
+            sLogger.e(e, "Failed to open coordinator target URL");
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_PUBLIC_KEY_FETCHER_IO_ERROR,
@@ -197,7 +198,7 @@ final class AggregateEncryptionKeyFetcher {
 
             return parseResponse(responseBody.toString(), headers, eventTime, coordinatorOrigin);
         } catch (IOException e) {
-            LogUtil.e(e, "Failed to get coordinator response");
+            sLogger.e(e, "Failed to get coordinator response");
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_PUBLIC_KEY_FETCHER_IO_ERROR,

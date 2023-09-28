@@ -623,7 +623,7 @@ public class EnrollmentDao implements IEnrollmentDao {
                 String.join(" ", enrollmentData.getRemarketingResponseBasedRegistrationUrl()));
         values.put(
                 EnrollmentTables.EnrollmentDataContract.ENCRYPTION_KEY_URL,
-                String.join(" ", enrollmentData.getEncryptionKeyUrl()));
+                enrollmentData.getEncryptionKeyUrl());
         LogUtil.d("Inserting Enrollment record. ID : \"%s\"", enrollmentData.getEnrollmentId());
         try {
             db.insertWithOnConflict(

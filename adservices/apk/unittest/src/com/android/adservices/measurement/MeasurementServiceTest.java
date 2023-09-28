@@ -89,7 +89,7 @@ public class MeasurementServiceTest {
                     .setAttributionTriggerRegistrationUrl(List.of("https://test.com/trigger"))
                     .setAttributionReportingUrl(List.of("https://test.com"))
                     .setRemarketingResponseBasedRegistrationUrl(List.of("https://test.com"))
-                    .setEncryptionKeyUrl(List.of("https://test.com/keys"))
+                    .setEncryptionKeyUrl("https://test.com/keys")
                     .build();
 
     /** Setup for tests */
