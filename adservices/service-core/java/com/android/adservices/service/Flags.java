@@ -602,14 +602,14 @@ public interface Flags {
         return MEASUREMENT_FLEX_LITE_API_ENABLED;
     }
 
-    float MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT = 1.5849266F;
+    float MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT = 6.5F;
 
     /** Returns max information gain in Flexible Event API for Event sources */
     default float getMeasurementFlexApiMaxInformationGainEvent() {
         return MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT;
     }
 
-    float MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION = 11.4617280F;
+    float MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION = 11.46173F;
 
     /** Returns max information gain in Flexible Event API for Navigation sources */
     default float getMeasurementFlexApiMaxInformationGainNavigation() {
