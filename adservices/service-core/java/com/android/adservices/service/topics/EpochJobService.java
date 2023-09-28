@@ -71,9 +71,7 @@ public final class EpochJobService extends JobService {
         if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
             ErrorLogUtil.e(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
-                    this.getClass().getSimpleName(),
-                    new Object() {}.getClass().getEnclosingMethod().getName());
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             LoggerFactory.getTopicsLogger()
                     .e("Topics API is disabled, skipping and cancelling EpochJobService");
             return skipAndCancelBackgroundJob(
@@ -179,9 +177,7 @@ public final class EpochJobService extends JobService {
         if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
             ErrorLogUtil.e(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
-                    new Object() {}.getClass().getSimpleName(),
-                    new Object() {}.getClass().getEnclosingMethod().getName());
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             LoggerFactory.getTopicsLogger()
                     .e("Topics API is disabled, skip scheduling the EpochJobService");
             return false;
@@ -191,9 +187,7 @@ public final class EpochJobService extends JobService {
         if (jobScheduler == null) {
             ErrorLogUtil.e(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_FETCH_JOB_SCHEDULER_FAILURE,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
-                    new Object() {}.getClass().getSimpleName(),
-                    new Object() {}.getClass().getEnclosingMethod().getName());
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             LoggerFactory.getTopicsLogger().e("Cannot fetch Job Scheduler!");
             return false;
         }
