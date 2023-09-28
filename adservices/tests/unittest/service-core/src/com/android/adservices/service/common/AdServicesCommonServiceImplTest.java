@@ -626,7 +626,7 @@ public class AdServicesCommonServiceImplTest {
     }
 
     @Test
-    public void enableAdServicesTest_apiDisabled() {
+    public void enableAdServicesTest_apiDisabled() throws InterruptedException {
         mGetCommonCallbackLatch = new CountDownLatch(1);
         ExtendedMockito.doReturn(true)
                 .when(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
@@ -647,13 +647,17 @@ public class AdServicesCommonServiceImplTest {
                     }
                 });
 
+        assertThat(
+                        mGetCommonCallbackLatch.await(
+                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+                .isTrue();
         ExtendedMockito.verify(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
         verify(mFlags).getEnableAdServicesSystemApi();
         verify(mUxEngine, never()).start(any());
     }
 
     @Test
-    public void enableAdServicesTest_engineStarted() {
+    public void enableAdServicesTest_engineStarted() throws InterruptedException {
         mGetCommonCallbackLatch = new CountDownLatch(1);
         ExtendedMockito.doReturn(true)
                 .when(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
@@ -675,6 +679,10 @@ public class AdServicesCommonServiceImplTest {
                     }
                 });
 
+        assertThat(
+                        mGetCommonCallbackLatch.await(
+                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+                .isTrue();
         ExtendedMockito.verify(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
         verify(mFlags).getEnableAdServicesSystemApi();
         verify(mUxEngine).start(any());
