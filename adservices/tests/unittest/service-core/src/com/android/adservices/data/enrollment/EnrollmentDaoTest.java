@@ -394,6 +394,7 @@ public class EnrollmentDaoTest {
             EnrollmentData e = enrollmentDao.getEnrollmentData(enrollmentData.getEnrollmentId());
             assertEquals(enrollmentData, e);
         }
+        enrollmentDao.deleteAll();
     }
 
     @Test
