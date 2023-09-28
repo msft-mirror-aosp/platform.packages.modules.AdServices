@@ -163,8 +163,9 @@ public final class AdIdCacheManagerTest {
 
         // Verify the first call should call the provider to fetch the AdId
         verify(mAdIdCacheManager).getAdIdFromProvider(PACKAGE_NAME, DUMMY_CALLER_UID, callback);
-        // Verify the cache is never visited.
-        verify(mAdIdCacheManager, never()).getAdIdInStorage();
+        // Verify the cache is never visited. (the SharedPreference getter is never called.)
+        verify(mAdIdCacheManager).getAdIdInStorage();
+        verify(mAdIdCacheManager, never()).getSharedPreferences();
     }
 
     @Test
