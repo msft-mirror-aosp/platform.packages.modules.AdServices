@@ -21,7 +21,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.measurement.MeasurementTables;
 
 import org.json.JSONArray;
@@ -30,6 +30,7 @@ import java.util.UUID;
 
 /** Migrates Measurement DB from user version 3 to 6. */
 public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     public static final String CREATE_TABLE_XNA_IGNORED_SOURCES_V6 =
             "CREATE TABLE "
                     + MeasurementTables.XnaIgnoredSourcesContract.TABLE
@@ -139,7 +140,7 @@ public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
                 db,
                 MeasurementTables.AsyncRegistrationContract.TABLE,
                 MeasurementTables.AsyncRegistrationContract.REGISTRATION_ID)) {
-            LogUtil.d("Registration id exists. Skipping Migration");
+            sLogger.d("Registration id exists. Skipping Migration");
             return;
         }
 
@@ -277,7 +278,7 @@ public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
                         MeasurementTables.AsyncRegistrationContract.ID + " = ?",
                         new String[] {id});
         if (rowCount != 1) {
-            LogUtil.d("MeasurementDbMigratorV6: failed to update source record.");
+            sLogger.d("MeasurementDbMigratorV6: failed to update source record.");
         }
     }
 
@@ -292,7 +293,7 @@ public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
                         MeasurementTables.SourceContract.ID + " = ?",
                         new String[] {id});
         if (rowCount != 1) {
-            LogUtil.d("MeasurementDbMigratorV6: failed to update source record.");
+            sLogger.d("MeasurementDbMigratorV6: failed to update source record.");
         }
     }
 

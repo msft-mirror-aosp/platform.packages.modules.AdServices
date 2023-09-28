@@ -29,6 +29,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.common.SdkLevelSupportRule;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -55,6 +56,10 @@ public final class AdIdCompatibleManagerTest {
     @Rule(order = 1)
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forAdidE2ETests(sContext.getPackageName());
+
+    // TODO(b/285894099): Remove the rule once AdId is enabled on R.
+    @Rule(order = 2)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() throws Exception {

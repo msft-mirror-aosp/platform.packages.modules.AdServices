@@ -182,9 +182,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                             LogUtil.e("saving to the sharedpreference failed");
                             ErrorLogUtil.e(
                                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
-                                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX,
-                                    this.getClass().getSimpleName(),
-                                    new Object() {}.getClass().getEnclosingMethod().getName());
+                                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
                         }
                         LogUtil.d(
                                 "adid status is "
@@ -215,10 +213,9 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                                 "unable to save the adservices entry point status of "
                                         + e.getMessage());
                         ErrorLogUtil.e(
+                                e,
                                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_ENTRY_POINT_FAILURE,
-                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX,
-                                this.getClass().getSimpleName(),
-                                new Object() {}.getClass().getEnclosingMethod().getName());
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
                     }
                 });
     }

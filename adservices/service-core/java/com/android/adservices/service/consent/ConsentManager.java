@@ -1424,9 +1424,7 @@ public class ConsentManager {
                                 + " preference is not updated.");
                 ErrorLogUtil.e(
                         AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
-                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX,
-                        ConsentManager.class.getSimpleName(),
-                        new Object() {}.getClass().getEnclosingMethod().getName());
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
                 statsdAdServicesLogger.logConsentMigrationStats(
                         getConsentManagerStatsForLogging(
                                 appConsents,
@@ -1478,9 +1476,7 @@ public class ConsentManager {
             LogUtil.e("Finished clearing Consent in PPAPI but shared preference is not updated.");
             ErrorLogUtil.e(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX,
-                    ConsentManager.class.getSimpleName(),
-                    ConsentManager.class.getEnclosingMethod().getName());
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
         }
     }
 
@@ -1503,9 +1499,7 @@ public class ConsentManager {
             LogUtil.e("Failed to reset shared preference for " + sharedPreferenceKey);
             ErrorLogUtil.e(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_RESET_FAILURE,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX,
-                    ConsentManager.class.getSimpleName(),
-                    ConsentManager.class.getEnclosingMethod().getName());
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
         }
     }
 

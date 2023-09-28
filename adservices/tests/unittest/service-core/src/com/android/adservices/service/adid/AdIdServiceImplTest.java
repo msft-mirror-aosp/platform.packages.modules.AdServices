@@ -27,6 +27,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_ADID;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -75,7 +76,6 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
 
@@ -97,6 +97,7 @@ public class AdIdServiceImplTest {
     private static final String INVALID_PACKAGE_NAME = "com.do_not_exists";
     private static final String SOME_SDK_NAME = "SomeSdkName";
     private static final int BINDER_CONNECTION_TIMEOUT_MS = 5_000;
+    private static final int LOGGER_EVENT_TIMEOUT_MS = 1_000;
     private static final String SDK_PACKAGE_NAME = "test_package_name";
     private static final String ADID_API_ALLOW_LIST = "com.android.adservices.servicecoretest";
     private static final int SANDBOX_UID = 25000;
@@ -320,18 +321,7 @@ public class AdIdServiceImplTest {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
         CountDownLatch logOperationCalledLatch = new CountDownLatch(1);
-        Mockito.doAnswer(
-                        new Answer<Object>() {
-                            @Override
-                            public Object answer(InvocationOnMock invocation) throws Throwable {
-                                // The method logAPiCallStats is called.
-                                invocation.callRealMethod();
-                                logOperationCalledLatch.countDown();
-                                return null;
-                            }
-                        })
-                .when(mSpyAdServicesLogger)
-                .logApiCallStats(ArgumentMatchers.any(ApiCallStats.class));
+        mockLoggerEvent(logOperationCalledLatch);
 
         mAdIdServiceImpl =
                 new AdIdServiceImpl(
@@ -391,8 +381,15 @@ public class AdIdServiceImplTest {
                 new GetAdIdResult.Builder().setAdId(AdId.ZERO_OUT).setLatEnabled(false).build();
 
         final GetAdIdResult[] capturedResponseParcel = getAdIdResults(adIdServiceImpl);
+        CountDownLatch loggerCountDownLatch = new CountDownLatch(1);
+        mockLoggerEvent(loggerCountDownLatch);
 
         assertThat(mGetAdIdCallbackLatch.await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+                .isTrue();
+
+        // Verify the logger event has occurred.
+        assertWithMessage("Logger event:")
+                .that(loggerCountDownLatch.await(LOGGER_EVENT_TIMEOUT_MS, TimeUnit.MILLISECONDS))
                 .isTrue();
 
         GetAdIdResult getAdIdResult = capturedResponseParcel[0];
@@ -459,5 +456,18 @@ public class AdIdServiceImplTest {
         doReturn(packageInfo)
                 .when(mMockPackageManager)
                 .getPackageInfo(eq(packageName), eq(PackageManager.GET_PERMISSIONS));
+    }
+
+    private void mockLoggerEvent(CountDownLatch loggerCountDownLatch) {
+        Mockito.doAnswer(
+                        (Answer<Object>)
+                                invocation -> {
+                                    // The method logAPiCallStats is called.
+                                    invocation.callRealMethod();
+                                    loggerCountDownLatch.countDown();
+                                    return null;
+                                })
+                .when(mSpyAdServicesLogger)
+                .logApiCallStats(ArgumentMatchers.any(ApiCallStats.class));
     }
 }

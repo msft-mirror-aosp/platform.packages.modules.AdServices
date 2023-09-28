@@ -23,7 +23,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import android.adservices.common.AdServicesStatusUtils;
 import android.net.Uri;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.errorlogging.ErrorLogUtil;
@@ -50,6 +50,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class EventReportingJobHandler {
 
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     private final EnrollmentDao mEnrollmentDao;
     private final DatastoreManager mDatastoreManager;
     private boolean mIsDebugInstance;
@@ -135,7 +136,7 @@ public class EventReportingJobHandler {
             // service will interrupt this thread.  If the thread has been interrupted, it will exit
             // early.
             if (Thread.currentThread().isInterrupted()) {
-                LogUtil.d(
+                sLogger.d(
                         "EventReportingJobHandler performScheduledPendingReports "
                                 + "thread interrupted, exiting early.");
                 return true;
@@ -175,14 +176,14 @@ public class EventReportingJobHandler {
             return "";
         }
         if (eventReport.getSourceId() == null) {
-            LogUtil.d("SourceId is null on event report.");
+            sLogger.d("SourceId is null on event report.");
             return "";
         }
         Optional<String> sourceRegistrant =
                 mDatastoreManager.runInTransactionWithResult(
                         (dao) -> dao.getSourceRegistrant(eventReport.getSourceId()));
         if (!sourceRegistrant.isPresent()) {
-            LogUtil.d("Source registrant not found");
+            sLogger.d("Source registrant not found");
             return "";
         }
         return sourceRegistrant.get();
@@ -200,7 +201,7 @@ public class EventReportingJobHandler {
                 mDatastoreManager.runInTransactionWithResult((dao)
                         -> dao.getEventReport(eventReportId));
         if (!eventReportOpt.isPresent()) {
-            LogUtil.d("Event report not found");
+            sLogger.d("Event report not found");
             return AdServicesStatusUtils.STATUS_IO_ERROR;
         }
         EventReport eventReport = eventReportOpt.get();
@@ -208,12 +209,12 @@ public class EventReportingJobHandler {
         reportingStatus.setSourceRegistrant(getAppPackageName(eventReport));
         if (mIsDebugInstance
                 && eventReport.getDebugReportStatus() != EventReport.DebugReportStatus.PENDING) {
-            LogUtil.d("debugging status is not pending");
+            sLogger.d("debugging status is not pending");
             reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.REPORT_NOT_PENDING);
             return AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
         }
         if (!mIsDebugInstance && eventReport.getStatus() != EventReport.Status.PENDING) {
-            LogUtil.d("event report status is not pending");
+            sLogger.d("event report status is not pending");
             reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.REPORT_NOT_PENDING);
             return AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
         }
@@ -248,7 +249,7 @@ public class EventReportingJobHandler {
                 return AdServicesStatusUtils.STATUS_IO_ERROR;
             }
         } catch (IOException e) {
-            LogUtil.d(e, "Network error occurred when attempting to deliver event report.");
+            sLogger.d(e, "Network error occurred when attempting to deliver event report.");
             reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.NETWORK);
             // TODO(b/298330312): Change to defined error codes
             ErrorLogUtil.e(
@@ -257,7 +258,7 @@ public class EventReportingJobHandler {
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             return AdServicesStatusUtils.STATUS_IO_ERROR;
         } catch (JSONException e) {
-            LogUtil.d(e, "Serialization error occurred at event report delivery.");
+            sLogger.d(e, "Serialization error occurred at event report delivery.");
             // TODO(b/298330312): Indicate serialization error
             reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.SERIALIZATION_ERROR);
             // TODO(b/298330312): Change to defined error codes
@@ -282,7 +283,7 @@ public class EventReportingJobHandler {
             }
             return AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } catch (Exception e) {
-            LogUtil.e(e, "Unexpected exception occurred when attempting to deliver event report.");
+            sLogger.e(e, "Unexpected exception occurred when attempting to deliver event report.");
             reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.UNKNOWN);
             ErrorLogUtil.e(
                     e,

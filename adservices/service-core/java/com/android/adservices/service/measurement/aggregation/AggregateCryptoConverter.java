@@ -24,7 +24,7 @@ import android.annotation.Nullable;
 import androidx.annotation.NonNull;
 
 import com.android.adservices.HpkeJni;
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.exception.CryptoException;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -53,6 +53,7 @@ public class AggregateCryptoConverter {
 
     private static final Base64.Encoder sBase64Encoder = Base64.getEncoder();
     private static final Base64.Decoder sBase64Decoder = Base64.getDecoder();
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
 
     /**
      * Aggregate payload encryption. The payload is encrypted with the following steps: 1. Extracts
@@ -102,7 +103,7 @@ public class AggregateCryptoConverter {
             // Encode with Base 64
             return encodeWithBase64(payloadEncrypted);
         } catch (Exception e) {
-            LogUtil.e(e, "Encryption error");
+            sLogger.e(e, "Encryption error");
             throw new CryptoException("Encryption error", e);
         }
     }
@@ -127,7 +128,7 @@ public class AggregateCryptoConverter {
             // Encode with Base 64
             return encodeWithBase64(payloadCborEncoded);
         } catch (Exception e) {
-            LogUtil.e(e, "Encoding error");
+            sLogger.e(e, "Encoding error");
             throw new CryptoException("Encoding error", e);
         }
     }
@@ -139,7 +140,7 @@ public class AggregateCryptoConverter {
             final JSONObject jsonObject = new JSONObject(payload);
             final JSONArray jsonArray = jsonObject.getJSONArray("data");
             if (null == jsonArray || jsonArray.length() == 0) {
-                LogUtil.d("No histogram 'data' found");
+                sLogger.d("No histogram 'data' found");
                 return contributions;
             }
 
@@ -155,7 +156,7 @@ public class AggregateCryptoConverter {
             }
             return contributions;
         } catch (NumberFormatException | JSONException e) {
-            LogUtil.d(e, "Malformed histogram payload");
+            sLogger.d(e, "Malformed histogram payload");
             return contributions;
         }
     }
