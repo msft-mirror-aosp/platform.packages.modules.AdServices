@@ -421,6 +421,5 @@ public final class AppManifestConfigHelperTest {
 
     private void setEnabledByDefault(boolean value) {
         when(mMockFlags.getAppConfigReturnsEnabledByDefault()).thenReturn(value);
-        AppManifestConfigHelper.setEnabledByDefault(value);
     }
 }
