@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.service.ui.enrollment.base;
+package com.android.adservices.service.ui.ux.impl;
+
+import static com.android.adservices.service.FlagsConstants.KEY_RVC_UX_ENABLED;
 
 import android.content.Context;
 import android.os.Build;
@@ -22,21 +24,24 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
-import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+import com.android.adservices.service.ui.enrollment.base.PrivacySandboxEnrollmentChannel;
+import com.android.adservices.service.ui.ux.base.PrivacySandboxUx;
 
 import com.google.errorprone.annotations.Immutable;
 
-/** Base enrollment channel for all privacy sandbox UXs. */
+/** The privacy sandbox (general availability) R UX. */
 @RequiresApi(Build.VERSION_CODES.S)
 @Immutable
-public interface PrivacySandboxEnrollmentChannel {
+public class RvcUx implements PrivacySandboxUx {
 
-    /** Is a user eligible for a particular UX enrollment channel. */
-    boolean isEligible(
-            PrivacySandboxUxCollection ux,
-            ConsentManager consentManager,
-            UxStatesManager uxStatesManager);
+    /** Whether a user is eligible for the privacy sandbox Rvc UX. */
+    public boolean isEligible(ConsentManager consentManager, UxStatesManager uxStatesManager) {
+        return uxStatesManager.getFlag(KEY_RVC_UX_ENABLED);
+    }
 
-    /** Enroll a user through the notification channel. */
-    void enroll(Context context, ConsentManager consentManager);
+    /** Enroll user through one of the available R UX enrollment channels if needed. */
+    public void handleEnrollment(
+            PrivacySandboxEnrollmentChannel enrollmentChannel,
+            Context context,
+            ConsentManager consentManager) {}
 }
