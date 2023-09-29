@@ -39,6 +39,7 @@ import android.net.Uri;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
@@ -291,6 +292,7 @@ public class SignalsEncodingE2ETest {
     }
 
     @Test
+    @FlakyTest(bugId = 302689885)
     public void testSignalsEncoding_Success() throws Exception {
         String encodeSignalsJS =
                 "\nfunction encodeSignals(signals, maxSize) {\n"
@@ -418,6 +420,7 @@ public class SignalsEncodingE2ETest {
      * was used in encoding just by looking at the encoded payload output.
      */
     @Test
+    @FlakyTest(bugId = 302689885)
     public void testSecondUpdateEncoderDoesNotDownloadEncodingLogic() throws Exception {
         String encodeSignalsJS1 =
                 "\nfunction encodeSignals(signals, maxSize) {\n"

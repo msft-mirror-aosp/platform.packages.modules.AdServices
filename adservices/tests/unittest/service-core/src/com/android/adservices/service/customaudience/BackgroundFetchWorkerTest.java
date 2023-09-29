@@ -299,6 +299,7 @@ public class BackgroundFetchWorkerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 298714561)
     public void testRunBackgroundFetchNothingToUpdate()
             throws ExecutionException, InterruptedException {
         assertTrue(
@@ -353,6 +354,7 @@ public class BackgroundFetchWorkerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 298714561)
     public void testRunBackgroundFetchUpdateOneCustomAudience()
             throws ExecutionException, InterruptedException {
         // Mock a single custom audience eligible for update
@@ -422,6 +424,7 @@ public class BackgroundFetchWorkerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 298714561)
     public void testRunBackgroundFetchChecksWorkInProgress()
             throws InterruptedException, ExecutionException {
         int numEligibleCustomAudiences = 16;
@@ -601,6 +604,7 @@ public class BackgroundFetchWorkerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 298714561)
     public void testRunBackgroundFetchInSequence() throws InterruptedException, ExecutionException {
         int numEligibleCustomAudiences = 16;
         CountDownLatch completionLatch = new CountDownLatch(numEligibleCustomAudiences / 2);
