@@ -26,6 +26,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
@@ -49,6 +50,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.quality.Strictness.LENIENT;
 
 import android.adservices.common.CallerMetadata;
 import android.adservices.topics.GetTopicsParam;
@@ -77,6 +79,7 @@ import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.appsearch.AppSearchConsentManager;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -268,10 +271,17 @@ public class TopicsServiceImplTest {
         // Initialize mock static.
         mStaticMockitoSession =
                 ExtendedMockito.mockitoSession()
+                        .strictness(LENIENT)
                         .mockStatic(Binder.class)
                         .spyStatic(AllowLists.class)
                         .spyStatic(ErrorLogUtil.class)
+                        .spyStatic(FlagsFactory.class)
                         .startMocking();
+
+        // Topics must call AppManifestConfigHelper to check if topics is enabled, whose behavior is
+        // currently guarded by a flag
+        mockGetFlags(mMockFlags);
+        when(mMockFlags.getAppConfigReturnsEnabledByDefault()).thenReturn(false);
     }
 
     @After
@@ -543,7 +553,7 @@ public class TopicsServiceImplTest {
 
     @Test
     public void getTopicsFromApp_SdkNotIncluded() throws Exception {
-        Mockito.lenient().when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         PackageManager.Property property =
                 mSpyContext
                         .getPackageManager()
@@ -565,7 +575,7 @@ public class TopicsServiceImplTest {
 
     @Test
     public void getTopicsFromApp_SdkTagMissing() throws Exception {
-        Mockito.lenient().when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         PackageManager.Property property =
                 mSpyContext
                         .getPackageManager()
@@ -600,7 +610,7 @@ public class TopicsServiceImplTest {
 
     @Test
     public void getTopicsSdk() throws Exception {
-        Mockito.lenient().when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         PackageManager.Property property =
                 mSpyContext
                         .getPackageManager()

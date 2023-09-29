@@ -26,8 +26,8 @@ import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.exception.XmlParseException;
-import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.xmlpull.v1.XmlPullParserException;
@@ -42,17 +42,6 @@ public class AppManifestConfigHelper {
     public static final String AD_SERVICES_CONFIG_PROPERTY =
             "android.adservices.AD_SERVICES_CONFIG";
     private static final String ANDROID_MANIFEST_FILE = "AndroidManifest.xml";
-
-    // TODO(b/297585683): remove this variable (and update test cases) once it's always enabled by
-    // default (it will be initially determined by a flag).
-    // TODO(b/297585683): read initial value from flags
-    private static boolean sEnabledByDefault = false;
-
-    @VisibleForTesting
-    static void setEnabledByDefault(boolean value) {
-        LogUtil.i("setEnabledByDefault(%b) called by test", value);
-        sEnabledByDefault = value;
-    }
 
     /**
      * Parses the app's manifest config to determine whether this sdk is permitted to use the
@@ -192,9 +181,10 @@ public class AppManifestConfigHelper {
             ApiAccessChecker checker) {
         Objects.requireNonNull(appPackageName);
         Objects.requireNonNull(enrollmentId);
+        boolean enabledByDefault = FlagsFactory.getFlags().getAppConfigReturnsEnabledByDefault();
         try {
             XmlResourceParser in = getXmlParser(context, appPackageName);
-            if (in == null && sEnabledByDefault) {
+            if (in == null && enabledByDefault) {
                 LogUtil.v(
                         "%s: returning true for app (%s) that doesn't"
                                 + " have the AdServices XML config",
@@ -202,7 +192,7 @@ public class AppManifestConfigHelper {
                 return true;
             }
             AppManifestConfig appManifestConfig =
-                    AppManifestConfigParser.getConfig(in, sEnabledByDefault);
+                    AppManifestConfigParser.getConfig(in, enabledByDefault);
             return checker.isAllowedAccess(appManifestConfig);
         } catch (PackageManager.NameNotFoundException e) {
             LogUtil.v("Name not found while looking for manifest for app \"%s\"", appPackageName);
