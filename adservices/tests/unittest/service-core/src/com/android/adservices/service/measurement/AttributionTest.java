@@ -22,6 +22,8 @@ import static org.junit.Assert.assertThrows;
 
 import android.net.Uri;
 
+import com.android.adservices.common.WebUtil;
+
 import org.junit.Test;
 
 import java.util.UUID;
