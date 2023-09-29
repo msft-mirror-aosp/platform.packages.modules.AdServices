@@ -31,6 +31,7 @@ import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
@@ -337,6 +338,7 @@ public class DialogFragmentTest {
     }
 
     @Test
+    @FlakyTest(bugId = 301779505)
     public void blockAppDialogTest() throws UiObjectNotFoundException, IOException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
