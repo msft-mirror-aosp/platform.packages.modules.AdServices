@@ -44,6 +44,7 @@ public class FakeAdExchangeServer {
                     .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
                     .create();
 
+
     public static SelectAdResponse runServerAuction(
             String contextualSignalFileName, byte[] adSelectionData) throws IOException {
         // Add contextual data
