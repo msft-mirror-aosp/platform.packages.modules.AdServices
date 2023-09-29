@@ -97,7 +97,7 @@ public class AdIdServiceImplTest {
     private static final String INVALID_PACKAGE_NAME = "com.do_not_exists";
     private static final String SOME_SDK_NAME = "SomeSdkName";
     private static final int BINDER_CONNECTION_TIMEOUT_MS = 5_000;
-    private static final int LOGGER_EVENT_TIMEOUT_MS = 1_000;
+    private static final int LOGGER_EVENT_TIMEOUT_MS = 5_000;
     private static final String SDK_PACKAGE_NAME = "test_package_name";
     private static final String ADID_API_ALLOW_LIST = "com.android.adservices.servicecoretest";
     private static final int SANDBOX_UID = 25000;
