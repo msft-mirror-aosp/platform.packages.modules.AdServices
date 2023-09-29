@@ -23,6 +23,7 @@ import android.os.RemoteException;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
@@ -236,6 +237,7 @@ public class SettingsGaUxSelectorUiAutomatorTest {
     }
 
     @Test
+    @FlakyTest(bugId = 299829948)
     public void measurementDialogTest() throws UiObjectNotFoundException, RemoteException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled true");
@@ -324,6 +326,7 @@ public class SettingsGaUxSelectorUiAutomatorTest {
     }
 
     @Test
+    @FlakyTest(bugId = 299152923)
     public void fledgeToggleTest() throws UiObjectNotFoundException, RemoteException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
@@ -424,6 +427,7 @@ public class SettingsGaUxSelectorUiAutomatorTest {
     }
 
     @Test
+    @FlakyTest(bugId = 299152542)
     public void appsSubTitleTest() throws UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
@@ -451,6 +455,7 @@ public class SettingsGaUxSelectorUiAutomatorTest {
     }
 
     @Test
+    @FlakyTest(bugId = 301779114)
     public void dialogRotateTest() throws UiObjectNotFoundException, RemoteException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled false");
@@ -542,6 +547,7 @@ public class SettingsGaUxSelectorUiAutomatorTest {
     }
 
     @Test
+    @FlakyTest(bugId = 299153376)
     public void appsToggleDialogTest() throws UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         ShellUtils.runShellCommand(
@@ -599,6 +605,7 @@ public class SettingsGaUxSelectorUiAutomatorTest {
     }
 
     @Test
+    @FlakyTest(bugId = 301779357)
     public void measurementToggleDialogTest() throws UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         ShellUtils.runShellCommand(
