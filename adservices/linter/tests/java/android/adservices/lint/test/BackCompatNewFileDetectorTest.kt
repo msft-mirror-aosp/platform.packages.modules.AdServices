@@ -35,6 +35,59 @@ class BackCompatNewFileDetectorTest : LintDetectorTest() {
     override fun lint(): TestLintTask = super.lint().allowMissingSdk(true)
 
     @Test
+    fun applicableConstructorCalls_throws() {
+        lint().files(
+                java("""
+package com.android.adservices.service.common.fake.packagename;
+
+import java.io.File;
+
+public final class FakeClass {
+    public FakeClass() {
+        File myFile1 = new File("pathname");
+        File myFile2 = new File("parent", "child");
+    }
+}
+                """), *stubs)
+                .issues(BackCompatNewFileDetector.ISSUE)
+                .run()
+                .expect("""
+                    src/com/android/adservices/service/common/fake/packagename/FakeClass.java:8: Error: Please use FileCompatUtils to ensure any newly added files have a name that begins with "adservices" or create the files in a subdirectory called "adservices/" (go/rb-extservices-ota-data-cleanup) [NewAdServicesFile]
+            File myFile1 = new File("pathname");
+                           ~~~~~~~~~~~~~~~~~~~~
+    src/com/android/adservices/service/common/fake/packagename/FakeClass.java:9: Error: Please use FileCompatUtils to ensure any newly added files have a name that begins with "adservices" or create the files in a subdirectory called "adservices/" (go/rb-extservices-ota-data-cleanup) [NewAdServicesFile]
+            File myFile2 = new File("parent", "child");
+                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    2 errors, 0 warnings
+                """.trimIndent()
+
+                )
+    }
+
+    @Test
+    fun otherFileMethods_doesNotThrow() {
+        lint().files(
+                java("""
+package com.android.adservices.service.common.fake.packagename;
+
+import java.io.File;
+
+public final class FakeClass {
+    private boolean isDeleted = false;
+
+    public FakeClass(File myFile) {
+        if (myFile.exists()) {
+            isDeleted = myFile.delete();
+        }
+    }
+}
+                """), *stubs)
+                .issues(BackCompatNewFileDetector.ISSUE)
+                .run()
+                .expectClean()
+    }
+
+    @Test
     fun applicableMethodCalls_throws() {
         lint().files(
                 java("""
@@ -46,7 +99,6 @@ import androidx.room.Room;
 public final class FakeClass {
     public FakeClass(Context context) {
         context.getDatabasePath("stringName");
-        context.getFilesDir();
         Room.databaseBuilder(context, FakeClass.class, "stringName");
     }
 }
@@ -58,12 +110,9 @@ public final class FakeClass {
             context.getDatabasePath("stringName");
                     ~~~~~~~~~~~~~~~
     src/com/android/adservices/service/common/fake/packagename/FakeClass.java:10: Error: Please use FileCompatUtils to ensure any newly added files have a name that begins with "adservices" or create the files in a subdirectory called "adservices/" (go/rb-extservices-ota-data-cleanup) [NewAdServicesFile]
-            context.getFilesDir();
-                    ~~~~~~~~~~~
-    src/com/android/adservices/service/common/fake/packagename/FakeClass.java:11: Error: Please use FileCompatUtils to ensure any newly added files have a name that begins with "adservices" or create the files in a subdirectory called "adservices/" (go/rb-extservices-ota-data-cleanup) [NewAdServicesFile]
             Room.databaseBuilder(context, FakeClass.class, "stringName");
                  ~~~~~~~~~~~~~~~
-    3 errors, 0 warnings
+    2 errors, 0 warnings
                 """.trimIndent()
 
                 )
@@ -81,7 +130,6 @@ import androidx.room.OtherRoom;
 public final class FakeClass {
     public FakeClass(OtherContext context) {
         context.getDatabasePath("stringName");
-        context.getFilesDir();
         OtherRoom.databaseBuilder(context, FakeClass.class, "stringName");
     }
 }
@@ -91,13 +139,26 @@ public final class FakeClass {
                 .expectClean()
     }
 
+    private val fileClass: TestFile =
+            java(
+                    """
+            package java.io;
+            public class File {
+                    public File(String pathname) {}
+                    public File(String parent, String child) {}
+                    public boolean delete() { return true; }
+                    public boolean exists() { return true; }
+            }
+        """
+            )
+                    .indented()
+
     private val context: TestFile =
             java(
                     """
             package android.content;
             public abstract class Context {
                     public abstract void getDatabasePath(String name);
-                    public abstract void getFilesDir();
             }
         """
             )
@@ -124,7 +185,6 @@ public final class FakeClass {
             package android.content;
             public abstract class OtherContext {
                     public abstract void getDatabasePath(String name);
-                    public abstract void getFilesDir(String name);
             }
         """
             )
@@ -147,6 +207,7 @@ public final class FakeClass {
 
     private val stubs =
             arrayOf(
+                    fileClass,
                     context,
                     room,
                     otherContext,
