@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -76,7 +76,8 @@ import java.util.concurrent.TimeUnit;
 
 /** Unit test for {@link com.android.adservices.service.appsetid.AppSetIdServiceImpl}. */
 public class AppSetIdServiceImplTest {
-    private static final String TEST_APP_PACKAGE_NAME = "com.android.adservices.servicecoretest";
+    private static final String TEST_APP_PACKAGE_NAME =
+            "com.android.adservices.servicecoreappsetidtest";
     private static final String INVALID_PACKAGE_NAME = "com.do_not_exists";
     private static final String SOME_SDK_NAME = "SomeSdkName";
     private static final int BINDER_CONNECTION_TIMEOUT_MS = 5_000;
@@ -84,7 +85,8 @@ public class AppSetIdServiceImplTest {
     private static final String ALLOWED_SDK_ID = "1234567";
     // This is not allowed per the ad_services_config.xml manifest config.
     private static final String DISALLOWED_SDK_ID = "123";
-    private static final String APPSETID_API_ALLOW_LIST = "com.android.adservices.servicecoretest";
+    private static final String APPSETID_API_ALLOW_LIST =
+            "com.android.adservices.servicecoreappsetidtest";
     private static final int SANDBOX_UID = 25000;
 
     private final Context mContext = ApplicationProvider.getApplicationContext();
