@@ -27,6 +27,7 @@ import static org.mockito.Mockito.verify;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -80,6 +81,9 @@ public class DialogFragmentTest {
     public void setup() throws UiObjectNotFoundException, IOException {
         // Skip the test if it runs on unsupported platforms.
         Assume.assumeTrue(ApkTestUtil.isDeviceSupported());
+
+        // Skip the test on S- since Back Compat only support GA UX
+        Assume.assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU);
 
         // Static mocking
         mStaticMockSession =
