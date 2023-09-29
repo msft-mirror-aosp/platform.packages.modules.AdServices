@@ -84,7 +84,7 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
-import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
@@ -166,6 +166,7 @@ public class ReportAndRegisterEventE2ETest {
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptorMock;
     @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDaoMock;
     @Mock private AdIdFetcher mAdIdFetcher;
+    @Mock private AdServicesErrorLogger mAdServicesErrorLogger;
 
     private static final Instant ACTIVATION_TIME = Instant.now();
     private static final String CALLER_SDK_NAME = "sdk.package.name";
@@ -211,7 +212,8 @@ public class ReportAndRegisterEventE2ETest {
 
     @Spy
     private DatastoreManager mDatastoreManagerSpy =
-            new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
+            new SQLDatastoreManager(
+                    DbTestUtil.getMeasurementDbHelperForTest(), mAdServicesErrorLogger);
 
     @Mock private ContentResolver mContentResolverMock;
     @Mock private ClickVerifier mClickVerifierMock;

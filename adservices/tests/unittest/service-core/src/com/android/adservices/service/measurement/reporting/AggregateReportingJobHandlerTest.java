@@ -43,6 +43,7 @@ import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
+import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -101,6 +102,7 @@ public class AggregateReportingJobHandlerTest {
     @Mock EnrollmentDao mEnrollmentDao;
     @Mock Flags mMockFlags;
     @Mock AdServicesLogger mLogger;
+    @Mock AdServicesErrorLogger mErrorLogger;
 
     AggregateReportingJobHandler mAggregateReportingJobHandler;
     AggregateReportingJobHandler mSpyAggregateReportingJobHandler;
@@ -108,6 +110,10 @@ public class AggregateReportingJobHandlerTest {
     private StaticMockitoSession mMockitoSession;
 
     class FakeDatasoreManager extends DatastoreManager {
+
+        FakeDatasoreManager() {
+            super(mErrorLogger);
+        }
 
         @Override
         public ITransaction createNewTransaction() {
