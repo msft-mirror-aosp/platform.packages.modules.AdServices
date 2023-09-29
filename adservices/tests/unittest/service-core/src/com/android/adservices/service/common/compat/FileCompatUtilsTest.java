@@ -29,6 +29,7 @@ import org.junit.Test;
 public final class FileCompatUtilsTest {
     private static final String BASE_FILENAME = "filename.xml";
     private static final String FILENAME_STARTS_WITH_ADSERVICES = "ADSERVICES_filename.xml";
+    private static final String ANOTHER_FILENAME_STARTS_WITH_ADSERVICES = "adservicesFilename.xml";
     private static final String ADSERVICES_PREFIX = "adservices_";
 
     @Rule
@@ -48,6 +49,8 @@ public final class FileCompatUtilsTest {
         mockIsAtLeastT(false);
         assertThat(FileCompatUtils.getAdservicesFilename(FILENAME_STARTS_WITH_ADSERVICES))
                 .isEqualTo(FILENAME_STARTS_WITH_ADSERVICES);
+        assertThat(FileCompatUtils.getAdservicesFilename(ANOTHER_FILENAME_STARTS_WITH_ADSERVICES))
+                .isEqualTo(ANOTHER_FILENAME_STARTS_WITH_ADSERVICES);
     }
 
     @Test
