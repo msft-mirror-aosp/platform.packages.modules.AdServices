@@ -52,6 +52,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
@@ -62,12 +63,11 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
 import org.mockito.Spy;
 import org.mockito.quality.Strictness;
 
@@ -83,36 +83,33 @@ public class EpochJobServiceTest {
     private static final Flags TEST_FLAGS = FlagsFactory.getFlagsForTest();
 
     @Spy private EpochJobService mSpyEpochJobService;
-    private MockitoSession mStaticMockSession;
 
     // Mock EpochManager and CacheManager as the methods called are tested in corresponding
     // unit test. In this test, only verify whether specific method is initiated.
-    @Mock EpochManager mMockEpochManager;
-    @Mock CacheManager mMockCacheManager;
-    @Mock BlockedTopicsManager mBlockedTopicsManager;
-    @Mock AppUpdateManager mMockAppUpdateManager;
-    @Mock JobParameters mMockJobParameters;
-    @Mock Flags mMockFlags;
-    @Mock JobScheduler mMockJobScheduler;
-    @Mock StatsdAdServicesLogger mMockStatsdLogger;
+    @Mock private EpochManager mMockEpochManager;
+    @Mock private CacheManager mMockCacheManager;
+    @Mock private BlockedTopicsManager mBlockedTopicsManager;
+    @Mock private AppUpdateManager mMockAppUpdateManager;
+    @Mock private JobParameters mMockJobParameters;
+    @Mock private Flags mMockFlags;
+    @Mock private JobScheduler mMockJobScheduler;
+    @Mock private StatsdAdServicesLogger mMockStatsdLogger;
     private AdservicesJobServiceLogger mSpyLogger;
+
+    @Rule
+    public final AdServicesExtendedMockitoRule extendedMockito =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(EpochJobService.class)
+                    .spyStatic(TopicsWorker.class)
+                    .spyStatic(FlagsFactory.class)
+                    .spyStatic(AdservicesJobServiceLogger.class)
+                    .spyStatic(ErrorLogUtil.class)
+                    .mockStatic(ServiceCompatUtils.class)
+                    .setStrictness(Strictness.WARN)
+                    .build();
 
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
-
-        // Start a mockitoSession to mock static method
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(EpochJobService.class)
-                        .spyStatic(TopicsWorker.class)
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(AdservicesJobServiceLogger.class)
-                        .spyStatic(ErrorLogUtil.class)
-                        .mockStatic(ServiceCompatUtils.class)
-                        .strictness(Strictness.WARN)
-                        .startMocking();
-
         mockGetFlags(mMockFlags);
 
         // Mock JobScheduler invocation in EpochJobService
@@ -138,7 +135,6 @@ public class EpochJobServiceTest {
     @After
     public void teardown() {
         JOB_SCHEDULER.cancelAll();
-        mStaticMockSession.finishMocking();
     }
 
     @Test
