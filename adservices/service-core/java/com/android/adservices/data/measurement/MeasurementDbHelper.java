@@ -49,6 +49,7 @@ import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV2
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV7;
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV8;
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV9;
+import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
@@ -62,7 +63,8 @@ import java.util.stream.Stream;
 
 /** Database Helper for Measurement database. */
 public class MeasurementDbHelper extends SQLiteOpenHelper {
-    private static final String DATABASE_NAME = "adservices_msmt.db";
+    private static final String DATABASE_NAME =
+            FileCompatUtils.getAdservicesFilename("adservices_msmt.db");
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
 
     public static final int CURRENT_DATABASE_VERSION = 25;
