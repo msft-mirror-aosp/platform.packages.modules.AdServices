@@ -14,28 +14,19 @@
  * limitations under the License.
  */
 
-package android.adservices.cts;
+package android.adservices.signals;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.CommonFixture;
-import android.adservices.signals.FetchSignalUpdatesInput;
 import android.net.Uri;
 import android.os.Parcel;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
-/**
- * Unit tests for {@link FetchSignalUpdatesInput}
- *
- * <p>If this class is un-ignored {@link android.adservices.signals.FetchSignalUpdatesInputTest}
- * should be deleted.
- */
-@Ignore
-public class FetchSignalUpdatesInputTest {
+public class UpdateSignalsInputTest {
 
     private static final Uri URI = Uri.parse("https://example.com/somecoolsignals");
     private static final String PACKAGE = CommonFixture.TEST_PACKAGE_NAME_1;
@@ -43,8 +34,8 @@ public class FetchSignalUpdatesInputTest {
 
     @Test
     public void testBuild() {
-        FetchSignalUpdatesInput input = new FetchSignalUpdatesInput.Builder(URI, PACKAGE).build();
-        assertEquals(URI, input.getFetchUri());
+        UpdateSignalsInput input = new UpdateSignalsInput.Builder(URI, PACKAGE).build();
+        assertEquals(URI, input.getUpdateUri());
         assertEquals(PACKAGE, input.getCallerPackageName());
     }
 
@@ -52,25 +43,24 @@ public class FetchSignalUpdatesInputTest {
     public void testBuildNullUri_throws() {
         assertThrows(
                 NullPointerException.class,
-                () -> new FetchSignalUpdatesInput.Builder(null, PACKAGE).build());
+                () -> new UpdateSignalsInput.Builder(null, PACKAGE).build());
     }
 
     @Test
     public void testBuildNullPackage_throws() {
         assertThrows(
                 NullPointerException.class,
-                () -> new FetchSignalUpdatesInput.Builder(URI, null).build());
+                () -> new UpdateSignalsInput.Builder(URI, null).build());
     }
 
     @Test
     public void testParceling() {
-        FetchSignalUpdatesInput expected =
-                new FetchSignalUpdatesInput.Builder(URI, PACKAGE).build();
+        UpdateSignalsInput expected = new UpdateSignalsInput.Builder(URI, PACKAGE).build();
         Parcel parcel = Parcel.obtain();
 
         expected.writeToParcel(parcel, 0);
         parcel.setDataPosition(0);
-        FetchSignalUpdatesInput actual = FetchSignalUpdatesInput.CREATOR.createFromParcel(parcel);
+        UpdateSignalsInput actual = UpdateSignalsInput.CREATOR.createFromParcel(parcel);
 
         assertEquals(expected, actual);
     }
@@ -84,7 +74,7 @@ public class FetchSignalUpdatesInputTest {
         parcel.setDataPosition(0);
         assertThrows(
                 NullPointerException.class,
-                () -> FetchSignalUpdatesInput.CREATOR.createFromParcel(parcel));
+                () -> UpdateSignalsInput.CREATOR.createFromParcel(parcel));
     }
 
     @Test
@@ -96,61 +86,55 @@ public class FetchSignalUpdatesInputTest {
         parcel.setDataPosition(0);
         assertThrows(
                 NullPointerException.class,
-                () -> FetchSignalUpdatesInput.CREATOR.createFromParcel(parcel));
+                () -> UpdateSignalsInput.CREATOR.createFromParcel(parcel));
     }
 
     @Test
     public void testNewArray() {
         int arrayLength = 5;
-        FetchSignalUpdatesInput[] array = FetchSignalUpdatesInput.CREATOR.newArray(arrayLength);
+        UpdateSignalsInput[] array = UpdateSignalsInput.CREATOR.newArray(arrayLength);
         assertEquals(arrayLength, array.length);
     }
 
     @Test
     public void testDescribeContents() {
-        FetchSignalUpdatesInput input = new FetchSignalUpdatesInput.Builder(URI, PACKAGE).build();
+        UpdateSignalsInput input = new UpdateSignalsInput.Builder(URI, PACKAGE).build();
         assertEquals(0, input.describeContents());
     }
 
     @Test
     public void testEqualsEqual() {
-        FetchSignalUpdatesInput identical1 =
-                new FetchSignalUpdatesInput.Builder(URI, PACKAGE).build();
-        FetchSignalUpdatesInput identical2 =
-                new FetchSignalUpdatesInput.Builder(URI, PACKAGE).build();
+        UpdateSignalsInput identical1 = new UpdateSignalsInput.Builder(URI, PACKAGE).build();
+        UpdateSignalsInput identical2 = new UpdateSignalsInput.Builder(URI, PACKAGE).build();
         assertEquals(identical1, identical2);
     }
 
     @Test
     public void testEqualsNotEqualSameClass() {
-        FetchSignalUpdatesInput different1 =
-                new FetchSignalUpdatesInput.Builder(URI, PACKAGE).build();
-        FetchSignalUpdatesInput different2 =
-                new FetchSignalUpdatesInput.Builder(URI, OTHER_PACKAGE).build();
+        UpdateSignalsInput different1 = new UpdateSignalsInput.Builder(URI, PACKAGE).build();
+        UpdateSignalsInput different2 = new UpdateSignalsInput.Builder(URI, OTHER_PACKAGE).build();
         assertNotEquals(different1, different2);
     }
 
     @Test
     public void testEqualsNotEqualDifferentClass() {
-        FetchSignalUpdatesInput input1 = new FetchSignalUpdatesInput.Builder(URI, PACKAGE).build();
+        UpdateSignalsInput input1 = new UpdateSignalsInput.Builder(URI, PACKAGE).build();
         assertNotEquals(input1, new Object());
     }
 
     @Test
     public void testHash() {
-        FetchSignalUpdatesInput identical1 =
-                new FetchSignalUpdatesInput.Builder(URI, PACKAGE).build();
-        FetchSignalUpdatesInput identical2 =
-                new FetchSignalUpdatesInput.Builder(URI, PACKAGE).build();
+        UpdateSignalsInput identical1 = new UpdateSignalsInput.Builder(URI, PACKAGE).build();
+        UpdateSignalsInput identical2 = new UpdateSignalsInput.Builder(URI, PACKAGE).build();
         assertEquals(identical1.hashCode(), identical2.hashCode());
     }
 
     @Test
     public void testToString() {
-        FetchSignalUpdatesInput input = new FetchSignalUpdatesInput.Builder(URI, PACKAGE).build();
+        UpdateSignalsInput input = new UpdateSignalsInput.Builder(URI, PACKAGE).build();
         assertEquals(
-                "FetchSignalUpdatesInput{"
-                        + "mFetchUri="
+                "UpdateSignalsInput{"
+                        + "mUpdateUri="
                         + URI
                         + ", mCallerPackageName='"
                         + PACKAGE
