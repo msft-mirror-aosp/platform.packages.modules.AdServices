@@ -51,6 +51,7 @@ public final class DebugReport {
 
     @Override
     public boolean equals(Object obj) {
+        // TODO (b/300109438) Investigate DebugReport::equals
         if (!(obj instanceof DebugReport)) {
             return false;
         }

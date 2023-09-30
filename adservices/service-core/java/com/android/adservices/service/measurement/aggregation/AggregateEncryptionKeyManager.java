@@ -17,11 +17,11 @@ package com.android.adservices.service.measurement.aggregation;
 
 import android.net.Uri;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.common.AllowLists;
-import com.android.adservices.service.measurement.util.Web;
+import com.android.adservices.service.common.WebAddresses;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.time.Clock;
@@ -35,6 +35,7 @@ import java.util.Set;
 
 /** A public key used to encrypt aggregatable reports. */
 public final class AggregateEncryptionKeyManager {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     private final DatastoreManager mDatastoreManager;
     private final AggregateEncryptionKeyFetcher mAggregateEncryptionKeyFetcher;
     private final Clock mClock;
@@ -71,7 +72,7 @@ public final class AggregateEncryptionKeyManager {
     public List<AggregateEncryptionKey> getAggregateEncryptionKeys(
             Uri coordinatorOrigin, int numKeys) {
         if (!isAllowlisted(mAggregationCoordinatorOriginList, coordinatorOrigin.toString())) {
-            LogUtil.w("Fetching aggregate encryption keys failed, invalid url.");
+            sLogger.w("Fetching aggregate encryption keys failed, invalid url.");
             return Collections.emptyList();
         }
         Uri aggregationCoordinatorUrl = createURL(coordinatorOrigin, mAggregationCoordinatorPath);
@@ -96,7 +97,7 @@ public final class AggregateEncryptionKeyManager {
             if (fetchResult.isPresent()) {
                 aggregateEncryptionKeys = fetchResult.get();
                 // Do not cache keys provided by localhost
-                if (!Web.isLocalhost(aggregationCoordinatorUrl)) {
+                if (!WebAddresses.isLocalhost(aggregationCoordinatorUrl)) {
                     for (AggregateEncryptionKey aggregateEncryptionKey : aggregateEncryptionKeys) {
                         mDatastoreManager.runInTransaction((dao) ->
                                 dao.insertAggregateEncryptionKey(aggregateEncryptionKey));
@@ -105,7 +106,7 @@ public final class AggregateEncryptionKeyManager {
                 mDatastoreManager.runInTransaction((dao) ->
                         dao.deleteExpiredAggregateEncryptionKeys(eventTime));
             } else {
-                LogUtil.d("Fetching aggregate encryption keys over the network failed.");
+                sLogger.d("Fetching aggregate encryption keys over the network failed.");
             }
         }
 

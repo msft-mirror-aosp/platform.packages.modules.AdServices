@@ -21,10 +21,10 @@ import android.net.Uri;
 
 import androidx.annotation.NonNull;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.measurement.util.Web;
+import com.android.adservices.service.common.WebAddresses;
 
 import java.io.IOException;
 import java.net.URL;
@@ -46,6 +46,8 @@ import javax.net.ssl.X509TrustManager;
  */
 public class MeasurementHttpClient {
 
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
+
     enum HttpMethod {
         GET,
         POST
@@ -61,8 +63,9 @@ public class MeasurementHttpClient {
         Objects.requireNonNull(url);
 
         final HttpsURLConnection urlConnection = (HttpsURLConnection) url.openConnection();
-        if (Web.isLocalhost(Uri.parse(url.toString()))) {
-            LogUtil.d("MeasurementHttpClient::setup : setting unsafe SSL for localhost, URI: %s",
+        if (WebAddresses.isLocalhost(Uri.parse(url.toString()))) {
+            sLogger.d(
+                    "MeasurementHttpClient::setup : setting unsafe SSL for localhost, URI: %s",
                     url.toString());
             urlConnection.setSSLSocketFactory(getUnsafeSslSocketFactory());
         }
@@ -72,6 +75,7 @@ public class MeasurementHttpClient {
 
         // Overriding default headers to avoid leaking information
         urlConnection.setRequestProperty("User-Agent", "");
+        urlConnection.setRequestProperty("Version", flags.getMainlineTrainVersion());
 
         return urlConnection;
     }
@@ -96,7 +100,7 @@ public class MeasurementHttpClient {
             sslContext.init(null, bypassTrustManagers, new SecureRandom());
             return sslContext.getSocketFactory();
         } catch (Exception e) {
-            LogUtil.e(e, "getUnsafeSslSocketFactory caught exception");
+            sLogger.e(e, "getUnsafeSslSocketFactory caught exception");
             return null;
         }
     }

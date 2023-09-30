@@ -19,7 +19,7 @@ package com.android.adservices.service.measurement;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.measurement.noising.Combinatorics;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.internal.annotations.VisibleForTesting;
@@ -38,6 +38,7 @@ import java.util.Objects;
  * A class wrapper for the trigger specification from the input argument during source registration
  */
 public class ReportSpec {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     private final TriggerSpec[] mTriggerSpecs;
     private int mMaxEventLevelReports;
     private final PrivacyComputationParams mPrivacyParams;
@@ -135,7 +136,7 @@ public class ReportSpec {
     }
 
     /** @return the number of states */
-    public int getNumberState() {
+    public long getNumberState() {
         return getPrivacyParams().getNumStates();
     }
 
@@ -264,8 +265,8 @@ public class ReportSpec {
      *
      * @return json object encode this class
      */
-    public String encodeTriggerSpecsToJSON() {
-        return encodeTriggerSpecsToJSON(mTriggerSpecs);
+    public String encodeTriggerSpecsToJson() {
+        return encodeTriggerSpecsToJson(mTriggerSpecs);
     }
 
     /**
@@ -274,7 +275,7 @@ public class ReportSpec {
      * @param triggerSpecs triggerSpec array to be encoded
      * @return JSON encoded String
      */
-    public static String encodeTriggerSpecsToJSON(TriggerSpec[] triggerSpecs) {
+    public static String encodeTriggerSpecsToJson(TriggerSpec[] triggerSpecs) {
         try {
             JSONObject[] triggerSpecsArray = new JSONObject[triggerSpecs.length];
             for (int i = 0; i < triggerSpecs.length; i++) {
@@ -282,7 +283,7 @@ public class ReportSpec {
             }
             return new JSONArray(triggerSpecsArray).toString();
         } catch (JSONException e) {
-            LogUtil.e("ReportSpec::encodeTriggerSpecsToJSON is unable to encode TriggerSpecs");
+            sLogger.e("ReportSpec::encodeTriggerSpecsToJson is unable to encode TriggerSpecs");
             return null;
         }
     }
@@ -299,7 +300,7 @@ public class ReportSpec {
                     ReportSpecUtil.FlexEventReportJsonKeys.FLIP_PROBABILITY,
                     mPrivacyParams.mFlipProbability);
         } catch (JSONException e) {
-            LogUtil.e(
+            sLogger.e(
                     "ReportSpec::encodePrivacyParametersToJSONString is unable to encode"
                             + " PrivacyParams to JSON");
             return null;
@@ -352,7 +353,7 @@ public class ReportSpec {
                 return true;
             }
         }
-        LogUtil.e("ReportSpec::deleteFromAttributedValue: eventReport cannot be found");
+        sLogger.e("ReportSpec::deleteFromAttributedValue: eventReport cannot be found");
         return false;
     }
 
@@ -400,7 +401,7 @@ public class ReportSpec {
     private class PrivacyComputationParams {
         private final int[] mPerTypeNumWindowList;
         private final int[] mPerTypeCapList;
-        private final int mNumStates;
+        private final long mNumStates;
         private final double mFlipProbability;
         private final double mInformationGain;
 
@@ -410,7 +411,7 @@ public class ReportSpec {
 
             // compute number of state and other privacy parameters
             mNumStates =
-                    Combinatorics.getNumStatesFlexAPI(
+                    Combinatorics.getNumStatesFlexApi(
                             mMaxEventLevelReports, mPerTypeNumWindowList, mPerTypeCapList);
             mFlipProbability = Combinatorics.getFlipProbability(mNumStates);
             mInformationGain = Combinatorics.getInformationGain(mNumStates, mFlipProbability);
@@ -430,7 +431,7 @@ public class ReportSpec {
             return mFlipProbability;
         }
 
-        private int getNumStates() {
+        private long getNumStates() {
             return mNumStates;
         }
 

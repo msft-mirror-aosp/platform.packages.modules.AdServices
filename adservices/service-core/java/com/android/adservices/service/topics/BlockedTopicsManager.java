@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.topics;
 
+import static com.android.adservices.AdServicesCommon.ADEXTSERVICES_PACKAGE_NAME_SUFFIX;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_RESET_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_CLEAR_ALL_BLOCKED_TOPICS_IN_SYSTEM_SERVER_FAILURE;
@@ -35,6 +36,7 @@ import android.os.Build;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
@@ -173,9 +175,7 @@ public class BlockedTopicsManager {
                     default:
                         ErrorLogUtil.e(
                                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_INVALID_BLOCKED_TOPICS_SOURCE_OF_TRUTH,
-                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
-                                this.getClass().getSimpleName(),
-                                new Object() {}.getClass().getEnclosingMethod().getName());
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
                         throw new RuntimeException(
                                 ConsentConstants
                                         .ERROR_MESSAGE_INVALID_BLOCKED_TOPICS_SOURCE_OF_TRUTH);
@@ -220,9 +220,7 @@ public class BlockedTopicsManager {
                     default:
                         ErrorLogUtil.e(
                                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_INVALID_BLOCKED_TOPICS_SOURCE_OF_TRUTH,
-                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
-                                this.getClass().getSimpleName(),
-                                new Object() {}.getClass().getEnclosingMethod().getName());
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
                         throw new RuntimeException(
                                 ConsentConstants
                                         .ERROR_MESSAGE_INVALID_BLOCKED_TOPICS_SOURCE_OF_TRUTH);
@@ -263,9 +261,7 @@ public class BlockedTopicsManager {
                     default:
                         ErrorLogUtil.e(
                                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_INVALID_BLOCKED_TOPICS_SOURCE_OF_TRUTH,
-                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
-                                this.getClass().getSimpleName(),
-                                new Object() {}.getClass().getEnclosingMethod().getName());
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
                         throw new RuntimeException(
                                 ConsentConstants
                                         .ERROR_MESSAGE_INVALID_BLOCKED_TOPICS_SOURCE_OF_TRUTH);
@@ -307,9 +303,7 @@ public class BlockedTopicsManager {
                     default:
                         ErrorLogUtil.e(
                                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_INVALID_BLOCKED_TOPICS_SOURCE_OF_TRUTH,
-                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
-                                this.getClass().getSimpleName(),
-                                new Object() {}.getClass().getEnclosingMethod().getName());
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
                         throw new RuntimeException(
                                 ConsentConstants
                                         .ERROR_MESSAGE_INVALID_BLOCKED_TOPICS_SOURCE_OF_TRUTH);
@@ -341,6 +335,15 @@ public class BlockedTopicsManager {
         Objects.requireNonNull(topicsDao);
         // Migration of data to system server is not done on S-.
         if (!SdkLevel.isAtLeastT()) {
+            return;
+        }
+        // On R/S, handleBlockedTopicsMigrationIfNeeded should never be executed.
+        // It is a T+ feature. On T+, this function should only execute if it's within the
+        // AdServices APK and not ExtServices. So check if it's within ExtServices,
+        // and bail out if that's the case on any platform.
+        String packageName = context.getPackageName();
+        if (packageName != null && packageName.endsWith(ADEXTSERVICES_PACKAGE_NAME_SUFFIX)) {
+            LogUtil.d("Aborting attempt to migrate blocked topics in ExtServices");
             return;
         }
 
@@ -389,15 +392,15 @@ public class BlockedTopicsManager {
         } else {
             ErrorLogUtil.e(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_RESET_FAILURE,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
-                    sSingleton.getClass().getSimpleName(),
-                    new Object() {}.getClass().getEnclosingMethod().getName());
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             sLogger.e("Failed to reset shared preference for " + sharedPreferenceKey);
         }
     }
 
     // Perform a one-time migration to migrate existing PPAPI blocked topics.
     @VisibleForTesting
+    // Suppress lint warning for context.getUser in R since this code is unused in R
+    @SuppressWarnings("NewApi")
     static void mayMigratePpApiBlockedTopicsToSystemService(
             @NonNull Context context,
             @NonNull TopicsDao topicsDao,
@@ -433,9 +436,7 @@ public class BlockedTopicsManager {
         } else {
             ErrorLogUtil.e(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
-                    sSingleton.getClass().getSimpleName(),
-                    new Object() {}.getClass().getEnclosingMethod().getName());
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             sLogger.e(
                     "Finish migrating blocked topics from PPAPI to System Service but shared"
                             + " preference is not updated.");
@@ -467,9 +468,7 @@ public class BlockedTopicsManager {
         } else {
             ErrorLogUtil.e(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
-                    sSingleton.getClass().getSimpleName(),
-                    new Object() {}.getClass().getEnclosingMethod().getName());
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             sLogger.e(
                     "Finish clearing blocked topics in PPAPI but shared preference is not"
                             + " updated.");

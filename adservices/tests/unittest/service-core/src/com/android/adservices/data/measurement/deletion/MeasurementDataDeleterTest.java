@@ -39,6 +39,9 @@ import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
+import com.android.adservices.errorlogging.AdServicesErrorLogger;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventReportFixture;
 import com.android.adservices.service.measurement.ReportSpec;
@@ -51,15 +54,22 @@ import com.android.adservices.service.measurement.aggregation.AggregateHistogram
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.aggregation.AggregateReportFixture;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.MockitoSession;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.quality.Strictness;
 
 import java.math.BigInteger;
 import java.time.Instant;
@@ -143,10 +153,18 @@ public class MeasurementDataDeleterTest {
     @Mock private AggregateReport mAggregateReport3;
     @Mock private List<Uri> mOriginUris;
     @Mock private List<Uri> mDomainUris;
+    @Mock private Flags mFlags;
+    @Mock private AdServicesErrorLogger mErrorLogger;
+    @Mock private AdServicesLogger mLogger;
 
     private MeasurementDataDeleter mMeasurementDataDeleter;
+    private MockitoSession mStaticMockSession;
 
     private class FakeDatastoreManager extends DatastoreManager {
+        private FakeDatastoreManager() {
+            super(mErrorLogger);
+        }
+
         @Override
         public ITransaction createNewTransaction() {
             return mTransaction;
@@ -164,8 +182,23 @@ public class MeasurementDataDeleterTest {
     }
 
     @Before
-    public void setUp() throws Exception {
-        mMeasurementDataDeleter = new MeasurementDataDeleter(new FakeDatastoreManager());
+    public void setup() throws Exception {
+        MockitoAnnotations.initMocks(this);
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
+                        .strictness(Strictness.WARN)
+                        .startMocking();
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        when(mFlags.getMeasurementEnableAraDeduplicationAlignmentV1()).thenReturn(true);
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(false);
+        mMeasurementDataDeleter =
+                spy(new MeasurementDataDeleter(new FakeDatastoreManager(), mFlags, mLogger));
+    }
+
+    @After
+    public void cleanup() {
+        mStaticMockSession.finishMocking();
     }
 
     @Test
@@ -231,7 +264,65 @@ public class MeasurementDataDeleterTest {
     }
 
     @Test
-    public void resetDedupKeys_hasMatchingEventReports_removesTriggerDedupKeysFromSource()
+    public void resetDedupKeys_matchingReports_removesDedupKeysFromSource()
+            throws DatastoreException, JSONException {
+        String attributionStatus1 = getAttributionStatus(
+                List.of("trigger1", "trigger2", "trigger3"),
+                List.of("4", "5", "6"),
+                List.of("1", "2", "3"));
+        // Setup
+        Source source1 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("sourceId1")
+                        .setEventAttributionStatus(attributionStatus1)
+                        .build();
+        String attributionStatus2 = getAttributionStatus(
+                List.of("trigger11", "trigger22", "trigger33"),
+                List.of("44", "55", "66"),
+                List.of("11", "22", "33"));
+        Source source2 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("sourceId2")
+                        .setEventAttributionStatus(attributionStatus2)
+                        .build();
+
+        when(mEventReport1.getTriggerDedupKey()).thenReturn(new UnsignedLong("1")); // S1 - T1
+        when(mEventReport1.getTriggerId()).thenReturn("trigger1"); // S1 - T1
+        when(mEventReport2.getTriggerDedupKey()).thenReturn(new UnsignedLong("22")); // S2 - T2
+        when(mEventReport2.getTriggerId()).thenReturn("trigger22"); // S2 - T2
+        when(mEventReport3.getTriggerDedupKey()).thenReturn(new UnsignedLong("3")); // S1 - T3
+        when(mEventReport3.getTriggerId()).thenReturn("trigger3"); // S3 - T3
+        when(mEventReport1.getSourceId()).thenReturn(source1.getId());
+        when(mEventReport2.getSourceId()).thenReturn(source2.getId());
+        when(mEventReport3.getSourceId()).thenReturn(source1.getId());
+
+        when(mMeasurementDao.getSource(source1.getId())).thenReturn(source1);
+        when(mMeasurementDao.getSource(source2.getId())).thenReturn(source2);
+
+        // Execution
+        mMeasurementDataDeleter.resetDedupKeys(
+                mMeasurementDao, List.of(mEventReport1, mEventReport2, mEventReport3));
+
+        // Verification
+        ArgumentCaptor<String> attributionStatusArg = ArgumentCaptor.forClass(String.class);
+        verify(mMeasurementDao, times(2)).updateSourceAttributedTriggers(
+                eq(source1.getId()), attributionStatusArg.capture());
+        List<String> attributionStatuses = attributionStatusArg.getAllValues();
+        assertEquals(
+                getAttributionStatus(List.of("trigger2", "trigger3"),
+                      List.of("5", "6"), List.of("2", "3")),
+                attributionStatuses.get(0));
+        assertEquals(
+                getAttributionStatus(List.of("trigger2"), List.of("5"), List.of("2")),
+                attributionStatuses.get(1));
+        String expectedAttributionStatus2 = getAttributionStatus(
+                List.of("trigger11", "trigger33"), List.of("44", "66"), List.of("11", "33"));
+        verify(mMeasurementDao).updateSourceAttributedTriggers(
+                eq(source2.getId()), eq(expectedAttributionStatus2));
+    }
+
+    @Test
+    public void resetDedupKeys_matchingReportsDedupAlignFlagOff_removesDedupKeysFromSource()
             throws DatastoreException {
         // Setup
         Source source1 =
@@ -265,6 +356,8 @@ public class MeasurementDataDeleterTest {
         when(mMeasurementDao.getSource(source1.getId())).thenReturn(source1);
         when(mMeasurementDao.getSource(source2.getId())).thenReturn(source2);
 
+        when(mFlags.getMeasurementEnableAraDeduplicationAlignmentV1()).thenReturn(false);
+
         // Execution
         mMeasurementDataDeleter.resetDedupKeys(
                 mMeasurementDao, List.of(mEventReport1, mEventReport2, mEventReport3));
@@ -281,7 +374,7 @@ public class MeasurementDataDeleterTest {
     }
 
     @Test
-    public void resetDedupKeys_eventReportHasNullSourceId_ignoresRemoval()
+    public void resetDedupKeys_eventReportHasNullSourceIdDedup_ignoresRemoval()
             throws DatastoreException {
         // Setup
         when(mEventReport1.getSourceId()).thenReturn(null);
@@ -292,11 +385,28 @@ public class MeasurementDataDeleterTest {
 
         // Verification
         verify(mMeasurementDao, never()).getSource(anyString());
+        verify(mMeasurementDao, never()).updateSourceAttributedTriggers(anyString(), anyString());
+    }
+
+    @Test
+    public void resetDedupKeys_eventReportHasNullSourceIdDedupFlagOff_ignoresRemoval()
+            throws DatastoreException {
+        // Setup
+        when(mEventReport1.getSourceId()).thenReturn(null);
+        when(mEventReport1.getTriggerDedupKey()).thenReturn(new UnsignedLong("1")); // S1 - T1
+
+        when(mFlags.getMeasurementEnableAraDeduplicationAlignmentV1()).thenReturn(false);
+
+        // Execution
+        mMeasurementDataDeleter.resetDedupKeys(mMeasurementDao, List.of(mEventReport1));
+
+        // Verification
+        verify(mMeasurementDao, never()).getSource(anyString());
         verify(mMeasurementDao, never()).updateSourceEventReportDedupKeys(any());
     }
 
     @Test
-    public void resetDedupKeys_hasMatchingAggregateReports_removesTriggerDedupKeysFromSource()
+    public void resetAggregateReportDedupKeys_matchingReports_removesDedupKeysFromSource()
             throws DatastoreException {
         // Setup
         Source source1 =
@@ -346,7 +456,7 @@ public class MeasurementDataDeleterTest {
     }
 
     @Test
-    public void resetDedupKeys_AggregateReportHasNullSourceId_ignoresRemoval()
+    public void resetAggregateReportDedupKeys_aggregateReportHasNullSourceId_ignoresRemoval()
             throws DatastoreException {
         // Setup
         when(mAggregateReport1.getSourceId()).thenReturn(null);
@@ -362,7 +472,7 @@ public class MeasurementDataDeleterTest {
     }
 
     @Test
-    public void resetDedupKeys_AggregateReportHasNullDedupKey_ignoresRemoval()
+    public void resetAggregateReportDedupKeys_aggregateReportHasNullDedupKey_ignoresRemoval()
             throws DatastoreException {
         // Setup
         when(mAggregateReport1.getSourceId()).thenReturn(null);
@@ -380,7 +490,6 @@ public class MeasurementDataDeleterTest {
     @Test
     public void delete_deletionModeAll_success() throws DatastoreException {
         // Setup
-        MeasurementDataDeleter subjectUnderTest = spy(mMeasurementDataDeleter);
         List<String> triggerIds = List.of("triggerId1", "triggerId2");
         List<String> sourceIds = List.of("sourceId1", "sourceId2");
         List<String> asyncRegistrationIds = List.of("asyncRegId1", "asyncRegId2");
@@ -409,13 +518,13 @@ public class MeasurementDataDeleterTest {
                         .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
                         .build();
 
-        ExtendedMockito.doReturn(true).when(subjectUnderTest).getFlexibleEventAPIFlag();
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
         doNothing()
-                .when(subjectUnderTest)
+                .when(mMeasurementDataDeleter)
                 .resetAggregateContributions(
                         mMeasurementDao, List.of(mAggregateReport1, mAggregateReport2));
         doNothing()
-                .when(subjectUnderTest)
+                .when(mMeasurementDataDeleter)
                 .resetDedupKeys(mMeasurementDao, List.of(mEventReport1, mEventReport2));
         when(mMeasurementDao.fetchMatchingEventReports(sourceIds, triggerIds))
                 .thenReturn(List.of(mEventReport1, mEventReport2));
@@ -451,19 +560,19 @@ public class MeasurementDataDeleterTest {
         when(mMeasurementDao.getSource(source2.getId())).thenReturn(source2);
 
         // Execution
-        boolean result = subjectUnderTest.delete(deletionParam);
+        boolean result = mMeasurementDataDeleter.delete(deletionParam);
 
         // Assertions
         assertTrue(result);
-        verify(subjectUnderTest)
+        verify(mMeasurementDataDeleter)
                 .resetAggregateContributions(
                         mMeasurementDao, List.of(mAggregateReport1, mAggregateReport2));
-        verify(subjectUnderTest)
+        verify(mMeasurementDataDeleter)
                 .resetDedupKeys(mMeasurementDao, List.of(mEventReport1, mEventReport2));
         verify(mMeasurementDao).deleteAsyncRegistrations(asyncRegistrationIds);
         verify(mMeasurementDao).deleteSources(sourceIds);
         verify(mMeasurementDao).deleteTriggers(triggerIds);
-        verify(subjectUnderTest)
+        verify(mMeasurementDataDeleter)
                 .resetAggregateReportDedupKeys(
                         mMeasurementDao, List.of(mAggregateReport1, mAggregateReport2));
     }
@@ -471,7 +580,6 @@ public class MeasurementDataDeleterTest {
     @Test
     public void delete_deletionModeExcludeInternalData_success() throws DatastoreException {
         // Setup
-        MeasurementDataDeleter subjectUnderTest = spy(mMeasurementDataDeleter);
         List<String> triggerIds = List.of("triggerId1", "triggerId2");
         List<String> sourceIds = List.of("sourceId1", "sourceId2");
         Source source1 = SourceFixture.getMinimalValidSourceBuilder().setId("sourceId1").build();
@@ -497,11 +605,11 @@ public class MeasurementDataDeleterTest {
                         .build();
 
         doNothing()
-                .when(subjectUnderTest)
+                .when(mMeasurementDataDeleter)
                 .resetAggregateContributions(
                         mMeasurementDao, List.of(mAggregateReport1, mAggregateReport2));
         doNothing()
-                .when(subjectUnderTest)
+                .when(mMeasurementDataDeleter)
                 .resetDedupKeys(mMeasurementDao, List.of(mEventReport1, mEventReport2));
         when(mMeasurementDao.fetchMatchingEventReports(sourceIds, triggerIds))
                 .thenReturn(List.of(mEventReport1, mEventReport2));
@@ -527,9 +635,9 @@ public class MeasurementDataDeleterTest {
         when(mMeasurementDao.getSource(source1.getId())).thenReturn(source1);
         when(mMeasurementDao.getSource(source2.getId())).thenReturn(source2);
 
-        ExtendedMockito.doReturn(true).when(subjectUnderTest).getFlexibleEventAPIFlag();
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
         // Execution
-        boolean result = subjectUnderTest.delete(deletionParam);
+        boolean result = mMeasurementDataDeleter.delete(deletionParam);
 
         // Assertions
         assertTrue(result);
@@ -561,7 +669,6 @@ public class MeasurementDataDeleterTest {
         // Setup
         Source source = SourceFixture.getValidSourceWithFlexEventReport();
         when(mMeasurementDao.getSource(source.getId())).thenReturn(source);
-        MeasurementDataDeleter subjectUnderTest = spy(mMeasurementDataDeleter);
 
         EventReport eventReport1 =
                 EventReportFixture.getBaseEventReportBuild()
@@ -581,11 +688,11 @@ public class MeasurementDataDeleterTest {
         source.getFlexEventReportSpec().insertAttributedTrigger(eventReport1);
         source.getFlexEventReportSpec().insertAttributedTrigger(eventReport2);
 
-        ExtendedMockito.doReturn(true).when(subjectUnderTest).getFlexibleEventAPIFlag();
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
         // Execution
         List<String> sourceIds = new ArrayList<>(Collections.singletonList(source.getId()));
         List<EventReport> toBeDeleted =
-                subjectUnderTest.filterReportFlexibleEventsAPI(
+                mMeasurementDataDeleter.filterReportFlexibleEventsAPI(
                         mMeasurementDao,
                         sourceIds,
                         new ArrayList<>(Arrays.asList(eventReport1, eventReport2)));
@@ -629,13 +736,12 @@ public class MeasurementDataDeleterTest {
                         .build();
 
         when(mMeasurementDao.getSource(source.getId())).thenReturn(source);
-        MeasurementDataDeleter subjectUnderTest = spy(mMeasurementDataDeleter);
 
-        ExtendedMockito.doReturn(true).when(subjectUnderTest).getFlexibleEventAPIFlag();
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
         // Execution
 
         List<EventReport> toBeDeleted =
-                subjectUnderTest.filterReportFlexibleEventsAPI(
+                mMeasurementDataDeleter.filterReportFlexibleEventsAPI(
                         mMeasurementDao,
                         new ArrayList<>(),
                         new ArrayList<>(Arrays.asList(eventReport1, eventReport2)));
@@ -681,12 +787,12 @@ public class MeasurementDataDeleterTest {
                         .build();
 
         when(mMeasurementDao.getSource(source.getId())).thenReturn(source);
-        MeasurementDataDeleter subjectUnderTest = spy(mMeasurementDataDeleter);
 
-        ExtendedMockito.doReturn(true).when(subjectUnderTest).getFlexibleEventAPIFlag();
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+
         // Execution
         List<EventReport> toBeDeleted =
-                subjectUnderTest.filterReportFlexibleEventsAPI(
+                mMeasurementDataDeleter.filterReportFlexibleEventsAPI(
                         mMeasurementDao,
                         new ArrayList<>(),
                         new ArrayList<>(Arrays.asList(eventReport1, eventReport2)));
@@ -731,12 +837,12 @@ public class MeasurementDataDeleterTest {
                         .build();
 
         when(mMeasurementDao.getSource(source.getId())).thenReturn(source);
-        MeasurementDataDeleter subjectUnderTest = spy(mMeasurementDataDeleter);
 
-        ExtendedMockito.doReturn(true).when(subjectUnderTest).getFlexibleEventAPIFlag();
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+
         // Execution
         List<EventReport> toBeDeleted =
-                subjectUnderTest.filterReportFlexibleEventsAPI(
+                mMeasurementDataDeleter.filterReportFlexibleEventsAPI(
                         mMeasurementDao,
                         new ArrayList<>(),
                         new ArrayList<>(Collections.singletonList(eventReport1)));
@@ -782,12 +888,12 @@ public class MeasurementDataDeleterTest {
                         .build();
 
         when(mMeasurementDao.getSource(source.getId())).thenReturn(source);
-        MeasurementDataDeleter subjectUnderTest = spy(mMeasurementDataDeleter);
 
-        ExtendedMockito.doReturn(true).when(subjectUnderTest).getFlexibleEventAPIFlag();
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+
         // Execution
         List<EventReport> toBeDeleted =
-                subjectUnderTest.filterReportFlexibleEventsAPI(
+                mMeasurementDataDeleter.filterReportFlexibleEventsAPI(
                         mMeasurementDao,
                         new ArrayList<>(),
                         new ArrayList<>(Collections.singletonList(eventReport2)));
@@ -831,12 +937,12 @@ public class MeasurementDataDeleterTest {
                         .build();
 
         when(mMeasurementDao.getSource(source.getId())).thenReturn(source);
-        MeasurementDataDeleter subjectUnderTest = spy(mMeasurementDataDeleter);
 
-        ExtendedMockito.doReturn(true).when(subjectUnderTest).getFlexibleEventAPIFlag();
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+
         // Execution
         List<EventReport> toBeDeleted =
-                subjectUnderTest.filterReportFlexibleEventsAPI(
+                mMeasurementDataDeleter.filterReportFlexibleEventsAPI(
                         mMeasurementDao,
                         new ArrayList<>(),
                         new ArrayList<>(Collections.singletonList(eventReport2)));
@@ -881,12 +987,12 @@ public class MeasurementDataDeleterTest {
                         .build();
 
         when(mMeasurementDao.getSource(source.getId())).thenReturn(source);
-        MeasurementDataDeleter subjectUnderTest = spy(mMeasurementDataDeleter);
 
-        ExtendedMockito.doReturn(true).when(subjectUnderTest).getFlexibleEventAPIFlag();
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+
         // Execution
         List<EventReport> toBeDeleted =
-                subjectUnderTest.filterReportFlexibleEventsAPI(
+                mMeasurementDataDeleter.filterReportFlexibleEventsAPI(
                         mMeasurementDao,
                         new ArrayList<>(),
                         new ArrayList<>(Collections.singletonList(eventReport1)));
@@ -931,12 +1037,12 @@ public class MeasurementDataDeleterTest {
                         .build();
 
         when(mMeasurementDao.getSource(source.getId())).thenReturn(source);
-        MeasurementDataDeleter subjectUnderTest = spy(mMeasurementDataDeleter);
 
-        ExtendedMockito.doReturn(true).when(subjectUnderTest).getFlexibleEventAPIFlag();
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+
         // Execution
         List<EventReport> toBeDeleted =
-                subjectUnderTest.filterReportFlexibleEventsAPI(
+                mMeasurementDataDeleter.filterReportFlexibleEventsAPI(
                         mMeasurementDao,
                         new ArrayList<>(),
                         new ArrayList<>(Collections.singletonList(eventReport1)));
@@ -980,12 +1086,12 @@ public class MeasurementDataDeleterTest {
                         .build();
 
         when(mMeasurementDao.getSource(source.getId())).thenReturn(source);
-        MeasurementDataDeleter subjectUnderTest = spy(mMeasurementDataDeleter);
 
-        ExtendedMockito.doReturn(true).when(subjectUnderTest).getFlexibleEventAPIFlag();
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+
         // Execution
         List<EventReport> toBeDeleted =
-                subjectUnderTest.filterReportFlexibleEventsAPI(
+                mMeasurementDataDeleter.filterReportFlexibleEventsAPI(
                         mMeasurementDao,
                         new ArrayList<>(),
                         new ArrayList<>(Collections.singletonList(eventReport1)));
@@ -1028,12 +1134,12 @@ public class MeasurementDataDeleterTest {
                         .build();
 
         when(mMeasurementDao.getSource(source.getId())).thenReturn(source);
-        MeasurementDataDeleter subjectUnderTest = spy(mMeasurementDataDeleter);
 
-        ExtendedMockito.doReturn(true).when(subjectUnderTest).getFlexibleEventAPIFlag();
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+
         // Execution
         List<EventReport> toBeDeleted =
-                subjectUnderTest.filterReportFlexibleEventsAPI(
+                mMeasurementDataDeleter.filterReportFlexibleEventsAPI(
                         mMeasurementDao,
                         new ArrayList<>(),
                         new ArrayList<>(Arrays.asList(eventReport1, eventReport2)));
@@ -1050,6 +1156,23 @@ public class MeasurementDataDeleterTest {
         for (EventReport eventReport : eventReports) {
             reportSpec.insertAttributedTrigger(eventReport);
         }
-        return source.encodeAttributedTriggersToJson();
+        return source.attributedTriggersToJsonFlexApi();
+    }
+
+    private static String getAttributionStatus(List<String> triggerIds, List<String> triggerData,
+            List<String> dedupKeys) {
+        try {
+            JSONArray attributionStatus = new JSONArray();
+            for (int i = 0; i < triggerIds.size(); i++) {
+                attributionStatus.put(
+                        new JSONObject()
+                                .put("trigger_id", triggerIds.get(i))
+                                .put("trigger_data", triggerData.get(i))
+                                .put("dedup_key", dedupKeys.get(i)));
+            }
+            return attributionStatus.toString();
+        } catch (JSONException ignored) {
+            return null;
+        }
     }
 }

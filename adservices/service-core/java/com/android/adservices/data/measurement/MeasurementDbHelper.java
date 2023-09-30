@@ -26,7 +26,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.measurement.migration.IMeasurementDbMigrator;
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV10;
@@ -42,9 +42,13 @@ import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV1
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV20;
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV21;
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV22;
+import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV23;
+import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV24;
+import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV25;
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV7;
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV8;
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV9;
+import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
@@ -58,9 +62,11 @@ import java.util.stream.Stream;
 
 /** Database Helper for Measurement database. */
 public class MeasurementDbHelper extends SQLiteOpenHelper {
-    private static final String DATABASE_NAME = "adservices_msmt.db";
+    private static final String DATABASE_NAME =
+            FileCompatUtils.getAdservicesFilename("adservices_msmt.db");
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
 
-    public static final int CURRENT_DATABASE_VERSION = 22;
+    public static final int CURRENT_DATABASE_VERSION = 25;
     public static final int OLD_DATABASE_FINAL_VERSION = 6;
 
     private static MeasurementDbHelper sSingleton = null;
@@ -72,7 +78,7 @@ public class MeasurementDbHelper extends SQLiteOpenHelper {
     public MeasurementDbHelper(
             @NonNull Context context, @NonNull String dbName, int dbVersion, DbHelper dbHelper) {
         super(context, dbName, null, dbVersion);
-        mDbFile = context.getDatabasePath(dbName);
+        mDbFile = FileCompatUtils.getDatabasePathHelper(context, dbName);
         this.mDbVersion = dbVersion;
         this.mDbHelper = dbHelper;
     }
@@ -95,14 +101,14 @@ public class MeasurementDbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        LogUtil.d(
+        sLogger.d(
                 "MeasurementDbHelper.onCreate with version %d. Name: %s",
                 mDbVersion, mDbFile.getName());
         SQLiteDatabase oldDb = mDbHelper.safeGetWritableDatabase();
         // Only migrate data if all V6 tables are present, else skip the migration because
         // database is in an unexpected state.
         if (hasAllV6MeasurementTables(oldDb)) {
-            LogUtil.d("MeasurementDbHelper.onCreate copying data from old db");
+            sLogger.d("MeasurementDbHelper.onCreate copying data from old db");
             // Migrate Data:
             // 1. Create V6 (old DbHelper's last database version) version of tables
             // 2. Copy data from old database
@@ -113,14 +119,14 @@ public class MeasurementDbHelper extends SQLiteOpenHelper {
             deleteV6TablesFromDatabase(oldDb);
             upgradeSchema(db, OLD_DATABASE_FINAL_VERSION, mDbVersion);
         } else {
-            LogUtil.d("MeasurementDbHelper.onCreate creating empty database");
+            sLogger.d("MeasurementDbHelper.onCreate creating empty database");
             createSchema(db);
         }
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        LogUtil.d(
+        sLogger.d(
                 "MeasurementDbHelper.onUpgrade. Attempting to upgrade version from %d to %d.",
                 oldVersion, newVersion);
         upgradeSchema(db, oldVersion, newVersion);
@@ -149,7 +155,10 @@ public class MeasurementDbHelper extends SQLiteOpenHelper {
                 new MeasurementDbMigratorV19(),
                 new MeasurementDbMigratorV20(),
                 new MeasurementDbMigratorV21(),
-                new MeasurementDbMigratorV22());
+                new MeasurementDbMigratorV22(),
+                new MeasurementDbMigratorV23(),
+                new MeasurementDbMigratorV24(),
+                new MeasurementDbMigratorV25());
     }
 
     private boolean hasAllV6MeasurementTables(SQLiteDatabase db) {
@@ -176,7 +185,7 @@ public class MeasurementDbHelper extends SQLiteOpenHelper {
         try {
             return super.getWritableDatabase();
         } catch (SQLiteException e) {
-            LogUtil.e(e, "Failed to get a writeable database");
+            sLogger.e(e, "Failed to get a writeable database");
             return null;
         }
     }
@@ -231,7 +240,7 @@ public class MeasurementDbHelper extends SQLiteOpenHelper {
     }
 
     private void upgradeSchema(SQLiteDatabase db, int oldVersion, int newVersion) {
-        LogUtil.d(
+        sLogger.d(
                 "MeasurementDbHelper.upgradeToLatestSchema. "
                         + "Attempting to upgrade version from %d to %d.",
                 oldVersion, newVersion);

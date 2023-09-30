@@ -17,24 +17,19 @@
 package android.app.sdksandbox.testutils;
 
 import android.content.Context;
-import android.content.pm.PackageManager;
 
+
+import com.android.adservices.common.AdServicesSupportHelper;
+
+// TODO(b/284971005): remove once all callers use the rule
 /** Utility class to control which devices SDK sandbox tests run on. */
-public class DeviceSupportUtils {
+public final class DeviceSupportUtils {
 
+    /**
+     * @deprecated - use {@link SdkSandboxDeviceSupportedRule} instead
+     */
+    @Deprecated
     public static boolean isSdkSandboxSupported(Context context) {
-        return !isWatch(context) && !isTv(context) && !isAuto(context);
-    }
-
-    private static boolean isWatch(Context context) {
-        return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
-    }
-
-    private static boolean isTv(Context context) {
-        return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_LEANBACK);
-    }
-
-    private static boolean isAuto(Context context) {
-        return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE);
+        return AdServicesSupportHelper.getInstance().isDeviceSupported();
     }
 }

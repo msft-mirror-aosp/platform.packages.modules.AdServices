@@ -18,6 +18,7 @@ package com.android.adservices.ui.settings.activitydelegates;
 import android.os.Build;
 import android.util.Log;
 import android.util.Pair;
+import android.view.View;
 
 import androidx.annotation.RequiresApi;
 import androidx.lifecycle.Observer;
@@ -29,10 +30,12 @@ import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.settings.DialogFragmentManager;
 import com.android.adservices.ui.settings.DialogManager;
 import com.android.adservices.ui.settings.activities.BlockedAppsActivity;
+import com.android.adservices.ui.settings.viewadatpors.AppsListViewAdapter;
 import com.android.adservices.ui.settings.viewmodels.BlockedAppsViewModel;
 import com.android.adservices.ui.settings.viewmodels.BlockedAppsViewModel.BlockedAppsViewModelUiEvent;
 
 import java.io.IOException;
+import java.util.function.Function;
 
 /**
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
@@ -46,21 +49,47 @@ public class BlockedAppsActivityActionDelegate extends BaseActionDelegate {
             BlockedAppsActivity blockedAppsActivity, BlockedAppsViewModel blockedAppsViewModel) {
         super(blockedAppsActivity);
         mBlockedAppsViewModel = blockedAppsViewModel;
+        initWithUx(blockedAppsActivity, blockedAppsActivity.getApplicationContext());
         listenToBlockedAppsViewModelUiEvents();
     }
 
     @Override
     public void initBeta() {
         mActivity.setTitle(R.string.settingsUI_blocked_apps_title);
+        configureSharedElements(/* isGA */ false);
     }
 
     @Override
     public void initGA() {
         mActivity.setTitle(R.string.settingsUI_blocked_apps_ga_title);
+        configureSharedElements(/* isGA */ true);
     }
 
     @Override
     public void initU18() {}
+
+    private void configureSharedElements(Boolean isGA) {
+        // no blocked apps message
+        configureElement(
+                isGA ? R.id.no_blocked_apps_ga_message : R.id.no_blocked_apps_message,
+                mBlockedAppsViewModel.getBlockedApps(),
+                controls ->
+                        list ->
+                                controls.setVisibility(
+                                        (list.isEmpty() ? View.VISIBLE : View.GONE)));
+        // recycler view (apps list)
+        Function<App, View.OnClickListener> getOnclickListener =
+                app -> view -> mBlockedAppsViewModel.restoreAppConsentButtonClickHandler(app);
+        AppsListViewAdapter adapter =
+                new AppsListViewAdapter(
+                        mActivity,
+                        mBlockedAppsViewModel.getBlockedApps(),
+                        getOnclickListener,
+                        true);
+        configureRecyclerView(R.id.blocked_apps_list, adapter);
+
+        configureNotifyAdapterDataChange(mBlockedAppsViewModel.getBlockedApps(), adapter);
+    }
 
     private void listenToBlockedAppsViewModelUiEvents() {
         Observer<Pair<BlockedAppsViewModelUiEvent, App>> observer =

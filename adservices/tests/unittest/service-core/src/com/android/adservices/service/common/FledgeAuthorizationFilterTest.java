@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.common;
 
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
@@ -36,7 +37,9 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
+import android.adservices.customaudience.CustomAudienceFixture;
 import android.content.Context;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.util.Pair;
@@ -170,22 +173,69 @@ public class FledgeAuthorizationFilterTest {
     }
 
     @Test
-    public void testAssertAppHasPermission_appHasPermission() {
-        when(PermissionHelper.hasCustomAudiencesPermission(CONTEXT)).thenReturn(true);
+    public void testAssertAppHasPermission_appHasPermission()
+            throws PackageManager.NameNotFoundException {
+        PackageInfo packageInfoGrant = new PackageInfo();
+        packageInfoGrant.requestedPermissions = new String[] {ACCESS_ADSERVICES_CUSTOM_AUDIENCE};
+        doReturn(packageInfoGrant)
+                .when(mPackageManagerMock)
+                .getPackageInfo(
+                        eq(CustomAudienceFixture.VALID_OWNER), eq(PackageManager.GET_PERMISSIONS));
 
-        mChecker.assertAppDeclaredPermission(CONTEXT, API_NAME_LOGGING_ID);
+        when(PermissionHelper.hasCustomAudiencesPermission(CONTEXT, CONTEXT.getPackageName()))
+                .thenReturn(true);
+
+        mChecker.assertAppDeclaredPermission(
+                CONTEXT, CustomAudienceFixture.VALID_OWNER, API_NAME_LOGGING_ID);
 
         verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }
 
     @Test
-    public void testAssertAppHasPermission_appDoesNotHavePermission_throwSecurityException() {
-        when(PermissionHelper.hasCustomAudiencesPermission(CONTEXT)).thenReturn(false);
+    public void testAssertAppHasPermission_appDoesNotHavePermission_throwSecurityException()
+            throws PackageManager.NameNotFoundException {
+        doReturn(new PackageInfo())
+                .when(mPackageManagerMock)
+                .getPackageInfo(
+                        eq(CustomAudienceFixture.VALID_OWNER), eq(PackageManager.GET_PERMISSIONS));
+        when(PermissionHelper.hasCustomAudiencesPermission(CONTEXT, CONTEXT.getPackageName()))
+                .thenReturn(false);
 
         SecurityException exception =
                 assertThrows(
                         SecurityException.class,
-                        () -> mChecker.assertAppDeclaredPermission(CONTEXT, API_NAME_LOGGING_ID));
+                        () ->
+                                mChecker.assertAppDeclaredPermission(
+                                        CONTEXT,
+                                        CustomAudienceFixture.VALID_OWNER,
+                                        API_NAME_LOGGING_ID));
+
+        assertEquals(
+                AdServicesStatusUtils.SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE,
+                exception.getMessage());
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(API_NAME_LOGGING_ID), eq(STATUS_PERMISSION_NOT_REQUESTED), anyInt());
+        verifyNoMoreInteractions(mAdServicesLoggerMock);
+        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock);
+    }
+
+    @Test
+    public void testAssertAppHasPermission_mismatchedAppPackageName_throwSecurityException()
+            throws PackageManager.NameNotFoundException {
+        doReturn(new PackageInfo())
+                .when(mPackageManagerMock)
+                .getPackageInfo(
+                        eq(CustomAudienceFixture.VALID_OWNER), eq(PackageManager.GET_PERMISSIONS));
+        when(PermissionHelper.hasCustomAudiencesPermission(CONTEXT, CONTEXT.getPackageName()))
+                .thenReturn(false);
+
+        SecurityException exception =
+                assertThrows(
+                        SecurityException.class,
+                        () ->
+                                mChecker.assertAppDeclaredPermission(
+                                        CONTEXT, "mismatchedAppPackageName", API_NAME_LOGGING_ID));
 
         assertEquals(
                 AdServicesStatusUtils.SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE,
@@ -201,7 +251,9 @@ public class FledgeAuthorizationFilterTest {
     public void testAssertAppHasPermission_nullContext_throwNpe() {
         assertThrows(
                 NullPointerException.class,
-                () -> mChecker.assertAppDeclaredPermission(null, API_NAME_LOGGING_ID));
+                () ->
+                        mChecker.assertAppDeclaredPermission(
+                                null, CustomAudienceFixture.VALID_OWNER, API_NAME_LOGGING_ID));
 
         verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }

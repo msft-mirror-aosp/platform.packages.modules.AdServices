@@ -24,6 +24,7 @@ import static org.junit.Assume.assumeTrue;
 
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
+import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -45,16 +46,19 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public class CustomizedSdkContextTest {
+public class CustomizedSdkContextTest extends SandboxKillerBeforeTest {
     private static final String SDK_NAME_1 = "com.android.ctssdkprovider";
     private static final String SDK_NAME_2 = "com.android.emptysdkprovider";
 
-    @Rule
-    public final ActivityScenarioRule<TestActivity> mRule =
+    @Rule(order = 0)
+    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
+
+    @Rule(order = 1)
+    public final ActivityScenarioRule<TestActivity> activityScenarioRule =
             new ActivityScenarioRule<>(TestActivity.class);
 
-    @Rule
-    public final DeviceConfigStateChangerRule mCustomizedSdkContextEnabledRule =
+    @Rule(order = 2)
+    public final DeviceConfigStateChangerRule customizedSdkContextEnabledRule =
             new DeviceConfigStateChangerRule(
                     androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
                             .getTargetContext(),
@@ -69,7 +73,7 @@ public class CustomizedSdkContextTest {
     public void setup() {
         final Context context = InstrumentationRegistry.getInstrumentation().getContext();
         mSdkSandboxManager = context.getSystemService(SdkSandboxManager.class);
-        mRule.getScenario();
+        activityScenarioRule.getScenario();
     }
 
     @After

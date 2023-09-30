@@ -23,6 +23,6 @@ import android.app.sdksandbox.LoadSdkException;
 
 /** @hide */
 interface ILoadSdkCallback {
-    oneway void onLoadSdkSuccess(in SandboxedSdk sandboxedSdkParcel, long timeSystemServerCalledApp, in SandboxLatencyInfo sandboxLatencyInfo);
-    oneway void onLoadSdkFailure(in LoadSdkException exception, long timeSystemServerCalledApp, in SandboxLatencyInfo sandboxLatencyInfo);
+    oneway void onLoadSdkSuccess(in SandboxedSdk sandboxedSdkParcel, in SandboxLatencyInfo sandboxLatencyInfo);
+    oneway void onLoadSdkFailure(in LoadSdkException exception, in SandboxLatencyInfo sandboxLatencyInfo);
 }

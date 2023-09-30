@@ -23,8 +23,12 @@ import static org.junit.Assert.assertThrows;
 import android.Manifest;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
+import android.adservices.adselection.AdSelectionFromOutcomesConfig;
+import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
 import android.adservices.adselection.AdSelectionOutcome;
+import android.adservices.adselection.AddAdSelectionFromOutcomesOverrideRequest;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
+import android.adservices.adselection.RemoveAdSelectionFromOutcomesOverrideRequest;
 import android.adservices.adselection.RemoveAdSelectionOverrideRequest;
 import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
@@ -37,8 +41,10 @@ import android.os.Process;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
@@ -50,6 +56,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -84,15 +91,27 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
 
     private static final AdSelectionSignals SELECTION_SIGNALS = AdSelectionSignals.EMPTY;
 
+    private static final AdSelectionFromOutcomesConfig AD_SELECTION_FROM_OUTCOMES_CONFIG =
+            AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
+                    SELLER, DECISION_LOGIC_URI);
+
     private TestAdSelectionClient mTestAdSelectionClient;
     private boolean mIsDebugMode;
     private String mPreviousAppAllowList;
 
+    // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    // Skip the test if it runs on unsupported platforms.
+    @Rule(order = 1)
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
+    // TODO(b/294423183): refactor to use AdServicesFlagsSetterRule instead of PhFlagsFixture
+
     @Before
     public void setup() {
-        // Skip the test if it runs on unsupported platforms
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-
         if (SdkLevel.isAtLeastT()) {
             assertForegroundActivityStarted();
         } else {
@@ -116,14 +135,13 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
         PhFlagsFixture.overrideEnforceIsolateMaxHeapSize(false);
         PhFlagsFixture.overrideIsolateMaxHeapSizeBytes(0);
         PhFlagsFixture.overrideEnableEnrollmentSeed(true);
+
+        // Kill AdServices process
+        AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
     @After
     public void tearDown() {
-        if (!AdservicesTestHelper.isDeviceSupported()) {
-            return;
-        }
-
         if (!SdkLevel.isAtLeastT()) {
             CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
             CompatAdServicesTestUtils.resetFlagsToDefault();
@@ -321,4 +339,62 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
                         .setUseGetMethodToCreateManagerInstance(true)
                         .build();
     }
+
+    @Test
+    public void testAddFromOutcomesOverrideFailsWithDebugModeDisabled() throws Exception {
+        Assume.assumeFalse(mIsDebugMode);
+
+        AddAdSelectionFromOutcomesOverrideRequest request =
+                new AddAdSelectionFromOutcomesOverrideRequest(
+                        AD_SELECTION_FROM_OUTCOMES_CONFIG, DECISION_LOGIC_JS, SELECTION_SIGNALS);
+
+        ListenableFuture<Void> result =
+                mTestAdSelectionClient.overrideAdSelectionFromOutcomesConfigRemoteInfo(request);
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            result.get(10, TimeUnit.SECONDS);
+                        });
+        assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
+    }
+
+    @Test
+    public void testRemoveFromOutcomesOverrideFailsWithDebugModeDisabled() throws Exception {
+        Assume.assumeFalse(mIsDebugMode);
+
+        RemoveAdSelectionFromOutcomesOverrideRequest request =
+                new RemoveAdSelectionFromOutcomesOverrideRequest(AD_SELECTION_FROM_OUTCOMES_CONFIG);
+
+        ListenableFuture<Void> result =
+                mTestAdSelectionClient.removeAdSelectionFromOutcomesConfigRemoteInfoOverride(
+                        request);
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            result.get(10, TimeUnit.SECONDS);
+                        });
+        assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
+    }
+
+    @Test
+    public void testResetAllFromOutcomesOverridesFailsWithDebugModeDisabled() throws Exception {
+        Assume.assumeFalse(mIsDebugMode);
+
+        ListenableFuture<Void> result =
+                mTestAdSelectionClient.resetAllAdSelectionFromOutcomesConfigRemoteOverrides();
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            result.get(10, TimeUnit.SECONDS);
+                        });
+        assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
+    }
+
+    // TODO(b/221876775): Add override CTS tests for frequency cap API review
 }

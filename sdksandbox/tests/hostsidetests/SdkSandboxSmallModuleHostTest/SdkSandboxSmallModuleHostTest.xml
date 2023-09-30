@@ -19,8 +19,11 @@
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true" />
+        <option name="test-file-name" value="EmptySdkProviderApp.apk" />
         <option name="test-file-name" value="SdkSandboxSmallModuleTestApp.apk" />
     </target_preparer>
+
+    <target_preparer class="com.android.tradefed.targetprep.RootTargetPreparer"/>
 
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
         <option name="run-command" value="cmd sdk_sandbox set-state --enabled" />

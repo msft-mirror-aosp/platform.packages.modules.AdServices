@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
 import android.adservices.measurement.RegistrationRequest;
+import android.adservices.measurement.SourceRegistrationRequest;
 import android.adservices.measurement.WebSourceParams;
 import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.adservices.measurement.WebTriggerParams;
@@ -57,6 +58,7 @@ public class DevContextAccessResolverTest {
     @Mock private WebTriggerRegistrationRequest mWebTriggerRegistrationRequest;
     @Mock private WebTriggerParams mWebTriggerParams;
     @Mock private WebTriggerParams mWebTriggerParams2;
+    @Mock private SourceRegistrationRequest mSourceRegistrationRequest;
 
     private DevContextAccessResolver mClassUnderTest;
 
@@ -260,6 +262,76 @@ public class DevContextAccessResolverTest {
                 .thenReturn(List.of(mWebTriggerParams, mWebTriggerParams2));
         mClassUnderTest = new DevContextAccessResolver(
                 getDevContextDisabled(), mWebTriggerRegistrationRequest);
+
+        // Execution
+        assertFalse(mClassUnderTest.isAllowed(mContext));
+    }
+
+    @Test
+    public void isAllowed_registerSources_noneLocalhost_devEnabled_returnsTrue() {
+        // Setup
+        when(mSourceRegistrationRequest.getRegistrationUris())
+                .thenReturn(List.of(REGISTRATION_URI));
+        mClassUnderTest =
+                new DevContextAccessResolver(getDevContextEnabled(), mSourceRegistrationRequest);
+
+        // Execution
+        assertTrue(mClassUnderTest.isAllowed(mContext));
+    }
+
+    @Test
+    public void isAllowed_registerSources_noneLocalhost_devDisabled_returnsTrue() {
+        // Setup
+        when(mSourceRegistrationRequest.getRegistrationUris())
+                .thenReturn(List.of(REGISTRATION_URI));
+        mClassUnderTest =
+                new DevContextAccessResolver(getDevContextDisabled(), mSourceRegistrationRequest);
+
+        // Execution
+        assertTrue(mClassUnderTest.isAllowed(mContext));
+    }
+
+    @Test
+    public void isAllowed_registerSources_allLocalhost_devEnabled_returnsTrue() {
+        // Setup
+        when(mSourceRegistrationRequest.getRegistrationUris()).thenReturn(List.of(LOCALHOST));
+        mClassUnderTest =
+                new DevContextAccessResolver(getDevContextEnabled(), mSourceRegistrationRequest);
+
+        // Execution
+        assertTrue(mClassUnderTest.isAllowed(mContext));
+    }
+
+    @Test
+    public void isAllowed_registerSources_someLocalhost_devEnabled_returnsTrue() {
+        // Setup
+        when(mSourceRegistrationRequest.getRegistrationUris())
+                .thenReturn(List.of(REGISTRATION_URI, LOCALHOST));
+        mClassUnderTest =
+                new DevContextAccessResolver(getDevContextEnabled(), mSourceRegistrationRequest);
+
+        // Execution
+        assertTrue(mClassUnderTest.isAllowed(mContext));
+    }
+
+    @Test
+    public void isAllowed_registerSources_allLocalhost_devDisabled_returnsFalse() {
+        // Setup
+        when(mSourceRegistrationRequest.getRegistrationUris()).thenReturn(List.of(LOCALHOST));
+        mClassUnderTest =
+                new DevContextAccessResolver(getDevContextDisabled(), mSourceRegistrationRequest);
+
+        // Execution
+        assertFalse(mClassUnderTest.isAllowed(mContext));
+    }
+
+    @Test
+    public void isAllowed_registerSources_someLocalhost_devDisabled_returnsFalse() {
+        // Setup
+        when(mSourceRegistrationRequest.getRegistrationUris())
+                .thenReturn(List.of(REGISTRATION_URI, LOCALHOST));
+        mClassUnderTest =
+                new DevContextAccessResolver(getDevContextDisabled(), mSourceRegistrationRequest);
 
         // Execution
         assertFalse(mClassUnderTest.isAllowed(mContext));

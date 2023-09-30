@@ -20,7 +20,7 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.util.Pair;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.AttributionConfig;
 import com.android.adservices.service.measurement.FilterMap;
@@ -50,10 +50,13 @@ import java.util.stream.Collectors;
 /** Class facilitates creation of derived source for XNA. */
 public class XnaSourceCreator {
     private static final String HEX_PREFIX = "0x";
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     private final Flags mFlags;
+    private final Filter mFilter;
 
     public XnaSourceCreator(@NonNull Flags flags) {
         mFlags = flags;
+        mFilter = new Filter(flags);
     }
 
     /**
@@ -70,11 +73,12 @@ public class XnaSourceCreator {
             JSONArray attributionConfigsJsonArray = new JSONArray(trigger.getAttributionConfig());
             for (int i = 0; i < attributionConfigsJsonArray.length(); i++) {
                 attributionConfigs.add(
-                        new AttributionConfig.Builder(attributionConfigsJsonArray.getJSONObject(i))
+                        new AttributionConfig.Builder(
+                                        attributionConfigsJsonArray.getJSONObject(i), mFlags)
                                 .build());
             }
         } catch (JSONException e) {
-            LogUtil.d(e, "Failed to parse attribution configs.");
+            sLogger.d(e, "Failed to parse attribution configs.");
             return Collections.emptyList();
         }
 
@@ -114,10 +118,10 @@ public class XnaSourceCreator {
                 // Trigger time was before (source event time + attribution config expiry override)
                 .filter(createSourceExpiryOverridePredicate(attributionConfig, trigger))
                 // Source's filter data should match the provided attributionConfig filters
-                .filter(createFilterMatchPredicate(sourceFilters, true))
+                .filter(createFilterMatchPredicate(sourceFilters, trigger, true))
                 // Source's filter data should not coincide with the provided attributionConfig
                 // not_filters
-                .filter(createFilterMatchPredicate(sourceNotFilters, false))
+                .filter(createFilterMatchPredicate(sourceNotFilters, trigger, false))
                 .map(
                         parentSource -> {
                             alreadyConsumedSourceIds.add(parentSource.getId());
@@ -151,34 +155,19 @@ public class XnaSourceCreator {
                         .orElse(true);
     }
 
-    private FilterMap getSharedFilterData(Source source) throws JSONException {
-        if (source.getSharedFilterDataKeys() == null) {
-            return source.getFilterData();
-        }
-        Map<String, List<String>> sharedAttributionFilterMap = new HashMap<>();
-        Map<String, List<String>> attributionFilterMap =
-                source.getFilterData().getAttributionFilterMap();
-        JSONArray sharedFilterDataKeysArray = new JSONArray(source.getSharedFilterDataKeys());
-        for (int i = 0; i < sharedFilterDataKeysArray.length(); ++i) {
-            String filterKey = sharedFilterDataKeysArray.getString(i);
-            if (attributionFilterMap.containsKey(filterKey)) {
-                sharedAttributionFilterMap.put(filterKey, attributionFilterMap.get(filterKey));
-            }
-        }
-        return new FilterMap.Builder().setAttributionFilterMap(sharedAttributionFilterMap).build();
-    }
-
     private Predicate<Source> createFilterMatchPredicate(
-            @Nullable List<FilterMap> filterSet, boolean match) {
+            @Nullable List<FilterMap> filterSet, Trigger trigger, boolean match) {
         return (source) ->
                 Optional.ofNullable(filterSet)
                         .map(
                                 filter -> {
                                     try {
-                                        return Filter.isFilterMatch(
-                                                source.getFilterData(), filter, match);
+                                        return mFilter.isFilterMatch(
+                                                source.getFilterData(trigger, mFlags),
+                                                filter,
+                                                match);
                                     } catch (JSONException e) {
-                                        LogUtil.d(e, "Failed to parse source filterData.");
+                                        sLogger.d(e, "Failed to parse source filterData.");
                                         return false;
                                     }
                                 })
@@ -199,11 +188,11 @@ public class XnaSourceCreator {
                 attributionConfig.getPostInstallExclusivityWindow(),
                 builder::setInstallCooldownWindow);
         Optional.ofNullable(attributionConfig.getFilterData())
-                .map(Filter::serializeFilterSet)
+                .map(mFilter::serializeFilterSet)
                 .map(JSONArray::toString)
                 .ifPresent(builder::setFilterData);
         builder.setExpiryTime(calculateDerivedSourceExpiry(attributionConfig, parentSource));
-        builder.setAggregateSource(createAggregatableSourceWithSharedKeys(parentSource));
+        builder.setAggregateSource(createAggregatableSourceWithSharedKeys(parentSource, trigger));
 
         boolean isInstallAttributed =
                 Optional.ofNullable(parentSource.getInstallTime())
@@ -225,9 +214,12 @@ public class XnaSourceCreator {
                 && parentSource.getSharedFilterDataKeys() != null) {
             try {
                 builder.setFilterData(
-                        getSharedFilterData(parentSource).serializeAsJson().toString());
+                        parentSource
+                                .getSharedFilterData(trigger, mFlags)
+                                .serializeAsJson(mFlags)
+                                .toString());
             } catch (JSONException e) {
-                LogUtil.d(e, "Failed to parse shared filter keys.");
+                sLogger.d(e, "Failed to parse shared filter keys.");
                 return Optional.empty();
             }
             builder.setSharedFilterDataKeys(null);
@@ -235,17 +227,18 @@ public class XnaSourceCreator {
         return Optional.of(builder.build());
     }
 
-    private String createAggregatableSourceWithSharedKeys(Source parentSource) {
+    private String createAggregatableSourceWithSharedKeys(Source parentSource, Trigger trigger) {
         String sharedAggregationKeysString = parentSource.getSharedAggregationKeys();
         try {
-            if (sharedAggregationKeysString == null
-                    || !parentSource.getAggregatableAttributionSource().isPresent()) {
+            Optional<AggregatableAttributionSource> aggregateAttributionSource =
+                    parentSource.getAggregatableAttributionSource(trigger, mFlags);
+            if (sharedAggregationKeysString == null || !aggregateAttributionSource.isPresent()) {
                 return null;
             }
 
             JSONArray sharedAggregationKeysArray = new JSONArray(sharedAggregationKeysString);
             AggregatableAttributionSource baseAggregatableAttributionSource =
-                    parentSource.getAggregatableAttributionSource().get();
+                    aggregateAttributionSource.get();
             Map<String, BigInteger> baseAggregatableSource =
                     baseAggregatableAttributionSource.getAggregatableSource();
             Map<String, String> derivedAggregatableSource = new HashMap<>();
@@ -259,7 +252,7 @@ public class XnaSourceCreator {
 
             return new JSONObject(derivedAggregatableSource).toString();
         } catch (JSONException e) {
-            LogUtil.d(e, "Failed to set AggregatableAttributionSource for derived source.");
+            sLogger.d(e, "Failed to set AggregatableAttributionSource for derived source.");
             return null;
         }
     }

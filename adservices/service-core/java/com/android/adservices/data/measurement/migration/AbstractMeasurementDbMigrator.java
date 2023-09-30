@@ -19,10 +19,11 @@ package com.android.adservices.data.measurement.migration;
 import android.annotation.NonNull;
 import android.database.sqlite.SQLiteDatabase;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 
 /** Handles common functionalities of migrators, e.g. validations. */
 public abstract class AbstractMeasurementDbMigrator implements IMeasurementDbMigrator {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     private final int mMigrationTargetVersion;
 
     public AbstractMeasurementDbMigrator(int migrationTargetVersion) {
@@ -32,11 +33,11 @@ public abstract class AbstractMeasurementDbMigrator implements IMeasurementDbMig
     @Override
     public void performMigration(SQLiteDatabase db, int oldVersion, int newVersion) {
         if (oldVersion >= mMigrationTargetVersion || newVersion < mMigrationTargetVersion) {
-            LogUtil.d("Skipping migration script to db version " + mMigrationTargetVersion);
+            sLogger.d("Skipping migration script to db version " + mMigrationTargetVersion);
             return;
         }
 
-        LogUtil.d("Migrating DB to version " + mMigrationTargetVersion);
+        sLogger.d("Migrating DB to version " + mMigrationTargetVersion);
         performMigration(db);
     }
 

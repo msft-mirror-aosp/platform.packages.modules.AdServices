@@ -74,7 +74,7 @@ public class ApkTestUtil {
                 500,
                 consentSwitch.getVisibleBounds().centerX(),
                 0,
-                1000);
+                100);
 
         return consentSwitch;
     }
@@ -82,6 +82,7 @@ public class ApkTestUtil {
     /** Returns the UiObject corresponding to a resource ID. */
     public static UiObject getElement(UiDevice device, int resId) {
         UiObject obj = device.findObject(new UiSelector().text(getString(resId)));
+        obj.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
         if (!obj.exists()) {
             obj = device.findObject(new UiSelector().text(getString(resId).toUpperCase()));
         }
@@ -97,6 +98,12 @@ public class ApkTestUtil {
     public static void scrollToAndClick(UiDevice device, int resId)
             throws UiObjectNotFoundException {
         UiObject obj = scrollTo(device, resId);
+        // objects may be partially hidden by the status bar and nav bars.
+        obj.clickTopLeft();
+    }
+
+    public static void click(UiDevice device, int resId) throws UiObjectNotFoundException {
+        UiObject obj = device.findObject(new UiSelector().text(getString(resId)));
         // objects may be partially hidden by the status bar and nav bars.
         obj.clickTopLeft();
     }

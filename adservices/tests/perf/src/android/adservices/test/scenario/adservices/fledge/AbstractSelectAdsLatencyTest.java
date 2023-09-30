@@ -175,7 +175,6 @@ public class AbstractSelectAdsLatencyTest {
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 
-
     private ImmutableList<CustomAudience> readCustomAudiences(String fileName) throws Exception {
         ImmutableList.Builder<CustomAudience> customAudienceBuilder = ImmutableList.builder();
         InputStream is = ApplicationProvider.getApplicationContext().getAssets().open(fileName);

@@ -47,14 +47,19 @@ public class CobaltRegistryLoaderTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
 
     @Test
+    public void cobaltRegistryIsValidated_isTrue() throws Exception {
+        assertThat(CobaltRegistryValidated.IS_REGISTRY_VALIDATED).isTrue();
+    }
+
+    @Test
     public void getRegistry_registryCanBeLoaded() throws Exception {
-        CobaltRegistry registry = CobaltRegistryLoader.getRegistry();
+        CobaltRegistry registry = CobaltRegistryLoader.getRegistry(CONTEXT);
         assertThat(registry).isNotEqualTo(CobaltRegistry.getDefaultInstance());
     }
 
     @Test
     public void getRegistry_unsupportedFeaturesNotInRegistry() throws Exception {
-        CobaltRegistry registry = CobaltRegistryLoader.getRegistry();
+        CobaltRegistry registry = CobaltRegistryLoader.getRegistry(CONTEXT);
         assertThat(registry.getCustomersCount()).isEqualTo(1);
         assertThat(registry.getCustomers(0).getProjectsCount()).isEqualTo(1);
 
@@ -70,6 +75,8 @@ public class CobaltRegistryLoaderTest {
             assertThat(report.getReportingInterval()).isEqualTo(ReportingInterval.DAYS_1);
             assertThat(report.getLocalAggregationProcedure())
                     .isEqualTo(LocalAggregationProcedure.LOCAL_AGGREGATION_PROCEDURE_UNSET);
+            assertThat(report.getSystemProfileFieldList()).isEmpty();
+            assertThat(report.getExperimentIdList()).isEmpty();
             assertThat(report.getSystemProfileSelection())
                     .isEqualTo(SystemProfileSelectionPolicy.REPORT_ALL);
             assertThat(report.getStringSketchParams())

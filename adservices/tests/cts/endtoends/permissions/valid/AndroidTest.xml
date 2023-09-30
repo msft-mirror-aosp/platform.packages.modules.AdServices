@@ -17,7 +17,7 @@
 <configuration description="Config for Cts Ad Services Permissions E2E tests">
     <option name="test-suite-tag" value="cts" />
     <option name="test-tag" value="CtsAdServicesPermissionsValidEndToEndTests" />
-    <option name="config-descriptor:metadata" key="component" value="framework"/>
+    <option name="config-descriptor:metadata" key="component" value="adservices"/>
     <option name="config-descriptor:metadata" key="parameter" value="not_instant_app" />
     <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi" />
     <option name="config-descriptor:metadata" key="parameter" value="secondary_user" />
@@ -45,6 +45,12 @@
 
         <option name="run-command" value="setprop log.tag.adservices VERBOSE" />
         <option name="run-command" value="setprop log.tag.adservices.topics VERBOSE" />
+
+        <!-- Ensure the ad filtering feature is disabled -->
+        <option name="run-command"
+                value="device_config put adservices fledge_ad_selection_filtering_enabled false" />
+        <option name="teardown-command"
+                value="device_config put adservices fledge_ad_selection_filtering_enabled false" />
 
         <!-- Increase the allowed API queries per second -->
         <option name="run-command" value="setprop debug.adservices.sdk_request_permits_per_second 1000" />

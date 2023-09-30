@@ -20,15 +20,17 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZE
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.measurement.RegistrationRequest;
+import android.adservices.measurement.SourceRegistrationRequest;
 import android.adservices.measurement.WebSourceParams;
 import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.annotation.NonNull;
 import android.content.Context;
+import android.net.Uri;
 
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.devapi.DevContext;
-import com.android.adservices.service.measurement.util.Web;
 
 /** Resolves access related to development/testing context. */
 public class DevContextAccessResolver implements IAccessResolver {
@@ -39,7 +41,7 @@ public class DevContextAccessResolver implements IAccessResolver {
     public DevContextAccessResolver(
             @NonNull DevContext devContext,
             @NonNull RegistrationRequest registrationRequest) {
-        mIsAllowed = Web.isLocalhost(registrationRequest.getRegistrationUri())
+        mIsAllowed = WebAddresses.isLocalhost(registrationRequest.getRegistrationUri())
                 ? devContext.getDevOptionsEnabled()
                 : true;
     }
@@ -49,7 +51,20 @@ public class DevContextAccessResolver implements IAccessResolver {
             @NonNull WebSourceRegistrationRequest webRegistrationRequest) {
         boolean hasLocalhost = false;
         for (WebSourceParams params : webRegistrationRequest.getSourceParams()) {
-            if (Web.isLocalhost(params.getRegistrationUri())) {
+            if (WebAddresses.isLocalhost(params.getRegistrationUri())) {
+                hasLocalhost = true;
+                break;
+            }
+        }
+        mIsAllowed = hasLocalhost ? devContext.getDevOptionsEnabled() : true;
+    }
+
+    public DevContextAccessResolver(
+            @NonNull DevContext devContext,
+            @NonNull SourceRegistrationRequest registrationRequest) {
+        boolean hasLocalhost = false;
+        for (Uri uri : registrationRequest.getRegistrationUris()) {
+            if (WebAddresses.isLocalhost(uri)) {
                 hasLocalhost = true;
                 break;
             }
@@ -62,7 +77,7 @@ public class DevContextAccessResolver implements IAccessResolver {
             @NonNull WebTriggerRegistrationRequest webRegistrationRequest) {
         boolean hasLocalhost = false;
         for (WebTriggerParams params : webRegistrationRequest.getTriggerParams()) {
-            if (Web.isLocalhost(params.getRegistrationUri())) {
+            if (WebAddresses.isLocalhost(params.getRegistrationUri())) {
                 hasLocalhost = true;
                 break;
             }

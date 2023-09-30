@@ -23,12 +23,16 @@ import android.net.Uri;
 
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
+import com.android.adservices.errorlogging.AdServicesErrorLogger;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.stats.AdServicesLogger;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,6 +49,8 @@ import java.util.List;
 public class DeleteApiIntegrationTest extends AbstractDbIntegrationTest {
     private static final String TEST_DIR = "msmt_browser_deletion_tests";
     private final JSONObject mParam;
+    private final AdServicesLogger mLogger;
+    private final AdServicesErrorLogger mErrorLogger;
 
     // The 'name' parameter is needed for the JUnit parameterized
     // test, although it's ostensibly unused by this constructor.
@@ -53,6 +59,8 @@ public class DeleteApiIntegrationTest extends AbstractDbIntegrationTest {
             DbState input, DbState output, JSONObject param, String name) {
         super(input, output);
         mParam = param;
+        mLogger = Mockito.mock(AdServicesLogger.class);
+        mErrorLogger = Mockito.mock(AdServicesErrorLogger.class);
     }
 
     @Parameterized.Parameters(name = "{3}")
@@ -94,9 +102,10 @@ public class DeleteApiIntegrationTest extends AbstractDbIntegrationTest {
         Integer finalDeletionMode = deletionMode;
 
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
         MeasurementDataDeleter measurementDataDeleter =
-                new MeasurementDataDeleter(datastoreManager);
+                new MeasurementDataDeleter(
+                        datastoreManager, FlagsFactory.getFlagsForTest(), mLogger);
         measurementDataDeleter.delete(
                 new DeletionParam.Builder(
                                 originList,

@@ -16,11 +16,12 @@
 
 package com.android.adservices.ui.notifications;
 
-import static com.android.adservices.service.PhFlags.KEY_EU_NOTIF_FLOW_CHANGE_ENABLED;
-import static com.android.adservices.service.PhFlags.KEY_GA_UX_FEATURE_ENABLED;
-import static com.android.adservices.service.PhFlags.KEY_NOTIFICATION_DISMISSED_ON_CLICK;
-import static com.android.adservices.service.PhFlags.KEY_RECORD_MANUAL_INTERACTION_ENABLED;
-import static com.android.adservices.service.PhFlags.KEY_UI_OTA_STRINGS_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_EU_NOTIF_FLOW_CHANGE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_NOTIFICATION_DISMISSED_ON_CLICK;
+import static com.android.adservices.service.FlagsConstants.KEY_RECORD_MANUAL_INTERACTION_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_STRINGS_FEATURE_ENABLED;
+import static com.android.adservices.ui.UxUtil.isUxStatesReady;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -95,7 +96,7 @@ public class ConsentNotificationTrigger {
                     ConsentManager.NO_MANUAL_INTERACTIONS_RECORDED);
         }
 
-        if (FlagsFactory.getFlags().getEnableAdServicesSystemApi()) {
+        if (isUxStatesReady(context)) {
             switch (UxUtil.getUx(context)) {
                 case GA_UX:
                     consentManager.recordGaUxNotificationDisplayed(true);
@@ -121,8 +122,7 @@ public class ConsentNotificationTrigger {
     private static Notification getNotification(
             @NonNull Context context, boolean isEuDevice, boolean gaUxFeatureEnabled) {
         Notification notification;
-
-        if (FlagsFactory.getFlags().getEnableAdServicesSystemApi()) {
+        if (isUxStatesReady(context)) {
             switch (UxUtil.getUx(context)) {
                 case GA_UX:
                     if (UxStatesManager.getInstance(context)
@@ -167,7 +167,7 @@ public class ConsentNotificationTrigger {
             boolean isEuDevice,
             boolean gaUxFeatureEnabled,
             ConsentManager consentManager) {
-        if (FlagsFactory.getFlags().getEnableAdServicesSystemApi()) {
+        if (isUxStatesReady(context)) {
             switch (UxUtil.getUx(context)) {
                 case U18_UX:
                     consentManager.recordMeasurementDefaultConsent(true);

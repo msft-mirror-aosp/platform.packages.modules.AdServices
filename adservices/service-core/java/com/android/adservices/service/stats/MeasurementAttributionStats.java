@@ -30,6 +30,11 @@ public class MeasurementAttributionStats {
     private boolean mIsSourceDerived;
     private boolean mIsInstallAttribution;
     private long mAttributionDelay;
+    private String mSourceRegistrant;
+    private int mAggregateReportCount;
+    private int mAggregateDebugReportCount;
+    private int mEventReportCount;
+    private int mEventDebugReportCount;
 
     public MeasurementAttributionStats() {}
 
@@ -46,7 +51,14 @@ public class MeasurementAttributionStats {
                 && mFailureType == measurementAttributionStats.getFailureType()
                 && mIsSourceDerived == measurementAttributionStats.isSourceDerived()
                 && mIsInstallAttribution == measurementAttributionStats.isInstallAttribution()
-                && mAttributionDelay == measurementAttributionStats.getAttributionDelay();
+                && mAttributionDelay == measurementAttributionStats.getAttributionDelay()
+                && Objects.equals(
+                        mSourceRegistrant, measurementAttributionStats.getSourceRegistrant())
+                && mAggregateReportCount == measurementAttributionStats.getAggregateReportCount()
+                && mAggregateDebugReportCount
+                        == measurementAttributionStats.getAggregateDebugReportCount()
+                && mEventReportCount == measurementAttributionStats.getEventReportCount()
+                && mEventDebugReportCount == measurementAttributionStats.getEventDebugReportCount();
     }
 
     @Override
@@ -59,7 +71,12 @@ public class MeasurementAttributionStats {
                 mFailureType,
                 mIsSourceDerived,
                 mIsInstallAttribution,
-                mAttributionDelay);
+                mAttributionDelay,
+                mSourceRegistrant,
+                mAggregateReportCount,
+                mAggregateDebugReportCount,
+                mEventReportCount,
+                mEventDebugReportCount);
     }
 
     public int getCode() {
@@ -92,6 +109,26 @@ public class MeasurementAttributionStats {
 
     public long getAttributionDelay() {
         return mAttributionDelay;
+    }
+
+    public String getSourceRegistrant() {
+        return mSourceRegistrant;
+    }
+
+    public int getAggregateReportCount() {
+        return mAggregateReportCount;
+    }
+
+    public int getAggregateDebugReportCount() {
+        return mAggregateDebugReportCount;
+    }
+
+    public int getEventReportCount() {
+        return mEventReportCount;
+    }
+
+    public int getEventDebugReportCount() {
+        return mEventDebugReportCount;
     }
 
     /** Builder for {@link MeasurementAttributionStats}. */
@@ -152,6 +189,42 @@ public class MeasurementAttributionStats {
             mBuilding.mAttributionDelay = attributionDelay;
             return this;
         }
+
+        /** See {@link MeasurementAttributionStats#getSourceRegistrant()} . */
+        public @NonNull MeasurementAttributionStats.Builder setSourceRegistrant(
+                String sourceRegistrant) {
+            mBuilding.mSourceRegistrant = sourceRegistrant;
+            return this;
+        }
+
+        /** See {@link MeasurementAttributionStats#getAggregateReportCount()} . */
+        public @NonNull MeasurementAttributionStats.Builder setAggregateReportCount(
+                int aggregateReportCount) {
+            mBuilding.mAggregateReportCount = aggregateReportCount;
+            return this;
+        }
+
+        /** See {@link MeasurementAttributionStats#getAggregateDebugReportCount()} . */
+        public @NonNull MeasurementAttributionStats.Builder setAggregateDebugReportCount(
+                int aggregateDebugReportCount) {
+            mBuilding.mAggregateDebugReportCount = aggregateDebugReportCount;
+            return this;
+        }
+
+        /** See {@link MeasurementAttributionStats#getEventReportCount()} . */
+        public @NonNull MeasurementAttributionStats.Builder setEventReportCount(
+                int eventReportCount) {
+            mBuilding.mEventReportCount = eventReportCount;
+            return this;
+        }
+
+        /** See {@link MeasurementAttributionStats#getEventDebugReportCount()} . */
+        public @NonNull MeasurementAttributionStats.Builder setEventDebugReportCount(
+                int eventDebugReportCount) {
+            mBuilding.mEventDebugReportCount = eventDebugReportCount;
+            return this;
+        }
+
         /** Build the {@link MeasurementAttributionStats}. */
         public @NonNull MeasurementAttributionStats build() {
             return mBuilding;

@@ -25,12 +25,15 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -50,12 +53,19 @@ public class NotInAllowListTest {
 
     private String mPreviousSignatureAllowList;
 
+    @Rule
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
     @Before
     public void setup() {
         if (!SdkLevel.isAtLeastT()) {
             CompatAdServicesTestUtils.setFlags();
         }
         overrideSignatureAllowListToEmpty();
+
+        // Kill AdServices process
+        AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
     @After

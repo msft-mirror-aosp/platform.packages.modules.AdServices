@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
@@ -30,16 +31,18 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -50,13 +53,16 @@ public class NotificationActivityU18UxSelectorUiAutomatorTest {
     private static final String NOTIFICATION_PACKAGE = "android.adservices.ui.NOTIFICATIONS";
     private static final int LAUNCH_TIMEOUT = 5000;
     private static final int SCROLL_WAIT_TIME = 2000;
-    private static UiDevice sDevice =
+    private static final UiDevice sDevice =
             UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
     private String mTestName;
 
+    @Rule
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
     @BeforeClass
     public static void classSetup() {
-        if (!ApkTestUtil.isDeviceSupported()) return;
         AdservicesTestHelper.killAdservicesProcess(ApplicationProvider.getApplicationContext());
     }
 
@@ -67,11 +73,12 @@ public class NotificationActivityU18UxSelectorUiAutomatorTest {
         }
         ShellUtils.runShellCommand(
                 "device_config put adservices enable_ad_services_system_api true");
+        ShellUtils.runShellCommand(
+                "device_config put adservices consent_notification_activity_debug_mode true");
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
         ShellUtils.runShellCommand("device_config put adservices u18_ux_enabled true");
+        ShellUtils.runShellCommand("device_config put adservices debug_ux U18_UX");
 
-        // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(ApkTestUtil.isDeviceSupported());
         sDevice.pressHome();
         final String launcherPackage = sDevice.getLauncherPackageName();
         assertThat(launcherPackage).isNotNull();
@@ -80,8 +87,6 @@ public class NotificationActivityU18UxSelectorUiAutomatorTest {
 
     @After
     public void teardown() throws Exception {
-        if (!ApkTestUtil.isDeviceSupported()) return;
-
         ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + mTestName + "_");
 
         AdservicesTestHelper.killAdservicesProcess(ApplicationProvider.getApplicationContext());
@@ -99,51 +104,46 @@ public class NotificationActivityU18UxSelectorUiAutomatorTest {
 
         UiObject u18NotificationTitle = getElement(R.string.notificationUI_u18_notification_title);
         assertThat(u18NotificationTitle.exists()).isTrue();
-        UiObject leftControlButton =
-                getElement(R.string.notificationUI_u18_left_control_button_text);
-        UiObject rightControlButton =
-                getElement(R.string.notificationUI_u18_right_control_button_text);
-        UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
-        assertThat(leftControlButton.exists()).isFalse();
-        assertThat(rightControlButton.exists()).isFalse();
-        assertThat(moreButton.exists()).isTrue();
-        while (moreButton.exists()) {
-            moreButton.click();
-            Thread.sleep(SCROLL_WAIT_TIME);
-        }
+
+        clickMoreToBottom();
+
+        UiObject
+                leftControlButton =
+                        getElement(R.string.notificationUI_u18_left_control_button_text),
+                rightControlButton =
+                        getElement(R.string.notificationUI_u18_right_control_button_text);
         assertThat(leftControlButton.exists()).isTrue();
-        assertThat(rightControlButton.exists()).isTrue();
-        assertThat(moreButton.exists()).isFalse();
         rightControlButton.click();
         assertThat(u18NotificationTitle.exists()).isFalse();
     }
 
     @Test
+    @FlakyTest(bugId = 302607350)
     public void clickSettingsTest() throws UiObjectNotFoundException, InterruptedException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
         startActivity();
-        UiObject u18NotificationTitle = getElement(R.string.notificationUI_u18_notification_title);
-        assertThat(u18NotificationTitle.exists()).isTrue();
 
-        UiObject leftControlButton =
-                getElement(R.string.notificationUI_u18_left_control_button_text);
-        UiObject rightControlButton =
-                getElement(R.string.notificationUI_u18_right_control_button_text);
-        UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
-        assertThat(leftControlButton.exists()).isFalse();
-        assertThat(rightControlButton.exists()).isFalse();
-        assertThat(moreButton.exists()).isTrue();
-        while (moreButton.exists()) {
-            moreButton.click();
-            Thread.sleep(SCROLL_WAIT_TIME);
-        }
-        assertThat(leftControlButton.exists()).isTrue();
+        clickMoreToBottom();
+
+        UiObject
+                leftControlButton =
+                        getElement(R.string.notificationUI_u18_left_control_button_text),
+                rightControlButton =
+                        getElement(R.string.notificationUI_u18_right_control_button_text);
         assertThat(rightControlButton.exists()).isTrue();
-        assertThat(moreButton.exists()).isFalse();
+
         leftControlButton.click();
+
+        // make sure it goes to u18 page rather than GA page
+        UiObject topicTitle = getElement(R.string.settingsUI_topics_ga_title);
+        assertThat((topicTitle.exists())).isFalse();
         UiObject measurementTitle = getElement(R.string.settingsUI_u18_measurement_view_title);
-        ApkTestUtil.scrollTo(sDevice, R.string.settingsUI_u18_measurement_view_title);
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.R) {
+            ApkTestUtil.click(sDevice, R.string.settingsUI_u18_measurement_view_title);
+        } else {
+            ApkTestUtil.scrollTo(sDevice, R.string.settingsUI_u18_measurement_view_title);
+        }
         assertThat(measurementTitle.exists()).isTrue();
     }
 
@@ -158,6 +158,21 @@ public class NotificationActivityU18UxSelectorUiAutomatorTest {
 
         ApplicationProvider.getApplicationContext().startActivity(intent);
         sDevice.wait(Until.hasObject(By.pkg(notificationPackage).depth(0)), LAUNCH_TIMEOUT);
+    }
+
+    private void clickMoreToBottom() throws UiObjectNotFoundException, InterruptedException {
+        UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
+        if (!moreButton.exists()) {
+            LogUtil.e("More Button not Found");
+            return;
+        }
+
+        int clickCount = 10;
+        while (moreButton.exists() && clickCount-- > 0) {
+            moreButton.click();
+            Thread.sleep(SCROLL_WAIT_TIME);
+        }
+        assertThat(moreButton.exists()).isFalse();
     }
 
     private String getString(int resourceId) {

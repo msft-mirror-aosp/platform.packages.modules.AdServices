@@ -28,9 +28,12 @@ import com.android.adservices.data.measurement.AbstractDbIntegrationTest;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DbState;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
+import com.android.adservices.errorlogging.AdServicesErrorLogger;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
+import com.android.adservices.service.stats.AdServicesLogger;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -52,6 +55,8 @@ import java.util.Objects;
 public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbIntegrationTest {
     private final JSONObject mParam;
     private final EnrollmentDao mEnrollmentDao;
+    private final AdServicesLogger mLogger;
+    private final AdServicesErrorLogger mErrorLogger;
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> data() throws IOException, JSONException {
@@ -67,6 +72,8 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
         super(input, output);
         mParam = param;
         mEnrollmentDao = Mockito.mock(EnrollmentDao.class);
+        mLogger = Mockito.mock(AdServicesLogger.class);
+        mErrorLogger = Mockito.mock(AdServicesErrorLogger.class);
     }
 
     public enum Action {
@@ -92,10 +99,15 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
                             return keys;
                         });
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
         AggregateReportingJobHandler spyReportingService =
-                Mockito.spy(new AggregateReportingJobHandler(
-                        mEnrollmentDao, datastoreManager, mockKeyManager));
+                Mockito.spy(
+                        new AggregateReportingJobHandler(
+                                mEnrollmentDao,
+                                datastoreManager,
+                                mockKeyManager,
+                                FlagsFactory.getFlagsForTest(),
+                                mLogger));
         try {
             Mockito.doReturn(returnCode)
                     .when(spyReportingService)

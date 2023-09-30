@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Veitir forriti aðgang að forritaskilum samþykkja AdServices"</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Aðgangur að forritaskilum auglýsingaauðkennis."</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Veitir forriti aðgang að forritaskilum auglýsingaauðkennis."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"Aðgangur að forritaskilum AdServices Cobalt Upload"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Veitir forriti aðgang að forritaskilum AdServices Cobalt Upload."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Aðgangur að forritaskilum kennis forritahóps."</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Veitir forriti aðgang að forritaskilum kennis forritahóps."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Aðgangur að forritaskilum samþykkjaþjónustu"</string>
@@ -40,7 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Veitir forriti aðgang að virknistöðuforritaskilum AdService."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Aðgangur að forritaskilum AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Veitir forriti aðgang að forritaskilum AdServicesManager."</string>
-    <string name="app_label" msgid="5985320129629013968">"Android kerfið"</string>
+    <string name="app_label" msgid="5844694701336604490">"Persónuvernd auglýsinga"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Taktu þátt í betaútgáfu persónuverndar Android-auglýsinga"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android kannar lokaðri leiðir fyrir forrit til að birta þér auglýsingar."</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Nánar"</string>
@@ -224,7 +226,7 @@
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Algengt er að forritin sem nú notar muni áhugasvið þín til að sérsníða upplifun þína. Forrit geta einnig vistað upplýsingar um umfjöllunarefnin þín hjá Android.\n\nEf þú notar til dæmis forrit um maraþonþjálfun gæti forritið áætlað að þú hafir áhuga á hlaupaskóm. Ef þú notar annað forrit seinna getur viðkomandi forrit sýnt þér auglýsingu fyrir hlaupaskó í samræmi við tillögu frá fyrsta forritinu.\n\nAndroid eyðir forritstillögugögnum reglulega sjálfkrafa. Forrit sem þú notar aftur gæti birst aftur á listanum Þú getur einnig lokað á að forrit stingi upp á auglýsingum fyrir þig.\n\nSérsniðnar auglýsingar kunna að birtast í forritum en það fer eftir þessari stillingu, stillingu fyrir umfjöllunarefni auglýsinga, stillingum auglýsingakennis og því hvort forritið sem þú ert að nota sérsníði auglýsingar."</string>
     <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"Nýr persónuverndareiginleiki auglýsinga er í boði"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Aðeins mjög takmörkuðum upplýsingum er deilt á milli forrita til að mæla árangur auglýsinga"</string>
-    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Við erum að gefa út nýjan persónuverndareiginleika auglýsinga sem kallast auglýsingamælingar. Android deilir aðeins mjög takmörkuðum upplýsingum á milli forrita til að hjálpa þeim að mæla árangur auglýsinga, t.d. um hvenær auglýsing birtist þér."</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Við erum að gefa út nýjan persónuverndareiginleika auglýsinga sem kallast auglýsingamælingar. Android deilir aðeins mjög takmörkuðum upplýsingum á milli forrita til að hjálpa þeim að mæla árangur auglýsinga, t.d. hvenær auglýsing birtist þér."</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Þú getur gert breytingar í persónuverndarstillingunum auglýsinga."</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Forrit sem þú notar geta beðið Android um upplýsingar til að hjálpa þeim að mæla árangur auglýsinga sinna. Android gerir forritum aðeins kleift að safna tilteknum gerðum gagna."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Litrík myndskreyting af táknum fyrir áhugasvið á borð við tónlist, fréttir og íþróttir"</string>

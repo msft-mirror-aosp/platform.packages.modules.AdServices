@@ -22,8 +22,6 @@ import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTI
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
-import android.os.Parcel;
-import android.os.Parcelable;
 
 import com.android.internal.util.Preconditions;
 
@@ -35,29 +33,11 @@ import java.util.Objects;
  *
  * <p>Instances of this class are created by SDKs to be provided as arguments to the {@link
  * AdSelectionManager#persistAdSelectionResult} methods in {@link AdSelectionManager}.
- *
- * @hide
  */
-public final class PersistAdSelectionResultRequest implements Parcelable {
+public final class PersistAdSelectionResultRequest {
     private final long mAdSelectionId;
     @Nullable private final AdTechIdentifier mSeller;
     @Nullable private final byte[] mAdSelectionResult;
-
-    @NonNull
-    public static final Parcelable.Creator<PersistAdSelectionResultRequest> CREATOR =
-            new Parcelable.Creator<>() {
-                @Override
-                public PersistAdSelectionResultRequest createFromParcel(@NonNull Parcel in) {
-                    Objects.requireNonNull(in);
-
-                    return new PersistAdSelectionResultRequest(in);
-                }
-
-                @Override
-                public PersistAdSelectionResultRequest[] newArray(int size) {
-                    return new PersistAdSelectionResultRequest[size];
-                }
-            };
 
     private PersistAdSelectionResultRequest(
             long adSelectionId,
@@ -66,28 +46,6 @@ public final class PersistAdSelectionResultRequest implements Parcelable {
         this.mAdSelectionId = adSelectionId;
         this.mSeller = seller;
         this.mAdSelectionResult = adSelectionResult;
-    }
-
-    private PersistAdSelectionResultRequest(@NonNull Parcel in) {
-        Objects.requireNonNull(in);
-
-        this.mAdSelectionId = in.readLong();
-        this.mSeller = AdTechIdentifier.CREATOR.createFromParcel(in);
-        this.mAdSelectionResult = in.createByteArray();
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(@NonNull Parcel dest, int flags) {
-        Objects.requireNonNull(dest);
-
-        dest.writeLong(mAdSelectionId);
-        mSeller.writeToParcel(dest, flags);
-        dest.writeByteArray(mAdSelectionResult);
     }
 
     /**
@@ -117,25 +75,7 @@ public final class PersistAdSelectionResultRequest implements Parcelable {
         }
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof PersistAdSelectionResultRequest)) return false;
-        PersistAdSelectionResultRequest that = (PersistAdSelectionResultRequest) o;
-        return mAdSelectionId == that.mAdSelectionId
-                && Objects.equals(mSeller, that.mSeller)
-                && Arrays.equals(mAdSelectionResult, that.mAdSelectionResult);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(mAdSelectionId, mSeller, Arrays.hashCode(mAdSelectionResult));
-    }
-
-    /** Builder for {@link PersistAdSelectionResultRequest} objects.
-     *
-     * @hide
-     */
+    /** Builder for {@link PersistAdSelectionResultRequest} objects. */
     public static final class Builder {
         private long mAdSelectionId;
         @Nullable private AdTechIdentifier mSeller;
@@ -175,7 +115,6 @@ public final class PersistAdSelectionResultRequest implements Parcelable {
          * Builds a {@link PersistAdSelectionResultRequest} instance.
          *
          * @throws IllegalArgumentException if the adSelectionIid is not set
-         * @throws NullPointerException if the mAdSelectionResult or Seller is null
          */
         @NonNull
         public PersistAdSelectionResultRequest build() {

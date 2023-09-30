@@ -150,7 +150,8 @@ public class ConsentManager {
             @NonNull UserProfileIdManager userProfileIdManager,
             @NonNull UxStatesDao uxStatesDao,
             @NonNull Flags flags,
-            @Flags.ConsentSourceOfTruth int consentSourceOfTruth) {
+            @Flags.ConsentSourceOfTruth int consentSourceOfTruth,
+            boolean enableAppsearchConsentData) {
         Objects.requireNonNull(topicsWorker);
         Objects.requireNonNull(appConsentDao);
         Objects.requireNonNull(measurementImpl);
@@ -165,7 +166,7 @@ public class ConsentManager {
             Objects.requireNonNull(adServicesManager);
         }
 
-        if (flags.getEnableAppsearchConsentData()) {
+        if (enableAppsearchConsentData) {
             Objects.requireNonNull(appSearchConsentManager);
         }
 
@@ -217,7 +218,9 @@ public class ConsentManager {
                             StatsdAdServicesLogger.getInstance();
                     // Flag enable_appsearch_consent_data is true on S- and T+ only when we want to
                     // use AppSearch to write to or read from.
-                    if (FlagsFactory.getFlags().getEnableAppsearchConsentData()) {
+                    boolean enableAppsearchConsentData =
+                            FlagsFactory.getFlags().getEnableAppsearchConsentData();
+                    if (enableAppsearchConsentData) {
                         appSearchConsentManager = AppSearchConsentManager.getInstance(context);
                         handleConsentMigrationFromAppSearchIfNeeded(
                                 context,
@@ -252,7 +255,8 @@ public class ConsentManager {
                                     // TODO(b/260601944): Remove Flag Instance.
                                     UxStatesDao.getInstance(context),
                                     FlagsFactory.getFlags(),
-                                    consentSourceOfTruth);
+                                    consentSourceOfTruth,
+                                    enableAppsearchConsentData);
                 }
             }
         }
@@ -268,6 +272,13 @@ public class ConsentManager {
     public void enable(@NonNull Context context) {
         Objects.requireNonNull(context);
 
+        // Check current value, if it is already enabled, skip this enable process. so that the Api
+        // won't be reset. Only add this logic to "enable" not "disable", since if it already
+        // disabled, there is no harm to reset the api again.
+        if (mFlags.getConsentManagerLazyEnableMode() && getConsentFromSourceOfTruth()) {
+            LogUtil.d("CONSENT_KEY already enable. Skipping enable process.");
+            return;
+        }
         UiStatsLogger.logOptInSelected(context);
 
         BackgroundJobsManager.scheduleAllBackgroundJobs(context);
@@ -326,6 +337,15 @@ public class ConsentManager {
      */
     public void enable(@NonNull Context context, AdServicesApiType apiType) {
         Objects.requireNonNull(context);
+        // Check current value, if it is already enabled, skip this enable process. so that the Api
+        // won't be reset.
+        if (mFlags.getConsentManagerLazyEnableMode()
+                && getPerApiConsentFromSourceOfTruth(apiType)) {
+            LogUtil.d(
+                    "ApiType: is %s already enable. Skipping enable process.",
+                    apiType.toPpApiDatastoreKey());
+            return;
+        }
 
         UiStatsLogger.logOptInSelected(context, apiType);
 
@@ -1227,6 +1247,16 @@ public class ConsentManager {
         mDatastore.put(apiType.toPpApiDatastoreKey(), isGiven);
     }
 
+    @VisibleForTesting
+    boolean getConsentFromPpApi() {
+        return mDatastore.get(ConsentConstants.CONSENT_KEY);
+    }
+
+    @VisibleForTesting
+    boolean getConsentPerApiFromPpApi(AdServicesApiType apiType) {
+        return mDatastore.get(apiType.toPpApiDatastoreKey());
+    }
+
     // Set the aggregated consent so that after the rollback of the module
     // and the flag which controls the consent flow everything works as expected.
     // The problematic edge case which is covered:
@@ -1299,8 +1329,24 @@ public class ConsentManager {
         }
     }
 
+    @VisibleForTesting
+    static boolean getPerApiConsentFromSystemServer(
+            @NonNull AdServicesManager adServicesManager,
+            @ConsentParcel.ConsentApiType int consentApiType) {
+        Objects.requireNonNull(adServicesManager);
+        return adServicesManager.getConsent(consentApiType).isIsGiven();
+    }
+
+    @VisibleForTesting
+    static boolean getConsentFromSystemServer(@NonNull AdServicesManager adServicesManager) {
+        Objects.requireNonNull(adServicesManager);
+        return getPerApiConsentFromSystemServer(adServicesManager, ConsentParcel.ALL_API);
+    }
+
     // Perform a one-time migration to migrate existing PPAPI Consent
     @VisibleForTesting
+    // Suppress lint warning for context.getUser in R since this code is unused in R
+    @SuppressWarnings("NewApi")
     static void migratePpApiConsentToSystemService(
             @NonNull Context context,
             @NonNull BooleanFileDatastore datastore,
@@ -1378,9 +1424,7 @@ public class ConsentManager {
                                 + " preference is not updated.");
                 ErrorLogUtil.e(
                         AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
-                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX,
-                        ConsentManager.class.getSimpleName(),
-                        new Object() {}.getClass().getEnclosingMethod().getName());
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
                 statsdAdServicesLogger.logConsentMigrationStats(
                         getConsentManagerStatsForLogging(
                                 appConsents,
@@ -1432,9 +1476,7 @@ public class ConsentManager {
             LogUtil.e("Finished clearing Consent in PPAPI but shared preference is not updated.");
             ErrorLogUtil.e(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX,
-                    ConsentManager.class.getSimpleName(),
-                    ConsentManager.class.getEnclosingMethod().getName());
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
         }
     }
 
@@ -1457,9 +1499,7 @@ public class ConsentManager {
             LogUtil.e("Failed to reset shared preference for " + sharedPreferenceKey);
             ErrorLogUtil.e(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_RESET_FAILURE,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX,
-                    ConsentManager.class.getSimpleName(),
-                    ConsentManager.class.getEnclosingMethod().getName());
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
         }
     }
 
@@ -1473,6 +1513,28 @@ public class ConsentManager {
                 () ->
                         mAppSearchConsentManager.setConsent(
                                 ConsentConstants.CONSENT_KEY_FOR_ALL, isGiven),
+                /* errorLogger= */ null);
+    }
+
+    @VisibleForTesting
+    boolean getConsentFromSourceOfTruth() {
+        return executeGettersByConsentSourceOfTruth(
+                false,
+                () -> getConsentFromPpApi(),
+                () -> getConsentFromSystemServer(mAdServicesManager),
+                () -> mAppSearchConsentManager.getConsent(ConsentConstants.CONSENT_KEY_FOR_ALL),
+                /* errorLogger= */ null);
+    }
+
+    @VisibleForTesting
+    boolean getPerApiConsentFromSourceOfTruth(AdServicesApiType apiType) {
+        return executeGettersByConsentSourceOfTruth(
+                false,
+                () -> getConsentPerApiFromPpApi(apiType),
+                () ->
+                        getPerApiConsentFromSystemServer(
+                                mAdServicesManager, apiType.toConsentApiType()),
+                () -> mAppSearchConsentManager.getConsent(apiType.toPpApiDatastoreKey()),
                 /* errorLogger= */ null);
     }
 
@@ -1681,7 +1743,7 @@ public class ConsentManager {
                 .logMeasurementWipeoutStats(
                         new MeasurementWipeoutStats.Builder()
                                 .setCode(AD_SERVICES_MEASUREMENT_WIPEOUT)
-                                .setWipeoutType(wipeoutStatus.getWipeoutType().ordinal())
+                                .setWipeoutType(wipeoutStatus.getWipeoutType().getValue())
                                 .build());
     }
 

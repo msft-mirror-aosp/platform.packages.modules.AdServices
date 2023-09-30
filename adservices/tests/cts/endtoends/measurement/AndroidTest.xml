@@ -17,7 +17,7 @@
 <configuration description="Config for Cts Ad Services E2E tests for measurement">
     <option name="test-suite-tag" value="cts" />
     <option name="test-tag" value="CtsAdServicesEndToEndTestMeasurement" />
-    <option name="config-descriptor:metadata" key="component" value="framework"/>
+    <option name="config-descriptor:metadata" key="component" value="adservices"/>
     <option name="config-descriptor:metadata" key="parameter" value="not_instant_app" />
     <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi" />
     <option name="config-descriptor:metadata" key="parameter" value="secondary_user" />
@@ -37,6 +37,8 @@
                 value="device_config put adservices measurement_register_source_request_permits_per_second 25.0" />
         <option name="run-command"
                 value="device_config put adservices measurement_register_web_source_request_permits_per_second 25.0" />
+        <option name="run-command"
+            value="device_config put adservices measurement_register_sources_request_permits_per_second 25.0" />
 
         <!-- Temporarily disable Device Config sync -->
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />

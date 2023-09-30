@@ -21,11 +21,11 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.room.AutoMigration;
 import androidx.room.Database;
-import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
 import com.android.adservices.data.common.FledgeRoomConverters;
+import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.internal.annotations.GuardedBy;
 
 import java.util.Objects;
@@ -42,11 +42,13 @@ import java.util.Objects;
         version = AdSelectionServerDatabase.DATABASE_VERSION,
         autoMigrations = {
             @AutoMigration(from = 1, to = 2),
+            @AutoMigration(from = 2, to = 3),
         })
 @TypeConverters({FledgeRoomConverters.class})
 public abstract class AdSelectionServerDatabase extends RoomDatabase {
-    public static final int DATABASE_VERSION = 2;
-    public static final String DATABASE_NAME = "adselectionserver.db";
+    public static final int DATABASE_VERSION = 3;
+    public static final String DATABASE_NAME =
+            FileCompatUtils.getAdservicesFilename("adselectionserver.db");
 
     private static final Object SINGLETON_LOCK = new Object();
 
@@ -59,7 +61,7 @@ public abstract class AdSelectionServerDatabase extends RoomDatabase {
         synchronized (SINGLETON_LOCK) {
             if (Objects.isNull(sSingleton)) {
                 sSingleton =
-                        Room.databaseBuilder(
+                        FileCompatUtils.roomDatabaseBuilderHelper(
                                         context, AdSelectionServerDatabase.class, DATABASE_NAME)
                                 .fallbackToDestructiveMigration()
                                 .build();

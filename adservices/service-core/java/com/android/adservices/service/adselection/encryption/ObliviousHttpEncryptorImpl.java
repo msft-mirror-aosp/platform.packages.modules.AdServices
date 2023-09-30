@@ -25,10 +25,12 @@ import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.ohttp.ObliviousHttpRequest;
 import com.android.adservices.ohttp.ObliviousHttpRequestContext;
 import com.android.adservices.ohttp.algorithms.UnsupportedHpkeAlgorithmException;
+import com.android.adservices.service.profiling.Tracing;
 
 import com.google.common.util.concurrent.FluentFuture;
 
 import java.io.IOException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
@@ -58,12 +60,19 @@ public class ObliviousHttpEncryptorImpl implements ObliviousHttpEncryptor {
     @Override
     public FluentFuture<byte[]> encryptBytes(
             byte[] plainText, long contextId, long keyFetchTimeoutMs) {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.OHTTP_ENCRYPT_BYTES);
         return mEncryptionKeyManager
                 .getLatestOhttpKeyConfigOfType(AUCTION, keyFetchTimeoutMs)
                 .transform(
-                        key -> createAndSerializeRequest(key, plainText, contextId),
+                        key -> {
+                            byte[] serializedRequest =
+                                    createAndSerializeRequest(key, plainText, contextId);
+                            Tracing.endAsyncSection(Tracing.OHTTP_ENCRYPT_BYTES, traceCookie);
+                            return serializedRequest;
+                        },
                         mLightweightExecutor);
     }
+
     /**
      * Decrypts the given bytes using context stored in the DB keyed by the given storedContextId.
      */
@@ -77,7 +86,7 @@ public class ObliviousHttpEncryptorImpl implements ObliviousHttpEncryptor {
             ObliviousHttpClient client = ObliviousHttpClient.create(context.keyConfig());
 
             return client.decryptObliviousHttpResponse(encryptedBytes, context);
-        } catch (Exception e) {
+        } catch (InvalidKeySpecException | UnsupportedHpkeAlgorithmException | IOException e) {
             sLogger.e("Unexpected error during decryption");
             throw new RuntimeException(e);
         }
@@ -85,6 +94,7 @@ public class ObliviousHttpEncryptorImpl implements ObliviousHttpEncryptor {
 
     private byte[] createAndSerializeRequest(
             ObliviousHttpKeyConfig config, byte[] plainText, long contextId) {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.CREATE_AND_SERIALIZE_REQUEST);
         try {
             Objects.requireNonNull(config);
             ObliviousHttpClient client = ObliviousHttpClient.create(config);
@@ -96,12 +106,16 @@ public class ObliviousHttpEncryptorImpl implements ObliviousHttpEncryptor {
             mObliviousHttpRequestContextMarshaller.insertAuctionEncryptionContext(
                     contextId, request.requestContext());
 
-            return request.serialize();
+            byte[] serializedRequest = request.serialize();
+            Tracing.endAsyncSection(Tracing.CREATE_AND_SERIALIZE_REQUEST, traceCookie);
+            return serializedRequest;
         } catch (UnsupportedHpkeAlgorithmException e) {
             sLogger.e("Unexpected error during Oblivious Http Client creation");
+            Tracing.endAsyncSection(Tracing.CREATE_AND_SERIALIZE_REQUEST, traceCookie);
             throw new RuntimeException(e);
         } catch (IOException e) {
             sLogger.e("Unexpected error during Oblivious HTTP Request creation");
+            Tracing.endAsyncSection(Tracing.CREATE_AND_SERIALIZE_REQUEST, traceCookie);
             throw new RuntimeException(e);
         }
     }

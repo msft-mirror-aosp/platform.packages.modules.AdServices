@@ -16,24 +16,40 @@
 
 package com.android.adservices.cobalt;
 
+import android.annotation.NonNull;
+import android.content.Context;
+import android.content.res.AssetManager;
+
+import com.android.internal.annotations.VisibleForTesting;
+
 import com.google.cobalt.CobaltRegistry;
-import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.common.io.ByteStreams;
 
-import java.io.IOException;
+import java.io.InputStream;
 
-/** Loads the Cobalt registry from a Java resource. */
-final class CobaltRegistryLoader {
-    private static final String REGISTRY_FILE = "cobalt_registry.binarypb";
-
-    private CobaltRegistryLoader() {}
+/** Loads the Cobalt registry from a APK asset. */
+@VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
+public final class CobaltRegistryLoader {
+    private static final String REGISTRY_ASSET_FILE = "cobalt/cobalt_registry.binarypb";
 
     /**
-     * Get the Cobalt registry from the JAR's resource file.
+     * Get the Cobalt registry from the APK asset directory.
      *
      * @return the CobaltRegistry
      */
-    public static CobaltRegistry getRegistry() throws IOException, InvalidProtocolBufferException {
-        final ClassLoader loader = CobaltRegistryLoader.class.getClassLoader();
-        return CobaltRegistry.parseFrom(loader.getResourceAsStream(REGISTRY_FILE));
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
+    public static CobaltRegistry getRegistry(@NonNull Context context)
+            throws CobaltInitializationException {
+        if (!CobaltRegistryValidated.IS_REGISTRY_VALIDATED) {
+            throw new AssertionError(
+                    "Cobalt registry was not validated at build time, something is very wrong");
+        }
+
+        AssetManager assetManager = context.getAssets();
+        try (InputStream inputStream = assetManager.open(REGISTRY_ASSET_FILE)) {
+            return CobaltRegistry.parseFrom(ByteStreams.toByteArray(inputStream));
+        } catch (Exception e) {
+            throw new CobaltInitializationException("Exception while reading registry", e);
+        }
     }
 }

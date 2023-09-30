@@ -20,24 +20,21 @@ import static org.junit.Assert.assertTrue;
 
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdCompatibleManager;
-import android.adservices.common.OutcomeReceiver;
+import android.adservices.common.AdServicesOutcomeReceiver;
 import android.content.Context;
 import android.os.LimitExceededException;
-import android.os.SystemProperties;
-import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.runner.AndroidJUnit4;
 
-import com.android.adservices.common.CompatAdServicesTestUtils;
-import com.android.compatibility.common.util.ShellUtils;
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.common.SdkLevelSupportRule;
 
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
@@ -46,45 +43,36 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-@RunWith(AndroidJUnit4.class)
-public class AdIdCompatibleManagerTest {
+public final class AdIdCompatibleManagerTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final float DEFAULT_ADID_REQUEST_PERMITS_PER_SECOND = 25f;
     private static final Context sContext = ApplicationProvider.getApplicationContext();
 
-    private String mPreviousAppAllowList;
+    @Rule(order = 0)
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
+    // Sets flags used in the test (and automatically reset them at the end)
+    @Rule(order = 1)
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forAdidE2ETests(sContext.getPackageName());
+
+    // TODO(b/285894099): Remove the rule once AdId is enabled on R.
+    @Rule(order = 2)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() throws Exception {
-        overrideAdIdKillSwitch(true);
-        mPreviousAppAllowList =
-                CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
-                        sContext.getPackageName());
         // Cool-off rate limiter in case it was initialized by another test
         TimeUnit.SECONDS.sleep(1);
-    }
-
-    @After
-    public void tearDown() {
-        overrideAdIdKillSwitch(false);
-        CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
-    }
-
-    // Override adid related kill switch to ignore the effect of actual PH values.
-    // If shouldOverride = true, override adid related kill switch to OFF to allow adservices
-    // If shouldOverride = false, override adid related kill switch to meaningless value so that
-    // PhFlags will use the default value.
-    private void overrideAdIdKillSwitch(boolean shouldOverride) {
-        String overrideString = shouldOverride ? "false" : "null";
-        ShellUtils.runShellCommand("setprop debug.adservices.adid_kill_switch " + overrideString);
     }
 
     @Test
     public void testAdIdCompatibleManager() throws Exception {
         AdIdCompatibleManager adIdCompatibleManager = new AdIdCompatibleManager(sContext);
         CompletableFuture<AdId> future = new CompletableFuture<>();
-        OutcomeReceiver<AdId, Exception> callback =
-                new OutcomeReceiver<>() {
+        AdServicesOutcomeReceiver<AdId, Exception> callback =
+                new AdServicesOutcomeReceiver<>() {
                     @Override
                     public void onResult(AdId result) {
                         future.complete(result);
@@ -107,7 +95,7 @@ public class AdIdCompatibleManagerTest {
 
         // Rate limit hasn't reached yet
         final long nowInMillis = System.currentTimeMillis();
-        final float requestPerSecond = getAdIdRequestPerSecond();
+        final float requestPerSecond = flags.getAdIdRequestPerSecond();
         for (int i = 0; i < requestPerSecond; i++) {
             assertFalse(getAdIdAndVerifyRateLimitReached(adIdCompatibleManager));
         }
@@ -140,9 +128,9 @@ public class AdIdCompatibleManagerTest {
         return reachedLimit.get();
     }
 
-    private OutcomeReceiver<AdId, Exception> createCallbackWithCountdownOnLimitExceeded(
+    private AdServicesOutcomeReceiver<AdId, Exception> createCallbackWithCountdownOnLimitExceeded(
             CountDownLatch countDownLatch, AtomicBoolean reachedLimit) {
-        return new OutcomeReceiver<>() {
+        return new AdServicesOutcomeReceiver<>() {
             @Override
             public void onResult(@NonNull AdId result) {
                 countDownLatch.countDown();
@@ -156,25 +144,5 @@ public class AdIdCompatibleManagerTest {
                 countDownLatch.countDown();
             }
         };
-    }
-
-    private float getAdIdRequestPerSecond() {
-        try {
-            String permitString =
-                    SystemProperties.get("debug.adservices.adid_request_permits_per_second");
-            if (!TextUtils.isEmpty(permitString) && !"null".equalsIgnoreCase(permitString)) {
-                return Float.parseFloat(permitString);
-            }
-
-            permitString =
-                    ShellUtils.runShellCommand(
-                            "device_config get adservices adid_request_permits_per_second");
-            if (!TextUtils.isEmpty(permitString) && !"null".equalsIgnoreCase(permitString)) {
-                return Float.parseFloat(permitString);
-            }
-            return DEFAULT_ADID_REQUEST_PERMITS_PER_SECOND;
-        } catch (Exception e) {
-            return DEFAULT_ADID_REQUEST_PERMITS_PER_SECOND;
-        }
     }
 }

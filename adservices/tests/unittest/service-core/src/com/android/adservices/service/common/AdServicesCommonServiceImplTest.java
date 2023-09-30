@@ -21,6 +21,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZE
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.ADSERVICES_ENTRY_POINT_STATUS_DISABLE;
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.ADSERVICES_ENTRY_POINT_STATUS_ENABLE;
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.KEY_ADSERVICES_ENTRY_POINT_STATUS;
+import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.GA_UX;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
@@ -47,6 +48,8 @@ import android.content.pm.PackageManager;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.telephony.TelephonyManager;
+
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
@@ -133,7 +136,7 @@ public class AdServicesCommonServiceImplTest {
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
         doReturn(mPackageManager).when(mContext).getPackageManager();
         doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
-        doReturn(true).when(mUxStatesManager).isEnrolledUser();
+        doReturn(true).when(mUxStatesManager).isEnrolledUser(mContext);
     }
 
 
@@ -147,7 +150,7 @@ public class AdServicesCommonServiceImplTest {
     // For the old entry point logic, we only check the UX flag and user enrollment is irrelevant.
     @Test
     public void isAdServiceEnabledTest_userNotEnrolledEntryPointLogicV1() throws InterruptedException {
-        doReturn(false).when(mUxStatesManager).isEnrolledUser();
+        doReturn(false).when(mUxStatesManager).isEnrolledUser(mContext);
         doReturn(false).when(mFlags).getEnableAdServicesSystemApi();
         mCommonService =
                 new AdServicesCommonServiceImpl(mContext, mFlags, mUxEngine, mUxStatesManager);
@@ -161,11 +164,15 @@ public class AdServicesCommonServiceImplTest {
         assertThat(getStatusResult1.getAdServicesEnabled()).isTrue();
     }
 
-    // For the new entry point logic, only enrolled user can see the entry point.
+    // For the new entry point logic, only enrolled user that has gone through UxEngine
+    // can see the entry point.
     @Test
-    public void isAdServiceEnabledTest_userNotEnrolledEntryPointLogicV2() throws InterruptedException {
-        doReturn(false).when(mUxStatesManager).isEnrolledUser();
+    public void isAdServiceEnabledTest_userNotEnrolledEntryPointLogicV2()
+            throws InterruptedException {
+        doReturn(false).when(mUxStatesManager).isEnrolledUser(mContext);
         doReturn(true).when(mFlags).getEnableAdServicesSystemApi();
+        doReturn(GA_UX).when(mConsentManager).getUx();
+
         mCommonService =
                 new AdServicesCommonServiceImpl(mContext, mFlags, mUxEngine, mUxStatesManager);
         // Calling get adservice status, init set the flag to true, expect to return true
@@ -621,7 +628,8 @@ public class AdServicesCommonServiceImplTest {
     }
 
     @Test
-    public void enableAdServicesTest_apiDisabled() {
+    @FlakyTest(bugId = 299686058)
+    public void enableAdServicesTest_apiDisabled() throws InterruptedException {
         mGetCommonCallbackLatch = new CountDownLatch(1);
         ExtendedMockito.doReturn(true)
                 .when(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
@@ -642,13 +650,17 @@ public class AdServicesCommonServiceImplTest {
                     }
                 });
 
+        assertThat(
+                        mGetCommonCallbackLatch.await(
+                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+                .isTrue();
         ExtendedMockito.verify(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
         verify(mFlags).getEnableAdServicesSystemApi();
         verify(mUxEngine, never()).start(any());
     }
 
     @Test
-    public void enableAdServicesTest_engineStarted() {
+    public void enableAdServicesTest_engineStarted() throws InterruptedException {
         mGetCommonCallbackLatch = new CountDownLatch(1);
         ExtendedMockito.doReturn(true)
                 .when(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
@@ -670,6 +682,10 @@ public class AdServicesCommonServiceImplTest {
                     }
                 });
 
+        assertThat(
+                        mGetCommonCallbackLatch.await(
+                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+                .isTrue();
         ExtendedMockito.verify(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
         verify(mFlags).getEnableAdServicesSystemApi();
         verify(mUxEngine).start(any());

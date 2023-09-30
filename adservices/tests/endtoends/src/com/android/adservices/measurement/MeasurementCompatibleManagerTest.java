@@ -34,7 +34,7 @@ import static org.mockito.Mockito.verify;
 
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdCompatibleManager;
-import android.adservices.common.OutcomeReceiver;
+import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.IMeasurementService;
@@ -58,7 +58,7 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -66,6 +66,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.stubbing.Answer;
@@ -100,8 +101,6 @@ public class MeasurementCompatibleManagerTest {
                     /* sdkDeDataDir = */ null,
                     /* isCustomizedSdkContext = */ false);
 
-    private String mPreviousAppAllowList;
-
     private String getPackageName() {
         return SdkLevel.isAtLeastT()
                 ? "com.android.adservices.endtoendtest"
@@ -112,28 +111,20 @@ public class MeasurementCompatibleManagerTest {
         return spy(MeasurementCompatibleManager.get(sContext));
     }
 
+    @Rule
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
+                    .setCompatModeFlags()
+                    .setMsmtApiAppAllowList(sContext.getPackageName());
+
     @Before
     public void setUp() throws TimeoutException {
-        if (!SdkLevel.isAtLeastT()) {
-            mPreviousAppAllowList =
-                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
-                            sContext.getPackageName());
-            CompatAdServicesTestUtils.setFlags();
-        }
-
         // TODO(b/290394919): disable AppSearch & MeasurementRollback until implemented on R
         disableAppSearchOnR();
     }
 
     @After
     public void tearDown() {
-        resetDisableAppSearchOnR();
-
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
-
         resetOverrideConsentManagerDebugMode();
     }
 
@@ -167,7 +158,7 @@ public class MeasurementCompatibleManagerTest {
     public void testRegisterSource_BindServiceFailure_propagateErrorCallback() {
         MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
         doThrow(new IllegalStateException()).when(measurementManager).getService();
-        OutcomeReceiver callback = mock(OutcomeReceiver.class);
+        AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
         measurementManager.registerSource(
                 Uri.parse("https://example.com"),
                 /* inputEvent = */ null,
@@ -197,7 +188,7 @@ public class MeasurementCompatibleManagerTest {
 
         doAnswer(
                         (invocation) -> {
-                            ((OutcomeReceiver) invocation.getArgument(1))
+                            ((AdServicesOutcomeReceiver) invocation.getArgument(1))
                                     .onResult(new AdId(AD_ID, true));
                             return null;
                         })
@@ -236,7 +227,7 @@ public class MeasurementCompatibleManagerTest {
 
         doAnswer(
                         (invocation) -> {
-                            ((OutcomeReceiver) invocation.getArgument(1))
+                            ((AdServicesOutcomeReceiver) invocation.getArgument(1))
                                     .onResult(new AdId(AdId.ZERO_OUT, true));
                             return null;
                         })
@@ -274,7 +265,7 @@ public class MeasurementCompatibleManagerTest {
 
         doAnswer(
                         (invocation) -> {
-                            ((OutcomeReceiver) invocation.getArgument(1))
+                            ((AdServicesOutcomeReceiver) invocation.getArgument(1))
                                     .onError(new SecurityException());
                             return null;
                         })
@@ -334,7 +325,7 @@ public class MeasurementCompatibleManagerTest {
     public void testRegisterTrigger_BindServiceFailure_propagateErrorCallback() {
         MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
         doThrow(new IllegalStateException()).when(measurementManager).getService();
-        OutcomeReceiver callback = mock(OutcomeReceiver.class);
+        AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
 
         measurementManager.registerTrigger(
                 Uri.parse("https://example.com"),
@@ -348,7 +339,7 @@ public class MeasurementCompatibleManagerTest {
     public void testRegisterWebSource_BindServiceFailure_propagateErrorCallback() {
         MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
         doThrow(new IllegalStateException()).when(measurementManager).getService();
-        OutcomeReceiver callback = mock(OutcomeReceiver.class);
+        AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
 
         measurementManager.registerWebSource(
                 buildDefaultWebSourceRegistrationRequest(),
@@ -362,7 +353,7 @@ public class MeasurementCompatibleManagerTest {
     public void testRegisterWebTrigger_BindServiceFailure_propagateErrorCallback() {
         MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
         doThrow(new IllegalStateException()).when(measurementManager).getService();
-        OutcomeReceiver callback = mock(OutcomeReceiver.class);
+        AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
 
         measurementManager.registerWebTrigger(
                 buildDefaultWebTriggerRegistrationRequest(),
@@ -409,7 +400,7 @@ public class MeasurementCompatibleManagerTest {
                 Uri.parse("https://registration-source"),
                 /* inputEvent = */ null,
                 CALLBACK_EXECUTOR,
-                new OutcomeReceiver<>() {
+                new AdServicesOutcomeReceiver<>() {
                     @Override
                     public void onResult(@NonNull Object result) {
                         anyCountDownLatch.countDown();
@@ -500,7 +491,7 @@ public class MeasurementCompatibleManagerTest {
         mm.registerWebSource(
                 buildDefaultWebSourceRegistrationRequest(),
                 CALLBACK_EXECUTOR,
-                new OutcomeReceiver<>() {
+                new AdServicesOutcomeReceiver<>() {
                     @Override
                     public void onResult(@NonNull Object result) {
                         anyCountDownLatch.countDown();
@@ -535,7 +526,7 @@ public class MeasurementCompatibleManagerTest {
 
         doAnswer(
                         (invocation) -> {
-                            ((OutcomeReceiver) invocation.getArgument(1))
+                            ((AdServicesOutcomeReceiver) invocation.getArgument(1))
                                     .onResult(new AdId(AD_ID, true));
                             return null;
                         })
@@ -573,7 +564,7 @@ public class MeasurementCompatibleManagerTest {
 
         doAnswer(
                         (invocation) -> {
-                            ((OutcomeReceiver) invocation.getArgument(1))
+                            ((AdServicesOutcomeReceiver) invocation.getArgument(1))
                                     .onResult(new AdId(AdId.ZERO_OUT, true));
                             return null;
                         })
@@ -610,7 +601,7 @@ public class MeasurementCompatibleManagerTest {
 
         doAnswer(
                         (invocation) -> {
-                            ((OutcomeReceiver) invocation.getArgument(1))
+                            ((AdServicesOutcomeReceiver) invocation.getArgument(1))
                                     .onError(new SecurityException());
                             return null;
                         })
@@ -735,7 +726,7 @@ public class MeasurementCompatibleManagerTest {
         mm.registerWebTrigger(
                 buildDefaultWebTriggerRegistrationRequest(),
                 CALLBACK_EXECUTOR,
-                new OutcomeReceiver<>() {
+                new AdServicesOutcomeReceiver<>() {
                     @Override
                     public void onResult(@NonNull Object result) {
                         anyCountDownLatch.countDown();
@@ -770,7 +761,7 @@ public class MeasurementCompatibleManagerTest {
 
         doAnswer(
                         (invocation) -> {
-                            ((OutcomeReceiver) invocation.getArgument(1))
+                            ((AdServicesOutcomeReceiver) invocation.getArgument(1))
                                     .onResult(new AdId(AD_ID, true));
                             return null;
                         })
@@ -808,7 +799,7 @@ public class MeasurementCompatibleManagerTest {
 
         doAnswer(
                         (invocation) -> {
-                            ((OutcomeReceiver) invocation.getArgument(1))
+                            ((AdServicesOutcomeReceiver) invocation.getArgument(1))
                                     .onResult(new AdId(AdId.ZERO_OUT, true));
                             return null;
                         })
@@ -845,7 +836,7 @@ public class MeasurementCompatibleManagerTest {
 
         doAnswer(
                         (invocation) -> {
-                            ((OutcomeReceiver) invocation.getArgument(1))
+                            ((AdServicesOutcomeReceiver) invocation.getArgument(1))
                                     .onError(new SecurityException());
                             return null;
                         })
@@ -955,7 +946,7 @@ public class MeasurementCompatibleManagerTest {
         mm.registerTrigger(
                 Uri.parse("https://registration-trigger"),
                 CALLBACK_EXECUTOR,
-                new OutcomeReceiver<>() {
+                new AdServicesOutcomeReceiver<>() {
                     @Override
                     public void onResult(@NonNull Object result) {
                         anyCountDownLatch.countDown();
@@ -990,7 +981,7 @@ public class MeasurementCompatibleManagerTest {
 
         doAnswer(
                         (invocation) -> {
-                            ((OutcomeReceiver) invocation.getArgument(1))
+                            ((AdServicesOutcomeReceiver) invocation.getArgument(1))
                                     .onResult(new AdId(AD_ID, true));
                             return null;
                         })
@@ -1026,7 +1017,7 @@ public class MeasurementCompatibleManagerTest {
 
         doAnswer(
                         (invocation) -> {
-                            ((OutcomeReceiver) invocation.getArgument(1))
+                            ((AdServicesOutcomeReceiver) invocation.getArgument(1))
                                     .onResult(new AdId(AdId.ZERO_OUT, true));
                             return null;
                         })
@@ -1061,7 +1052,7 @@ public class MeasurementCompatibleManagerTest {
 
         doAnswer(
                         (invocation) -> {
-                            ((OutcomeReceiver) invocation.getArgument(1))
+                            ((AdServicesOutcomeReceiver) invocation.getArgument(1))
                                     .onError(new SecurityException());
                             return null;
                         })
@@ -1218,7 +1209,7 @@ public class MeasurementCompatibleManagerTest {
 
         mm.getMeasurementApiStatus(
                 CALLBACK_EXECUTOR,
-                new OutcomeReceiver<>() {
+                new AdServicesOutcomeReceiver<>() {
                     @Override
                     public void onResult(Integer result) {
                         Assert.fail();
@@ -1258,7 +1249,7 @@ public class MeasurementCompatibleManagerTest {
         CompletableFuture<Exception> future = new CompletableFuture<>();
         mm.getMeasurementApiStatus(
                 CALLBACK_EXECUTOR,
-                new OutcomeReceiver<>() {
+                new AdServicesOutcomeReceiver<>() {
                     @Override
                     public void onResult(Integer result) {
                         Assert.fail();
@@ -1296,7 +1287,8 @@ public class MeasurementCompatibleManagerTest {
                 .registerSource(captor.capture(), any(), any());
         Answer adIdAnswer =
                 (invocation) -> {
-                    ((OutcomeReceiver) invocation.getArgument(1)).onError(new SecurityException());
+                    ((AdServicesOutcomeReceiver) invocation.getArgument(1))
+                            .onError(new SecurityException());
                     return null;
                 };
         doAnswer(adIdAnswer).when(adIdManager).getAdId(any(), any());
@@ -1366,7 +1358,8 @@ public class MeasurementCompatibleManagerTest {
 
         Answer adIdAnswer =
                 (invocation) -> {
-                    ((OutcomeReceiver) invocation.getArgument(1)).onResult(new AdId(AD_ID, true));
+                    ((AdServicesOutcomeReceiver) invocation.getArgument(1))
+                            .onResult(new AdId(AD_ID, true));
                     return null;
                 };
         doAnswer(adIdAnswer).when(adIdManager).getAdId(any(), any());
@@ -1401,7 +1394,7 @@ public class MeasurementCompatibleManagerTest {
 
         Answer adIdAnswer =
                 (invocation) -> {
-                    ((OutcomeReceiver) invocation.getArgument(1))
+                    ((AdServicesOutcomeReceiver) invocation.getArgument(1))
                             .onResult(new AdId(AdId.ZERO_OUT, true));
                     return null;
                 };
@@ -1421,7 +1414,7 @@ public class MeasurementCompatibleManagerTest {
     public void testRegisterSourceMulti_BindServiceFailure_propagateErrorCallback() {
         MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
         doThrow(new IllegalStateException()).when(measurementManager).getService();
-        OutcomeReceiver callback = mock(OutcomeReceiver.class);
+        AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
 
         measurementManager.registerSource(
                 buildDefaultAppSourcesRegistrationRequest(),
@@ -1436,7 +1429,7 @@ public class MeasurementCompatibleManagerTest {
             testRegisterSourceMulti_callbackProvidedWithoutExecutor_throwsIllegalArgException() {
         MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
         doThrow(new IllegalStateException()).when(measurementManager).getService();
-        OutcomeReceiver callback = mock(OutcomeReceiver.class);
+        AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
 
         Assert.assertThrows(
                 IllegalArgumentException.class,
@@ -1475,7 +1468,7 @@ public class MeasurementCompatibleManagerTest {
     public void testRegisterSource_callbackProvidedWithoutExecutor_throwsIllegalArgException() {
         MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
         doThrow(new IllegalStateException()).when(measurementManager).getService();
-        OutcomeReceiver callback = mock(OutcomeReceiver.class);
+        AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
 
         Assert.assertThrows(
                 IllegalArgumentException.class,
@@ -1491,7 +1484,7 @@ public class MeasurementCompatibleManagerTest {
     public void testRegisterWebSource_callbackProvidedWithoutExecutor_throwsIllegalArgException() {
         MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
         doThrow(new IllegalStateException()).when(measurementManager).getService();
-        OutcomeReceiver callback = mock(OutcomeReceiver.class);
+        AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
 
         Assert.assertThrows(
                 IllegalArgumentException.class,
@@ -1506,7 +1499,7 @@ public class MeasurementCompatibleManagerTest {
     public void testRegisterWebTrigger_callbackProvidedWithoutExecutor_throwsIllegalArgException() {
         MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
         doThrow(new IllegalStateException()).when(measurementManager).getService();
-        OutcomeReceiver callback = mock(OutcomeReceiver.class);
+        AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
 
         Assert.assertThrows(
                 IllegalArgumentException.class,
@@ -1529,8 +1522,8 @@ public class MeasurementCompatibleManagerTest {
     private int callMeasurementApiStatus(MeasurementCompatibleManager mm) throws Exception {
         overrideConsentManagerDebugMode();
         CompletableFuture<Integer> future = new CompletableFuture<>();
-        OutcomeReceiver<Integer, Exception> callback =
-                new OutcomeReceiver<>() {
+        AdServicesOutcomeReceiver<Integer, Exception> callback =
+                new AdServicesOutcomeReceiver<>() {
                     @Override
                     public void onResult(Integer result) {
                         future.complete(result);
@@ -1560,26 +1553,9 @@ public class MeasurementCompatibleManagerTest {
             return;
         }
 
-        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 1");
-        ShellUtils.runShellCommand("device_config put adservices blocked_topics_source_of_truth 1");
-        ShellUtils.runShellCommand(
-                "device_config put adservices enable_appsearch_consent_data false");
-        ShellUtils.runShellCommand(
-                "device_config put adservices measurement_rollback_deletion_app_search_kill_switch"
-                        + " true");
-    }
-
-    private void resetDisableAppSearchOnR() {
-        if (SdkLevel.isAtLeastS()) {
-            return;
-        }
-
-        ShellUtils.runShellCommand("device_config delete adservices consent_source_of_truth");
-        ShellUtils.runShellCommand(
-                "device_config delete adservices blocked_topics_source_of_truth");
-        ShellUtils.runShellCommand("device_config delete adservices enable_appsearch_consent_data");
-        ShellUtils.runShellCommand(
-                "device_config delete adservices"
-                        + " measurement_rollback_deletion_app_search_kill_switch");
+        flags.setConsentSourceOfTruth(1)
+                .setBlockedTopicsSourceOfTruth(1)
+                .setEnableAppsearchConsentData(false)
+                .setMeasurementRollbackDeletionAppSearchKillSwitch(true);
     }
 }

@@ -19,6 +19,11 @@
 # repository, and the file is copied to Android where it is used by the Cobalt
 # client. Do not edit the copy of this file in this Android repo as those edits
 # will be overwritten when the file is next copied.
+#
+# Additionally, code which translates AdServices concepts, e.g., topics, to
+# Cobalt event codes may need to be updated when the registry changes.
+# Dependencies include, but may not be limited to:
+# * adservices/service-core/java/com/android/adservices/service/topics/cobalt/TopicsCobaltLogger.java
 ################################################################################
 customers {
   customer_name: "privacy_sandbox"
@@ -89,6 +94,21 @@ customers {
         poisson_mean: 1.24512E-4
         reporting_interval: DAYS_1
         system_profile_selection: REPORT_ALL
+      }
+      reports {
+        report_name: "fleetwide_counts_dogfood"
+        id: 5
+        report_type: FLEETWIDE_OCCURRENCE_COUNTS
+        reporting_threshold: 100
+        privacy_level: LOW_PRIVACY
+        num_index_points: 25
+        min_value: 1
+        max_value: 25
+        event_vector_buffer_max: 18
+        poisson_mean: 0.002
+        reporting_interval: DAYS_1
+        system_profile_selection: REPORT_ALL
+        max_release_stage: DOGFOOD
       }
       metric_dimensions {
         dimension: "topic"

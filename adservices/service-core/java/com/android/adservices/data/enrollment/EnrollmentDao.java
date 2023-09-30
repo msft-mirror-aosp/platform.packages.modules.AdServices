@@ -18,6 +18,7 @@ package com.android.adservices.data.enrollment;
 
 import static com.android.adservices.service.enrollment.EnrollmentUtil.ENROLLMENT_SHARED_PREF;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_DELETE_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_SHARED_PREFERENCES_SEED_SAVE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 
 import android.adservices.common.AdTechIdentifier;
@@ -40,10 +41,10 @@ import com.android.adservices.data.shared.SharedDbHelper;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.enrollment.EnrollmentUtil;
-import com.android.adservices.service.measurement.util.Web;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
@@ -145,10 +146,12 @@ public class EnrollmentDao implements IEnrollmentDao {
                 SharedPreferences.Editor edit = prefs.edit();
                 edit.putBoolean(IS_SEEDED, true);
                 if (!edit.commit()) {
-                    // TODO(b/280579966): Add logging using CEL.
                     LogUtil.e(
                             "Saving shared preferences - %s , %s failed",
                             ENROLLMENT_SHARED_PREF, IS_SEEDED);
+                    ErrorLogUtil.e(
+                            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_SHARED_PREFERENCES_SEED_SAVE_FAILURE,
+                            AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
                 }
             }
         }
@@ -164,10 +167,12 @@ public class EnrollmentDao implements IEnrollmentDao {
         SharedPreferences.Editor edit = prefs.edit();
         edit.putBoolean(IS_SEEDED, false);
         if (!edit.commit()) {
-            // TODO(b/280579966): Add logging using CEL.
             LogUtil.e(
                     "Saving shared preferences - %s , %s failed",
                     ENROLLMENT_SHARED_PREF, IS_SEEDED);
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_SHARED_PREFERENCES_SEED_SAVE_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
         }
     }
 
@@ -204,7 +209,8 @@ public class EnrollmentDao implements IEnrollmentDao {
         int buildId = mEnrollmentUtil.getBuildId();
         boolean originMatch = mFlags.getEnforceEnrollmentOriginMatch();
         Optional<Uri> registrationBaseUri =
-                originMatch ? Web.originAndScheme(url) : Web.topPrivateDomainAndScheme(url);
+                originMatch ? WebAddresses.originAndScheme(url)
+                        : WebAddresses.topPrivateDomainAndScheme(url);
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         if (!registrationBaseUri.isPresent()) {
             return null;
@@ -276,8 +282,8 @@ public class EnrollmentDao implements IEnrollmentDao {
         for (String uri : enrolledUris) {
             Optional<Uri> enrolledBaseUri =
                     originMatch
-                            ? Web.originAndScheme(Uri.parse(uri))
-                            : Web.topPrivateDomainAndScheme(Uri.parse(uri));
+                            ? WebAddresses.originAndScheme(Uri.parse(uri))
+                            : WebAddresses.topPrivateDomainAndScheme(Uri.parse(uri));
             if (registrationBaseUri.equals(enrolledBaseUri)) {
                 return true;
             }
@@ -622,7 +628,7 @@ public class EnrollmentDao implements IEnrollmentDao {
                 String.join(" ", enrollmentData.getRemarketingResponseBasedRegistrationUrl()));
         values.put(
                 EnrollmentTables.EnrollmentDataContract.ENCRYPTION_KEY_URL,
-                String.join(" ", enrollmentData.getEncryptionKeyUrl()));
+                enrollmentData.getEncryptionKeyUrl());
         LogUtil.d("Inserting Enrollment record. ID : \"%s\"", enrollmentData.getEnrollmentId());
         try {
             db.insertWithOnConflict(

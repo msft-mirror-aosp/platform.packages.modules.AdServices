@@ -1,5 +1,4 @@
 {
-  "name": "Only one source of multiple matches can be attributed",
   "description": "Two sources with differing event-time and equal priority, and two triggers that match both sources. Event report task within the expiry window sends two reports with the data corresponding to the source with later event-time.",
   "input": {
     "sources": [

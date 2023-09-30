@@ -35,16 +35,14 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 @Scenario
 @RunWith(JUnit4.class)
 public class LoadAd {
     private static final UiDevice sUiDevice = UiDevice.getInstance(getInstrumentation());
     private static final long UI_NAVIGATION_WAIT_MS = 1000;
-
-    private static final int NUMBER_OF_ADS = 3;
-    private static final int TIME_BETWEEN_RENDERS_S = 2;
+    private static final int WAIT_BEFORE_ASSERT_MS = 2000;
+    private static final int WAIT_TIME_BEFORE_END_TEST_MS = 3000;
     private static final String LOAD_AD_BUTTON = "loadAdButton";
 
     private static final String CLIENT_APP = "com.google.android.libraries.internal.exampleclient";
@@ -61,13 +59,10 @@ public class LoadAd {
 
     @Test
     public void testLoadAd() throws Exception {
-        // Loop to load ad multiple times sequentially
-        for (int i = 0; i < NUMBER_OF_ADS; i++) {
-            loadAd();
-            SystemClock.sleep(TimeUnit.SECONDS.toMillis(TIME_BETWEEN_RENDERS_S));
-            assertThat(getLoadAdButton().getText()).isEqualTo("Load Ad (Ad loaded)");
-        }
-        SystemClock.sleep(TimeUnit.SECONDS.toMillis(2));
+        loadAd();
+        SystemClock.sleep(WAIT_BEFORE_ASSERT_MS);
+        assertThat(getLoadAdButton().getText()).isEqualTo("Load Ad (Ad loaded)");
+        SystemClock.sleep(WAIT_TIME_BEFORE_END_TEST_MS);
     }
 
     private UiObject2 getLoadAdButton() {

@@ -191,9 +191,6 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
         final int apiName = AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE;
 
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
-
         try {
             Objects.requireNonNull(customAudience);
             Objects.requireNonNull(ownerPackageName);
@@ -205,10 +202,16 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             throw exception;
         }
 
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, ownerPackageName, apiName);
+
         final int callerUid = getCallingUid(apiName);
+        final DevContext devContext = mDevContextFilter.createDevContext();
         sLogger.v("Running service");
         mExecutorService.execute(
-                () -> doJoinCustomAudience(customAudience, ownerPackageName, callback, callerUid));
+                () ->
+                        doJoinCustomAudience(
+                                customAudience, ownerPackageName, callback, callerUid, devContext));
     }
 
     /** Try to join the custom audience and signal back to the caller using the callback. */
@@ -216,10 +219,12 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             @NonNull CustomAudience customAudience,
             @NonNull String ownerPackageName,
             @NonNull ICustomAudienceCallback callback,
-            final int callerUid) {
+            final int callerUid,
+            @NonNull final DevContext devContext) {
         Objects.requireNonNull(customAudience);
         Objects.requireNonNull(ownerPackageName);
         Objects.requireNonNull(callback);
+        Objects.requireNonNull(devContext);
 
         sLogger.v("Entering doJoinCustomAudience");
 
@@ -237,7 +242,8 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                         false,
                         callerUid,
                         apiName,
-                        FLEDGE_API_JOIN_CUSTOM_AUDIENCE);
+                        FLEDGE_API_JOIN_CUSTOM_AUDIENCE,
+                        devContext);
 
                 shouldLog = true;
 
@@ -281,9 +287,6 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         sLogger.v("Executing fetchAndJoinCustomAudience.");
         final int apiName = AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
 
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
-
         // Failing fast if parameters are null.
         try {
             Objects.requireNonNull(input);
@@ -295,7 +298,12 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             throw exception;
         }
 
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+                mContext, input.getCallerPackageName(), apiName);
+
         final int callerUid = getCallingUid(apiName);
+        final DevContext devContext = mDevContextFilter.createDevContext();
         mExecutorService.execute(
                 () -> {
                     FetchCustomAudienceImpl impl =
@@ -310,14 +318,14 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                                     mCustomAudienceServiceFilter,
                                     new AdServicesHttpsClient(
                                             AdServicesExecutors.getBlockingExecutor(),
-                                            CacheProviderFactory.create(mContext, mFlags)),
+                                            CacheProviderFactory.createNoOpCache()),
                                     mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
                                     AdRenderIdValidator.createInstance(mFlags),
                                     AdDataConversionStrategyFactory.getAdDataConversionStrategy(
                                             mFlags.getFledgeAdSelectionFilteringEnabled(),
                                             mFlags.getFledgeAuctionServerAdRenderIdEnabled()));
 
-                    impl.doFetchCustomAudience(input, callback);
+                    impl.doFetchCustomAudience(input, callback, devContext);
                 });
     }
 
@@ -363,9 +371,6 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             @NonNull ICustomAudienceCallback callback) {
         final int apiName = AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE;
 
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
-
         try {
             Objects.requireNonNull(ownerPackageName);
             Objects.requireNonNull(buyer);
@@ -378,9 +383,15 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             throw exception;
         }
 
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, ownerPackageName, apiName);
+
         final int callerUid = getCallingUid(apiName);
+        final DevContext devContext = mDevContextFilter.createDevContext();
         mExecutorService.execute(
-                () -> doLeaveCustomAudience(ownerPackageName, buyer, name, callback, callerUid));
+                () ->
+                        doLeaveCustomAudience(
+                                ownerPackageName, buyer, name, callback, callerUid, devContext));
     }
 
     /** Try to leave the custom audience and signal back to the caller using the callback. */
@@ -389,11 +400,13 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             @NonNull AdTechIdentifier buyer,
             @NonNull String name,
             @NonNull ICustomAudienceCallback callback,
-            final int callerUid) {
+            final int callerUid,
+            @NonNull final DevContext devContext) {
         Objects.requireNonNull(ownerPackageName);
         Objects.requireNonNull(buyer);
         Objects.requireNonNull(name);
         Objects.requireNonNull(callback);
+        Objects.requireNonNull(devContext);
 
         final int apiName = AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE;
         int resultCode = AdServicesStatusUtils.STATUS_UNSET;
@@ -409,7 +422,8 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                         false,
                         callerUid,
                         apiName,
-                        FLEDGE_API_LEAVE_CUSTOM_AUDIENCE);
+                        FLEDGE_API_LEAVE_CUSTOM_AUDIENCE,
+                        devContext);
 
                 shouldLog = true;
 
@@ -466,9 +480,6 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             @NonNull CustomAudienceOverrideCallback callback) {
         final int apiName = AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO;
 
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
-
         try {
             Objects.requireNonNull(owner);
             Objects.requireNonNull(buyer);
@@ -490,6 +501,10 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                     apiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
+
+        // Caller permissions must be checked with a non-null callingAppPackageName
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+                mContext, devContext.getCallingAppPackageName(), apiName);
 
         CustomAudienceDao customAudienceDao = mCustomAudienceImpl.getCustomAudienceDao();
 
@@ -528,9 +543,6 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         final int apiName =
                 AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE;
 
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
-
         try {
             Objects.requireNonNull(owner);
             Objects.requireNonNull(buyer);
@@ -550,6 +562,10 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                     apiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
+
+        // Caller permissions must be checked with a non-null callingAppPackageName
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+                mContext, devContext.getCallingAppPackageName(), apiName);
 
         CustomAudienceDao customAudienceDao = mCustomAudienceImpl.getCustomAudienceDao();
 
@@ -577,9 +593,6 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
     public void resetAllCustomAudienceOverrides(@NonNull CustomAudienceOverrideCallback callback) {
         final int apiName = AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES;
 
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
-
         try {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
@@ -598,6 +611,10 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                     apiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
+
+        // Caller permissions must be checked with a non-null callingAppPackageName
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+                mContext, devContext.getCallingAppPackageName(), apiName);
 
         CustomAudienceDao customAudienceDao = mCustomAudienceImpl.getCustomAudienceDao();
 

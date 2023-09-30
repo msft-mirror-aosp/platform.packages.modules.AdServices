@@ -93,6 +93,8 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
         return result;
     }
 
+    // Suppress lint warning for context.getUser in R since this code is unused in R
+    @SuppressWarnings("NewApi")
     private void handleSandboxArguments() {
         String opt;
         while ((opt = getNextOption()) != null) {
@@ -123,6 +125,8 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
         }
     }
 
+    // Suppress lint warning for context.getUser in R since this code is unused in R
+    @SuppressWarnings("NewApi")
     private int parseUserArg(String arg) {
         switch (arg) {
             case "all":
@@ -149,15 +153,14 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
 
         @Override
         public void onBindingSuccessful(
-                ISdkSandboxService service, int time, SandboxLatencyInfo sandboxLatencyInfo) {
+                ISdkSandboxService service, SandboxLatencyInfo sandboxLatencyInfo) {
             mSuccess = true;
             mService = service;
             mLatch.countDown();
         }
 
         @Override
-        public void onBindingFailed(
-                LoadSdkException e, long time, SandboxLatencyInfo sandboxLatencyInfo) {
+        public void onBindingFailed(LoadSdkException e, SandboxLatencyInfo sandboxLatencyInfo) {
             mLatch.countDown();
         }
 
