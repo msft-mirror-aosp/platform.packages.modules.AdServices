@@ -279,6 +279,8 @@ public class AdIdServiceImplTest {
                         .build();
 
         mGetAdIdCallbackLatch = new CountDownLatch(1);
+        CountDownLatch logOperationCalledLatch = new CountDownLatch(1);
+        mockLoggerEvent(logOperationCalledLatch);
 
         adidService.getAdId(
                 mRequest,
@@ -303,6 +305,11 @@ public class AdIdServiceImplTest {
 
         // This ensures that the callback was called.
         assertThat(mGetAdIdCallbackLatch.await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+                .isTrue();
+
+        // Verify the logger event has occurred.
+        assertWithMessage("Logger event:")
+                .that(logOperationCalledLatch.await(LOGGER_EVENT_TIMEOUT_MS, TimeUnit.MILLISECONDS))
                 .isTrue();
     }
 
@@ -356,8 +363,12 @@ public class AdIdServiceImplTest {
         jobFinishedCountDown.await();
 
         if (checkLoggingStatus) {
-            // getAdId method finished executing.
-            logOperationCalledLatch.await();
+            // Verify the logger event has occurred.
+            assertWithMessage("Logger event:")
+                    .that(
+                            logOperationCalledLatch.await(
+                                    LOGGER_EVENT_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+                    .isTrue();
 
             ArgumentCaptor<ApiCallStats> argument = ArgumentCaptor.forClass(ApiCallStats.class);
 
