@@ -29,6 +29,7 @@ import android.adservices.topics.TopicsManager;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
@@ -133,6 +134,7 @@ public class TopicsManagerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     // @RequiresGlobalKillSwitchDisabled // TODO(b/284971005): re-add when it uses the rule / runner
     public void testTopicsManager_testTopicsKillSwitch() throws Exception {
         // Override Topics kill switch to disable Topics API.
@@ -158,6 +160,7 @@ public class TopicsManagerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_disableDirectAppCalls_testEmptySdkNameRequests()
             throws Exception {
         flags.setTopicsDisableDirectAppCalls(true);
@@ -177,6 +180,7 @@ public class TopicsManagerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_testOnDeviceKillSwitch_shouldUsePrecomputedList()
             throws Exception {
         // Override Topics on device classifier kill switch to disable on device classifier.
@@ -232,12 +236,14 @@ public class TopicsManagerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runDefaultClassifier_usingGetMethodToCreateManager()
             throws Exception {
         testTopicsManager_runDefaultClassifier(/* useGetMethodToCreateManager */ true);
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runDefaultClassifier() throws Exception {
         testTopicsManager_runDefaultClassifier(/* useGetMethodToCreateManager */ false);
     }
@@ -308,12 +314,14 @@ public class TopicsManagerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runOnDeviceClassifier_usingGetMethodToCreateManager()
             throws Exception {
         testTopicsManager_runOnDeviceClassifier(true);
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runOnDeviceClassifier() throws Exception {
         testTopicsManager_runOnDeviceClassifier(false);
     }
@@ -390,12 +398,14 @@ public class TopicsManagerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runPrecomputedClassifier_usingGetMethodToCreateManager()
             throws Exception {
         testTopicsManager_runPrecomputedClassifier(/* useGetMethodToCreateManager = */ true);
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runPrecomputedClassifier() throws Exception {
         testTopicsManager_runPrecomputedClassifier(/* useGetMethodToCreateManager = */ false);
     }

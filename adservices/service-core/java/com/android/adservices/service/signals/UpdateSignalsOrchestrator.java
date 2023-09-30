@@ -30,15 +30,15 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
-/** Orchestrates the fetchSignalUpdates API. */
-public class FetchOrchestrator {
+/** Orchestrates the updateSignals API. */
+public class UpdateSignalsOrchestrator {
 
     @NonNull private final Executor mBackgroundExecutor;
     @NonNull private final UpdatesDownloader mUpdatesDownloader;
     @NonNull private final UpdateProcessingOrchestrator mUpdateProcessingOrchestrator;
     @NonNull private final AdTechUriValidator mAdTechUriValidator;
 
-    public FetchOrchestrator(
+    public UpdateSignalsOrchestrator(
             @NonNull Executor backgroundExecutor,
             @NonNull UpdatesDownloader updatesDownloader,
             @NonNull UpdateProcessingOrchestrator updateProcessingOrchestrator,
@@ -54,13 +54,13 @@ public class FetchOrchestrator {
     }
 
     /**
-     * Orchestrate the fetchSignalsUpdate API.
+     * Orchestrate the updateSignals API.
      *
      * @param uri Validated Uri to fetch JSON from.
      * @param packageName The package name of the calling app.
      * @return A future for running the orchestration, with no return value
      */
-    public FluentFuture<Object> orchestrateFetch(
+    public FluentFuture<Object> orchestrateUpdate(
             Uri uri, AdTechIdentifier adtech, String packageName) {
         mAdTechUriValidator.validate(uri);
         FluentFuture<JSONObject> jsonFuture = mUpdatesDownloader.getUpdateJson(uri, packageName);

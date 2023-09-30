@@ -25,7 +25,9 @@ import static com.android.adservices.ui.util.ApkTestUtil.getPageElement;
 import static com.android.adservices.ui.util.ApkTestUtil.getString;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
+
 import static com.google.common.truth.Truth.assertThat;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 
@@ -36,6 +38,7 @@ import android.content.Context;
 
 import androidx.core.app.NotificationManagerCompat;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
@@ -437,6 +440,7 @@ public class ConsentNotificationTriggerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302607350)
     public void testEuNotifications_gaUxEnabled_nonDismissable_dismissedOnConfirmationPage()
             throws InterruptedException, UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();

@@ -49,6 +49,8 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.telephony.TelephonyManager;
 
+import androidx.test.filters.FlakyTest;
+
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiConsent;
@@ -626,6 +628,7 @@ public class AdServicesCommonServiceImplTest {
     }
 
     @Test
+    @FlakyTest(bugId = 299686058)
     public void enableAdServicesTest_apiDisabled() throws InterruptedException {
         mGetCommonCallbackLatch = new CountDownLatch(1);
         ExtendedMockito.doReturn(true)
