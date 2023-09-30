@@ -1573,12 +1573,9 @@ public interface Flags {
         return DOWNLOADER_MAX_DOWNLOAD_THREADS;
     }
 
-    /** MDD Topics API Classifier Manifest Url */
-    // TODO(b/236761740): We use this for now for testing. We need to update to the correct one
-    // when we actually upload the models.
+    /** MDD Topics API Classifier Manifest Url. Topics classifier v2-3. Build_id = 1467. */
     String MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
-            "https://dl.google.com/mdi-serving/adservices/topics_classifier/manifest_configs/2"
-                    + "/manifest_config_1661376643699.binaryproto";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/1467/80c34503413cea9ea44cbe94cd38dabc44ea8d70";
 
     default String getMddTopicsClassifierManifestFileUrl() {
         return MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
