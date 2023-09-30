@@ -37,8 +37,8 @@ import android.adservices.common.CallingAppUidSupplierProcessImpl;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.http.MockWebServerRule;
-import android.adservices.signals.FetchSignalUpdatesCallback;
-import android.adservices.signals.FetchSignalUpdatesInput;
+import android.adservices.signals.UpdateSignalsCallback;
+import android.adservices.signals.UpdateSignalsInput;
 import android.content.Context;
 import android.net.Uri;
 import android.os.IBinder;
@@ -127,7 +127,7 @@ public class SignalsIntakeE2ETest {
     private EncoderEndpointsDao mEncoderEndpointsDao;
     private EncoderLogicDao mEncoderLogicDao;
     private ProtectedSignalsServiceImpl mService;
-    private FetchOrchestrator mFetchOrchestrator;
+    private UpdateSignalsOrchestrator mUpdateSignalsOrchestrator;
     private UpdatesDownloader mUpdatesDownloader;
     private UpdateProcessingOrchestrator mUpdateProcessingOrchestrator;
     private UpdateProcessorSelector mUpdateProcessorSelector;
@@ -209,8 +209,8 @@ public class SignalsIntakeE2ETest {
                             new AdServicesHttpsClient(
                                     mBackgroundExecutorService, 2000, 2000, 10000));
         }
-        mFetchOrchestrator =
-                new FetchOrchestrator(
+        mUpdateSignalsOrchestrator =
+                new UpdateSignalsOrchestrator(
                         mBackgroundExecutorService,
                         mUpdatesDownloader,
                         mUpdateProcessingOrchestrator,
@@ -218,7 +218,7 @@ public class SignalsIntakeE2ETest {
         mService =
                 new ProtectedSignalsServiceImpl(
                         mContextSpy,
-                        mFetchOrchestrator,
+                        mUpdateSignalsOrchestrator,
                         mFledgeAuthorizationFilter,
                         mConsentManagerMock,
                         mDevContextFilterMock,
@@ -235,7 +235,7 @@ public class SignalsIntakeE2ETest {
         String json =
                 "{" + "\"put\":{\"" + BASE64_KEY_1 + "\":\"" + BASE64_VALUE_1 + "\"" + "}" + "}";
 
-        setupAndRunFetchSignalUpdates(json);
+        setupAndRunUpdateSignals(json);
 
         List<DBProtectedSignal> expected = new ArrayList<>();
         expected.add(
@@ -294,7 +294,7 @@ public class SignalsIntakeE2ETest {
                         + "\"]"
                         + ",\"update_encoder\": {}"
                         + "}";
-        setupAndRunFetchSignalUpdates(json1);
+        setupAndRunUpdateSignals(json1);
 
         List<DBProtectedSignal> expected1 =
                 Arrays.asList(
@@ -341,7 +341,7 @@ public class SignalsIntakeE2ETest {
                         + "\"]"
                         + ",\"update_encoder\": {}"
                         + "}";
-        setupAndRunFetchSignalUpdates(json2);
+        setupAndRunUpdateSignals(json2);
 
         List<DBProtectedSignal> expected2 =
                 Arrays.asList(
@@ -464,10 +464,10 @@ public class SignalsIntakeE2ETest {
         Uri uri = mMockWebServerRule.uriForPath(SIGNALS_PATH);
         MockResponse response1 = new MockResponse().setBody(badJson);
         mMockWebServerRule.startMockWebServer(Arrays.asList(response1));
-        FetchSignalUpdatesInput input =
-                new FetchSignalUpdatesInput.Builder(uri, CommonFixture.TEST_PACKAGE_NAME).build();
+        UpdateSignalsInput input =
+                new UpdateSignalsInput.Builder(uri, CommonFixture.TEST_PACKAGE_NAME).build();
         CallbackForTesting callback = new CallbackForTesting();
-        mService.fetchSignalUpdates(input, callback);
+        mService.updateSignals(input, callback);
         callback.mFailureLatch.await(WAIT_TIME_SECONDS, TimeUnit.SECONDS);
         FledgeErrorResponse cause = callback.mFailureCause;
         assertEquals(AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, cause.getStatusCode());
@@ -475,14 +475,14 @@ public class SignalsIntakeE2ETest {
     }
 
     private void callForUri(Uri uri) throws Exception {
-        FetchSignalUpdatesInput input =
-                new FetchSignalUpdatesInput.Builder(uri, CommonFixture.TEST_PACKAGE_NAME).build();
+        UpdateSignalsInput input =
+                new UpdateSignalsInput.Builder(uri, CommonFixture.TEST_PACKAGE_NAME).build();
         CallbackForTesting callback = new CallbackForTesting();
-        mService.fetchSignalUpdates(input, callback);
+        mService.updateSignals(input, callback);
         callback.mSuccessLatch.await(WAIT_TIME_SECONDS, TimeUnit.SECONDS);
     }
 
-    private void setupAndRunFetchSignalUpdates(String json) throws Exception {
+    private void setupAndRunUpdateSignals(String json) throws Exception {
         ImmutableMap<String, String> requestProperties =
                 ImmutableMap.of(PACKAGE_NAME_HEADER, CommonFixture.TEST_PACKAGE_NAME);
         AdServicesHttpClientRequest expected =
@@ -498,7 +498,7 @@ public class SignalsIntakeE2ETest {
         callForUri(URI);
     }
 
-    static class CallbackForTesting implements FetchSignalUpdatesCallback {
+    static class CallbackForTesting implements UpdateSignalsCallback {
         CountDownLatch mSuccessLatch = new CountDownLatch(1);
         CountDownLatch mFailureLatch = new CountDownLatch(1);
         FledgeErrorResponse mFailureCause =

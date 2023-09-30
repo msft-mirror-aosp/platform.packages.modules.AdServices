@@ -23,7 +23,7 @@ import android.util.Pair;
 
 import androidx.annotation.Nullable;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -42,6 +42,7 @@ import java.util.Objects;
  */
 public class EventReport {
 
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     private String mId;
     private UnsignedLong mSourceEventId;
     private long mReportTime;
@@ -488,7 +489,7 @@ public class EventReport {
                 try {
                     source.buildFlexibleEventReportApi();
                 } catch (JSONException e) {
-                    LogUtil.d(
+                    sLogger.d(
                             e,
                             "EventReport::populateFromSourceAndTrigger cannot parse JSON for flex"
                                     + " event API");

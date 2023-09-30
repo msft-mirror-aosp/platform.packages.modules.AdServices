@@ -25,7 +25,7 @@ import static com.android.adservices.service.measurement.PrivacyParams.NAVIGATIO
 import android.annotation.NonNull;
 import android.util.Pair;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.PrivacyParams;
@@ -45,6 +45,8 @@ import java.util.stream.Collectors;
 /** Does event report window related calculations, e.g. count, reporting time. */
 public class EventReportWindowCalcDelegate {
     private static final String EARLY_REPORTING_WINDOWS_CONFIG_DELIMITER = ",";
+
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
 
     private final Flags mFlags;
 
@@ -275,7 +277,7 @@ public class EventReportWindowCalcDelegate {
         String earlyReportingWindowsString = pickEarlyReportingWindowsConfig(mFlags, sourceType);
 
         if (earlyReportingWindowsString == null) {
-            LogUtil.d("Invalid configurable early reporting windows; null");
+            sLogger.d("Invalid configurable early reporting windows; null");
             return defaultEarlyWindows;
         }
 
@@ -296,7 +298,7 @@ public class EventReportWindowCalcDelegate {
         String[] split =
                 earlyReportingWindowsString.split(EARLY_REPORTING_WINDOWS_CONFIG_DELIMITER);
         if (split.length > MAX_CONFIGURABLE_EVENT_REPORT_EARLY_REPORTING_WINDOWS) {
-            LogUtil.d(
+            sLogger.d(
                     "Invalid configurable early reporting window; more than allowed size: "
                             + MAX_CONFIGURABLE_EVENT_REPORT_EARLY_REPORTING_WINDOWS);
             return defaultEarlyWindows;
@@ -306,7 +308,7 @@ public class EventReportWindowCalcDelegate {
             try {
                 earlyWindows.add(TimeUnit.SECONDS.toMillis(Long.parseLong(window)));
             } catch (NumberFormatException e) {
-                LogUtil.d(e, "Configurable early reporting window parsing failed.");
+                sLogger.d(e, "Configurable early reporting window parsing failed.");
                 return defaultEarlyWindows;
             }
         }

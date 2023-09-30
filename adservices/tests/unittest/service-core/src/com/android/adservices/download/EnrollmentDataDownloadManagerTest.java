@@ -18,7 +18,6 @@ package com.android.adservices.download;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlagsForTest;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilError;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_INSERT_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__LOAD_MDD_FILE_GROUP_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
@@ -40,6 +39,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.mockito.ExtendedMockitoExpectations;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
@@ -215,7 +215,7 @@ public class EnrollmentDataDownloadManagerTest {
         verify(mMockEnrollmentDao, times(0)).insert(any());
         verifyZeroInteractions(mLogger);
 
-        verifyErrorLogUtilError(
+        ExtendedMockitoExpectations.verifyErrorLogUtilErrorWithException(
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__LOAD_MDD_FILE_GROUP_FAILURE,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT,
                 /* numberOfInvocations= */ 1);
@@ -248,7 +248,7 @@ public class EnrollmentDataDownloadManagerTest {
 
         verify(mMockEnrollmentDao, times(0)).insert(any());
 
-        verifyErrorLogUtilError(
+        ExtendedMockitoExpectations.verifyErrorLogUtilErrorWithException(
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_INSERT_ERROR,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT,
                 /* numberOfInvocations= */ 1);
