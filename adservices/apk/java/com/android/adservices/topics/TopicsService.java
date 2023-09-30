@@ -68,9 +68,7 @@ public class TopicsService extends Service {
             sLogger.e("onCreate(): Topics API is disabled");
             ErrorLogUtil.e(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
-                    "TopicsService",
-                    "onCreate");
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             return;
         }
 
@@ -120,9 +118,7 @@ public class TopicsService extends Service {
             sLogger.e("onBind(): Topics API is disabled, return nullBinding.");
             ErrorLogUtil.e(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
-                    "TopicsService",
-                    "onBind");
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             // Return null so that clients can not bind to the service.
             return null;
         }

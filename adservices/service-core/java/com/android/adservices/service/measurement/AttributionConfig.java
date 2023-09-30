@@ -34,7 +34,7 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.util.Pair;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.MathUtils;
@@ -49,6 +49,7 @@ import java.util.Objects;
 /** POJO for AttributionConfig. */
 public class AttributionConfig {
 
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     @NonNull private final String mSourceAdtech;
     @Nullable private final Pair<Long, Long> mSourcePriorityRange;
     @Nullable private final List<FilterMap> mSourceFilters;
@@ -227,7 +228,7 @@ public class AttributionConfig {
 
             return attributionConfig;
         } catch (JSONException e) {
-            LogUtil.d(e, "Serializing attribution config failed");
+            sLogger.d(e, "Serializing attribution config failed");
             return null;
         }
     }

@@ -24,6 +24,7 @@ import android.util.AtomicFile;
 import androidx.annotation.NonNull;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.io.File;
@@ -113,7 +114,10 @@ public class EncoderPersistenceDao {
      */
     public boolean deleteEncoder(@NonNull AdTechIdentifier buyer) {
         String uniqueFileNamePerBuyer = generateFileNameForBuyer(buyer);
-            File file = new File(new File(mFilesDir, ENCODERS_DIR), uniqueFileNamePerBuyer);
+        File file =
+                FileCompatUtils.newFileHelper(
+                        FileCompatUtils.newFileHelper(mFilesDir, ENCODERS_DIR),
+                        uniqueFileNamePerBuyer);
         boolean deletionComplete = false;
             if (!file.exists()) {
                 deletionComplete = true;
@@ -137,7 +141,7 @@ public class EncoderPersistenceDao {
     @VisibleForTesting
     File createEncodersDirectoryIfDoesNotExist() {
         // This itself does not create a directory or file
-        File encodersDir = new File(mFilesDir, ENCODERS_DIR);
+        File encodersDir = FileCompatUtils.newFileHelper(mFilesDir, ENCODERS_DIR);
         if (!encodersDir.exists()) {
 
             // This creates the actual directory
@@ -155,7 +159,7 @@ public class EncoderPersistenceDao {
     @VisibleForTesting
     File createFileInDirectory(File directory, String fileName) {
         // This itself does not create a directory or file
-        File file = new File(directory, fileName);
+        File file = FileCompatUtils.newFileHelper(directory, fileName);
         if (!file.isFile()) {
             try {
                 // This creates the actual file
@@ -198,7 +202,7 @@ public class EncoderPersistenceDao {
     String readDataFromFile(File directory, String fileName) {
         try {
             // This does not create a new file
-            File file = new File(directory, fileName);
+            File file = FileCompatUtils.newFileHelper(directory, fileName);
             AtomicFile atomicFile = new AtomicFile(file);
             byte[] fileContents = atomicFile.readFully();
             return new String(fileContents, StandardCharsets.UTF_8);

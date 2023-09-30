@@ -2789,7 +2789,7 @@ public class ConsentManagerTest {
         doReturn(false).when(editor).commit();
         doReturn(sharedPreferences).when(mContextSpy).getSharedPreferences(anyString(), anyInt());
 
-        doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt(), anyString(), anyString()));
+        doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
         doNothing().when(mStatsdAdServicesLoggerMock).logConsentMigrationStats(any());
         ExtendedMockito.doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
 
@@ -2826,7 +2826,7 @@ public class ConsentManagerTest {
                 .when(mMockIAdServicesManager)
                 .recordNotificationDisplayed(true);
 
-        doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt(), anyString(), anyString()));
+        doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
         doNothing().when(mStatsdAdServicesLoggerMock).logConsentMigrationStats(any());
         ExtendedMockito.doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
 
@@ -3316,7 +3316,8 @@ public class ConsentManagerTest {
                         mUserProfileIdManagerMock,
                         mUxStatesDaoMock,
                         mMockFlags,
-                        Flags.PPAPI_ONLY);
+                        Flags.PPAPI_ONLY,
+                        true);
         doNothing().when(mBlockedTopicsManagerMock).blockTopic(any());
         doNothing().when(mBlockedTopicsManagerMock).unblockTopic(any());
         // The actual usage is to invoke clearAllTopicsData() from TopicsWorker
@@ -3812,7 +3813,8 @@ public class ConsentManagerTest {
                 mUserProfileIdManagerMock,
                 mUxStatesDaoMock,
                 mMockFlags,
-                consentSourceOfTruth);
+                consentSourceOfTruth,
+                true);
     }
 
     private ConsentManager getSpiedConsentManagerForMigrationTesting(
