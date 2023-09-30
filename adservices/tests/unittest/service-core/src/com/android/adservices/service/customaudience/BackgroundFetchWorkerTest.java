@@ -452,6 +452,16 @@ public class BackgroundFetchWorkerTest {
                 .when(mBackgroundFetchRunnerSpy)
                 .updateCustomAudience(any(), any());
 
+        // ensures that we verify only after BackgroundExecuterLoggerClose#close is executed.
+        CountDownLatch latchForExecutionLoggerClose = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            latchForExecutionLoggerClose.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerImplMock)
+                .logBackgroundFetchProcessReportedStats(any());
+
         when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW);
 
         CountDownLatch bgfWorkStoppedLatch = new CountDownLatch(1);
@@ -474,6 +484,7 @@ public class BackgroundFetchWorkerTest {
         mBackgroundFetchWorker.runBackgroundFetch().get();
 
         bgfWorkStoppedLatch.await();
+        latchForExecutionLoggerClose.await();
         verify(mBackgroundFetchRunnerSpy).deleteExpiredCustomAudiences(any());
         verify(mCustomAudienceDaoSpy).deleteAllExpiredCustomAudienceData(any());
         verify(mBackgroundFetchRunnerSpy).deleteDisallowedOwnerCustomAudiences();
