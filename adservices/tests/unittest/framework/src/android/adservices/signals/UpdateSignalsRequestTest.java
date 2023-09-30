@@ -14,75 +14,63 @@
  * limitations under the License.
  */
 
-package android.adservices.cts;
+package android.adservices.signals;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThrows;
 
-import android.adservices.signals.FetchSignalUpdatesInput;
-import android.adservices.signals.FetchSignalUpdatesRequest;
 import android.net.Uri;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
-/**
- * Unit tests for {@link FetchSignalUpdatesInput}
- *
- * <p>If this class is un-ignored {@link android.adservices.signals.FetchSignalUpdatesInputTest}
- * should be deleted.
- */
-@Ignore
-public class FetchSignalUpdatesRequestTest {
+public class UpdateSignalsRequestTest {
 
     private static final Uri URI = Uri.parse("https://example.com/somecoolsignals");
     private static final Uri OTHER_URI = Uri.parse("https://example.com/lesscoolsignals");
 
     @Test
     public void testBuild() {
-        FetchSignalUpdatesRequest request = new FetchSignalUpdatesRequest.Builder(URI).build();
-        assertEquals(URI, request.getFetchUri());
+        UpdateSignalsRequest request = new UpdateSignalsRequest.Builder(URI).build();
+        assertEquals(URI, request.getUpdateUri());
     }
 
     @Test
     public void testBuildNullUri_throws() {
         assertThrows(
-                NullPointerException.class,
-                () -> new FetchSignalUpdatesRequest.Builder(null).build());
+                NullPointerException.class, () -> new UpdateSignalsRequest.Builder(null).build());
     }
 
     @Test
     public void testEqualsEqual() {
-        FetchSignalUpdatesRequest identical1 = new FetchSignalUpdatesRequest.Builder(URI).build();
-        FetchSignalUpdatesRequest identical2 = new FetchSignalUpdatesRequest.Builder(URI).build();
+        UpdateSignalsRequest identical1 = new UpdateSignalsRequest.Builder(URI).build();
+        UpdateSignalsRequest identical2 = new UpdateSignalsRequest.Builder(URI).build();
         assertEquals(identical1, identical2);
     }
 
     @Test
     public void testEqualsNotEqualSameClass() {
-        FetchSignalUpdatesRequest different1 = new FetchSignalUpdatesRequest.Builder(URI).build();
-        FetchSignalUpdatesRequest different2 =
-                new FetchSignalUpdatesRequest.Builder(OTHER_URI).build();
+        UpdateSignalsRequest different1 = new UpdateSignalsRequest.Builder(URI).build();
+        UpdateSignalsRequest different2 = new UpdateSignalsRequest.Builder(OTHER_URI).build();
         assertNotEquals(different1, different2);
     }
 
     @Test
     public void testEqualsNotEqualDifferentClass() {
-        FetchSignalUpdatesRequest input1 = new FetchSignalUpdatesRequest.Builder(URI).build();
+        UpdateSignalsRequest input1 = new UpdateSignalsRequest.Builder(URI).build();
         assertNotEquals(input1, new Object());
     }
 
     @Test
     public void testHash() {
-        FetchSignalUpdatesRequest identical1 = new FetchSignalUpdatesRequest.Builder(URI).build();
-        FetchSignalUpdatesRequest identical2 = new FetchSignalUpdatesRequest.Builder(URI).build();
+        UpdateSignalsRequest identical1 = new UpdateSignalsRequest.Builder(URI).build();
+        UpdateSignalsRequest identical2 = new UpdateSignalsRequest.Builder(URI).build();
         assertEquals(identical1.hashCode(), identical2.hashCode());
     }
 
     @Test
     public void testToString() {
-        FetchSignalUpdatesRequest input = new FetchSignalUpdatesRequest.Builder(URI).build();
-        assertEquals("FetchSignalUpdatesRequest{" + "fetchUri=" + URI + '}', input.toString());
+        UpdateSignalsRequest input = new UpdateSignalsRequest.Builder(URI).build();
+        assertEquals("UpdateSignalsRequest{" + "updateUri=" + URI + '}', input.toString());
     }
 }

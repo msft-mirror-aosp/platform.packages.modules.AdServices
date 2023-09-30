@@ -45,7 +45,7 @@ import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
 @RunWith(MockitoJUnitRunner.class)
-public class FetchOrchestratorTest {
+public class UpdateSignalsOrchestratorTest {
 
     private static final long TEST_TIMEOUT_SECONDS = 10L;
     private static final Uri URI = Uri.parse("https://example.com");
@@ -54,12 +54,12 @@ public class FetchOrchestratorTest {
     @Mock private UpdateProcessingOrchestrator mUpdateProcessingOrchestrator;
     @Mock private AdTechUriValidator mAdTechUriValidator;
 
-    private FetchOrchestrator mFetchOrchestrator;
+    private UpdateSignalsOrchestrator mUpdateSignalsOrchestrator;
 
     @Before
     public void setup() {
-        mFetchOrchestrator =
-                new FetchOrchestrator(
+        mUpdateSignalsOrchestrator =
+                new UpdateSignalsOrchestrator(
                         AdServicesExecutors.getBackgroundExecutor(),
                         mUpdatesDownloader,
                         mUpdateProcessingOrchestrator,
@@ -67,14 +67,14 @@ public class FetchOrchestratorTest {
     }
 
     @Test
-    public void testOrchestrateFetch() throws Exception {
+    public void testOrchestrateUpdate() throws Exception {
         SettableFuture future = SettableFuture.create();
         future.set(new JSONObject(JSON));
         FluentFuture<JSONObject> returnValue = FluentFuture.from(future);
         when(mUpdatesDownloader.getUpdateJson(URI, TEST_PACKAGE_NAME_1)).thenReturn(returnValue);
 
-        mFetchOrchestrator
-                .orchestrateFetch(URI, CommonFixture.VALID_BUYER_1, TEST_PACKAGE_NAME_1)
+        mUpdateSignalsOrchestrator
+                .orchestrateUpdate(URI, CommonFixture.VALID_BUYER_1, TEST_PACKAGE_NAME_1)
                 .get(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         verify(mUpdatesDownloader).getUpdateJson(eq(URI), eq(TEST_PACKAGE_NAME_1));

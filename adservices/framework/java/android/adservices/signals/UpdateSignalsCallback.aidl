@@ -16,10 +16,20 @@
 
 package android.adservices.signals;
 
+import android.adservices.common.FledgeErrorResponse;
+
 /**
- * A FetchSignalUpdatesInput is a Parcelable object input to the fetchSignalUpdates API that
- * contains a fetch URI and the caller app's package name.
+ * Callback class for the updateSignals API operation.
  *
  * @hide
  */
-parcelable FetchSignalUpdatesInput;
+oneway interface UpdateSignalsCallback {
+    /**
+     * Sends back a void indicating success.
+     */
+    void onSuccess();
+    /**
+     * Sends back a status code and error message indicating failure.
+     */
+    void onFailure(in FledgeErrorResponse responseParcel);
+}

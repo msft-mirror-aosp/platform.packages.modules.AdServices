@@ -72,10 +72,9 @@ public class AdSelectionDataE2ETest {
     private static final String CUSTOM_AUDIENCE_FIVE_BUYERS_MULTIPLE_CA =
             "CustomAudienceServerAuctionFiveBuyersMultipleCa.json";
     private static final String CUSTOM_AUDIENCE_NO_AD_RENDER_ID = "CustomAudienceNoAdRenderId.json";
-    private static final String SELLER = "example.com";
+    private static final String SELLER = "ba-seller-5jyy5ulagq-uc.a.run.app";
 
-    private static final String AD_WINNER_DOMAIN =
-            "https://performance-fledge-static-5jyy5ulagq-uc.a.run.app/";
+    private static final String AD_WINNER_DOMAIN = "https://ba-buyer-5jyy5ulagq-uc.a.run.app/";
 
     private static final int API_RESPONSE_TIMEOUT_SECONDS = 100;
     private static final AdSelectionClient AD_SELECTION_CLIENT =
@@ -199,7 +198,8 @@ public class AdSelectionDataE2ETest {
 
         GetAdSelectionDataRequest request =
                 new GetAdSelectionDataRequest.Builder()
-                        .setSeller(AdTechIdentifier.fromString("example.com"))
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
                         .build();
         GetAdSelectionDataOutcome outcome =
                 AD_SELECTION_CLIENT
@@ -213,7 +213,7 @@ public class AdSelectionDataE2ETest {
         PersistAdSelectionResultRequest persistAdSelectionResultRequest =
                 new PersistAdSelectionResultRequest.Builder()
                         .setAdSelectionId(outcome.getAdSelectionId())
-                        .setSeller(AdTechIdentifier.fromString("example.com"))
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
                         .setAdSelectionResult(
                                 BaseEncoding.base64()
                                         .decode(selectAdResponse.auctionResultCiphertext))
@@ -243,7 +243,7 @@ public class AdSelectionDataE2ETest {
 
         GetAdSelectionDataRequest request =
                 new GetAdSelectionDataRequest.Builder()
-                        .setSeller(AdTechIdentifier.fromString("example.com"))
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
                         .build();
         GetAdSelectionDataOutcome outcome =
                 AD_SELECTION_CLIENT
@@ -257,7 +257,7 @@ public class AdSelectionDataE2ETest {
         PersistAdSelectionResultRequest persistAdSelectionResultRequest =
                 new PersistAdSelectionResultRequest.Builder()
                         .setAdSelectionId(outcome.getAdSelectionId())
-                        .setSeller(AdTechIdentifier.fromString("example.com"))
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
                         .setAdSelectionResult(
                                 BaseEncoding.base64()
                                         .decode(selectAdResponse.auctionResultCiphertext))

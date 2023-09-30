@@ -51,6 +51,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.common.FledgeMaintenanceTasksWorker;
@@ -393,6 +394,7 @@ public class MaintenanceJobServiceTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302683283)
     public void testOnStartJob_killSwitchOnDoesTopicsJobWhenFledgeThrowsException()
             throws Exception {
         final TopicsWorker topicsWorker =

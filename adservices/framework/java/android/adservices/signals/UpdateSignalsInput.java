@@ -24,57 +24,57 @@ import android.os.Parcelable;
 import java.util.Objects;
 
 /**
- * The input object wrapping the parameters for the fetchSignalUpdates API.
+ * The input object wrapping the parameters for the updateSignals API.
  *
- * <p>Refer to {@link FetchSignalUpdatesRequest} for more information about the parameters.
+ * <p>Refer to {@link UpdateSignalsRequest} for more information about the parameters.
  *
  * @hide
  */
-public final class FetchSignalUpdatesInput implements Parcelable {
-    @NonNull private final Uri mFetchUri;
+public final class UpdateSignalsInput implements Parcelable {
+    @NonNull private final Uri mUpdateUri;
     @NonNull private final String mCallerPackageName;
 
     @NonNull
-    public static final Creator<FetchSignalUpdatesInput> CREATOR =
+    public static final Creator<UpdateSignalsInput> CREATOR =
             new Creator<>() {
                 @NonNull
                 @Override
-                public FetchSignalUpdatesInput createFromParcel(@NonNull Parcel in) {
-                    return new FetchSignalUpdatesInput(in);
+                public UpdateSignalsInput createFromParcel(@NonNull Parcel in) {
+                    return new UpdateSignalsInput(in);
                 }
 
                 @NonNull
                 @Override
-                public FetchSignalUpdatesInput[] newArray(int size) {
-                    return new FetchSignalUpdatesInput[size];
+                public UpdateSignalsInput[] newArray(int size) {
+                    return new UpdateSignalsInput[size];
                 }
             };
 
-    private FetchSignalUpdatesInput(@NonNull Uri fetchUri, @NonNull String callerPackageName) {
-        Objects.requireNonNull(fetchUri);
+    private UpdateSignalsInput(@NonNull Uri updateUri, @NonNull String callerPackageName) {
+        Objects.requireNonNull(updateUri);
         Objects.requireNonNull(callerPackageName);
 
-        mFetchUri = fetchUri;
+        mUpdateUri = updateUri;
         mCallerPackageName = callerPackageName;
     }
 
-    private FetchSignalUpdatesInput(@NonNull Parcel in) {
+    private UpdateSignalsInput(@NonNull Parcel in) {
         Objects.requireNonNull(in);
 
-        Uri fetchUri = Uri.CREATOR.createFromParcel(in);
-        Objects.requireNonNull(fetchUri);
-        mFetchUri = fetchUri;
+        Uri updateUri = Uri.CREATOR.createFromParcel(in);
+        Objects.requireNonNull(updateUri);
+        mUpdateUri = updateUri;
         String callerPackageName = in.readString();
         Objects.requireNonNull(callerPackageName);
         mCallerPackageName = callerPackageName;
     }
 
     /**
-     * @return the {@link Uri} from which the signals will be fetched.
+     * @return the {@link Uri} from which the signal updates will be fetched.
      */
     @NonNull
-    public Uri getFetchUri() {
-        return mFetchUri;
+    public Uri getUpdateUri() {
+        return mUpdateUri;
     }
 
     /**
@@ -94,35 +94,35 @@ public final class FetchSignalUpdatesInput implements Parcelable {
     public void writeToParcel(@NonNull Parcel dest, int flags) {
         Objects.requireNonNull(dest);
 
-        mFetchUri.writeToParcel(dest, flags);
+        mUpdateUri.writeToParcel(dest, flags);
         dest.writeString(mCallerPackageName);
     }
 
     /**
-     * @return {@code true} if and only if the other object is {@link FetchSignalUpdatesRequest}
-     *     with the same fetch URI and package name
+     * @return {@code true} if and only if the other object is {@link UpdateSignalsRequest} with the
+     *     same update URI and package name
      */
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof FetchSignalUpdatesInput)) return false;
-        FetchSignalUpdatesInput that = (FetchSignalUpdatesInput) o;
-        return mFetchUri.equals(that.mFetchUri)
+        if (!(o instanceof UpdateSignalsInput)) return false;
+        UpdateSignalsInput that = (UpdateSignalsInput) o;
+        return mUpdateUri.equals(that.mUpdateUri)
                 && mCallerPackageName.equals(that.mCallerPackageName);
     }
 
     /**
-     * @return the hash of the {@link FetchSignalUpdatesInput} object's data.
+     * @return the hash of the {@link UpdateSignalsInput} object's data.
      */
     @Override
     public int hashCode() {
-        return Objects.hash(mFetchUri, mCallerPackageName);
+        return Objects.hash(mUpdateUri, mCallerPackageName);
     }
 
     @Override
     public String toString() {
-        return "FetchSignalUpdatesInput{"
-                + "mFetchUri="
-                + mFetchUri
+        return "UpdateSignalsInput{"
+                + "mUpdateUri="
+                + mUpdateUri
                 + ", mCallerPackageName='"
                 + mCallerPackageName
                 + '\''
@@ -130,37 +130,37 @@ public final class FetchSignalUpdatesInput implements Parcelable {
     }
 
     /**
-     * Builder for {@link FetchSignalUpdatesInput} objects.
+     * Builder for {@link UpdateSignalsInput} objects.
      *
      * @hide
      */
     public static final class Builder {
-        @NonNull private Uri mFetchUri;
+        @NonNull private Uri mUpdateUri;
         @NonNull private String mCallerPackageName;
 
         /**
-         * Instantiates a {@link FetchSignalUpdatesInput.Builder} with the {@link Uri} from which
-         * the JSON is to be fetched and the caller app's package name.
+         * Instantiates a {@link UpdateSignalsInput.Builder} with the {@link Uri} from which the
+         * JSON is to be fetched and the caller app's package name.
          *
          * @throws NullPointerException if any non-null parameter is null.
          */
-        public Builder(@NonNull Uri fetchUri, @NonNull String callerPackageName) {
-            Objects.requireNonNull(fetchUri);
+        public Builder(@NonNull Uri updateUri, @NonNull String callerPackageName) {
+            Objects.requireNonNull(updateUri);
             Objects.requireNonNull(callerPackageName);
 
-            this.mFetchUri = fetchUri;
+            this.mUpdateUri = updateUri;
             this.mCallerPackageName = callerPackageName;
         }
 
         /**
          * Sets the {@link Uri} from which the signal updates will be fetched.
          *
-         * <p>See {@link #getFetchUri()} ()} for details.
+         * <p>See {@link #getUpdateUri()} ()} for details.
          */
         @NonNull
-        public Builder setFetchUri(@NonNull Uri fetchUri) {
-            Objects.requireNonNull(fetchUri);
-            this.mFetchUri = fetchUri;
+        public Builder setUpdateUri(@NonNull Uri updateUri) {
+            Objects.requireNonNull(updateUri);
+            this.mUpdateUri = updateUri;
             return this;
         }
 
@@ -177,13 +177,13 @@ public final class FetchSignalUpdatesInput implements Parcelable {
         }
 
         /**
-         * Builds an instance of a {@link FetchSignalUpdatesInput}.
+         * Builds an instance of a {@link UpdateSignalsInput}.
          *
          * @throws NullPointerException if any non-null parameter is null.
          */
         @NonNull
-        public FetchSignalUpdatesInput build() {
-            return new FetchSignalUpdatesInput(mFetchUri, mCallerPackageName);
+        public UpdateSignalsInput build() {
+            return new UpdateSignalsInput(mUpdateUri, mCallerPackageName);
         }
     }
 }

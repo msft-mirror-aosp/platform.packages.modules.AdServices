@@ -53,7 +53,9 @@ public final class AdIdCacheManager {
     @VisibleForTesting static final String SHARED_PREFS_IAPC = "adservices_PPAPI_IAPC";
     private static final String SHARE_PREFS_CACHED_AD_ID_KEY = "cached_ad_id";
     private static final String SHARE_PREFS_CACHED_LAT_KEY = "cached_lat";
-    private static final String UNSET_AD_ID = "";
+    // A default AdId to indicate the AdId is not set in the cache.
+    private static final AdId UNSET_AD_ID =
+            new AdId(/* adId */ "", /* limitAdTrackingEnabled */ false);
     private static final Object SINGLETON_LOCK = new Object();
 
     private static AdIdCacheManager sSingleton;
@@ -94,16 +96,10 @@ public final class AdIdCacheManager {
      * @param callback is used to return the result.
      */
     public void getAdId(String packageName, int appUid, IGetAdIdCallback callback) {
-        // TODO(b/300147424): Remove the flag once the feature is rolled out.
-        if (!FlagsFactory.getFlags().getAdIdCacheEnabled()) {
-            getAdIdFromProvider(packageName, appUid, callback);
-            return;
-        }
-
         AdId adId = getAdIdInStorage();
 
         // If the cache is not set, get the AdId from the provider.
-        if (adId.getAdId().equals(UNSET_AD_ID)) {
+        if (adId.equals(UNSET_AD_ID)) {
             getAdIdFromProvider(packageName, appUid, callback);
             return;
         }
@@ -185,6 +181,10 @@ public final class AdIdCacheManager {
 
     @VisibleForTesting
     void setAdIdInStorage(@NonNull AdId adId) {
+        // TODO(b/300147424): Remove the flag once the feature is rolled out.
+        if (!FlagsFactory.getFlags().getAdIdCacheEnabled()) {
+            return;
+        }
         Objects.requireNonNull(adId);
 
         mReadWriteLock.writeLock().lock();
@@ -206,13 +206,21 @@ public final class AdIdCacheManager {
 
     @VisibleForTesting
     AdId getAdIdInStorage() {
+        // TODO(b/300147424): Remove the flag once the feature is rolled out.
+        if (!FlagsFactory.getFlags().getAdIdCacheEnabled()) {
+            return UNSET_AD_ID;
+        }
+
         mReadWriteLock.readLock().lock();
         try {
             SharedPreferences sharedPreferences = getSharedPreferences();
 
             String adIdString =
-                    sharedPreferences.getString(SHARE_PREFS_CACHED_AD_ID_KEY, UNSET_AD_ID);
-            boolean isLatEnabled = sharedPreferences.getBoolean(SHARE_PREFS_CACHED_LAT_KEY, false);
+                    sharedPreferences.getString(
+                            SHARE_PREFS_CACHED_AD_ID_KEY, UNSET_AD_ID.getAdId());
+            boolean isLatEnabled =
+                    sharedPreferences.getBoolean(
+                            SHARE_PREFS_CACHED_LAT_KEY, UNSET_AD_ID.isLimitAdTrackingEnabled());
 
             return new AdId(adIdString, isLatEnabled);
         } finally {
@@ -227,13 +235,14 @@ public final class AdIdCacheManager {
     }
 
     @NonNull
-    private void unbindFromService() {
-        mServiceBinder.unbindFromService();
+    @VisibleForTesting
+    SharedPreferences getSharedPreferences() {
+        return mContext.getSharedPreferences(SHARED_PREFS_IAPC, Context.MODE_PRIVATE);
     }
 
     @NonNull
-    private SharedPreferences getSharedPreferences() {
-        return mContext.getSharedPreferences(SHARED_PREFS_IAPC, Context.MODE_PRIVATE);
+    private void unbindFromService() {
+        mServiceBinder.unbindFromService();
     }
 
     // Logs the RemoteException to both logcat and CEL.

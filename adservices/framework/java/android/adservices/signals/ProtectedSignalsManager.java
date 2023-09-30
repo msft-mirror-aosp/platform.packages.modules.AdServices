@@ -117,8 +117,8 @@ public class ProtectedSignalsManager {
     }
 
     /**
-     * The fetchSignalUpdates API will retrieve a JSON from the URI that describes which signals to
-     * add or remove. This API also allows registering the encoder endpoint. The endpoint is used to
+     * The updateSignals API will retrieve a JSON from the URI that describes which signals to add
+     * or remove. This API also allows registering the encoder endpoint. The endpoint is used to
      * download an encoding logic, which enables encoding the signals.
      *
      * <p>The top level keys for the JSON must correspond to one of 5 commands:
@@ -182,22 +182,22 @@ public class ProtectedSignalsManager {
      * encountered.
      */
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
-    public void fetchSignalUpdates(
-            @NonNull FetchSignalUpdatesRequest fetchSignalUpdatesRequest,
+    public void updateSignals(
+            @NonNull UpdateSignalsRequest updateSignalsRequest,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<Object, Exception> receiver) {
-        Objects.requireNonNull(fetchSignalUpdatesRequest);
+        Objects.requireNonNull(updateSignalsRequest);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
 
         try {
             final IProtectedSignalsService service = getService();
 
-            service.fetchSignalUpdates(
-                    new FetchSignalUpdatesInput.Builder(
-                                    fetchSignalUpdatesRequest.getFetchUri(), getCallerPackageName())
+            service.updateSignals(
+                    new UpdateSignalsInput.Builder(
+                                    updateSignalsRequest.getUpdateUri(), getCallerPackageName())
                             .build(),
-                    new FetchSignalUpdatesCallback.Stub() {
+                    new UpdateSignalsCallback.Stub() {
                         @Override
                         public void onSuccess() {
                             executor.execute(() -> receiver.onResult(new Object()));

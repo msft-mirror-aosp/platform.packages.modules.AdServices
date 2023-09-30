@@ -18,7 +18,6 @@ package com.android.adservices.data.measurement;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
-import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -49,6 +48,7 @@ import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV2
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV7;
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV8;
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV9;
+import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
@@ -62,7 +62,8 @@ import java.util.stream.Stream;
 
 /** Database Helper for Measurement database. */
 public class MeasurementDbHelper extends SQLiteOpenHelper {
-    private static final String DATABASE_NAME = "adservices_msmt.db";
+    private static final String DATABASE_NAME =
+            FileCompatUtils.getAdservicesFilename("adservices_msmt.db");
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
 
     public static final int CURRENT_DATABASE_VERSION = 25;
@@ -73,12 +74,11 @@ public class MeasurementDbHelper extends SQLiteOpenHelper {
     private final int mDbVersion;
     private final DbHelper mDbHelper;
 
-    @SuppressLint("NewAdServicesFile")
     @VisibleForTesting
     public MeasurementDbHelper(
             @NonNull Context context, @NonNull String dbName, int dbVersion, DbHelper dbHelper) {
         super(context, dbName, null, dbVersion);
-        mDbFile = context.getDatabasePath(dbName);
+        mDbFile = FileCompatUtils.getDatabasePathHelper(context, dbName);
         this.mDbVersion = dbVersion;
         this.mDbHelper = dbHelper;
     }
