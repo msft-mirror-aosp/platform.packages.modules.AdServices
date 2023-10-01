@@ -41,6 +41,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.mockito.ExtendedMockitoExpectations;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.modules.utils.build.SdkLevel;
@@ -193,7 +194,7 @@ public class ModelManagerTest {
         // Check byteBuffer capacity is 0 when failed to read a model.
         assertThat(byteBuffer.capacity()).isEqualTo(0);
 
-        verifyErrorLogUtilError(
+        ExtendedMockitoExpectations.verifyErrorLogUtilErrorWithException(
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_LOAD_ML_MODEL_FAILURE,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
                 /* numberOfInvocations= */ 1);
@@ -307,7 +308,7 @@ public class ModelManagerTest {
         // Check empty list returned.
         assertThat(labels).isEmpty();
 
-        verifyErrorLogUtilError(
+        ExtendedMockitoExpectations.verifyErrorLogUtilErrorWithException(
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__READ_LABELS_FILE_FAILURE,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
                 /* numberOfInvocations= */ 1);
@@ -335,7 +336,7 @@ public class ModelManagerTest {
         // Check empty list returned.
         assertThat(labels).isEmpty();
 
-        verifyErrorLogUtilError(
+        ExtendedMockitoExpectations.verifyErrorLogUtilErrorWithException(
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__READ_LABELS_FILE_FAILURE,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
                 /* numberOfInvocations= */ 1);
@@ -409,8 +410,6 @@ public class ModelManagerTest {
         verifyErrorLogUtilError(
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__INVALID_TOPIC_ID,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
-                MODEL_MANAGER_CLASS_NAME,
-                GET_APPS_TOPIC_MAP_METHOD_NAME,
                 /* numberOfInvocations= */ 5);
     }
 
@@ -448,8 +447,6 @@ public class ModelManagerTest {
         verifyErrorLogUtilError(
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__INVALID_TOPIC_ID,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
-                MODEL_MANAGER_CLASS_NAME,
-                GET_APPS_TOPIC_MAP_METHOD_NAME,
                 /* numberOfInvocations= */ 5);
     }
 
@@ -529,8 +526,6 @@ public class ModelManagerTest {
         verifyErrorLogUtilError(
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CLASSIFIER_METADATA_REDUNDANT_ASSET,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
-                MODEL_MANAGER_CLASS_NAME,
-                GET_ASSETS_METADATA_MAP_METHOD_NAME,
                 /* numberOfInvocations= */ 2);
     }
 
@@ -900,7 +895,7 @@ public class ModelManagerTest {
         // If the bundled model is available but null, return false.
         assertThat(mTestModelManager.isModelAvailable()).isFalse();
 
-        verifyErrorLogUtilError(
+        ExtendedMockitoExpectations.verifyErrorLogUtilErrorWithException(
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__NO_CLASSIFIER_MODEL_AVAILABLE,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
                 /* numberOfInvocations= */ 1);
@@ -949,8 +944,6 @@ public class ModelManagerTest {
         verifyErrorLogUtilError(
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CLASSIFIER_METADATA_REDUNDANT_ASSET,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
-                MODEL_MANAGER_CLASS_NAME,
-                GET_ASSETS_METADATA_MAP_METHOD_NAME,
                 /* numberOfInvocations= */ 2);
     }
 }

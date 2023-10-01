@@ -23,7 +23,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import android.adservices.common.AdServicesStatusUtils;
 import android.net.Uri;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.errorlogging.ErrorLogUtil;
@@ -54,6 +54,7 @@ import java.util.concurrent.TimeUnit;
 
 public class AggregateReportingJobHandler {
 
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     private final EnrollmentDao mEnrollmentDao;
     private final DatastoreManager mDatastoreManager;
     private final AggregateEncryptionKeyManager mAggregateEncryptionKeyManager;
@@ -149,7 +150,7 @@ public class AggregateReportingJobHandler {
                     // job service will interrupt this thread.  If the thread has been interrupted,
                     // it will exit early.
                     if (Thread.currentThread().isInterrupted()) {
-                        LogUtil.d(
+                        sLogger.d(
                                 "AggregateReportingJobHandler performScheduledPendingReports "
                                         + "thread interrupted, exiting early.");
                         return true;
@@ -178,7 +179,7 @@ public class AggregateReportingJobHandler {
                     logReportingStats(reportingStatus);
                 }
             } else {
-                LogUtil.w("The number of keys do not align with the number of reports");
+                sLogger.w("The number of keys do not align with the number of reports");
             }
         }
 
@@ -190,14 +191,14 @@ public class AggregateReportingJobHandler {
             return "";
         }
         if (report.getSourceId() == null) {
-            LogUtil.d("SourceId is null on event report.");
+            sLogger.d("SourceId is null on event report.");
             return "";
         }
         Optional<String> sourceRegistrant =
                 mDatastoreManager.runInTransactionWithResult(
                         (dao) -> dao.getSourceRegistrant(report.getSourceId()));
         if (sourceRegistrant.isEmpty()) {
-            LogUtil.d("Source registrant not found");
+            sLogger.d("Source registrant not found");
             return "";
         }
         return sourceRegistrant.get();
@@ -218,7 +219,7 @@ public class AggregateReportingJobHandler {
                 mDatastoreManager.runInTransactionWithResult((dao)
                         -> dao.getAggregateReport(aggregateReportId));
         if (!aggregateReportOpt.isPresent()) {
-            LogUtil.d("Aggregate report not found");
+            sLogger.d("Aggregate report not found");
             return AdServicesStatusUtils.STATUS_IO_ERROR;
         }
         AggregateReport aggregateReport = aggregateReportOpt.get();
@@ -228,7 +229,7 @@ public class AggregateReportingJobHandler {
         if (mIsDebugInstance
                 && aggregateReport.getDebugReportStatus()
                         != AggregateReport.DebugReportStatus.PENDING) {
-            LogUtil.d("Debugging status is not pending");
+            sLogger.d("Debugging status is not pending");
             reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.REPORT_NOT_PENDING);
             return AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
         }
@@ -267,7 +268,7 @@ public class AggregateReportingJobHandler {
                 return AdServicesStatusUtils.STATUS_IO_ERROR;
             }
         } catch (IOException e) {
-            LogUtil.d(e, "Network error occurred when attempting to deliver aggregate report.");
+            sLogger.d(e, "Network error occurred when attempting to deliver aggregate report.");
             reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.NETWORK);
             // TODO(b/298330312): Change to defined error codes
             ErrorLogUtil.e(
@@ -276,7 +277,7 @@ public class AggregateReportingJobHandler {
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             return AdServicesStatusUtils.STATUS_IO_ERROR;
         } catch (JSONException e) {
-            LogUtil.d(e, "Serialization error occurred at aggregate report delivery.");
+            sLogger.d(e, "Serialization error occurred at aggregate report delivery.");
             reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.SERIALIZATION_ERROR);
             // TODO(b/298330312): Change to defined error codes
             ErrorLogUtil.e(
@@ -301,7 +302,7 @@ public class AggregateReportingJobHandler {
             }
             return AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } catch (CryptoException e) {
-            LogUtil.e(e, e.toString());
+            sLogger.e(e, e.toString());
             reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.ENCRYPTION_ERROR);
             // TODO(b/298330312): Change to defined error codes
             ErrorLogUtil.e(
@@ -315,7 +316,7 @@ public class AggregateReportingJobHandler {
             }
             return AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } catch (Exception e) {
-            LogUtil.e(e, e.toString());
+            sLogger.e(e, e.toString());
             reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.UNKNOWN);
             // TODO(b/298330312): Change to defined error codes
             ErrorLogUtil.e(

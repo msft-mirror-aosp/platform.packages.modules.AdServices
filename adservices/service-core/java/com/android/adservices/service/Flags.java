@@ -602,14 +602,14 @@ public interface Flags {
         return MEASUREMENT_FLEX_LITE_API_ENABLED;
     }
 
-    float MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT = 1.5849266F;
+    float MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT = 6.5F;
 
     /** Returns max information gain in Flexible Event API for Event sources */
     default float getMeasurementFlexApiMaxInformationGainEvent() {
         return MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT;
     }
 
-    float MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION = 11.4617280F;
+    float MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION = 11.46173F;
 
     /** Returns max information gain in Flexible Event API for Navigation sources */
     default float getMeasurementFlexApiMaxInformationGainNavigation() {
@@ -1573,12 +1573,9 @@ public interface Flags {
         return DOWNLOADER_MAX_DOWNLOAD_THREADS;
     }
 
-    /** MDD Topics API Classifier Manifest Url */
-    // TODO(b/236761740): We use this for now for testing. We need to update to the correct one
-    // when we actually upload the models.
+    /** MDD Topics API Classifier Manifest Url. Topics classifier v2-3. Build_id = 1467. */
     String MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
-            "https://dl.google.com/mdi-serving/adservices/topics_classifier/manifest_configs/2"
-                    + "/manifest_config_1661376643699.binaryproto";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/1467/80c34503413cea9ea44cbe94cd38dabc44ea8d70";
 
     default String getMddTopicsClassifierManifestFileUrl() {
         return MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
@@ -3809,6 +3806,16 @@ public interface Flags {
     /** Returns the max time period (in milliseconds) between each cobalt logging job run. */
     default long getCobaltLoggingJobPeriodMs() {
         return COBALT_LOGGING_JOB_PERIOD_MS;
+    }
+
+    long COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS = 10 * 1000; // 10 seconds
+
+    /**
+     * Returns the amount of time Cobalt should wait (in milliseconds) before unbinding from its
+     * upload service.
+     */
+    default long getCobaltUploadServiceUnbindDelayMs() {
+        return COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS;
     }
 
     /** Cobalt logging feature flag. */

@@ -22,7 +22,7 @@ import android.net.Uri;
 
 import androidx.annotation.Nullable;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONArray;
@@ -40,6 +40,7 @@ import java.util.Objects;
  * Class that contains all the real data needed after aggregation, it is not encrypted.
  */
 public class AggregateReport {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     static final String OPERATION = "operation";
     static final String HISTOGRAM = "histogram";
     static final String DATA = "data";
@@ -295,7 +296,7 @@ public class AggregateReport {
             }
             return aggregateHistogramContributions;
         } catch (JSONException e) {
-            LogUtil.e(e, "Failed to parse contributions on Aggregate report.");
+            sLogger.e(e, "Failed to parse contributions on Aggregate report.");
             return Collections.emptyList();
         }
     }

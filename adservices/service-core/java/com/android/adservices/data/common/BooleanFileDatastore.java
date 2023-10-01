@@ -16,7 +16,6 @@
 
 package com.android.adservices.data.common;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.PersistableBundle;
 import android.util.AtomicFile;
@@ -25,13 +24,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -66,7 +65,6 @@ public class BooleanFileDatastore {
     private final AtomicFile mAtomicFile;
     private final Map<String, Boolean> mLocalMap = new HashMap<>();
 
-    @SuppressLint("NewAdServicesFile")
     public BooleanFileDatastore(
             @NonNull Context adServicesContext, @NonNull String filename, int datastoreVersion) {
         Objects.requireNonNull(adServicesContext);
@@ -74,7 +72,9 @@ public class BooleanFileDatastore {
         Preconditions.checkStringNotEmpty(filename, "Filename must not be empty");
         Preconditions.checkArgumentPositive(datastoreVersion, "Version must be positive");
 
-        mAtomicFile = new AtomicFile(new File(adServicesContext.getFilesDir(), filename));
+        mAtomicFile =
+                new AtomicFile(
+                        FileCompatUtils.newFileHelper(adServicesContext.getFilesDir(), filename));
         mDatastoreVersion = datastoreVersion;
     }
 

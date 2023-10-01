@@ -61,8 +61,10 @@ public class TopicsApiLoggingHostTest extends AdServicesHostSideTestCase {
     private static final String TARGET_PACKAGE_SUFFIX_TPLUS = "android.adservices.api";
     private static final String TARGET_PACKAGE_SUFFIX_SMINUS = "android.ext.services";
 
+    // Topics are not going to be implemented on Android R, so this test shouldn't run on R.
+    // If that decision changes, this will need to be enabled. TODO(b/269798827).
     @Rule(order = 0)
-    public final HostSideSdkLevelSupportRule sdkLevel = HostSideSdkLevelSupportRule.forAnyLevel();
+    public final HostSideSdkLevelSupportRule sdkLevel = HostSideSdkLevelSupportRule.forAtLeastS();
 
     @Rule(order = 1)
     public final AdServicesHostSideDeviceSupportedRule adServicesDeviceSupportedRule =

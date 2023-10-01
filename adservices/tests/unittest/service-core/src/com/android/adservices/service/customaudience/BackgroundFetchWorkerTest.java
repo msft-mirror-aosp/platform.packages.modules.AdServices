@@ -299,6 +299,7 @@ public class BackgroundFetchWorkerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 298714561)
     public void testRunBackgroundFetchNothingToUpdate()
             throws ExecutionException, InterruptedException {
         assertTrue(
@@ -353,6 +354,7 @@ public class BackgroundFetchWorkerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 298714561)
     public void testRunBackgroundFetchUpdateOneCustomAudience()
             throws ExecutionException, InterruptedException {
         // Mock a single custom audience eligible for update
@@ -422,6 +424,7 @@ public class BackgroundFetchWorkerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 298714561)
     public void testRunBackgroundFetchChecksWorkInProgress()
             throws InterruptedException, ExecutionException {
         int numEligibleCustomAudiences = 16;
@@ -449,6 +452,16 @@ public class BackgroundFetchWorkerTest {
                 .when(mBackgroundFetchRunnerSpy)
                 .updateCustomAudience(any(), any());
 
+        // ensures that we verify only after BackgroundExecuterLoggerClose#close is executed.
+        CountDownLatch latchForExecutionLoggerClose = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            latchForExecutionLoggerClose.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerImplMock)
+                .logBackgroundFetchProcessReportedStats(any());
+
         when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW);
 
         CountDownLatch bgfWorkStoppedLatch = new CountDownLatch(1);
@@ -471,6 +484,7 @@ public class BackgroundFetchWorkerTest {
         mBackgroundFetchWorker.runBackgroundFetch().get();
 
         bgfWorkStoppedLatch.await();
+        latchForExecutionLoggerClose.await();
         verify(mBackgroundFetchRunnerSpy).deleteExpiredCustomAudiences(any());
         verify(mCustomAudienceDaoSpy).deleteAllExpiredCustomAudienceData(any());
         verify(mBackgroundFetchRunnerSpy).deleteDisallowedOwnerCustomAudiences();
@@ -601,6 +615,7 @@ public class BackgroundFetchWorkerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 298714561)
     public void testRunBackgroundFetchInSequence() throws InterruptedException, ExecutionException {
         int numEligibleCustomAudiences = 16;
         CountDownLatch completionLatch = new CountDownLatch(numEligibleCustomAudiences / 2);
