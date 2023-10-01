@@ -3808,6 +3808,16 @@ public interface Flags {
         return COBALT_LOGGING_JOB_PERIOD_MS;
     }
 
+    long COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS = 10 * 1000; // 10 seconds
+
+    /**
+     * Returns the amount of time Cobalt should wait (in milliseconds) before unbinding from its
+     * upload service.
+     */
+    default long getCobaltUploadServiceUnbindDelayMs() {
+        return COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS;
+    }
+
     /** Cobalt logging feature flag. */
     boolean COBALT_LOGGING_ENABLED = false;
 

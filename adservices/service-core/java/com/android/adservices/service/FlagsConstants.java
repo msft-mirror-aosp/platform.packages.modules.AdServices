@@ -100,6 +100,8 @@ public final class FlagsConstants {
     public static final String KEY_ADSERVICES_RELEASE_STAGE_FOR_COBALT =
             "adservices_release_stage_for_cobalt";
     public static final String KEY_COBALT_LOGGING_JOB_PERIOD_MS = "cobalt_logging_job_period_ms";
+    public static final String KEY_COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS =
+            "cobalt_upload_service_unbind_delay_ms";
     public static final String KEY_COBALT_LOGGING_ENABLED = "cobalt_logging_enabled";
 
     // Measurement keys
