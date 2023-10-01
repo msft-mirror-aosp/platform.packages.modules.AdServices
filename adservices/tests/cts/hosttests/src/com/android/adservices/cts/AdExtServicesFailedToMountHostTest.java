@@ -20,27 +20,25 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.android.adservices.common.AdServicesHostSideFlagsSetterRule;
 import com.android.adservices.common.AdServicesHostSideTestCase;
+import com.android.adservices.common.BackgroundLogReceiver;
 import com.android.adservices.common.HostSideSdkLevelSupportRule;
 import com.android.adservices.common.RequiresSdkLevelLessThanT;
-import com.android.ddmlib.MultiLineReceiver;
-import com.android.tradefed.device.BackgroundDeviceAction;
-import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 /** Test to check if com.google.android.ext.services failed to mount */
 @RunWith(DeviceJUnit4ClassRunner.class)
 public class AdExtServicesFailedToMountHostTest extends AdServicesHostSideTestCase {
-
-    private static String sWildcardString = ".*";
-    private static String sExtservicesString = "com\\.google\\.android\\.ext\\.services";
-    private static String sFailedToMountString = "Failed to mount";
-    private static String sNoSuchString = "No such file or directory";
+    private static final String LOGCAT_COMMAND = "logcat";
+    private static final String PATTERN_TO_MATCH =
+            "com\\.google\\.android\\.ext\\.services"
+                    + ".*Failed to mount.*No such file or directory";
 
     @Rule(order = 0)
     public final HostSideSdkLevelSupportRule sdkLevel = HostSideSdkLevelSupportRule.forAnyLevel();
@@ -57,66 +55,23 @@ public class AdExtServicesFailedToMountHostTest extends AdServicesHostSideTestCa
         mDevice.reboot();
         mDevice.waitForDeviceAvailable();
 
-        AdservicesLogcatReceiver logcatReceiver =
-                new AdservicesLogcatReceiver("receiver", " logcat");
-        logcatReceiver.start(mDevice);
+        Pattern errorPattern = Pattern.compile(PATTERN_TO_MATCH);
 
-        // Sleep 5 min to allow time for the error to occur
-        Thread.sleep(300 * 1000);
-        logcatReceiver.stop();
+        // Wait for up to 5 minutes, looking for the error log
+        BackgroundLogReceiver logcatReceiver =
+                new BackgroundLogReceiver.Builder()
+                        .setDevice(mDevice)
+                        .setLogCatCommand(LOGCAT_COMMAND)
+                        .setEarlyStopCondition(stopIfErrorLogOccurs(errorPattern))
+                        .build();
+        logcatReceiver.collectLogs(/* timeoutMilliseconds= */ 5 * 60 * 1000);
 
-        String regex =
-                sExtservicesString
-                        + sWildcardString
-                        + sFailedToMountString
-                        + sWildcardString
-                        + sNoSuchString;
-        Pattern errorPattern = Pattern.compile(regex);
-        assertWithMessage("logcat matches regex (%s)", regex)
+        assertWithMessage("logcat matches regex (%s)", PATTERN_TO_MATCH)
                 .that(logcatReceiver.patternMatches(errorPattern))
                 .isFalse();
     }
 
-    // TODO: b/288892905 consolidate with existing logcat receiver
-    private static class AdservicesLogcatReceiver extends MultiLineReceiver {
-        private volatile boolean mCancelled = false;
-        private final StringBuilder mBuilder = new StringBuilder();
-        private final String mName;
-        private final String mLogcatCmd;
-        private BackgroundDeviceAction mBackgroundDeviceAction;
-
-        AdservicesLogcatReceiver(String name, String logcatCmd) {
-            this.mName = name;
-            this.mLogcatCmd = logcatCmd;
-        }
-
-        @Override
-        public void processNewLines(String[] lines) {
-            if (lines.length == 0) {
-                return;
-            }
-            mBuilder.append(String.join("\n", lines));
-        }
-
-        @Override
-        public boolean isCancelled() {
-            return mCancelled;
-        }
-
-        public void start(ITestDevice device) {
-            mBackgroundDeviceAction =
-                    new BackgroundDeviceAction(mLogcatCmd, mName, device, this, 0);
-            mBackgroundDeviceAction.start();
-        }
-
-        public void stop() {
-            if (mBackgroundDeviceAction != null) mBackgroundDeviceAction.cancel();
-            if (isCancelled()) return;
-            mCancelled = true;
-        }
-
-        public boolean patternMatches(Pattern pattern) {
-            return mBuilder.length() > 0 && pattern.matcher(mBuilder).find();
-        }
+    private Predicate<String[]> stopIfErrorLogOccurs(Pattern errorPattern) {
+        return (s) -> errorPattern.matcher(String.join("\n", s)).find();
     }
 }

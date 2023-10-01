@@ -24,7 +24,10 @@ import androidx.room.RoomDatabase;
 
 import com.android.modules.utils.build.SdkLevel;
 
+import java.io.File;
+
 /** Utility class for handling file names in a backward-compatible manner */
+@SuppressLint("NewAdServicesFile")
 public final class FileCompatUtils {
     private static final String ADSERVICES_PREFIX = "adservices";
 
@@ -62,5 +65,21 @@ public final class FileCompatUtils {
                 context,
                 klass,
                 getAdservicesFilename(name) /* make sure filename is valid for S- */);
+    }
+
+    /**
+     * calls Context.getDataPath to return a File for the given context and name, while ensuring the
+     * filename is prepended with "adservices" on S-.
+     */
+    public static File getDatabasePathHelper(Context context, String name) {
+        return context.getDatabasePath(getAdservicesFilename(name));
+    }
+
+    /**
+     * creates a new File from the given parent and child, while ensuring the child filename is
+     * prepended with "adservices" on S-.
+     */
+    public static File newFileHelper(File parent, String child) {
+        return new File(parent, getAdservicesFilename(child));
     }
 }

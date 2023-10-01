@@ -25,7 +25,7 @@ import android.annotation.NonNull;
 import android.net.Uri;
 import android.util.Pair;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
@@ -89,6 +89,7 @@ class AttributionJobHandler {
 
     private static final String API_VERSION = "0.1";
     private static final String AGGREGATE_REPORT_DELAY_DELIMITER = ",";
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     private final DatastoreManager mDatastoreManager;
     private final DebugReportApi mDebugReportApi;
     private final EventReportWindowCalcDelegate mEventReportWindowCalcDelegate;
@@ -279,7 +280,8 @@ class AttributionJobHandler {
             throws DatastoreException {
         if (!hasAttributionQuota(source, trigger, measurementDao)
                 || !isReportingOriginWithinPrivacyBounds(source, trigger, measurementDao)) {
-            LogUtil.d("Attribution blocked by rate limits. Source ID: %s ; Trigger ID: %s ",
+            sLogger.d(
+                    "Attribution blocked by rate limits. Source ID: %s ; Trigger ID: %s ",
                     source.getId(), trigger.getId());
             return true;
         }
@@ -308,7 +310,7 @@ class AttributionJobHandler {
                         trigger.getAttributionDestination(), trigger.getDestinationType());
 
         if (numReportsPerDestination >= mFlags.getMeasurementMaxAggregateReportsPerDestination()) {
-            LogUtil.d(
+            sLogger.d(
                     String.format(
                             Locale.ENGLISH,
                             "Aggregate reports for destination %1$s exceeds system health limit of"
@@ -328,7 +330,7 @@ class AttributionJobHandler {
 
         if (mFlags.getMeasurementEnableMaxAggregateReportsPerSource()
                 && numReportsPerSource >= mFlags.getMeasurementMaxAggregateReportsPerSource()) {
-            LogUtil.d(
+            sLogger.d(
                     String.format(
                             Locale.ENGLISH,
                             "Aggregate reports for source %1$s exceeds system health limit of"
@@ -381,7 +383,7 @@ class AttributionJobHandler {
                     validateAndGetUpdatedAggregateContributions(
                             contributions.get(), source, trigger, measurementDao);
             if (!newAggregateContributions.isPresent()) {
-                LogUtil.d(
+                sLogger.d(
                         "Aggregate contributions exceeded bound. Source ID: %s ; "
                                 + "Trigger ID: %s ",
                         source.getId(), trigger.getId());
@@ -447,7 +449,7 @@ class AttributionJobHandler {
             // TODO (b/230618328): read from DB and upload unencrypted aggregate report.
             return TriggeringStatus.ATTRIBUTED;
         } catch (JSONException e) {
-            LogUtil.e(
+            sLogger.e(
                     e,
                     "AttributionJobHandler::maybeGenerateAggregateReport JSONException when parse"
                             + " aggregate fields.");
@@ -518,7 +520,7 @@ class AttributionJobHandler {
                                 AttributionConfig.AttributionConfigContract.SOURCE_NETWORK));
             }
         } catch (JSONException e) {
-            LogUtil.d(e, "Failed to parse attribution configs.");
+            sLogger.d(e, "Failed to parse attribution configs.");
         }
         return enrollmentIds;
     }
@@ -544,7 +546,7 @@ class AttributionJobHandler {
                             aggregateAttributionSource.getFilterMap(), mFlags);
             return dedupKey;
         } catch (JSONException e) {
-            LogUtil.e(
+            sLogger.e(
                     e,
                     "AttributionJobHandler::maybeGetAggregateDeduplicationKey JSONException when "
                             + "parse aggregate dedup key fields in AttributionJobHandler.");
@@ -583,7 +585,7 @@ class AttributionJobHandler {
             throws DatastoreException {
 
         if (source.getParentId() != null) {
-            LogUtil.d("Event report generation skipped because it's a derived source.");
+            sLogger.d("Event report generation skipped because it's a derived source.");
             return TriggeringStatus.DROPPED;
         }
 
@@ -618,7 +620,7 @@ class AttributionJobHandler {
                     source.buildAttributedTriggers();
                     alreadyAttributed = hasDeduplicationKey(source, eventTrigger.getDedupKey());
                 } catch (JSONException e) {
-                    LogUtil.e(e, "maybeGenerateEventReport: failed to build attributed triggers.");
+                    sLogger.e(e, "maybeGenerateEventReport: failed to build attributed triggers.");
                     return TriggeringStatus.DROPPED;
                 }
             } else {
@@ -641,7 +643,7 @@ class AttributionJobHandler {
                         trigger.getAttributionDestination(), trigger.getDestinationType());
 
         if (numReports >= mFlags.getMeasurementMaxEventReportsPerDestination()) {
-            LogUtil.d(
+            sLogger.d(
                     String.format(
                             Locale.ENGLISH,
                             "Event reports for destination %1$s exceeds system health limit of"
@@ -1005,7 +1007,7 @@ class AttributionJobHandler {
             return isFilterMatch;
         } catch (JSONException e) {
             // If JSON is malformed, we shall consider as not matched.
-            LogUtil.e(e, "AttributionJobHandler::doTopLevelFiltersMatch: JSON parse failed.");
+            sLogger.e(e, "AttributionJobHandler::doTopLevelFiltersMatch: JSON parse failed.");
             return false;
         }
     }
@@ -1037,7 +1039,7 @@ class AttributionJobHandler {
             return matchingEventTrigger;
         } catch (JSONException e) {
             // If JSON is malformed, we shall consider as not matched.
-            LogUtil.e(
+            sLogger.e(
                     e,
                     "AttributionJobHandler::findFirstMatchingEventTrigger: Malformed JSON string.");
             return Optional.empty();
@@ -1114,7 +1116,7 @@ class AttributionJobHandler {
                     return OptionalInt.empty();
                 }
             } catch (ArithmeticException e) {
-                LogUtil.e(
+                sLogger.e(
                         e,
                         "AttributionJobHandler::validateAndGetUpdatedAggregateContributions Error"
                                 + " adding aggregate contribution values.");
@@ -1152,8 +1154,10 @@ class AttributionJobHandler {
 
             return count < mFlags.getMeasurementMaxDistinctEnrollmentsInAttribution();
         } else {
-            LogUtil.d("isEnrollmentWithinPrivacyBounds: getPublisherAndDestinationTopPrivateDomains"
-                    + " failed. %s %s", source.getPublisher(), trigger.getAttributionDestination());
+            sLogger.d(
+                    "isEnrollmentWithinPrivacyBounds: getPublisherAndDestinationTopPrivateDomains"
+                            + " failed. %s %s",
+                    source.getPublisher(), trigger.getAttributionDestination());
             return true;
         }
     }
@@ -1271,14 +1275,14 @@ class AttributionJobHandler {
         String aggregateReportDelayString = mFlags.getMeasurementAggregateReportDelayConfig();
 
         if (aggregateReportDelayString == null) {
-            LogUtil.d("Invalid configurable aggregate report delay: null");
+            sLogger.d("Invalid configurable aggregate report delay: null");
             return reportDelayFromDefaults;
         }
 
         String[] split = aggregateReportDelayString.split(AGGREGATE_REPORT_DELAY_DELIMITER);
 
         if (split.length != 2) {
-            LogUtil.d("Invalid configurable aggregate report delay: length is not two");
+            sLogger.d("Invalid configurable aggregate report delay: length is not two");
             return reportDelayFromDefaults;
         }
 
@@ -1287,7 +1291,7 @@ class AttributionJobHandler {
             final long delaySpan = Long.parseLong(split[1].trim());
             return (long) (Math.random() * delaySpan + minDelay);
         } catch (NumberFormatException e) {
-            LogUtil.e(e, "Configurable aggregate report delay parsing failed.");
+            sLogger.e(e, "Configurable aggregate report delay parsing failed.");
             return reportDelayFromDefaults;
         }
     }

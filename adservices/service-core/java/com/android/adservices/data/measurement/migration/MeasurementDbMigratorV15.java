@@ -23,7 +23,7 @@ import android.net.Uri;
 
 import androidx.annotation.NonNull;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.enrollment.EnrollmentTables;
 import com.android.adservices.data.measurement.MeasurementTables;
@@ -46,6 +46,7 @@ public class MeasurementDbMigratorV15 extends AbstractMeasurementDbMigrator {
     private static final String ID_COLUMN = "_id";
     private static final String ENROLLMENT_ID_COLUMN = "enrollment_id";
     private static final String REGISTRATION_ORIGIN_COLUMN = "registration_origin";
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     private final DbHelper mDbHelper;
 
     public MeasurementDbMigratorV15(DbHelper dbHelper) {
@@ -86,7 +87,7 @@ public class MeasurementDbMigratorV15 extends AbstractMeasurementDbMigrator {
                         /*orderBy=*/ null,
                         /*limit=*/ null)) {
             if (cursor == null || cursor.getCount() <= 0) {
-                LogUtil.d(
+                sLogger.d(
                         "Failed to find any enrollments with non-empty attribution reporting url");
                 return enrollmentIdToReportingUrl;
             }
@@ -139,7 +140,7 @@ public class MeasurementDbMigratorV15 extends AbstractMeasurementDbMigrator {
                 Uri reportingUri = enrollmentIdToReportingUrl.get(enrollmentId);
                 if (reportingUri == null) {
                     // no reporting origin found. delete the data
-                    LogUtil.d("Reporting origin not found for enrollment id - " + enrollmentId);
+                    sLogger.d("Reporting origin not found for enrollment id - " + enrollmentId);
 
                     deleteRecord(db, id);
 
@@ -154,7 +155,7 @@ public class MeasurementDbMigratorV15 extends AbstractMeasurementDbMigrator {
                                     ID_COLUMN + " = ? ",
                                     new String[] {id});
                     if (rows != 1) {
-                        LogUtil.d(
+                        sLogger.d(
                                 "Failed to insert registration_origin for id "
                                         + id
                                         + " in table "
@@ -167,7 +168,7 @@ public class MeasurementDbMigratorV15 extends AbstractMeasurementDbMigrator {
     }
 
     private void deleteRecord(SQLiteDatabase db, String recordId) {
-        LogUtil.d(
+        sLogger.d(
                 "Deleting record with id - "
                         + recordId
                         + " from table - "

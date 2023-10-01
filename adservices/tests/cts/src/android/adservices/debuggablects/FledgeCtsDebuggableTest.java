@@ -68,6 +68,7 @@ import android.net.Uri;
 import android.os.Process;
 import android.util.Log;
 
+import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.common.AdservicesTestHelper;
@@ -4114,6 +4115,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     }
 
     @Test
+    @FlakyTest(bugId = 298832350)
     public void testGetAdSelectionData_collectsCa_success()
             throws ExecutionException, InterruptedException, TimeoutException {
         // TODO(b/293022107): Add success tests when encryption key fetch can be done in CTS
@@ -4144,6 +4146,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302669752)
     public void testPersistAdSelectionData_adSelectionIdDoesntExist_failure()
             throws ExecutionException, InterruptedException, TimeoutException {
         // TODO(b/293022107): This test is currently using a placeholder ad selection id that cause

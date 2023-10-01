@@ -150,7 +150,8 @@ public class ConsentManager {
             @NonNull UserProfileIdManager userProfileIdManager,
             @NonNull UxStatesDao uxStatesDao,
             @NonNull Flags flags,
-            @Flags.ConsentSourceOfTruth int consentSourceOfTruth) {
+            @Flags.ConsentSourceOfTruth int consentSourceOfTruth,
+            boolean enableAppsearchConsentData) {
         Objects.requireNonNull(topicsWorker);
         Objects.requireNonNull(appConsentDao);
         Objects.requireNonNull(measurementImpl);
@@ -165,7 +166,7 @@ public class ConsentManager {
             Objects.requireNonNull(adServicesManager);
         }
 
-        if (flags.getEnableAppsearchConsentData()) {
+        if (enableAppsearchConsentData) {
             Objects.requireNonNull(appSearchConsentManager);
         }
 
@@ -217,7 +218,9 @@ public class ConsentManager {
                             StatsdAdServicesLogger.getInstance();
                     // Flag enable_appsearch_consent_data is true on S- and T+ only when we want to
                     // use AppSearch to write to or read from.
-                    if (FlagsFactory.getFlags().getEnableAppsearchConsentData()) {
+                    boolean enableAppsearchConsentData =
+                            FlagsFactory.getFlags().getEnableAppsearchConsentData();
+                    if (enableAppsearchConsentData) {
                         appSearchConsentManager = AppSearchConsentManager.getInstance(context);
                         handleConsentMigrationFromAppSearchIfNeeded(
                                 context,
@@ -252,7 +255,8 @@ public class ConsentManager {
                                     // TODO(b/260601944): Remove Flag Instance.
                                     UxStatesDao.getInstance(context),
                                     FlagsFactory.getFlags(),
-                                    consentSourceOfTruth);
+                                    consentSourceOfTruth,
+                                    enableAppsearchConsentData);
                 }
             }
         }
@@ -1420,9 +1424,7 @@ public class ConsentManager {
                                 + " preference is not updated.");
                 ErrorLogUtil.e(
                         AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
-                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX,
-                        ConsentManager.class.getSimpleName(),
-                        new Object() {}.getClass().getEnclosingMethod().getName());
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
                 statsdAdServicesLogger.logConsentMigrationStats(
                         getConsentManagerStatsForLogging(
                                 appConsents,
@@ -1474,9 +1476,7 @@ public class ConsentManager {
             LogUtil.e("Finished clearing Consent in PPAPI but shared preference is not updated.");
             ErrorLogUtil.e(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX,
-                    ConsentManager.class.getSimpleName(),
-                    ConsentManager.class.getEnclosingMethod().getName());
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
         }
     }
 
@@ -1499,9 +1499,7 @@ public class ConsentManager {
             LogUtil.e("Failed to reset shared preference for " + sharedPreferenceKey);
             ErrorLogUtil.e(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_RESET_FAILURE,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX,
-                    ConsentManager.class.getSimpleName(),
-                    ConsentManager.class.getEnclosingMethod().getName());
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
         }
     }
 

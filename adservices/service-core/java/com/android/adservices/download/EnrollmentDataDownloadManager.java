@@ -146,9 +146,7 @@ public class EnrollmentDataDownloadManager {
                 LogUtil.e("Saving to the enrollment file read status sharedpreference failed");
                 ErrorLogUtil.e(
                         AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
-                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT,
-                        this.getClass().getSimpleName(),
-                        new Object() {}.getClass().getEnclosingMethod().getName());
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             }
             LogUtil.d(
                     "Inserted new enrollment data build id = %s into DB. "
@@ -202,10 +200,7 @@ public class EnrollmentDataDownloadManager {
                                             data[6].contains(" ")
                                                     ? Arrays.asList(data[6].split(" "))
                                                     : Arrays.asList(data[6]))
-                                    .setEncryptionKeyUrl(
-                                            data[7].contains(" ")
-                                                    ? Arrays.asList(data[7].split(" "))
-                                                    : Arrays.asList(data[7]))
+                                    .setEncryptionKeyUrl(data[7])
                                     .build();
                     newEnrollments.add(enrollmentData);
                 }
@@ -288,9 +283,7 @@ public class EnrollmentDataDownloadManager {
                         ENROLLMENT_SHARED_PREF, BUILD_ID, FILE_GROUP_STATUS);
                 ErrorLogUtil.e(
                         AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
-                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT,
-                        this.getClass().getSimpleName(),
-                        new Object() {}.getClass().getEnclosingMethod().getName());
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             }
         }
     }

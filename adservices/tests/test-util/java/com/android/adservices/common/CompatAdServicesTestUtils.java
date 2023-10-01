@@ -57,19 +57,6 @@ public final class CompatAdServicesTestUtils {
                 });
     }
 
-    public static void setMsmtApiAppAllowList(String allowList) {
-        call(() -> sRule.setMsmtApiAppAllowList(allowList));
-    }
-
-    public static String getAndOverrideMsmtApiAppAllowList(String packageName) {
-        return call(
-                () -> {
-                    String previousAppAllowList = sRule.getMsmtApiAppAllowList();
-                    setMsmtApiAppAllowList(packageName); // this method takes care of the separator
-                    return previousAppAllowList;
-                });
-    }
-
     // Helper method as all AdServicesFlagsSetterRule methods throws Exception in the signature,
     // although not in reality (the exceptions are declared because of the host-side counterpart)
     private static <T> T call(CallableWithScissors<T> r) {

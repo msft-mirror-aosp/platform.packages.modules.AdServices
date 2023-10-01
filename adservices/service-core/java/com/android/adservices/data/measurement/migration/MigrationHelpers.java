@@ -21,7 +21,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 import androidx.annotation.Nullable;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -30,6 +30,7 @@ import java.util.List;
 /** Helper methods for database migrations. */
 public final class MigrationHelpers {
 
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     /**
      * Creates a table using {@code createTableQuery} and fills it with values from {@code
      * tableName} using {@code backupTableName} as a temporary storage.
@@ -64,7 +65,7 @@ public final class MigrationHelpers {
             if (!new HashSet<>(newTableColumnNames).containsAll(backupTableColumnNames)) {
                 // Not all the columns in the old table are present in the new table.  Proceeding
                 // with an empty table.
-                LogUtil.w(
+                sLogger.w(
                         "Error during measurement migration (copyAndUpdateTable()).  The new "
                                 + "table does not have all of the columns from the old table.");
                 db.execSQL(dropBackupTable);

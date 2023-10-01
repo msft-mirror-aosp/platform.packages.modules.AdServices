@@ -16,8 +16,8 @@
 
 package android.adservices.signals;
 
-import android.adservices.signals.FetchSignalUpdatesInput;
-import android.adservices.signals.FetchSignalUpdatesCallback;
+import android.adservices.signals.UpdateSignalsInput;
+import android.adservices.signals.UpdateSignalsCallback;
 
 /**
  * Protected signals service.
@@ -25,6 +25,6 @@ import android.adservices.signals.FetchSignalUpdatesCallback;
  * @hide
  */
 interface IProtectedSignalsService {
-    void fetchSignalUpdates(in FetchSignalUpdatesInput input,
-        in FetchSignalUpdatesCallback callback);
+    void updateSignals(in UpdateSignalsInput input,
+        in UpdateSignalsCallback callback);
 }
