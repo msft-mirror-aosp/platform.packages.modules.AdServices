@@ -174,7 +174,7 @@ public class EncoderPersistenceDaoTest {
 
     @Test
     public void testWriteAndReadForFile() {
-        File tempFile = new File(CONTEXT.getFilesDir(), "temp_file");
+        File tempFile = new File(CONTEXT.getFilesDir(), ADSERVICES_PREFIX + "temp_file");
         mEncoderPersistenceDao.writeDataToFile(tempFile, ENCODER);
         String readData =
                 mEncoderPersistenceDao.readDataFromFile(CONTEXT.getFilesDir(), tempFile.getName());

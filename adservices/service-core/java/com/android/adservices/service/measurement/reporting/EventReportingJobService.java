@@ -28,6 +28,7 @@ import android.content.ComponentName;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
@@ -70,14 +71,14 @@ public final class EventReportingJobService extends JobService {
                 .recordOnStartJob(MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementJobEventReportingKillSwitch()) {
-            LogUtil.e("EventReportingJobService is disabled");
+            LoggerFactory.getMeasurementLogger().e("EventReportingJobService is disabled");
             return skipAndCancelBackgroundJob(
                     params,
                     AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON,
                     /* doRecord=*/ true);
         }
 
-        LogUtil.d("EventReportingJobService.onStartJob: ");
+        LoggerFactory.getMeasurementLogger().d("EventReportingJobService.onStartJob: ");
         mExecutorFuture =
                 sBlockingExecutor.submit(
                         () -> {
@@ -117,12 +118,12 @@ public final class EventReportingJobService extends JobService {
                 lock.unlock();
             }
         }
-        LogUtil.d("EventReportingJobService did not acquire the lock");
+        LoggerFactory.getMeasurementLogger().d("EventReportingJobService did not acquire the lock");
     }
 
     @Override
     public boolean onStopJob(JobParameters params) {
-        LogUtil.d("EventReportingJobService.onStopJob");
+        LoggerFactory.getMeasurementLogger().d("EventReportingJobService.onStopJob");
         boolean shouldRetry = true;
         if (mExecutorFuture != null) {
             shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
@@ -147,13 +148,14 @@ public final class EventReportingJobService extends JobService {
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
         Flags flags = FlagsFactory.getFlags();
         if (flags.getMeasurementJobEventReportingKillSwitch()) {
-            LogUtil.d("EventReportingJobService is disabled, skip scheduling");
+            LoggerFactory.getMeasurementLogger()
+                    .d("EventReportingJobService is disabled, skip scheduling");
             return;
         }
 
         final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
         if (jobScheduler == null) {
-            LogUtil.e("JobScheduler not found");
+            LoggerFactory.getMeasurementLogger().e("JobScheduler not found");
             return;
         }
 
@@ -163,9 +165,10 @@ public final class EventReportingJobService extends JobService {
         JobInfo jobInfo = buildJobInfo(context, flags);
         if (forceSchedule || !jobInfo.equals(scheduledJob)) {
             schedule(jobScheduler, jobInfo);
-            LogUtil.d("Scheduled EventReportingJobService");
+            LoggerFactory.getMeasurementLogger().d("Scheduled EventReportingJobService");
         } else {
-            LogUtil.d("EventReportingJobService already scheduled, skipping reschedule");
+            LoggerFactory.getMeasurementLogger()
+                    .d("EventReportingJobService already scheduled, skipping reschedule");
         }
     }
 

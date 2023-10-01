@@ -49,6 +49,8 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.telephony.TelephonyManager;
 
+import androidx.test.filters.FlakyTest;
+
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiConsent;
@@ -626,7 +628,8 @@ public class AdServicesCommonServiceImplTest {
     }
 
     @Test
-    public void enableAdServicesTest_apiDisabled() {
+    @FlakyTest(bugId = 299686058)
+    public void enableAdServicesTest_apiDisabled() throws InterruptedException {
         mGetCommonCallbackLatch = new CountDownLatch(1);
         ExtendedMockito.doReturn(true)
                 .when(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
@@ -647,13 +650,17 @@ public class AdServicesCommonServiceImplTest {
                     }
                 });
 
+        assertThat(
+                        mGetCommonCallbackLatch.await(
+                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+                .isTrue();
         ExtendedMockito.verify(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
         verify(mFlags).getEnableAdServicesSystemApi();
         verify(mUxEngine, never()).start(any());
     }
 
     @Test
-    public void enableAdServicesTest_engineStarted() {
+    public void enableAdServicesTest_engineStarted() throws InterruptedException {
         mGetCommonCallbackLatch = new CountDownLatch(1);
         ExtendedMockito.doReturn(true)
                 .when(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
@@ -675,6 +682,10 @@ public class AdServicesCommonServiceImplTest {
                     }
                 });
 
+        assertThat(
+                        mGetCommonCallbackLatch.await(
+                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+                .isTrue();
         ExtendedMockito.verify(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
         verify(mFlags).getEnableAdServicesSystemApi();
         verify(mUxEngine).start(any());

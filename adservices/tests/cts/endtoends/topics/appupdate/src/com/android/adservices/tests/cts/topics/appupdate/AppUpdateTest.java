@@ -29,6 +29,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
@@ -179,6 +180,7 @@ public class AppUpdateTest {
     }
 
     @Test
+    @FlakyTest(bugId = 298870452)
     public void testAppUpdate() throws Exception {
         // Invoke Topics API once to compute top topics so that following installed test apps are
         // able to get top topics assigned when getting installed.

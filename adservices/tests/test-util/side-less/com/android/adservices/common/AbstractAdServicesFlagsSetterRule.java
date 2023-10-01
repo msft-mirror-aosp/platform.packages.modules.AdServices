@@ -345,6 +345,15 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
 
     /**
      * Overrides flag used by {@link
+     * com.android.adservices.service.PhFlags#getWebContextClientAppAllowList()}.
+     */
+    public T setMsmtWebContextClientAllowList(String value) {
+        return setOrCacheFlagWithSeparator(
+                FlagsConstants.KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST, value, ALLOWLIST_SEPARATOR);
+    }
+
+    /**
+     * Overrides flag used by {@link
      * com.android.adservices.service.PhFlags#getAdIdRequestPermitsPerSecond()}.
      */
     public T setAdIdRequestPermitsPerSecond(double value) {
@@ -602,7 +611,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         mInitialSystemProperties = null;
     }
 
-    private T setOrCacheDebugSystemProperty(String name, boolean value) {
+    protected T setOrCacheDebugSystemProperty(String name, boolean value) {
         return setOrCacheDebugSystemProperty(name, Boolean.toString(value));
     }
 
