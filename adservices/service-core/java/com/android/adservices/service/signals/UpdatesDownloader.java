@@ -33,7 +33,7 @@ import org.json.JSONObject;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
-/** Downloads signal updates for the fetchSignalUpdates API. */
+/** Downloads signal updates for the updateSignals API. */
 public class UpdatesDownloader {
 
     public static final String PACKAGE_NAME_HEADER = "X-PROTECTED-SIGNALS-PACKAGE";
@@ -77,7 +77,7 @@ public class UpdatesDownloader {
         try {
             return new JSONObject(response.getResponseBody());
         } catch (JSONException e) {
-            sLogger.e(e, "Error converting fetchSignalsUpdate response body to JSON");
+            sLogger.e(e, "Error converting updateSignals response body to JSON");
             throw new IllegalArgumentException(CONVERSION_ERROR_MSG, e);
         }
     }

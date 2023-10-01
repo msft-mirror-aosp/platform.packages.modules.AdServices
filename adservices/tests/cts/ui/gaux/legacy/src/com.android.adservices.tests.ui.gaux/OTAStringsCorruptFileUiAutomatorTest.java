@@ -27,7 +27,6 @@ import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
-import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.common.AdservicesTestHelper;
@@ -35,7 +34,6 @@ import com.android.adservices.tests.ui.libs.UiUtils;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -63,7 +61,7 @@ public class OTAStringsCorruptFileUiAutomatorTest {
     private static AdServicesCommonManager sCommonManager;
 
     @BeforeClass
-    public static void initTestClass() throws InterruptedException, UiObjectNotFoundException {
+    public static void initTestClass() throws Exception {
         // Skip the test if it runs on unsupported platforms.
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
@@ -74,13 +72,16 @@ public class OTAStringsCorruptFileUiAutomatorTest {
         // enable wifi
         UiUtils.connectToWifi();
 
+        UiUtils.setOTADownloadTimeout(0);
+        UiUtils.enableOtaStrings();
+
         // wait for wifi to connect
         Thread.sleep(LAUNCH_TIMEOUT);
     }
 
-    @AfterClass
-    public static void cleanup() throws InterruptedException, UiObjectNotFoundException {
-        UiUtils.turnOffWifi(sDevice);
+    @BeforeClass
+    public static void tearDownTestClass() throws Exception {
+        UiUtils.disableOtaStrings();
     }
 
     @Before
@@ -104,32 +105,24 @@ public class OTAStringsCorruptFileUiAutomatorTest {
         ShellUtils.runShellCommand(
                 "rm -rf /data/data/com.google.android.adservices.api/files/"
                         + "datadownload/shared/public");
-        ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
-        // Same value as the default value in Flag.java, don't want to import Flag.java which need
-        // add extra dependency.
-        UiUtils.setOTADownloadTimeout(86700000);
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
     @Test
     @FlakyTest(bugId = 297347345)
-    public void checkCorruptedARSCFile_OTAFailTest()
-            throws UiObjectNotFoundException, InterruptedException {
-        // download test OTA strings
-        UiUtils.setOTADownloadTimeout(0);
+    public void checkCorruptedARSCFile_OTAFailTest() throws Exception {
         UiUtils.setupOTAStrings(sContext, sDevice, sCommonManager, CORRUPT_ARSC_FILE_MDD_URL);
 
-        // verify notification and settings flow
         sCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
         UiUtils.verifyNotificationAndSettingsPage(sContext, sDevice, false);
     }
 
     @Test
     @FlakyTest(bugId = 297347345)
-    public void checkXMLFile_OTAFailTest() throws UiObjectNotFoundException, InterruptedException {
-        // download test OTA strings
-        UiUtils.setOTADownloadTimeout(0);
+    public void checkXMLFile_OTAFailTest() throws Exception {
         UiUtils.setupOTAStrings(sContext, sDevice, sCommonManager, XML_FIL_MDD_URL);
-        // verify notification and settings flow
+
         sCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
         UiUtils.verifyNotificationAndSettingsPage(sContext, sDevice, false);
     }

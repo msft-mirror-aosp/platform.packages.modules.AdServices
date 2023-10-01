@@ -22,13 +22,26 @@ import org.jetbrains.uast.UCallExpression
 
 class BackCompatNewFileDetector : Detector(), SourceCodeScanner {
     override fun getApplicableMethodNames(): List<String> {
-        return listOf("getFilesDir", "getDatabasePath", "databaseBuilder")
+        return listOf("getDatabasePath", "databaseBuilder")
+    }
+
+    override fun getApplicableConstructorTypes(): List<String> {
+        return listOf("java.io.File")
+    }
+
+    override fun visitConstructor(context: JavaContext, node: UCallExpression, constructor: PsiMethod) {
+            context.report(
+                    issue = ISSUE,
+                    location = context.getNameLocation(node),
+                    message =
+                    "Please use FileCompatUtils to ensure any newly added files have a name " +
+                            "that begins with \"adservices\" or create the files in a subdirectory " +
+                            "called \"adservices/\" (go/rb-extservices-ota-data-cleanup)"
+            )
     }
 
     override fun visitMethodCall(context: JavaContext, node: UCallExpression, method: PsiMethod) {
         if (
-                (method.name == "getFilesDir" &&
-                method.containingClass?.qualifiedName == "android.content.Context") ||
                 (method.name == "getDatabasePath" &&
                         method.containingClass?.qualifiedName == "android.content.Context") ||
                 (method.name == "databaseBuilder" &&

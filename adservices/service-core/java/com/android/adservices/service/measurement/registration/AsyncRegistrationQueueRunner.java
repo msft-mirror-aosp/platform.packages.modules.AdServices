@@ -24,7 +24,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.RemoteException;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
@@ -59,6 +59,7 @@ import java.util.stream.Collectors;
 
 /** Runner for servicing queued registration requests */
 public class AsyncRegistrationQueueRunner {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     private static AsyncRegistrationQueueRunner sAsyncRegistrationQueueRunner;
     private final DatastoreManager mDatastoreManager;
     private final AsyncSourceFetcher mAsyncSourceFetcher;
@@ -144,7 +145,7 @@ public class AsyncRegistrationQueueRunner {
             // service will interrupt this thread.  If the thread has been interrupted, it will exit
             // early.
             if (Thread.currentThread().isInterrupted()) {
-                LogUtil.d(
+                sLogger.d(
                         "AsyncRegistrationQueueRunner runAsyncRegistrationQueueWorker "
                                 + "thread interrupted, exiting early.");
                 return;
@@ -160,15 +161,15 @@ public class AsyncRegistrationQueueRunner {
             if (optAsyncRegistration.isPresent()) {
                 asyncRegistration = optAsyncRegistration.get();
             } else {
-                LogUtil.d("AsyncRegistrationQueueRunner: no async registration fetched.");
+                sLogger.d("AsyncRegistrationQueueRunner: no async registration fetched.");
                 return;
             }
 
             if (asyncRegistration.isSourceRequest()) {
-                LogUtil.d("AsyncRegistrationQueueRunner:" + " processing source");
+                sLogger.d("AsyncRegistrationQueueRunner:" + " processing source");
                 processSourceRegistration(asyncRegistration, failedOrigins);
             } else {
-                LogUtil.d("AsyncRegistrationQueueRunner:" + " processing trigger");
+                sLogger.d("AsyncRegistrationQueueRunner:" + " processing trigger");
                 processTriggerRegistration(asyncRegistration, failedOrigins);
             }
         }
@@ -271,7 +272,7 @@ public class AsyncRegistrationQueueRunner {
             } catch (DatastoreException e) {
                 mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
                         trigger, dao, DebugReportApi.Type.TRIGGER_UNKNOWN_ERROR);
-                LogUtil.e(e, "Insert trigger to DB error, generate trigger-unknown-error report");
+                sLogger.e(e, "Insert trigger to DB error, generate trigger-unknown-error report");
                 throw new DatastoreException(
                         "Insert trigger to DB error, generate trigger-unknown-error report");
             }
@@ -291,7 +292,7 @@ public class AsyncRegistrationQueueRunner {
         long windowStartTime = source.getEventTime() - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS;
         Optional<Uri> publisher = getTopLevelPublisher(topOrigin, publisherType);
         if (!publisher.isPresent()) {
-            LogUtil.d("insertSources: getTopLevelPublisher failed", topOrigin);
+            sLogger.d("insertSources: getTopLevelPublisher failed", topOrigin);
             return false;
         }
         long numOfSourcesPerPublisher =
@@ -299,7 +300,7 @@ public class AsyncRegistrationQueueRunner {
                         BaseUriExtractor.getBaseUri(topOrigin), publisherType);
         if (numOfSourcesPerPublisher
                 >= FlagsFactory.getFlags().getMeasurementMaxSourcesPerPublisher()) {
-            LogUtil.d(
+            sLogger.d(
                     "insertSources: Max limit of %s sources for publisher - %s reached.",
                     FlagsFactory.getFlags().getMeasurementMaxSourcesPerPublisher(), publisher);
             debugReportApi.scheduleSourceStorageLimitDebugReport(
@@ -347,7 +348,7 @@ public class AsyncRegistrationQueueRunner {
         if (numOfOriginExcludingRegistrationOrigin
                 >= flags.getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow()) {
             debugReportApi.scheduleSourceSuccessDebugReport(source, dao);
-            LogUtil.d(
+            sLogger.d(
                     "insertSources: Max limit of 1 reporting origin for publisher - %s and"
                             + " enrollment - %s reached.",
                     publisher, source.getEnrollmentId());
@@ -384,7 +385,7 @@ public class AsyncRegistrationQueueRunner {
         int maxDistinctDestinations =
                 FlagsFactory.getFlags().getMeasurementMaxDistinctDestinationsInActiveSource();
         if (destinationCount + destinations.size() > maxDistinctDestinations) {
-            LogUtil.d(
+            sLogger.d(
                     "AsyncRegistrationQueueRunner: "
                             + (destinationType == EventSurfaceType.APP ? "App" : "Web")
                             + " destination count >= "
@@ -405,7 +406,7 @@ public class AsyncRegistrationQueueRunner {
         if (distinctReportingOriginCount
                 >= FlagsFactory.getFlags().getMeasurementMaxDistinctRepOrigPerPublXDestInSource()) {
             debugReportApi.scheduleSourceSuccessDebugReport(source, dao);
-            LogUtil.d(
+            sLogger.d(
                     "AsyncRegistrationQueueRunner: "
                             + (destinationType == EventSurfaceType.APP ? "App" : "Web")
                             + " distinct reporting origin count >= "
@@ -423,7 +424,7 @@ public class AsyncRegistrationQueueRunner {
                     dao.getNumTriggersPerDestination(
                             trigger.getAttributionDestination(), trigger.getDestinationType());
         } catch (DatastoreException e) {
-            LogUtil.e("Unable to fetch number of triggers currently registered per destination.");
+            sLogger.e("Unable to fetch number of triggers currently registered per destination.");
             return false;
         }
         return triggerInsertedPerDestination
@@ -491,7 +492,7 @@ public class AsyncRegistrationQueueRunner {
             dao.insertSource(source);
         } catch (DatastoreException e) {
             mDebugReportApi.scheduleSourceUnknownErrorDebugReport(source, dao);
-            LogUtil.e(e, "Insert source to DB error, generate source-unknown-error report");
+            sLogger.e(e, "Insert source to DB error, generate source-unknown-error report");
             throw new DatastoreException(
                     "Insert source to DB error, generate source-unknown-error report");
         }
@@ -561,7 +562,7 @@ public class AsyncRegistrationQueueRunner {
             IMeasurementDao dao)
             throws DatastoreException {
         if (asyncFetchStatus.canRetry()) {
-            LogUtil.d(
+            sLogger.d(
                     "AsyncRegistrationQueueRunner: "
                             + "async "
                             + asyncRegistration.getType()
@@ -572,7 +573,7 @@ public class AsyncRegistrationQueueRunner {
             asyncRegistration.incrementRetryCount();
             dao.updateRetryCount(asyncRegistration);
         } else {
-            LogUtil.d(
+            sLogger.d(
                     "AsyncRegistrationQueueRunner: "
                             + "async "
                             + asyncRegistration.getType()
@@ -636,7 +637,7 @@ public class AsyncRegistrationQueueRunner {
                 contentProviderClient.insert(TriggerContentProvider.TRIGGER_URI, null);
             }
         } catch (RemoteException e) {
-            LogUtil.e(e, "Trigger Content Provider invocation failed.");
+            sLogger.e(e, "Trigger Content Provider invocation failed.");
         }
     }
 

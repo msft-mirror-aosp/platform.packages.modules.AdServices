@@ -19,7 +19,7 @@ package com.android.adservices.service.measurement.util;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -27,6 +27,7 @@ import java.security.NoSuchAlgorithmException;
 public final class AdIdEncryption {
 
     private static final String SHA256_DIGEST_ALGORITHM_NAME = "SHA-256";
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
 
     private AdIdEncryption() {}
 
@@ -40,7 +41,7 @@ public final class AdIdEncryption {
     public static String encryptAdIdAndEnrollmentSha256(
             @Nullable String adIdValue, @NonNull String enrollmentId) {
         if (adIdValue == null) {
-            LogUtil.d("Provided adId is null; not encrypting, returning null");
+            sLogger.d("Provided adId is null; not encrypting, returning null");
             return null;
         }
 
@@ -57,7 +58,7 @@ public final class AdIdEncryption {
                 adIdSha256.append(String.format("%02x", b));
             }
         } catch (NoSuchAlgorithmException e) {
-            LogUtil.e(e, "Unable to find correct message digest algorithm for AdId encryption.");
+            sLogger.e(e, "Unable to find correct message digest algorithm for AdId encryption.");
             // When catching NoSuchAlgorithmException -> return null.
             return null;
         }
