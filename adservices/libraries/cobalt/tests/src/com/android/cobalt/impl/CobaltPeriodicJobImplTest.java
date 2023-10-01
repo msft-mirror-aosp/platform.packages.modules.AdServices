@@ -84,11 +84,15 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 @RunWith(AndroidJUnit4.class)
 public class CobaltPeriodicJobImplTest {
-    private static ExecutorService EXECUTOR = Executors.newCachedThreadPool();
+    private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
+    private static final ScheduledExecutorService SCHEDULED_EXECUTOR =
+            Executors.newSingleThreadScheduledExecutor();
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
+    private static final Duration UPLOAD_DONE_DELAY = Duration.ofMillis(10);
 
     private static final String API_KEY = "12345678";
     private static final Instant LOG_TIME = Instant.parse("2022-07-28T14:15:30.00Z");
@@ -317,6 +321,7 @@ public class CobaltPeriodicJobImplTest {
                         RELEASE_STAGE,
                         mDataService,
                         EXECUTOR,
+                        SCHEDULED_EXECUTOR,
                         mClock,
                         mSystemData,
                         mPrivacyGenerator,
@@ -324,6 +329,7 @@ public class CobaltPeriodicJobImplTest {
                         mUploader,
                         mEncrypter,
                         ByteString.copyFrom(API_KEY.getBytes(UTF_8)),
+                        UPLOAD_DONE_DELAY,
                         mEnabled);
 
         mClock.set(LOG_TIME);
@@ -350,8 +356,10 @@ public class CobaltPeriodicJobImplTest {
         // Trigger the CobaltPeriodicJob for the LOG_TIME day.
         mPeriodicJob.generateAggregatedObservations().get();
 
-        // Verify no observations were generated, but the logger was recorded as enabled.
+        // Verify no observations were generated, but the upload was marked done and logger was
+        // recorded as enabled.
         assertThat(mUploader.getSentEnvelopes()).isEmpty();
+        assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
         assertThat(mTestOnlyDao.getInitialEnabledTime()).isEqualTo(Optional.of(ENABLED_TIME));
     }
 
@@ -364,8 +372,10 @@ public class CobaltPeriodicJobImplTest {
         mClock.set(UPLOAD_TIME);
         mPeriodicJob.generateAggregatedObservations().get();
 
-        // Verify no observations were stored/sent but the last sent day index was updated.
+        // Verify no observations were stored/sent but the uploader was told it's done and last sent
+        // day index was updated.
         assertThat(mUploader.getSentEnvelopes()).isEmpty();
+        assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
         assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_1))
                 .isEqualTo(Optional.of(LOG_TIME_DAY));
         assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_2))
@@ -418,6 +428,7 @@ public class CobaltPeriodicJobImplTest {
                                         .setObservation(OBSERVATION_1)
                                         .setContributionId(RANDOM_BYTES)
                                         .build()));
+        assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
     }
 
     @Test
@@ -494,6 +505,7 @@ public class CobaltPeriodicJobImplTest {
                                         .setObservation(OBSERVATION_3)
                                         .setContributionId(RANDOM_BYTES)
                                         .build()));
+        assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
     }
 
     @Test
@@ -577,6 +589,7 @@ public class CobaltPeriodicJobImplTest {
                 .containsAtLeastEntriesIn(getObservationsIn(sentEnvelopes.get(1)));
         assertThat(getObservationsIn(sentEnvelopes.get(0)))
                 .isNotEqualTo(getObservationsIn(sentEnvelopes.get(1)));
+        assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
     }
 
     @Test
@@ -638,6 +651,7 @@ public class CobaltPeriodicJobImplTest {
                                                                 .build())
                                                 .setContributionId(RANDOM_BYTES)
                                                 .build()));
+        assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
     }
 
     @Test
@@ -719,6 +733,7 @@ public class CobaltPeriodicJobImplTest {
                                                         .build())
                                         .setContributionId(RANDOM_BYTES)
                                         .build()));
+        assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
     }
 
     @Test
@@ -806,6 +821,7 @@ public class CobaltPeriodicJobImplTest {
                                                         .setRandomId(RANDOM_BYTES)
                                                         .build())
                                         .build()));
+        assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
     }
 
     @Test
@@ -948,8 +964,9 @@ public class CobaltPeriodicJobImplTest {
         mClock.set(UPLOAD_TIME);
         mPeriodicJob.generateAggregatedObservations().get();
 
-        // Verify no observations were stored/sent.
+        // Verify no observations were stored/sent, but the uploader was told it's done.
         assertThat(mUploader.getSentEnvelopes()).isEmpty();
+        assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
         assertThat(mTestOnlyDao.getReportKeys()).doesNotContain(REPORT_3);
         assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_1))
                 .isEqualTo(Optional.of(LOG_TIME_DAY));
@@ -1010,6 +1027,7 @@ public class CobaltPeriodicJobImplTest {
         // Verify no observations were stored/sent the report to exclude is removed from the
         // database.
         assertThat(mUploader.getSentEnvelopes()).isEmpty();
+        assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
         assertThat(mTestOnlyDao.getReportKeys()).doesNotContain(REPORT_4);
         assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_1))
                 .isEqualTo(Optional.of(LOG_TIME_DAY));
