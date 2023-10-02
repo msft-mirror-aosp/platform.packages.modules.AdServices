@@ -18,6 +18,7 @@ package com.android.adservices.data.enrollment;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -246,6 +247,7 @@ public class EnrollmentDaoTest {
         EnrollmentData e3 = spyEnrollmentDao.getEnrollmentData("E3");
         assertNotNull(e3);
         assertEquals(e3.getSdkNames().get(0), "sdk3");
+        spyEnrollmentDao.deleteAll();
     }
 
     @Test
