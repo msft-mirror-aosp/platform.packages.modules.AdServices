@@ -6973,9 +6973,7 @@ public class PhFlagsTest {
     }
 
     private void testRvcUxEnabled(
-            boolean adServicesSystemApi,
-            boolean phOverridingValue,
-            boolean expected) {
+            boolean adServicesSystemApi, boolean phOverridingValue, boolean expected) {
 
         // Without any overriding, the value is the hard coded constant.
         assertThat(mPhFlags.getEnableRvcUx()).isEqualTo(DEFAULT_RVC_UX_ENABLED);

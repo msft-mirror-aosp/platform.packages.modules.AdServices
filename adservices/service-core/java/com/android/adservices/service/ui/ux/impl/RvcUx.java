@@ -43,5 +43,7 @@ public class RvcUx implements PrivacySandboxUx {
     public void handleEnrollment(
             PrivacySandboxEnrollmentChannel enrollmentChannel,
             Context context,
-            ConsentManager consentManager) {}
+            ConsentManager consentManager) {
+        enrollmentChannel.enroll(context, consentManager);
+    }
 }
