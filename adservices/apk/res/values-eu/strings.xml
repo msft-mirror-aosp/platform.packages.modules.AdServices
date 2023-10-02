@@ -437,7 +437,7 @@
     <string name="topic10204" msgid="6591131759521321677">"Bizi-aseguruak"</string>
     <string name="topic10205" msgid="3294946723815021478">"Bidaia-aseguruak"</string>
     <string name="topic10206" msgid="6166888350685752683">"Inbertsioak"</string>
-    <string name="topic10207" msgid="2296385804039743999">"Salgaien eta gerokoen merkataritza"</string>
+    <string name="topic10207" msgid="2296385804039743999">"Salgaien eta finantza-gerokoen merkataritza"</string>
     <string name="topic10208" msgid="2717498987483479091">"Monetak eta trukea"</string>
     <string name="topic10209" msgid="5204948738662951962">"Estaldura-funtsak"</string>
     <string name="topic10210" msgid="4607225697024266227">"Funts mutualistak"</string>
@@ -466,7 +466,7 @@
     <string name="topic10233" msgid="8318075279868138231">"Borroka-jokoak"</string>
     <string name="topic10234" msgid="3899847414436099153">"Bideojokoei buruzko erreferentziak eta iritziak"</string>
     <string name="topic10235" msgid="5851356242523630529">"Bideojokoetarako tranpak eta iradokizunak"</string>
-    <string name="topic10236" msgid="1986665634014804954">"Jokalari anitzeko joko masiboak"</string>
+    <string name="topic10236" msgid="1986665634014804954">"Jokalari bat baino gehiagoko joko masiboak"</string>
     <string name="topic10237" msgid="5569920221620447713">"Musika- eta dantza-jokoak"</string>
     <string name="topic10238" msgid="7431087331656772530">"Mundu irekiko jokoak"</string>
     <string name="topic10239" msgid="8667462879554115515">"Tiroketa-jokoak"</string>
