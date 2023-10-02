@@ -23,8 +23,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.adservices.service.measurement.PrivacyParams;
 
-import com.google.common.math.DoubleMath;
-
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -249,7 +247,8 @@ public class CombinatoricsTest {
             {2925.0, 0.24263221679834088d},
             {3.0, 0.0002494582008677539d},
             {455.0, 0.037820279032938435d},
-            {2.0, 0.0001663056055328264d}
+            {2.0, 0.0001663056055328264d},
+            {1.0, 0.00008315280276d}
         };
 
         Arrays.stream(testCases)
@@ -257,11 +256,7 @@ public class CombinatoricsTest {
                         (testCase) -> {
                             double result =
                                     100 * Combinatorics.getFlipProbability((int) testCase[0]);
-                            assertTrue(
-                                    DoubleMath.fuzzyEquals(
-                                            testCase[1],
-                                            result,
-                                            PrivacyParams.NUMBER_EQUAL_THRESHOLD));
+                            assertEquals(testCase[1], result, PrivacyParams.NUMBER_EQUAL_THRESHOLD);
                         });
     }
 
@@ -272,7 +267,8 @@ public class CombinatoricsTest {
             {2925.0, 11.461727965384876d},
             {3.0, 1.5849265115082312d},
             {455.0, 8.821556150827456d},
-            {2.0, 0.9999820053790732d}
+            {2.0, 0.9999820053790732d},
+            {1.0, 0.0d}
         };
 
         Arrays.stream(testCases)
@@ -282,11 +278,7 @@ public class CombinatoricsTest {
                                     Combinatorics.getInformationGain(
                                             (int) testCase[0],
                                             Combinatorics.getFlipProbability((int) testCase[0]));
-                            assertTrue(
-                                    DoubleMath.fuzzyEquals(
-                                            testCase[1],
-                                            result,
-                                            PrivacyParams.NUMBER_EQUAL_THRESHOLD));
+                            assertEquals(testCase[1], result, PrivacyParams.NUMBER_EQUAL_THRESHOLD);
                         });
     }
 
