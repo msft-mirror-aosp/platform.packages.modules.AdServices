@@ -70,7 +70,7 @@ public class AppManifestConfigParser {
         AppManifestTopicsConfig topicsConfig = null;
         AppManifestAdIdConfig adIdConfig = null;
         AppManifestAppSetIdConfig appSetIdConfig = null;
-        List<String> includesSdkLibraries = new ArrayList<>();
+        List<String> includesSdkLibraries = null;
 
         // The first next goes to START_DOCUMENT, so we need another next to go to START_TAG.
         parser.next();
@@ -104,6 +104,9 @@ public class AppManifestConfigParser {
                     if (sdkLibrary == null || sdkLibrary.isEmpty()) {
                         throw new XmlParseException(
                                 "Sdk name not mentioned in <includes-sdk-library>");
+                    }
+                    if (includesSdkLibraries == null) {
+                        includesSdkLibraries = new ArrayList<>();
                     }
                     if (!includesSdkLibraries.contains(sdkLibrary)) {
                         includesSdkLibraries.add(sdkLibrary);
@@ -179,7 +182,8 @@ public class AppManifestConfigParser {
             parser.next();
         }
 
-        includesSdkLibraryConfig = new AppManifestIncludesSdkLibraryConfig(includesSdkLibraries);
+        includesSdkLibraryConfig =
+                new AppManifestIncludesSdkLibraryConfig(enabledByDefault, includesSdkLibraries);
         return new AppManifestConfig(
                 includesSdkLibraryConfig,
                 attributionConfig,
