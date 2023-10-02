@@ -96,7 +96,8 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                                         AdServicesExecutors.getBlockingExecutor(),
                                         TIMEOUT_MS,
                                         TIMEOUT_MS,
-                                        MAX_SIZE_BYTES)),
+                                        FlagsFactory.getFlags()
+                                                .getProtectedSignalsFetchSignalUpdatesMaxSizeBytes())),
                         new UpdateProcessingOrchestrator(
                                 ProtectedSignalsDatabase.getInstance(context).protectedSignalsDao(),
                                 new UpdateProcessorSelector(),
