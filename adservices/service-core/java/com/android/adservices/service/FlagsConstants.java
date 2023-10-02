@@ -1002,4 +1002,7 @@ public final class FlagsConstants {
             "is_u18_supervised_account_enabled";
 
     public static final String KEY_AD_ID_CACHE_ENABLED = "ad_id_cache_enabled";
+
+    public static final String KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT =
+            "app_config_returns_enabled_by_detault";
 }

@@ -97,7 +97,7 @@ public final class ExtendedMockitoExpectations {
      * FlagsFactory#getFlagsForTest()}
      */
     public static void mockGetFlagsForTest() {
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        mockGetFlags(FlagsFactory.getFlagsForTest());
     }
 
     /**
