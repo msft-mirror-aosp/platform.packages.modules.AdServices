@@ -16,8 +16,8 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastS;
-import static com.android.adservices.service.common.AppManifestConfigHelper.setEnabledByDefault;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
@@ -43,6 +43,8 @@ import androidx.test.filters.SmallTest;
 import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.exception.XmlParseException;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -52,7 +54,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-
 
 @SmallTest
 public final class AppManifestConfigHelperTest {
@@ -70,12 +71,14 @@ public final class AppManifestConfigHelperTest {
     @Mock private AssetManager mMockAssetManager;
     @Mock private Resources mMockResources;
     @Mock private XmlResourceParser mMockParser;
+    @Mock private Flags mMockFlags;
 
     @Rule
-    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+    public final AdServicesExtendedMockitoRule extendedMockito =
             new AdServicesExtendedMockitoRule.Builder(this)
                     .spyStatic(AppManifestConfigParser.class)
                     .spyStatic(AndroidManifestConfigParser.class)
+                    .spyStatic(FlagsFactory.class)
                     .spyStatic(SdkLevel.class)
                     .build();
 
@@ -86,6 +89,7 @@ public final class AppManifestConfigHelperTest {
     @Before
     public void setCommonExpectations() {
         when(mMockContext.getPackageManager()).thenReturn(mMockPackageManager);
+        mockGetFlags(mMockFlags);
         setEnabledByDefault(false);
     }
 
@@ -413,5 +417,10 @@ public final class AppManifestConfigHelperTest {
                                 PACKAGE_NAME,
                                 ENROLLMENT_ID))
                 .isTrue();
+    }
+
+    private void setEnabledByDefault(boolean value) {
+        when(mMockFlags.getAppConfigReturnsEnabledByDefault()).thenReturn(value);
+        AppManifestConfigHelper.setEnabledByDefault(value);
     }
 }
