@@ -34,6 +34,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -63,6 +64,7 @@ import android.content.res.Resources;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.Process;
+import android.util.Log;
 import android.util.Pair;
 
 import androidx.annotation.NonNull;
@@ -141,7 +143,6 @@ public class TopicsServiceImplTest {
     private final AdServicesLogger mAdServicesLogger =
             Mockito.spy(AdServicesLoggerImpl.getInstance());
 
-    private CountDownLatch mGetTopicsCallbackLatch;
     private CallerMetadata mCallerMetadata;
     private TopicsWorker mTopicsWorker;
     private TopicsWorker mSpyTopicsWorker;
@@ -650,15 +651,7 @@ public class TopicsServiceImplTest {
         // Call init() to load the cache
         topicsServiceImpl.init();
 
-        // To capture result in inner class, we have to declare final.
-        final GetTopicsResult[] capturedResponseParcel = getTopicsResults(topicsServiceImpl);
-
-        assertThat(
-                        mGetTopicsCallbackLatch.await(
-                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-                .isTrue();
-
-        GetTopicsResult getTopicsResult = capturedResponseParcel[0];
+        GetTopicsResult getTopicsResult = getTopicsResults(topicsServiceImpl);
         // Since the returned topic list is shuffled, elements have to be verified separately
         assertThat(getTopicsResult.getResultCode())
                 .isEqualTo(expectedGetTopicsResult.getResultCode());
@@ -714,16 +707,7 @@ public class TopicsServiceImplTest {
         // Call init() to load the cache
         topicsServiceImpl.init();
 
-        // To capture result in inner class, we have to declare final.
-        final GetTopicsResult[] capturedResponseParcel = getTopicsResults(topicsServiceImpl);
-
-        assertThat(
-                        mGetTopicsCallbackLatch.await(
-                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-                .isTrue();
-
-        GetTopicsResult getTopicsResult = capturedResponseParcel[0];
-
+        GetTopicsResult getTopicsResult = getTopicsResults(topicsServiceImpl);
         assertThat(getTopicsResult).isEqualTo(expectedGetTopicsResult);
 
         // Invocation Summary:
@@ -761,14 +745,7 @@ public class TopicsServiceImplTest {
         topicsServiceImpl.init();
 
         // To capture result in inner class, we have to declare final.
-        final GetTopicsResult[] capturedResponseParcel = getTopicsResults(topicsServiceImpl);
-
-        assertThat(
-                        mGetTopicsCallbackLatch.await(
-                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-                .isTrue();
-
-        GetTopicsResult getTopicsResult = capturedResponseParcel[0];
+        GetTopicsResult getTopicsResult = getTopicsResults(topicsServiceImpl);
         // Since the returned topic list is shuffled, elements have to be verified separately
         assertThat(getTopicsResult.getResultCode())
                 .isEqualTo(expectedGetTopicsResult.getResultCode());
@@ -811,7 +788,6 @@ public class TopicsServiceImplTest {
 
         // To capture result in inner class, we have to declare final.
         final GetTopicsResult[] capturedResponseParcel = new GetTopicsResult[1];
-        mGetTopicsCallbackLatch = new CountDownLatch(1);
 
         // Topic impl service use a background executor to run the task,
         // use a countdownLatch and set the countdown in the logging call operation
@@ -842,33 +818,9 @@ public class TopicsServiceImplTest {
 
         // Send client side timestamp, working with the mock information in
         // service side to calculate the latency
-        topicsServiceImpl.getTopics(
-                mRequest,
-                mCallerMetadata,
-                new IGetTopicsCallback() {
-                    @Override
-                    public void onResult(GetTopicsResult responseParcel) {
-                        capturedResponseParcel[0] = responseParcel;
-                        mGetTopicsCallbackLatch.countDown();
-                    }
-
-                    @Override
-                    public void onFailure(int resultCode) {
-                        Assert.fail();
-                    }
-
-                    @Override
-                    public IBinder asBinder() {
-                        return null;
-                    }
-                });
-
-        assertThat(
-                        mGetTopicsCallbackLatch.await(
-                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-                .isTrue();
-
-        GetTopicsResult getTopicsResult = capturedResponseParcel[0];
+        SyncGetTopicsCallback callback = new SyncGetTopicsCallback();
+        topicsServiceImpl.getTopics(mRequest, mCallerMetadata, callback);
+        GetTopicsResult getTopicsResult = callback.assertSuccess();
         // Since the returned topic list is shuffled, elements have to be verified separately
         assertThat(getTopicsResult.getResultCode())
                 .isEqualTo(expectedGetTopicsResult.getResultCode());
@@ -918,34 +870,10 @@ public class TopicsServiceImplTest {
                         .setSdkPackageName(SOME_SDK_NAME)
                         .build();
 
-        mGetTopicsCallbackLatch = new CountDownLatch(1);
+        SyncGetTopicsCallback callback = new SyncGetTopicsCallback();
+        topicsService.getTopics(mRequest, mCallerMetadata, callback);
+        callback.assertFailed(STATUS_UNAUTHORIZED);
 
-        topicsService.getTopics(
-                mRequest,
-                mCallerMetadata,
-                new IGetTopicsCallback() {
-                    @Override
-                    public void onResult(GetTopicsResult responseParcel) {
-                        Assert.fail();
-                    }
-
-                    @Override
-                    public void onFailure(int resultCode) {
-                        assertThat(resultCode).isEqualTo(STATUS_UNAUTHORIZED);
-                        mGetTopicsCallbackLatch.countDown();
-                    }
-
-                    @Override
-                    public IBinder asBinder() {
-                        return null;
-                    }
-                });
-
-        // This ensures that the callback was called.
-        assertThat(
-                        mGetTopicsCallbackLatch.await(
-                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-                .isTrue();
         ExtendedMockito.verify(
                 () ->
                         ErrorLogUtil.e(
@@ -997,25 +925,9 @@ public class TopicsServiceImplTest {
 
         ArgumentCaptor<ApiCallStats> argument = ArgumentCaptor.forClass(ApiCallStats.class);
 
-        topicsService.getTopics(
-                mRequest,
-                mCallerMetadata,
-                new IGetTopicsCallback() {
-                    @Override
-                    public void onResult(GetTopicsResult responseParcel) {
-                        capturedResponseParcel[0] = responseParcel;
-                    }
-
-                    @Override
-                    public void onFailure(int resultCode) {
-                        Assert.fail();
-                    }
-
-                    @Override
-                    public IBinder asBinder() {
-                        return null;
-                    }
-                });
+        SyncGetTopicsCallback callback = new SyncGetTopicsCallback();
+        topicsService.getTopics(mRequest, mCallerMetadata, callback);
+        // NOTE: not awaiting for the callback result but for logOperationCalledLatch instead
 
         // getTopics method finished executing.
         assertThat(
@@ -1131,7 +1043,6 @@ public class TopicsServiceImplTest {
             GetTopicsParam request,
             boolean checkLoggingStatus)
             throws InterruptedException {
-        CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
         // Topic impl service use a background executor to run the task,
         // use a countdownLatch and set the countdown in the logging call operation
@@ -1160,28 +1071,9 @@ public class TopicsServiceImplTest {
                         mMockThrottler,
                         mEnrollmentDao,
                         mMockAppImportanceFilter);
-        mTopicsServiceImpl.getTopics(
-                request,
-                mCallerMetadata,
-                new IGetTopicsCallback() {
-                    @Override
-                    public void onResult(GetTopicsResult responseParcel) {
-                        Assert.fail();
-                        jobFinishedCountDown.countDown();
-                    }
-
-                    @Override
-                    public void onFailure(int resultCode) {
-                        assertThat(resultCode).isEqualTo(expectedResultCode);
-                        jobFinishedCountDown.countDown();
-                    }
-
-                    @Override
-                    public IBinder asBinder() {
-                        return null;
-                    }
-                });
-        jobFinishedCountDown.await();
+        SyncGetTopicsCallback callback = new SyncGetTopicsCallback();
+        mTopicsServiceImpl.getTopics(request, mCallerMetadata, callback);
+        callback.assertFailed(expectedResultCode);
 
         if (checkLoggingStatus) {
             // getTopics method finished executing.
@@ -1219,14 +1111,7 @@ public class TopicsServiceImplTest {
 
         // Call init() to load the cache
         topicsServiceImpl.init();
-        final GetTopicsResult[] capturedResponseParcel = getTopicsResults(topicsServiceImpl);
-
-        assertThat(
-                        mGetTopicsCallbackLatch.await(
-                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-                .isTrue();
-
-        GetTopicsResult getTopicsResult = capturedResponseParcel[0];
+        GetTopicsResult getTopicsResult = getTopicsResults(topicsServiceImpl);
         // Since the returned topic list is shuffled, elements have to be verified separately
         assertThat(getTopicsResult.getResultCode())
                 .isEqualTo(expectedGetTopicsResult.getResultCode());
@@ -1244,32 +1129,11 @@ public class TopicsServiceImplTest {
     }
 
     @NonNull
-    private GetTopicsResult[] getTopicsResults(TopicsServiceImpl topicsServiceImpl) {
-        // To capture result in inner class, we have to declare final.
-        final GetTopicsResult[] capturedResponseParcel = new GetTopicsResult[1];
-        mGetTopicsCallbackLatch = new CountDownLatch(1);
-
-        topicsServiceImpl.getTopics(
-                mRequest,
-                mCallerMetadata,
-                new IGetTopicsCallback() {
-                    @Override
-                    public void onResult(GetTopicsResult responseParcel) {
-                        capturedResponseParcel[0] = responseParcel;
-                        mGetTopicsCallbackLatch.countDown();
-                    }
-
-                    @Override
-                    public void onFailure(int resultCode) {
-                        Assert.fail();
-                    }
-
-                    @Override
-                    public IBinder asBinder() {
-                        return null;
-                    }
-                });
-        return capturedResponseParcel;
+    private GetTopicsResult getTopicsResults(TopicsServiceImpl topicsServiceImpl)
+            throws InterruptedException {
+        SyncGetTopicsCallback callback = new SyncGetTopicsCallback();
+        topicsServiceImpl.getTopics(mRequest, mCallerMetadata, callback);
+        return callback.assertSuccess();
     }
 
     @NonNull
@@ -1332,5 +1196,51 @@ public class TopicsServiceImplTest {
                 mMockThrottler,
                 mEnrollmentDao,
                 mMockAppImportanceFilter);
+    }
+
+    // TODO(b/302757068): make it an abstract class (which doesn't implement anything) and move to
+    // common testing library
+    private static final class SyncGetTopicsCallback implements IGetTopicsCallback {
+        private static final String TAG = SyncGetTopicsCallback.class.getSimpleName();
+
+        private final CountDownLatch mLatch = new CountDownLatch(1);
+        private GetTopicsResult mResult;
+        private Integer mFailureCode;
+
+        @Override
+        public void onResult(GetTopicsResult responseParcel) {
+            Log.d(TAG, "onResult(): " + responseParcel);
+            mResult = responseParcel;
+            mLatch.countDown();
+        }
+
+        @Override
+        public void onFailure(int resultCode) {
+            Log.d(TAG, "onFailure(): " + resultCode);
+            mFailureCode = resultCode;
+            mLatch.countDown();
+        }
+
+        @Override
+        public IBinder asBinder() {
+            return null;
+        }
+
+        public void assertCalled() throws InterruptedException {
+            assertWithMessage("latch called in %s ms", BINDER_CONNECTION_TIMEOUT_MS)
+                    .that(mLatch.await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+                    .isTrue();
+        }
+
+        public GetTopicsResult assertSuccess() throws InterruptedException {
+            assertCalled();
+            assertWithMessage("result").that(mResult).isNotNull();
+            return mResult;
+        }
+
+        public void assertFailed(int expectedCode) throws InterruptedException {
+            assertCalled();
+            assertWithMessage("failure code").that(mFailureCode).isEqualTo(expectedCode);
+        }
     }
 }
