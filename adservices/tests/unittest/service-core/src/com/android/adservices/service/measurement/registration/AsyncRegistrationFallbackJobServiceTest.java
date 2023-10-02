@@ -44,6 +44,7 @@ import android.content.ComponentName;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
@@ -136,6 +137,7 @@ public class AsyncRegistrationFallbackJobServiceTest {
                 });
     }
 
+    @FlakyTest(bugId = 300551596)
     @Test
     public void onStartJob_killSwitchOff_withoutLogging() throws Exception {
         runWithMocks(
@@ -152,6 +154,7 @@ public class AsyncRegistrationFallbackJobServiceTest {
                 });
     }
 
+    @FlakyTest(bugId = 300551596)
     @Test
     public void onStartJob_killSwitchOff_withLogging() throws Exception {
         runWithMocks(
