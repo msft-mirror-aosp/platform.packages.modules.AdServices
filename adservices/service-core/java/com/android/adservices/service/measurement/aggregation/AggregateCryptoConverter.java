@@ -53,7 +53,6 @@ public class AggregateCryptoConverter {
 
     private static final Base64.Encoder sBase64Encoder = Base64.getEncoder();
     private static final Base64.Decoder sBase64Decoder = Base64.getDecoder();
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
 
     /**
      * Aggregate payload encryption. The payload is encrypted with the following steps: 1. Extracts
@@ -103,7 +102,7 @@ public class AggregateCryptoConverter {
             // Encode with Base 64
             return encodeWithBase64(payloadEncrypted);
         } catch (Exception e) {
-            sLogger.e(e, "Encryption error");
+            LoggerFactory.getMeasurementLogger().e(e, "Encryption error");
             throw new CryptoException("Encryption error", e);
         }
     }
@@ -128,7 +127,7 @@ public class AggregateCryptoConverter {
             // Encode with Base 64
             return encodeWithBase64(payloadCborEncoded);
         } catch (Exception e) {
-            sLogger.e(e, "Encoding error");
+            LoggerFactory.getMeasurementLogger().e(e, "Encoding error");
             throw new CryptoException("Encoding error", e);
         }
     }
@@ -140,7 +139,7 @@ public class AggregateCryptoConverter {
             final JSONObject jsonObject = new JSONObject(payload);
             final JSONArray jsonArray = jsonObject.getJSONArray("data");
             if (null == jsonArray || jsonArray.length() == 0) {
-                sLogger.d("No histogram 'data' found");
+                LoggerFactory.getMeasurementLogger().d("No histogram 'data' found");
                 return contributions;
             }
 
@@ -156,7 +155,7 @@ public class AggregateCryptoConverter {
             }
             return contributions;
         } catch (NumberFormatException | JSONException e) {
-            sLogger.d(e, "Malformed histogram payload");
+            LoggerFactory.getMeasurementLogger().d(e, "Malformed histogram payload");
             return contributions;
         }
     }

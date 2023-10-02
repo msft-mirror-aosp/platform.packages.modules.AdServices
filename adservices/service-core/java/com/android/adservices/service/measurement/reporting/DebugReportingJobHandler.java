@@ -46,7 +46,6 @@ import java.util.concurrent.ThreadLocalRandom;
 /** Class for handling debug reporting. */
 public class DebugReportingJobHandler {
 
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     private final EnrollmentDao mEnrollmentDao;
     private final DatastoreManager mDatastoreManager;
     private final Flags mFlags;
@@ -80,7 +79,7 @@ public class DebugReportingJobHandler {
         Optional<List<String>> pendingDebugReports =
                 mDatastoreManager.runInTransactionWithResult(IMeasurementDao::getDebugReportIds);
         if (!pendingDebugReports.isPresent()) {
-            sLogger.d("Pending Debug Reports not found");
+            LoggerFactory.getMeasurementLogger().d("Pending Debug Reports not found");
             return;
         }
 
@@ -90,9 +89,10 @@ public class DebugReportingJobHandler {
             // service will interrupt this thread.  If the thread has been interrupted, it will exit
             // early.
             if (Thread.currentThread().isInterrupted()) {
-                sLogger.d(
-                        "DebugReportingJobHandler performScheduledPendingReports "
-                                + "thread interrupted, exiting early.");
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "DebugReportingJobHandler performScheduledPendingReports "
+                                        + "thread interrupted, exiting early.");
                 return;
             }
 
@@ -131,7 +131,7 @@ public class DebugReportingJobHandler {
                 mDatastoreManager.runInTransactionWithResult(
                         (dao) -> dao.getDebugReport(debugReportId));
         if (!debugReportOpt.isPresent()) {
-            sLogger.d("Reading Scheduled Debug Report failed");
+            LoggerFactory.getMeasurementLogger().d("Reading Scheduled Debug Report failed");
             return AdServicesStatusUtils.STATUS_IO_ERROR;
         }
         DebugReport debugReport = debugReportOpt.get();
@@ -153,18 +153,20 @@ public class DebugReportingJobHandler {
                 if (success) {
                     return AdServicesStatusUtils.STATUS_SUCCESS;
                 } else {
-                    sLogger.d("Deleting debug report failed");
+                    LoggerFactory.getMeasurementLogger().d("Deleting debug report failed");
                     reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.DATASTORE);
                     return AdServicesStatusUtils.STATUS_IO_ERROR;
                 }
             } else {
-                sLogger.d("Sending debug report failed with http error");
+                LoggerFactory.getMeasurementLogger()
+                        .d("Sending debug report failed with http error");
                 reportingStatus.setFailureStatus(
                         ReportingStatus.FailureStatus.UNSUCCESSFUL_HTTP_RESPONSE_CODE);
                 return AdServicesStatusUtils.STATUS_IO_ERROR;
             }
         } catch (IOException e) {
-            sLogger.d(e, "Network error occurred when attempting to deliver debug report.");
+            LoggerFactory.getMeasurementLogger()
+                    .d(e, "Network error occurred when attempting to deliver debug report.");
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED,
@@ -173,7 +175,8 @@ public class DebugReportingJobHandler {
             // TODO(b/298330312): Change to defined error codes
             return AdServicesStatusUtils.STATUS_IO_ERROR;
         } catch (JSONException e) {
-            sLogger.d(e, "Serialization error occurred at debug report delivery.");
+            LoggerFactory.getMeasurementLogger()
+                    .d(e, "Serialization error occurred at debug report delivery.");
             // TODO(b/298330312): Change to defined error codes
             ErrorLogUtil.e(
                     e,
@@ -193,7 +196,8 @@ public class DebugReportingJobHandler {
             }
             return AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } catch (Exception e) {
-            sLogger.e(e, "Unexpected exception occurred when attempting to deliver debug report.");
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "Unexpected exception occurred when attempting to deliver debug report.");
             // TODO(b/298330312): Change to defined error codes
             ErrorLogUtil.e(
                     e,

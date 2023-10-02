@@ -48,7 +48,6 @@ import java.util.regex.Pattern;
  * @hide
  */
 class FetcherUtil {
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     static final String REDIRECT_LIST_HEADER_KEY = "Attribution-Reporting-Redirect";
     static final String REDIRECT_LOCATION_HEADER_KEY = "Location";
     static final Pattern HEX_PATTERN = Pattern.compile("\\p{XDigit}+");
@@ -90,7 +89,8 @@ class FetcherUtil {
             }
             return Optional.of(new UnsignedLong((String) maybeValue));
         } catch (JSONException | NumberFormatException e) {
-            sLogger.d(e, "extractUnsignedLong: caught exception. Key: %s", key);
+            LoggerFactory.getMeasurementLogger()
+                    .d(e, "extractUnsignedLong: caught exception. Key: %s", key);
             return Optional.empty();
         }
     }
@@ -104,7 +104,8 @@ class FetcherUtil {
             }
             return Optional.of(Long.parseLong((String) maybeValue));
         } catch (JSONException | NumberFormatException e) {
-            sLogger.d(e, "extractLong: caught exception. Key: %s", key);
+            LoggerFactory.getMeasurementLogger()
+                    .d(e, "extractLong: caught exception. Key: %s", key);
             return Optional.empty();
         }
     }
@@ -113,17 +114,19 @@ class FetcherUtil {
         try {
             long lookbackWindow = Long.parseLong(obj.optString(FilterMap.LOOKBACK_WINDOW));
             if (lookbackWindow <= 0) {
-                sLogger.d(
-                        "extractLookbackWindow: non positive lookback window found: %d",
-                        lookbackWindow);
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "extractLookbackWindow: non positive lookback window found: %d",
+                                lookbackWindow);
                 return Optional.empty();
             }
             return Optional.of(lookbackWindow);
         } catch (NumberFormatException e) {
-            sLogger.d(
-                    e,
-                    "extractLookbackWindow: caught exception. Key: %s",
-                    FilterMap.LOOKBACK_WINDOW);
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            e,
+                            "extractLookbackWindow: caught exception. Key: %s",
+                            FilterMap.LOOKBACK_WINDOW);
             return Optional.empty();
         }
     }
@@ -297,7 +300,8 @@ class FetcherUtil {
         if (field != null && !field.isEmpty()) {
             redirects.add(Uri.parse(field.get(0)));
             if (field.size() > 1) {
-                sLogger.d("Expected one Location redirect only, others ignored!");
+                LoggerFactory.getMeasurementLogger()
+                        .d("Expected one Location redirect only, others ignored!");
             }
         }
         return redirects;
