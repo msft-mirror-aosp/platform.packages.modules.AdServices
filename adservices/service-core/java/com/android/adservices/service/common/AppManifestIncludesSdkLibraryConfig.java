@@ -18,7 +18,10 @@ package com.android.adservices.service.common;
 
 import android.annotation.NonNull;
 
+import com.android.internal.annotations.VisibleForTesting;
+
 import java.util.List;
+import java.util.Objects;
 
 /** Topics part of the app manifest config (<ad-services-config>). */
 public class AppManifestIncludesSdkLibraryConfig {
@@ -30,12 +33,16 @@ public class AppManifestIncludesSdkLibraryConfig {
      * @param includesSdkLibraries corresponds to the list in the config.
      */
     public AppManifestIncludesSdkLibraryConfig(@NonNull List<String> includesSdkLibraries) {
-        mIncludesSdkLibraries = includesSdkLibraries;
+        mIncludesSdkLibraries = Objects.requireNonNull(includesSdkLibraries);
     }
 
-    /** Getter for allowAdPartnersToAccess. */
-    @NonNull
-    public List<String> getIncludesSdkLibraries() {
-        return mIncludesSdkLibraries;
+    /** Checks if the given SDK is included. */
+    public boolean contains(String id) {
+        return mIncludesSdkLibraries.contains(id);
+    }
+
+    @VisibleForTesting
+    boolean isEmpty() {
+        return mIncludesSdkLibraries.isEmpty();
     }
 }
