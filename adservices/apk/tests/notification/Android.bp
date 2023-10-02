@@ -27,6 +27,7 @@ android_test {
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
     static_libs: [
+        "platform-test-rules",
         "compatibility-device-util-axt",
         "adservices-service-core",
         "adservices-assets",
@@ -75,6 +76,7 @@ android_test {
     min_sdk_version: "30",
     max_sdk_version: "32",
     static_libs: [
+        "platform-test-rules",
         "compatibility-device-util-axt",
         "adservices-service-core",
         "adservices-assets",
