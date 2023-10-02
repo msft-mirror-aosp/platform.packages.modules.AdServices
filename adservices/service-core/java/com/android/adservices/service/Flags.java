@@ -1517,6 +1517,14 @@ public interface Flags {
         return FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH;
     }
 
+    // Protected signals cleanup feature flag disabled by default
+    boolean PROTECTED_SIGNALS_CLEANUP_ENABLED = false;
+
+    /** Returns {@code true} if protected signals cleanup is enabled. */
+    default boolean getProtectedSignalsCleanupEnabled() {
+        return PROTECTED_SIGNALS_CLEANUP_ENABLED;
+    }
+
     boolean ADSERVICES_ENABLED = false;
 
     default boolean getAdServicesEnabled() {

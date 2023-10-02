@@ -358,6 +358,7 @@ import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_PERIODIC_EN
 import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_SERVICE_KILL_SWITCH;
+import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_CLEANUP_ENABLED;
 import static com.android.adservices.service.Flags.RECORD_MANUAL_INTERACTION_ENABLED;
 import static com.android.adservices.service.Flags.SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.TOGGLE_SPEED_BUMP_ENABLED;
@@ -3076,6 +3077,19 @@ public class PhFlagsTest {
         PhFlagsFixture.overrideFledgeCpcBillingEnabled(phOverridingValue);
 
         assertThat(mPhFlags.getFledgeCpcBillingEnabled()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetProtectedSignalsCleanupEnabled() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getProtectedSignalsCleanupEnabled())
+                .isEqualTo(PROTECTED_SIGNALS_CLEANUP_ENABLED);
+
+        boolean phOverridingValue = !PROTECTED_SIGNALS_CLEANUP_ENABLED;
+
+        PhFlagsFixture.overrideProtectedSignalsCleanupEnabled(phOverridingValue);
+
+        assertThat(mPhFlags.getProtectedSignalsCleanupEnabled()).isEqualTo(phOverridingValue);
     }
 
     @Test

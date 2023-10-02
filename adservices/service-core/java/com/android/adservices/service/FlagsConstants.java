@@ -620,6 +620,10 @@ public final class FlagsConstants {
     public static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE =
             "fledge_ad_selection_enforce_foreground_status_custom_audience";
 
+    // Protected Signals keys
+    public static final String KEY_PROTECTED_SIGNALS_CLEANUP_ENABLED =
+            "protected_signals_cleanup_enabled";
+
     // Topics invoking app status key.
     public static final String KEY_ENFORCE_FOREGROUND_STATUS_TOPICS =
             "topics_enforce_foreground_status";

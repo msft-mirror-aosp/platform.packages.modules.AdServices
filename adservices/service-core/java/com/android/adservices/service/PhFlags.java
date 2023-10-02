@@ -1324,6 +1324,14 @@ public final class PhFlags implements Flags {
                 /* defaultValue */ FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_PER_BUYER_EVENT_COUNT);
     }
 
+    @Override
+    public boolean getProtectedSignalsCleanupEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_PROTECTED_SIGNALS_CLEANUP_ENABLED,
+                /* defaultValue */ PROTECTED_SIGNALS_CLEANUP_ENABLED);
+    }
+
     // MDD related flags.
     @Override
     public int getDownloaderConnectionTimeoutMs() {
@@ -4613,6 +4621,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_DATA_VERSION_HEADER_ENABLED
                         + " = "
                         + getFledgeDataVersionHeaderEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_PROTECTED_SIGNALS_CLEANUP_ENABLED
+                        + " = "
+                        + getProtectedSignalsCleanupEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_TOPICS_COBALT_LOGGING_ENABLED
