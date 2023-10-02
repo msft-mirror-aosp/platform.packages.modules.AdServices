@@ -43,8 +43,8 @@ import static com.android.adservices.data.shared.migration.ContentValueFixtures.
 
 import android.content.ContentValues;
 
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.enrollment.EnrollmentTables;
-import com.android.adservices.service.measurement.WebUtil;
 
 import java.util.Arrays;
 import java.util.List;

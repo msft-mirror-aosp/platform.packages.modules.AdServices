@@ -53,7 +53,6 @@ java_library {
         "mockito-target-extended-minus-junit4",
         "mockwebserver",
         "truth-prebuilt",
-        "adservices-measurement-web-util-lib",
         "adservices-test-utility"
     ],
     apex_available: ["com.android.adservices"],
