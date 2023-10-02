@@ -62,9 +62,21 @@ public final class AppManifestConfigParserTest {
                 .that(includesSdkLibraryConfig)
                 .isNotNull();
         if (includesSdkLibraryConfig != null) {
-            expect.withMessage("getIncludesSdkLibraryConfig().getIncludesSdkLibraries()")
-                    .that(appManifestConfig.getIncludesSdkLibraryConfig().getIncludesSdkLibraries())
-                    .containsExactly("1234", "4567", "89", "1234567");
+            expect.withMessage("getIncludesSdkLibraryConfig().isEmpty()")
+                    .that(appManifestConfig.getIncludesSdkLibraryConfig().isEmpty())
+                    .isFalse();
+            expect.withMessage("getIncludesSdkLibraryConfig().contains(1234)")
+                    .that(appManifestConfig.getIncludesSdkLibraryConfig().contains("1234"))
+                    .isTrue();
+            expect.withMessage("getIncludesSdkLibraryConfig().contains(1234)")
+                    .that(appManifestConfig.getIncludesSdkLibraryConfig().contains("4567"))
+                    .isTrue();
+            expect.withMessage("getIncludesSdkLibraryConfig().contains(1234)")
+                    .that(appManifestConfig.getIncludesSdkLibraryConfig().contains("89"))
+                    .isTrue();
+            expect.withMessage("getIncludesSdkLibraryConfig().contains(1234)")
+                    .that(appManifestConfig.getIncludesSdkLibraryConfig().contains("1234567"))
+                    .isTrue();
         }
 
         // Verify Attribution tags.
@@ -434,9 +446,9 @@ public final class AppManifestConfigParserTest {
         AppManifestIncludesSdkLibraryConfig sdkLibrary =
                 appManifestConfig.getIncludesSdkLibraryConfig();
         expect.withMessage("getIncludesSdkLibraryConfig()").that(sdkLibrary).isNotNull();
-        expect.withMessage("getIncludesSdkLibraryConfig().getIncludesSdkLibraries()")
-                .that(sdkLibrary.getIncludesSdkLibraries())
-                .isEmpty();
+        expect.withMessage("getIncludesSdkLibraryConfig().getIncludesSdkLibraries().isEmpty()")
+                .that(sdkLibrary.isEmpty())
+                .isTrue();
     }
 
     private void assertAttributionConfigIsDefault(AppManifestConfig appManifestConfig) {

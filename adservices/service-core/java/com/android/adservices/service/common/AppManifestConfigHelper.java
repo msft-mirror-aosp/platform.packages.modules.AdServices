@@ -117,9 +117,7 @@ public class AppManifestConfigHelper {
                     // If the request comes directly from the app, check that the app has declared
                     // that it includes this Sdk library.
                     if (!useSandboxCheck) {
-                        return config.getIncludesSdkLibraryConfig()
-                                        .getIncludesSdkLibraries()
-                                        .contains(enrollmentId)
+                        return config.getIncludesSdkLibraryConfig().contains(enrollmentId)
                                 && config.isAllowedTopicsAccess(enrollmentId);
                     }
 
