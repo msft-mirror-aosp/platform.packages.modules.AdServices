@@ -37,8 +37,6 @@ import java.util.Map;
  */
 public class MeasurementDbMigratorV25 extends AbstractMeasurementDbMigrator {
 
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
-
     public MeasurementDbMigratorV25() {
         super(25);
     }
@@ -74,7 +72,8 @@ public class MeasurementDbMigratorV25 extends AbstractMeasurementDbMigrator {
                         /*orderBy=*/ null,
                         /*limit=*/ null)) {
             if (cursor == null || cursor.getCount() <= 0) {
-                sLogger.d("Failed to find any sources with non-empty registration urls");
+                LoggerFactory.getMeasurementLogger()
+                        .d("Failed to find any sources with non-empty registration urls");
                 return sourceIdToRegistrationUrl;
             }
 
@@ -125,7 +124,8 @@ public class MeasurementDbMigratorV25 extends AbstractMeasurementDbMigrator {
                 if (reportingUri == null) {
                     // source id not found in source table. delete the record from attribution
                     // table
-                    sLogger.d("Reporting origin not found for source id - " + sourceId);
+                    LoggerFactory.getMeasurementLogger()
+                            .d("Reporting origin not found for source id - " + sourceId);
                     deleteRecordFromAttributionTable(db, id);
 
                 } else {
@@ -141,11 +141,12 @@ public class MeasurementDbMigratorV25 extends AbstractMeasurementDbMigrator {
                                     MeasurementTables.AttributionContract.ID + " = ? ",
                                     new String[] {id});
                     if (rows != 1) {
-                        sLogger.d(
-                                "Failed to insert registration_origin for id "
-                                        + id
-                                        + " in table "
-                                        + MeasurementTables.AttributionContract.TABLE);
+                        LoggerFactory.getMeasurementLogger()
+                                .d(
+                                        "Failed to insert registration_origin for id "
+                                                + id
+                                                + " in table "
+                                                + MeasurementTables.AttributionContract.TABLE);
                         deleteRecordFromAttributionTable(db, id);
                     }
                 }
@@ -154,11 +155,12 @@ public class MeasurementDbMigratorV25 extends AbstractMeasurementDbMigrator {
     }
 
     private void deleteRecordFromAttributionTable(SQLiteDatabase db, String recordId) {
-        sLogger.d(
-                "Deleting record with id - "
-                        + recordId
-                        + " from table - "
-                        + MeasurementTables.AttributionContract.TABLE);
+        LoggerFactory.getMeasurementLogger()
+                .d(
+                        "Deleting record with id - "
+                                + recordId
+                                + " from table - "
+                                + MeasurementTables.AttributionContract.TABLE);
         db.delete(
                 MeasurementTables.AttributionContract.TABLE,
                 MeasurementTables.AttributionContract.ID + " = ? ",
