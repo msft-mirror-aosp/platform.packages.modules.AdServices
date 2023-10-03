@@ -15,9 +15,11 @@
   ~ limitations under the License.
   -->
 <ad-services-config>
-    <attribution />
-    <custom-audiences />
-    <topics />
-    <adid />
-    <appsetid />
+    <attribution allowAllToAccess="false" />
+    <custom-audiences allowAllToAccess="false"/>
+    <topics allowAllToAccess="false"/>
+    <adid allowAllToAccess="false"/>
+    <!--
+    <appsetid allowAllToAccess="false"/>
+    -->
 </ad-services-config>

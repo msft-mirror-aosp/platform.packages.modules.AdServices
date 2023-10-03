@@ -3800,4 +3800,15 @@ public interface Flags {
     default boolean isU18SupervisedAccountEnabled() {
         return IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT;
     }
+
+    boolean APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT = false;
+
+    /**
+     * Returns whether the API access checked by the AdServices XML config returns {@code true} by
+     * default (i.e., when the app doesn't define the config XML file or if the given API access is
+     * missing from that file).
+     */
+    default boolean getAppConfigReturnsEnabledByDefault() {
+        return APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT;
+    }
 }
