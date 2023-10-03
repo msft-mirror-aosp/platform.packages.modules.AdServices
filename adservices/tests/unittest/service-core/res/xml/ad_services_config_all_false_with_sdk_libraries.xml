@@ -15,9 +15,12 @@
   ~ limitations under the License.
   -->
 <ad-services-config>
-    <attribution />
-    <custom-audiences />
-    <topics />
-    <adid />
-    <appsetid />
+    <includes-sdk-library name="42" />
+    <includes-sdk-library name="108" />
+
+    <attribution allowAllToAccess="false" />
+    <custom-audiences allowAllToAccess="false"/>
+    <topics allowAllToAccess="false"/>
+    <adid allowAllToAccess="false"/>
+    <appsetid allowAllToAccess="false"/>
 </ad-services-config>
