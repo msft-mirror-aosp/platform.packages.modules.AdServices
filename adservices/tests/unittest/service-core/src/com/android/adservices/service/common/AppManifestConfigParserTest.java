@@ -212,7 +212,7 @@ public final class AppManifestConfigParserTest {
                 .that(appManifestConfig)
                 .isNotNull();
 
-        assertSdkLibraryConfigIsEmpty(appManifestConfig);
+        assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ false);
 
         AppManifestAttributionConfig attributionConfig = appManifestConfig.getAttributionConfig();
         expect.withMessage("getAttributionConfig()").that(attributionConfig).isNull();
@@ -258,7 +258,7 @@ public final class AppManifestConfigParserTest {
                 .that(appManifestConfig)
                 .isNotNull();
 
-        assertSdkLibraryConfigIsEmpty(appManifestConfig);
+        assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ true);
         assertAttributionConfigIsDefault(appManifestConfig);
         assertCustomAudiencesConfigIsDefault(appManifestConfig);
         assertTopicsConfigIsDefault(appManifestConfig);
@@ -278,7 +278,7 @@ public final class AppManifestConfigParserTest {
                 .that(appManifestConfig)
                 .isNotNull();
 
-        assertSdkLibraryConfigIsEmpty(appManifestConfig);
+        assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ true);
         assertAttributionConfigIsDefault(appManifestConfig);
         assertCustomAudiencesConfigIsFalse(appManifestConfig);
         assertTopicsConfigIsFalse(appManifestConfig);
@@ -298,7 +298,7 @@ public final class AppManifestConfigParserTest {
                 .that(appManifestConfig)
                 .isNotNull();
 
-        assertSdkLibraryConfigIsEmpty(appManifestConfig);
+        assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ true);
         assertAttributionConfigIsFalse(appManifestConfig);
         assertCustomAudiencesConfigIsDefault(appManifestConfig);
         assertTopicsConfigIsFalse(appManifestConfig);
@@ -318,7 +318,7 @@ public final class AppManifestConfigParserTest {
                 .that(appManifestConfig)
                 .isNotNull();
 
-        assertSdkLibraryConfigIsEmpty(appManifestConfig);
+        assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ true);
         assertAttributionConfigIsFalse(appManifestConfig);
         assertCustomAudiencesConfigIsFalse(appManifestConfig);
         assertTopicsConfigIsDefault(appManifestConfig);
@@ -338,7 +338,7 @@ public final class AppManifestConfigParserTest {
                 .that(appManifestConfig)
                 .isNotNull();
 
-        assertSdkLibraryConfigIsEmpty(appManifestConfig);
+        assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ true);
         assertAttributionConfigIsFalse(appManifestConfig);
         assertCustomAudiencesConfigIsFalse(appManifestConfig);
         assertTopicsConfigIsFalse(appManifestConfig);
@@ -358,12 +358,68 @@ public final class AppManifestConfigParserTest {
                 .that(appManifestConfig)
                 .isNotNull();
 
-        assertSdkLibraryConfigIsEmpty(appManifestConfig);
+        assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ true);
         assertAttributionConfigIsFalse(appManifestConfig);
         assertCustomAudiencesConfigIsFalse(appManifestConfig);
         assertTopicsConfigIsFalse(appManifestConfig);
         assertAdIdConfigIsFalse(appManifestConfig);
         assertAppSetIdConfigIsDefault(appManifestConfig);
+    }
+
+    @Test
+    public void testValidXml_enabledByDefault_missingSdkLibraries() throws Exception {
+        XmlResourceParser parser =
+                mContext.getPackageManager()
+                        .getResourcesForApplication(mPackageName)
+                        .getXml(R.xml.ad_services_config_all_false_missing_sdk_libraries);
+        AppManifestConfig appManifestConfig =
+                AppManifestConfigParser.getConfig(parser, /* enabledByDefault= */ true);
+        assertWithMessage("manifest for ad_services_config_all_false_missing_sdk_libraries")
+                .that(appManifestConfig)
+                .isNotNull();
+
+        assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ true);
+        assertAttributionConfigIsFalse(appManifestConfig);
+        assertCustomAudiencesConfigIsFalse(appManifestConfig);
+        assertTopicsConfigIsFalse(appManifestConfig);
+        assertAdIdConfigIsFalse(appManifestConfig);
+        assertAppSetIdConfigIsFalse(appManifestConfig);
+    }
+
+    @Test
+    public void testValidXml_enabledByDefault_withSdkLibraries() throws Exception {
+        XmlResourceParser parser =
+                mContext.getPackageManager()
+                        .getResourcesForApplication(mPackageName)
+                        // This XML contains only 42 and 108
+                        .getXml(R.xml.ad_services_config_all_false_with_sdk_libraries);
+        AppManifestConfig appManifestConfig =
+                AppManifestConfigParser.getConfig(parser, /* enabledByDefault= */ true);
+        assertWithMessage("manifest for ad_services_config_all_false_with_sdk_libraries")
+                .that(appManifestConfig)
+                .isNotNull();
+
+        AppManifestIncludesSdkLibraryConfig sdkLibrary =
+                appManifestConfig.getIncludesSdkLibraryConfig();
+        expect.withMessage("getIncludesSdkLibraryConfig()").that(sdkLibrary).isNotNull();
+        expect.withMessage("getIncludesSdkLibraryConfig().isEmpty()")
+                .that(sdkLibrary.isEmpty())
+                .isFalse();
+        expect.withMessage("getIncludesSdkLibraryConfig().contains(42)")
+                .that(sdkLibrary.contains("42"))
+                .isTrue();
+        expect.withMessage("getIncludesSdkLibraryConfig().contains(108)")
+                .that(sdkLibrary.contains("108"))
+                .isTrue();
+        expect.withMessage("getIncludesSdkLibraryConfig().contains(4815162342)")
+                .that(sdkLibrary.contains("4815162342"))
+                .isFalse();
+
+        assertAttributionConfigIsFalse(appManifestConfig);
+        assertCustomAudiencesConfigIsFalse(appManifestConfig);
+        assertTopicsConfigIsFalse(appManifestConfig);
+        assertAdIdConfigIsFalse(appManifestConfig);
+        assertAppSetIdConfigIsFalse(appManifestConfig);
     }
 
     @Test
@@ -377,7 +433,7 @@ public final class AppManifestConfigParserTest {
                 .that(appManifestConfig)
                 .isNotNull();
 
-        assertSdkLibraryConfigIsEmpty(appManifestConfig);
+        assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ false);
         assertAttributionConfigIsFalse(appManifestConfig);
         assertCustomAudiencesConfigIsFalse(appManifestConfig);
         assertTopicsConfigIsFalse(appManifestConfig);
@@ -442,13 +498,23 @@ public final class AppManifestConfigParserTest {
                 .isEqualTo("Unknown attribute: foobar [Tags and attributes are case sensitive]");
     }
 
-    private void assertSdkLibraryConfigIsEmpty(AppManifestConfig appManifestConfig) {
+    private void assertSdkLibraryConfigIsEmpty(
+            AppManifestConfig appManifestConfig, boolean containsByDefault) {
         AppManifestIncludesSdkLibraryConfig sdkLibrary =
                 appManifestConfig.getIncludesSdkLibraryConfig();
         expect.withMessage("getIncludesSdkLibraryConfig()").that(sdkLibrary).isNotNull();
-        expect.withMessage("getIncludesSdkLibraryConfig().getIncludesSdkLibraries().isEmpty()")
+        expect.withMessage("getIncludesSdkLibraryConfig().isEmpty()")
                 .that(sdkLibrary.isEmpty())
                 .isTrue();
+        if (containsByDefault) {
+            expect.withMessage("getIncludesSdkLibraryConfig().contains(42)")
+                    .that(sdkLibrary.contains("42"))
+                    .isTrue();
+        } else {
+            expect.withMessage("getIncludesSdkLibraryConfig().contains(42)")
+                    .that(sdkLibrary.contains("42"))
+                    .isFalse();
+        }
     }
 
     private void assertAttributionConfigIsDefault(AppManifestConfig appManifestConfig) {
