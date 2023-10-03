@@ -60,7 +60,7 @@ public class ScenarioDispatcher extends Dispatcher {
     public static final String SCENARIOS_DATA_JARPATH = "scenarios/data/";
     public static final String X_FLEDGE_BUYER_BIDDING_LOGIC_VERSION =
             "x_fledge_buyer_bidding_logic_version";
-    public static final int TIMEOUT_SEC = 4;
+    public static final int TIMEOUT_SEC = 8;
 
     private final Map<Request, Response> mRequestToResponseMap;
     private final String mPrefix;
