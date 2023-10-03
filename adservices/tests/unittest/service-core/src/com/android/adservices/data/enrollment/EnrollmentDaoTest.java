@@ -202,6 +202,8 @@ public class EnrollmentDaoTest {
                         mMockFlags.isEnableEnrollmentTestSeed(),
                         mLogger,
                         mEnrollmentUtil);
+        // We want to clear the shared pref boolean value before each test.
+        mEnrollmentDao.unSeed();
     }
 
     @After
