@@ -47,8 +47,6 @@ import com.android.adservices.service.measurement.reporting.EventReportingJobSer
 import com.android.adservices.service.measurement.reporting.VerboseDebugReportingFallbackJobService;
 import com.android.adservices.service.stats.Clock;
 
-import java.util.Objects;
-
 /** Measurement Service */
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
@@ -95,7 +93,7 @@ public class MeasurementService extends Service {
             // Return null so that clients can not bind to the service.
             return null;
         }
-        return Objects.requireNonNull(mMeasurementService);
+        return mMeasurementService;
     }
 
     private boolean hasUserConsent() {
