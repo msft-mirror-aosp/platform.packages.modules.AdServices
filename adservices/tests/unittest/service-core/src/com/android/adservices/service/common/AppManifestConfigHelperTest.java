@@ -66,6 +66,7 @@ public final class AppManifestConfigHelperTest {
     private static final String ENROLLMENT_ID = "ENROLLMENT_ID";
 
     @Mock private AppManifestConfig mMockAppManifestConfig;
+    @Mock private AppManifestIncludesSdkLibraryConfig mMockSdkLibraryConfig;
     @Mock private Context mMockContext;
     @Mock private PackageManager mMockPackageManager;
     @Mock private AssetManager mMockAssetManager;
@@ -153,37 +154,138 @@ public final class AppManifestConfigHelperTest {
 
     @Test
     @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
-    public void testIsAllowedTopicsAccess_sPlus() throws Exception {
-        mockGetPropertySucceeds(PACKAGE_NAME, AD_SERVICES_CONFIG_PROPERTY, RESOURCE_ID);
-        mockAppManifestConfigParserGetConfigSucceeds();
-        mockIsAllowedTopicsAccess(ENROLLMENT_ID, true);
-
-        assertWithMessage("isAllowedTopicsAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
-                .that(
-                        AppManifestConfigHelper.isAllowedTopicsAccess(
-                                mMockContext,
-                                /* useSandboxCheck= */ true,
-                                PACKAGE_NAME,
-                                ENROLLMENT_ID))
-                .isTrue();
+    public void testIsAllowedTopicsAccessFromSandbox_allowed_sPlus() throws Exception {
+        executeIsAllowedTopicAccessTest(
+                /* isRMinus= */ false,
+                /* useSandboxCheck= */ true,
+                /* containsSdk= */ false,
+                /* topicsAllowed= */ true,
+                /* expectedAllowed= */ true);
     }
 
     @Test
-    public void testIsAllowedTopicsAccess_rMinus() throws Exception {
-        mockSdkLevelR();
-        mockGetAssetSucceeds(PACKAGE_NAME, RESOURCE_ID);
+    @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
+    public void testIsAllowedTopicsAccessFromSandbox_notAllowed_sPlus() throws Exception {
+        executeIsAllowedTopicAccessTest(
+                /* isRMinus= */ false,
+                /* useSandboxCheck= */ true,
+                /* containsSdk= */ false,
+                /* topicsAllowed= */ false,
+                /* expectedAllowed= */ false);
+    }
+
+    @Test
+    @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
+    public void testIsAllowedTopicsAccessFromApp_allowed_sPlus() throws Exception {
+        executeIsAllowedTopicAccessTest(
+                /* isRMinus= */ false,
+                /* useSandboxCheck= */ false,
+                /* containsSdk= */ true,
+                /* topicsAllowed= */ true,
+                /* expectedAllowed= */ true);
+    }
+
+    @Test
+    @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
+    public void testIsAllowedTopicsAccessFromApp_notAllowedBecauseOfSdk_sPlus() throws Exception {
+        executeIsAllowedTopicAccessTest(
+                /* isRMinus= */ false,
+                /* useSandboxCheck= */ false,
+                /* containsSdk= */ false,
+                /* topicsAllowed= */ true,
+                /* expectedAllowed= */ false);
+    }
+
+    @Test
+    @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
+    public void testIsAllowedTopicsAccessFromApp_notAllowedBecauseOfTopics_sPlus()
+            throws Exception {
+        executeIsAllowedTopicAccessTest(
+                /* isRMinus= */ false,
+                /* useSandboxCheck= */ false,
+                /* containsSdk= */ true,
+                /* topicsAllowed= */ false,
+                /* expectedAllowed= */ false);
+    }
+
+    @Test
+    public void testIsAllowedTopicsAccessFromSandbox_allowed_rMinus() throws Exception {
+        executeIsAllowedTopicAccessTest(
+                /* isRMinus= */ true,
+                /* useSandboxCheck= */ true,
+                /* containsSdk= */ false,
+                /* topicsAllowed= */ true,
+                /* expectedAllowed= */ true);
+    }
+
+    @Test
+    public void testIsAllowedTopicsAccessFromSandbox_notAllowed_rMinus() throws Exception {
+        executeIsAllowedTopicAccessTest(
+                /* isRMinus= */ true,
+                /* useSandboxCheck= */ true,
+                /* containsSdk= */ false,
+                /* topicsAllowed= */ false,
+                /* expectedAllowed= */ false);
+    }
+
+    @Test
+    public void testIsAllowedTopicsAccessFromApp_allowed_rMinus() throws Exception {
+        executeIsAllowedTopicAccessTest(
+                /* isRMinus= */ true,
+                /* useSandboxCheck= */ false,
+                /* containsSdk= */ true,
+                /* topicsAllowed= */ true,
+                /* expectedAllowed= */ true);
+    }
+
+    @Test
+    public void testIsAllowedTopicsAccessFromApp_notAllowedBecauseOfSdk_rMinus() throws Exception {
+        executeIsAllowedTopicAccessTest(
+                /* isRMinus= */ true,
+                /* useSandboxCheck= */ false,
+                /* containsSdk= */ false,
+                /* topicsAllowed= */ true,
+                /* expectedAllowed= */ false);
+    }
+
+    @Test
+    public void testIsAllowedTopicsAccessFromApp_notAllowedBecauseOfTopics_rMinus()
+            throws Exception {
+        executeIsAllowedTopicAccessTest(
+                /* isRMinus= */ true,
+                /* useSandboxCheck= */ false,
+                /* containsSdk= */ true,
+                /* topicsAllowed= */ false,
+                /* expectedAllowed= */ false);
+    }
+
+    private void executeIsAllowedTopicAccessTest(
+            boolean isRMinus,
+            boolean useSandboxCheck,
+            boolean containsSdk,
+            boolean topicsAllowed,
+            boolean expectedAllowed)
+            throws Exception {
+        if (isRMinus) {
+            mockSdkLevelR();
+            mockGetAssetSucceeds(PACKAGE_NAME, RESOURCE_ID);
+        } else {
+            mockGetPropertySucceeds(PACKAGE_NAME, AD_SERVICES_CONFIG_PROPERTY, RESOURCE_ID);
+        }
         mockAppManifestConfigParserGetConfigSucceeds();
-        mockIsAllowedTopicsAccess(ENROLLMENT_ID, true);
+        mockContainsSdk(ENROLLMENT_ID, containsSdk);
+        mockIsAllowedTopicsAccess(ENROLLMENT_ID, topicsAllowed);
 
         assertWithMessage("isAllowedTopicsAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
                 .that(
                         AppManifestConfigHelper.isAllowedTopicsAccess(
                                 mMockContext,
-                                /* useSandboxCheck= */ true,
+                                /* useSandboxCheck= */ useSandboxCheck,
                                 PACKAGE_NAME,
                                 ENROLLMENT_ID))
-                .isTrue();
+                .isEqualTo(expectedAllowed);
     }
+
 
     @Test
     @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
@@ -357,6 +459,12 @@ public final class AppManifestConfigHelperTest {
 
     private void mockIsAllowedTopicsAccess(String partnerId, boolean value) {
         when(mMockAppManifestConfig.isAllowedTopicsAccess(partnerId)).thenReturn(value);
+    }
+
+    private void mockContainsSdk(String partnerId, boolean value) {
+        when(mMockAppManifestConfig.getIncludesSdkLibraryConfig())
+                .thenReturn(mMockSdkLibraryConfig);
+        when(mMockSdkLibraryConfig.contains(partnerId)).thenReturn(value);
     }
 
     private void assertNoAccessAllowed() {
