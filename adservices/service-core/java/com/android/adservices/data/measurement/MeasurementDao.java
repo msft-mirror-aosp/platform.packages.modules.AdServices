@@ -71,7 +71,6 @@ import java.util.stream.Stream;
 /** Data Access Object for the Measurement PPAPI module. */
 class MeasurementDao implements IMeasurementDao {
 
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     private Supplier<Boolean> mDbFileMaxSizeLimitReachedSupplier;
     private Supplier<Integer> mReportingRetryLimitSupplier;
     private Supplier<Boolean> mReportingRetryLimitEnabledSupplier;
@@ -98,7 +97,8 @@ class MeasurementDao implements IMeasurementDao {
     @Override
     public void insertTrigger(@NonNull Trigger trigger) throws DatastoreException {
         if (mDbFileMaxSizeLimitReachedSupplier.get()) {
-            sLogger.d("DB size has reached the limit, trigger will not be inserted");
+            LoggerFactory.getMeasurementLogger()
+                    .d("DB size has reached the limit, trigger will not be inserted");
             return;
         }
 
@@ -155,7 +155,7 @@ class MeasurementDao implements IMeasurementDao {
                                 MeasurementTables.TriggerContract.TABLE,
                                 /* nullColumnHack= */ null,
                                 values);
-        sLogger.d("MeasurementDao: insertTrigger: rowId=" + rowId);
+        LoggerFactory.getMeasurementLogger().d("MeasurementDao: insertTrigger: rowId=" + rowId);
         if (rowId == -1) {
             throw new DatastoreException("Trigger insertion failed.");
         }
@@ -404,7 +404,8 @@ class MeasurementDao implements IMeasurementDao {
     @Override
     public void insertSource(@NonNull Source source) throws DatastoreException {
         if (mDbFileMaxSizeLimitReachedSupplier.get()) {
-            sLogger.d("DB size has reached the limit, source will not be inserted");
+            LoggerFactory.getMeasurementLogger()
+                    .d("DB size has reached the limit, source will not be inserted");
             return;
         }
 
@@ -488,7 +489,7 @@ class MeasurementDao implements IMeasurementDao {
                                 MeasurementTables.SourceContract.TABLE,
                                 /* nullColumnHack= */ null,
                                 values);
-        sLogger.d("MeasurementDao: insertSource: rowId=" + rowId);
+        LoggerFactory.getMeasurementLogger().d("MeasurementDao: insertSource: rowId=" + rowId);
 
         if (rowId == -1) {
             throw new DatastoreException("Source insertion failed.");
@@ -510,9 +511,10 @@ class MeasurementDao implements IMeasurementDao {
                                         MeasurementTables.SourceDestination.TABLE,
                                         /* nullColumnHack= */ null,
                                         destinationValues);
-                sLogger.d(
-                        "MeasurementDao: insertSource: insert sourceDestination: rowId="
-                                + destinationRowId);
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "MeasurementDao: insertSource: insert sourceDestination: rowId="
+                                        + destinationRowId);
                 if (destinationRowId == -1) {
                     throw new DatastoreException(
                             "Source insertion failed on inserting app destination.");
@@ -535,9 +537,10 @@ class MeasurementDao implements IMeasurementDao {
                                         MeasurementTables.SourceDestination.TABLE,
                                         /* nullColumnHack= */ null,
                                         destinationValues);
-                sLogger.d(
-                        "MeasurementDao: insertSource: insert sourceDestination: rowId="
-                                + destinationRowId);
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "MeasurementDao: insertSource: insert sourceDestination: rowId="
+                                        + destinationRowId);
                 if (destinationRowId == -1) {
                     throw new DatastoreException(
                             "Source insertion failed on inserting web destination.");
@@ -552,9 +555,10 @@ class MeasurementDao implements IMeasurementDao {
         List<Source> sources = new ArrayList<>();
         Optional<String> destinationValue = getDestinationValue(trigger);
         if (!destinationValue.isPresent()) {
-            sLogger.d(
-                    "getMatchingActiveSources: unable to obtain destination value: %s",
-                    trigger.getAttributionDestination().toString());
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "getMatchingActiveSources: unable to obtain destination value: %s",
+                            trigger.getAttributionDestination().toString());
             return sources;
         }
         String triggerDestinationValue = destinationValue.get();
@@ -596,9 +600,11 @@ class MeasurementDao implements IMeasurementDao {
             throws DatastoreException {
         Optional<String> destinationValue = getDestinationValue(trigger);
         if (!destinationValue.isPresent()) {
-            sLogger.d(
-                    "getMatchingActiveDelayedSources: unable to obtain destination value: %s",
-                    trigger.getAttributionDestination().toString());
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "getMatchingActiveDelayedSources: unable to obtain destination value:"
+                                    + " %s",
+                            trigger.getAttributionDestination().toString());
             return Optional.empty();
         }
         String triggerDestinationValue = destinationValue.get();
@@ -876,7 +882,8 @@ class MeasurementDao implements IMeasurementDao {
         if (rows != 1) {
             throw new DatastoreException("DebugReport deletion failed.");
         }
-        sLogger.d("MeasurementDao: deleteDebugReport: row deleted: " + rows);
+        LoggerFactory.getMeasurementLogger()
+                .d("MeasurementDao: deleteDebugReport: row deleted: " + rows);
     }
 
     @Override
@@ -2263,7 +2270,7 @@ class MeasurementDao implements IMeasurementDao {
                                 MeasurementTables.DebugReportContract.TABLE,
                                 /* nullColumnHack= */ null,
                                 values);
-        sLogger.d("MeasurementDao: insertDebugReport: rowId=" + rowId);
+        LoggerFactory.getMeasurementLogger().d("MeasurementDao: insertDebugReport: rowId=" + rowId);
 
         if (rowId == -1) {
             throw new DatastoreException("Debug report payload insertion failed.");
@@ -2424,9 +2431,11 @@ class MeasurementDao implements IMeasurementDao {
         List<Source> sources = new ArrayList<>();
         Optional<String> destinationValue = getDestinationValue(trigger);
         if (!destinationValue.isPresent()) {
-            sLogger.d(
-                    "getTriggerMatchingSourcesForXna: unable to obtain destination value: %s",
-                    trigger.getAttributionDestination().toString());
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "getTriggerMatchingSourcesForXna: unable to obtain destination value:"
+                                    + " %s",
+                            trigger.getAttributionDestination().toString());
             return sources;
         }
         String triggerDestinationValue = destinationValue.get();
@@ -2692,7 +2701,8 @@ class MeasurementDao implements IMeasurementDao {
                                 MeasurementTables.AsyncRegistrationContract.TABLE,
                                 /* nullColumnHack= */ null,
                                 values);
-        sLogger.d("MeasurementDao: insertAsyncRegistration: rowId=" + rowId);
+        LoggerFactory.getMeasurementLogger()
+                .d("MeasurementDao: insertAsyncRegistration: rowId=" + rowId);
         if (rowId == -1) {
             throw new DatastoreException("Async Registration insertion failed.");
         }
@@ -2711,7 +2721,8 @@ class MeasurementDao implements IMeasurementDao {
             // deleted by some other job while it was being processed.
             throw new DatastoreException("Async Registration already deleted");
         }
-        sLogger.d("MeasurementDao: deleteAsyncRegistration: rows affected=" + rows);
+        LoggerFactory.getMeasurementLogger()
+                .d("MeasurementDao: deleteAsyncRegistration: rows affected=" + rows);
     }
 
     @Override
@@ -2830,7 +2841,8 @@ class MeasurementDao implements IMeasurementDao {
         eventRetry.setReportRetryCount(eventRetry.getReportRetryCount() + 1);
         insertOrUpdateKeyValueData(eventRetry);
         int retryCount = eventRetry.getReportRetryCount();
-        sLogger.d("Incrementing: " + reportType + " Retry Count: " + retryCount);
+        LoggerFactory.getMeasurementLogger()
+                .d("Incrementing: " + reportType + " Retry Count: " + retryCount);
         return retryCount;
     }
 

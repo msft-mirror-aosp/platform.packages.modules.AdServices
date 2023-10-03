@@ -102,7 +102,6 @@ public class DebugReportApi {
         NONE
     }
 
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     private final Context mContext;
     private final Flags mFlags;
     private final DatastoreManager mDatastoreManager;
@@ -155,7 +154,7 @@ public class DebugReportApi {
         }
         if (getAdIdPermissionFromSource(source) == PermissionState.DENIED
                 || getArDebugPermissionFromSource(source) == PermissionState.DENIED) {
-            sLogger.d("Skipping debug report %s", Type.SOURCE_SUCCESS);
+            LoggerFactory.getMeasurementLogger().d("Skipping debug report %s", Type.SOURCE_SUCCESS);
             return;
         }
         scheduleReport(
@@ -192,7 +191,8 @@ public class DebugReportApi {
                     source.getRegistrationOrigin(),
                     dao);
         } catch (JSONException e) {
-            sLogger.e(e, "Json error in debug report %s", Type.SOURCE_DESTINATION_LIMIT);
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "Json error in debug report %s", Type.SOURCE_DESTINATION_LIMIT);
         }
     }
 
@@ -206,7 +206,7 @@ public class DebugReportApi {
         }
         if (getAdIdPermissionFromSource(source) == PermissionState.DENIED
                 || getArDebugPermissionFromSource(source) == PermissionState.DENIED) {
-            sLogger.d("Skipping debug report %s", Type.SOURCE_NOISED);
+            LoggerFactory.getMeasurementLogger().d("Skipping debug report %s", Type.SOURCE_NOISED);
             return;
         }
         scheduleReport(
@@ -228,7 +228,8 @@ public class DebugReportApi {
         }
         if (getAdIdPermissionFromSource(source) == PermissionState.DENIED
                 || getArDebugPermissionFromSource(source) == PermissionState.DENIED) {
-            sLogger.d("Skipping debug report %s", Type.SOURCE_STORAGE_LIMIT);
+            LoggerFactory.getMeasurementLogger()
+                    .d("Skipping debug report %s", Type.SOURCE_STORAGE_LIMIT);
             return;
         }
         scheduleReport(
@@ -251,7 +252,8 @@ public class DebugReportApi {
         }
         if (getAdIdPermissionFromSource(source) == PermissionState.DENIED
                 || getArDebugPermissionFromSource(source) == PermissionState.DENIED) {
-            sLogger.d("Skipping debug report %s", Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR);
+            LoggerFactory.getMeasurementLogger()
+                    .d("Skipping debug report %s", Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR);
             return;
         }
         scheduleReport(
@@ -272,7 +274,8 @@ public class DebugReportApi {
         }
         if (getAdIdPermissionFromSource(source) == PermissionState.DENIED
                 || getArDebugPermissionFromSource(source) == PermissionState.DENIED) {
-            sLogger.d("Skipping debug report %s", Type.SOURCE_UNKNOWN_ERROR);
+            LoggerFactory.getMeasurementLogger()
+                    .d("Skipping debug report %s", Type.SOURCE_UNKNOWN_ERROR);
             return;
         }
         scheduleReport(
@@ -297,7 +300,7 @@ public class DebugReportApi {
         }
         if (getAdIdPermissionFromTrigger(trigger) == PermissionState.DENIED
                 || getArDebugPermissionFromTrigger(trigger) == PermissionState.DENIED) {
-            sLogger.d("Skipping trigger debug report %s", type);
+            LoggerFactory.getMeasurementLogger().d("Skipping trigger debug report %s", type);
             return;
         }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
@@ -326,7 +329,7 @@ public class DebugReportApi {
         }
         if (getAdIdPermissionFromTrigger(trigger) == PermissionState.DENIED
                 || getArDebugPermissionFromTrigger(trigger) == PermissionState.DENIED) {
-            sLogger.d("Skipping trigger debug report %s", type);
+            LoggerFactory.getMeasurementLogger().d("Skipping trigger debug report %s", type);
             return;
         }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
@@ -358,7 +361,7 @@ public class DebugReportApi {
         }
         if (getAdIdPermissionFromTrigger(trigger) == PermissionState.DENIED
                 || getArDebugPermissionFromTrigger(trigger) == PermissionState.DENIED) {
-            sLogger.d("Skipping trigger debug report %s", type);
+            LoggerFactory.getMeasurementLogger().d("Skipping trigger debug report %s", type);
             return;
         }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
@@ -392,11 +395,11 @@ public class DebugReportApi {
         Objects.requireNonNull(enrollmentId);
         Objects.requireNonNull(dao);
         if (type.isEmpty() || body.length() == 0) {
-            sLogger.d("Empty debug report found %s", type);
+            LoggerFactory.getMeasurementLogger().d("Empty debug report found %s", type);
             return;
         }
         if (enrollmentId.isEmpty()) {
-            sLogger.d("Empty enrollment found %s", type);
+            LoggerFactory.getMeasurementLogger().d("Empty enrollment found %s", type);
             return;
         }
         DebugReport debugReport =
@@ -410,7 +413,7 @@ public class DebugReportApi {
         try {
             dao.insertDebugReport(debugReport);
         } catch (DatastoreException e) {
-            sLogger.e(e, "Failed to insert debug report %s", type);
+            LoggerFactory.getMeasurementLogger().e(e, "Failed to insert debug report %s", type);
         }
 
         VerboseDebugReportingJobService.scheduleIfNeeded(mContext, /*forceSchedule=*/ false);
@@ -422,7 +425,7 @@ public class DebugReportApi {
             if (source.hasAdIdPermission()) {
                 return PermissionState.GRANTED;
             } else {
-                sLogger.d("Source doesn't have AdId permission");
+                LoggerFactory.getMeasurementLogger().d("Source doesn't have AdId permission");
                 return PermissionState.DENIED;
             }
         }
@@ -435,7 +438,7 @@ public class DebugReportApi {
             if (source.hasArDebugPermission()) {
                 return PermissionState.GRANTED;
             } else {
-                sLogger.d("Source doesn't have ArDebug permission");
+                LoggerFactory.getMeasurementLogger().d("Source doesn't have ArDebug permission");
                 return PermissionState.DENIED;
             }
         }
@@ -447,7 +450,7 @@ public class DebugReportApi {
             if (trigger.hasAdIdPermission()) {
                 return PermissionState.GRANTED;
             } else {
-                sLogger.d("Trigger doesn't have AdId permission");
+                LoggerFactory.getMeasurementLogger().d("Trigger doesn't have AdId permission");
                 return PermissionState.DENIED;
             }
         }
@@ -459,7 +462,7 @@ public class DebugReportApi {
             if (trigger.hasArDebugPermission()) {
                 return PermissionState.GRANTED;
             } else {
-                sLogger.d("Trigger doesn't have ArDebug permission");
+                LoggerFactory.getMeasurementLogger().d("Trigger doesn't have ArDebug permission");
                 return PermissionState.DENIED;
             }
         }
@@ -469,7 +472,8 @@ public class DebugReportApi {
     /** Get is Ad tech not op-in and log */
     private boolean isAdTechNotOptIn(boolean optIn, String type) {
         if (!optIn) {
-            sLogger.d("Ad-tech not opt-in. Skipping debug report %s", type);
+            LoggerFactory.getMeasurementLogger()
+                    .d("Ad-tech not opt-in. Skipping debug report %s", type);
         }
         return !optIn;
     }
@@ -485,7 +489,8 @@ public class DebugReportApi {
             body.put(Body.LIMIT, limit);
             body.put(Body.SOURCE_DEBUG_KEY, source.getDebugKey());
         } catch (JSONException e) {
-            sLogger.e(e, "Json error while generating source debug report body.");
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "Json error while generating source debug report body.");
         }
         return body;
     }
@@ -530,7 +535,8 @@ public class DebugReportApi {
             body.put(Body.SOURCE_EVENT_ID, source.getEventId().toString());
             body.put(Body.SOURCE_SITE, generateSourceSite(source));
         } catch (JSONException e) {
-            sLogger.e(e, "Json error while generating trigger debug report body.");
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "Json error while generating trigger debug report body.");
         }
         return body;
     }
@@ -570,7 +576,8 @@ public class DebugReportApi {
                 body.put(Body.TRIGGER_DEBUG_KEY, debugKeyPair.second);
             }
         } catch (JSONException e) {
-            sLogger.e(e, "Json error while generating trigger debug report body with all fields.");
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "Json error while generating trigger debug report body with all fields.");
         }
         return body;
     }
@@ -579,7 +586,8 @@ public class DebugReportApi {
     private boolean isSourceDebugFlagDisabled(String type) {
         if (!mFlags.getMeasurementEnableDebugReport()
                 || !mFlags.getMeasurementEnableSourceDebugReport()) {
-            sLogger.d("Source flag is disabled for %s debug report", type);
+            LoggerFactory.getMeasurementLogger()
+                    .d("Source flag is disabled for %s debug report", type);
             return true;
         }
         return false;
@@ -589,7 +597,8 @@ public class DebugReportApi {
     private boolean isTriggerDebugFlagDisabled(String type) {
         if (!mFlags.getMeasurementEnableDebugReport()
                 || !mFlags.getMeasurementEnableTriggerDebugReport()) {
-            sLogger.d("Trigger flag is disabled for %s debug report", type);
+            LoggerFactory.getMeasurementLogger()
+                    .d("Trigger flag is disabled for %s debug report", type);
             return true;
         }
         return false;

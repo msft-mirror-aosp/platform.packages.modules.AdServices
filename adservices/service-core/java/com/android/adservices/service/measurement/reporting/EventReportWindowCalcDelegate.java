@@ -46,8 +46,6 @@ import java.util.stream.Collectors;
 public class EventReportWindowCalcDelegate {
     private static final String EARLY_REPORTING_WINDOWS_CONFIG_DELIMITER = ",";
 
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
-
     private final Flags mFlags;
 
     public EventReportWindowCalcDelegate(@NonNull Flags flags) {
@@ -277,7 +275,8 @@ public class EventReportWindowCalcDelegate {
         String earlyReportingWindowsString = pickEarlyReportingWindowsConfig(mFlags, sourceType);
 
         if (earlyReportingWindowsString == null) {
-            sLogger.d("Invalid configurable early reporting windows; null");
+            LoggerFactory.getMeasurementLogger()
+                    .d("Invalid configurable early reporting windows; null");
             return defaultEarlyWindows;
         }
 
@@ -298,9 +297,10 @@ public class EventReportWindowCalcDelegate {
         String[] split =
                 earlyReportingWindowsString.split(EARLY_REPORTING_WINDOWS_CONFIG_DELIMITER);
         if (split.length > MAX_CONFIGURABLE_EVENT_REPORT_EARLY_REPORTING_WINDOWS) {
-            sLogger.d(
-                    "Invalid configurable early reporting window; more than allowed size: "
-                            + MAX_CONFIGURABLE_EVENT_REPORT_EARLY_REPORTING_WINDOWS);
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "Invalid configurable early reporting window; more than allowed size: "
+                                    + MAX_CONFIGURABLE_EVENT_REPORT_EARLY_REPORTING_WINDOWS);
             return defaultEarlyWindows;
         }
 
@@ -308,7 +308,8 @@ public class EventReportWindowCalcDelegate {
             try {
                 earlyWindows.add(TimeUnit.SECONDS.toMillis(Long.parseLong(window)));
             } catch (NumberFormatException e) {
-                sLogger.d(e, "Configurable early reporting window parsing failed.");
+                LoggerFactory.getMeasurementLogger()
+                        .d(e, "Configurable early reporting window parsing failed.");
                 return defaultEarlyWindows;
             }
         }

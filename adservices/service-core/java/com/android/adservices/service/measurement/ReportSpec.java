@@ -38,7 +38,6 @@ import java.util.Objects;
  * A class wrapper for the trigger specification from the input argument during source registration
  */
 public class ReportSpec {
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     private final TriggerSpec[] mTriggerSpecs;
     private int mMaxEventLevelReports;
     private final PrivacyComputationParams mPrivacyParams;
@@ -283,7 +282,8 @@ public class ReportSpec {
             }
             return new JSONArray(triggerSpecsArray).toString();
         } catch (JSONException e) {
-            sLogger.e("ReportSpec::encodeTriggerSpecsToJson is unable to encode TriggerSpecs");
+            LoggerFactory.getMeasurementLogger()
+                    .e("ReportSpec::encodeTriggerSpecsToJson is unable to encode TriggerSpecs");
             return null;
         }
     }
@@ -300,9 +300,10 @@ public class ReportSpec {
                     ReportSpecUtil.FlexEventReportJsonKeys.FLIP_PROBABILITY,
                     mPrivacyParams.mFlipProbability);
         } catch (JSONException e) {
-            sLogger.e(
-                    "ReportSpec::encodePrivacyParametersToJSONString is unable to encode"
-                            + " PrivacyParams to JSON");
+            LoggerFactory.getMeasurementLogger()
+                    .e(
+                            "ReportSpec::encodePrivacyParametersToJSONString is unable to encode"
+                                    + " PrivacyParams to JSON");
             return null;
         }
         return json.toString();
@@ -353,7 +354,8 @@ public class ReportSpec {
                 return true;
             }
         }
-        sLogger.e("ReportSpec::deleteFromAttributedValue: eventReport cannot be found");
+        LoggerFactory.getMeasurementLogger()
+                .e("ReportSpec::deleteFromAttributedValue: eventReport cannot be found");
         return false;
     }
 
