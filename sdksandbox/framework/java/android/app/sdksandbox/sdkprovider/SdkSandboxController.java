@@ -26,7 +26,6 @@ import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxLatencyInfo;
 import android.app.sdksandbox.SandboxedSdk;
-import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.app.sdksandbox.SdkSandboxLocalSingleton;
