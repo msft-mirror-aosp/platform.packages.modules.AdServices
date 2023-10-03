@@ -23,6 +23,8 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import com.android.internal.util.Preconditions;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -36,77 +38,84 @@ public final class OutcomeReceiverForTests<T> implements OutcomeReceiver<T, Exce
 
     private static final String TAG = OutcomeReceiverForTests.class.getSimpleName();
 
+    private static final int DEFAULT_TIMEOUT_MS = 500;
+
     private final CountDownLatch mLatch = new CountDownLatch(1);
+    private final int mTimeoutMs;
 
     private @Nullable Exception mError;
     private @Nullable T mResult;
     private @Nullable String mMethodCalled;
     private long mEpoch = SystemClock.elapsedRealtime();
 
+    /** Default constructor, uses {@link #DEFAULT_TIMEOUT_MS} for timeout. */
+    public OutcomeReceiverForTests() {
+        this(DEFAULT_TIMEOUT_MS);
+    }
+
+    /** Constructor with a custom timeout to wait for the outcome. */
+    public OutcomeReceiverForTests(int timeoutMs) {
+        mTimeoutMs = timeoutMs;
+    }
+
     @Override
-    public void onError(Exception error) {
+    public void onError(@Nullable Exception error) {
         mError = error;
         setMethodCalled("onError", error);
     }
 
     @Override
-    public void onResult(T result) {
+    public void onResult(@Nullable T result) {
         mResult = result;
         setMethodCalled("onResult", result);
     }
 
     /**
-     * Asserts that {@link #onResult(Object)} was called (without waiting for it).
+     * Returns the maximum time the {@code assert...} methods will wait for an outcome before
+     * failing.
+     */
+    public int getTimeoutMs() {
+        return mTimeoutMs;
+    }
+
+    /**
+     * Asserts that {@link #onResult(Object)} was called, waiting up to {@link #getTimeoutMs()}
+     * milliseconds before failing (if not called).
      *
      * @return the result
      */
-    public T assertSuccess() {
+    public T assertSuccess() throws InterruptedException {
+        assertCalled();
         assertWithMessage("result").that(mResult).isNotNull();
         assertWithMessage("error").that(mError).isNull();
         return mResult;
     }
 
     /**
-     * Asserts that {@link #onResult(Object)} was called, after (at most) {@code timeoutMs} ms.
-     *
-     * @return the result
-     */
-    public T assertSuccess(long timeoutMs) throws InterruptedException {
-        assertCalled(timeoutMs);
-        return assertSuccess();
-    }
-
-    /**
-     * Asserts that {@link #onError(Exception)} was called (without waiting for it).
+     * Asserts that {@link #onError(Exception)} was called, waiting up to {@link #getTimeoutMs()}
+     * milliseconds before failing (if not called).
      *
      * @return the error
      */
-    public <E extends Exception> E assertFailure(Class<E> expectedClass) {
+    public <E extends Exception> E assertFailure(Class<E> expectedClass)
+            throws InterruptedException {
+        Preconditions.checkArgument(expectedClass != null, "expectedClass cannot be null");
+
+        assertCalled();
         assertWithMessage("result").that(mResult).isNull();
         assertWithMessage("error").that(mError).isInstanceOf(expectedClass);
         return expectedClass.cast(mError);
     }
 
     /**
-     * Asserts that {@link #onError(Exception)} was called, after (at most) {@code timeoutMs} ms.
-     *
-     * @return the error
-     */
-    public <E extends Exception> E assertFailure(Class<E> expectedClass, long timeoutMs)
-            throws InterruptedException {
-        assertCalled(timeoutMs);
-        return assertFailure(expectedClass);
-    }
-
-    /**
      * Asserts that either {@link #onResult(Object)} or {@link #onError(Exception)} was called,
-     * after (at most) {@code timeoutMs} ms.
+     * waiting up to {@link #getTimeoutMs()} milliseconds before failing (if not called).
      */
-    public void assertCalled(long timeoutMs) throws InterruptedException {
-        Log.v(TAG, "waiting " + timeoutMs + " until called");
-        boolean called = mLatch.await(timeoutMs, TimeUnit.MILLISECONDS);
+    public void assertCalled() throws InterruptedException {
+        Log.v(TAG, "waiting " + mTimeoutMs + " until called");
+        boolean called = mLatch.await(mTimeoutMs, TimeUnit.MILLISECONDS);
         if (!called) {
-            throw new IllegalStateException("Outcome not received in " + timeoutMs + "ms");
+            throw new IllegalStateException("Outcome not received in " + mTimeoutMs + "ms");
         }
     }
 
