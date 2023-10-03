@@ -335,6 +335,7 @@ public class AdSelectionTest extends FledgeScenarioTest {
      * Test that buyer and seller receive win and loss debug reports with reject reason (Remarketing
      * CUJ 170).
      */
+    @FlakyTest(bugId = 301334790)
     @Test
     public void testAdSelection_withDebugReportingAndRejectReason_happyPath() throws Exception {
         ScenarioDispatcher dispatcher =
