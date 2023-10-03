@@ -257,6 +257,35 @@ public class EncryptionKeyDao implements IEncryptionKeyDao {
         return true;
     }
 
+    @Override
+    public boolean insert(List<EncryptionKey> encryptionKeys) {
+        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
+        if (db == null) {
+            return false;
+        }
+        for (EncryptionKey encryptionKey : encryptionKeys) {
+            if (!isEncryptionKeyValid(encryptionKey)) {
+                sLogger.e("Encryption key is invalid, can't insert into DB.");
+                return false;
+            }
+            EncryptionKey existKey =
+                    getEncryptionKeyFromEnrollmentIdAndKeyCommitmentId(
+                            encryptionKey.getEnrollmentId(), encryptionKey.getKeyCommitmentId());
+            if (existKey != null) {
+                // If a key with same enrollment id and key id is saved previously, update the key
+                // to the new one.
+                delete(existKey.getId());
+            }
+            try {
+                insertToDb(encryptionKey, db);
+            } catch (SQLException e) {
+                sLogger.e(e, "Failed to insert EncryptionKey into DB.");
+                return false;
+            }
+        }
+        return true;
+    }
+
     private static boolean isEncryptionKeyValid(EncryptionKey encryptionKey) {
         return encryptionKey.getEnrollmentId() != null
                 && encryptionKey.getKeyType() != null

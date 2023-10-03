@@ -32,6 +32,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class EncryptionKeyDaoTest {
@@ -193,6 +194,14 @@ public class EncryptionKeyDaoTest {
         mEncryptionKeyDao.insert(INVALID_KEY);
         List<EncryptionKey> encryptionKeyList = mEncryptionKeyDao.getAllEncryptionKeys();
         assertEquals(0, encryptionKeyList.size());
+    }
+
+    @Test
+    public void testInsertEncryptionKeyList() {
+        List<EncryptionKey> encryptionKeyList = Arrays.asList(ENCRYPTION_KEY1, SIGNING_KEY1);
+        mEncryptionKeyDao.insert(encryptionKeyList);
+
+        assertEquals(2, mEncryptionKeyDao.getAllEncryptionKeys().size());
     }
 
     /** Unit test for EncryptionKeyDao getAllEncryptionKeys() method. */
