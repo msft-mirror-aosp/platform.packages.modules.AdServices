@@ -234,7 +234,10 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                     sLogger.v("Orchestrating signal update");
                     mUpdateSignalsOrchestrator
                             .orchestrateUpdate(
-                                    input.getUpdateUri(), buyer, input.getCallerPackageName())
+                                    input.getUpdateUri(),
+                                    buyer,
+                                    input.getCallerPackageName(),
+                                    devContext)
                             .get();
                     PeriodicEncodingJobService.scheduleIfNeeded(mContext, mFlags, false);
                     resultCode = AdServicesStatusUtils.STATUS_SUCCESS;

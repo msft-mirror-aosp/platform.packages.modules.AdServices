@@ -26,6 +26,7 @@ import com.android.adservices.data.signals.DBEncoderEndpoint;
 import com.android.adservices.data.signals.EncoderEndpointsDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.service.devapi.DevContext;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FluentFuture;
@@ -66,13 +67,18 @@ public class UpdateEncoderEventHandler {
      *
      * @param buyer Ad tech responsible for this update event
      * @param event an {@link UpdateEncoderEvent}
+     * @param devContext development context used for testing network calls
      * @throws IllegalArgumentException if uri is null for registering encoder or the event type is
      *     not recognized
      */
-    public void handle(@NonNull AdTechIdentifier buyer, @NonNull UpdateEncoderEvent event)
+    public void handle(
+            @NonNull AdTechIdentifier buyer,
+            @NonNull UpdateEncoderEvent event,
+            @NonNull DevContext devContext)
             throws IllegalArgumentException {
         Objects.requireNonNull(buyer);
         Objects.requireNonNull(event);
+        Objects.requireNonNull(devContext);
 
         switch (event.getUpdateType()) {
             case REGISTER:
@@ -95,7 +101,7 @@ public class UpdateEncoderEventHandler {
                 if (previousRegisteredEncoder == null) {
                     // We immediately download and update if no previous encoder existed
                     FluentFuture<Boolean> downloadAndUpdate =
-                            mEncoderLogicHandler.downloadAndUpdate(buyer);
+                            mEncoderLogicHandler.downloadAndUpdate(buyer, devContext);
                     notifyObservers(buyer, event.getUpdateType().toString(), downloadAndUpdate);
                 }
                 break;

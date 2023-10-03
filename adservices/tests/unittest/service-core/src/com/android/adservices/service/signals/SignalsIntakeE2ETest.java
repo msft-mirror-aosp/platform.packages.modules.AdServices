@@ -489,6 +489,7 @@ public class SignalsIntakeE2ETest {
                 AdServicesHttpClientRequest.builder()
                         .setRequestProperties(requestProperties)
                         .setUri(URI)
+                        .setDevContext(DevContext.createForDevOptionsDisabled())
                         .build();
         AdServicesHttpClientResponse response =
                 AdServicesHttpClientResponse.builder().setResponseBody(json).build();
