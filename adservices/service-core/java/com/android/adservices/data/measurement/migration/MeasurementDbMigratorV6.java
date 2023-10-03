@@ -30,7 +30,6 @@ import java.util.UUID;
 
 /** Migrates Measurement DB from user version 3 to 6. */
 public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     public static final String CREATE_TABLE_XNA_IGNORED_SOURCES_V6 =
             "CREATE TABLE "
                     + MeasurementTables.XnaIgnoredSourcesContract.TABLE
@@ -140,7 +139,7 @@ public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
                 db,
                 MeasurementTables.AsyncRegistrationContract.TABLE,
                 MeasurementTables.AsyncRegistrationContract.REGISTRATION_ID)) {
-            sLogger.d("Registration id exists. Skipping Migration");
+            LoggerFactory.getMeasurementLogger().d("Registration id exists. Skipping Migration");
             return;
         }
 
@@ -278,7 +277,8 @@ public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
                         MeasurementTables.AsyncRegistrationContract.ID + " = ?",
                         new String[] {id});
         if (rowCount != 1) {
-            sLogger.d("MeasurementDbMigratorV6: failed to update source record.");
+            LoggerFactory.getMeasurementLogger()
+                    .d("MeasurementDbMigratorV6: failed to update source record.");
         }
     }
 
@@ -293,7 +293,8 @@ public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
                         MeasurementTables.SourceContract.ID + " = ?",
                         new String[] {id});
         if (rowCount != 1) {
-            sLogger.d("MeasurementDbMigratorV6: failed to update source record.");
+            LoggerFactory.getMeasurementLogger()
+                    .d("MeasurementDbMigratorV6: failed to update source record.");
         }
     }
 

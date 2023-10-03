@@ -37,7 +37,6 @@ import java.util.Optional;
 
 /** Upgrades Measurement DB from user version 2 to 3. */
 public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     private static final String ANDROID_APP_SCHEME = "android-app";
     private static final String FILTERS = "filters";
     private static final String NOT_FILTERS = "not_filters";
@@ -170,7 +169,7 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                 db,
                 MeasurementTables.EventReportContract.TABLE,
                 MeasurementTables.EventReportContract.SOURCE_EVENT_ID)) {
-            sLogger.d("Source event id exists. Skipping Migration");
+            LoggerFactory.getMeasurementLogger().d("Source event id exists. Skipping Migration");
             return;
         }
         // Drop and create a new AsyncRegistrationTable if it exists.
@@ -320,7 +319,8 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                         MeasurementTables.SourceContract.ID + " = ?",
                         new String[] {id});
         if (rowCount != 1) {
-            sLogger.d("MeasurementDbMigratorV3: failed to update aggregate source record.");
+            LoggerFactory.getMeasurementLogger()
+                    .d("MeasurementDbMigratorV3: failed to update aggregate source record.");
         }
     }
 
@@ -334,7 +334,8 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                         MeasurementTables.TriggerContract.ID + " = ?",
                         new String[] {id});
         if (rowCount != 1) {
-            sLogger.d("MeasurementDbMigratorV3: failed to update event trigger record.");
+            LoggerFactory.getMeasurementLogger()
+                    .d("MeasurementDbMigratorV3: failed to update event trigger record.");
         }
     }
 
@@ -354,10 +355,12 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                     MeasurementTables.EventReportContract.ID + " = ?",
                     new String[]{id});
             if (rowCount != 1) {
-                sLogger.d("MeasurementDbMigratorV3: failed to update event report record.");
+                LoggerFactory.getMeasurementLogger()
+                        .d("MeasurementDbMigratorV3: failed to update event report record.");
             }
         } else {
-            sLogger.d("MeasurementDbMigratorV3: baseUri not present. %s", destination);
+            LoggerFactory.getMeasurementLogger()
+                    .d("MeasurementDbMigratorV3: baseUri not present. %s", destination);
         }
     }
 
@@ -385,7 +388,8 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                 MeasurementTables.TriggerContract.ID + " = ?",
                 new String[]{id});
         if (rowCount != 1) {
-            sLogger.d("MeasurementDbMigratorV3: failed to update trigger record.");
+            LoggerFactory.getMeasurementLogger()
+                    .d("MeasurementDbMigratorV3: failed to update trigger record.");
         }
     }
 
@@ -422,7 +426,8 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
             }
             return new JSONObject(aggregateSourceMap).toString();
         } catch (JSONException e) {
-            sLogger.e(e, "Aggregate source parsing failed when migrating from V2 to V3.");
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "Aggregate source parsing failed when migrating from V2 to V3.");
             return null;
         }
     }
@@ -435,7 +440,8 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
         try {
             return updateEventTriggers(new JSONArray(eventTriggers));
         } catch (JSONException e) {
-            sLogger.e(e, "MeasurementDbMigratorV3: failed to parse event triggers.");
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "MeasurementDbMigratorV3: failed to parse event triggers.");
             return new JSONArray().toString();
         }
     }
@@ -458,7 +464,8 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
         try {
             return convertFiltersInObjectArray(new JSONArray(aggregateTriggerData));
         } catch (JSONException e) {
-            sLogger.e(e, "MeasurementDbMigratorV3: failed to parse aggregate trigger data.");
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "MeasurementDbMigratorV3: failed to parse aggregate trigger data.");
             return null;
         }
     }
@@ -493,7 +500,8 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
         try {
             return new JSONArray().put(new JSONObject(filters));
         } catch (JSONException e) {
-            sLogger.e(e, "MeasurementDbMigratorV3: failed to parse filters.");
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "MeasurementDbMigratorV3: failed to parse filters.");
             return null;
         }
     }
