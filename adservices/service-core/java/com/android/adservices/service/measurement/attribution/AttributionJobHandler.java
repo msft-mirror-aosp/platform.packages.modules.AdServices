@@ -327,25 +327,26 @@ class AttributionJobHandler {
             return TriggeringStatus.DROPPED;
         }
 
-        int numReportsPerSource = measurementDao.getNumAggregateReportsPerSource(source.getId());
-
-        if (mFlags.getMeasurementEnableMaxAggregateReportsPerSource()
-                && numReportsPerSource >= mFlags.getMeasurementMaxAggregateReportsPerSource()) {
-            LoggerFactory.getMeasurementLogger()
-                    .d(
-                            String.format(
-                                    Locale.ENGLISH,
-                                    "Aggregate reports for source %1$s exceeds system health limit"
-                                            + " of %2$d.",
-                                    source.getId(),
-                                    mFlags.getMeasurementMaxAggregateReportsPerSource()));
-            mDebugReportApi.scheduleTriggerDebugReport(
-                    source,
-                    trigger,
-                    String.valueOf(numReportsPerSource),
-                    measurementDao,
-                    Type.TRIGGER_AGGREGATE_EXCESSIVE_REPORTS);
-            return TriggeringStatus.DROPPED;
+        if (mFlags.getMeasurementEnableMaxAggregateReportsPerSource()) {
+            int numReportsPerSource =
+                    measurementDao.getNumAggregateReportsPerSource(source.getId());
+            if (numReportsPerSource >= mFlags.getMeasurementMaxAggregateReportsPerSource()) {
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                String.format(
+                                        Locale.ENGLISH,
+                                        "Aggregate reports for source %1$s exceeds system"
+                                                + " health limit of %2$d.",
+                                        source.getId(),
+                                        mFlags.getMeasurementMaxAggregateReportsPerSource()));
+                mDebugReportApi.scheduleTriggerDebugReport(
+                        source,
+                        trigger,
+                        String.valueOf(numReportsPerSource),
+                        measurementDao,
+                        Type.TRIGGER_AGGREGATE_EXCESSIVE_REPORTS);
+                return TriggeringStatus.DROPPED;
+            }
         }
 
         try {
