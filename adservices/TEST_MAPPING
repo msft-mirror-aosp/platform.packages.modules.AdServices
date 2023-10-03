@@ -546,6 +546,15 @@
           "exclude-annotation": "androidx.test.filters.FlakyTest"
         }
       ]
+    },
+    {
+      // Install com.google.android.extservices.apex and run AdExtServicesEndToEndTests.
+      "name": "AdExtServicesUIUnitTests[com.google.android.extservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
     }
   ],
   "presubmit": [
@@ -836,6 +845,14 @@
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "AdExtServicesUIUnitTests",
+      "options": [
+        {
+        "exclude-annotation": "androidx.test.filters.FlakyTest"
         }
       ]
     }
