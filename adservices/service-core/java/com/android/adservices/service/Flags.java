@@ -3639,6 +3639,14 @@ public interface Flags {
         return DEFAULT_U18_UX_ENABLED;
     }
 
+    /** Default RVC UX feature flag.. */
+    boolean DEFAULT_RVC_UX_ENABLED = false;
+
+    /** RVC UX feature flag.. */
+    default boolean getEnableRvcUx() {
+        return DEFAULT_RVC_UX_ENABLED;
+    }
+
     /** Default enableAdServices system API feature flag.. */
     boolean DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API = false;
 
