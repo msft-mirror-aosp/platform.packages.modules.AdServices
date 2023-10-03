@@ -763,6 +763,8 @@ public final class FlagsConstants {
 
     public static final String KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH =
             "protected_signals_service_kill_switch";
+    public static final String KEY_ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH =
+            "encryption_key_new_enrollment_fetch_kill_switch";
 
     // App/SDK AllowList/DenyList keys
     public static final String KEY_PPAPI_APP_ALLOW_LIST = "ppapi_app_allow_list";

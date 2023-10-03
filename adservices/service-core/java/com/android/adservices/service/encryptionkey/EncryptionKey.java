@@ -36,7 +36,7 @@ public class EncryptionKey {
     private long mExpiration;
     private long mLastFetchTime;
 
-    private EncryptionKey() {
+    public EncryptionKey() {
         mId = null;
         mKeyType = KeyType.ENCRYPTION;
         mEnrollmentId = null;
