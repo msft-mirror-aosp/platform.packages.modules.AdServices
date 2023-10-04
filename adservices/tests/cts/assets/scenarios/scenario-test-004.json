@@ -5,9 +5,9 @@
         "path": "bidding"
       },
       "response": {
-        "body": "BiddingLogicV2.js"
-      },
-      "verify_called": true
+        "body": "BiddingLogicV2.js",
+        "delay_sec": 2
+      }
     }
   ]
 }

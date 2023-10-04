@@ -20,15 +20,15 @@ function generateBid(ad, auction_signals, per_buyer_signals,
   if (custom_audience_bidding_signals.name === "shoes") {
     bid = 10;
   }
-  return {'status': 0, 'ad': ad, 'bid': bid, 'adCost': 1.0 };
+  return {'status': 0, 'ad': ad, 'bid': bid };
 }
 function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,
  contextual_signals, custom_audience_reporting_signals) {
   // Add the address of your reporting server here
   let reporting_address = '<buyer-reporting-uri>';
   // Register beacons
-  let clickUri = reporting_address + '/buyerInteraction?click?adCost=' + contextual_signals.adCost;
-  let viewUri = reporting_address + '/buyerInteraction?view';
+  let clickUri = 'https://incorrectDomain.com' + '/buyerInteraction?click';
+  let viewUri = 'https://incorrectDomain.com' + '/buyerInteraction?view';
   const beacons = {'click': clickUri, 'view': viewUri}
   registerAdBeacon(beacons)
   return {'status': 0, 'results': {'reporting_uri':
