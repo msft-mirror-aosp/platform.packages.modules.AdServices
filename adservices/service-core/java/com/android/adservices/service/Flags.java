@@ -353,8 +353,8 @@ public interface Flags {
 
     /** Measurement manifest file url, used for MDD download. */
     String MEASUREMENT_MANIFEST_FILE_URL =
-            "https://dl.google.com/mdi-serving/adservices/adtech_enrollment/manifest_configs/1"
-                    + "/manifest_config_1658790241927.binaryproto";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/2324"
+                    + "/3927729583a9dbfdb9a3eaa84ddcef3d9b46c3c7";
 
     /** Measurement manifest file url. */
     default String getMeasurementManifestFileUrl() {
