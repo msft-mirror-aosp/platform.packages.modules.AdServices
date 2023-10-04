@@ -106,6 +106,12 @@
                 android:description="@string/permdesc_accessAdServicesManager"
                 android:protectionLevel="signature"/>
 
+    <!-- Permission to allow calling updating AdId Cache API via Common Service. -->
+    <permission android:name="android.permission.UPDATE_AD_ID_CACHE"
+                android:label="@string/permlab_accessUpdateAdIdCache"
+                android:description="@string/permdesc_accessUpdateAdIdCache"
+                android:protectionLevel="signature|configurator"/>
+
     <!-- Allow AdServicesApk (PPAPI) to call AdService's system service. -->
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_MANAGER"/>
 

@@ -16,12 +16,10 @@
 package com.android.adservices.tests.ui.libs;
 
 import static android.Manifest.permission.POST_NOTIFICATIONS;
-
 import static com.android.adservices.tests.ui.libs.UiConstants.AD_ID_ENABLED;
 import static com.android.adservices.tests.ui.libs.UiConstants.ENTRY_POINT_ENABLED;
 import static com.android.adservices.tests.ui.libs.UiConstants.PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS;
 import static com.android.adservices.tests.ui.libs.UiConstants.SYSTEM_UI_RESOURCE_ID;
-
 import static com.google.common.truth.Truth.assertThat;
 
 
@@ -165,6 +163,16 @@ public class UiUtils {
 
     public static void disableGa() throws Exception {
         forceSetFlag("ga_ux_enabled", false);
+    }
+
+    /** Disables the enableAdServices system API. */
+    public static void turnOffEnableAdServicesSystemApi() throws Exception {
+        forceSetFlag("enable_ad_services_system_api", false);
+    }
+
+    /** Enables the enableAdServices system API. */
+    public static void turnOnAdServicesSystemApi() throws Exception {
+        forceSetFlag("enable_ad_services_system_api", true);
     }
 
     public static void enableBeta() throws Exception {
@@ -717,6 +725,7 @@ public class UiUtils {
     public static void resetAdServicesConsentData(Context context) throws Exception {
         // Neeed to disable debug mode since it takes precedence over reset channel.
         disableConsentDebugMode();
+        turnOnAdServicesSystemApi();
 
         AdServicesCommonManager mCommonManager = AdServicesCommonManager.get(context);
 

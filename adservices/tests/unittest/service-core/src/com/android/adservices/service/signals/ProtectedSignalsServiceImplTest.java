@@ -147,7 +147,8 @@ public class ProtectedSignalsServiceImplTest {
                 .thenReturn(false);
         SettableFuture<Object> emptyReturn = SettableFuture.create();
         emptyReturn.set(new Object());
-        when(mUpdateSignalsOrchestratorMock.orchestrateUpdate(eq(URI), eq(ADTECH), eq(PACKAGE)))
+        when(mUpdateSignalsOrchestratorMock.orchestrateUpdate(
+                        eq(URI), eq(ADTECH), eq(PACKAGE), eq(mDevContext)))
                 .thenReturn(FluentFuture.from(emptyReturn));
         doNothing()
                 .when(
@@ -185,7 +186,8 @@ public class ProtectedSignalsServiceImplTest {
                         eq(PROTECTED_SIGNAL_API_UPDATE_SIGNALS),
                         eq(mDevContext));
         verify(mConsentManagerMock).isFledgeConsentRevokedForAppAfterSettingFledgeUse(eq(PACKAGE));
-        verify(mUpdateSignalsOrchestratorMock).orchestrateUpdate(eq(URI), eq(ADTECH), eq(PACKAGE));
+        verify(mUpdateSignalsOrchestratorMock)
+                .orchestrateUpdate(eq(URI), eq(ADTECH), eq(PACKAGE), eq(mDevContext));
         verify(mUpdateSignalsCallbackMock).onSuccess();
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
@@ -263,7 +265,8 @@ public class ProtectedSignalsServiceImplTest {
         IllegalArgumentException exception = new IllegalArgumentException(EXCEPTION_MESSAGE);
         SettableFuture<Object> future = SettableFuture.create();
         future.setException(exception);
-        when(mUpdateSignalsOrchestratorMock.orchestrateUpdate(eq(URI), eq(ADTECH), eq(PACKAGE)))
+        when(mUpdateSignalsOrchestratorMock.orchestrateUpdate(
+                        eq(URI), eq(ADTECH), eq(PACKAGE), eq(mDevContext)))
                 .thenReturn(FluentFuture.from(future));
         mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock);
 
