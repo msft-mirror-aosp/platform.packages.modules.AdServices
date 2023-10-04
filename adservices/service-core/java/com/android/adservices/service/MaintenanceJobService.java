@@ -292,6 +292,6 @@ public final class MaintenanceJobService extends JobService {
 
     private void doProtectedSignalsDataMaintenanceTasks() {
         LogUtil.v("Performing protected signals maintenance tasks");
-        getSignalsMaintenanceTasksWorker().clearInvalidSignals();
+        getSignalsMaintenanceTasksWorker().clearInvalidProtectedSignalsData();
     }
 }
