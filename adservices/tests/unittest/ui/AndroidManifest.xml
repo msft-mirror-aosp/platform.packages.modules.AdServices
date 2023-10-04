@@ -31,6 +31,9 @@
     <!-- Needed to schedule MDD jobs to persist across device reboots  -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
+    <!-- Permissions required for reading device configs -->
+    <uses-permission android:name="android.permission.READ_DEVICE_CONFIG"/>
+
     <!-- android:debuggable="true is needed. See b/228384531 -->
     <application
         android:debuggable="true"
