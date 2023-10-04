@@ -211,22 +211,26 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
         boolean shouldLog = false;
         try {
             try {
-                // Filter and validate request -- the custom audience filter does what we need so
-                // I don't see much value in creating a new one
-                AdTechIdentifier buyer =
-                        mCustomAudienceServiceFilter.filterRequestAndExtractIdentifier(
-                                input.getUpdateUri(),
-                                input.getCallerPackageName(),
-                                mFlags.getDisableFledgeEnrollmentCheck(),
-                                // We will always enforce the foreground check, I don't see a reason
-                                // to make a flags for this like other APIs do
-                                true,
-                                true,
-                                callerUid,
-                                apiName,
-                                PROTECTED_SIGNAL_API_UPDATE_SIGNALS,
-                                devContext);
-                shouldLog = true;
+                AdTechIdentifier buyer;
+                try {
+                    /* Filter and validate request -- the custom audience filter does what we need
+                     * so I don't see much value in creating a new one.
+                     */
+                    buyer =
+                            mCustomAudienceServiceFilter.filterRequestAndExtractIdentifier(
+                                    input.getUpdateUri(),
+                                    input.getCallerPackageName(),
+                                    mFlags.getDisableFledgeEnrollmentCheck(),
+                                    mFlags.getEnforceForegroundStatusForSignals(),
+                                    true,
+                                    callerUid,
+                                    apiName,
+                                    PROTECTED_SIGNAL_API_UPDATE_SIGNALS,
+                                    devContext);
+                    shouldLog = true;
+                } catch (Throwable t) {
+                    throw new FilterException(t);
+                }
 
                 // Fail silently for revoked user consent
                 if (!mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(

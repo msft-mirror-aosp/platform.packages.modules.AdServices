@@ -2641,6 +2641,7 @@ public interface Flags {
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE = true;
     boolean ENFORCE_FOREGROUND_STATUS_TOPICS = true;
+    boolean ENFORCE_FOREGROUND_STATUS_SIGNALS = true;
 
     /**
      * @return true if FLEDGE runAdSelection API should require that the calling API is running in
@@ -2755,6 +2756,14 @@ public interface Flags {
     /** @return true if Topics API should require that the calling API is running in foreground. */
     default boolean getEnforceForegroundStatusForTopics() {
         return ENFORCE_FOREGROUND_STATUS_TOPICS;
+    }
+
+    /**
+     * @return true if Protected Signals API should require that the calling API is running in
+     *     foreground.
+     */
+    default boolean getEnforceForegroundStatusForSignals() {
+        return ENFORCE_FOREGROUND_STATUS_SIGNALS;
     }
 
     /** @return true if AdId API should require that the calling API is running in foreground. */
