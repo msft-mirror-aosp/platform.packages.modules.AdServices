@@ -460,6 +460,13 @@ public interface Flags {
         return DEFAULT_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS;
     }
 
+    boolean MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING = false;
+
+    /** Returns true if aggregatable report padding is enabled else false. */
+    default boolean getMeasurementEnableAggregatableReportPayloadPadding() {
+        return MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING;
+    }
+
     int DEFAULT_MEASUREMENT_MAX_ATTRIBUTIONS_PER_INVOCATION = 100;
 
     /** Max number of {@link Trigger} to process per job for {@link AttributionJobService} */
@@ -1515,6 +1522,14 @@ public interface Flags {
     /** Returns the max length of Ad Render Id. */
     default long getFledgeAuctionServerAdRenderIdMaxLength() {
         return FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH;
+    }
+
+    // Protected signals cleanup feature flag disabled by default
+    boolean PROTECTED_SIGNALS_CLEANUP_ENABLED = false;
+
+    /** Returns {@code true} if protected signals cleanup is enabled. */
+    default boolean getProtectedSignalsCleanupEnabled() {
+        return PROTECTED_SIGNALS_CLEANUP_ENABLED;
     }
 
     boolean ADSERVICES_ENABLED = false;
@@ -3631,6 +3646,14 @@ public interface Flags {
         return DEFAULT_U18_UX_ENABLED;
     }
 
+    /** Default RVC UX feature flag.. */
+    boolean DEFAULT_RVC_UX_ENABLED = false;
+
+    /** RVC UX feature flag.. */
+    default boolean getEnableRvcUx() {
+        return DEFAULT_RVC_UX_ENABLED;
+    }
+
     /** Default enableAdServices system API feature flag.. */
     boolean DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API = false;
 
@@ -3866,5 +3889,16 @@ public interface Flags {
      */
     default boolean getAdIdCacheEnabled() {
         return DEFAULT_ADID_CACHE_ENABLED;
+    }
+
+    boolean APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT = false;
+
+    /**
+     * Returns whether the API access checked by the AdServices XML config returns {@code true} by
+     * default (i.e., when the app doesn't define the config XML file or if the given API access is
+     * missing from that file).
+     */
+    default boolean getAppConfigReturnsEnabledByDefault() {
+        return APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT;
     }
 }

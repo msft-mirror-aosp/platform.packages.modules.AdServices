@@ -24,6 +24,9 @@ import java.time.Instant;
 @AutoValue
 public abstract class ProtectedSignal {
 
+    // 60 days
+    public static final int EXPIRATION_SECONDS = 60 * 24 * 60 * 60;
+
     /**
      * @return The value of this signal in the form of base 64 encoded string
      */

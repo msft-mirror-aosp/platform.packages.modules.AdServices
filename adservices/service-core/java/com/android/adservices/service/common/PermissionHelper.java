@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.common;
 
+import android.adservices.adid.AdId;
 import android.adservices.common.AdServicesPermissions;
 import android.annotation.NonNull;
 import android.content.Context;
@@ -122,6 +123,20 @@ public final class PermissionHelper {
                 || PackageManager.PERMISSION_GRANTED
                         == context.checkCallingOrSelfPermission(
                                 AdServicesPermissions.ACCESS_ADSERVICES_STATE_COMPAT);
+    }
+
+    /**
+     * Returns if the caller has the permission to invoke the API of updating {@link AdId} cache.
+     *
+     * @return {@code true} if the caller has the permission.
+     */
+    public static boolean hasUpdateAdIdCachePermission(@NonNull Context context) {
+        return PackageManager.PERMISSION_GRANTED
+                        == context.checkCallingOrSelfPermission(
+                                AdServicesPermissions.UPDATE_AD_ID_CACHE)
+                || PackageManager.PERMISSION_GRANTED
+                        == context.checkCallingOrSelfPermission(
+                                AdServicesPermissions.UPDATE_AD_ID_CACHE_COMPAT);
     }
 
     private static boolean hasPermission(

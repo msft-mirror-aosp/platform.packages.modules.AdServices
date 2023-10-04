@@ -49,7 +49,6 @@ import java.util.Objects;
 /** POJO for AttributionConfig. */
 public class AttributionConfig {
 
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     @NonNull private final String mSourceAdtech;
     @Nullable private final Pair<Long, Long> mSourcePriorityRange;
     @Nullable private final List<FilterMap> mSourceFilters;
@@ -228,7 +227,7 @@ public class AttributionConfig {
 
             return attributionConfig;
         } catch (JSONException e) {
-            sLogger.d(e, "Serializing attribution config failed");
+            LoggerFactory.getMeasurementLogger().d(e, "Serializing attribution config failed");
             return null;
         }
     }

@@ -71,7 +71,7 @@ public class SQLDatastoreManagerTest {
                 ExtendedMockito.spy(
                         new SQLDatastoreManager(
                                 DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger));
-        ExtendedMockito.doReturn(mLogger).when(mSQLDatastoreManager).getLogger();
+        ExtendedMockito.doReturn(mLogger).when(LoggerFactory::getMeasurementLogger);
     }
     @Test
     public void runInTransactionWithResult_throwsException_logsDbVersion()

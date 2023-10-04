@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.signals;
 
+import static com.android.adservices.service.signals.SignalsFixture.DEV_CONTEXT;
 import static com.android.adservices.service.signals.UpdatesDownloader.PACKAGE_NAME_HEADER;
 
 import static org.junit.Assert.assertEquals;
@@ -71,13 +72,14 @@ public class UpdatesDownloaderTest {
                 AdServicesHttpClientRequest.builder()
                         .setRequestProperties(requestProperties)
                         .setUri(URI)
+                        .setDevContext(DEV_CONTEXT)
                         .build();
         when(mMockAdServicesHttpsClient.fetchPayload(request)).thenReturn(returnValue);
 
         assertEquals(
                 JSON,
                 mUpdatesDownloader
-                        .getUpdateJson(URI, CommonFixture.TEST_PACKAGE_NAME_1)
+                        .getUpdateJson(URI, CommonFixture.TEST_PACKAGE_NAME_1, DEV_CONTEXT)
                         .get()
                         .toString());
     }
@@ -94,6 +96,7 @@ public class UpdatesDownloaderTest {
                 AdServicesHttpClientRequest.builder()
                         .setRequestProperties(requestProperties)
                         .setUri(URI)
+                        .setDevContext(DEV_CONTEXT)
                         .build();
         when(mMockAdServicesHttpsClient.fetchPayload(request)).thenReturn(returnValue);
 
@@ -101,7 +104,7 @@ public class UpdatesDownloaderTest {
                 ExecutionException.class,
                 () ->
                         mUpdatesDownloader
-                                .getUpdateJson(URI, CommonFixture.TEST_PACKAGE_NAME_1)
+                                .getUpdateJson(URI, CommonFixture.TEST_PACKAGE_NAME_1, DEV_CONTEXT)
                                 .get());
     }
 }

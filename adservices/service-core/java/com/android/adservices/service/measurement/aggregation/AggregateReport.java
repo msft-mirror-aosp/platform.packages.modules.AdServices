@@ -40,7 +40,6 @@ import java.util.Objects;
  * Class that contains all the real data needed after aggregation, it is not encrypted.
  */
 public class AggregateReport {
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     static final String OPERATION = "operation";
     static final String HISTOGRAM = "histogram";
     static final String DATA = "data";
@@ -296,7 +295,8 @@ public class AggregateReport {
             }
             return aggregateHistogramContributions;
         } catch (JSONException e) {
-            sLogger.e(e, "Failed to parse contributions on Aggregate report.");
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "Failed to parse contributions on Aggregate report.");
             return Collections.emptyList();
         }
     }

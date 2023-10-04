@@ -15,14 +15,19 @@
  */
 package com.android.adservices.common;
 
+import static com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel.ANY;
+import static com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel.R;
 import static com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel.S;
 import static com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel.T;
+import static com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel.U;
+import static com.android.adservices.common.TestAnnotations.newAnnotationForAtLeast;
 
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel;
 
 import com.google.common.truth.Expect;
+import com.google.common.truth.StringSubject;
 
 import org.junit.AssumptionViolatedException;
 import org.junit.Rule;
@@ -44,54 +49,305 @@ public abstract class AbstractSdkLevelSupportedRuleTestCase<
     // Not a real test (i.e., it doesn't exist on this class), but it's passed to Description
     private static final String TEST_METHOD_BEING_EXECUTED = "testAmI..OrNot";
 
+    private static final String REASON = "Because I said so";
+
     private final SimpleStatement mBaseStatement = new SimpleStatement();
 
     @Rule public final Expect expect = Expect.create();
 
-    // NOTE: the isAtLeast methods refers to the device SDK, not the rule's
+    // NOTE: the testRuleIsAtLeastMethods... refers to the device SDK, not the rule's
+
     @Test
-    public void testRuleIsAtLeastMethods_deviceIsT() throws Exception {
-        RULE rule = newRuleForAtLeast(T);
-        setDeviceSdkLevel(T);
+    public void testRuleIsAtLeastMethods_deviceIsR() throws Exception {
+        RULE rule = newRuleForAtLeast(ANY);
+        setDeviceSdkLevel(R);
 
         expect.withMessage("rule.atLeastR()").that(rule.isAtLeastR()).isTrue();
-        expect.withMessage("rule.atLeastS()").that(rule.isAtLeastS()).isTrue();
+        expect.withMessage("rule.atLeastS()").that(rule.isAtLeastS()).isFalse();
+        expect.withMessage("rule.atLeastT()").that(rule.isAtLeastT()).isFalse();
         expect.withMessage("rule.atLeastU()").that(rule.isAtLeastU()).isFalse();
     }
 
     @Test
-    public void testConstructorRequiresT_deviceIsS_skipped() throws Throwable {
-        RULE rule = newRuleForAtLeast(T);
+    public void testRuleIsAtLeastMethods_deviceIsS() throws Exception {
+        RULE rule = newRuleForAtLeast(ANY);
         setDeviceSdkLevel(S);
-        Description testMethod = newTestMethod();
 
-        assertThrows(
-                AssumptionViolatedException.class,
-                () -> rule.apply(mBaseStatement, testMethod).evaluate());
-
-        mBaseStatement.assertNotEvaluated();
+        expect.withMessage("rule.atLeastR()").that(rule.isAtLeastR()).isTrue();
+        expect.withMessage("rule.atLeastS()").that(rule.isAtLeastS()).isTrue();
+        expect.withMessage("rule.atLeastT()").that(rule.isAtLeastT()).isFalse();
+        expect.withMessage("rule.atLeastU()").that(rule.isAtLeastU()).isFalse();
     }
 
     @Test
-    public void testConstructorRequiresT_deviceIsT_run() throws Throwable {
-        RULE rule = newRuleForAtLeast(T);
+    public void testRuleIsAtLeastMethods_deviceIsT() throws Exception {
+        RULE rule = newRuleForAtLeast(ANY);
         setDeviceSdkLevel(T);
-        Description testMethod = newTestMethod();
 
-        rule.apply(mBaseStatement, testMethod).evaluate();
+        expect.withMessage("rule.atLeastR()").that(rule.isAtLeastR()).isTrue();
+        expect.withMessage("rule.atLeastS()").that(rule.isAtLeastS()).isTrue();
+        expect.withMessage("rule.atLeastT()").that(rule.isAtLeastT()).isTrue();
+        expect.withMessage("rule.atLeastU()").that(rule.isAtLeastU()).isFalse();
+    }
 
-        mBaseStatement.assertEvaluated();
+    @Test
+    public void testRuleIsAtLeastMethods_deviceIsU() throws Exception {
+        RULE rule = newRuleForAtLeast(ANY);
+        setDeviceSdkLevel(U);
+
+        expect.withMessage("rule.atLeastR()").that(rule.isAtLeastR()).isTrue();
+        expect.withMessage("rule.atLeastS()").that(rule.isAtLeastS()).isTrue();
+        expect.withMessage("rule.atLeastT()").that(rule.isAtLeastT()).isTrue();
+        expect.withMessage("rule.atLeastU()").that(rule.isAtLeastU()).isTrue();
+    }
+
+    /*
+     * Tests for rule constructed for any level.
+     */
+    @Test
+    public void testRuleIsAtLeastAny_deviceIsR_runs() throws Throwable {
+        testRanWhenRuleIsAtLeastXAndDeviceIsY(/* ruleLevel= */ ANY, /* deviceLevel= */ R);
+    }
+
+    @Test
+    public void testRuleIsAtLeastAny_deviceIsS_runs() throws Throwable {
+        testRanWhenRuleIsAtLeastXAndDeviceIsY(/* ruleLevel= */ ANY, /* deviceLevel= */ S);
+    }
+
+    @Test
+    public void testRuleIsAtLeastAny_deviceIsT_runs() throws Throwable {
+        testRanWhenRuleIsAtLeastXAndDeviceIsY(/* ruleLevel= */ ANY, /* deviceLevel= */ T);
+    }
+
+    @Test
+    public void testRuleIsAtLeastAny_deviceIsU_runs() throws Throwable {
+        testRanWhenRuleIsAtLeastXAndDeviceIsY(/* ruleLevel= */ ANY, /* deviceLevel= */ U);
+    }
+
+    @Test
+    public void testRuleIsAtLeastAny_deviceIsR_testAnnotatedWithR_runs() throws Throwable {
+        testSkippedWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithZ(
+                /* ruleLevel= */ ANY, /* deviceLevel= */ R, /* annotationLevel=*/ S);
+    }
+
+    /*
+     * Tests for rule constructed for at least R.
+     */
+    @Test
+    public void testRuleIsAtLeastR_deviceIsR_runs() throws Throwable {
+        testRanWhenRuleIsAtLeastXAndDeviceIsY(/* ruleLevel= */ R, /* deviceLevel= */ R);
+    }
+
+    @Test
+    public void testRuleIsAtLeastR_deviceIsS_runs() throws Throwable {
+        testRanWhenRuleIsAtLeastXAndDeviceIsY(/* ruleLevel= */ R, /* deviceLevel= */ S);
+    }
+
+    @Test
+    public void testRuleIsAtLeastR_deviceIsT_runs() throws Throwable {
+        testRanWhenRuleIsAtLeastXAndDeviceIsY(/* ruleLevel= */ R, /* deviceLevel= */ T);
+    }
+
+    @Test
+    public void testRuleIsAtLeastR_deviceIsU_runs() throws Throwable {
+        testRanWhenRuleIsAtLeastXAndDeviceIsY(/* ruleLevel= */ R, /* deviceLevel= */ U);
+    }
+
+    @Test
+    public void testRuleIsAtLeastR_deviceIsR_testAnnotatedWithR_runs() throws Throwable {
+        testRanWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithZ(
+                /* ruleLevel= */ R, /* deviceLevel= */ R, /* annotationLevel=*/ R);
+    }
+
+    /*
+     * Tests for rule constructed for at least S.
+     */
+    @Test
+    public void testRuleIsAtLeastS_deviceIsR_skips() throws Throwable {
+        testSkippedWhenRuleIsAtLeastXAndDeviceIsY(/* ruleLevel= */ S, /* deviceLevel= */ R);
+    }
+
+    @Test
+    public void testRuleIsAtLeastS_deviceIsS_runs() throws Throwable {
+        testRanWhenRuleIsAtLeastXAndDeviceIsY(/* ruleLevel= */ S, /* deviceLevel= */ S);
+    }
+
+    @Test
+    public void testRuleIsAtLeastS_deviceIsS_testAnnotatedWithT_skips() throws Throwable {
+        testSkippedWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithZ(
+                /* ruleLevel= */ S, /* deviceLevel= */ S, /* annotationLevel=*/ T);
+    }
+
+    @Test
+    public void testRuleIsAtLeastS_deviceIsS_testAnnotatedWithU_skips() throws Throwable {
+        testSkippedWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithZ(
+                /* ruleLevel= */ S, /* deviceLevel= */ S, /* annotationLevel=*/ U);
+    }
+
+    @Test
+    public void testRuleIsAtLeastS_deviceIsT_runs() throws Throwable {
+        testRanWhenRuleIsAtLeastXAndDeviceIsY(/* ruleLevel= */ S, /* deviceLevel= */ T);
+    }
+
+    @Test
+    public void testRuleIsAtLeastS_deviceIsU_runs() throws Throwable {
+        testRanWhenRuleIsAtLeastXAndDeviceIsY(/* ruleLevel= */ S, /* deviceLevel= */ U);
+    }
+
+    @Test
+    public void testRuleIsAtLeastS_deviceIsS_testAnnotatedWithS_runs() throws Throwable {
+        testRanWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithZ(
+                /* ruleLevel= */ S, /* deviceLevel= */ S, /* annotationLevel=*/ S);
+    }
+
+    /*
+     * Tests for rule constructed for at least T.
+     */
+    @Test
+    public void testRuleIsAtLeastT_deviceIsR_skips() throws Throwable {
+        testSkippedWhenRuleIsAtLeastXAndDeviceIsY(/* ruleLevel= */ T, /* deviceLevel= */ R);
+    }
+
+    @Test
+    public void testRuleIsAtLeastT_deviceIsS_skips() throws Throwable {
+        testSkippedWhenRuleIsAtLeastXAndDeviceIsY(/* ruleLevel= */ T, /* deviceLevel= */ S);
+    }
+
+    @Test
+    public void testRuleIsAtLeastT_deviceIsT_runs() throws Throwable {
+        testRanWhenRuleIsAtLeastXAndDeviceIsY(/* ruleLevel= */ T, /* deviceLevel= */ T);
+    }
+
+    @Test
+    public void testRuleIsAtLeastT_deviceIsT_testAnnotatedWithU_skips() throws Throwable {
+        testSkippedWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithZ(
+                /* ruleLevel= */ T, /* deviceLevel= */ T, /* annotationLevel=*/ U);
+    }
+
+    @Test
+    public void testRuleIsAtLeastT_deviceIsU_runs() throws Throwable {
+        testRanWhenRuleIsAtLeastXAndDeviceIsY(/* ruleLevel= */ T, /* deviceLevel= */ U);
+    }
+
+    @Test
+    public void testRuleIsAtLeastT_deviceIsT_testAnnotatedWithT_runs() throws Throwable {
+        testRanWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithZ(
+                /* ruleLevel= */ T, /* deviceLevel= */ T, /* annotationLevel=*/ T);
+    }
+
+    /*
+     * Tests for rule constructed for at least U.
+     */
+    @Test
+    public void testRuleIsAtLeastU_deviceIsR_skips() throws Throwable {
+        testSkippedWhenRuleIsAtLeastXAndDeviceIsY(/* ruleLevel= */ U, /* deviceLevel= */ R);
+    }
+
+    @Test
+    public void testRuleIsAtLeastU_deviceIsS_skips() throws Throwable {
+        testSkippedWhenRuleIsAtLeastXAndDeviceIsY(/* ruleLevel= */ U, /* deviceLevel= */ S);
+    }
+
+    @Test
+    public void testRuleIsAtLeastU_deviceIsT_skips() throws Throwable {
+        testSkippedWhenRuleIsAtLeastXAndDeviceIsY(/* ruleLevel= */ U, /* deviceLevel= */ T);
+    }
+
+    @Test
+    public void testRuleIsAtLeastU_deviceIsU_runs() throws Throwable {
+        testRanWhenRuleIsAtLeastXAndDeviceIsY(/* ruleLevel= */ U, /* deviceLevel= */ U);
+    }
+
+    @Test
+    public void testRuleIsAtLeastU_deviceIsU_testAnnotatedWithU_runs() throws Throwable {
+        testRanWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithZ(
+                /* ruleLevel= */ U, /* deviceLevel= */ U, /* annotationLevel=*/ U);
     }
 
     protected abstract RULE newRuleForAtLeast(AndroidSdkLevel level);
 
     protected abstract void setDeviceSdkLevel(AndroidSdkLevel level);
 
-    public static Description newTestMethod(Annotation... annotations) {
+    // NOTE: eventually there will be releases X, Y, Z, but other names would make these methods
+    // even longer than what they already are
+
+    private void testRanWhenRuleIsAtLeastXAndDeviceIsY(
+            AndroidSdkLevel ruleLevel, AndroidSdkLevel deviceLevel) throws Throwable {
+        RULE rule = newRuleForAtLeast(ruleLevel);
+        setDeviceSdkLevel(deviceLevel);
+        Description testMethod = newTestMethod();
+
+        try {
+            rule.apply(mBaseStatement, testMethod).evaluate();
+        } catch (AssumptionViolatedException e) {
+            throw new Exception("test should not throw", e);
+        }
+
+        mBaseStatement.assertEvaluated();
+    }
+
+    private void testRanWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithZ(
+            AndroidSdkLevel ruleLevel, AndroidSdkLevel deviceLevel, AndroidSdkLevel annotationLevel)
+            throws Throwable {
+        RULE rule = newRuleForAtLeast(ruleLevel);
+        setDeviceSdkLevel(deviceLevel);
+        Description testMethod = newTestMethod(newAnnotationForAtLeast(annotationLevel, REASON));
+
+        try {
+            rule.apply(mBaseStatement, testMethod).evaluate();
+        } catch (AssumptionViolatedException e) {
+            throw new Exception(
+                    "test should not throw AssumptionViolatedException: " + e.getMessage(), e);
+        }
+
+        mBaseStatement.assertEvaluated();
+    }
+
+    private void testSkippedWhenRuleIsAtLeastXAndDeviceIsY(
+            AndroidSdkLevel ruleLevel, AndroidSdkLevel deviceLevel) {
+        RULE rule = newRuleForAtLeast(ruleLevel);
+        setDeviceSdkLevel(deviceLevel);
+        Description testMethod = newTestMethod();
+
+        AssumptionViolatedException e =
+                assertThrows(
+                        AssumptionViolatedException.class,
+                        () -> rule.apply(mBaseStatement, testMethod).evaluate());
+
+        expect.withMessage("exception message")
+                .that(e)
+                .hasMessageThat()
+                .contains("SDK level " + ruleLevel);
+
+        mBaseStatement.assertNotEvaluated();
+    }
+
+    private void testSkippedWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithZ(
+            AndroidSdkLevel ruleLevel,
+            AndroidSdkLevel deviceLevel,
+            AndroidSdkLevel annotationLevel) {
+        RULE rule = newRuleForAtLeast(ruleLevel);
+        setDeviceSdkLevel(deviceLevel);
+        Description testMethod = newTestMethod(newAnnotationForAtLeast(annotationLevel, REASON));
+
+        AssumptionViolatedException e =
+                assertThrows(
+                        AssumptionViolatedException.class,
+                        () -> rule.apply(mBaseStatement, testMethod).evaluate());
+
+        StringSubject exceptionMessage =
+                expect.withMessage("exception message").that(e).hasMessageThat();
+        exceptionMessage.contains("SDK level " + annotationLevel);
+        exceptionMessage.contains(REASON);
+
+        mBaseStatement.assertNotEvaluated();
+    }
+
+    private static Description newTestMethod(Annotation... annotations) {
         return newTestMethod(TEST_METHOD_BEING_EXECUTED, annotations);
     }
 
-    public static Description newTestMethod(String methodName, Annotation... annotations) {
+    private static Description newTestMethod(String methodName, Annotation... annotations) {
         return Description.createTestDescription(
                 AbstractSdkLevelSupportedRuleTestCase.class, methodName, annotations);
     }

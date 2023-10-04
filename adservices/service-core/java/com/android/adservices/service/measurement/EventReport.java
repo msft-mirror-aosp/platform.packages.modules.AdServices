@@ -42,7 +42,6 @@ import java.util.Objects;
  */
 public class EventReport {
 
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     private String mId;
     private UnsignedLong mSourceEventId;
     private long mReportTime;
@@ -489,10 +488,11 @@ public class EventReport {
                 try {
                     source.buildFlexibleEventReportApi();
                 } catch (JSONException e) {
-                    sLogger.d(
-                            e,
-                            "EventReport::populateFromSourceAndTrigger cannot parse JSON for flex"
-                                    + " event API");
+                    LoggerFactory.getMeasurementLogger()
+                            .d(
+                                    e,
+                                    "EventReport::populateFromSourceAndTrigger cannot parse JSON"
+                                            + " for flex event API");
                 }
                 mBuilding.mTriggerPriority =
                         source.getFlexEventReportSpec()

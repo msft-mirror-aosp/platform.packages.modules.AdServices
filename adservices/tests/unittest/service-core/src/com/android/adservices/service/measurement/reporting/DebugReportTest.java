@@ -20,7 +20,7 @@ import static org.junit.Assert.assertNotEquals;
 
 import android.net.Uri;
 
-import com.android.adservices.service.measurement.WebUtil;
+import com.android.adservices.common.WebUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;

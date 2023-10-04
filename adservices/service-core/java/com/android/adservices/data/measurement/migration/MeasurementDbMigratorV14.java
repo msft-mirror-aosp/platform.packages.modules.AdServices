@@ -47,7 +47,6 @@ public class MeasurementDbMigratorV14 extends AbstractMeasurementDbMigrator {
     private static final String ID_COLUMN = "_id";
     private static final String ENROLLMENT_ID_COLUMN = "enrollment_id";
     private static final String REGISTRATION_ORIGIN_COLUMN = "registration_origin";
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     private final DbHelper mDbHelper;
 
     public MeasurementDbMigratorV14(DbHelper dbHelper) {
@@ -110,8 +109,10 @@ public class MeasurementDbMigratorV14 extends AbstractMeasurementDbMigrator {
                         /*orderBy=*/ null,
                         /*limit=*/ null)) {
             if (cursor == null || cursor.getCount() <= 0) {
-                sLogger.d(
-                        "Failed to find any enrollments with non-empty attribution reporting url");
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "Failed to find any enrollments with non-empty attribution"
+                                        + " reporting url");
                 return enrollmentIdToReportingUrl;
             }
 
@@ -164,7 +165,8 @@ public class MeasurementDbMigratorV14 extends AbstractMeasurementDbMigrator {
                 Uri reportingUri = enrollmentIdToReportingUrl.get(enrollmentId);
                 if (reportingUri == null) {
                     // no reporting origin found. delete the data
-                    sLogger.d("Reporting origin not found for enrollment id - " + enrollmentId);
+                    LoggerFactory.getMeasurementLogger()
+                            .d("Reporting origin not found for enrollment id - " + enrollmentId);
 
                     deleteRecord(db, table, id);
 
@@ -174,11 +176,12 @@ public class MeasurementDbMigratorV14 extends AbstractMeasurementDbMigrator {
                     values.put(REGISTRATION_ORIGIN_COLUMN, reportingUri.toString());
                     long rows = db.update(table, values, ID_COLUMN + " = ? ", new String[] {id});
                     if (rows != 1) {
-                        sLogger.d(
-                                "Failed to insert registration_origin for id "
-                                        + id
-                                        + " in table "
-                                        + table);
+                        LoggerFactory.getMeasurementLogger()
+                                .d(
+                                        "Failed to insert registration_origin for id "
+                                                + id
+                                                + " in table "
+                                                + table);
                         deleteRecord(db, table, id);
                     }
                 }
@@ -187,7 +190,8 @@ public class MeasurementDbMigratorV14 extends AbstractMeasurementDbMigrator {
     }
 
     private void deleteRecord(SQLiteDatabase db, String table, String recordId) {
-        sLogger.d("Deleting record with id - " + recordId + " from table - " + table);
+        LoggerFactory.getMeasurementLogger()
+                .d("Deleting record with id - " + recordId + " from table - " + table);
         db.delete(table, ID_COLUMN + " = ? ", new String[] {recordId});
     }
 }
