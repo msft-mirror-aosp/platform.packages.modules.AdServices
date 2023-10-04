@@ -27,6 +27,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import android.util.Log;
 
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.server.LocalManagerRegistry;
@@ -91,6 +92,14 @@ public final class ExtendedMockitoExpectations {
      */
     public static void mockGetFlagsForTest() {
         mockGetFlags(FlagsFactory.getFlagsForTest());
+    }
+
+    /**
+     * Mocks a call of {@link FlagsFactory#getFlags()} to return the passed-in mocking {@link Flags}
+     * object.
+     */
+    public static void mockGetFlags(Flags mockedFlags) {
+        doReturn(mockedFlags).when(FlagsFactory::getFlags);
     }
 
     /** Verifies {@link ErrorLogUtil#e()} was called with the expected values. */
