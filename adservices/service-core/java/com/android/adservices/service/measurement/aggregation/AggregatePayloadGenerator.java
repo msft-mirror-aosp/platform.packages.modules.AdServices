@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.stream.IntStream;
 
 /**
  * Class used to generate AggregateReport using AggregatableAttributionSource and
@@ -120,6 +121,17 @@ public class AggregatePayloadGenerator {
             contributions.add(contribution);
         }
         if (contributions.size() > 0) {
+            if (mFlags.getMeasurementEnableAggregatableReportPayloadPadding()) {
+                AggregateHistogramContribution paddingContribution =
+                        new AggregateHistogramContribution.Builder()
+                                .setKey(BigInteger.valueOf(0L))
+                                .setValue(0)
+                                .build();
+                IntStream.range(
+                                contributions.size(),
+                                mFlags.getMeasurementMaxAggregateKeysPerSourceRegistration())
+                        .forEach(i -> contributions.add(paddingContribution));
+            }
             return Optional.of(contributions);
         }
         return Optional.empty();

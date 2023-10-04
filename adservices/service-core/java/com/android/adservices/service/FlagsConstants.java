@@ -382,6 +382,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED =
             "measurement_aggregate_fallback_reporting_job_persisted";
 
+    public static final String KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING =
+            "measurement_enable_aggregatable_report_payload_padding";
+
     // FLEDGE Custom Audience keys
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT =
             "fledge_custom_audience_max_count";
@@ -621,6 +624,10 @@ public final class FlagsConstants {
     public static final String KEY_FOREGROUND_STATUS_LEVEL = "foreground_validation_status_level";
     public static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE =
             "fledge_ad_selection_enforce_foreground_status_custom_audience";
+
+    // Protected Signals keys
+    public static final String KEY_PROTECTED_SIGNALS_CLEANUP_ENABLED =
+            "protected_signals_cleanup_enabled";
 
     // Topics invoking app status key.
     public static final String KEY_ENFORCE_FOREGROUND_STATUS_TOPICS =
@@ -993,6 +1000,8 @@ public final class FlagsConstants {
 
     public static final String KEY_U18_UX_ENABLED = "u18_ux_enabled";
 
+    public static final String KEY_RVC_UX_ENABLED = "rvc_ux_enabled";
+
     public static final String KEY_ENABLE_AD_SERVICES_SYSTEM_API = "enable_ad_services_system_api";
 
     public static final String KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED =
@@ -1002,4 +1011,7 @@ public final class FlagsConstants {
             "is_u18_supervised_account_enabled";
 
     public static final String KEY_AD_ID_CACHE_ENABLED = "ad_id_cache_enabled";
+
+    public static final String KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT =
+            "app_config_returns_enabled_by_detault";
 }

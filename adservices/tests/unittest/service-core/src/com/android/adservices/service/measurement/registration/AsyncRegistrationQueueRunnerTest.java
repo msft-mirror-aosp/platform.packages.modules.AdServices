@@ -245,6 +245,8 @@ public class AsyncRegistrationQueueRunnerTest {
                         .MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW);
         when(mFlags.getMeasurementMaxDistinctRepOrigPerPublXDestInSource())
                 .thenReturn(Flags.MEASUREMENT_MAX_DISTINCT_REP_ORIG_PER_PUBLISHER_X_DEST_IN_SOURCE);
+
+        when(mFlags.getAppConfigReturnsEnabledByDefault()).thenReturn(false);
     }
 
     @Test

@@ -28,6 +28,7 @@ import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
+import com.android.adservices.service.devapi.DevContext;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.FluentFuture;
@@ -113,9 +114,11 @@ public class EncoderLogicHandler {
      * </ol>
      *
      * @param buyer The buyer for which the encoder logic is required to be updated
+     * @param devContext development context used for testing network calls
      * @return a Fluent Future with success or failure in the form of boolean
      */
-    public FluentFuture<Boolean> downloadAndUpdate(@NonNull AdTechIdentifier buyer) {
+    public FluentFuture<Boolean> downloadAndUpdate(
+            @NonNull AdTechIdentifier buyer, @NonNull DevContext devContext) {
         Objects.requireNonNull(buyer);
 
         DBEncoderEndpoint encoderEndpoint = mEncoderEndpointsDao.getEndpoint(buyer);
@@ -132,6 +135,7 @@ public class EncoderLogicHandler {
                         .setUri(encoderEndpoint.getDownloadUri())
                         .setUseCache(false)
                         .setResponseHeaderKeys(mDownloadRequestProperties)
+                        .setDevContext(devContext)
                         .build();
         sLogger.v(
                 "Initiating encoder download request for buyer: %s, uri: %s",

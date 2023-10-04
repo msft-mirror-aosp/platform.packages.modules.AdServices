@@ -31,6 +31,7 @@ import android.net.Uri;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
+import com.android.adservices.service.devapi.DevContext;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -108,6 +109,7 @@ public class EncoderLogicHandlerTest {
                         .setResponseHeaderKeys(ImmutableSet.of(ENCODER_VERSION_RESPONSE_HEADER))
                         .setUseCache(false)
                         .setUri(encoderUri)
+                        .setDevContext(DevContext.createForDevOptionsDisabled())
                         .build();
 
         String body = "function() { fake JS}";
@@ -128,7 +130,9 @@ public class EncoderLogicHandlerTest {
         when(mEncoderPersistenceDao.persistEncoder(buyer, body)).thenReturn(true);
 
         boolean updateSucceeded =
-                mEncoderLogicHandler.downloadAndUpdate(buyer).get(5, TimeUnit.SECONDS);
+                mEncoderLogicHandler
+                        .downloadAndUpdate(buyer, DevContext.createForDevOptionsDisabled())
+                        .get(5, TimeUnit.SECONDS);
         assertTrue(updateSucceeded);
     }
 
@@ -141,7 +145,9 @@ public class EncoderLogicHandlerTest {
         when(mEncoderEndpointsDao.getEndpoint(buyer)).thenReturn(encoderEndpoint);
 
         boolean updateSucceeded =
-                mEncoderLogicHandler.downloadAndUpdate(buyer).get(5, TimeUnit.SECONDS);
+                mEncoderLogicHandler
+                        .downloadAndUpdate(buyer, DevContext.createForDevOptionsDisabled())
+                        .get(5, TimeUnit.SECONDS);
         assertFalse("The call to download should have been skipped", updateSucceeded);
 
         verifyZeroInteractions(mAdServicesHttpsClient, mEncoderPersistenceDao, mEncoderLogicDao);
