@@ -183,7 +183,7 @@ public class AdSelectionTest extends FledgeScenarioTest {
         String customAudienceName = "hats";
 
         try {
-            CustomAudience customAudience = makeCustomAudience(customAudienceName);
+            CustomAudience customAudience = makeCustomAudience(customAudienceName).build();
             ShellUtils.runShellCommand(
                     "device_config put adservices fledge_fetch_custom_audience_enabled true");
             mCustomAudienceClient
@@ -220,18 +220,9 @@ public class AdSelectionTest extends FledgeScenarioTest {
                 ScenarioDispatcher.fromScenario(
                         "scenarios/remarketing-cuj-default.json", getCacheBusterPrefix());
         setupDefaultMockWebServer(dispatcher);
-        CustomAudience template = makeCustomAudience(SHOES_CA);
         CustomAudience customAudience =
-                new CustomAudience.Builder()
-                        .setName(template.getName())
-                        .setBuyer(template.getBuyer())
-                        .setBiddingLogicUri(template.getBiddingLogicUri())
-                        .setActivationTime(template.getActivationTime())
+                makeCustomAudience(SHOES_CA)
                         .setExpirationTime(Instant.now().plus(1, ChronoUnit.SECONDS))
-                        .setDailyUpdateUri(template.getDailyUpdateUri())
-                        .setUserBiddingSignals(template.getUserBiddingSignals())
-                        .setTrustedBiddingData(template.getTrustedBiddingData())
-                        .setAds(template.getAds())
                         .build();
         AdSelectionConfig config = makeAdSelectionConfig();
 

@@ -14,23 +14,30 @@
  * limitations under the License.
  */
 
-function generateBid(ad, auction_signals, per_buyer_signals,
-  trusted_bidding_signals, contextual_signals, custom_audience_bidding_signals) {
-  var bid = 5;
-  if (custom_audience_bidding_signals.name === "shoes") {
-    bid = 10;
+const simulateDelay = (ms) => {
+  var start = new Date().getTime();
+  var end = start;
+  while(end < start + ms) {
+      end = new Date().getTime();
   }
-  return {'status': 0, 'ad': ad, 'bid': bid, 'adCost': 1.0 };
 }
+
+/**
+ * Generates a bid of 10 for the shoes CA, and a bid of 5 otherwise
+ */
+function generateBid(ad, auction_signals, per_buyer_signals, trusted_bidding_signals, contextual_signals, custom_audience_signals) {
+  var bid = 5;
+  if (custom_audience_signals.name === "shoes") {
+      bid = 10;
+  }
+  simulateDelay(0);
+  return {'status': 0, 'ad': ad, 'bid': bid };
+}
+
 function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,
- contextual_signals, custom_audience_reporting_signals) {
-  // Add the address of your reporting server here
+ contextual_signals, custom_audience_signals) {
   let reporting_address = '<buyer-reporting-uri>';
-  // Register beacons
-  let clickUri = reporting_address + '/buyerInteraction?click?adCost=' + contextual_signals.adCost;
-  let viewUri = reporting_address + '/buyerInteraction?view';
-  const beacons = {'click': clickUri, 'view': viewUri}
-  registerAdBeacon(beacons)
+  simulateDelay(6000);
   return {'status': 0, 'results': {'reporting_uri':
-         reporting_address + '/reportWin?ca=' + custom_audience_reporting_signals.name} };
+         reporting_address + '?ca=' + custom_audience_signals.name} };
 }
