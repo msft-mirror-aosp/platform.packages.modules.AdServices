@@ -93,7 +93,7 @@ public class EncoderLogicHandler {
                 ProtectedSignalsDatabase.getInstance(context).getEncoderEndpointsDao(),
                 ProtectedSignalsDatabase.getInstance(context).getEncoderLogicDao(),
                 new AdServicesHttpsClient(
-                        AdServicesExecutors.getBlockingExecutor(),
+                        AdServicesExecutors.getBackgroundExecutor(),
                         CacheProviderFactory.createNoOpCache()),
                 AdServicesExecutors.getBackgroundExecutor());
     }
@@ -187,7 +187,8 @@ public class EncoderLogicHandler {
 
             if (updateSucceeded) {
                 sLogger.v(
-                        "Update for encoding logic on persistence layer succeeded, updating entry");
+                        "Update for encoding logic on persistence layer succeeded, updating DB"
+                                + " entry");
                 mEncoderLogicDao.persistEncoder(encoderLogicEntry);
             } else {
                 sLogger.e(
