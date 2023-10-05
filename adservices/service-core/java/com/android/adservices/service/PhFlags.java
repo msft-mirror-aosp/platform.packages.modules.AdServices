@@ -2579,6 +2579,16 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getEnforceForegroundStatusForSignals() {
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS),
+                /* defaultValue */ DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        /* flagName */ FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS,
+                        /* defaultValue */ ENFORCE_FOREGROUND_STATUS_SIGNALS));
+    }
+
+    @Override
     public boolean getEnforceForegroundStatusForAdId() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_ADID),
@@ -4964,6 +4974,11 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING
                         + " = "
                         + getMeasurementEnableAggregatableReportPayloadPadding());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS
+                        + " = "
+                        + getEnforceForegroundStatusForSignals());
     }
 
     @VisibleForTesting
