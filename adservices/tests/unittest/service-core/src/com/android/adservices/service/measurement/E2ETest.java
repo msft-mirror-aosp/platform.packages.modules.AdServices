@@ -188,6 +188,7 @@ public abstract class E2ETest {
         String INPUT_EVENT_KEY = "source_type";
         String SOURCE_VIEW_TYPE = "event";
         String TIMESTAMP_KEY = "timestamp";
+        String REPORTS_OBJECTS_KEY = "reports";
         String EVENT_REPORT_OBJECTS_KEY = "event_level_results";
         String AGGREGATE_REPORT_OBJECTS_KEY = "aggregatable_results";
         String DEBUG_EVENT_REPORT_OBJECTS_KEY = "debug_event_level_results";
@@ -1266,17 +1267,60 @@ public abstract class E2ETest {
 
     private static ReportObjects getExpectedOutput(JSONObject output) throws JSONException {
         List<JSONObject> eventReportObjects = new ArrayList<>();
+        List<JSONObject> aggregateReportObjects = new ArrayList<>();
+        List<JSONObject> debugEventReportObjects = new ArrayList<>();
+        List<JSONObject> debugAggregateReportObjects = new ArrayList<>();
+        List<JSONObject> debugReportObjects = new ArrayList<>();
+
+        // Interop tests have all report types in one list
+        if (!output.isNull(TestFormatJsonMapping.REPORTS_OBJECTS_KEY)) {
+            // We compare the suffixes of the different reporting URLs with the report URL to
+            // determine the report type. This assumes the longest suffix match corresponds with the
+            // report type.
+            String[] eventUrlTokens = EVENT_ATTRIBUTION_REPORT_URI_PATH.split("/");
+            String[] debugEventUrlTokens = DEBUG_EVENT_ATTRIBUTION_REPORT_URI_PATH.split("/");
+            String[] aggregateUrlTokens = AGGREGATE_ATTRIBUTION_REPORT_URI_PATH.split("/");
+            String[] debugAggregateUrlTokens =
+                DEBUG_AGGREGATE_ATTRIBUTION_REPORT_URI_PATH.split("/");
+            String[] debugUrlTokens = DEBUG_REPORT_URI_PATH.split("/");
+
+            JSONArray reportsObjectsArray = output.getJSONArray(
+                    TestFormatJsonMapping.REPORTS_OBJECTS_KEY);
+
+            for (int i = 0; i < reportsObjectsArray.length(); i++) {
+                JSONObject obj = reportsObjectsArray.getJSONObject(i);
+                String[] urlTokens = obj.getString(TestFormatJsonMapping.REPORT_TO_KEY).split("/");
+                if (urlTokens[urlTokens.length - 1].equals(
+                        debugUrlTokens[debugUrlTokens.length - 1])) {
+                    debugReportObjects.add(obj);
+                } else if (urlTokens[urlTokens.length - 1].equals(
+                        eventUrlTokens[eventUrlTokens.length - 1])) {
+                    if (urlTokens[urlTokens.length - 2].equals(
+                            debugEventUrlTokens[debugEventUrlTokens.length - 2])) {
+                        debugEventReportObjects.add(obj);
+                    } else {
+                        eventReportObjects.add(obj);
+                    }
+                } else if (urlTokens[urlTokens.length - 1].equals(
+                        aggregateUrlTokens[aggregateUrlTokens.length - 1])) {
+                    if (urlTokens[urlTokens.length - 2].equals(
+                            debugAggregateUrlTokens[debugAggregateUrlTokens.length - 2])) {
+                        debugAggregateReportObjects.add(obj);
+                    } else {
+                        aggregateReportObjects.add(obj);
+                    }
+                }
+            }
+        }
+
         if (!output.isNull(TestFormatJsonMapping.EVENT_REPORT_OBJECTS_KEY)) {
             JSONArray eventReportObjectsArray = output.getJSONArray(
                     TestFormatJsonMapping.EVENT_REPORT_OBJECTS_KEY);
             for (int i = 0; i < eventReportObjectsArray.length(); i++) {
-                JSONObject obj = eventReportObjectsArray.getJSONObject(i);
-                String adTechDomain = obj.getString(TestFormatJsonMapping.REPORT_TO_KEY);
-                eventReportObjects.add(obj.put(TestFormatJsonMapping.REPORT_TO_KEY, adTechDomain));
+                eventReportObjects.add(eventReportObjectsArray.getJSONObject(i));
             }
         }
 
-        List<JSONObject> aggregateReportObjects = new ArrayList<>();
         if (!output.isNull(TestFormatJsonMapping.AGGREGATE_REPORT_OBJECTS_KEY)) {
             JSONArray aggregateReportObjectsArray =
                     output.getJSONArray(TestFormatJsonMapping.AGGREGATE_REPORT_OBJECTS_KEY);
@@ -1285,19 +1329,14 @@ public abstract class E2ETest {
             }
         }
 
-        List<JSONObject> debugEventReportObjects = new ArrayList<>();
         if (!output.isNull(TestFormatJsonMapping.DEBUG_EVENT_REPORT_OBJECTS_KEY)) {
             JSONArray debugEventReportObjectsArray =
                     output.getJSONArray(TestFormatJsonMapping.DEBUG_EVENT_REPORT_OBJECTS_KEY);
             for (int i = 0; i < debugEventReportObjectsArray.length(); i++) {
-                JSONObject obj = debugEventReportObjectsArray.getJSONObject(i);
-                String adTechDomain = obj.getString(TestFormatJsonMapping.REPORT_TO_KEY);
-                debugEventReportObjects.add(
-                        obj.put(TestFormatJsonMapping.REPORT_TO_KEY, adTechDomain));
+                debugEventReportObjects.add(debugEventReportObjectsArray.getJSONObject(i));
             }
         }
 
-        List<JSONObject> debugAggregateReportObjects = new ArrayList<>();
         if (!output.isNull(TestFormatJsonMapping.DEBUG_AGGREGATE_REPORT_OBJECTS_KEY)) {
             JSONArray debugAggregateReportObjectsArray =
                     output.getJSONArray(TestFormatJsonMapping.DEBUG_AGGREGATE_REPORT_OBJECTS_KEY);
@@ -1305,7 +1344,7 @@ public abstract class E2ETest {
                 debugAggregateReportObjects.add(debugAggregateReportObjectsArray.getJSONObject(i));
             }
         }
-        List<JSONObject> debugReportObjects = new ArrayList<>();
+
         if (!output.isNull(TestFormatJsonMapping.DEBUG_REPORT_API_OBJECTS_KEY)) {
             JSONArray debugReportObjectsArray =
                     output.getJSONArray(TestFormatJsonMapping.DEBUG_REPORT_API_OBJECTS_KEY);
