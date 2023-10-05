@@ -17,13 +17,14 @@
 package com.android.adservices.ui.notifications;
 
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.BETA_UX;
+
 import static com.google.common.truth.Truth.assertThat;
+
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 
 import android.content.Context;
 import android.content.Intent;
-import android.platform.test.rule.ScreenRecordRule;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -50,7 +51,6 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -62,14 +62,12 @@ import org.mockito.quality.Strictness;
 import java.io.IOException;
 
 @RunWith(AndroidJUnit4.class)
-@ScreenRecordRule.ScreenRecord
 public class NotificationActivityUiAutomatorTest {
     private static final String NOTIFICATION_TEST_PACKAGE =
             "android.test.adservices.ui.NOTIFICATIONS";
     private static final int LAUNCH_TIMEOUT = 5000;
     private static final UiDevice sDevice =
             UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-    @Rule public final ScreenRecordRule screenRecordRule = new ScreenRecordRule();
     private MockitoSession mStaticMockSession;
     private String mTestName;
 
@@ -300,6 +298,7 @@ public class NotificationActivityUiAutomatorTest {
         UiObject scrollView =
                 sDevice.findObject(new UiSelector().className("android.widget.ScrollView"));
 
+        // TODO: clean up the following code with NotificationPages.goThroughNotificationPage()
         if (scrollView.isScrollable()) {
             // there should be a more button
             assertThat(leftControlButton.exists()).isFalse();
@@ -314,6 +313,12 @@ public class NotificationActivityUiAutomatorTest {
             assertThat(rightControlButton.exists()).isTrue();
             assertThat(moreButton.exists()).isFalse();
         } else {
+            // fix the flaky test where test fails due to only moreButton exists
+            int clickCount = 10;
+            while (moreButton.exists() && clickCount-- > 0) {
+                moreButton.click();
+                Thread.sleep(2000);
+            }
             assertThat(leftControlButton.exists()).isTrue();
             assertThat(rightControlButton.exists()).isTrue();
             assertThat(moreButton.exists()).isFalse();

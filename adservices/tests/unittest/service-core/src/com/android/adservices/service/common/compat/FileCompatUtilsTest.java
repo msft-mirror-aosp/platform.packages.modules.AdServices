@@ -21,6 +21,7 @@ import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsA
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 import android.content.Context;
 
@@ -35,11 +36,12 @@ import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.Spy;
 
 import java.io.File;
 
 public final class FileCompatUtilsTest {
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
+    @Spy private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String BASE_FILENAME = "filename.xml";
     private static final String FILENAME_STARTS_WITH_ADSERVICES = "ADSERVICES_filename.xml";
     private static final String ANOTHER_FILENAME_STARTS_WITH_ADSERVICES = "adservicesFilename.xml";
@@ -80,9 +82,7 @@ public final class FileCompatUtilsTest {
     public void testRoomDatabaseBuilderHelper_shouldPrependAdservices_SMinus() {
         mockIsAtLeastT(false);
 
-        RoomDatabase.Builder<CacheDatabase> unused =
-                FileCompatUtils.roomDatabaseBuilderHelper(
-                        sContext, CacheDatabase.class, BASE_FILENAME);
+        FileCompatUtils.roomDatabaseBuilderHelper(sContext, CacheDatabase.class, BASE_FILENAME);
 
         ExtendedMockito.verify(
                 () -> Room.databaseBuilder(sContext, CacheDatabase.class, BASE_FILENAME), never());
@@ -139,5 +139,22 @@ public final class FileCompatUtilsTest {
 
         File file = FileCompatUtils.newFileHelper(new File("parent", "child"), BASE_FILENAME);
         assertThat(file.getName()).isEqualTo(BASE_FILENAME);
+    }
+
+    @Test
+    public void testGetSharedPreferencesHelper_shouldPrependAdservices_SMinus() {
+        mockIsAtLeastT(false);
+
+        FileCompatUtils.getSharedPreferencesHelper(sContext, BASE_FILENAME, Context.MODE_PRIVATE);
+        verify(sContext)
+                .getSharedPreferences(ADSERVICES_PREFIX + BASE_FILENAME, Context.MODE_PRIVATE);
+    }
+
+    @Test
+    public void testGetSharedPreferencesHelper_shouldNotPrependAdservices_TPlus() {
+        mockIsAtLeastT(true);
+
+        FileCompatUtils.getSharedPreferencesHelper(sContext, BASE_FILENAME, Context.MODE_PRIVATE);
+        verify(sContext).getSharedPreferences(BASE_FILENAME, Context.MODE_PRIVATE);
     }
 }

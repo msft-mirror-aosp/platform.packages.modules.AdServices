@@ -26,6 +26,8 @@ import com.google.common.truth.Expect;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.util.NoSuchElementException;
+
 public final class OutcomeReceiverForTestsTest {
 
     private static final String TAG = OutcomeReceiverForTestsTest.class.getSimpleName();
@@ -53,12 +55,12 @@ public final class OutcomeReceiverForTestsTest {
     }
 
     private void onResultTest(boolean await) throws InterruptedException {
-        OutcomeReceiverForTests<String> receiver = new OutcomeReceiverForTests<>();
+        OutcomeReceiverForTests<String> receiver = new OutcomeReceiverForTests<>(TIMEOUT_MS * 3);
 
         String result;
         if (await) {
             runAsync(TIMEOUT_MS, () -> receiver.onResult(RESULT));
-            result = receiver.assertSuccess(TIMEOUT_MS * 3);
+            result = receiver.assertSuccess();
         } else {
             receiver.onResult(RESULT);
             result = receiver.assertSuccess();
@@ -67,6 +69,20 @@ public final class OutcomeReceiverForTestsTest {
         expect.withMessage("assertSuccess()").that(result).isEqualTo(RESULT);
         expect.withMessage("getResult()").that(receiver.getResult()).isEqualTo(RESULT);
         expect.withMessage("getError()").that(receiver.getError()).isNull();
+    }
+
+    @Test
+    public void testDefaultConstructor() {
+        OutcomeReceiverForTests<String> receiver = new OutcomeReceiverForTests<>();
+
+        expect.withMessage("getTimeout()").that(receiver.getTimeoutMs()).isGreaterThan(0);
+    }
+
+    @Test
+    public void testGetTimeout() {
+        OutcomeReceiverForTests<String> receiver = new OutcomeReceiverForTests<>(42);
+
+        expect.withMessage("getTimeout()").that(receiver.getTimeoutMs()).isEqualTo(42);
     }
 
     @Test
@@ -81,7 +97,12 @@ public final class OutcomeReceiverForTestsTest {
         expect.withMessage("exception")
                 .that(exception)
                 .hasMessageThat()
-                .contains("onResult(" + anotherError + ") called after onResult(" + RESULT + ")");
+                .contains(
+                        "injectResult("
+                                + anotherError
+                                + ") called after injectResult("
+                                + RESULT
+                                + ")");
     }
 
     @Test
@@ -95,41 +116,47 @@ public final class OutcomeReceiverForTestsTest {
         expect.withMessage("exception")
                 .that(exception)
                 .hasMessageThat()
-                .contains("onResult(" + RESULT + ") called after onError(" + mError + ")");
+                .contains("injectResult(" + RESULT + ") called after injectError(" + mError + ")");
     }
 
     @Test
-    public void testOnError_nullArg() {
+    public void testaAssertFailure_nullArg() {
         OutcomeReceiverForTests<String> receiver = new OutcomeReceiverForTests<>();
+        receiver.onError(mError);
 
-        assertThrows(NullPointerException.class, () -> receiver.assertFailure(null));
+        assertThrows(IllegalArgumentException.class, () -> receiver.assertFailure(null));
     }
 
     @Test
     public void testOnError() throws Exception {
-        onErrorTest(/* await= */ false);
-    }
+        OutcomeReceiverForTests<String> receiver = new OutcomeReceiverForTests<>(TIMEOUT_MS * 3);
 
-    @Test
-    public void testOnError_await() throws Exception {
-        onErrorTest(/* await= */ true);
-    }
-
-    private void onErrorTest(boolean await) throws InterruptedException {
-        OutcomeReceiverForTests<String> receiver = new OutcomeReceiverForTests<>();
-
-        Exception error;
-        if (await) {
-            runAsync(TIMEOUT_MS, () -> receiver.onError(mError));
-            error = receiver.assertFailure(mError.getClass(), TIMEOUT_MS * 3);
-        } else {
-            receiver.onError(mError);
-            error = receiver.assertFailure(mError.getClass());
-        }
+        runAsync(TIMEOUT_MS, () -> receiver.onError(mError));
+        Exception error = receiver.assertFailure(mError.getClass());
 
         expect.withMessage("assertFailure()").that(error).isSameInstanceAs(mError);
         expect.withMessage("getError()").that(receiver.getError()).isSameInstanceAs(mError);
         expect.withMessage("getResult()").that(receiver.getResult()).isNull();
+    }
+
+    @Test
+    public void testOnError_wrongExceptionClass() throws Exception {
+        OutcomeReceiverForTests<String> receiver = new OutcomeReceiverForTests<>(TIMEOUT_MS * 3);
+
+        runAsync(TIMEOUT_MS, () -> receiver.onError(mError));
+
+        IllegalStateException exception =
+                assertThrows(
+                        IllegalStateException.class,
+                        () -> receiver.assertFailure(NoSuchElementException.class));
+        expect.withMessage("exception")
+                .that(exception)
+                .hasMessageThat()
+                .isEqualTo(
+                        String.format(
+                                OutcomeReceiverForTests.ERROR_WRONG_EXCEPTION_RECEIVED,
+                                NoSuchElementException.class,
+                                mError));
     }
 
     @Test
@@ -144,7 +171,12 @@ public final class OutcomeReceiverForTestsTest {
         expect.withMessage("exception")
                 .that(exception)
                 .hasMessageThat()
-                .contains("onError(" + anotherError + ") called after onError(" + mError + ")");
+                .contains(
+                        "injectError("
+                                + anotherError
+                                + ") called after injectError("
+                                + mError
+                                + ")");
     }
 
     @Test
@@ -158,7 +190,7 @@ public final class OutcomeReceiverForTestsTest {
         expect.withMessage("exception")
                 .that(exception)
                 .hasMessageThat()
-                .contains("onError(" + mError + ") called after onResult(" + RESULT + ")");
+                .contains("injectError(" + mError + ") called after injectResult(" + RESULT + ")");
     }
 
     private static void runAsync(long timeoutMs, Runnable r) {

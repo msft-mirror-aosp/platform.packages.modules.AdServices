@@ -28,7 +28,7 @@ public class PrivacySandboxUxCollectionTest {
 
     @Test
     public void uxCollectionTest_cardinalityCheck() {
-        assertEquals(4, PrivacySandboxUxCollection.values().length);
+        assertEquals(5, PrivacySandboxUxCollection.values().length);
     }
 
     @Test
@@ -37,8 +37,9 @@ public class PrivacySandboxUxCollectionTest {
 
         assertEquals(PrivacySandboxUxCollection.UNSUPPORTED_UX, uxCollection[0]);
         assertEquals(PrivacySandboxUxCollection.U18_UX, uxCollection[1]);
-        assertEquals(PrivacySandboxUxCollection.GA_UX, uxCollection[2]);
-        assertEquals(PrivacySandboxUxCollection.BETA_UX, uxCollection[3]);
+        assertEquals(PrivacySandboxUxCollection.RVC_UX, uxCollection[2]);
+        assertEquals(PrivacySandboxUxCollection.GA_UX, uxCollection[3]);
+        assertEquals(PrivacySandboxUxCollection.BETA_UX, uxCollection[4]);
     }
 
     @Test
