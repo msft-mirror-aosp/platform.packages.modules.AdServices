@@ -63,7 +63,6 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.os.Binder;
-import android.os.IBinder;
 import android.os.Process;
 import android.util.Pair;
 
@@ -101,7 +100,6 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
@@ -795,9 +793,6 @@ public class TopicsServiceImplTest {
         // Call init() to load the cache
         topicsServiceImpl.init();
 
-        // To capture result in inner class, we have to declare final.
-        final GetTopicsResult[] capturedResponseParcel = new GetTopicsResult[1];
-
         // Topic impl service use a background executor to run the task,
         // use a countdownLatch and set the countdown in the logging call operation
         final CountDownLatch logOperationCalledLatch = new CountDownLatch(1);
@@ -895,8 +890,6 @@ public class TopicsServiceImplTest {
     @Test
     public void testGetTopics_recordObservation() throws InterruptedException {
         when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
-        // To capture result in inner class, we have to declare final.
-        final GetTopicsResult[] capturedResponseParcel = new GetTopicsResult[1];
 
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
@@ -960,8 +953,6 @@ public class TopicsServiceImplTest {
     @Test
     public void testGetTopics_notRecordObservation() throws InterruptedException {
         when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
-        // To capture result in inner class, we have to declare final.
-        final GetTopicsResult[] capturedResponseParcel = new GetTopicsResult[1];
 
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
@@ -998,31 +989,9 @@ public class TopicsServiceImplTest {
                         .setShouldRecordObservation(false)
                         .build();
 
-        topicsService.getTopics(
-                mRequest,
-                mCallerMetadata,
-                new IGetTopicsCallback() {
-                    @Override
-                    public void onResult(GetTopicsResult responseParcel) {
-                        capturedResponseParcel[0] = responseParcel;
-                    }
-
-                    @Override
-                    public void onFailure(int resultCode) {
-                        Assert.fail();
-                    }
-
-                    @Override
-                    public IBinder asBinder() {
-                        return null;
-                    }
-                });
-
-        // getTopics method finished executing.
-        assertThat(
-                        logOperationCalledLatch.await(
-                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-                .isTrue();
+        SyncGetTopicsCallback callback = new SyncGetTopicsCallback();
+        topicsService.getTopics(mRequest, mCallerMetadata, callback);
+        callback.assertResultReceived();
 
         // Not record the call from App and Sdk to usage history when isRecordObservation is false.
         verify(mSpyTopicsWorker, never()).recordUsage(anyString(), anyString());
