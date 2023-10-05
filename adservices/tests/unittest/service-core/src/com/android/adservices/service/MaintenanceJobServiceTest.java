@@ -231,7 +231,7 @@ public class MaintenanceJobServiceTest {
         verify(mFledgeMaintenanceTasksWorkerMock)
                 .clearInvalidFrequencyCapHistogramData(any(PackageManager.class));
 
-        verify(mSignalsMaintenanceTasksWorkerMock).clearInvalidSignals();
+        verify(mSignalsMaintenanceTasksWorkerMock).clearInvalidProtectedSignalsData();
     }
 
     @Test
@@ -360,7 +360,7 @@ public class MaintenanceJobServiceTest {
         verify(mFledgeMaintenanceTasksWorkerMock).clearExpiredAdSelectionData();
         verify(mFledgeMaintenanceTasksWorkerMock)
                 .clearInvalidFrequencyCapHistogramData(any(PackageManager.class));
-        verify(mSignalsMaintenanceTasksWorkerMock, never()).clearInvalidSignals();
+        verify(mSignalsMaintenanceTasksWorkerMock, never()).clearInvalidProtectedSignalsData();
     }
 
     @Test
@@ -470,7 +470,7 @@ public class MaintenanceJobServiceTest {
         verify(mFledgeMaintenanceTasksWorkerMock)
                 .clearInvalidFrequencyCapHistogramData(any(PackageManager.class));
 
-        verify(mSignalsMaintenanceTasksWorkerMock).clearInvalidSignals();
+        verify(mSignalsMaintenanceTasksWorkerMock).clearInvalidProtectedSignalsData();
     }
 
     @Test
@@ -546,7 +546,7 @@ public class MaintenanceJobServiceTest {
 
         verify(mFledgeMaintenanceTasksWorkerMock).clearExpiredAdSelectionData();
 
-        verify(mSignalsMaintenanceTasksWorkerMock).clearInvalidSignals();
+        verify(mSignalsMaintenanceTasksWorkerMock).clearInvalidProtectedSignalsData();
     }
 
     @Test
@@ -620,7 +620,7 @@ public class MaintenanceJobServiceTest {
         verify(mFledgeMaintenanceTasksWorkerMock, never())
                 .clearInvalidFrequencyCapHistogramData(any(PackageManager.class));
 
-        verify(mSignalsMaintenanceTasksWorkerMock, never()).clearInvalidSignals();
+        verify(mSignalsMaintenanceTasksWorkerMock, never()).clearInvalidProtectedSignalsData();
     }
 
     @Test
@@ -841,7 +841,7 @@ public class MaintenanceJobServiceTest {
         verify(mFledgeMaintenanceTasksWorkerMock, never()).clearExpiredAdSelectionData();
         verify(mFledgeMaintenanceTasksWorkerMock, never())
                 .clearInvalidFrequencyCapHistogramData(any(PackageManager.class));
-        verify(mSignalsMaintenanceTasksWorkerMock, never()).clearInvalidSignals();
+        verify(mSignalsMaintenanceTasksWorkerMock, never()).clearInvalidProtectedSignalsData();
     }
 
     private void testOnStartJob_killSwitchOff() throws InterruptedException {
@@ -915,7 +915,7 @@ public class MaintenanceJobServiceTest {
         verify(mFledgeMaintenanceTasksWorkerMock)
                 .clearInvalidFrequencyCapHistogramData(any(PackageManager.class));
 
-        verify(mSignalsMaintenanceTasksWorkerMock).clearInvalidSignals();
+        verify(mSignalsMaintenanceTasksWorkerMock).clearInvalidProtectedSignalsData();
     }
 
     private void testOnStopJob() {
@@ -974,6 +974,6 @@ public class MaintenanceJobServiceTest {
         verify(mFledgeMaintenanceTasksWorkerMock, never())
                 .clearInvalidFrequencyCapHistogramData(any(PackageManager.class));
 
-        verify(mSignalsMaintenanceTasksWorkerMock, never()).clearInvalidSignals();
+        verify(mSignalsMaintenanceTasksWorkerMock, never()).clearInvalidProtectedSignalsData();
     }
 }

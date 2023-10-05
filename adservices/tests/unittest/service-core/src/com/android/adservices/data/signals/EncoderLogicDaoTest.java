@@ -31,6 +31,8 @@ import androidx.test.core.app.ApplicationProvider;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -117,6 +119,39 @@ public class EncoderLogicDaoTest {
 
         Set<AdTechIdentifier> actualRegisteredBuyers =
                 mEncoderLogicDao.getAllBuyersWithRegisteredEncoders().stream()
+                        .collect(Collectors.toSet());
+        Set<AdTechIdentifier> expectedRegisteredBuyers = Set.of(BUYER_1, BUYER_2);
+        assertEquals(expectedRegisteredBuyers, actualRegisteredBuyers);
+    }
+
+    @Test
+    public void testGetAllBuyersWithRegisteredBeforeTime() {
+        DBEncoderLogic logic1 =
+                DBEncoderLogicFixture.anEncoderLogicBuilder(BUYER_1).setVersion(1).build();
+        DBEncoderLogic logic2 =
+                DBEncoderLogicFixture.anEncoderLogicBuilder(BUYER_2).setVersion(1).build();
+        DBEncoderLogic logic3 =
+                DBEncoderLogicFixture.anEncoderLogicBuilder(AdTechIdentifier.fromString("buyer3"))
+                        .setCreationTime(Instant.now().plus(10, ChronoUnit.DAYS))
+                        .setVersion(1)
+                        .build();
+        assertEquals(
+                "First entry should have been inserted",
+                1,
+                mEncoderLogicDao.persistEncoder(logic1));
+        assertEquals(
+                "Second entry should have been inserted",
+                2,
+                mEncoderLogicDao.persistEncoder(logic2));
+        assertEquals(
+                "Second entry should have been inserted",
+                3,
+                mEncoderLogicDao.persistEncoder(logic3));
+
+        Set<AdTechIdentifier> actualRegisteredBuyers =
+                mEncoderLogicDao
+                        .getBuyersWithEncodersBeforeTime(Instant.now().plus(1, ChronoUnit.DAYS))
+                        .stream()
                         .collect(Collectors.toSet());
         Set<AdTechIdentifier> expectedRegisteredBuyers = Set.of(BUYER_1, BUYER_2);
         assertEquals(expectedRegisteredBuyers, actualRegisteredBuyers);
