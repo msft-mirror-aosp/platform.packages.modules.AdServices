@@ -829,6 +829,43 @@ public final class PhFlags implements Flags {
                 MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING);
     }
 
+    public boolean getMeasurementEnableDestinationRateLimit() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT,
+                /* defaultValue */
+                        MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT);
+    }
+
+    @Override
+    public int getMeasurementMaxDestinationsPerPublisherPerRateLimitWindow() {
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW,
+                /* defaultValue */
+                        MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW);
+    }
+
+    @Override
+    public int getMeasurementMaxDestPerPublisherXEnrollmentPerRateLimitWindow() {
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW,
+                /* defaultValue */
+                        MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW);
+    }
+
+    @Override
+    public long getMeasurementDestinationRateLimitWindow() {
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW,
+                /* defaultValue */ MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW);
+    }
+
     @Override
     public long getFledgeCustomAudienceMaxCount() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
@@ -3907,6 +3944,26 @@ public final class PhFlags implements Flags {
                         .KEY_MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW
                         + " = "
                         + getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow());
+        writer.println(
+                "\t" + FlagsConstants
+                        .KEY_MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT
+                        + " = "
+                        + getMeasurementEnableDestinationRateLimit());
+        writer.println(
+                "\t" + FlagsConstants
+                        .KEY_MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW
+                        + " = "
+                        + getMeasurementMaxDestinationsPerPublisherPerRateLimitWindow());
+        writer.println(
+                "\t" + FlagsConstants
+                        .KEY_MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW
+                        + " = "
+                        + getMeasurementMaxDestPerPublisherXEnrollmentPerRateLimitWindow());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW
+                        + " = "
+                        + getMeasurementDestinationRateLimitWindow());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_SOURCE

@@ -649,10 +649,12 @@ public abstract class E2ETest {
         }
         if (!payload1.optString(AggregateReportPayloadKeys.SOURCE_DEBUG_KEY, "")
                 .equals(payload2.optString(AggregateReportPayloadKeys.SOURCE_DEBUG_KEY, ""))) {
+            log("Source debug key mismatch");
             return false;
         }
         if (!payload1.optString(AggregateReportPayloadKeys.TRIGGER_DEBUG_KEY, "")
                 .equals(payload2.optString(AggregateReportPayloadKeys.TRIGGER_DEBUG_KEY, ""))) {
+            log("Trigger debug key mismatch");
             return false;
         }
         JSONArray histograms1 = payload1.optJSONArray(AggregateReportPayloadKeys.HISTOGRAMS);

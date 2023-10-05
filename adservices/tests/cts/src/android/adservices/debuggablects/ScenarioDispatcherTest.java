@@ -90,6 +90,23 @@ public class ScenarioDispatcherTest {
         server.shutdown();
     }
 
+    @Test
+    public void testScenarioDispatcher_withTwoSecondDelay_success() throws Exception {
+        ScenarioDispatcher dispatcher =
+                ScenarioDispatcher.fromScenario("scenarios/scenario-test-004.json", "");
+        MockWebServer server = mMockWebServerRule.startMockWebServer(dispatcher);
+
+        String baseAddress = mMockWebServerRule.getServerBaseAddress();
+        long startTime = System.currentTimeMillis();
+        makeSimpleGetRequest(new URL(baseAddress + "/bidding")); // Call something else.
+        long endTime = System.currentTimeMillis();
+
+        assertThat(dispatcher.getCalledPaths())
+                .containsNoneIn(dispatcher.getVerifyNotCalledPaths());
+        assertThat(endTime - startTime).isAtLeast(2000);
+        server.shutdown();
+    }
+
     @SuppressWarnings("UnusedReturnValue")
     public static String makeSimpleGetRequest(URL url) throws Exception {
         StringBuilder result = new StringBuilder();
