@@ -18,11 +18,13 @@ package com.android.adservices.data.signals;
 
 import android.adservices.common.AdTechIdentifier;
 
+import androidx.annotation.NonNull;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 
+import java.time.Instant;
 import java.util.List;
 
 /** Dao to persist, access and delete encoded signals payload for buyers */
@@ -65,4 +67,18 @@ public interface EncodedPayloadDao {
     /** Deletes all persisted encoded payloads */
     @Query("DELETE FROM encoded_payload")
     void deleteAllEncodedPayloads();
+
+    /**
+     * @return list of all the buyers that have encoded payloads
+     */
+    @Query("SELECT DISTINCT buyer FROM encoded_payload")
+    List<AdTechIdentifier> getAllBuyersWithEncodedPayloads();
+
+    /**
+     * Deletes encoded payload before the {@code expiryTime}.
+     *
+     * @return the number of deleted payloads
+     */
+    @Query("DELETE FROM encoded_payload WHERE creation_time < :expiryTime")
+    int deleteEncodedPayloadsBeforeTime(@NonNull Instant expiryTime);
 }
