@@ -748,7 +748,7 @@ public class AdSelectionScriptEngine {
     @VisibleForTesting
     String handleEncodingOutput(String encodingScriptResult) throws IllegalStateException {
 
-        if (encodingScriptResult.isEmpty()) {
+        if (encodingScriptResult == null || encodingScriptResult.isEmpty()) {
             throw new IllegalStateException(
                     "The encoding script either doesn't contain the required function or the"
                             + " function returned null");
