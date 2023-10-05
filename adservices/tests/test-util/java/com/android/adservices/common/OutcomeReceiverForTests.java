@@ -27,7 +27,10 @@ import android.os.OutcomeReceiver;
 public final class OutcomeReceiverForTests<T> extends ExceptionFailureSyncCallback<T>
         implements OutcomeReceiver<T, Exception> {
 
-    /** Default constructor, uses {@link #DEFAULT_TIMEOUT_MS} for timeout. */
+    /**
+     * Default constructor, uses {@link #DEFAULT_TIMEOUT_MS} for timeout and fails if the {@code
+     * inject...} method is called in the main thread.
+     */
     public OutcomeReceiverForTests() {
         super();
     }
@@ -35,5 +38,10 @@ public final class OutcomeReceiverForTests<T> extends ExceptionFailureSyncCallba
     /** Constructor with a custom timeout to wait for the outcome. */
     public OutcomeReceiverForTests(int timeoutMs) {
         super(timeoutMs);
+    }
+
+    /** Constructor with custom settings. */
+    public OutcomeReceiverForTests(int timeoutMs, boolean failIfCalledOnMainThread) {
+        super(timeoutMs, failIfCalledOnMainThread);
     }
 }

@@ -39,7 +39,10 @@ public abstract class IntFailureSyncCallback<T> extends SyncCallback<T, Integer>
     static final String ERROR_WRONG_EXCEPTION_RECEIVED =
             "expected exception of type %s, but received %s";
 
-    /** Default constructor, uses {@link #DEFAULT_TIMEOUT_MS} for timeout. */
+    /**
+     * Default constructor, uses {@link #DEFAULT_TIMEOUT_MS} for timeout and fails if the {@code
+     * inject...} method is called in the main thread.
+     */
     public IntFailureSyncCallback() {
         super();
     }
@@ -47,6 +50,11 @@ public abstract class IntFailureSyncCallback<T> extends SyncCallback<T, Integer>
     /** Constructor with a custom timeout to wait for the outcome. */
     public IntFailureSyncCallback(int timeoutMs) {
         super(timeoutMs);
+    }
+
+    /** Constructor with custom settings. */
+    protected IntFailureSyncCallback(int timeoutMs, boolean failIfCalledOnMainThread) {
+        super(timeoutMs, failIfCalledOnMainThread);
     }
 
     /**
