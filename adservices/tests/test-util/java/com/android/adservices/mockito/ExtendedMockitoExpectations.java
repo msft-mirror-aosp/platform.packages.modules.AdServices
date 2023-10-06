@@ -17,6 +17,7 @@ package com.android.adservices.mockito;
 
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -126,7 +127,19 @@ public final class ExtendedMockitoExpectations {
      * {@link ErrorLogUtil#e()}.
      */
     public static void verifyErrorLogUtilError(Exception exception, int errorCode, int ppapiName) {
-        verify(() -> ErrorLogUtil.e(exception, errorCode, ppapiName));
+        verifyErrorLogUtilError(exception, errorCode, ppapiName, times(1));
+    }
+
+    /**
+     * Verifies {@link ErrorLogUtil#e()} was called with the expected values, using Mockito's {@link
+     * VerificationMode} to set the number of times (like {@code times(2)} or {@code never}).
+     *
+     * <p><b>Note: </b>you must call {@link #doNothingOnErrorLogUtilError()} before the test calls
+     * {@link ErrorLogUtil#e()}.
+     */
+    public static void verifyErrorLogUtilError(
+            Exception exception, int errorCode, int ppapiName, VerificationMode mode) {
+        verify(() -> ErrorLogUtil.e(exception, errorCode, ppapiName), mode);
     }
 
     /**
