@@ -30,14 +30,13 @@ import android.content.IntentFilter;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
-import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -134,9 +133,6 @@ public class AppUpdateTest {
     // allow them to have enough time to be executed. This helps to reduce the test flaky.
     private static final long EXECUTION_WAITING_TIME = 2000;
 
-    // Default Epoch Period.
-    private static final long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
-
     // Use 0 percent for random topic in the test so that we can verify the returned topic.
     private static final int TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC = 0;
     private static final int DEFAULT_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC = 5;
@@ -144,17 +140,16 @@ public class AppUpdateTest {
     private int mExpectedTopicResponseBroadCastIndex = 0;
     private BroadcastReceiver mTopicsResponseReceiver;
 
+    @Rule(order = 0)
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
+    @Rule(order = 1)
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests().setCompatModeFlags();
+
     @Before
     public void setup() throws InterruptedException {
-        // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-
-        // Extra flags need to be set when test is executed on S- for service to run (e.g.
-        // to avoid invoking system-server related code).
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setFlags();
-        }
-
         // Kill AdServices process so that background jobs don't get skipped due to starting
         // with same params.
         AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
@@ -162,20 +157,11 @@ public class AppUpdateTest {
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
 
-        overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
+        flags.setTopicsEpochJobPeriodMsForTests(TEST_EPOCH_JOB_PERIOD_MS);
         // We need to turn off random topic so that we can verify the returned topic.
-        overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+        flags.setTopicsPercentageForRandomTopicForTests(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
 
         registerTopicResponseReceiver();
-    }
-
-    @After
-    public void tearDown() {
-        overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
-        overridePercentageForRandomTopic(DEFAULT_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
     }
 
     @Test
@@ -314,19 +300,6 @@ public class AppUpdateTest {
     private void forceEpochComputationJob() {
         ShellUtils.runShellCommand(
                 "cmd jobscheduler run -f" + " " + ADSERVICES_PACKAGE_NAME + " " + EPOCH_JOB_ID);
-    }
-
-    // Override the Epoch Period to shorten the Epoch Length in the test.
-    private void overrideEpochPeriod(long overrideEpochPeriod) {
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.topics_epoch_job_period_ms " + overrideEpochPeriod);
-    }
-
-    // Override the Percentage For Random Topic in the test.
-    private void overridePercentageForRandomTopic(long overridePercentage) {
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.topics_percentage_for_random_topics "
-                        + overridePercentage);
     }
 
     // Forces JobScheduler to run the Maintenance job.
