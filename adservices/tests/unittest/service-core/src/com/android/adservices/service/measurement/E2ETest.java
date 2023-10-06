@@ -161,11 +161,12 @@ public abstract class E2ETest {
         String PH_FLAGS_OVERRIDE_KEY = "phflags_override";
         String TEST_INPUT_KEY = "input";
         String TEST_OUTPUT_KEY = "output";
+        String REGISTRATIONS_KEY = "registrations";
         String SOURCE_REGISTRATIONS_KEY = "sources";
         String WEB_SOURCES_KEY = "web_sources";
         String LIST_SOURCES_KEY = "list_sources";
         String SOURCE_PARAMS_REGISTRATIONS_KEY = "source_params";
-        String TRIGGER_KEY = "triggers";
+        String TRIGGERS_KEY = "triggers";
         String WEB_TRIGGERS_KEY = "web_triggers";
         String TRIGGER_PARAMS_REGISTRATIONS_KEY = "trigger_params";
         String URI_TO_RESPONSE_HEADERS_KEY = "responses";
@@ -174,6 +175,7 @@ public abstract class E2ETest {
         String REGISTRATION_REQUEST_KEY = "registration_request";
         String ATTRIBUTION_SOURCE_KEY = "registrant";
         String ATTRIBUTION_SOURCE_DEFAULT = "com.interop.app";
+        String CONTEXT_ORIGIN_URI_KEY = "context_origin";
         String SOURCE_TOP_ORIGIN_URI_KEY = "source_origin";
         String TRIGGER_TOP_ORIGIN_URI_KEY = "destination_origin";
         String SOURCE_APP_DESTINATION_URI_KEY = "app_destination";
@@ -1122,10 +1124,43 @@ public abstract class E2ETest {
         return phFlagsMap;
     }
 
+    private static boolean isSourceRegistration(JSONObject obj) throws JSONException {
+        JSONObject request = obj.getJSONObject(TestFormatJsonMapping.REGISTRATION_REQUEST_KEY);
+        return !request.isNull("source_type");
+    }
+
+    private static void addSourceRegistration(JSONObject sourceObj, List<Action> actions,
+            Set<Action> eventReportingJobActions) throws JSONException {
+        RegisterSource sourceRegistration = new RegisterSource(sourceObj);
+        actions.add(sourceRegistration);
+        // Add corresponding reporting job time actions
+        eventReportingJobActions.addAll(
+                maybeAddEventReportingJobTimes(
+                        sourceRegistration.mRegistrationRequest.getInputEvent() == null,
+                        sourceRegistration.mTimestamp,
+                        sourceRegistration.mUriToResponseHeadersMap.values()));
+    }
+
     private static List<Action> createSourceBasedActions(JSONObject input) throws JSONException {
         List<Action> actions = new ArrayList<>();
         // Set avoids duplicate reporting times across sources to do attribution upon.
         Set<Action> eventReportingJobActions = new HashSet<>();
+
+        // Interop tests have all registration types in one list
+        if (!input.isNull(TestFormatJsonMapping.REGISTRATIONS_KEY)) {
+            JSONArray registrationArray = input.getJSONArray(
+                    TestFormatJsonMapping.REGISTRATIONS_KEY);
+            for (int i = 0; i < registrationArray.length(); i++) {
+                if (registrationArray.isNull(i)) {
+                    continue;
+                }
+                JSONObject obj = registrationArray.getJSONObject(i);
+                if (isSourceRegistration(obj)) {
+                    addSourceRegistration(obj, actions, eventReportingJobActions);
+                }
+            }
+        }
+
         if (!input.isNull(TestFormatJsonMapping.SOURCE_REGISTRATIONS_KEY)) {
             JSONArray sourceRegistrationArray = input.getJSONArray(
                     TestFormatJsonMapping.SOURCE_REGISTRATIONS_KEY);
@@ -1133,15 +1168,8 @@ public abstract class E2ETest {
                 if (sourceRegistrationArray.isNull(j)) {
                     continue;
                 }
-                RegisterSource sourceRegistration =
-                        new RegisterSource(sourceRegistrationArray.getJSONObject(j));
-                actions.add(sourceRegistration);
-                // Add corresponding reporting job time actions
-                eventReportingJobActions.addAll(
-                        maybeAddEventReportingJobTimes(
-                                sourceRegistration.mRegistrationRequest.getInputEvent() == null,
-                                sourceRegistration.mTimestamp,
-                                sourceRegistration.mUriToResponseHeadersMap.values()));
+                addSourceRegistration(sourceRegistrationArray.getJSONObject(j),
+                        actions, eventReportingJobActions);
             }
         }
 
@@ -1190,9 +1218,28 @@ public abstract class E2ETest {
         List<Action> actions = new ArrayList<>();
         long firstTriggerTime = Long.MAX_VALUE;
         long lastTriggerTime = -1;
-        if (!input.isNull(TestFormatJsonMapping.TRIGGER_KEY)) {
+
+        // Interop tests have all registration types in one list
+        if (!input.isNull(TestFormatJsonMapping.REGISTRATIONS_KEY)) {
+            JSONArray registrationArray = input.getJSONArray(
+                    TestFormatJsonMapping.REGISTRATIONS_KEY);
+            for (int i = 0; i < registrationArray.length(); i++) {
+                if (registrationArray.isNull(i)) {
+                    continue;
+                }
+                JSONObject obj = registrationArray.getJSONObject(i);
+                if (!isSourceRegistration(obj)) {
+                    RegisterTrigger triggerRegistration = new RegisterTrigger(obj);
+                    actions.add(triggerRegistration);
+                    firstTriggerTime = Math.min(firstTriggerTime, triggerRegistration.mTimestamp);
+                    lastTriggerTime = Math.max(lastTriggerTime, triggerRegistration.mTimestamp);
+                }
+            }
+        }
+
+        if (!input.isNull(TestFormatJsonMapping.TRIGGERS_KEY)) {
             JSONArray triggerRegistrationArray =
-                    input.getJSONArray(TestFormatJsonMapping.TRIGGER_KEY);
+                    input.getJSONArray(TestFormatJsonMapping.TRIGGERS_KEY);
             for (int j = 0; j < triggerRegistrationArray.length(); j++) {
                 RegisterTrigger triggerRegistration =
                         new RegisterTrigger(triggerRegistrationArray.getJSONObject(j));
