@@ -42,6 +42,10 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Позволява на приложението достъп до API за състоянието на AdService за активиране."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Достъп до API на AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Разрешете на дадено приложение да осъществява достъп до API на AdServicesManager."</string>
+    <!-- no translation found for permlab_accessUpdateAdIdCache (6912755067998635886) -->
+    <skip />
+    <!-- no translation found for permdesc_accessUpdateAdIdCache (2907546830224186022) -->
+    <skip />
     <string name="app_label" msgid="5844694701336604490">"Поверителност при рекламите"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Присъединете се към бета-версията на Android за поверителността при рекламите"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android проучва по-поверителни начини, по които приложенията да ви показват реклами"</string>

@@ -42,6 +42,8 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"AdService の有効化状態 API へのアクセスをアプリに許可します。"</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManager の API へのアクセス"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"AdServicesManager の API へのアクセスをアプリに許可します。"</string>
+    <string name="permlab_accessUpdateAdIdCache" msgid="6912755067998635886">"AdService の AdId Cache API のアップデートへのアクセス。"</string>
+    <string name="permdesc_accessUpdateAdIdCache" msgid="2907546830224186022">"AdService の AdId Cache API のアップデートへのアクセスをアプリに許可します。"</string>
     <string name="app_label" msgid="5844694701336604490">"広告のプライバシー"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Android の広告のプライバシー（ベータ版）にご参加ください"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android はプライバシー保護を強化した方法に基づいてアプリが広告を表示するよう取り組んでいます"</string>
