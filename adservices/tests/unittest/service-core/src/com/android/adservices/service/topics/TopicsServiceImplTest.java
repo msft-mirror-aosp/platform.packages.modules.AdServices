@@ -72,6 +72,7 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.IntFailureSyncCallback;
+import com.android.adservices.common.ProcessLifeguardRule;
 import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
@@ -128,7 +129,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /** Unit test for {@link com.android.adservices.service.topics.TopicsServiceImpl}. */
-public class TopicsServiceImplTest {
+public final class TopicsServiceImplTest {
     private static final String TEST_APP_PACKAGE_NAME = "com.android.adservices.servicecoretest";
     private static final String INVALID_PACKAGE_NAME = "com.do_not_exists";
     private static final String SOME_SDK_NAME = "SomeSdkName";
@@ -173,7 +174,11 @@ public class TopicsServiceImplTest {
     // We are not expecting to launch Topics API on Android R. Hence, skipping this test on
     // Android R since some tests require handling of unsupported PackageManager APIs.
     // TODO(b/290839573) - Remove rule if Topics is enabled on R in the future.
-    @Rule public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    @Rule(order = 1)
+    public final ProcessLifeguardRule processLifeguard = new ProcessLifeguardRule();
 
     @Before
     public void setup() throws Exception {
