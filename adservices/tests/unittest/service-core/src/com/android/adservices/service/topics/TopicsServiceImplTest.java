@@ -26,6 +26,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
@@ -282,6 +283,9 @@ public class TopicsServiceImplTest {
         // currently guarded by a flag
         mockGetFlags(mMockFlags);
         when(mMockFlags.getAppConfigReturnsEnabledByDefault()).thenReturn(false);
+        // Similarly, AppManifestConfigHelper.isAllowedTopicsAccess() is failing to parse the XML
+        // (which returns false), but logging the error on ErrorLogUtil, so we need to ignored that.
+        doNothingOnErrorLogUtilError();
     }
 
     @After
