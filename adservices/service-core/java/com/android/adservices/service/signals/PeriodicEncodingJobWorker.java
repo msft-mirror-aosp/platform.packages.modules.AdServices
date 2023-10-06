@@ -215,6 +215,7 @@ public class PeriodicEncodingJobWorker {
                         .setVersion(version)
                         .setEncodedPayload(encodedBytes)
                         .build();
+        sLogger.v("Persisting encoded payload for buyer: %s", buyer);
         mEncodedPayloadDao.persistEncodedPayload(dbEncodedPayload);
         return true;
     }

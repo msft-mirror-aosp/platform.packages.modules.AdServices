@@ -16,12 +16,13 @@
 package com.android.adservices.tests.ui.libs;
 
 import static android.Manifest.permission.POST_NOTIFICATIONS;
+
 import static com.android.adservices.tests.ui.libs.UiConstants.AD_ID_ENABLED;
 import static com.android.adservices.tests.ui.libs.UiConstants.ENTRY_POINT_ENABLED;
 import static com.android.adservices.tests.ui.libs.UiConstants.PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS;
 import static com.android.adservices.tests.ui.libs.UiConstants.SYSTEM_UI_RESOURCE_ID;
-import static com.google.common.truth.Truth.assertThat;
 
+import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesStates;
@@ -159,6 +160,11 @@ public class UiUtils {
 
     public static void enableGa() throws Exception {
         forceSetFlag("ga_ux_enabled", true);
+    }
+
+    /** Override flag rvc_ux_enabled in tests */
+    public static void enableRvc() throws Exception {
+        forceSetFlag("rvc_ux_enabled", true);
     }
 
     public static void disableGa() throws Exception {

@@ -20,13 +20,12 @@ import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentat
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.os.Bundle;
 import android.os.SystemClock;
 import android.platform.test.scenario.annotation.Scenario;
 
-import androidx.test.uiautomator.By;
+import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
-import androidx.test.uiautomator.UiObject2;
-import androidx.test.uiautomator.Until;
 
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -40,41 +39,32 @@ import java.io.IOException;
 @RunWith(JUnit4.class)
 public class LoadAd {
     private static final UiDevice sUiDevice = UiDevice.getInstance(getInstrumentation());
-    private static final long UI_NAVIGATION_WAIT_MS = 1000;
-    private static final int WAIT_BEFORE_ASSERT_MS = 2000;
-    private static final int WAIT_TIME_BEFORE_END_TEST_MS = 3000;
-    private static final String LOAD_AD_BUTTON = "loadAdButton";
+    private static final Bundle sArgsBundle = InstrumentationRegistry.getArguments();
 
     private static final String CLIENT_APP = "com.google.android.libraries.internal.exampleclient";
+    private static final String MEDIATION_ENABLED_KEY = "mediation_enabled";
+    private static final int WAIT_BEFORE_ASSERT_MS = 2000;
+    private static final int WAIT_TIME_BEFORE_END_TEST_MS = 3000;
+
+    private static final ClientAppUtils sClientAppUtils = new ClientAppUtils(CLIENT_APP);
 
     @AfterClass
     public static void tearDown() throws IOException {
-        sUiDevice.executeShellCommand("am force-stop " + CLIENT_APP);
+        sUiDevice.executeShellCommand(sClientAppUtils.getStopAppCommand());
     }
 
     @Before
     public void setup() throws Exception {
-        sUiDevice.executeShellCommand("am start " + CLIENT_APP + "/" + ".MainActivity");
+        boolean mediationEnabled = sArgsBundle.getBoolean(MEDIATION_ENABLED_KEY);
+        sUiDevice.executeShellCommand(sClientAppUtils.getStartAppCommand(mediationEnabled));
     }
 
     @Test
     public void testLoadAd() throws Exception {
-        loadAd();
+        sClientAppUtils.loadAd(sUiDevice);
         SystemClock.sleep(WAIT_BEFORE_ASSERT_MS);
-        assertThat(getLoadAdButton().getText()).isEqualTo("Load Ad (Ad loaded)");
+        assertThat(sClientAppUtils.getLoadAdButton(sUiDevice).getText())
+                .isEqualTo(ClientAppUtils.AD_LOADED_BUTTON_TEXT);
         SystemClock.sleep(WAIT_TIME_BEFORE_END_TEST_MS);
-    }
-
-    private UiObject2 getLoadAdButton() {
-        return sUiDevice.wait(
-                Until.findObject(By.res(CLIENT_APP, LOAD_AD_BUTTON)), UI_NAVIGATION_WAIT_MS);
-    }
-
-    void loadAd() {
-        if (getLoadAdButton() != null) {
-            getLoadAdButton().click();
-        } else {
-            throw new RuntimeException("Did not find 'Load Ad' button.");
-        }
     }
 }

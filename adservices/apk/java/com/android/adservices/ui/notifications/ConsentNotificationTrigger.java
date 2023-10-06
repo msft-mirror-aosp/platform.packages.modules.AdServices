@@ -101,7 +101,9 @@ public class ConsentNotificationTrigger {
                 case GA_UX:
                     consentManager.recordGaUxNotificationDisplayed(true);
                     break;
+                // Both U18_UX and RVC_UX are showing U18 Notification
                 case U18_UX:
+                case RVC_UX:
                     consentManager.setU18NotificationDisplayed(true);
                     break;
                 case BETA_UX:
@@ -132,7 +134,9 @@ public class ConsentNotificationTrigger {
                         notification = getGaConsentNotification(context, isEuDevice);
                     }
                     break;
+                // Both U18_UX and RVC_UX are showing U18 Notification
                 case U18_UX:
+                case RVC_UX:
                     notification = getU18ConsentNotification(context);
                     break;
                 case BETA_UX:
@@ -170,6 +174,11 @@ public class ConsentNotificationTrigger {
         if (isUxStatesReady(context)) {
             switch (UxUtil.getUx(context)) {
                 case U18_UX:
+                    consentManager.recordMeasurementDefaultConsent(true);
+                    consentManager.enable(context, AdServicesApiType.MEASUREMENTS);
+                    break;
+                case RVC_UX:
+                    // TODO(297413394) Eu user needs defaults to opt out before receiving R notif
                     consentManager.recordMeasurementDefaultConsent(true);
                     consentManager.enable(context, AdServicesApiType.MEASUREMENTS);
                     break;
