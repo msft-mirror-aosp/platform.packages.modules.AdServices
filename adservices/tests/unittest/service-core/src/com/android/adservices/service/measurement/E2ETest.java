@@ -1216,8 +1216,10 @@ public abstract class E2ETest {
 
     private static List<Action> createTriggerBasedActions(JSONObject input) throws JSONException {
         List<Action> actions = new ArrayList<>();
-        long firstTriggerTime = Long.MAX_VALUE;
-        long lastTriggerTime = -1;
+        List<Action> aggregateReportingJobActions = new ArrayList<>();
+
+        long aggregateReportMaxDelay = PrivacyParams.AGGREGATE_REPORT_MIN_DELAY
+                + PrivacyParams.AGGREGATE_REPORT_DELAY_SPAN;
 
         // Interop tests have all registration types in one list
         if (!input.isNull(TestFormatJsonMapping.REGISTRATIONS_KEY)) {
@@ -1231,8 +1233,8 @@ public abstract class E2ETest {
                 if (!isSourceRegistration(obj)) {
                     RegisterTrigger triggerRegistration = new RegisterTrigger(obj);
                     actions.add(triggerRegistration);
-                    firstTriggerTime = Math.min(firstTriggerTime, triggerRegistration.mTimestamp);
-                    lastTriggerTime = Math.max(lastTriggerTime, triggerRegistration.mTimestamp);
+                    aggregateReportingJobActions.add(new AggregateReportingJob(
+                            triggerRegistration.mTimestamp + aggregateReportMaxDelay));
                 }
             }
         }
@@ -1244,8 +1246,8 @@ public abstract class E2ETest {
                 RegisterTrigger triggerRegistration =
                         new RegisterTrigger(triggerRegistrationArray.getJSONObject(j));
                 actions.add(triggerRegistration);
-                firstTriggerTime = Math.min(firstTriggerTime, triggerRegistration.mTimestamp);
-                lastTriggerTime = Math.max(lastTriggerTime, triggerRegistration.mTimestamp);
+                aggregateReportingJobActions.add(new AggregateReportingJob(
+                        triggerRegistration.mTimestamp + aggregateReportMaxDelay));
             }
         }
 
@@ -1256,30 +1258,9 @@ public abstract class E2ETest {
                 RegisterWebTrigger webTrigger =
                         new RegisterWebTrigger(webTriggerRegistrationArray.getJSONObject(j));
                 actions.add(webTrigger);
-                firstTriggerTime = Math.min(firstTriggerTime, webTrigger.mTimestamp);
-                lastTriggerTime = Math.max(lastTriggerTime, webTrigger.mTimestamp);
+                aggregateReportingJobActions.add(new AggregateReportingJob(
+                        webTrigger.mTimestamp + aggregateReportMaxDelay));
             }
-        }
-
-        // Aggregate reports are scheduled close to trigger time. Add aggregate report jobs to cover
-        // the time span outlined by triggers.
-        List<Action> aggregateReportingJobActions = new ArrayList<>();
-        long window = Flags.DEFAULT_MEASUREMENT_MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS - 10;
-        long t = firstTriggerTime;
-
-        do {
-            t += window;
-            aggregateReportingJobActions.add(new AggregateReportingJob(t));
-        } while (t <= lastTriggerTime);
-
-        // Account for edge case of t between lastTriggerTime and the latter's max report delay.
-        long aggregateReportMaxDelay = PrivacyParams.AGGREGATE_REPORT_MIN_DELAY
-                + PrivacyParams.AGGREGATE_REPORT_DELAY_SPAN;
-        if (t <= lastTriggerTime + aggregateReportMaxDelay) {
-            // t must be greater than lastTriggerTime so adding max report
-            // delay should be beyond the report delay for lastTriggerTime.
-            aggregateReportingJobActions.add(new AggregateReportingJob(t
-                    + aggregateReportMaxDelay));
         }
 
         actions.addAll(aggregateReportingJobActions);
