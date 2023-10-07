@@ -647,6 +647,10 @@ public final class FlagsConstants {
     public static final String KEY_ENFORCE_FOREGROUND_STATUS_TOPICS =
             "topics_enforce_foreground_status";
 
+    // Signals invoking app status key.
+    public static final String KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS =
+            "signals_enforce_foreground_status";
+
     // AdId invoking app status key.
     public static final String KEY_ENFORCE_FOREGROUND_STATUS_ADID =
             "adid_enforce_foreground_status";

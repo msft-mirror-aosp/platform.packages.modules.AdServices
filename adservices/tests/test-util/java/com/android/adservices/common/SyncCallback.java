@@ -24,7 +24,6 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 
 import com.android.internal.annotations.VisibleForTesting;
-import com.android.internal.util.Preconditions;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -150,7 +149,10 @@ public abstract class SyncCallback<T, E> {
     public final void assertReceived() throws InterruptedException {
         Log.v(TAG, "waiting " + mTimeoutMs + " until called");
         boolean called = mLatch.await(mTimeoutMs, TimeUnit.MILLISECONDS);
-        Preconditions.checkState(called, "Callback not received in %d ms", mTimeoutMs);
+        if (!called) {
+            throw new IllegalStateException(
+                    String.format("Callback not received in %d ms", mTimeoutMs));
+        }
         if (mInternalFailure != null) {
             throw mInternalFailure;
         }

@@ -18,12 +18,19 @@ package com.android.adservices.service.common;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastS;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilError;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_PARSING_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -42,6 +49,7 @@ import androidx.test.filters.SmallTest;
 
 import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -54,6 +62,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.verification.VerificationMode;
 
 @SmallTest
 public final class AppManifestConfigHelperTest {
@@ -81,6 +90,7 @@ public final class AppManifestConfigHelperTest {
                     .spyStatic(AndroidManifestConfigParser.class)
                     .spyStatic(FlagsFactory.class)
                     .spyStatic(SdkLevel.class)
+                    .spyStatic(ErrorLogUtil.class)
                     .build();
 
     @Rule public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAnyLevel();
@@ -92,6 +102,7 @@ public final class AppManifestConfigHelperTest {
         when(mMockContext.getPackageManager()).thenReturn(mMockPackageManager);
         mockGetFlags(mMockFlags);
         setEnabledByDefault(false);
+        doNothingOnErrorLogUtilError();
     }
 
     @Test
@@ -291,18 +302,20 @@ public final class AppManifestConfigHelperTest {
     @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
     public void testIsAllowedApiAccess_parsingExceptionSwallowed_sPlus() throws Exception {
         mockGetPropertySucceeds(PACKAGE_NAME, AD_SERVICES_CONFIG_PROPERTY, RESOURCE_ID);
-        mockAppManifestConfigParserGetConfigThrows();
+        Exception e = mockAppManifestConfigParserGetConfigThrows();
 
         assertNoAccessAllowed();
+        verifyErrorLogUtilErrorLogged(e, times(4)); // Called once for each API
     }
 
     @Test
     public void testIsAllowedApiAccess_parsingExceptionSwallowed_rMinus() throws Exception {
         mockSdkLevelR();
         mockGetAssetSucceeds(PACKAGE_NAME, RESOURCE_ID);
-        mockAppManifestConfigParserGetConfigThrows();
+        Exception e = mockAppManifestConfigParserGetConfigThrows();
 
         assertNoAccessAllowed();
+        verifyErrorLogUtilErrorLogged(e, times(4)); // Called once for each API
     }
 
     @Test
@@ -311,9 +324,10 @@ public final class AppManifestConfigHelperTest {
             throws Exception {
         setEnabledByDefault(true);
         mockGetPropertySucceeds(PACKAGE_NAME, AD_SERVICES_CONFIG_PROPERTY, RESOURCE_ID);
-        mockAppManifestConfigParserGetConfigThrows();
+        Exception e = mockAppManifestConfigParserGetConfigThrows();
 
         assertNoAccessAllowed();
+        verifyErrorLogUtilErrorLogged(e, times(4)); // Called once for each API
     }
 
     @Test
@@ -322,9 +336,10 @@ public final class AppManifestConfigHelperTest {
         setEnabledByDefault(true);
         mockSdkLevelR();
         mockGetAssetSucceeds(PACKAGE_NAME, RESOURCE_ID);
-        mockAppManifestConfigParserGetConfigThrows();
+        Exception e = mockAppManifestConfigParserGetConfigThrows();
 
         assertNoAccessAllowed();
+        verifyErrorLogUtilErrorLogged(e, times(4)); // Called once for each API
     }
 
     @Test
@@ -444,9 +459,10 @@ public final class AppManifestConfigHelperTest {
                 .when(() -> AppManifestConfigParser.getConfig(eq(mMockParser), anyBoolean()));
     }
 
-    private void mockAppManifestConfigParserGetConfigThrows() throws Exception {
-        doThrow(XmlParseException.class)
-                .when(() -> AppManifestConfigParser.getConfig(eq(mMockParser), anyBoolean()));
+    private XmlParseException mockAppManifestConfigParserGetConfigThrows() throws Exception {
+        XmlParseException e = new XmlParseException("D'OH!");
+        doThrow(e).when(() -> AppManifestConfigParser.getConfig(eq(mMockParser), anyBoolean()));
+        return e;
     }
 
     private void mockIsAllowedAttributionAccess(String partnerId, boolean value) {
@@ -525,6 +541,18 @@ public final class AppManifestConfigHelperTest {
                                 PACKAGE_NAME,
                                 ENROLLMENT_ID))
                 .isTrue();
+
+        verifyErrorLogUtilErrorLogged(any(), never());
+    }
+
+    private void verifyErrorLogUtilErrorLogged(Exception e, VerificationMode mode) {
+        // NOTE: e is null when passed as any().
+        Exception exceptionMatcher = e == null ? e : eq(e);
+        verifyErrorLogUtilError(
+                exceptionMatcher,
+                eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_PARSING_ERROR),
+                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED),
+                mode);
     }
 
     private void setEnabledByDefault(boolean value) {

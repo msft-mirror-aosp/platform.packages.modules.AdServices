@@ -42,8 +42,8 @@ import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.common.SupportedByConditionRule;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.compatibility.common.util.ShellUtils;
@@ -91,7 +91,6 @@ public abstract class FledgeScenarioTest extends ForegroundDebuggableCtsTest {
     private final Random mCacheBusterRandom = new Random();
     // Prefix added to all requests to bust cache.
     private int mCacheBuster;
-    private String mPreviousAppAllowList;
 
     @Rule(order = 0)
     public final AdServicesDeviceSupportedRule deviceSupported =
@@ -110,6 +109,12 @@ public abstract class FledgeScenarioTest extends ForegroundDebuggableCtsTest {
             MockWebServerRule.forHttps(
                     CONTEXT, "adservices_untrusted_test_server.p12", "adservices_test");
 
+    @Rule(order = 4)
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
+                    .setCompatModeFlags()
+                    .setPpapiAppAllowList(sContext.getPackageName());
+
     protected static void overrideBiddingLogicVersionToV3(boolean useVersion3) {
         ShellUtils.runShellCommand(
                 "device_config put adservices fledge_ad_selection_bidding_logic_js_version %s",
@@ -125,11 +130,6 @@ public abstract class FledgeScenarioTest extends ForegroundDebuggableCtsTest {
     public void setUp() throws Exception {
         if (SdkLevel.isAtLeastT()) {
             assertForegroundActivityStarted();
-        } else {
-            mPreviousAppAllowList =
-                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
-                            sContext.getPackageName());
-            CompatAdServicesTestUtils.setFlags();
         }
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
@@ -148,13 +148,6 @@ public abstract class FledgeScenarioTest extends ForegroundDebuggableCtsTest {
     public void tearDown() throws IOException {
         if (mMockWebServer != null) {
             mMockWebServer.shutdown();
-        }
-        if (!AdservicesTestHelper.isDeviceSupported()) {
-            return;
-        }
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
-            CompatAdServicesTestUtils.resetFlagsToDefault();
         }
     }
 
