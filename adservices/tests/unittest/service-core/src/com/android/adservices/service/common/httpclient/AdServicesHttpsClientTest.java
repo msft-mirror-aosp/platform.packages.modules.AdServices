@@ -439,7 +439,10 @@ public class AdServicesHttpsClientTest {
     @Test
     public void testAdServiceRequestResponseDefault_Empty() {
         AdServicesHttpClientRequest request =
-                AdServicesHttpClientRequest.builder().setUri(Uri.EMPTY).build();
+                AdServicesHttpClientRequest.builder()
+                        .setUri(Uri.EMPTY)
+                        .setDevContext(DEV_CONTEXT_DISABLED)
+                        .build();
 
         assertEquals(request.getRequestProperties(), ImmutableMap.of());
         assertEquals(request.getResponseHeaderKeys(), ImmutableSet.of());
@@ -550,6 +553,7 @@ public class AdServicesHttpsClientTest {
                                         .setUri(Uri.parse(url.toString()))
                                         .setUseCache(true)
                                         .setResponseHeaderKeys(ImmutableSet.of(RESPONSE_HEADER_KEY))
+                                        .setDevContext(DEV_CONTEXT_DISABLED)
                                         .build())
                         .get();
         assertEquals(mJsScript, response.getResponseBody());

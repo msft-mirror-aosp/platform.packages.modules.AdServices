@@ -24,4 +24,7 @@ import com.google.cobalt.EncryptedMessage;
 public interface Uploader {
     /** Upload an encrypted message to Cobalt. */
     void upload(@NonNull EncryptedMessage encryptedMessage);
+
+    /** Uploads have been completed and resources can be released. */
+    void uploadDone();
 }

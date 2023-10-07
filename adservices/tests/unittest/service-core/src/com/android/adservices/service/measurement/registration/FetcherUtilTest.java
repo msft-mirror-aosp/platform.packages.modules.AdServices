@@ -29,9 +29,9 @@ import android.net.Uri;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;

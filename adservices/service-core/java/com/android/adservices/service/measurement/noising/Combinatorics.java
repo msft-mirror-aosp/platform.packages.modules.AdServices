@@ -308,6 +308,9 @@ public class Combinatorics {
      * @return the information gain
      */
     public static double getInformationGain(long numOfStates, double flipProbability) {
+        if (numOfStates <= 1L) {
+            return 0d;
+        }
         double log2Q = DoubleMath.log2(numOfStates);
         double fakeProbability = flipProbability * (numOfStates - 1L) / numOfStates;
         return log2Q

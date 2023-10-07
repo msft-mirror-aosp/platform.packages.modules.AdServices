@@ -42,8 +42,8 @@ import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.common.SupportedByConditionRule;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.compatibility.common.util.ShellUtils;
@@ -91,7 +91,6 @@ public abstract class FledgeScenarioTest extends ForegroundDebuggableCtsTest {
     private final Random mCacheBusterRandom = new Random();
     // Prefix added to all requests to bust cache.
     private int mCacheBuster;
-    private String mPreviousAppAllowList;
 
     @Rule(order = 0)
     public final AdServicesDeviceSupportedRule deviceSupported =
@@ -110,6 +109,12 @@ public abstract class FledgeScenarioTest extends ForegroundDebuggableCtsTest {
             MockWebServerRule.forHttps(
                     CONTEXT, "adservices_untrusted_test_server.p12", "adservices_test");
 
+    @Rule(order = 4)
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
+                    .setCompatModeFlags()
+                    .setPpapiAppAllowList(sContext.getPackageName());
+
     protected static void overrideBiddingLogicVersionToV3(boolean useVersion3) {
         ShellUtils.runShellCommand(
                 "device_config put adservices fledge_ad_selection_bidding_logic_js_version %s",
@@ -125,11 +130,6 @@ public abstract class FledgeScenarioTest extends ForegroundDebuggableCtsTest {
     public void setUp() throws Exception {
         if (SdkLevel.isAtLeastT()) {
             assertForegroundActivityStarted();
-        } else {
-            mPreviousAppAllowList =
-                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
-                            sContext.getPackageName());
-            CompatAdServicesTestUtils.setFlags();
         }
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
@@ -148,13 +148,6 @@ public abstract class FledgeScenarioTest extends ForegroundDebuggableCtsTest {
     public void tearDown() throws IOException {
         if (mMockWebServer != null) {
             mMockWebServer.shutdown();
-        }
-        if (!AdservicesTestHelper.isDeviceSupported()) {
-            return;
-        }
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
-            CompatAdServicesTestUtils.resetFlagsToDefault();
         }
     }
 
@@ -199,9 +192,15 @@ public abstract class FledgeScenarioTest extends ForegroundDebuggableCtsTest {
         Log.d(TAG, "Joined Custom Audience: " + customAudienceName);
     }
 
+    protected void joinCustomAudience(CustomAudience customAudience)
+            throws ExecutionException, InterruptedException, TimeoutException {
+        mCustomAudienceClient.joinCustomAudience(customAudience).get(5, TimeUnit.SECONDS);
+        Log.d(TAG, "Joined Custom Audience: " + customAudience.getName());
+    }
+
     protected void leaveCustomAudience(String customAudienceName)
             throws ExecutionException, InterruptedException, TimeoutException {
-        CustomAudience customAudience = makeCustomAudience(customAudienceName);
+        CustomAudience customAudience = makeCustomAudience(customAudienceName).build();
         mCustomAudienceClient
                 .leaveCustomAudience(customAudience.getBuyer(), customAudience.getName())
                 .get(TIMEOUT, TimeUnit.SECONDS);
@@ -273,11 +272,11 @@ public abstract class FledgeScenarioTest extends ForegroundDebuggableCtsTest {
 
     private JoinCustomAudienceRequest makeJoinCustomAudienceRequest(String customAudienceName) {
         return new JoinCustomAudienceRequest.Builder()
-                .setCustomAudience(makeCustomAudience(customAudienceName))
+                .setCustomAudience(makeCustomAudience(customAudienceName).build())
                 .build();
     }
 
-    protected CustomAudience makeCustomAudience(String customAudienceName) {
+    protected CustomAudience.Builder makeCustomAudience(String customAudienceName) {
         Uri trustedBiddingUri = Uri.parse(mServerBaseAddress + Scenarios.BIDDING_SIGNALS_PATH);
         Uri dailyUpdateUri =
                 Uri.parse(mServerBaseAddress + Scenarios.getDailyUpdatePath(customAudienceName));
@@ -295,8 +294,7 @@ public abstract class FledgeScenarioTest extends ForegroundDebuggableCtsTest {
                         Uri.parse(String.format(mServerBaseAddress + Scenarios.BIDDING_LOGIC_PATH)))
                 .setBuyer(mAdTechIdentifier)
                 .setActivationTime(Instant.now())
-                .setExpirationTime(Instant.now().plus(5, ChronoUnit.DAYS))
-                .build();
+                .setExpirationTime(Instant.now().plus(5, ChronoUnit.DAYS));
     }
 
     private ImmutableList<AdData> makeAds(String customAudienceName) {

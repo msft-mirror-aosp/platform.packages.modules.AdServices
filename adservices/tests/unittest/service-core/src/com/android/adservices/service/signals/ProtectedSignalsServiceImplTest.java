@@ -50,7 +50,6 @@ import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
-import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -131,6 +130,7 @@ public class ProtectedSignalsServiceImplTest {
         // Set up the mocks for a success flow -- indivual tests that want a failure can overwrite
         when(mCallingAppUidSupplierMock.getCallingAppUid()).thenReturn(UID);
         when(mFlagsMock.getDisableFledgeEnrollmentCheck()).thenReturn(false);
+        when(mFlagsMock.getEnforceForegroundStatusForSignals()).thenReturn(true);
         when(mDevContextFilterMock.createDevContext()).thenReturn(mDevContext);
         when(mCustomAudienceServiceFilterMock.filterRequestAndExtractIdentifier(
                         eq(URI),
@@ -147,7 +147,8 @@ public class ProtectedSignalsServiceImplTest {
                 .thenReturn(false);
         SettableFuture<Object> emptyReturn = SettableFuture.create();
         emptyReturn.set(new Object());
-        when(mUpdateSignalsOrchestratorMock.orchestrateUpdate(eq(URI), eq(ADTECH), eq(PACKAGE)))
+        when(mUpdateSignalsOrchestratorMock.orchestrateUpdate(
+                        eq(URI), eq(ADTECH), eq(PACKAGE), eq(mDevContext)))
                 .thenReturn(FluentFuture.from(emptyReturn));
         doNothing()
                 .when(
@@ -185,7 +186,8 @@ public class ProtectedSignalsServiceImplTest {
                         eq(PROTECTED_SIGNAL_API_UPDATE_SIGNALS),
                         eq(mDevContext));
         verify(mConsentManagerMock).isFledgeConsentRevokedForAppAfterSettingFledgeUse(eq(PACKAGE));
-        verify(mUpdateSignalsOrchestratorMock).orchestrateUpdate(eq(URI), eq(ADTECH), eq(PACKAGE));
+        verify(mUpdateSignalsOrchestratorMock)
+                .orchestrateUpdate(eq(URI), eq(ADTECH), eq(PACKAGE), eq(mDevContext));
         verify(mUpdateSignalsCallbackMock).onSuccess();
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
@@ -245,7 +247,7 @@ public class ProtectedSignalsServiceImplTest {
                         eq(API_NAME),
                         eq(PROTECTED_SIGNAL_API_UPDATE_SIGNALS),
                         eq(mDevContext)))
-                .thenThrow(new FilterException(new LimitExceededException(EXCEPTION_MESSAGE)));
+                .thenThrow(new LimitExceededException(EXCEPTION_MESSAGE));
         mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock);
 
         verify(mUpdateSignalsCallbackMock).onFailure(mErrorCaptor.capture());
@@ -263,7 +265,8 @@ public class ProtectedSignalsServiceImplTest {
         IllegalArgumentException exception = new IllegalArgumentException(EXCEPTION_MESSAGE);
         SettableFuture<Object> future = SettableFuture.create();
         future.setException(exception);
-        when(mUpdateSignalsOrchestratorMock.orchestrateUpdate(eq(URI), eq(ADTECH), eq(PACKAGE)))
+        when(mUpdateSignalsOrchestratorMock.orchestrateUpdate(
+                        eq(URI), eq(ADTECH), eq(PACKAGE), eq(mDevContext)))
                 .thenReturn(FluentFuture.from(future));
         mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock);
 

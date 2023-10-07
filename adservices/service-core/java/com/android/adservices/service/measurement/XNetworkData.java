@@ -33,8 +33,6 @@ import java.util.Optional;
 /** POJO for XNetworkData. */
 public class XNetworkData {
 
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
-
     private final Optional<UnsignedLong> mKeyOffset;
 
     private XNetworkData(@NonNull XNetworkData.Builder builder) {
@@ -75,7 +73,8 @@ public class XNetworkData {
                 try {
                     mKeyOffset = Optional.of(new UnsignedLong(keyOffset));
                 } catch (NumberFormatException e) {
-                    sLogger.d(e, "XNetworkData.Builder: Failed to parse keyOffset.");
+                    LoggerFactory.getMeasurementLogger()
+                            .d(e, "XNetworkData.Builder: Failed to parse keyOffset.");
                     // Wrapped into JSONException so that it does not crash and becomes a checked
                     // Exception that is caught by the caller.
                     throw new JSONException("Failed to parse keyOffset", e);
