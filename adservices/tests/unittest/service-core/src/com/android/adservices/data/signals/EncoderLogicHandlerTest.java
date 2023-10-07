@@ -21,6 +21,7 @@ import static com.android.adservices.data.signals.EncoderLogicHandler.FALLBACK_V
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
@@ -31,6 +32,7 @@ import android.net.Uri;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
+import com.android.adservices.service.devapi.DevContext;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -51,7 +53,9 @@ import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -108,6 +112,7 @@ public class EncoderLogicHandlerTest {
                         .setResponseHeaderKeys(ImmutableSet.of(ENCODER_VERSION_RESPONSE_HEADER))
                         .setUseCache(false)
                         .setUri(encoderUri)
+                        .setDevContext(DevContext.createForDevOptionsDisabled())
                         .build();
 
         String body = "function() { fake JS}";
@@ -128,7 +133,9 @@ public class EncoderLogicHandlerTest {
         when(mEncoderPersistenceDao.persistEncoder(buyer, body)).thenReturn(true);
 
         boolean updateSucceeded =
-                mEncoderLogicHandler.downloadAndUpdate(buyer).get(5, TimeUnit.SECONDS);
+                mEncoderLogicHandler
+                        .downloadAndUpdate(buyer, DevContext.createForDevOptionsDisabled())
+                        .get(5, TimeUnit.SECONDS);
         assertTrue(updateSucceeded);
     }
 
@@ -141,7 +148,9 @@ public class EncoderLogicHandlerTest {
         when(mEncoderEndpointsDao.getEndpoint(buyer)).thenReturn(encoderEndpoint);
 
         boolean updateSucceeded =
-                mEncoderLogicHandler.downloadAndUpdate(buyer).get(5, TimeUnit.SECONDS);
+                mEncoderLogicHandler
+                        .downloadAndUpdate(buyer, DevContext.createForDevOptionsDisabled())
+                        .get(5, TimeUnit.SECONDS);
         assertFalse("The call to download should have been skipped", updateSucceeded);
 
         verifyZeroInteractions(mAdServicesHttpsClient, mEncoderPersistenceDao, mEncoderLogicDao);
@@ -237,6 +246,36 @@ public class EncoderLogicHandlerTest {
         assertFalse(mEncoderLogicHandler.extractAndPersistEncoder(buyer, response));
 
         Mockito.verifyZeroInteractions(mEncoderLogicDao);
+    }
+
+    @Test
+    public void testGetAllBuyersWithEncoders() {
+        mEncoderLogicHandler.getBuyersWithEncoders();
+        verify(mEncoderLogicDao).getAllBuyersWithRegisteredEncoders();
+    }
+
+    @Test
+    public void testGetAllBuyersWithStaleEncoders() {
+        Instant now = Instant.now();
+        mEncoderLogicHandler.getBuyersWithStaleEncoders(now);
+        verify(mEncoderLogicDao).getBuyersWithEncodersBeforeTime(now);
+    }
+
+    @Test
+    public void testDeleteEncodersForBuyers() {
+        AdTechIdentifier buyer1 = CommonFixture.VALID_BUYER_1;
+        AdTechIdentifier buyer2 = CommonFixture.VALID_BUYER_2;
+        Set<AdTechIdentifier> buyers = Set.of(buyer1, buyer2);
+        mEncoderLogicHandler.deleteEncodersForBuyers(buyers);
+
+        verify(mEncoderLogicDao).deleteEncoder(buyer1);
+        verify(mEncoderLogicDao).deleteEncoder(buyer2);
+
+        verify(mEncoderPersistenceDao).deleteEncoder(buyer1);
+        verify(mEncoderPersistenceDao).deleteEncoder(buyer2);
+
+        verify(mEncoderEndpointsDao).deleteEncoderEndpoint(buyer1);
+        verify(mEncoderEndpointsDao).deleteEncoderEndpoint(buyer2);
     }
 
     @SuppressWarnings("FutureReturnValueIgnored")

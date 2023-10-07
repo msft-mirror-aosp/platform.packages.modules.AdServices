@@ -19,12 +19,12 @@ package com.android.adservices.data.measurement.migration;
 import android.content.ContentValues;
 import android.net.Uri;
 
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
-import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
 import com.android.adservices.service.measurement.util.UnsignedLong;

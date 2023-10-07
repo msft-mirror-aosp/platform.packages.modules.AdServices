@@ -83,7 +83,6 @@ import javax.annotation.concurrent.ThreadSafe;
 @WorkerThread
 public final class MeasurementImpl {
     private static final String ANDROID_APP_SCHEME = "android-app";
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     private static volatile MeasurementImpl sMeasurementImpl;
     private final Context mContext;
     private final ReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
@@ -144,7 +143,7 @@ public final class MeasurementImpl {
      * @param eventTime  time when the package was installed.
      */
     public void doInstallAttribution(@NonNull Uri packageUri, long eventTime) {
-        sLogger.d("Attributing installation for: " + packageUri);
+        LoggerFactory.getMeasurementLogger().d("Attributing installation for: " + packageUri);
         Uri appUri = getAppUri(packageUri);
         mReadWriteLock.readLock().lock();
         try {
@@ -225,7 +224,7 @@ public final class MeasurementImpl {
         WebSourceRegistrationRequest sourceRegistrationRequest =
                 request.getSourceRegistrationRequest();
         if (!isValid(sourceRegistrationRequest)) {
-            sLogger.e("registerWebSource received invalid parameters");
+            LoggerFactory.getMeasurementLogger().e("registerWebSource received invalid parameters");
             return STATUS_INVALID_ARGUMENT;
         }
         mReadWriteLock.readLock().lock();
@@ -263,7 +262,8 @@ public final class MeasurementImpl {
         WebTriggerRegistrationRequest triggerRegistrationRequest =
                 request.getTriggerRegistrationRequest();
         if (!isValid(triggerRegistrationRequest)) {
-            sLogger.e("registerWebTrigger received invalid parameters");
+            LoggerFactory.getMeasurementLogger()
+                    .e("registerWebTrigger received invalid parameters");
             return STATUS_INVALID_ARGUMENT;
         }
         mReadWriteLock.readLock().lock();
@@ -344,7 +344,8 @@ public final class MeasurementImpl {
             }
             return deleteResult ? STATUS_SUCCESS : STATUS_INTERNAL_ERROR;
         } catch (NullPointerException | IllegalArgumentException e) {
-            sLogger.e(e, "Delete registration received invalid parameters");
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "Delete registration received invalid parameters");
             return STATUS_INVALID_ARGUMENT;
         } finally {
             mReadWriteLock.readLock().unlock();
@@ -356,7 +357,7 @@ public final class MeasurementImpl {
      */
     public void deletePackageRecords(Uri packageUri) {
         Uri appUri = getAppUri(packageUri);
-        sLogger.d("Deleting records for " + appUri);
+        LoggerFactory.getMeasurementLogger().d("Deleting records for " + appUri);
         mReadWriteLock.writeLock().lock();
         try {
             Optional<Boolean> didDeletionOccurOpt =
@@ -369,7 +370,8 @@ public final class MeasurementImpl {
                 markDeletion();
             }
         } catch (NullPointerException | IllegalArgumentException e) {
-            sLogger.e(e, "Delete package records received invalid parameters");
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "Delete package records received invalid parameters");
         } finally {
             mReadWriteLock.writeLock().unlock();
         }
@@ -385,9 +387,10 @@ public final class MeasurementImpl {
         try {
             mDatastoreManager.runInTransaction(
                     (dao) -> dao.deleteAllMeasurementData(tablesToExclude));
-            sLogger.v(
-                    "All data is cleared for Measurement API except: %s",
-                    tablesToExclude.toString());
+            LoggerFactory.getMeasurementLogger()
+                    .v(
+                            "All data is cleared for Measurement API except: %s",
+                            tablesToExclude.toString());
             markDeletion();
         } finally {
             mReadWriteLock.writeLock().unlock();
@@ -506,10 +509,12 @@ public final class MeasurementImpl {
                                 verifiedDestinationTopPrivateDomainAndScheme.get());
             }
         } catch (URISyntaxException e) {
-            sLogger.e(
-                    e,
-                    "MeasurementImpl::handleVerifiedDestination: failed to parse intent URI: %s",
-                    verifiedDestination.toString());
+            LoggerFactory.getMeasurementLogger()
+                    .e(
+                            e,
+                            "MeasurementImpl::handleVerifiedDestination: failed to parse intent"
+                                    + " URI: %s",
+                            verifiedDestination.toString());
             return false;
         }
     }
@@ -533,14 +538,16 @@ public final class MeasurementImpl {
      */
     private void deleteOnRollback() {
         if (FlagsFactory.getFlags().getMeasurementRollbackDeletionKillSwitch()) {
-            sLogger.e("Rollback deletion is disabled. Not checking system server for rollback.");
+            LoggerFactory.getMeasurementLogger()
+                    .e("Rollback deletion is disabled. Not checking system server for rollback.");
             return;
         }
 
-        sLogger.d("Checking rollback status.");
+        LoggerFactory.getMeasurementLogger().d("Checking rollback status.");
         boolean needsToHandleRollbackReconciliation = checkIfNeedsToHandleReconciliation();
         if (needsToHandleRollbackReconciliation) {
-            sLogger.d("Rollback and deletion detected, deleting all measurement data.");
+            LoggerFactory.getMeasurementLogger()
+                    .d("Rollback and deletion detected, deleting all measurement data.");
             mReadWriteLock.writeLock().lock();
             try {
                 mDatastoreManager.runInTransaction(
@@ -560,7 +567,8 @@ public final class MeasurementImpl {
 
         // Not on Android T+
         if (FlagsFactory.getFlags().getMeasurementRollbackDeletionAppSearchKillSwitch()) {
-            sLogger.e("Rollback deletion is disabled. Not checking App Search for rollback.");
+            LoggerFactory.getMeasurementLogger()
+                    .e("Rollback deletion is disabled. Not checking App Search for rollback.");
             return false;
         }
 
@@ -576,12 +584,13 @@ public final class MeasurementImpl {
      */
     private void markDeletion() {
         if (FlagsFactory.getFlags().getMeasurementRollbackDeletionKillSwitch()) {
-            sLogger.e("Rollback deletion is disabled. Not storing status in system server.");
+            LoggerFactory.getMeasurementLogger()
+                    .e("Rollback deletion is disabled. Not storing status in system server.");
             return;
         }
 
         if (SdkLevel.isAtLeastT()) {
-            sLogger.d("Marking deletion in system server.");
+            LoggerFactory.getMeasurementLogger().d("Marking deletion in system server.");
             AdServicesManager.getInstance(mContext)
                     .recordAdServicesDeletionOccurred(AdServicesManager.MEASUREMENT_DELETION);
             return;
@@ -589,11 +598,12 @@ public final class MeasurementImpl {
 
         // On Android S or lower.
         if (FlagsFactory.getFlags().getMeasurementRollbackDeletionAppSearchKillSwitch()) {
-            sLogger.e("Rollback deletion in AppSearch disabled. Not storing status in AppSearch.");
+            LoggerFactory.getMeasurementLogger()
+                    .e("Rollback deletion in AppSearch disabled. Not storing status in AppSearch.");
             return;
         }
 
-        sLogger.d("Marking deletion in AppSearch");
+        LoggerFactory.getMeasurementLogger().d("Marking deletion in AppSearch");
         AppSearchMeasurementRollbackManager.getInstance(
                         mContext, AdServicesManager.MEASUREMENT_DELETION)
                 .recordAdServicesDeletionOccurred();

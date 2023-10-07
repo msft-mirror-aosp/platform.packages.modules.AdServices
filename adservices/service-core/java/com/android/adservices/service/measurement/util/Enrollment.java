@@ -30,8 +30,6 @@ import java.util.Optional;
 
 /** Enrollment utilities for measurement. */
 public final class Enrollment {
-
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     public static final String FAKE_ENROLLMENT = "fake_enrollment";
     public static final String LOCALHOST_ENROLLMENT_ID = "localhost_enrollment_id";
     public static final String LOCALHOST_IP_ENROLLMENT_ID = "localhost_ip_enrollment_id";
@@ -66,26 +64,29 @@ public final class Enrollment {
         EnrollmentData enrollmentData =
                 enrollmentDao.getEnrollmentDataFromMeasurementUrl(uriWithoutParams);
         if (enrollmentData == null) {
-            sLogger.w(
-                    "Enrollment check failed, Reason: Enrollment Id Not Found, "
-                            + "Registration URI: %s",
-                    registrationUri);
+            LoggerFactory.getMeasurementLogger()
+                    .w(
+                            "Enrollment check failed, Reason: Enrollment Id Not Found, "
+                                    + "Registration URI: %s",
+                            registrationUri);
             return Optional.empty();
         }
         if (flags.isEnrollmentBlocklisted(enrollmentData.getEnrollmentId())) {
-            sLogger.w(
-                    "Enrollment check failed, Reason: Enrollment Id in blocklist, "
-                            + "Registration URI: %s, Enrollment Id: %s",
-                    registrationUri, enrollmentData.getEnrollmentId());
+            LoggerFactory.getMeasurementLogger()
+                    .w(
+                            "Enrollment check failed, Reason: Enrollment Id in blocklist, "
+                                    + "Registration URI: %s, Enrollment Id: %s",
+                            registrationUri, enrollmentData.getEnrollmentId());
             return Optional.empty();
         }
         if (!AppManifestConfigHelper.isAllowedAttributionAccess(
                 context, packageName, enrollmentData.getEnrollmentId())) {
-            sLogger.w(
-                    "Enrollment check failed, Reason: Enrollment Id missing from "
-                            + "App Manifest AdTech allowlist, "
-                            + "Registration URI: %s, Enrollment Id: %s",
-                    registrationUri, enrollmentData.getEnrollmentId());
+            LoggerFactory.getMeasurementLogger()
+                    .w(
+                            "Enrollment check failed, Reason: Enrollment Id missing from "
+                                    + "App Manifest AdTech allowlist, "
+                                    + "Registration URI: %s, Enrollment Id: %s",
+                            registrationUri, enrollmentData.getEnrollmentId());
             return Optional.empty();
         }
         return Optional.of(enrollmentData.getEnrollmentId());

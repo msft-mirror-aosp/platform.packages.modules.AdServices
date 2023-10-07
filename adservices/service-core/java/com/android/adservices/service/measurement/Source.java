@@ -58,7 +58,6 @@ import java.util.concurrent.TimeUnit;
  */
 public class Source {
 
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     private String mId;
     private UnsignedLong mEventId;
     private Uri mPublisher;
@@ -165,7 +164,8 @@ public class Source {
             JSONObject jsonObject = new JSONObject(eventReportWindows);
             return parseEventReportWindows(jsonObject);
         } catch (JSONException e) {
-            sLogger.e(e, "Invalid JSON encountered: event_report_windows");
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "Invalid JSON encountered: event_report_windows");
             return null;
         }
     }
@@ -189,7 +189,8 @@ public class Source {
                 startDuration = endDuration;
             }
         } catch (JSONException e) {
-            sLogger.e(e, "Invalid JSON encountered: event_report_windows");
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "Invalid JSON encountered: event_report_windows");
             return null;
         }
         return result;

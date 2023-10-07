@@ -310,13 +310,3 @@ android_test {
     test_mainline_modules: ["com.google.android.extservices.apex"],
     instrumentation_for: "ExtServices-sminus",
 }
-
-java_library {
-    name: "adservices-measurement-web-util-lib",
-    sdk_version: "module_current",
-    srcs: [
-      "src/com/android/adservices/service/measurement/WebUtil.java"
-    ],
-    visibility: ["//packages/modules/AdServices/adservices/tests/unittest/fixtures"]
-
-}

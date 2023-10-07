@@ -353,8 +353,8 @@ public interface Flags {
 
     /** Measurement manifest file url, used for MDD download. */
     String MEASUREMENT_MANIFEST_FILE_URL =
-            "https://dl.google.com/mdi-serving/adservices/adtech_enrollment/manifest_configs/1"
-                    + "/manifest_config_1658790241927.binaryproto";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/2324"
+                    + "/3927729583a9dbfdb9a3eaa84ddcef3d9b46c3c7";
 
     /** Measurement manifest file url. */
     default String getMeasurementManifestFileUrl() {
@@ -458,6 +458,13 @@ public interface Flags {
     /** Delay from trigger registration to attribution job triggering */
     default long getMeasurementAttributionJobTriggerDelayMs() {
         return DEFAULT_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS;
+    }
+
+    boolean MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING = false;
+
+    /** Returns true if aggregatable report padding is enabled else false. */
+    default boolean getMeasurementEnableAggregatableReportPayloadPadding() {
+        return MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING;
     }
 
     int DEFAULT_MEASUREMENT_MAX_ATTRIBUTIONS_PER_INVOCATION = 100;
@@ -579,7 +586,7 @@ public interface Flags {
     int MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW = 1;
 
     /**
-     * Returns the number of reporting origins per source site, reporting site,
+     * Returns the maximum number of reporting origins per source site, reporting site,
      * reporting-origin-update-window counted per source registration.
      */
     default int getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow() {
@@ -587,12 +594,49 @@ public interface Flags {
     }
 
     int MEASUREMENT_MAX_DISTINCT_REP_ORIG_PER_PUBLISHER_X_DEST_IN_SOURCE = 100;
+
     /**
      * Max distinct reporting origins with source registration per { Publisher X Advertiser X
      * TimePeriod }.
      */
     default int getMeasurementMaxDistinctRepOrigPerPublXDestInSource() {
         return MEASUREMENT_MAX_DISTINCT_REP_ORIG_PER_PUBLISHER_X_DEST_IN_SOURCE;
+    }
+
+    boolean MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT = true;
+
+    /** Returns {@code true} if Measurement destination rate limit is enabled. */
+    default boolean getMeasurementEnableDestinationRateLimit() {
+        return MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT;
+    }
+
+    int MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW = 50;
+
+    /**
+     * Returns the maximum number of distinct destination sites per source site per rate limit
+     * window.
+     */
+    default int getMeasurementMaxDestinationsPerPublisherPerRateLimitWindow() {
+        return MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW;
+    }
+
+    int MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW = 200;
+
+    /**
+     * Returns the maximum number of distinct destination sites per source site X enrollment per
+     * rate limit window.
+     */
+    default int getMeasurementMaxDestPerPublisherXEnrollmentPerRateLimitWindow() {
+        return MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW;
+    }
+
+    long MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW = TimeUnit.MINUTES.toMillis(1);
+
+    /**
+     * Returns the duration that controls the rate-limiting window for destinations.
+     */
+    default long getMeasurementDestinationRateLimitWindow() {
+        return MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
     }
 
     boolean MEASUREMENT_FLEX_LITE_API_ENABLED = true;
@@ -1515,6 +1559,14 @@ public interface Flags {
     /** Returns the max length of Ad Render Id. */
     default long getFledgeAuctionServerAdRenderIdMaxLength() {
         return FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH;
+    }
+
+    // Protected signals cleanup feature flag disabled by default
+    boolean PROTECTED_SIGNALS_CLEANUP_ENABLED = false;
+
+    /** Returns {@code true} if protected signals cleanup is enabled. */
+    default boolean getProtectedSignalsCleanupEnabled() {
+        return PROTECTED_SIGNALS_CLEANUP_ENABLED;
     }
 
     boolean ADSERVICES_ENABLED = false;
@@ -2626,6 +2678,7 @@ public interface Flags {
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE = true;
     boolean ENFORCE_FOREGROUND_STATUS_TOPICS = true;
+    boolean ENFORCE_FOREGROUND_STATUS_SIGNALS = true;
 
     /**
      * @return true if FLEDGE runAdSelection API should require that the calling API is running in
@@ -2740,6 +2793,14 @@ public interface Flags {
     /** @return true if Topics API should require that the calling API is running in foreground. */
     default boolean getEnforceForegroundStatusForTopics() {
         return ENFORCE_FOREGROUND_STATUS_TOPICS;
+    }
+
+    /**
+     * @return true if Protected Signals API should require that the calling API is running in
+     *     foreground.
+     */
+    default boolean getEnforceForegroundStatusForSignals() {
+        return ENFORCE_FOREGROUND_STATUS_SIGNALS;
     }
 
     /** @return true if AdId API should require that the calling API is running in foreground. */
@@ -3261,8 +3322,8 @@ public interface Flags {
     String MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG =
             String.join(
                     ",",
-                    Long.toString(TimeUnit.MINUTES.toMillis(10L)),
-                    Long.toString(TimeUnit.MINUTES.toMillis(50L)));
+                    Long.toString(TimeUnit.MINUTES.toMillis(0L)),
+                    Long.toString(TimeUnit.MINUTES.toMillis(10L)));
 
     /**
      * Returns configured comma separated aggregate report min delay and aggregate report delay
@@ -3631,6 +3692,14 @@ public interface Flags {
         return DEFAULT_U18_UX_ENABLED;
     }
 
+    /** Default RVC UX feature flag.. */
+    boolean DEFAULT_RVC_UX_ENABLED = false;
+
+    /** RVC UX feature flag.. */
+    default boolean getEnableRvcUx() {
+        return DEFAULT_RVC_UX_ENABLED;
+    }
+
     /** Default enableAdServices system API feature flag.. */
     boolean DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API = false;
 
@@ -3808,6 +3877,16 @@ public interface Flags {
         return COBALT_LOGGING_JOB_PERIOD_MS;
     }
 
+    long COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS = 10 * 1000; // 10 seconds
+
+    /**
+     * Returns the amount of time Cobalt should wait (in milliseconds) before unbinding from its
+     * upload service.
+     */
+    default long getCobaltUploadServiceUnbindDelayMs() {
+        return COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS;
+    }
+
     /** Cobalt logging feature flag. */
     boolean COBALT_LOGGING_ENABLED = false;
 
@@ -3856,5 +3935,16 @@ public interface Flags {
      */
     default boolean getAdIdCacheEnabled() {
         return DEFAULT_ADID_CACHE_ENABLED;
+    }
+
+    boolean APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT = false;
+
+    /**
+     * Returns whether the API access checked by the AdServices XML config returns {@code true} by
+     * default (i.e., when the app doesn't define the config XML file or if the given API access is
+     * missing from that file).
+     */
+    default boolean getAppConfigReturnsEnabledByDefault() {
+        return APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT;
     }
 }

@@ -27,7 +27,6 @@ import java.security.NoSuchAlgorithmException;
 public final class AdIdEncryption {
 
     private static final String SHA256_DIGEST_ALGORITHM_NAME = "SHA-256";
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
 
     private AdIdEncryption() {}
 
@@ -41,7 +40,8 @@ public final class AdIdEncryption {
     public static String encryptAdIdAndEnrollmentSha256(
             @Nullable String adIdValue, @NonNull String enrollmentId) {
         if (adIdValue == null) {
-            sLogger.d("Provided adId is null; not encrypting, returning null");
+            LoggerFactory.getMeasurementLogger()
+                    .d("Provided adId is null; not encrypting, returning null");
             return null;
         }
 
@@ -58,7 +58,8 @@ public final class AdIdEncryption {
                 adIdSha256.append(String.format("%02x", b));
             }
         } catch (NoSuchAlgorithmException e) {
-            sLogger.e(e, "Unable to find correct message digest algorithm for AdId encryption.");
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "Unable to find correct message digest algorithm for AdId encryption.");
             // When catching NoSuchAlgorithmException -> return null.
             return null;
         }

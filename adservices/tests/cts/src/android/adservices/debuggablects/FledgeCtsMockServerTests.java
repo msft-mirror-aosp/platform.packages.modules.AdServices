@@ -46,11 +46,12 @@ import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.js.JSScriptEngine;
-import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
@@ -129,8 +130,6 @@ public class FledgeCtsMockServerTests extends ForegroundDebuggableCtsTest {
     private AdvertisingCustomAudienceClient mCustomAudienceClient;
     private MockWebServer mMockWebServer;
 
-    private String mPreviousAppAllowList;
-
     private final ArrayList<CustomAudience> mCustomAudiencesToCleanUp = new ArrayList<>();
     private MockWebServerRule.RequestMatcher<String> mRequestMatcherPrefixMatch;
 
@@ -141,22 +140,23 @@ public class FledgeCtsMockServerTests extends ForegroundDebuggableCtsTest {
     private String mServerBaseAddress;
     private AdTechIdentifier mAdTechIdentifier;
 
+    @Rule(order = 0)
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
+    @Rule(order = 1)
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
+                    .setCompatModeFlags()
+                    .setPpapiAppAllowList(sContext.getPackageName());
+
     @Before
     public void setup() throws InterruptedException {
-        // Skip the test if it runs on unsupported platforms
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         if (SdkLevel.isAtLeastT()) {
             assertForegroundActivityStarted();
-            ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 2");
-        } else {
-            mPreviousAppAllowList =
-                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
-                            String.format(
-                                    "%s,%s",
-                                    sContext.getPackageName(), "ad-selection-from-outcomes"));
-            CompatAdServicesTestUtils.setFlags();
+            flags.setConsentSourceOfTruth(FlagsConstants.PPAPI_AND_SYSTEM_SERVER);
         }
 
         mAdSelectionClient =
@@ -201,8 +201,7 @@ public class FledgeCtsMockServerTests extends ForegroundDebuggableCtsTest {
 
     @After
     public void tearDown() throws Exception {
-        if (!AdservicesTestHelper.isDeviceSupported()
-                || !JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable()) {
+        if (!JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable()) {
             return;
         }
 
@@ -211,11 +210,6 @@ public class FledgeCtsMockServerTests extends ForegroundDebuggableCtsTest {
         // Reset the filtering flag
         PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(false);
         AdservicesTestHelper.killAdservicesProcess(sContext);
-
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
     }
 
     private String getCacheBusterPrefix() {

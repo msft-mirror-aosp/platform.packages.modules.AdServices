@@ -44,7 +44,6 @@ import java.util.concurrent.TimeUnit;
 public final class AdIdManagerTest {
 
     private static final String TAG = AdIdManagerTest.class.getSimpleName();
-    private static final long CALLBACK_TIMEOUT_MS = 500;
 
     private static final Executor sCallbackExecutor = Executors.newCachedThreadPool();
     private static final Context sContext = ApplicationProvider.getApplicationContext();
@@ -79,7 +78,7 @@ public final class AdIdManagerTest {
         OutcomeReceiverForTests<AdId> callback = new OutcomeReceiverForTests<>();
 
         mAdIdManager.getAdId(sCallbackExecutor, callback);
-        AdId resultAdId = callback.assertSuccess(CALLBACK_TIMEOUT_MS);
+        AdId resultAdId = callback.assertSuccess();
         Log.v(TAG, "AdId: " + toString(resultAdId));
 
         assertWithMessage("getAdId()").that(resultAdId.getAdId()).isNotNull();
@@ -131,7 +130,7 @@ public final class AdIdManagerTest {
     private boolean getAdIdAndVerifyRateLimitReached() throws InterruptedException {
         OutcomeReceiverForTests<AdId> callback = new OutcomeReceiverForTests<>();
         mAdIdManager.getAdId(sCallbackExecutor, callback);
-        callback.assertCalled(CALLBACK_TIMEOUT_MS);
+        callback.assertCalled();
         AdId result = callback.getResult();
         Exception error = callback.getError();
         Log.v(
@@ -146,7 +145,7 @@ public final class AdIdManagerTest {
 
     @Test
     @RequiresLowRamDevice
-    public void testAdIdManager_whenDeviceNotSupported() {
+    public void testAdIdManager_whenDeviceNotSupported() throws Exception {
         AdIdManager adIdManager = AdIdManager.get(sContext);
         assertWithMessage("adIdManager").that(adIdManager).isNotNull();
         OutcomeReceiverForTests<AdId> receiver = new OutcomeReceiverForTests<>();

@@ -174,6 +174,9 @@ import java.util.stream.Collectors;
 
 @SmallTest
 public class ConsentManagerTest {
+    private static final int UX_TYPE_COUNT = 5;
+    private static final int ENROLLMENT_CHANNEL_COUNT = 19;
+
     @Spy
     private final Context mContextSpy = ApplicationProvider.getApplicationContext();
 
@@ -4506,8 +4509,8 @@ public class ConsentManagerTest {
             spyConsentManager.setUx(ux);
         }
 
-        verify(mUxStatesDaoMock, times(4)).getUx();
-        verify(mUxStatesDaoMock, times(4)).setUx(any());
+        verify(mUxStatesDaoMock, times(UX_TYPE_COUNT)).getUx();
+        verify(mUxStatesDaoMock, times(UX_TYPE_COUNT)).setUx(any());
     }
 
     @Test
@@ -4524,8 +4527,8 @@ public class ConsentManagerTest {
             spyConsentManager.setUx(ux);
         }
 
-        verify(mMockIAdServicesManager, times(4)).getUx();
-        verify(mMockIAdServicesManager, times(4)).setUx(any());
+        verify(mMockIAdServicesManager, times(UX_TYPE_COUNT)).getUx();
+        verify(mMockIAdServicesManager, times(UX_TYPE_COUNT)).setUx(any());
     }
 
     @Test
@@ -4542,8 +4545,8 @@ public class ConsentManagerTest {
             spyConsentManager.setUx(ux);
         }
 
-        verify(mMockIAdServicesManager, times(4)).getUx();
-        verify(mMockIAdServicesManager, times(4)).setUx(any());
+        verify(mMockIAdServicesManager, times(UX_TYPE_COUNT)).getUx();
+        verify(mMockIAdServicesManager, times(UX_TYPE_COUNT)).setUx(any());
     }
 
     @Test
@@ -4561,8 +4564,8 @@ public class ConsentManagerTest {
             spyConsentManager.setUx(ux);
         }
 
-        verify(mAppSearchConsentManagerMock, times(4)).getUx();
-        verify(mAppSearchConsentManagerMock, times(4)).setUx(any());
+        verify(mAppSearchConsentManagerMock, times(UX_TYPE_COUNT)).getUx();
+        verify(mAppSearchConsentManagerMock, times(UX_TYPE_COUNT)).setUx(any());
     }
 
     @Test
@@ -4582,8 +4585,9 @@ public class ConsentManagerTest {
             }
         }
 
-        verify(mUxStatesDaoMock, times(15)).getEnrollmentChannel(any());
-        verify(mUxStatesDaoMock, times(15)).setEnrollmentChannel(any(), any());
+        verify(mUxStatesDaoMock, times(ENROLLMENT_CHANNEL_COUNT)).getEnrollmentChannel(any());
+        verify(mUxStatesDaoMock, times(ENROLLMENT_CHANNEL_COUNT))
+                .setEnrollmentChannel(any(), any());
     }
 
     @Test
@@ -4603,8 +4607,9 @@ public class ConsentManagerTest {
             }
         }
 
-        verify(mMockIAdServicesManager, times(15)).getEnrollmentChannel();
-        verify(mMockIAdServicesManager, times(15)).setEnrollmentChannel(anyString());
+        verify(mMockIAdServicesManager, times(ENROLLMENT_CHANNEL_COUNT)).getEnrollmentChannel();
+        verify(mMockIAdServicesManager, times(ENROLLMENT_CHANNEL_COUNT))
+                .setEnrollmentChannel(anyString());
     }
 
     @Test
@@ -4624,8 +4629,9 @@ public class ConsentManagerTest {
             }
         }
 
-        verify(mMockIAdServicesManager, times(15)).getEnrollmentChannel();
-        verify(mMockIAdServicesManager, times(15)).setEnrollmentChannel(anyString());
+        verify(mMockIAdServicesManager, times(ENROLLMENT_CHANNEL_COUNT)).getEnrollmentChannel();
+        verify(mMockIAdServicesManager, times(ENROLLMENT_CHANNEL_COUNT))
+                .setEnrollmentChannel(anyString());
     }
 
     @Test
@@ -4646,7 +4652,9 @@ public class ConsentManagerTest {
             }
         }
 
-        verify(mAppSearchConsentManagerMock, times(15)).getEnrollmentChannel(any());
-        verify(mAppSearchConsentManagerMock, times(15)).setEnrollmentChannel(any(), any());
+        verify(mAppSearchConsentManagerMock, times(ENROLLMENT_CHANNEL_COUNT))
+                .getEnrollmentChannel(any());
+        verify(mAppSearchConsentManagerMock, times(ENROLLMENT_CHANNEL_COUNT))
+                .setEnrollmentChannel(any(), any());
     }
 }
