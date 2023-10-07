@@ -42,7 +42,7 @@ android_test {
         "mockito-target-extended-minus-junit4",
         "androidx.room_room-runtime",
         "androidx.room_room-testing",
-        "truth-prebuilt",
+        "truth",
         "SettingsLibActionBarShadow",
         "SettingsLibSettingsTheme",
         "SettingsLibCollapsingToolbarBaseActivity",
@@ -92,7 +92,7 @@ android_test {
         "mockito-target-extended-minus-junit4",
         "androidx.room_room-runtime",
         "androidx.room_room-testing",
-        "truth-prebuilt",
+        "truth",
         "SettingsLibActionBarShadow",
         "SettingsLibSettingsTheme",
         "SettingsLibCollapsingToolbarBaseActivity",
@@ -107,7 +107,7 @@ android_test {
     ],
     test_suites: [
         "general-tests",
-        "mts-extservices"
+        "mts-extservices",
     ],
     test_config: "AndroidTest.ExtServices.xml",
     manifest: "AndroidManifestExtServices.xml",
@@ -139,7 +139,7 @@ android_test {
         "mockito-target-extended-minus-junit4",
         "androidx.room_room-runtime",
         "androidx.room_room-testing",
-        "truth-prebuilt",
+        "truth",
         "SettingsLibActionBarShadow",
         "SettingsLibSettingsTheme",
         "SettingsLibCollapsingToolbarBaseActivity",
@@ -186,7 +186,7 @@ android_test {
         "androidx.test.uiautomator_uiautomator",
         "compatibility-device-util-axt",
         "mockito-target-extended-minus-junit4",
-        "truth-prebuilt",
+        "truth",
         "SettingsLibActionBarShadow",
         "SettingsLibCollapsingToolbarBaseActivity",
         "SettingsLibMainSwitchPreference",
@@ -204,5 +204,5 @@ android_test {
     test_config: "AndroidTest.AppConsent.ExtServices.xml",
     data: [":com.example.adservices.samples.ui.consenttestapp"],
     instrumentation_for: "AdExtServicesApk",
-    manifest: "AndroidManifestExtServices.xml"
+    manifest: "AndroidManifestExtServices.xml",
 }

@@ -24,7 +24,7 @@ android_test {
     static_libs: [
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt",
-        "truth-prebuilt",
+        "truth",
         "adservices-test-fixtures",
         "adservices-clients",
         "adservices-test-utility",
@@ -37,7 +37,7 @@ android_test {
     test_suites: [
         "cts",
         "general-tests",
-        "mts-adservices"
+        "mts-adservices",
     ],
     // To fix Pre-submit warning, suggested by farivar@
     javacflags: ["-parameters"],
@@ -54,7 +54,7 @@ android_test {
     static_libs: [
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt",
-        "truth-prebuilt",
+        "truth",
         "adservices-test-fixtures",
         "adservices-clients",
         "adservices-test-utility",
@@ -68,7 +68,7 @@ android_test {
     test_suites: [
         "cts",
         "general-tests",
-        "mts-extservices"
+        "mts-extservices",
     ],
     javacflags: ["-parameters"],
     sdk_version: "module_current",
