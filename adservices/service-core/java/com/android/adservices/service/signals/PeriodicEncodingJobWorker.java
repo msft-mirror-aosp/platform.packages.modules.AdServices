@@ -148,8 +148,21 @@ public class PeriodicEncodingJobWorker {
         return mSingletonRunner.runSingleInstance();
     }
 
+    /** Requests that any ongoing work be stopped gracefully and waits for work to be stopped. */
+    public void stopWork() {
+        mSingletonRunner.stopWork();
+    }
+
     private FluentFuture<Void> doRun(@NonNull Supplier<Boolean> shouldStop) {
-        List<AdTechIdentifier> buyers = mEncoderLogicDao.getAllBuyersWithRegisteredEncoders();
+        FluentFuture<List<AdTechIdentifier>> buyers =
+                FluentFuture.from(
+                        mBackgroundExecutor.submit(
+                                () -> mEncoderLogicDao.getAllBuyersWithRegisteredEncoders()));
+
+        return buyers.transformAsync(b -> doEncodingForRegisteredBuyers(b), mBackgroundExecutor);
+    }
+
+    private FluentFuture<Void> doEncodingForRegisteredBuyers(List<AdTechIdentifier> buyers) {
         List<ListenableFuture<Boolean>> buyerEncodings =
                 buyers.stream()
                         .map(
@@ -159,11 +172,6 @@ public class PeriodicEncodingJobWorker {
                         .collect(Collectors.toList());
         return FluentFuture.from(Futures.successfulAsList(buyerEncodings))
                 .transform(ignored -> null, mLightWeightExecutor);
-    }
-
-    /** Requests that any ongoing work be stopped gracefully and waits for work to be stopped. */
-    public void stopWork() {
-        mSingletonRunner.stopWork();
     }
 
     @VisibleForTesting

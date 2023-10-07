@@ -19,6 +19,8 @@ package com.android.sdksandboxclient;
 import android.app.Activity;
 import android.net.Uri;
 import android.os.Bundle;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.VideoView;
 
 /**
@@ -29,20 +31,42 @@ import android.widget.VideoView;
  * com.android.sdksandboxclient/.AppVideoView --es "video-url" "[video url]"
  */
 public class AppVideoView extends Activity {
-    private static final String VIDEO_URL_KEY = "video-url";
+    static final String VIDEO_URL_KEY = "video-url";
+
+    private VideoView mVideoView;
+    private EditText mVideoUrlEdit;
+    private Button mStartAppVideoButton;
 
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
         setContentView(R.layout.activity_app_video);
 
-        Bundle extras = getIntent().getExtras();
-        if (extras == null) return;
-        final String videoUrl = extras.getString(VIDEO_URL_KEY);
+        mVideoView = findViewById(R.id.app_video);
+        mVideoUrlEdit = findViewById(R.id.app_video_url_edit);
+        mStartAppVideoButton = findViewById(R.id.start_app_video_button);
 
-        VideoView videoView = findViewById(R.id.app_video);
-        videoView.setVideoURI(Uri.parse(videoUrl));
-        videoView.requestFocus();
-        videoView.start();
+        registerStartAppVideoButton();
+
+        final Bundle extras = getIntent().getExtras();
+        final String videoUrl = extras == null ? null : extras.getString(VIDEO_URL_KEY);
+        if (videoUrl != null) {
+            mVideoUrlEdit.setText(videoUrl);
+            startVideo(videoUrl);
+        }
+    }
+
+    private void registerStartAppVideoButton() {
+        mStartAppVideoButton.setOnClickListener(
+                v -> {
+                    final String videoUrl = mVideoUrlEdit.getText().toString();
+                    startVideo(videoUrl);
+                });
+    }
+
+    private void startVideo(String videoUrl) {
+        mVideoView.setVideoURI(Uri.parse(videoUrl));
+        mVideoView.requestFocus();
+        mVideoView.start();
     }
 }

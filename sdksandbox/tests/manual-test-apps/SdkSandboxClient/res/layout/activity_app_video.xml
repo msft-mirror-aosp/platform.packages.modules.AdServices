@@ -14,12 +14,28 @@
   ~ limitations under the License.
   -->
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <EditText
+        android:id="@+id/app_video_url_edit"
+        android:inputType="textUri"
+        android:importantForAutofill="no"
+        android:hint="@string/video_url"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <Button
+        android:id="@+id/start_app_video_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/start_app_video"
+        android:textAllCaps="false" />
 
     <VideoView
         android:id="@+id/app_video"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
-</RelativeLayout>
+</LinearLayout>

@@ -508,6 +508,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
     @Test
     @LargeTest // Device reboot
+    @Ignore("b/300051780")
     public void testSdkDataPackageDirectory_IsReconciled_DeleteKeepNewVolumeData()
             throws Exception {
         assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());

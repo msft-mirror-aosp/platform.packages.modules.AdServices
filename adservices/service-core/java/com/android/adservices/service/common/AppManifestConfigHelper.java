@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_PARSING_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED;
+
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
@@ -26,6 +29,7 @@ import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.exception.XmlParseException;
 import com.android.modules.utils.build.SdkLevel;
@@ -182,12 +186,11 @@ public class AppManifestConfigHelper {
         boolean enabledByDefault = FlagsFactory.getFlags().getAppConfigReturnsEnabledByDefault();
         try {
             XmlResourceParser in = getXmlParser(context, appPackageName);
-            if (in == null && enabledByDefault) {
+            if (in == null) {
                 LogUtil.v(
-                        "%s: returning true for app (%s) that doesn't"
-                                + " have the AdServices XML config",
-                        method, appPackageName);
-                return true;
+                        "%s: returning %b for app (%s) that doesn't have the AdServices XML config",
+                        method, enabledByDefault, appPackageName);
+                return enabledByDefault;
             }
             AppManifestConfig appManifestConfig =
                     AppManifestConfigParser.getConfig(in, enabledByDefault);
@@ -196,8 +199,11 @@ public class AppManifestConfigHelper {
             LogUtil.v("Name not found while looking for manifest for app \"%s\"", appPackageName);
             LogUtil.e(e, "App manifest parse failed: NameNotFound.");
         } catch (Exception e) {
-            // TODO(b/297585683): create Client Error Logging entry for that.
             LogUtil.e(e, "App manifest parse failed.");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_PARSING_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED);
         }
         return false;
     }
