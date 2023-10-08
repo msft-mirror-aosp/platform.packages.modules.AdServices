@@ -40,6 +40,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELE
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_EXPIRED_JOB_REQUIRES_DEVICE_IDLE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
@@ -326,6 +327,24 @@ public final class PhFlags implements Flags {
                             cobaltLoggingJobPeriodMs));
         }
         return cobaltLoggingJobPeriodMs;
+    }
+
+    @Override
+    public long getCobaltUploadServiceUnbindDelayMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        long cobaltUploadServiceUnbindDelayMs =
+                DeviceConfig.getLong(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        /* flagName */ FlagsConstants.KEY_COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS,
+                        /* defaultValue */ COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS);
+        if (cobaltUploadServiceUnbindDelayMs < 0) {
+            throw new IllegalArgumentException(
+                    String.format(
+                            "cobaltUploadServiceUnbindDelayMs=%d. cobaltLoggingJobPeriodMs should"
+                                    + " >= 0",
+                            cobaltUploadServiceUnbindDelayMs));
+        }
+        return cobaltUploadServiceUnbindDelayMs;
     }
 
     @Override
@@ -800,6 +819,51 @@ public final class PhFlags implements Flags {
                 /* flagName */ FlagsConstants
                         .KEY_MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_SOURCE,
                 MEASUREMENT_MAX_DISTINCT_REP_ORIG_PER_PUBLISHER_X_DEST_IN_SOURCE);
+    }
+
+    @Override
+    public boolean getMeasurementEnableAggregatableReportPayloadPadding() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING,
+                MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING);
+    }
+
+    public boolean getMeasurementEnableDestinationRateLimit() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT,
+                /* defaultValue */
+                        MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT);
+    }
+
+    @Override
+    public int getMeasurementMaxDestinationsPerPublisherPerRateLimitWindow() {
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW,
+                /* defaultValue */
+                        MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW);
+    }
+
+    @Override
+    public int getMeasurementMaxDestPerPublisherXEnrollmentPerRateLimitWindow() {
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW,
+                /* defaultValue */
+                        MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW);
+    }
+
+    @Override
+    public long getMeasurementDestinationRateLimitWindow() {
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW,
+                /* defaultValue */ MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW);
     }
 
     @Override
@@ -1322,6 +1386,14 @@ public final class PhFlags implements Flags {
                 /* flagName */ FlagsConstants
                         .KEY_FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_PER_BUYER_EVENT_COUNT,
                 /* defaultValue */ FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_PER_BUYER_EVENT_COUNT);
+    }
+
+    @Override
+    public boolean getProtectedSignalsCleanupEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_PROTECTED_SIGNALS_CLEANUP_ENABLED,
+                /* defaultValue */ PROTECTED_SIGNALS_CLEANUP_ENABLED);
     }
 
     // MDD related flags.
@@ -2504,6 +2576,16 @@ public final class PhFlags implements Flags {
                         FlagsConstants.NAMESPACE_ADSERVICES,
                         /* flagName */ FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_TOPICS,
                         /* defaultValue */ ENFORCE_FOREGROUND_STATUS_TOPICS));
+    }
+
+    @Override
+    public boolean getEnforceForegroundStatusForSignals() {
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS),
+                /* defaultValue */ DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        /* flagName */ FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS,
+                        /* defaultValue */ ENFORCE_FOREGROUND_STATUS_SIGNALS));
     }
 
     @Override
@@ -3873,6 +3955,26 @@ public final class PhFlags implements Flags {
                         + " = "
                         + getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow());
         writer.println(
+                "\t" + FlagsConstants
+                        .KEY_MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT
+                        + " = "
+                        + getMeasurementEnableDestinationRateLimit());
+        writer.println(
+                "\t" + FlagsConstants
+                        .KEY_MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW
+                        + " = "
+                        + getMeasurementMaxDestinationsPerPublisherPerRateLimitWindow());
+        writer.println(
+                "\t" + FlagsConstants
+                        .KEY_MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW
+                        + " = "
+                        + getMeasurementMaxDestPerPublisherXEnrollmentPerRateLimitWindow());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW
+                        + " = "
+                        + getMeasurementDestinationRateLimitWindow());
+        writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_SOURCE
                         + " = "
@@ -4615,6 +4717,11 @@ public final class PhFlags implements Flags {
                         + getFledgeDataVersionHeaderEnabled());
         writer.println(
                 "\t"
+                        + FlagsConstants.KEY_PROTECTED_SIGNALS_CLEANUP_ENABLED
+                        + " = "
+                        + getProtectedSignalsCleanupEnabled());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_TOPICS_COBALT_LOGGING_ENABLED
                         + " = "
                         + getTopicsCobaltLoggingEnabled());
@@ -4857,6 +4964,21 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED
                         + " = "
                         + getMeasurementAggregateFallbackReportingJobPersisted());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT
+                        + " = "
+                        + getAppConfigReturnsEnabledByDefault());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING
+                        + " = "
+                        + getMeasurementEnableAggregatableReportPayloadPadding());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS
+                        + " = "
+                        + getEnforceForegroundStatusForSignals());
     }
 
     @VisibleForTesting
@@ -5021,6 +5143,15 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getEnableRvcUx() {
+        return getEnableAdServicesSystemApi()
+                && DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        /* flagName */ FlagsConstants.KEY_RVC_UX_ENABLED,
+                        /* defaultValue */ DEFAULT_RVC_UX_ENABLED);
+    }
+
+    @Override
     public boolean getEnableAdServicesSystemApi() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -5039,6 +5170,7 @@ public final class PhFlags implements Flags {
                 FlagsConstants.KEY_RECORD_MANUAL_INTERACTION_ENABLED,
                 getRecordManualInteractionEnabled());
         uxMap.put(FlagsConstants.KEY_GA_UX_FEATURE_ENABLED, getGaUxFeatureEnabled());
+        uxMap.put(FlagsConstants.KEY_RVC_UX_ENABLED, getEnableRvcUx());
         uxMap.put(
                 FlagsConstants.KEY_UI_OTA_STRINGS_FEATURE_ENABLED, getUiOtaStringsFeatureEnabled());
         uxMap.put(
@@ -5552,10 +5684,19 @@ public final class PhFlags implements Flags {
                 /* defaultValue */ IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT);
     }
 
+    @Override
     public boolean getAdIdCacheEnabled() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_AD_ID_CACHE_ENABLED,
                 /* defaultValue */ DEFAULT_ADID_CACHE_ENABLED);
+    }
+
+    @Override
+    public boolean getAppConfigReturnsEnabledByDefault() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT,
+                /* defaultValue */ Flags.APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT);
     }
 }

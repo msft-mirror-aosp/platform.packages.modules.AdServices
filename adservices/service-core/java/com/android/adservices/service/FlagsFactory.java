@@ -94,6 +94,11 @@ public class FlagsFactory {
             public boolean getFledgeEventLevelDebugReportingEnabled() {
                 return true;
             }
+
+            @Override
+            public boolean getAppConfigReturnsEnabledByDefault() {
+                return false;
+            }
         };
     }
 }

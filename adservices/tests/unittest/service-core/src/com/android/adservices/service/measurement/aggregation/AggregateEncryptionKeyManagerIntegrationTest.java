@@ -21,13 +21,13 @@ import static org.mockito.Mockito.when;
 
 import android.net.Uri;
 
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.measurement.AbstractDbIntegrationTest;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DbState;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.errorlogging.AdServicesErrorLogger;
-import com.android.adservices.service.measurement.WebUtil;
 
 import org.json.JSONException;
 import org.junit.Assert;

@@ -18,6 +18,7 @@ package com.android.adservices.service.common.compat;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.SharedPreferences;
 
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
@@ -81,5 +82,14 @@ public final class FileCompatUtils {
      */
     public static File newFileHelper(File parent, String child) {
         return new File(parent, getAdservicesFilename(child));
+    }
+
+    /**
+     * returns a Sharedpreferences for the given context, name, and mode, while ensuring the
+     * filename is prepended with "adservices" on S-.
+     */
+    public static SharedPreferences getSharedPreferencesHelper(
+            Context context, String name, int mode) {
+        return context.getSharedPreferences(getAdservicesFilename(name), mode);
     }
 }

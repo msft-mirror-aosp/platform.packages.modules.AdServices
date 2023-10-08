@@ -25,7 +25,7 @@ import android.net.Uri;
 
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.service.measurement.WebUtil;
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.junit.Test;

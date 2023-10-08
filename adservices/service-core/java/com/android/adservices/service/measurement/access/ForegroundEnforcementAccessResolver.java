@@ -33,7 +33,6 @@ import java.util.function.Supplier;
 /** Resolves if API was called from foreground. */
 public class ForegroundEnforcementAccessResolver implements IAccessResolver {
     private static final String ERROR_MESSAGE = "Measurement API was not called from foreground.";
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     private final int mAppNameId;
     private final int mCallingUid;
     private final AppImportanceFilter mAppImportanceFilter;
@@ -53,12 +52,13 @@ public class ForegroundEnforcementAccessResolver implements IAccessResolver {
     @Override
     public boolean isAllowed(@NonNull Context context) {
         if (!mEnforceForegroundStatus) {
-            sLogger.d("Enforcement foreground flag has been disabled");
+            LoggerFactory.getMeasurementLogger().d("Enforcement foreground flag has been disabled");
             return true;
         }
 
         if (ProcessCompatUtils.isSdkSandboxUid(mCallingUid)) {
-            sLogger.d("Foreground check skipped, app running on Sandbox");
+            LoggerFactory.getMeasurementLogger()
+                    .d("Foreground check skipped, app running on Sandbox");
             return true;
         }
 
@@ -66,10 +66,11 @@ public class ForegroundEnforcementAccessResolver implements IAccessResolver {
         try {
             mAppImportanceFilter.assertCallerIsInForeground(mCallingUid, mAppNameId, null);
         } catch (AppImportanceFilter.WrongCallingApplicationStateException e) {
-            sLogger.e("App not running in foreground");
+            LoggerFactory.getMeasurementLogger().e("App not running in foreground");
             return false;
         } catch (Exception e) {
-            sLogger.e(e, "Unexpected error occurred when asserting caller in foreground");
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "Unexpected error occurred when asserting caller in foreground");
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_FOREGROUND_UNKNOWN_FAILURE,

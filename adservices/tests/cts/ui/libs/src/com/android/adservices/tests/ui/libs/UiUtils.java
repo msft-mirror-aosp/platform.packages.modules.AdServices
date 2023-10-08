@@ -24,7 +24,6 @@ import static com.android.adservices.tests.ui.libs.UiConstants.SYSTEM_UI_RESOURC
 
 import static com.google.common.truth.Truth.assertThat;
 
-
 import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesStates;
 import android.app.Instrumentation;
@@ -163,8 +162,23 @@ public class UiUtils {
         forceSetFlag("ga_ux_enabled", true);
     }
 
+    /** Override flag rvc_ux_enabled in tests */
+    public static void enableRvc() throws Exception {
+        forceSetFlag("rvc_ux_enabled", true);
+    }
+
     public static void disableGa() throws Exception {
         forceSetFlag("ga_ux_enabled", false);
+    }
+
+    /** Disables the enableAdServices system API. */
+    public static void turnOffEnableAdServicesSystemApi() throws Exception {
+        forceSetFlag("enable_ad_services_system_api", false);
+    }
+
+    /** Enables the enableAdServices system API. */
+    public static void turnOnAdServicesSystemApi() throws Exception {
+        forceSetFlag("enable_ad_services_system_api", true);
     }
 
     public static void enableBeta() throws Exception {
@@ -717,6 +731,7 @@ public class UiUtils {
     public static void resetAdServicesConsentData(Context context) throws Exception {
         // Neeed to disable debug mode since it takes precedence over reset channel.
         disableConsentDebugMode();
+        turnOnAdServicesSystemApi();
 
         AdServicesCommonManager mCommonManager = AdServicesCommonManager.get(context);
 

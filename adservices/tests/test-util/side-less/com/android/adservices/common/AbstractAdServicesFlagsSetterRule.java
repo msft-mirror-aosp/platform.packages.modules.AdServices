@@ -202,31 +202,63 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         return dump;
     }
 
+    /** Sets the flag with the given value. */
+    public T setFlag(String name, boolean value) {
+        return setOrCacheFlag(name, Boolean.toString(value));
+    }
+
+    /** Sets the flag with the given value. */
+    public T setFlag(String name, int value) {
+        return setOrCacheFlag(name, Integer.toString(value));
+    }
+
+    /** Sets the flag with the given value. */
+    public T setFlag(String name, long value) {
+        return setOrCacheFlag(name, Long.toString(value));
+    }
+
+    /** Sets the flag with the given value. */
+    public T setFlag(String name, float value) {
+        return setOrCacheFlag(name, Float.toString(value));
+    }
+
+    /** Sets the flag with the given value. */
+    public T setFlag(String name, double value) {
+        return setOrCacheFlag(name, Double.toString(value));
+    }
+
+    /** Sets the flag with the given value. */
+    public T setFlag(String name, String value) {
+        return setOrCacheFlag(name, value);
+    }
+
+    // Add more generic setFlag for other types as needed
+
     /** Overrides the flag that sets the global AdServices kill switch. */
     public T setGlobalKillSwitch(boolean value) {
-        return setOrCacheFlag(FlagsConstants.KEY_GLOBAL_KILL_SWITCH, value);
+        return setFlag(FlagsConstants.KEY_GLOBAL_KILL_SWITCH, value);
     }
 
     /**
      * Overrides flag used by {@link com.android.adservices.service.PhFlags#getAdServicesEnabled}.
      */
     public T setAdServicesEnabled(boolean value) {
-        return setOrCacheFlag(FlagsConstants.KEY_ADSERVICES_ENABLED, value);
+        return setFlag(FlagsConstants.KEY_ADSERVICES_ENABLED, value);
     }
 
     /** Overrides the flag that sets the Topics kill switch. */
     public T setTopicsKillSwitch(boolean value) {
-        return setOrCacheFlag(FlagsConstants.KEY_TOPICS_KILL_SWITCH, value);
+        return setFlag(FlagsConstants.KEY_TOPICS_KILL_SWITCH, value);
     }
 
     /** Overrides the flag that sets the Topics Device Classifier kill switch. */
     public T setTopicsOnDeviceClassifierKillSwitch(boolean value) {
-        return setOrCacheFlag(FlagsConstants.KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH, value);
+        return setFlag(FlagsConstants.KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH, value);
     }
 
     /** Overrides the flag that sets the enrollment seed. */
     public T setEnableEnrollmentTestSeed(boolean value) {
-        return setOrCacheFlag(FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED, value);
+        return setFlag(FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED, value);
     }
 
     /**
@@ -245,7 +277,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
 
     /** Overrides the flag to select the topics classifier type. */
     public T setTopicsClassifierType(int value) {
-        return setOrCacheFlag(FlagsConstants.KEY_CLASSIFIER_TYPE, value);
+        return setFlag(FlagsConstants.KEY_CLASSIFIER_TYPE, value);
     }
 
     /**
@@ -253,26 +285,22 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
      * type.
      */
     public T setTopicsClassifierNumberOfTopLabels(int value) {
-        return setOrCacheFlag(FlagsConstants.KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS, value);
+        return setFlag(FlagsConstants.KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS, value);
     }
 
     /** Overrides the flag to change the threshold for the classifier. */
     public T setTopicsClassifierThreshold(float value) {
-        return setOrCacheFlag(FlagsConstants.KEY_CLASSIFIER_THRESHOLD, value);
+        return setFlag(FlagsConstants.KEY_CLASSIFIER_THRESHOLD, value);
     }
 
     /** Overrides the flag that disables direct app calls for Topics. */
     public T setTopicsDisableDirectAppCalls(boolean value) {
-        return setOrCacheFlag(FlagsConstants.KEY_TOPICS_DISABLE_DIRECT_APP_CALLS, value);
+        return setFlag(FlagsConstants.KEY_TOPICS_DISABLE_DIRECT_APP_CALLS, value);
     }
 
     /** Overrides the flag that forces the use of bundle files for the Topics classifier. */
     public T setTopicsClassifierForceUseBundleFiles(boolean value) {
-        return setOrCacheFlag(FlagsConstants.KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES, value);
-    }
-
-    public T setTopicsClassifierForceUseBundleFilesx(boolean value) {
-        return setOrCacheFlag(FlagsConstants.KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES, value);
+        return setFlag(FlagsConstants.KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES, value);
     }
 
     /** Overrides the system property used to disable topics enrollment check. */
@@ -290,7 +318,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
      * Overrides flag used by {@link com.android.adservices.service.PhFlags#getEnableBackCompat()}.
      */
     public T setEnableBackCompat(boolean value) {
-        return setOrCacheFlag(FlagsConstants.KEY_ENABLE_BACK_COMPAT, value);
+        return setFlag(FlagsConstants.KEY_ENABLE_BACK_COMPAT, value);
     }
 
     /**
@@ -298,7 +326,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
      * com.android.adservices.service.PhFlags#getConsentSourceOfTruth()}.
      */
     public T setConsentSourceOfTruth(int value) {
-        return setOrCacheFlag(FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH, value);
+        return setFlag(FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH, value);
     }
 
     /**
@@ -306,7 +334,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
      * com.android.adservices.service.PhFlags#getBlockedTopicsSourceOfTruth()}.
      */
     public T setBlockedTopicsSourceOfTruth(int value) {
-        return setOrCacheFlag(FlagsConstants.KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH, value);
+        return setFlag(FlagsConstants.KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH, value);
     }
 
     /**
@@ -314,7 +342,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
      * com.android.adservices.service.PhFlags#getEnableAppsearchConsentData()}.
      */
     public T setEnableAppsearchConsentData(boolean value) {
-        return setOrCacheFlag(FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA, value);
+        return setFlag(FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA, value);
     }
 
     /**
@@ -322,7 +350,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
      * com.android.adservices.service.PhFlags#getMeasurementRollbackDeletionAppSearchKillSwitch()}.
      */
     public T setMeasurementRollbackDeletionAppSearchKillSwitch(boolean value) {
-        return setOrCacheFlag(
+        return setFlag(
                 FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH, value);
     }
 
@@ -330,8 +358,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
      * Overrides flag used by {@link com.android.adservices.service.PhFlags#getPpapiAppAllowList()}.
      */
     public T setPpapiAppAllowList(String value) {
-        return setOrCacheFlagWithSeparator(
-                FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST, value, ALLOWLIST_SEPARATOR);
+        return setOrCacheFlag(FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST, value, ALLOWLIST_SEPARATOR);
     }
 
     /**
@@ -339,7 +366,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
      * com.android.adservices.service.PhFlags#getMsmtApiAppAllowList()}.
      */
     public T setMsmtApiAppAllowList(String value) {
-        return setOrCacheFlagWithSeparator(
+        return setOrCacheFlag(
                 FlagsConstants.KEY_MSMT_API_APP_ALLOW_LIST, value, ALLOWLIST_SEPARATOR);
     }
 
@@ -357,7 +384,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
      * com.android.adservices.service.PhFlags#getAdIdRequestPermitsPerSecond()}.
      */
     public T setAdIdRequestPermitsPerSecond(double value) {
-        return setOrCacheFlag(FlagsConstants.KEY_ADID_REQUEST_PERMITS_PER_SECOND, value);
+        return setFlag(FlagsConstants.KEY_ADID_REQUEST_PERMITS_PER_SECOND, value);
     }
 
     /**
@@ -373,7 +400,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
      * com.android.adservices.service.PhFlags#getMddBackgroundTaskKillSwitch()}.
      */
     public T setMddBackgroundTaskKillSwitch(boolean value) {
-        return setOrCacheFlag(FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH, value);
+        return setFlag(FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH, value);
     }
 
     /**
@@ -517,22 +544,6 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         if (!isCalledByLegacyHelper()) {
             throw new UnsupportedOperationException("Only available for legacy helpers");
         }
-    }
-
-    private T setOrCacheFlag(String name, boolean value) {
-        return setOrCacheFlag(name, Boolean.toString(value));
-    }
-
-    private T setOrCacheFlag(String name, int value) {
-        return setOrCacheFlag(name, Integer.toString(value));
-    }
-
-    private T setOrCacheFlag(String name, double value) {
-        return setOrCacheFlag(name, Double.toString(value));
-    }
-
-    private T setOrCacheFlag(String name, float value) {
-        return setOrCacheFlag(name, Float.toString(value));
     }
 
     // TODO(b/294423183): make private once not used by subclass for legacy methods

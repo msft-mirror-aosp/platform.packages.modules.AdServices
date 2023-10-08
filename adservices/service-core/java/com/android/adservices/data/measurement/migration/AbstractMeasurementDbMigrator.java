@@ -23,7 +23,6 @@ import com.android.adservices.LoggerFactory;
 
 /** Handles common functionalities of migrators, e.g. validations. */
 public abstract class AbstractMeasurementDbMigrator implements IMeasurementDbMigrator {
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     private final int mMigrationTargetVersion;
 
     public AbstractMeasurementDbMigrator(int migrationTargetVersion) {
@@ -33,11 +32,13 @@ public abstract class AbstractMeasurementDbMigrator implements IMeasurementDbMig
     @Override
     public void performMigration(SQLiteDatabase db, int oldVersion, int newVersion) {
         if (oldVersion >= mMigrationTargetVersion || newVersion < mMigrationTargetVersion) {
-            sLogger.d("Skipping migration script to db version " + mMigrationTargetVersion);
+            LoggerFactory.getMeasurementLogger()
+                    .d("Skipping migration script to db version " + mMigrationTargetVersion);
             return;
         }
 
-        sLogger.d("Migrating DB to version " + mMigrationTargetVersion);
+        LoggerFactory.getMeasurementLogger()
+                .d("Migrating DB to version " + mMigrationTargetVersion);
         performMigration(db);
     }
 

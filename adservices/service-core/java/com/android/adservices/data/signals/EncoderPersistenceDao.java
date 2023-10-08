@@ -189,13 +189,19 @@ public class EncoderPersistenceDao {
             return true;
         } catch (FileNotFoundException e) {
             sLogger.e(String.format("Could not find file: %s", file.getName()));
+            failWriteToFile(fos, atomicFile);
         } catch (IOException e) {
             sLogger.e(String.format("Could not write to file: %s", file.getName()));
-            if (fos != null) {
-                atomicFile.failWrite(fos);
-            }
+            failWriteToFile(fos, atomicFile);
         }
         return false;
+    }
+
+    /** Closes the file output stream associated with the atomic file */
+    private void failWriteToFile(FileOutputStream fos, AtomicFile atomicFile) {
+        if (fos != null && atomicFile != null) {
+            atomicFile.failWrite(fos);
+        }
     }
 
     @VisibleForTesting
@@ -234,9 +240,6 @@ public class EncoderPersistenceDao {
     /**
      * Explicitly avoids filename format being changed across systems for a buyer, by giving control
      * to the persistence layer on how to decide a filename.
-     *
-     * <p>The unique name for buyer is also used for synchronizing the read, writes and deletes for
-     * files to maintain atomicity and thread safety across operations, for one buyer
      *
      * @param buyer Ad tech for which the file has to be stored
      * @return the String representing filename for the buyer
