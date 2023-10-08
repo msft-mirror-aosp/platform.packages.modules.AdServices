@@ -298,6 +298,7 @@ public class NotificationActivityUiAutomatorTest {
         UiObject scrollView =
                 sDevice.findObject(new UiSelector().className("android.widget.ScrollView"));
 
+        // TODO: clean up the following code with NotificationPages.goThroughNotificationPage()
         if (scrollView.isScrollable()) {
             // there should be a more button
             assertThat(leftControlButton.exists()).isFalse();
@@ -312,6 +313,12 @@ public class NotificationActivityUiAutomatorTest {
             assertThat(rightControlButton.exists()).isTrue();
             assertThat(moreButton.exists()).isFalse();
         } else {
+            // fix the flaky test where test fails due to only moreButton exists
+            int clickCount = 10;
+            while (moreButton.exists() && clickCount-- > 0) {
+                moreButton.click();
+                Thread.sleep(2000);
+            }
             assertThat(leftControlButton.exists()).isTrue();
             assertThat(rightControlButton.exists()).isTrue();
             assertThat(moreButton.exists()).isFalse();

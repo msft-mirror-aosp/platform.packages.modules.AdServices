@@ -22,7 +22,7 @@ import org.jetbrains.uast.UCallExpression
 
 class BackCompatNewFileDetector : Detector(), SourceCodeScanner {
     override fun getApplicableMethodNames(): List<String> {
-        return listOf("getDatabasePath", "databaseBuilder")
+        return listOf("getDatabasePath", "getSharedPreferences", "databaseBuilder")
     }
 
     override fun getApplicableConstructorTypes(): List<String> {
@@ -43,6 +43,8 @@ class BackCompatNewFileDetector : Detector(), SourceCodeScanner {
     override fun visitMethodCall(context: JavaContext, node: UCallExpression, method: PsiMethod) {
         if (
                 (method.name == "getDatabasePath" &&
+                        method.containingClass?.qualifiedName == "android.content.Context") ||
+                (method.name == "getSharedPreferences" &&
                         method.containingClass?.qualifiedName == "android.content.Context") ||
                 (method.name == "databaseBuilder" &&
                         method.containingClass?.qualifiedName == "androidx.room.Room")

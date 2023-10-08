@@ -129,6 +129,8 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
         }
     }
 
+    // TODO(b/295269584): expose as @VisibleForTest and add unit test for it - that would be a more
+    // pragmatic approach then adding more combinations to the existing tests
     private MinimumLevelRequired getMinimumLevelRequired(Description description) {
         RequiresSdkLevelAtLeastU atLeastU =
                 description.getAnnotation(RequiresSdkLevelAtLeastU.class);

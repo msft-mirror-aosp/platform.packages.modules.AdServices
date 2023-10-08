@@ -21,6 +21,7 @@ import static com.android.adservices.service.signals.SignalsFixture.intToBase64;
 import static com.android.adservices.service.signals.SignalsFixture.intToBytes;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -42,9 +43,6 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.MockWebServerRuleFactory;
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.SupportedByConditionRule;
-import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -56,7 +54,7 @@ import com.android.adservices.data.signals.EncoderLogicHandler;
 import com.android.adservices.data.signals.EncoderPersistenceDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
-import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.AdCounterKeyCopierNoOpImpl;
 import com.android.adservices.service.adselection.AdSelectionScriptEngine;
 import com.android.adservices.service.adselection.DebugReportingScriptDisabledStrategy;
@@ -71,6 +69,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.js.IsolateSettings;
+import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -84,6 +83,7 @@ import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.RecordedRequest;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -109,20 +109,7 @@ public class SignalsEncodingE2ETest {
 
     @Spy private final Context mContextSpy = ApplicationProvider.getApplicationContext();
 
-    @Rule(order = 0)
-    public final AdServicesDeviceSupportedRule deviceSupported =
-            new AdServicesDeviceSupportedRule();
-
-    @Rule(order = 1)
-    public final SupportedByConditionRule webViewSupportsJSSandbox =
-            WebViewSupportUtil.createJSSandboxAvailableRule();
-
-    @Rule(order = 2)
-    public final SupportedByConditionRule webViewSupportsConfigurableHeapSize =
-            WebViewSupportUtil.createJSSandboxConfigurableHeapSizeRule(mContextSpy);
-
-    @Rule(order = 3)
-    public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
+    @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
@@ -131,9 +118,43 @@ public class SignalsEncodingE2ETest {
     @Mock private Throttler mMockThrottler;
     @Mock private DevContextFilter mDevContextFilterMock;
 
+    private Flags mFlagsWithProtectedSignalsAndEncodingEnabled =
+            new Flags() {
+                @Override
+                public boolean getGaUxFeatureEnabled() {
+                    return true;
+                }
+
+                @Override
+                public boolean getProtectedSignalsPeriodicEncodingEnabled() {
+                    return true;
+                }
+
+                @Override
+                public boolean getBackgroundJobsLoggingKillSwitch() {
+                    return false;
+                }
+
+                @Override
+                public boolean getProtectedSignalsServiceKillSwitch() {
+                    return false;
+                }
+
+                @Override
+                public boolean getGlobalKillSwitch() {
+                    return false;
+                }
+
+                @Override
+                public boolean getDisableFledgeEnrollmentCheck() {
+                    return true;
+                }
+            };
+
     @Spy
     FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
-            new FledgeAllowListsFilter(FlagsFactory.getFlagsForTest(), mAdServicesLoggerMock);
+            new FledgeAllowListsFilter(
+                    mFlagsWithProtectedSignalsAndEncodingEnabled, mAdServicesLoggerMock);
 
     private ProtectedSignalsDao mSignalsDao;
     private EncoderEndpointsDao mEncoderEndpointsDao;
@@ -160,6 +181,7 @@ public class SignalsEncodingE2ETest {
 
     @Before
     public void setup() {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
@@ -210,13 +232,13 @@ public class SignalsEncodingE2ETest {
                                 new EnrollmentDao(
                                         mContextSpy,
                                         DbTestUtil.getSharedDbHelperForTest(),
-                                        FlagsFactory.getFlagsForTest()),
+                                        mFlagsWithProtectedSignalsAndEncodingEnabled),
                                 mAdServicesLoggerMock));
         mCustomAudienceServiceFilter =
                 new CustomAudienceServiceFilter(
                         mContextSpy,
                         mConsentManagerMock,
-                        FlagsFactory.getFlagsForTest(),
+                        mFlagsWithProtectedSignalsAndEncodingEnabled,
                         mAppImportanceFilterMock,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilterSpy,
@@ -246,7 +268,7 @@ public class SignalsEncodingE2ETest {
                         mDevContextFilterMock,
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesLoggerImpl.getInstance(),
-                        FlagsFactory.getFlagsForTest(),
+                        mFlagsWithProtectedSignalsAndEncodingEnabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mCustomAudienceServiceFilter);
 
@@ -274,7 +296,7 @@ public class SignalsEncodingE2ETest {
                         mAdSelectionScriptEngine,
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
-                        FlagsFactory.getFlagsForTest());
+                        mFlagsWithProtectedSignalsAndEncodingEnabled);
 
         doNothing()
                 .when(
@@ -400,7 +422,7 @@ public class SignalsEncodingE2ETest {
                 mEncoderPersistenceDao.getEncoder(BUYER));
 
         // Validate that the periodic job for encoding would have been scheduled
-        ExtendedMockito.verify(
+        verify(
                 () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
                 times(1));
 

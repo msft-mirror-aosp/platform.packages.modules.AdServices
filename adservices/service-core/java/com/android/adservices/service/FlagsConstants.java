@@ -100,6 +100,8 @@ public final class FlagsConstants {
     public static final String KEY_ADSERVICES_RELEASE_STAGE_FOR_COBALT =
             "adservices_release_stage_for_cobalt";
     public static final String KEY_COBALT_LOGGING_JOB_PERIOD_MS = "cobalt_logging_job_period_ms";
+    public static final String KEY_COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS =
+            "cobalt_upload_service_unbind_delay_ms";
     public static final String KEY_COBALT_LOGGING_ENABLED = "cobalt_logging_enabled";
 
     // Measurement keys
@@ -236,6 +238,20 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_SOURCE =
             "measurement_max_distinct_reporting_origins_in_source";
+
+    public static final String KEY_MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT =
+            "measurement_enable_destination_rate_limit";
+
+    public static final String
+            KEY_MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW =
+                    "measurement_max_destinations_per_publisher_per_rate_limit_window";
+
+    public static final String
+            KEY_MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW =
+                    "measurement_max_dest_per_publisher_x_enrollment_per_rate_limit_window";
+
+    public static final String KEY_MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW =
+            "measurement_destination_rate_limit_window";
 
     public static final String KEY_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS =
             "measurement_enable_coarse_event_report_destinations";
@@ -379,6 +395,9 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED =
             "measurement_aggregate_fallback_reporting_job_persisted";
+
+    public static final String KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING =
+            "measurement_enable_aggregatable_report_payload_padding";
 
     // FLEDGE Custom Audience keys
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT =
@@ -620,9 +639,17 @@ public final class FlagsConstants {
     public static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE =
             "fledge_ad_selection_enforce_foreground_status_custom_audience";
 
+    // Protected Signals keys
+    public static final String KEY_PROTECTED_SIGNALS_CLEANUP_ENABLED =
+            "protected_signals_cleanup_enabled";
+
     // Topics invoking app status key.
     public static final String KEY_ENFORCE_FOREGROUND_STATUS_TOPICS =
             "topics_enforce_foreground_status";
+
+    // Signals invoking app status key.
+    public static final String KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS =
+            "signals_enforce_foreground_status";
 
     // AdId invoking app status key.
     public static final String KEY_ENFORCE_FOREGROUND_STATUS_ADID =
@@ -991,6 +1018,8 @@ public final class FlagsConstants {
 
     public static final String KEY_U18_UX_ENABLED = "u18_ux_enabled";
 
+    public static final String KEY_RVC_UX_ENABLED = "rvc_ux_enabled";
+
     public static final String KEY_ENABLE_AD_SERVICES_SYSTEM_API = "enable_ad_services_system_api";
 
     public static final String KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED =
@@ -1000,4 +1029,7 @@ public final class FlagsConstants {
             "is_u18_supervised_account_enabled";
 
     public static final String KEY_AD_ID_CACHE_ENABLED = "ad_id_cache_enabled";
+
+    public static final String KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT =
+            "app_config_returns_enabled_by_detault";
 }

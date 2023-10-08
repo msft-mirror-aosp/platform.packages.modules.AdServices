@@ -32,7 +32,6 @@ import java.util.concurrent.ThreadLocalRandom;
  * Abstract class for Datastore management.
  */
 public abstract class DatastoreManager {
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     final AdServicesErrorLogger mErrorLogger;
 
     protected DatastoreManager(AdServicesErrorLogger errorLogger) {
@@ -81,16 +80,6 @@ public abstract class DatastoreManager {
     public abstract IMeasurementDao getMeasurementDao();
 
     /**
-     * Acquire an instance of LoggerFactory.Logger object for logging.
-     *
-     * @return LoggerFactory.Logger Object
-     */
-    @VisibleForTesting
-    LoggerFactory.Logger getLogger() {
-        return sLogger;
-    }
-
-    /**
      * Runs the {@code execute} lambda in a transaction.
      *
      * @param execute lambda to be executed in a transaction
@@ -112,7 +101,8 @@ public abstract class DatastoreManager {
         } catch (DatastoreException ex) {
             result = Optional.empty();
             safePrintDataStoreVersion();
-            getLogger().e(ex, "DatastoreException thrown during transaction");
+            LoggerFactory.getMeasurementLogger()
+                    .e(ex, "DatastoreException thrown during transaction");
             mErrorLogger.logErrorWithExceptionInfo(
                     ex,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_DATASTORE_FAILURE,
@@ -129,7 +119,8 @@ public abstract class DatastoreManager {
         } catch (Exception ex) {
             // Catch all exceptions for rollback
             safePrintDataStoreVersion();
-            getLogger().e(ex, "Unhandled exception thrown during transaction");
+            LoggerFactory.getMeasurementLogger()
+                    .e(ex, "Unhandled exception thrown during transaction");
             mErrorLogger.logErrorWithExceptionInfo(
                     ex,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_DATASTORE_UNKNOWN_FAILURE,
@@ -159,10 +150,11 @@ public abstract class DatastoreManager {
     /** Prints the underlying data store version catching exceptions it can raise. */
     private void safePrintDataStoreVersion() {
         try {
-            getLogger().w("Underlying datastore version: " + getDataStoreVersion());
+            LoggerFactory.getMeasurementLogger()
+                    .w("Underlying datastore version: " + getDataStoreVersion());
         } catch (Exception e) {
             // If fetching data store version throws an exception, skip printing the DB version.
-            getLogger().e(e, "Failed to print data store version.");
+            LoggerFactory.getMeasurementLogger().e(e, "Failed to print data store version.");
         }
     }
 

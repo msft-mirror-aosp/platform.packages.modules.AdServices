@@ -161,6 +161,10 @@ public class PeriodicEncodingJobService extends JobService {
      * Attempts to schedule the Periodic encoding as a singleton job if it is not already scheduled.
      */
     public static void scheduleIfNeeded(Context context, Flags flags, boolean forceSchedule) {
+        LoggerFactory.getFledgeLogger()
+                .v(
+                        "Attempting to schedule job:%s if needed",
+                        PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID);
         if (!flags.getProtectedSignalsPeriodicEncodingEnabled()) {
             LoggerFactory.getFledgeLogger()
                     .v("Protected Signals periodic encoding is disabled; skipping schedule");

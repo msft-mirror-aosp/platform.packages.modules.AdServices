@@ -34,6 +34,7 @@ import android.view.View;
 
 import androidx.annotation.NonNull;
 
+import com.android.adservices.common.WebUtil;
 import com.android.compatibility.common.util.TestUtils;
 
 import java.time.Instant;
@@ -44,13 +45,14 @@ import java.util.concurrent.Executors;
 public class SdkMeasurement extends SandboxedSdkProvider {
     private static final String TAG = "SdkMeasurement";
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
-    private static final Uri SOURCE_REGISTRATION_URI = Uri.parse("https://test.com/source");
-    private static final Uri TRIGGER_REGISTRATION_URI = Uri.parse("https://test.com/trigger");
-    private static final Uri DESTINATION = Uri.parse("http://destination.com");
+    private static final Uri SOURCE_REGISTRATION_URI = WebUtil.validUri("https://test.test/source");
+    private static final Uri TRIGGER_REGISTRATION_URI =
+            WebUtil.validUri("https://test.test/trigger");
+    private static final Uri DESTINATION = WebUtil.validUri("http://destination.test");
     private static final Uri OS_DESTINATION = Uri.parse("android-app://os.destination");
-    private static final Uri WEB_DESTINATION = Uri.parse("http://web-destination.com");
-    private static final Uri ORIGIN_URI = Uri.parse("http://origin-uri.com");
-    private static final Uri DOMAIN_URI = Uri.parse("http://domain-uri.com");
+    private static final Uri WEB_DESTINATION = WebUtil.validUri("http://web-destination.test");
+    private static final Uri ORIGIN_URI = WebUtil.validUri("http://origin-uri.test");
+    private static final Uri DOMAIN_URI = WebUtil.validUri("http://domain-uri.test");
 
     private MeasurementClient mMeasurementClient;
 

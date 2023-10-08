@@ -50,7 +50,7 @@ import java.util.function.Supplier;
  *
  * <p>Tests in assets/msmt_interop_tests/ directory were copied from Chromium
  * src/content/test/data/attribution_reporting/interop GitHub commit
- * 35a0eaf2e4370eba47497f83a8faa77233b83077.
+ * a579f3989c29017f5b0168f47e86a9a75544e21b.
  */
 @RunWith(Parameterized.class)
 public class E2EInteropMockTest extends E2EMockTest {
@@ -78,7 +78,13 @@ public class E2EInteropMockTest extends E2EMockTest {
                     "measurement_flex_api_max_information_gain_event",
                     // measurement_max_reporting_origins_per_source_reporting_site_per_window
                     "rate_limit_max_reporting_origins_per_source_reporting_site",
-                    "measurement_max_reporting_origins_per_source_reporting_site_per_window");
+                    "measurement_max_reporting_origins_per_source_reporting_site_per_window",
+
+                    "max_destinations_per_rate_limit_window",
+                    "measurement_max_destinations_per_publisher_per_rate_limit_window",
+
+                    "max_destinations_per_rate_limit_window_reporting_site",
+                    "measurement_max_dest_per_publisher_x_enrollment_per_rate_limit_window");
 
     private static String preprocessor(String json) {
         return json.replaceAll("\\.test(?=[\"\\/])", ".com")
