@@ -99,6 +99,7 @@ import androidx.room.Room;
 public final class FakeClass {
     public FakeClass(Context context) {
         context.getDatabasePath("stringName");
+        context.getSharedPreferences("stringName", intMode);
         Room.databaseBuilder(context, FakeClass.class, "stringName");
     }
 }
@@ -110,9 +111,12 @@ public final class FakeClass {
             context.getDatabasePath("stringName");
                     ~~~~~~~~~~~~~~~
     src/com/android/adservices/service/common/fake/packagename/FakeClass.java:10: Error: Please use FileCompatUtils to ensure any newly added files have a name that begins with "adservices" or create the files in a subdirectory called "adservices/" (go/rb-extservices-ota-data-cleanup) [NewAdServicesFile]
+            context.getSharedPreferences("stringName", intMode);
+                    ~~~~~~~~~~~~~~~~~~~~
+    src/com/android/adservices/service/common/fake/packagename/FakeClass.java:11: Error: Please use FileCompatUtils to ensure any newly added files have a name that begins with "adservices" or create the files in a subdirectory called "adservices/" (go/rb-extservices-ota-data-cleanup) [NewAdServicesFile]
             Room.databaseBuilder(context, FakeClass.class, "stringName");
                  ~~~~~~~~~~~~~~~
-    2 errors, 0 warnings
+    3 errors, 0 warnings
                 """.trimIndent()
 
                 )
@@ -130,6 +134,7 @@ import androidx.room.OtherRoom;
 public final class FakeClass {
     public FakeClass(OtherContext context) {
         context.getDatabasePath("stringName");
+        context.getSharedPreferences("stringName", intMode);
         OtherRoom.databaseBuilder(context, FakeClass.class, "stringName");
     }
 }
@@ -138,6 +143,17 @@ public final class FakeClass {
                 .run()
                 .expectClean()
     }
+
+    private val sharedPreferences: TestFile =
+            java(
+                    """
+            package android.content;
+
+            public class SharedPreferences {
+            }
+        """
+            )
+                    .indented()
 
     private val fileClass: TestFile =
             java(
@@ -157,8 +173,12 @@ public final class FakeClass {
             java(
                     """
             package android.content;
+
+            import android.content.SharedPreferences;
+
             public abstract class Context {
                     public abstract void getDatabasePath(String name);
+                    public abstract SharedPreferences getSharedPreferences(String name, int mode);
             }
         """
             )
@@ -183,8 +203,12 @@ public final class FakeClass {
             java(
                     """
             package android.content;
+
+            import android.content.SharedPreferences;
+
             public abstract class OtherContext {
                     public abstract void getDatabasePath(String name);
+                    public abstract SharedPreferences getSharedPreferences(String name, int mode);
             }
         """
             )
@@ -207,6 +231,7 @@ public final class FakeClass {
 
     private val stubs =
             arrayOf(
+                    sharedPreferences,
                     fileClass,
                     context,
                     room,

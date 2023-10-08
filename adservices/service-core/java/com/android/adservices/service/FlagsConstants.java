@@ -239,6 +239,20 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_SOURCE =
             "measurement_max_distinct_reporting_origins_in_source";
 
+    public static final String KEY_MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT =
+            "measurement_enable_destination_rate_limit";
+
+    public static final String
+            KEY_MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW =
+                    "measurement_max_destinations_per_publisher_per_rate_limit_window";
+
+    public static final String
+            KEY_MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW =
+                    "measurement_max_dest_per_publisher_x_enrollment_per_rate_limit_window";
+
+    public static final String KEY_MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW =
+            "measurement_destination_rate_limit_window";
+
     public static final String KEY_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS =
             "measurement_enable_coarse_event_report_destinations";
 
@@ -632,6 +646,10 @@ public final class FlagsConstants {
     // Topics invoking app status key.
     public static final String KEY_ENFORCE_FOREGROUND_STATUS_TOPICS =
             "topics_enforce_foreground_status";
+
+    // Signals invoking app status key.
+    public static final String KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS =
+            "signals_enforce_foreground_status";
 
     // AdId invoking app status key.
     public static final String KEY_ENFORCE_FOREGROUND_STATUS_ADID =

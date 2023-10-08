@@ -300,16 +300,43 @@ public class AsyncRegistrationQueueRunner {
                     .d("insertSources: getTopLevelPublisher failed", topOrigin);
             return false;
         }
+        Flags flags = FlagsFactory.getFlags();
+        if (flags.getMeasurementEnableDestinationRateLimit()) {
+            if (source.getAppDestinations() != null
+                    && !sourceIsWithinTimeBasedDestinationLimits(
+                            debugReportApi,
+                            source,
+                            publisher.get(),
+                            publisherType,
+                            source.getEnrollmentId(),
+                            source.getAppDestinations(),
+                            EventSurfaceType.APP,
+                            source.getEventTime(),
+                            dao)) {
+                return false;
+            }
+
+            if (source.getWebDestinations() != null
+                    && !sourceIsWithinTimeBasedDestinationLimits(
+                            debugReportApi,
+                            source,
+                            publisher.get(),
+                            publisherType,
+                            source.getEnrollmentId(),
+                            source.getWebDestinations(),
+                            EventSurfaceType.WEB,
+                            source.getEventTime(),
+                            dao)) {
+                return false;
+            }
+        }
         long numOfSourcesPerPublisher =
                 dao.getNumSourcesPerPublisher(
                         BaseUriExtractor.getBaseUri(topOrigin), publisherType);
-        if (numOfSourcesPerPublisher
-                >= FlagsFactory.getFlags().getMeasurementMaxSourcesPerPublisher()) {
-            LoggerFactory.getMeasurementLogger()
-                    .d(
-                            "insertSources: Max limit of %s sources for publisher - %s reached.",
-                            FlagsFactory.getFlags().getMeasurementMaxSourcesPerPublisher(),
-                            publisher);
+        if (numOfSourcesPerPublisher >= flags.getMeasurementMaxSourcesPerPublisher()) {
+            LoggerFactory.getMeasurementLogger().d(
+                    "insertSources: Max limit of %s sources for publisher - %s reached.",
+                    flags.getMeasurementMaxSourcesPerPublisher(), publisher);
             debugReportApi.scheduleSourceStorageLimitDebugReport(
                     source, String.valueOf(numOfSourcesPerPublisher), dao);
             return false;
@@ -343,7 +370,6 @@ public class AsyncRegistrationQueueRunner {
                         dao)) {
             return false;
         }
-        Flags flags = FlagsFactory.getFlags();
         int numOfOriginExcludingRegistrationOrigin =
                 dao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
                         source.getRegistrationOrigin(),
@@ -369,6 +395,71 @@ public class AsyncRegistrationQueueRunner {
         return true;
     }
 
+    private static boolean sourceIsWithinTimeBasedDestinationLimits(
+            DebugReportApi debugReportApi,
+            Source source,
+            Uri publisher,
+            @EventSurfaceType int publisherType,
+            String enrollmentId,
+            List<Uri> destinations,
+            @EventSurfaceType int destinationType,
+            long requestTime,
+            IMeasurementDao dao)
+            throws DatastoreException {
+        long windowStartTime = source.getEventTime()
+                - FlagsFactory.getFlags().getMeasurementDestinationRateLimitWindow();
+        int destinationReportingCount =
+                dao.countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+                        publisher,
+                        publisherType,
+                        enrollmentId,
+                        destinations,
+                        destinationType,
+                        windowStartTime,
+                        requestTime);
+        // Same reporting-site destination limit
+        int maxDistinctReportingDestinations =
+                FlagsFactory.getFlags()
+                        .getMeasurementMaxDestPerPublisherXEnrollmentPerRateLimitWindow();
+        boolean hitSameReportingRateLimit =
+                destinationReportingCount + destinations.size() > maxDistinctReportingDestinations;
+        if (hitSameReportingRateLimit) {
+            LoggerFactory.getMeasurementLogger().d(
+                    "AsyncRegistrationQueueRunner: "
+                            + (destinationType == EventSurfaceType.APP ? "App" : "Web")
+                            + " MaxDestPerPublisherXEnrollmentPerRateLimitWindow exceeded");
+        }
+        // Global destination limit
+        int destinationCount =
+                dao.countDistinctDestinationsPerPublisherPerRateLimitWindow(
+                        publisher,
+                        publisherType,
+                        destinations,
+                        destinationType,
+                        windowStartTime,
+                        requestTime);
+        int maxDistinctDestinations =
+                FlagsFactory.getFlags()
+                        .getMeasurementMaxDestinationsPerPublisherPerRateLimitWindow();
+        boolean hitRateLimit = destinationCount + destinations.size() > maxDistinctDestinations;
+        if (hitRateLimit) {
+            LoggerFactory.getMeasurementLogger().d(
+                    "AsyncRegistrationQueueRunner: "
+                            + (destinationType == EventSurfaceType.APP ? "App" : "Web")
+                            + " MaxDestinationsPerPublisherPerRateLimitWindow exceeded");
+        }
+
+        if (hitSameReportingRateLimit) {
+            debugReportApi.scheduleSourceDestinationRateLimitDebugReport(
+                    source, String.valueOf(maxDistinctReportingDestinations), dao);
+            return false;
+        } else if (hitRateLimit) {
+            debugReportApi.scheduleSourceSuccessDebugReport(source, dao);
+            return false;
+        }
+        return true;
+    }
+
     private static boolean isDestinationWithinBounds(
             DebugReportApi debugReportApi,
             Source source,
@@ -381,17 +472,29 @@ public class AsyncRegistrationQueueRunner {
             long requestTime,
             IMeasurementDao dao)
             throws DatastoreException {
-        int destinationCount =
-                dao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
-                        publisher,
-                        publisherType,
-                        enrollmentId,
-                        destinations,
-                        destinationType,
-                        windowStartTime,
-                        requestTime);
-        int maxDistinctDestinations =
-                FlagsFactory.getFlags().getMeasurementMaxDistinctDestinationsInActiveSource();
+        Flags flags = FlagsFactory.getFlags();
+        int destinationCount;
+        if (flags.getMeasurementEnableDestinationRateLimit()) {
+            destinationCount =
+                    dao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                            publisher,
+                            publisherType,
+                            enrollmentId,
+                            destinations,
+                            destinationType,
+                            requestTime);
+        } else {
+            destinationCount =
+                    dao.countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+                            publisher,
+                            publisherType,
+                            enrollmentId,
+                            destinations,
+                            destinationType,
+                            windowStartTime,
+                            requestTime);
+        }
+        int maxDistinctDestinations = flags.getMeasurementMaxDistinctDestinationsInActiveSource();
         if (destinationCount + destinations.size() > maxDistinctDestinations) {
             LoggerFactory.getMeasurementLogger()
                     .d(
@@ -413,7 +516,7 @@ public class AsyncRegistrationQueueRunner {
                         windowStartTime,
                         requestTime);
         if (distinctReportingOriginCount
-                >= FlagsFactory.getFlags().getMeasurementMaxDistinctRepOrigPerPublXDestInSource()) {
+                >= flags.getMeasurementMaxDistinctRepOrigPerPublXDestInSource()) {
             debugReportApi.scheduleSourceSuccessDebugReport(source, dao);
             LoggerFactory.getMeasurementLogger()
                     .d(

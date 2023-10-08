@@ -26,6 +26,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
@@ -35,7 +36,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -66,12 +66,13 @@ import android.content.res.Resources;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.Process;
-import android.util.Log;
 import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.IntFailureSyncCallback;
+import com.android.adservices.common.ProcessLifeguardRule;
 import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
@@ -128,7 +129,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /** Unit test for {@link com.android.adservices.service.topics.TopicsServiceImpl}. */
-public class TopicsServiceImplTest {
+public final class TopicsServiceImplTest {
     private static final String TEST_APP_PACKAGE_NAME = "com.android.adservices.servicecoretest";
     private static final String INVALID_PACKAGE_NAME = "com.do_not_exists";
     private static final String SOME_SDK_NAME = "SomeSdkName";
@@ -173,7 +174,11 @@ public class TopicsServiceImplTest {
     // We are not expecting to launch Topics API on Android R. Hence, skipping this test on
     // Android R since some tests require handling of unsupported PackageManager APIs.
     // TODO(b/290839573) - Remove rule if Topics is enabled on R in the future.
-    @Rule public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    @Rule(order = 1)
+    public final ProcessLifeguardRule processLifeguard = new ProcessLifeguardRule();
 
     @Before
     public void setup() throws Exception {
@@ -283,6 +288,9 @@ public class TopicsServiceImplTest {
         // currently guarded by a flag
         mockGetFlags(mMockFlags);
         when(mMockFlags.getAppConfigReturnsEnabledByDefault()).thenReturn(false);
+        // Similarly, AppManifestConfigHelper.isAllowedTopicsAccess() is failing to parse the XML
+        // (which returns false), but logging the error on ErrorLogUtil, so we need to ignored that.
+        doNothingOnErrorLogUtilError();
     }
 
     @After
@@ -1208,49 +1216,11 @@ public class TopicsServiceImplTest {
                 mMockAppImportanceFilter);
     }
 
-    // TODO(b/302757068): make it an abstract class (which doesn't implement anything) and move to
-    // common testing library
-    private static final class SyncGetTopicsCallback implements IGetTopicsCallback {
-        private static final String TAG = SyncGetTopicsCallback.class.getSimpleName();
+    private static final class SyncGetTopicsCallback extends IntFailureSyncCallback<GetTopicsResult>
+            implements IGetTopicsCallback {
 
-        private final CountDownLatch mLatch = new CountDownLatch(1);
-        private GetTopicsResult mResult;
-        private Integer mFailureCode;
-
-        @Override
-        public void onResult(GetTopicsResult responseParcel) {
-            Log.d(TAG, "onResult(): " + responseParcel);
-            mResult = responseParcel;
-            mLatch.countDown();
-        }
-
-        @Override
-        public void onFailure(int resultCode) {
-            Log.d(TAG, "onFailure(): " + resultCode);
-            mFailureCode = resultCode;
-            mLatch.countDown();
-        }
-
-        @Override
-        public IBinder asBinder() {
-            return null;
-        }
-
-        public void assertCalled() throws InterruptedException {
-            assertWithMessage("latch called in %s ms", BINDER_CONNECTION_TIMEOUT_MS)
-                    .that(mLatch.await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-                    .isTrue();
-        }
-
-        public GetTopicsResult assertSuccess() throws InterruptedException {
-            assertCalled();
-            assertWithMessage("result").that(mResult).isNotNull();
-            return mResult;
-        }
-
-        public void assertFailed(int expectedCode) throws InterruptedException {
-            assertCalled();
-            assertWithMessage("failure code").that(mFailureCode).isEqualTo(expectedCode);
+        SyncGetTopicsCallback() {
+            super(BINDER_CONNECTION_TIMEOUT_MS);
         }
     }
 }

@@ -36,10 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Takes appropriate action be it update, delete or download encoder based on {@link
- * UpdateEncoderEvent}
- */
+/** Takes appropriate action be it update or download encoder based on {@link UpdateEncoderEvent} */
 public class UpdateEncoderEventHandler {
     @NonNull private final EncoderEndpointsDao mEncoderEndpointsDao;
     @NonNull private final EncoderLogicHandler mEncoderLogicHandler;
