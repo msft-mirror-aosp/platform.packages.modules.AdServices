@@ -174,7 +174,7 @@ public class AppSetIdManagerTest {
 
     @Test
     @RequiresLowRamDevice
-    public void testAppSetIdManager_whenDeviceNotSupported() {
+    public void testAppSetIdManager_whenDeviceNotSupported() throws Exception {
         AppSetIdManager appSetIdManager = AppSetIdManager.get(sContext);
         assertWithMessage("appSetIdManager").that(appSetIdManager).isNotNull();
         OutcomeReceiverForTests<AppSetId> receiver = new OutcomeReceiverForTests<>();

@@ -41,8 +41,6 @@ import java.util.UUID;
 /** Class containing static functions for enqueueing AsyncRegistrations */
 public class EnqueueAsyncRegistration {
 
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
-
     /**
      * Inserts an App Source or Trigger Registration request into the Async Registration Queue
      * table.
@@ -271,7 +269,8 @@ public class EnqueueAsyncRegistration {
                 contentProviderClient.insert(AsyncRegistrationContentProvider.TRIGGER_URI, null);
             }
         } catch (RemoteException e) {
-            sLogger.e(e, "AsyncRegistration Content Provider invocation failed.");
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "AsyncRegistration Content Provider invocation failed.");
         }
     }
 

@@ -55,12 +55,14 @@ import java.util.concurrent.TimeUnit;
 public class ScenarioDispatcher extends Dispatcher {
 
     public static final String BASE_ADDRESS = "https://localhost:38383";
+    private static final String FAKE_ADDRESS_1 = "https://localhost:38384";
+    private static final String FAKE_ADDRESS_2 = "https://localhost:38385";
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     public static final String DEFAULT_RESPONSE_BODY = "200 OK";
     public static final String SCENARIOS_DATA_JARPATH = "scenarios/data/";
     public static final String X_FLEDGE_BUYER_BIDDING_LOGIC_VERSION =
             "x_fledge_buyer_bidding_logic_version";
-    public static final int TIMEOUT_SEC = 4;
+    public static final int TIMEOUT_SEC = 8;
 
     private final Map<Request, Response> mRequestToResponseMap;
     private final String mPrefix;
@@ -141,6 +143,11 @@ public class ScenarioDispatcher extends Dispatcher {
         mSubstitutionMap = parseSubstitutions(json);
         mSubstitutionVariables = new ArrayMap<>();
         mSubstitutionVariables.put("{base_url}", BASE_ADDRESS + prefix);
+        // These additional domains are not supported locally, however they are populated to
+        // maintain compatibility with existing scenario files.
+        mSubstitutionVariables.put("{adtech1_url}", BASE_ADDRESS + prefix);
+        mSubstitutionVariables.put("{adtech2_url}", FAKE_ADDRESS_1 + prefix);
+        mSubstitutionVariables.put("{adtech3_url}", FAKE_ADDRESS_2 + prefix);
         mRequestToResponseMap = parseMocks(json);
         mCallCount = new CountDownLatch(mRequestToResponseMap.size());
     }
@@ -203,6 +210,14 @@ public class ScenarioDispatcher extends Dispatcher {
         }
     }
 
+    private static int getIntegerOptional(String field, JSONObject json) {
+        try {
+            return json.getInt(field);
+        } catch (JSONException e) {
+            return 0;
+        }
+    }
+
     private static Request parseRequest(JSONObject json) {
         Request.Builder builder = Request.newBuilder();
         try {
@@ -250,6 +265,8 @@ public class ScenarioDispatcher extends Dispatcher {
             builder.setHeaders(ImmutableMap.of());
         }
 
+        builder.setDelaySeconds(getIntegerOptional("delay_sec", responseObject));
+
         return builder;
     }
 
@@ -265,6 +282,9 @@ public class ScenarioDispatcher extends Dispatcher {
                 for (Map.Entry<String, String> keyValuePair : mSubstitutionVariables.entrySet()) {
                     body = body.replace(keyValuePair.getKey(), keyValuePair.getValue());
                 }
+
+                // Sleep if necessary. Will default to 0 if not provided.
+                Thread.sleep(mockResponse.getDelaySeconds() * 1000L);
 
                 // If the mock path specifically has query params, then add that, otherwise strip
                 // them before adding them to the log.
@@ -340,6 +360,8 @@ public class ScenarioDispatcher extends Dispatcher {
 
         abstract ImmutableMap<String, String> getHeaders();
 
+        abstract int getDelaySeconds();
+
         static Response.Builder newBuilder() {
             return new AutoValue_ScenarioDispatcher_Response.Builder();
         }
@@ -353,6 +375,8 @@ public class ScenarioDispatcher extends Dispatcher {
             abstract Builder setVerifyNotCalled(boolean verifyNotCalled);
 
             abstract Builder setHeaders(Map<String, String> headers);
+
+            abstract Builder setDelaySeconds(int delay);
 
             abstract Response build();
         }

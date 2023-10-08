@@ -37,15 +37,17 @@ import com.android.internal.annotations.GuardedBy;
 import com.google.cobalt.CobaltRegistry;
 
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
 
 /** Factory for Cobalt's logger and periodic job implementations. */
 public final class CobaltFactory {
     private static final Object SINGLETON_LOCK = new Object();
 
     /*
-     * Use the prod pipeline because AdServices' reports are for either the DEBUG or GA release
+     * Uses the prod pipeline because AdServices' reports are for either the DEBUG or GA release
      * stage and DEBUG is sufficient for local testing.
      */
     private static final CobaltPipelineType PIPELINE_TYPE = CobaltPipelineType.PROD;
@@ -112,6 +114,7 @@ public final class CobaltFactory {
                                         flags.getAdservicesReleaseStageForCobalt()),
                                 getDataService(context),
                                 getExecutor(),
+                                getScheduledExecutor(),
                                 new SystemClockImpl(),
                                 new SystemData(),
                                 new PrivacyGenerator(getSecureRandom()),
@@ -121,6 +124,7 @@ public final class CobaltFactory {
                                         new HpkeEncryptImpl(), PIPELINE_TYPE),
                                 CobaltApiKeys.copyFromHexApiKey(
                                         flags.getCobaltAdservicesApiKeyHex()),
+                                Duration.ofMillis(flags.getCobaltUploadServiceUnbindDelayMs()),
                                 flags.getTopicsCobaltLoggingEnabled());
             }
             return sSingletonCobaltPeriodicJob;
@@ -131,6 +135,12 @@ public final class CobaltFactory {
     private static ExecutorService getExecutor() {
         // Cobalt requires disk I/O and must run on the background executor.
         return AdServicesExecutors.getBackgroundExecutor();
+    }
+
+    @NonNull
+    private static ScheduledExecutorService getScheduledExecutor() {
+        // Cobalt requires a timeout to disconnect from the system server.
+        return AdServicesExecutors.getScheduler();
     }
 
     @NonNull

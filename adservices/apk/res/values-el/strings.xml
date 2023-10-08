@@ -48,7 +48,7 @@
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Μάθετε περισσότερα"</string>
     <string name="notificationUI_header_title_eu" msgid="4955298263079910371">"Beta απορρήτου διαφημίσεων του Android"</string>
     <string name="notificationUI_container1_title_eu" msgid="8315199862119660570">"Τι νέο υπάρχει;"</string>
-    <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"Οι νέες λειτουργίες απορρήτου στο Πλαίσιο ιδιωτικότητας επιτρέπουν στις εφαρμογές να εμφανίζουν διαφημίσεις που είναι συναφείς για εσάς, αλλά περιορίζουν τις πληροφορίες που μπορούν να μάθουν οι συγκεκριμένες εφαρμογές σχετικά με τις δραστηριότητές σας σε ιστοτόπους και εφαρμογές από άλλους προγραμματιστές."</string>
+    <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"Οι νέες λειτουργίες απορρήτου στο Privacy Sandbox επιτρέπουν στις εφαρμογές να εμφανίζουν διαφημίσεις που είναι συναφείς για εσάς, αλλά περιορίζουν τις πληροφορίες που μπορούν να μάθουν οι συγκεκριμένες εφαρμογές σχετικά με τις δραστηριότητές σας σε ιστοτόπους και εφαρμογές από άλλους προγραμματιστές."</string>
     <string name="notificationUI_container1_control_text_eu" msgid="3158258148321255153">"Πώς λειτουργεί"</string>
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Τρόπος συμμετοχής"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Η ενεργοποίηση του προγράμματος beta επιτρέπει στις εφαρμογές να δοκιμάσουν αυτούς τους νέους πιο ιδιωτικούς τρόπους για την εμφάνιση διαφημίσεων. Μπορείτε να απενεργοποιήσετε το πρόγραμμα beta οποιαδήποτε στιγμή στις ρυθμίσεις απορρήτου."</string>
@@ -58,7 +58,7 @@
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Σας ευχαριστούμε για τη συμμετοχή σας"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Συμμετέχετε στο πρόγραμμα beta απορρήτου διαφημίσεων του Android. Το Privacy Sandbox είναι ενεργοποιημένο για τη συσκευή σας.\n\nΜπορείτε να μάθετε περισσότερα ή να απενεργοποιήσετε το πρόγραμμα beta οποιαδήποτε στιγμή στις ρυθμίσεις απορρήτου."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Επιλέξατε να μην συμμετάσχετε"</string>
-    <string name="notificationUI_confirmation_decline_subtitle" msgid="4194388733937808440">"Σας ευχαριστούμε για την απάντησή σας. Το Πλαίσιο ιδιωτικότητας είναι απενεργοποιημένο για τη συσκευή σας.\n\nΑν αλλάξετε γνώμη ή θέλετε να μάθετε περισσότερα, μεταβείτε στις ρυθμίσεις απορρήτου."</string>
+    <string name="notificationUI_confirmation_decline_subtitle" msgid="4194388733937808440">"Σας ευχαριστούμε για την απάντησή σας. Το Privacy Sandbox είναι απενεργοποιημένο για τη συσκευή σας.\n\nΑν αλλάξετε γνώμη ή θέλετε να μάθετε περισσότερα, μεταβείτε στις ρυθμίσεις απορρήτου."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"Ρυθμίσεις απορρήτου"</string>
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"Το κατάλαβα"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"Συμμετέχετε στο πρόγραμμα beta"</string>
@@ -133,7 +133,7 @@
     <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"Διατίθενται τώρα νέες λειτουργίες σχετικά με το απόρρητο διαφημίσεων"</string>
     <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"Το Android προσφέρει τώρα νέες λειτουργίες απορρήτου που σας δίνουν περισσότερες επιλογές σχετικά με τις διαφημίσεις που βλέπετε."</string>
     <string name="notificationUI_next_button_text" msgid="5564270455474313663">"Επόμενο"</string>
-    <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Πλαίσιο ιδιωτικότητας"</string>
+    <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Συμμετάσχετε στο πρόγραμμα beta απορρήτου διαφημίσεων του Android"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_title" msgid="5996189869721397937">"Ενδιαφέροντα που εκτιμήθηκαν από το Android"</string>
@@ -147,7 +147,7 @@
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Επαναφορά όλων των ενδιαφερόντων"</string>
     <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"Δεν υπάρχουν ενδιαφέροντα για εμφάνιση αυτήν τη στιγμή."</string>
     <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"Δεν υπάρχουν θέματα για εμφάνιση αυτήν τη στιγμή.\nΜάθετε περισσότερα σχετικά με τα "<a href="https://support.google.com/android?p=ad_privacy">"θέματα διαφημίσεων"</a></string>
-    <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Πλαίσιο ιδιωτικότητας"</string>
+    <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Το πρόγραμμα beta απορρήτου διαφημίσεων του Android παρέχει νέες λειτουργίες τις οποίες μπορούν να χρησιμοποιούν οι εφαρμογές για να εμφανίζουν διαφημίσεις που μπορεί να σας αρέσουν. Αυτές οι τεχνολογίες δεν χρησιμοποιούν αναγνωριστικά συσκευών.\n\nΤο Android μπορεί να εκτιμήσει τα είδη διαφημίσεων που μπορεί να σας ενδιαφέρουν και να αποθηκεύσει αυτά τα ενδιαφέροντα προσωρινά στη συσκευή σας. Αυτό επιτρέπει στις εφαρμογές να εμφανίζουν διαφημίσεις που είναι συναφείς για εσάς, χωρίς να παρακολουθούν τη δραστηριότητά σας σε ιστοτόπους και εφαρμογές από άλλους προγραμματιστές."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Δεν έχετε αποκλεισμένα ενδιαφέροντα"</string>
     <string name="settingsUI_no_blocked_topics_ga_text" msgid="377459829879121256">"Δεν υπάρχουν αποκλεισμένα θέματα"</string>
