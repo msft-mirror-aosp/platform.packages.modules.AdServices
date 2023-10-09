@@ -28,7 +28,7 @@ android_test {
     static_libs: [
         "androidx.test.runner",
         "androidx.test.core",
-        "truth-prebuilt",
+        "truth",
         "services.core",
         "framework-adservices.impl",
         "adservices-test-utility",
@@ -48,7 +48,7 @@ android_test {
     target_sdk_version: "Tiramisu",
     test_suites: [
         "general-tests",
-        "mts-adservices"
+        "mts-adservices",
     ],
     test_mainline_modules: ["com.google.android.adservices.apex"],
 }

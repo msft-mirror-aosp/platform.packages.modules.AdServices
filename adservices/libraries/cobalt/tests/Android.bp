@@ -31,7 +31,7 @@ android_test {
         "androidx.room_room-testing",
         "adservices-cobalt",
         "apache-commons-math",
-        "truth-prebuilt",
+        "truth",
     ],
     jni_libs: [
         "libhpke_jni",
@@ -44,7 +44,7 @@ android_test {
     sdk_version: "test_current",
     test_suites: [
         "general-tests",
-        "mts-adservices"
+        "mts-adservices",
     ],
     test_mainline_modules: ["com.google.android.adservices.apex"],
 }
