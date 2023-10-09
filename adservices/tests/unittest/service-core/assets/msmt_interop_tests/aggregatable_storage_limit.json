@@ -1,7 +1,7 @@
 {
   "description": "Aggregatable report not created due to storage limit",
-  "api_config": {
-    "max_aggregatable_reports_per_destination": "1"
+  "phflags_override": {
+    "measurement_max_aggregate_reports_per_destination": "1"
   },
   "input": {
     "registrations": [

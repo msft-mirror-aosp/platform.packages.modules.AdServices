@@ -210,22 +210,11 @@ public abstract class E2ETest {
         // Privacy params
         String NAVIGATION_SOURCE_TRIGGER_DATA_CARDINALITY =
                 "navigation_source_trigger_data_cardinality";
-        // System health params
-        String MAX_SOURCES_PER_ORIGIN = "max_sources_per_origin";
-        String MAX_EVENT_LEVEL_REPORTS_PER_DESTINATION =
-                "max_event_level_reports_per_destination";
-        String MAX_AGGREGATABLE_REPORTS_PER_DESTINATION =
-                "max_aggregatable_reports_per_destination";
     }
 
     public static class ParamsProvider {
         // Privacy params
         private Integer mNavigationTriggerDataCardinality;
-        // System health params
-        private Integer mMaxSourcesPerPublisher;
-        private Integer mMaxEventReportsPerDestination;
-        private Integer mMaxAggregateReportsPerDestination;
-
         public ParamsProvider(JSONObject json) throws JSONException {
             // Privacy params
             if (!json.isNull(ApiConfigKeys.NAVIGATION_SOURCE_TRIGGER_DATA_CARDINALITY)) {
@@ -235,44 +224,11 @@ public abstract class E2ETest {
                 mNavigationTriggerDataCardinality =
                         PrivacyParams.getNavigationTriggerDataCardinality();
             }
-            // System health params
-            if (!json.isNull(ApiConfigKeys.MAX_SOURCES_PER_ORIGIN)) {
-                mMaxSourcesPerPublisher = json.getInt(ApiConfigKeys.MAX_SOURCES_PER_ORIGIN);
-            } else {
-                mMaxSourcesPerPublisher = Flags.MEASUREMENT_MAX_SOURCES_PER_PUBLISHER;
-            }
-            if (!json.isNull(ApiConfigKeys.MAX_EVENT_LEVEL_REPORTS_PER_DESTINATION)) {
-                mMaxEventReportsPerDestination = json.getInt(
-                        ApiConfigKeys.MAX_EVENT_LEVEL_REPORTS_PER_DESTINATION);
-            } else {
-                mMaxEventReportsPerDestination =
-                        Flags.MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION;
-            }
-            if (!json.isNull(ApiConfigKeys.MAX_AGGREGATABLE_REPORTS_PER_DESTINATION)) {
-                mMaxAggregateReportsPerDestination = json.getInt(
-                        ApiConfigKeys.MAX_AGGREGATABLE_REPORTS_PER_DESTINATION);
-            } else {
-                mMaxAggregateReportsPerDestination =
-                        Flags.MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION;
-            }
         }
 
         // Privacy params
         public Integer getNavigationTriggerDataCardinality() {
             return mNavigationTriggerDataCardinality;
-        }
-
-        // System health params
-        public Integer getMaxSourcesPerPublisher() {
-            return mMaxSourcesPerPublisher;
-        }
-
-        public Integer getMaxEventReportsPerDestination() {
-            return mMaxEventReportsPerDestination;
-        }
-
-        public Integer getMaxAggregateReportsPerDestination() {
-            return mMaxAggregateReportsPerDestination;
         }
     }
 
