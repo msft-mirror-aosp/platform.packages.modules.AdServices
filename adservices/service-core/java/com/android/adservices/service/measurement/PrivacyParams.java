@@ -182,10 +182,10 @@ public final class PrivacyParams {
     public static final int AGGREGATE_HISTOGRAM_VALUE_BYTE_SIZE = 4;
 
     /** Minimum time an aggregate report is delayed after trigger */
-    public static final long AGGREGATE_REPORT_MIN_DELAY = TimeUnit.MINUTES.toMillis(10L);
+    public static final long AGGREGATE_REPORT_MIN_DELAY = TimeUnit.MINUTES.toMillis(0L);
 
     /** Maximum time an aggregate report is delayed after trigger */
-    public static final long AGGREGATE_REPORT_DELAY_SPAN = TimeUnit.MINUTES.toMillis(50L);
+    public static final long AGGREGATE_REPORT_DELAY_SPAN = TimeUnit.MINUTES.toMillis(10L);
 
     /**
      * Max distinct web destinations in a source registration.
