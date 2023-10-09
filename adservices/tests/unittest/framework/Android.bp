@@ -19,13 +19,13 @@ package {
 android_test {
     name: "AdServicesFrameworkUnitTests",
     srcs: [
-          "src/**/*.java"
+        "src/**/*.java",
     ],
     static_libs: [
         "androidx.test.runner",
         "androidx.test.core",
         "mockito-target-extended-minus-junit4",
-        "truth-prebuilt",
+        "truth",
         "adservices-test-fixtures",
     ],
     libs: [
@@ -41,9 +41,8 @@ android_test {
     target_sdk_version: "Tiramisu",
     test_suites: [
         "general-tests",
-        "mts-adservices"
+        "mts-adservices",
     ],
     test_mainline_modules: ["com.google.android.adservices.apex"],
     instrumentation_for: "AdServicesApk",
 }
-

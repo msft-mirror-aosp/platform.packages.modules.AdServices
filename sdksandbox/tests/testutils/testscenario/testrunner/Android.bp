@@ -22,7 +22,7 @@ java_library {
         "src/**/*.java",
     ],
     static_libs: [
-        "truth-prebuilt",
+        "truth",
         "CtsSdkSandboxTestExecutor",
         "compatibility-device-util-axt",
     ],
@@ -31,4 +31,3 @@ java_library {
         "//packages/modules/AdServices/sdksandbox/tests/testutils/testscenario/example/sdk",
     ],
 }
-

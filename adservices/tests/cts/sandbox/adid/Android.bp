@@ -24,7 +24,7 @@ android_test {
     static_libs: [
         "compatibility-device-util-axt",
         "androidx.test.runner",
-        "truth-prebuilt",
+        "truth",
         "SdkSandboxTestUtils",
         "adservices-test-utility",
     ],
@@ -34,7 +34,7 @@ android_test {
         "android.test.runner",
     ],
     data: [
-      ":AdIdSdk",
+        ":AdIdSdk",
     ],
     min_sdk_version: "33",
     target_sdk_version: "33",

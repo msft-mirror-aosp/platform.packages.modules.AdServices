@@ -26,7 +26,7 @@ android_test {
         "adservices-service-core",
         "adservices-clients",
         "compatibility-device-util-axt",
-        "truth-prebuilt",
+        "truth",
         "androidx.room_room-runtime",
         "androidx.room_room-testing",
         "androidx.test.uiautomator_uiautomator",
@@ -40,7 +40,7 @@ android_test {
     test_suites: [
         "cts_root",
         "general-tests",
-        "mts-adservices"
+        "mts-adservices",
     ],
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
