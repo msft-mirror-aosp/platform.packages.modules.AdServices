@@ -246,6 +246,11 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         return setFlag(FlagsConstants.KEY_ADSERVICES_ENABLED, value);
     }
 
+    /** Overrides the flag that sets the AppsetId kill switch. */
+    public T setAppsetIdKillSwitch(boolean value) {
+        return setFlag(FlagsConstants.KEY_APPSETID_KILL_SWITCH, value);
+    }
+
     /** Overrides the flag that sets the Topics kill switch. */
     public T setTopicsKillSwitch(boolean value) {
         return setFlag(FlagsConstants.KEY_TOPICS_KILL_SWITCH, value);
@@ -357,8 +362,19 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     /**
      * Overrides flag used by {@link com.android.adservices.service.PhFlags#getPpapiAppAllowList()}.
      */
+    // <p> TODO (b/303901926) - apploy consistent naming to allow list methods
     public T setPpapiAppAllowList(String value) {
         return setOrCacheFlag(FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST, value, ALLOWLIST_SEPARATOR);
+    }
+
+    /**
+     * Overrides flag used by (@link
+     * com.android.adservices.service.PhFlags#getPpapiAppSignatureAllowList()}. NOTE: this will
+     * completely override the allow list, *not* append to it.
+     */
+    // <p> TODO (b/303901926) - apply consistent naming to allow list methods
+    public T overridePpapiAppSignatureAllowList(String value) {
+        return setFlag(FlagsConstants.KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST, value);
     }
 
     /**
