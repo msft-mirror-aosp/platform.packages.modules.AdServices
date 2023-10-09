@@ -164,20 +164,20 @@
               "value": 456
            } ]
         },
-        "report_time": "1643325573000",
+        "report_time": "1643325572000",
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution"
-     },
-     {
-      "payload": {
-         "attribution_destination": "android-app://destination.test",
-         "histograms": [ {
+      },
+      {
+        "payload": {
+          "attribution_destination": "android-app://destination.test",
+          "histograms": [ {
             "key": "0x559",
             "value": 789
-         } ]
-      },
-      "report_time": "1643325574000",
-      "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution"
-   }
+          } ]
+        },
+        "report_time": "1643325574000",
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution"
+      }
     ]
   }
 }

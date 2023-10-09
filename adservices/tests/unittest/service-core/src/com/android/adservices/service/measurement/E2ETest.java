@@ -89,7 +89,6 @@ import java.util.function.Function;
  */
 public abstract class E2ETest {
     // Used to fuzzy-match expected report (not delivery) time
-    private static final long REPORT_TIME_EPSILON = TimeUnit.HOURS.toMillis(2);
     private static final String LOG_TAG = "ADSERVICES_MSMT_E2E_TEST";
 
     static final Context sContext = ApplicationProvider.getApplicationContext();
@@ -584,9 +583,8 @@ public abstract class E2ETest {
     // 'obj1' is the expected result, 'obj2' is the actual result.
     private boolean matchReportTimeAndReportTo(ReportType reportType, JSONObject obj1,
             JSONObject obj2) throws JSONException {
-        if (Math.abs(obj1.getLong(TestFormatJsonMapping.REPORT_TIME_KEY)
-                - obj2.getLong(TestFormatJsonMapping.REPORT_TIME_KEY))
-                > REPORT_TIME_EPSILON) {
+        if (obj1.getLong(TestFormatJsonMapping.REPORT_TIME_KEY)
+                != obj2.getLong(TestFormatJsonMapping.REPORT_TIME_KEY)) {
             log("Report-time mismatch. Report type: " + reportType.name());
             return false;
         }
