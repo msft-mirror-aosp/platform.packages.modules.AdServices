@@ -146,25 +146,6 @@ public final class PrivacyParams {
     public static final long MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS =
             TimeUnit.DAYS.toSeconds(30);
 
-    /**
-     * Minimum limit of duration to determine attribution for a verified installation.
-     */
-    public static final long MIN_INSTALL_ATTRIBUTION_WINDOW = TimeUnit.DAYS.toSeconds(1);
-
-    /**
-     * Maximum limit of duration to determine attribution for a verified installation.
-     */
-    public static final long MAX_INSTALL_ATTRIBUTION_WINDOW = TimeUnit.DAYS.toSeconds(30);
-
-    /**
-     * Default and minimum value for cooldown period of source which led to installation.
-     */
-    public static final long MIN_POST_INSTALL_EXCLUSIVITY_WINDOW = 0;
-
-    /**
-     * Maximum acceptable install cooldown period.
-     */
-    public static final long MAX_POST_INSTALL_EXCLUSIVITY_WINDOW = TimeUnit.DAYS.toSeconds(30);
 
     /** Minimum time window after which reporting origin can be migrated */
     public static final long MIN_REPORTING_ORIGIN_UPDATE_WINDOW = TimeUnit.DAYS.toMillis(1);
@@ -186,11 +167,6 @@ public final class PrivacyParams {
 
     /** Maximum time an aggregate report is delayed after trigger */
     public static final long AGGREGATE_REPORT_DELAY_SPAN = TimeUnit.MINUTES.toMillis(50L);
-
-    /**
-     * Max distinct web destinations in a source registration.
-     */
-    public static final int MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION = 3;
 
     private static final int PRIVACY_EPSILON = 14;
 

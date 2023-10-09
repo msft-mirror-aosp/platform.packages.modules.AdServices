@@ -325,16 +325,23 @@ import static com.android.adservices.service.Flags.MEASUREMENT_MAX_DEST_PER_PUBL
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_DISTINCT_REP_ORIG_PER_PUBLISHER_X_DEST_IN_SOURCE;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_INSTALL_ATTRIBUTION_WINDOW;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_POST_INSTALL_EXCLUSIVITY_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REGISTRATIONS_PER_JOB_INVOCATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REGISTRATION_REDIRECTS;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_SOURCES_PER_PUBLISHER;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_MINIMUM_AGGREGATABLE_REPORT_WINDOW_IN_SECONDS;
 import static com.android.adservices.service.Flags.MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS;
 import static com.android.adservices.service.Flags.MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS;
+import static com.android.adservices.service.Flags.MEASUREMENT_MIN_INSTALL_ATTRIBUTION_WINDOW;
+import static com.android.adservices.service.Flags.MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW;
+import static com.android.adservices.service.Flags.MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.Flags.MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_NETWORK_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
@@ -671,12 +678,16 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_SOURCE;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_FILTER_MAPS_PER_FILTER_SET;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_INSTALL_ATTRIBUTION_WINDOW;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_POST_INSTALL_EXCLUSIVITY_WINDOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_REGISTRATIONS_PER_JOB_INVOCATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_REGISTRATION_REDIRECTS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_SOURCES_PER_PUBLISHER;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION;
@@ -684,6 +695,9 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MINIMUM_AGGREGATABLE_REPORT_WINDOW_IN_SECONDS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MIN_INSTALL_ATTRIBUTION_WINDOW;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_NETWORK_READ_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
@@ -7141,6 +7155,130 @@ public class PhFlagsTest {
                 /* makeDefault */ false);
 
         assertThat(mPhFlags.getMeasurementEnableCoarseEventReportDestinations())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetMeasurementMaxDistinctWebDestinationsInSourceRegistration() {
+        assertThat(mPhFlags.getMeasurementMaxDistinctWebDestinationsInSourceRegistration())
+                .isEqualTo(MEASUREMENT_MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION);
+
+        // Now overriding with the value from PH.
+        int phOverridingValue =
+                MEASUREMENT_MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION + 20;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION,
+                Integer.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getMeasurementMaxDistinctWebDestinationsInSourceRegistration())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetMeasurementMaxReportingRegisterSourceExpirationInSeconds() {
+        assertThat(mPhFlags.getMeasurementMaxReportingRegisterSourceExpirationInSeconds())
+                .isEqualTo(MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+
+        // Now overriding with the value from PH.
+        long phOverridingValue =
+                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS
+                        + TimeUnit.DAYS.toSeconds(2);
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
+                Long.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getMeasurementMaxReportingRegisterSourceExpirationInSeconds())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetMeasurementMinReportingRegisterSourceExpirationInSeconds() {
+        assertThat(mPhFlags.getMeasurementMinReportingRegisterSourceExpirationInSeconds())
+                .isEqualTo(MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+
+        // Now overriding with the value from PH.
+        long phOverridingValue =
+                MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS
+                        + TimeUnit.DAYS.toSeconds(2);
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
+                Long.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getMeasurementMinReportingRegisterSourceExpirationInSeconds())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetMeasurementMaxInstallAttributionWindow() {
+        assertThat(mPhFlags.getMeasurementMaxInstallAttributionWindow())
+                .isEqualTo(MEASUREMENT_MAX_INSTALL_ATTRIBUTION_WINDOW);
+
+        // Now overriding with the value from PH.
+        long phOverridingValue = MEASUREMENT_MAX_INSTALL_ATTRIBUTION_WINDOW + 20;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_MAX_INSTALL_ATTRIBUTION_WINDOW,
+                Long.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getMeasurementMaxInstallAttributionWindow())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetMeasurementMinInstallAttributionWindow() {
+        assertThat(mPhFlags.getMeasurementMinInstallAttributionWindow())
+                .isEqualTo(MEASUREMENT_MIN_INSTALL_ATTRIBUTION_WINDOW);
+
+        // Now overriding with the value from PH.
+        long phOverridingValue = MEASUREMENT_MIN_INSTALL_ATTRIBUTION_WINDOW + 20;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_MIN_INSTALL_ATTRIBUTION_WINDOW,
+                Long.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getMeasurementMinInstallAttributionWindow())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetMeasurementMaxPostInstallExclusivityWindow() {
+        assertThat(mPhFlags.getMeasurementMaxPostInstallExclusivityWindow())
+                .isEqualTo(MEASUREMENT_MAX_POST_INSTALL_EXCLUSIVITY_WINDOW);
+
+        // Now overriding with the value from PH.
+        long phOverridingValue = MEASUREMENT_MAX_POST_INSTALL_EXCLUSIVITY_WINDOW + 20;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_MAX_POST_INSTALL_EXCLUSIVITY_WINDOW,
+                Long.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getMeasurementMaxPostInstallExclusivityWindow())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetMeasurementMinPostInstallExclusivityWindow() {
+        assertThat(mPhFlags.getMeasurementMinPostInstallExclusivityWindow())
+                .isEqualTo(MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW);
+
+        // Now overriding with the value from PH.
+        long phOverridingValue = MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW + 20;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW,
+                Long.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getMeasurementMinPostInstallExclusivityWindow())
                 .isEqualTo(phOverridingValue);
     }
 

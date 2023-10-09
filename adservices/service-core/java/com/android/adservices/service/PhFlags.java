@@ -3866,6 +3866,45 @@ public final class PhFlags implements Flags {
                         + getMeasurementMaxDelayedSourceRegistrationWindow());
         writer.println(
                 "\t"
+                        + FlagsConstants
+                                .KEY_MEASUREMENT_MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION
+                        + " = "
+                        + getMeasurementMaxDistinctWebDestinationsInSourceRegistration());
+        writer.println(
+                "\t"
+                        + FlagsConstants
+                                .KEY_MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS
+                        + " = "
+                        + getMeasurementMaxReportingRegisterSourceExpirationInSeconds());
+
+        writer.println(
+                "\t"
+                        + FlagsConstants
+                                .KEY_MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS
+                        + " = "
+                        + getMeasurementMinReportingRegisterSourceExpirationInSeconds());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_MAX_INSTALL_ATTRIBUTION_WINDOW
+                        + " = "
+                        + getMeasurementMaxInstallAttributionWindow());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_MIN_INSTALL_ATTRIBUTION_WINDOW
+                        + " = "
+                        + getMeasurementMinInstallAttributionWindow());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_MAX_POST_INSTALL_EXCLUSIVITY_WINDOW
+                        + " = "
+                        + getMeasurementMaxPostInstallExclusivityWindow());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW
+                        + " = "
+                        + getMeasurementMinPostInstallExclusivityWindow());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH
                         + " = "
                         + getAsyncRegistrationJobQueueKillSwitch());
@@ -5204,6 +5243,73 @@ public final class PhFlags implements Flags {
                 /* flagName */ FlagsConstants
                         .KEY_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS,
                 /* defaultValue */ DEFAULT_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS);
+    }
+
+    @Override
+    public int getMeasurementMaxDistinctWebDestinationsInSourceRegistration() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION,
+                /* defaultValue */
+                MEASUREMENT_MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION);
+    }
+
+    @Override
+    public long getMeasurementMaxReportingRegisterSourceExpirationInSeconds() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
+                /* defaultValue */ MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+    }
+
+    @Override
+    public long getMeasurementMinReportingRegisterSourceExpirationInSeconds() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
+                /* defaultValue */ MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+    }
+
+    @Override
+    public long getMeasurementMaxInstallAttributionWindow() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MEASUREMENT_MAX_INSTALL_ATTRIBUTION_WINDOW,
+                /* defaultValue */ MEASUREMENT_MAX_INSTALL_ATTRIBUTION_WINDOW);
+    }
+
+    @Override
+    public long getMeasurementMinInstallAttributionWindow() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MEASUREMENT_MIN_INSTALL_ATTRIBUTION_WINDOW,
+                /* defaultValue */ MEASUREMENT_MIN_INSTALL_ATTRIBUTION_WINDOW);
+    }
+
+    @Override
+    public long getMeasurementMaxPostInstallExclusivityWindow() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MEASUREMENT_MAX_POST_INSTALL_EXCLUSIVITY_WINDOW,
+                /* defaultValue */ MEASUREMENT_MAX_POST_INSTALL_EXCLUSIVITY_WINDOW);
+    }
+
+    @Override
+    public long getMeasurementMinPostInstallExclusivityWindow() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW,
+                /* defaultValue */ MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW);
     }
 
     @Override
