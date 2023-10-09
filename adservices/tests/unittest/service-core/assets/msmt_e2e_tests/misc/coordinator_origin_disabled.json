@@ -1,8 +1,8 @@
 {
   "description": "Given two entries \"Attribution-Reporting-Register-Aggregatable-Source\" header, many \"Attribution-Reporting-Register-Aggregatable-Trigger-Data\", generate an aggregate report with two contributions and the value is accumulated for each entry.",
   "phflags_override": {
-    "measurement_aggregation_coordinator_origin": "true",
-    "measurement_aggregation_coordinator_origin_list": "https://unused.test,https://a.test"
+    "measurement_aggregation_coordinator_origin": "false",
+    "measurement_aggregation_coordinator_origin_list": "https://a.test"
   },
   "input": {
     "sources": [{
@@ -130,7 +130,7 @@
       }
     }],
     "aggregatable_results": [{
-      "report_time": "800000600001",
+      "report_time": "800004200001",
       "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
       "payload": {
         "attribution_destination": "android-app://example.2d1.test",
@@ -138,8 +138,7 @@
         "histograms": [
           {"key": "0x559", "value": 32768},
           {"key": "0xb85", "value": 1664}
-        ],
-        "aggregation_coordinator_origin": "https://a.test"
+        ]
       }
     }]
   }
