@@ -106,6 +106,11 @@ public final class AdServicesFlagsSetterRule
                 .setAdIdKillSwitchForTests(false);
     }
 
+    /** Factory method for AdservicesCommonManager end-to-end CTS tests. */
+    public static AdServicesFlagsSetterRule forCommonManagerE2ETests(String packageName) {
+        return withDefaultLogcatTags().setCompatModeFlag().setPpapiAppAllowList(packageName);
+    }
+
     /**
      * @deprecated temporary method used only by {@code CompatAdServicesTestUtils} and similar
      *     helpers, it will be remove once such helpers are replaced by this rule.
