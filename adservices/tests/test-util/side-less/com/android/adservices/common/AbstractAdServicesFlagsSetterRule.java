@@ -246,6 +246,11 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         return setFlag(FlagsConstants.KEY_ADSERVICES_ENABLED, value);
     }
 
+    /** Overrides the flag that sets the AppsetId kill switch. */
+    public T setAppsetIdKillSwitch(boolean value) {
+        return setFlag(FlagsConstants.KEY_APPSETID_KILL_SWITCH, value);
+    }
+
     /** Overrides the flag that sets the Topics kill switch. */
     public T setTopicsKillSwitch(boolean value) {
         return setFlag(FlagsConstants.KEY_TOPICS_KILL_SWITCH, value);
