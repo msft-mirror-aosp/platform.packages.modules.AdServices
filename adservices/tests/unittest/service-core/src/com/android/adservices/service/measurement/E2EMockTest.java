@@ -94,6 +94,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -134,14 +135,29 @@ public abstract class E2EMockTest extends E2ETest {
 
     @Rule public final E2EMockStatic.E2EMockStaticRule mE2EMockStaticRule;
 
+    private static Map<String, String> sPhFlags = Map.of(
+            "measurement_enable_configurable_aggregate_report_delay", "true",
+            "measurement_aggregate_report_delay_config", "0,0");
+
     E2EMockTest(
             Collection<Action> actions,
             ReportObjects expectedOutput,
             ParamsProvider paramsProvider,
             String name,
-            Map<String, String> phFlagsMap)
-            throws RemoteException {
-        super(actions, expectedOutput, name, phFlagsMap);
+            Map<String, String> phFlagsMap) throws RemoteException {
+        super(
+                actions,
+                expectedOutput,
+                name,
+                (
+                        (Supplier<Map<String, String>>) () -> {
+                            for (String key : sPhFlags.keySet()) {
+                                phFlagsMap.put(key, sPhFlags.get(key));
+                            }
+                            return phFlagsMap;
+                        }
+                ).get()
+        );
         mClickVerifier = mock(ClickVerifier.class);
         mFlags = FlagsFactory.getFlags();
         mErrorLogger = mock(AdServicesErrorLogger.class);
@@ -542,7 +558,8 @@ public abstract class E2EMockTest extends E2ETest {
             List<JSONObject> payloads)
             throws JSONException {
         List<JSONObject> aggregateReportObjects =
-                getActualAggregateReportObjects(aggregateReports, destinations, payloads);
+                getActualAggregateReportObjects(aggregateReports, destinations, payloads,
+                        TimeUnit.HOURS.toMillis(1));
         mActualOutput.mAggregateReportObjects.addAll(aggregateReportObjects);
     }
 
@@ -552,14 +569,15 @@ public abstract class E2EMockTest extends E2ETest {
             List<JSONObject> payloads)
             throws JSONException {
         List<JSONObject> aggregateReportObjects =
-                getActualAggregateReportObjects(aggregateReports, destinations, payloads);
+                getActualAggregateReportObjects(aggregateReports, destinations, payloads, 0L);
         mActualOutput.mDebugAggregateReportObjects.addAll(aggregateReportObjects);
     }
 
     private List<JSONObject> getActualAggregateReportObjects(
             List<AggregateReport> aggregateReports,
             List<Uri> destinations,
-            List<JSONObject> payloads)
+            List<JSONObject> payloads,
+            long reportDelay)
             throws JSONException {
         List<JSONObject> result = new ArrayList<>();
         for (int i = 0; i < destinations.size(); i++) {
@@ -569,7 +587,8 @@ public abstract class E2EMockTest extends E2ETest {
                             .put(
                                     TestFormatJsonMapping.REPORT_TIME_KEY,
                                     String.valueOf(
-                                            aggregateReports.get(i).getScheduledReportTime()))
+                                            aggregateReports.get(i).getScheduledReportTime()
+                                                    + reportDelay))
                             .put(
                                     TestFormatJsonMapping.REPORT_TO_KEY,
                                     destinations.get(i).toString())
