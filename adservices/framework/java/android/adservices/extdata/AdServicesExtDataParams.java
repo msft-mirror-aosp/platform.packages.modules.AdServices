@@ -69,7 +69,7 @@ public final class AdServicesExtDataParams implements Parcelable {
     public static final int BOOLEAN_UNKNOWN = -1;
 
     /**
-     * Type to represent to user manual interaction state.
+     * Type to represent user manual interaction state.
      *
      * @hide
      */
@@ -181,28 +181,28 @@ public final class AdServicesExtDataParams implements Parcelable {
         out.writeLong(mMeasurementRollbackApexVersion);
     }
 
-    /** Returns whether AdServices notification was shown; null if no data. */
+    /** Returns 1 if notification was shown on R, 0 if not shown, -1 if unknown. */
     @FlaggedApi(FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS)
     @TriStateBoolean
     public int getIsNotificationDisplayed() {
         return mIsNotificationDisplayed;
     }
 
-    /** Returns whether Measurement API was consented; null if no data. */
+    /** Returns 1 if measurement was consented, 0 if not, -1 if unknown. */
     @FlaggedApi(FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS)
     @TriStateBoolean
     public int getIsMeasurementConsented() {
         return mIsMeasurementConsented;
     }
 
-    /** Returns whether account is U18; null if no data. */
+    /** Returns 1 if account is U18 account, 0 if not, -1 if unknown. */
     @FlaggedApi(FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS)
     @TriStateBoolean
     public int getIsU18Account() {
         return mIsU18Account;
     }
 
-    /** Returns whether account is an adult account; null if no data */
+    /** Returns 1 if account is adult account, 0 if not, -1 if unknown. */
     @FlaggedApi(FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS)
     @TriStateBoolean
     public int getIsAdultAccount() {
