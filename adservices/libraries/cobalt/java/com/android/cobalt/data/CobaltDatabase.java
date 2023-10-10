@@ -16,6 +16,7 @@
 
 package com.android.cobalt.data;
 
+import androidx.room.AutoMigration;
 import androidx.room.Database;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
@@ -29,12 +30,14 @@ import com.android.internal.annotations.VisibleForTesting;
             GlobalValueEntity.class,
             ObservationStoreEntity.class,
             ReportEntity.class,
-            SystemProfileEntity.class
+            SystemProfileEntity.class,
+            StringHashEntity.class
         },
-        version = CobaltDatabase.VERSION)
+        version = CobaltDatabase.VERSION,
+        autoMigrations = {@AutoMigration(from = 1, to = 2)})
 @TypeConverters({Converters.class})
 public abstract class CobaltDatabase extends RoomDatabase {
-    static final int VERSION = 1;
+    static final int VERSION = 2;
 
     /** Get the DAO building blocks. */
     abstract DaoBuildingBlocks daoBuildingBlocks();

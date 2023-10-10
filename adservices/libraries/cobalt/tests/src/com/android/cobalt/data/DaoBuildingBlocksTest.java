@@ -31,6 +31,7 @@ import androidx.test.runner.AndroidJUnit4;
 import com.google.cobalt.AggregateValue;
 import com.google.cobalt.SystemProfile;
 import com.google.cobalt.UnencryptedObservationBatch;
+import com.google.common.hash.HashCode;
 
 import org.junit.After;
 import org.junit.Before;
@@ -62,6 +63,9 @@ public class DaoBuildingBlocksTest {
     private static final AggregateValue[] sAggregateValue = {
         AggregateValue.newBuilder().setIntegerValue(0).build(),
         AggregateValue.newBuilder().setIntegerValue(1).build()
+    };
+    private static final HashCode[] sHashCodes = {
+        HashCode.fromInt(1), HashCode.fromInt(2), HashCode.fromInt(3)
     };
 
     private DaoBuildingBlocks mDaoBuildingBlocks;
@@ -103,6 +107,12 @@ public class DaoBuildingBlocksTest {
         mDaoBuildingBlocks.insertAggregateValue(
                 AggregateStoreEntity.create(
                         reportKey, dayIndex, eventVector, systemProfileHash, aggregateValue));
+    }
+
+    private void insertStringHash(
+            ReportKey reportKey, int dayIndex, int listIndex, HashCode stringHashHint) {
+        mDaoBuildingBlocks.insertStringHash(
+                StringHashEntity.create(reportKey, dayIndex, listIndex, stringHashHint));
     }
 
     private void insertObservations(ObservationStoreEntity... observationStoreEntities) {
@@ -637,6 +647,103 @@ public class DaoBuildingBlocksTest {
                 .containsExactly(
                         EventRecordAndSystemProfile.create(
                                 sSystemProfile[0], sEventVector[0], sAggregateValue[0]));
+    }
+
+    @Test
+    public void testQueryStringListIndex_nothingFoundReturnsZero() throws Exception {
+        int bufferMax = 0;
+        int index = 12;
+
+        // Insert two (hash, index) pairs to confirm the index of the matching hash is selected.
+        insertStringHash(sReportKey[0], sDayIndex[0], index, sHashCodes[0]);
+        insertStringHash(sReportKey[0], sDayIndex[0], index + 1, sHashCodes[1]);
+
+        // Search for a string hash for a different report.
+        assertThat(
+                        mDaoBuildingBlocks.queryStringListIndex(
+                                sReportKey[1], sDayIndex[0], bufferMax, sHashCodes[0]))
+                .isEqualTo(0);
+
+        // Search for a string hash on a different day.
+        assertThat(
+                        mDaoBuildingBlocks.queryStringListIndex(
+                                sReportKey[0], sDayIndex[1], bufferMax, sHashCodes[0]))
+                .isEqualTo(0);
+    }
+
+    @Test
+    public void testQueryStringListIndex_matchPicked_noBufferMax() throws Exception {
+        int bufferMax = 0;
+        int index = 12;
+
+        // Insert two (hash, index) pairs to confirm a the index of the matching hash is selected.
+        insertStringHash(sReportKey[0], sDayIndex[0], index, sHashCodes[0]);
+        insertStringHash(sReportKey[0], sDayIndex[0], index + 1, sHashCodes[1]);
+        assertThat(
+                        mDaoBuildingBlocks.queryStringListIndex(
+                                sReportKey[0], sDayIndex[0], bufferMax, sHashCodes[0]))
+                .isEqualTo(index);
+    }
+
+    @Test
+    public void testQueryStringListIndex_matchPicked_bufferMaxIgnored() throws Exception {
+        int bufferMax = 1;
+        int index = 12;
+
+        // Insert two (hash, index) pairs to confirm a the index of the matching hash is selected.
+        insertStringHash(sReportKey[0], sDayIndex[0], index, sHashCodes[0]);
+        insertStringHash(sReportKey[0], sDayIndex[0], index + 1, sHashCodes[1]);
+        assertThat(
+                        mDaoBuildingBlocks.queryStringListIndex(
+                                sReportKey[0], sDayIndex[0], bufferMax, sHashCodes[0]))
+                .isEqualTo(index);
+    }
+
+    @Test
+    public void testQueryStringListIndex_newHashGetsNextIndex_noBufferMax() throws Exception {
+        int bufferMax = 0;
+        int index = 12;
+
+        // Insert two (hash, index) pairs to confirm a new hash gets and index equal to 1 more than
+        // the max index.
+        insertStringHash(sReportKey[0], sDayIndex[0], index, sHashCodes[0]);
+        insertStringHash(sReportKey[0], sDayIndex[0], index + 1, sHashCodes[1]);
+        assertThat(
+                        mDaoBuildingBlocks.queryStringListIndex(
+                                sReportKey[0], sDayIndex[0], bufferMax, sHashCodes[2]))
+                .isEqualTo(index + 2);
+    }
+
+    @Test
+    public void testQueryStringListIndex_newHashGetsNextIndex_indexLessThanBufferMax()
+            throws Exception {
+        int bufferMax = 100;
+        int index = 12;
+
+        // Insert two (hash, index) pairs to confirm a new hash gets and index equal to 1 more than
+        // the max index.
+        insertStringHash(sReportKey[0], sDayIndex[0], index, sHashCodes[0]);
+        insertStringHash(sReportKey[0], sDayIndex[0], index + 1, sHashCodes[1]);
+        assertThat(
+                        mDaoBuildingBlocks.queryStringListIndex(
+                                sReportKey[0], sDayIndex[0], bufferMax, sHashCodes[2]))
+                .isEqualTo(index + 2);
+    }
+
+    @Test
+    public void testQueryStringListIndex_newHashGetsNegativeOne_bufferMaxReached()
+            throws Exception {
+        int bufferMax = 14;
+        int index = 12;
+
+        // Insert two (hash, index) pairs to confirm a new hash gets and index equal to 1 more than
+        // the max index.
+        insertStringHash(sReportKey[0], sDayIndex[0], index, sHashCodes[0]);
+        insertStringHash(sReportKey[0], sDayIndex[0], index + 1, sHashCodes[1]);
+        assertThat(
+                        mDaoBuildingBlocks.queryStringListIndex(
+                                sReportKey[0], sDayIndex[0], bufferMax, sHashCodes[2]))
+                .isEqualTo(-1);
     }
 
     @Test

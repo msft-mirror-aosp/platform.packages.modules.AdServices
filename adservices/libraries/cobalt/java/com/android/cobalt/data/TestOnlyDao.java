@@ -245,4 +245,9 @@ public abstract class TestOnlyDao {
     @VisibleForTesting
     @Query("SELECT day_index from AggregateStore")
     public abstract List<Integer> getDayIndices();
+
+    /** Get all string hashes in the string hash store. */
+    @VisibleForTesting
+    @Query("SELECT * FROM StringHashes")
+    public abstract List<StringHashEntity> getStringHashes();
 }
