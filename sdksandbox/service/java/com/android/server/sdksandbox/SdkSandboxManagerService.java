@@ -1781,6 +1781,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         DEFAULT_VALUE_DISABLE_SDK_SANDBOX);
 
         @GuardedBy("mLock")
+        private boolean mCustomizedSdkContextEnabled =
+                DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        PROPERTY_CUSTOMIZED_SDK_CONTEXT_ENABLED,
+                        DEFAULT_VALUE_CUSTOMIZED_SDK_CONTEXT_ENABLED);
+
+        @GuardedBy("mLock")
         private boolean mEnforceRestrictions =
                 DeviceConfig.getBoolean(
                         DeviceConfig.NAMESPACE_ADSERVICES,
@@ -1891,10 +1898,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             if (!SdkLevel.isAtLeastU()) {
                 return false;
             }
-            return DeviceConfig.getBoolean(
-                    DeviceConfig.NAMESPACE_ADSERVICES,
-                    PROPERTY_CUSTOMIZED_SDK_CONTEXT_ENABLED,
-                    DEFAULT_VALUE_CUSTOMIZED_SDK_CONTEXT_ENABLED);
+            synchronized (mLock) {
+                return mCustomizedSdkContextEnabled;
+            }
         }
 
         boolean areRestrictionsEnforced() {
@@ -1986,6 +1992,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                     stopAllSandboxesLocked();
                                 }
                             }
+                            break;
+                        case PROPERTY_CUSTOMIZED_SDK_CONTEXT_ENABLED:
+                            mCustomizedSdkContextEnabled =
+                                    properties.getBoolean(
+                                            PROPERTY_CUSTOMIZED_SDK_CONTEXT_ENABLED,
+                                            DEFAULT_VALUE_CUSTOMIZED_SDK_CONTEXT_ENABLED);
                             break;
                         case PROPERTY_ENFORCE_RESTRICTIONS:
                             mEnforceRestrictions =
