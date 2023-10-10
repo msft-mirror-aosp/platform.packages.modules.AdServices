@@ -30,6 +30,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import android.adservices.adid.AdId;
@@ -37,6 +38,7 @@ import android.adservices.adid.GetAdIdResult;
 import android.adservices.adid.IAdIdProviderService;
 import android.adservices.adid.IGetAdIdCallback;
 import android.adservices.adid.IGetAdIdProviderCallback;
+import android.adservices.common.UpdateAdIdRequest;
 import android.content.Context;
 import android.os.RemoteException;
 
@@ -183,6 +185,60 @@ public final class AdIdCacheManagerTest {
 
         int result = future.get();
         assertThat(result).isEqualTo(STATUS_INTERNAL_ERROR);
+    }
+
+    @Test
+    public void testUpdateAdId_success() {
+        // Enable the AdId cache.
+        doReturn(true).when(mMockFlags).getAdIdCacheEnabled();
+
+        AdId adId = new AdId(AD_ID, /* limitAdTrackingEnabled= */ false);
+        AdId adIdUpdate = new AdId(AD_ID_UPDATE, /* limitAdTrackingEnabled= */ true);
+
+        mAdIdCacheManager.setAdIdInStorage(adId);
+
+        mAdIdCacheManager.updateAdId(
+                new UpdateAdIdRequest.Builder(adIdUpdate.getAdId())
+                        .setLimitAdTrackingEnabled(adIdUpdate.isLimitAdTrackingEnabled())
+                        .build());
+        assertWithMessage("getAdIdInStorage()")
+                .that(mAdIdCacheManager.getAdIdInStorage())
+                .isEqualTo(adIdUpdate);
+        verify(mAdIdCacheManager).setAdIdInStorage(adIdUpdate);
+    }
+
+    @Test
+    public void testUpdateAdId_cacheDisabledWhenUpdating() {
+        // Enable the AdId cache at beginning to initialize the cache.
+        doReturn(true).when(mMockFlags).getAdIdCacheEnabled();
+
+        AdId adId = new AdId(AD_ID, /* limitAdTrackingEnabled= */ false);
+        mAdIdCacheManager.setAdIdInStorage(adId);
+        assertWithMessage("getAdIdInStorage() 1st")
+                .that(mAdIdCacheManager.getAdIdInStorage())
+                .isEqualTo(adId);
+
+        // Disable the cache before updating.
+        doReturn(false).when(mMockFlags).getAdIdCacheEnabled();
+
+        AdId adIdUpdate = new AdId(AD_ID_UPDATE, /* limitAdTrackingEnabled= */ true);
+        mAdIdCacheManager.updateAdId(
+                new UpdateAdIdRequest.Builder(adIdUpdate.getAdId())
+                        .setLimitAdTrackingEnabled(adIdUpdate.isLimitAdTrackingEnabled())
+                        .build());
+
+        // Enable the cache again to check the cached value.
+        doReturn(true).when(mMockFlags).getAdIdCacheEnabled();
+
+        assertWithMessage("getAdIdInStorage() 2nd")
+                .that(mAdIdCacheManager.getAdIdInStorage())
+                .isEqualTo(adId);
+
+        // Verify the SharedPreference is interacted 3 times when there are 4 cache get/set actions.
+        verify(mAdIdCacheManager).setAdIdInStorage(adId);
+        verify(mAdIdCacheManager).setAdIdInStorage(adIdUpdate);
+        verify(mAdIdCacheManager, times(2)).getAdIdInStorage();
+        verify(mAdIdCacheManager, times(3)).getSharedPreferences();
     }
 
     private IGetAdIdCallback createSuccessGetAdIdCallBack(CompletableFuture<GetAdIdResult> future) {
