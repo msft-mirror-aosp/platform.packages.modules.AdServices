@@ -27,7 +27,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_STATUS_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
-import static com.android.adservices.service.FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST;
 
 import android.os.Build;
 
@@ -40,19 +39,11 @@ import com.android.modules.utils.build.SdkLevel;
 public final class AdServicesFlagsSetterRule
         extends AbstractAdServicesFlagsSetterRule<AdServicesFlagsSetterRule> {
 
-    // TODO(b/294423183): remove once legacy usage is gone
-    private final boolean mUsedByLegacyHelper;
-
     private AdServicesFlagsSetterRule() {
-        this(/* usedByLegacyHelper= */ false);
-    }
-
-    private AdServicesFlagsSetterRule(boolean usedByLegacyHelper) {
         super(
                 AndroidLogger.getInstance(),
-                namespace -> new DeviceSideDeviceConfigHelper(namespace, usedByLegacyHelper),
+                DeviceSideDeviceConfigHelper::new,
                 DeviceSideSystemPropertiesHelper.getInstance());
-        mUsedByLegacyHelper = usedByLegacyHelper;
     }
 
     private static AdServicesFlagsSetterRule withDefaultLogcatTags() {
@@ -120,21 +111,6 @@ public final class AdServicesFlagsSetterRule
         return withDefaultLogcatTags().setCompatModeFlags().setPpapiAppAllowList(packageName);
     }
 
-    /**
-     * @deprecated temporary method used only by {@code CompatAdServicesTestUtils} and similar
-     *     helpers, it will be remove once such helpers are replaced by this rule.
-     */
-    @Deprecated
-    static AdServicesFlagsSetterRule forLegacyHelpers(Class<?> helperClass) {
-        AdServicesFlagsSetterRule rule =
-                new AdServicesFlagsSetterRule(/* usedByLegacyHelper= */ true);
-        String testName = helperClass.getSimpleName();
-        // This object won't be used as a JUnit rule, so we need to explicitly
-        // initialize it
-        rule.runInitialCommands(testName);
-        return rule;
-    }
-
     // NOTE: add more factory methods as needed
 
     @Override
@@ -181,19 +157,5 @@ public final class AdServicesFlagsSetterRule
                     defaultValue);
             return defaultValue;
         }
-    }
-
-    /**
-     * @deprecated only used by {@code CompatAdServicesTestUtils}
-     */
-    @Deprecated
-    String getPpapiAppAllowList() {
-        assertCalledByLegacyHelper();
-        return mDeviceConfig.get(KEY_PPAPI_APP_ALLOW_LIST);
-    }
-
-    @Override
-    protected boolean isCalledByLegacyHelper() {
-        return mUsedByLegacyHelper;
     }
 }
