@@ -42,6 +42,10 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Umožňuje aplikaci přístup k rozhraní API pro stav aktivování služby AdService."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Přístup k rozhraním AdServicesManager API"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Umožňuje aplikaci přístup k rozhraním AdServicesManager API."</string>
+    <!-- no translation found for permlab_accessUpdateAdIdCache (6912755067998635886) -->
+    <skip />
+    <!-- no translation found for permdesc_accessUpdateAdIdCache (2907546830224186022) -->
+    <skip />
     <string name="app_label" msgid="5844694701336604490">"Ochrana soukromí v reklamách"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Zapojte se do testování beta verze od Androidu"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android zkoumá způsoby zobrazování reklam v aplikacích zajišťující vyšší ochranu soukromí"</string>
