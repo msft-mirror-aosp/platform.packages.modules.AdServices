@@ -16,8 +16,11 @@
 
 package com.android.adservices.service.extdata;
 
+import static android.adservices.extdata.AdServicesExtDataParams.BOOLEAN_FALSE;
+import static android.adservices.extdata.AdServicesExtDataParams.BOOLEAN_TRUE;
 import static android.adservices.extdata.AdServicesExtDataParams.BOOLEAN_UNKNOWN;
 import static android.adservices.extdata.AdServicesExtDataParams.STATE_UNKNOWN;
+import static android.adservices.extdata.AdServicesExtDataParams.UserManualInteraction;
 import static android.adservices.extdata.AdServicesExtDataStorageService.AdServicesExtDataFieldId;
 import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_IS_ADULT_ACCOUNT;
 import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_IS_MEASUREMENT_CONSENTED;
@@ -192,6 +195,104 @@ public class AdServicesExtDataStorageServiceManager {
         }
 
         return isSuccess.get();
+    }
+
+    /**
+     * Sets Measurement API consent.
+     *
+     * @return true if update was successful; false otherwise.
+     */
+    public boolean setMsmtConsent(boolean isGiven) {
+        return setAdServicesExtData(
+                new AdServicesExtDataParams.Builder()
+                        .setMsmtConsent(isGiven ? BOOLEAN_TRUE : BOOLEAN_FALSE)
+                        .build(),
+                new int[] {FIELD_IS_MEASUREMENT_CONSENTED});
+    }
+
+    /**
+     * Retrieves the stored consent bit for Measurement API, converted into boolean. -1 (no data) is
+     * considered false.
+     */
+    public boolean getMsmtConsent() {
+        return getAdServicesExtData().getIsMeasurementConsented() == BOOLEAN_TRUE;
+    }
+
+    /**
+     * Sets manual interaction with consent status.
+     *
+     * @return true if update was successful; false otherwise.
+     */
+    public boolean setManualInteractionWithConsentStatus(
+            @UserManualInteraction int manualInteractionWithConsentStatus) {
+        return setAdServicesExtData(
+                new AdServicesExtDataParams.Builder()
+                        .setManualInteractionWithConsentStatus(manualInteractionWithConsentStatus)
+                        .build(),
+                new int[] {FIELD_MANUAL_INTERACTION_WITH_CONSENT_STATUS});
+    }
+
+    /** Retrieves stored value for manual interaction with consent status. */
+    @UserManualInteraction
+    public int getManualInteractionWithConsentStatus() {
+        return getAdServicesExtData().getManualInteractionWithConsentStatus();
+    }
+
+    /**
+     * Sets if notification was displayed.
+     *
+     * @return true if update was successful; false otherwise.
+     */
+    public boolean setNotifDisplayed(boolean isGiven) {
+        return setAdServicesExtData(
+                new AdServicesExtDataParams.Builder()
+                        .setNotificationDisplayed(isGiven ? BOOLEAN_TRUE : BOOLEAN_FALSE)
+                        .build(),
+                new int[] {FIELD_IS_NOTIFICATION_DISPLAYED});
+    }
+
+    /**
+     * Retrieves the stored consent bit for notification displayed, converted into boolean. -1 (no
+     * data) is considered false.
+     */
+    public boolean getNotifDisplayed() {
+        return getAdServicesExtData().getIsNotificationDisplayed() == BOOLEAN_TRUE;
+    }
+
+    /**
+     * Sets if account is U18
+     *
+     * @return true if update was successful; false otherwise.
+     */
+    public boolean setIsU18Account(boolean isU18Account) {
+        return setAdServicesExtData(
+                new AdServicesExtDataParams.Builder()
+                        .setIsU18Account(isU18Account ? BOOLEAN_TRUE : BOOLEAN_FALSE)
+                        .build(),
+                new int[] {FIELD_IS_U18_ACCOUNT});
+    }
+
+    /** Retrieves if account is U18, converted into boolean. -1 (no data) is considered false. */
+    public boolean getIsU18Account() {
+        return getAdServicesExtData().getIsU18Account() == BOOLEAN_TRUE;
+    }
+
+    /**
+     * Sets if adult account.
+     *
+     * @return true if update was successful; false otherwise.
+     */
+    public boolean setIsAdultAccount(boolean isAdultAccount) {
+        return setAdServicesExtData(
+                new AdServicesExtDataParams.Builder()
+                        .setIsAdultAccount(isAdultAccount ? BOOLEAN_TRUE : BOOLEAN_FALSE)
+                        .build(),
+                new int[] {FIELD_IS_ADULT_ACCOUNT});
+    }
+
+    /** Retrieves if adult account, converted into boolean. -1 (no data) is considered false. */
+    public boolean getIsAdultAccount() {
+        return getAdServicesExtData().getIsAdultAccount() == BOOLEAN_TRUE;
     }
 
     private AdServicesExtDataParams constructParams(
