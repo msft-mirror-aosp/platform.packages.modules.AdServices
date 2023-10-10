@@ -156,7 +156,9 @@ public class FledgeCtsMockServerTests extends ForegroundDebuggableCtsTest {
 
         if (SdkLevel.isAtLeastT()) {
             assertForegroundActivityStarted();
-            flags.setConsentSourceOfTruth(FlagsConstants.PPAPI_AND_SYSTEM_SERVER);
+            flags.setFlag(
+                    FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH,
+                    FlagsConstants.PPAPI_AND_SYSTEM_SERVER);
         }
 
         mAdSelectionClient =
