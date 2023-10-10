@@ -27,7 +27,7 @@ import org.junit.Test;
 
 import java.time.Instant;
 
-public class DBEncoderLogicTest {
+public class DBEncoderLogicMetadataTest {
 
     @Test
     public void testCreateEncodingLogic() {
@@ -35,7 +35,7 @@ public class DBEncoderLogicTest {
         int version = 1;
         Instant time = CommonFixture.FIXED_NOW;
 
-        DBEncoderLogic logicEntry = DBEncoderLogic.create(buyer, version, time);
+        DBEncoderLogicMetadata logicEntry = DBEncoderLogicMetadata.create(buyer, version, time);
         assertEquals(buyer, logicEntry.getBuyer());
         assertEquals(version, (int) logicEntry.getVersion());
         assertEquals(time, logicEntry.getCreationTime());
@@ -47,8 +47,8 @@ public class DBEncoderLogicTest {
         int version = 1;
         Instant time = CommonFixture.FIXED_NOW;
 
-        DBEncoderLogic logicEntry =
-                DBEncoderLogic.builder()
+        DBEncoderLogicMetadata logicEntry =
+                DBEncoderLogicMetadata.builder()
                         .setBuyer(buyer)
                         .setVersion(version)
                         .setCreationTime(time)
@@ -63,7 +63,7 @@ public class DBEncoderLogicTest {
         assertThrows(
                 IllegalStateException.class,
                 () -> {
-                    DBEncoderLogic.builder().build();
+                    DBEncoderLogicMetadata.builder().build();
                 });
     }
 
@@ -73,14 +73,14 @@ public class DBEncoderLogicTest {
         int version = 1;
         Instant time = CommonFixture.FIXED_NOW;
 
-        DBEncoderLogic logicEntry1 =
-                DBEncoderLogic.builder()
+        DBEncoderLogicMetadata logicEntry1 =
+                DBEncoderLogicMetadata.builder()
                         .setBuyer(buyer)
                         .setVersion(version)
                         .setCreationTime(time)
                         .build();
-        DBEncoderLogic logicEntry2 =
-                DBEncoderLogic.builder()
+        DBEncoderLogicMetadata logicEntry2 =
+                DBEncoderLogicMetadata.builder()
                         .setBuyer(buyer)
                         .setVersion(version)
                         .setCreationTime(time)
@@ -95,14 +95,14 @@ public class DBEncoderLogicTest {
         int version = 1;
         Instant time = CommonFixture.FIXED_NOW;
 
-        DBEncoderLogic logicEntry1 =
-                DBEncoderLogic.builder()
+        DBEncoderLogicMetadata logicEntry1 =
+                DBEncoderLogicMetadata.builder()
                         .setBuyer(buyer)
                         .setVersion(version)
                         .setCreationTime(time)
                         .build();
-        DBEncoderLogic logicEntry2 =
-                DBEncoderLogic.builder()
+        DBEncoderLogicMetadata logicEntry2 =
+                DBEncoderLogicMetadata.builder()
                         .setBuyer(buyer)
                         .setVersion(version + 1)
                         .setCreationTime(time)
@@ -117,14 +117,14 @@ public class DBEncoderLogicTest {
         int version = 1;
         Instant time = CommonFixture.FIXED_NOW;
 
-        DBEncoderLogic logicEntry1 =
-                DBEncoderLogic.builder()
+        DBEncoderLogicMetadata logicEntry1 =
+                DBEncoderLogicMetadata.builder()
                         .setBuyer(buyer)
                         .setVersion(version)
                         .setCreationTime(time)
                         .build();
-        DBEncoderLogic logicEntry2 =
-                DBEncoderLogic.builder()
+        DBEncoderLogicMetadata logicEntry2 =
+                DBEncoderLogicMetadata.builder()
                         .setBuyer(buyer)
                         .setVersion(version)
                         .setCreationTime(time)
