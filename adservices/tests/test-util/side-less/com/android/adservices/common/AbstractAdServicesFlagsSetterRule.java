@@ -411,6 +411,16 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         return setOrCacheDebugSystemProperty(FlagsConstants.KEY_ADID_KILL_SWITCH, value);
     }
 
+    /** Overrides flag used by {@link android.adservices.common.AdServicesCommonManager}. */
+    public T setAdserviceEnableStatus(boolean value) {
+        return setFlag(FlagsConstants.KEY_ADSERVICES_ENABLED, value);
+    }
+
+    /** Overrides flag used by {@link android.adservices.common.AdServicesCommonManager}. */
+    public T setUpdateAdIdCacheEnabled(boolean value) {
+        return setFlag(FlagsConstants.KEY_AD_ID_CACHE_ENABLED, value);
+    }
+
     /**
      * Overrides flag used by {@link
      * com.android.adservices.service.PhFlags#getMddBackgroundTaskKillSwitch()}.
@@ -763,6 +773,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         FlagOrSystemProperty(String name, String value) {
             this(name, value, /* separator= */ null);
         }
+
         // TODO(b/294423183): need to add unit test for equals() / hashcode() as they don't use
         // separator
 
