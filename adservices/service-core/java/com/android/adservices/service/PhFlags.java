@@ -1868,11 +1868,27 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getEnableComputeVersionFromMappings() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_ENABLE_COMPUTE_VERSION_FROM_MAPPINGS,
+                /* defaultValue */ DEFAULT_COMPUTE_VERSION_FROM_MAPPINGS_ENABLED);
+    }
+
+    @Override
     public String getMainlineTrainVersion() {
         return DeviceConfig.getString(
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_MAINLINE_TRAIN_VERSION,
                 /* defaultValue */ DEFAULT_MAINLINE_TRAIN_VERSION);
+    }
+
+    @Override
+    public String getAdservicesVersionMappings() {
+        return DeviceConfig.getString(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_ADSERVICES_VERSION_MAPPINGS,
+                /* defaultValue */ DEFAULT_ADSERVICES_VERSION_MAPPINGS);
     }
 
     // ADID Killswitches
@@ -3773,9 +3789,21 @@ public final class PhFlags implements Flags {
                         + getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist());
         writer.println(
                 "\t"
+                        + FlagsConstants.KEY_ENABLE_COMPUTE_VERSION_FROM_MAPPINGS
+                        + " = "
+                        + getEnableComputeVersionFromMappings());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_MAINLINE_TRAIN_VERSION
                         + " = "
                         + getMainlineTrainVersion());
+
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_ADSERVICES_VERSION_MAPPINGS
+                        + " = "
+                        + getAdservicesVersionMappings());
+
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED

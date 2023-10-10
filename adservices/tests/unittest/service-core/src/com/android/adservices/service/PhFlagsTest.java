@@ -45,8 +45,10 @@ import static com.android.adservices.service.Flags.DEBUG_UX;
 import static com.android.adservices.service.Flags.DEFAULT_ADID_CACHE_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_ENABLEMENT_CHECK_ENABLED;
+import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_VERSION_MAPPINGS;
 import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_CLASSIFIER_TYPE;
+import static com.android.adservices.service.Flags.DEFAULT_COMPUTE_VERSION_FROM_MAPPINGS_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ADSERVICES_API_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API;
@@ -409,6 +411,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABL
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ERROR_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_RELEASE_STAGE_FOR_COBALT;
+import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_VERSION_MAPPINGS;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_CACHE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSETID_KILL_SWITCH;
@@ -427,6 +430,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_COBALT_LOGGING_E
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_LOGGING_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_COMPAT_LOGGING_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_COMPUTE_VERSION_FROM_MAPPINGS;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_RESET_TOKEN;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH;
@@ -2010,6 +2014,20 @@ public class PhFlagsTest {
     }
 
     @Test
+    public void testGetComputeVersionFromMappings() {
+        assertThat(FlagsFactory.getFlags().getEnableComputeVersionFromMappings())
+                .isEqualTo(DEFAULT_COMPUTE_VERSION_FROM_MAPPINGS_ENABLED);
+        boolean overrideValue = false;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENABLE_COMPUTE_VERSION_FROM_MAPPINGS,
+                Boolean.toString(overrideValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getEnableComputeVersionFromMappings()).isEqualTo(overrideValue);
+    }
+
+    @Test
     public void testGetMainlineTrainVersion() {
         assertThat(FlagsFactory.getFlags().getMainlineTrainVersion())
                 .isEqualTo(DEFAULT_MAINLINE_TRAIN_VERSION);
@@ -2021,6 +2039,21 @@ public class PhFlagsTest {
                 /* makeDefault */ false);
 
         assertThat(mPhFlags.getMainlineTrainVersion()).isEqualTo(overrideValue);
+    }
+
+    @Test
+    public void testGetAdservicesVersionMappings() {
+        assertThat(FlagsFactory.getFlags().getAdservicesVersionMappings())
+                .isEqualTo(DEFAULT_ADSERVICES_VERSION_MAPPINGS);
+        String overrideValue =
+                "341700000,341800000,202404|341900000,342000000,202405|342100000,342200000,202406";
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ADSERVICES_VERSION_MAPPINGS,
+                overrideValue,
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getAdservicesVersionMappings()).isEqualTo(overrideValue);
     }
 
     @Test

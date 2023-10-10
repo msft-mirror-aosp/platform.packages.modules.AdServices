@@ -63,7 +63,7 @@ import java.util.Set;
  */
 public class AsyncTriggerFetcher {
 
-    private final MeasurementHttpClient mNetworkConnection = new MeasurementHttpClient();
+    private final MeasurementHttpClient mNetworkConnection;
     private final EnrollmentDao mEnrollmentDao;
     private final Flags mFlags;
     private final AdServicesLogger mLogger;
@@ -84,6 +84,7 @@ public class AsyncTriggerFetcher {
         mEnrollmentDao = enrollmentDao;
         mFlags = flags;
         mLogger = logger;
+        mNetworkConnection = new MeasurementHttpClient(context);
     }
 
     /**

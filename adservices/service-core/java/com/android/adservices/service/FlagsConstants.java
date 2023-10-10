@@ -62,7 +62,10 @@ public final class FlagsConstants {
 
     public static final String KEY_ERROR_CODE_LOGGING_DENY_LIST = "error_code_logging_deny_list";
 
+    public static final String KEY_ENABLE_COMPUTE_VERSION_FROM_MAPPINGS =
+            "enable_compute_version_from_mappings";
     public static final String KEY_MAINLINE_TRAIN_VERSION = "mainline_train_version";
+    public static final String KEY_ADSERVICES_VERSION_MAPPINGS = "adservices_version_mappings";
 
     // Topics keys
     public static final String KEY_TOPICS_EPOCH_JOB_PERIOD_MS = "topics_epoch_job_period_ms";

@@ -77,7 +77,7 @@ public class AsyncSourceFetcher {
     private static final long ONE_DAY_IN_SECONDS = TimeUnit.DAYS.toSeconds(1);
     private static final String DEFAULT_ANDROID_APP_SCHEME = "android-app";
     private static final String DEFAULT_ANDROID_APP_URI_PREFIX = DEFAULT_ANDROID_APP_SCHEME + "://";
-    private final MeasurementHttpClient mNetworkConnection = new MeasurementHttpClient();
+    private final MeasurementHttpClient mNetworkConnection;
     private final EnrollmentDao mEnrollmentDao;
     private final Flags mFlags;
     private final AdServicesLogger mLogger;
@@ -98,6 +98,7 @@ public class AsyncSourceFetcher {
         mEnrollmentDao = enrollmentDao;
         mFlags = flags;
         mLogger = logger;
+        mNetworkConnection = new MeasurementHttpClient(context);
     }
 
     private boolean parseCommonSourceParams(

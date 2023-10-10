@@ -173,17 +173,20 @@ public final class DebugReportingJobService extends JobService {
                                 FlagsFactory.getFlags(),
                                 AdServicesLoggerImpl.getInstance(),
                                 ReportingStatus.ReportType.DEBUG_EVENT,
-                                ReportingStatus.UploadMethod.REGULAR)
+                                ReportingStatus.UploadMethod.REGULAR,
+                                getApplicationContext())
                         .setIsDebugInstance(true)
                         .performScheduledPendingReportsInWindow(0, 0);
                 new AggregateReportingJobHandler(
                                 enrollmentDao,
                                 datastoreManager,
-                                new AggregateEncryptionKeyManager(datastoreManager),
+                                new AggregateEncryptionKeyManager(
+                                        datastoreManager, getApplicationContext()),
                                 FlagsFactory.getFlags(),
                                 AdServicesLoggerImpl.getInstance(),
                                 ReportingStatus.ReportType.DEBUG_AGGREGATE,
-                                ReportingStatus.UploadMethod.REGULAR)
+                                ReportingStatus.UploadMethod.REGULAR,
+                                getApplicationContext())
                         .setIsDebugInstance(true)
                         .performScheduledPendingReportsInWindow(0, 0);
                 return;

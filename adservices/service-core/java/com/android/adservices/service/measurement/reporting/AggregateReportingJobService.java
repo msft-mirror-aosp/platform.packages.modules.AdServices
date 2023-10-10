@@ -111,11 +111,13 @@ public final class AggregateReportingJobService extends JobService {
                 new AggregateReportingJobHandler(
                                 EnrollmentDao.getInstance(getApplicationContext()),
                                 datastoreManager,
-                                new AggregateEncryptionKeyManager(datastoreManager),
+                                new AggregateEncryptionKeyManager(
+                                        datastoreManager, getApplicationContext()),
                                 FlagsFactory.getFlags(),
                                 AdServicesLoggerImpl.getInstance(),
                                 ReportingStatus.ReportType.AGGREGATE,
-                                ReportingStatus.UploadMethod.REGULAR)
+                                ReportingStatus.UploadMethod.REGULAR,
+                                getApplicationContext())
                         .performScheduledPendingReportsInWindow(
                                 System.currentTimeMillis() - maxAggregateReportUploadRetryWindowMs,
                                 System.currentTimeMillis());
