@@ -147,7 +147,13 @@ public abstract class SyncCallback<T, E> {
      * called, waiting up to {@link #getMaxTimeoutMs()} milliseconds before failing (if not called).
      */
     public final void assertReceived() throws InterruptedException {
-        Log.v(TAG, "waiting " + mTimeoutMs + " until called");
+        Log.v(
+                TAG,
+                "waiting up to "
+                        + mTimeoutMs
+                        + "ms on "
+                        + Thread.currentThread()
+                        + " until called");
         boolean called = mLatch.await(mTimeoutMs, TimeUnit.MILLISECONDS);
         if (!called) {
             throw new IllegalStateException(

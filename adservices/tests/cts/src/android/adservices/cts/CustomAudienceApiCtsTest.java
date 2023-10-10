@@ -55,8 +55,8 @@ import android.util.Pair;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
@@ -89,7 +89,6 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
             AdSelectionSignals.fromString("{\"trusted_bidding_data\":1}");
 
     private boolean mIsDebugMode;
-    private String mPreviousAppAllowList;
 
     private final ArrayList<Pair<AdTechIdentifier, String>> mCustomAudiencesToCleanUp =
             new ArrayList<>();
@@ -103,15 +102,16 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
             new AdServicesDeviceSupportedRule();
 
+    @Rule(order = 2)
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
+                    .setCompatModeFlags()
+                    .setPpapiAppAllowList(sContext.getPackageName());
+
     @Before
     public void setup() throws InterruptedException {
         if (SdkLevel.isAtLeastT()) {
             assertForegroundActivityStarted();
-        } else {
-            mPreviousAppAllowList =
-                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
-                            sContext.getPackageName());
-            CompatAdServicesTestUtils.setFlags();
         }
 
         mClient =
@@ -141,11 +141,6 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
     public void tearDown() throws ExecutionException, InterruptedException, TimeoutException {
         leaveJoinedCustomAudiences();
         PhFlagsFixture.overrideEnableEnrollmentSeed(false);
-
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
     }
 
     @Test

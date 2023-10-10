@@ -1378,6 +1378,15 @@ public class MeasurementDaoTest {
                         publisherAsSuffix,
                         SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                         Source.Status.ACTIVE);
+        List<Source> ignoredSourcesWithAppAndWebDestinations =
+                getSourcesWithDifferentDestinations(
+                        4,
+                        true,
+                        true,
+                        4500000000L,
+                        publisher,
+                        SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                        Source.Status.IGNORED);
         List<Source> activeSourcesWithAppDestinations =
                 getSourcesWithDifferentDestinations(
                         2,
@@ -1413,8 +1422,11 @@ public class MeasurementDaoTest {
                         5000000000L,
                         publisher,
                         SourceFixture.ValidSourceParams.ENROLLMENT_ID,
-                        Source.Status.IGNORED);
+                        Source.Status.MARKED_TO_DELETE);
         for (Source source : activeSourcesWithAppAndWebDestinations) {
+            insertSource(source);
+        }
+        for (Source source : ignoredSourcesWithAppAndWebDestinations) {
             insertSource(source);
         }
         for (Source source : activeSourcesWithAppDestinations) {
@@ -1448,7 +1460,7 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
-                            Integer.valueOf(2),
+                            Integer.valueOf(3),
                             measurementDao
                                     .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
                                             publisher,

@@ -334,6 +334,8 @@ public class PersistAdSelectionResultRunnerTest {
                     WINNER_CUSTOM_AUDIENCE_OWNER,
                     WINNER_CUSTOM_AUDIENCE_NAME,
                     Collections.emptySet());
+    private static final WinningCustomAudience EMPTY_CUSTOM_AUDIENCE_FOR_APP_INSTALL =
+            getWinningCustomAudience("", "", Collections.emptySet());
     private static final ReportingData REPORTING_DATA =
             getReportingData(Uri.parse(BUYER_REPORTING_URI), Uri.parse(SELLER_REPORTING_URI));
     private static final ReportingData REPORTING_DATA_WITH_EMPTY_SELLER =
@@ -540,7 +542,7 @@ public class PersistAdSelectionResultRunnerTest {
                         AD_SELECTION_ID,
                         BID_AND_URI,
                         WINNER_BUYER,
-                        WINNER_CUSTOM_AUDIENCE_WITH_EMPTY_AD_COUNTER_KEYS);
+                        EMPTY_CUSTOM_AUDIENCE_FOR_APP_INSTALL);
         verify(mAdSelectionEntryDaoSpy, times(1))
                 .persistReportingData(AD_SELECTION_ID, REPORTING_DATA);
         verify(mAdSelectionEntryDaoSpy, times(1))
@@ -675,7 +677,7 @@ public class PersistAdSelectionResultRunnerTest {
                         AD_SELECTION_ID,
                         BID_AND_URI,
                         WINNER_BUYER,
-                        WINNER_CUSTOM_AUDIENCE_WITH_EMPTY_AD_COUNTER_KEYS);
+                        EMPTY_CUSTOM_AUDIENCE_FOR_APP_INSTALL);
         verify(mAdSelectionEntryDaoSpy, times(1))
                 .persistReportingData(AD_SELECTION_ID, REPORTING_DATA_WITH_EMPTY_SELLER);
         verify(mAdSelectionEntryDaoSpy, times(0))
@@ -1203,7 +1205,11 @@ public class PersistAdSelectionResultRunnerTest {
     private byte[] prepareDecryptedAuctionResultForAppInstallAd(
             AuctionResult.Builder auctionResult) {
         return prepareDecryptedAuctionResult(
-                auctionResult.setAdType(AuctionResult.AdType.APP_INSTALL_AD).build());
+                auctionResult
+                        .setCustomAudienceName("")
+                        .setCustomAudienceOwner("")
+                        .setAdType(AuctionResult.AdType.APP_INSTALL_AD)
+                        .build());
     }
 
     private byte[] prepareDecryptedAuctionResult(AuctionResult auctionResult) {
