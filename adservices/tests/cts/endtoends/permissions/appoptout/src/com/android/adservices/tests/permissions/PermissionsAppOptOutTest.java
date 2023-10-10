@@ -19,6 +19,7 @@ package com.android.adservices.tests.permissions;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
@@ -28,11 +29,13 @@ import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.adselection.UpdateAdCounterHistogramRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
+import android.adservices.clients.signals.ProtectedSignalsClient;
 import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FrequencyCapFilters;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
+import android.adservices.signals.UpdateSignalsRequest;
 import android.content.Context;
 import android.net.Uri;
 
@@ -378,5 +381,45 @@ public class PermissionsAppOptOutTest {
                         .build();
 
         mAdSelectionClient.updateAdCounterHistogram(request).get();
+    }
+
+    @Test
+    public void testNoEnrollment_fledgeFetchSignalUpdates() {
+        ProtectedSignalsClient protectedSignalsClient =
+                new ProtectedSignalsClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        UpdateSignalsRequest request =
+                new UpdateSignalsRequest.Builder(Uri.parse("https://buyer.example.com/signals"))
+                        .build();
+
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> protectedSignalsClient.fetchSignalUpdates(request).get());
+        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+    }
+
+    @Test
+    public void testWithEnrollment_fledgeFetchSignalUpdates() {
+        ProtectedSignalsClient protectedSignalsClient =
+                new ProtectedSignalsClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        // The "test.com" buyer is a pre-seeded enrolled ad tech
+        UpdateSignalsRequest request =
+                new UpdateSignalsRequest.Builder(Uri.parse("https://test.com/signals")).build();
+
+        // Verify that we make it past the enrollment check and fail on not getting anything from
+        // the URL
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> protectedSignalsClient.fetchSignalUpdates(request).get());
+        assertTrue(exception.getCause() instanceof IllegalStateException);
     }
 }
