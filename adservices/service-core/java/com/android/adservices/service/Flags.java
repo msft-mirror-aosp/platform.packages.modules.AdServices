@@ -132,10 +132,13 @@ public interface Flags {
 
     /** Unknown classifier option. */
     int UNKNOWN_CLASSIFIER = 0;
+
     /** Only on-device classification. */
     int ON_DEVICE_CLASSIFIER = 1;
+
     /** Only Precomputed classification. */
     int PRECOMPUTED_CLASSIFIER = 2;
+
     /** Precomputed classification values are preferred over on-device classification values. */
     int PRECOMPUTED_THEN_ON_DEVICE_CLASSIFIER = 3;
 
@@ -350,8 +353,8 @@ public interface Flags {
 
     /** Measurement manifest file url, used for MDD download. */
     String MEASUREMENT_MANIFEST_FILE_URL =
-            "https://dl.google.com/mdi-serving/adservices/adtech_enrollment/manifest_configs/1"
-                    + "/manifest_config_1658790241927.binaryproto";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/2324"
+                    + "/3927729583a9dbfdb9a3eaa84ddcef3d9b46c3c7";
 
     /** Measurement manifest file url. */
     default String getMeasurementManifestFileUrl() {
@@ -455,6 +458,13 @@ public interface Flags {
     /** Delay from trigger registration to attribution job triggering */
     default long getMeasurementAttributionJobTriggerDelayMs() {
         return DEFAULT_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS;
+    }
+
+    boolean MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING = false;
+
+    /** Returns true if aggregatable report padding is enabled else false. */
+    default boolean getMeasurementEnableAggregatableReportPayloadPadding() {
+        return MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING;
     }
 
     int DEFAULT_MEASUREMENT_MAX_ATTRIBUTIONS_PER_INVOCATION = 100;
@@ -573,6 +583,62 @@ public interface Flags {
         return MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE;
     }
 
+    int MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW = 1;
+
+    /**
+     * Returns the maximum number of reporting origins per source site, reporting site,
+     * reporting-origin-update-window counted per source registration.
+     */
+    default int getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow() {
+        return MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW;
+    }
+
+    int MEASUREMENT_MAX_DISTINCT_REP_ORIG_PER_PUBLISHER_X_DEST_IN_SOURCE = 100;
+
+    /**
+     * Max distinct reporting origins with source registration per { Publisher X Advertiser X
+     * TimePeriod }.
+     */
+    default int getMeasurementMaxDistinctRepOrigPerPublXDestInSource() {
+        return MEASUREMENT_MAX_DISTINCT_REP_ORIG_PER_PUBLISHER_X_DEST_IN_SOURCE;
+    }
+
+    boolean MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT = true;
+
+    /** Returns {@code true} if Measurement destination rate limit is enabled. */
+    default boolean getMeasurementEnableDestinationRateLimit() {
+        return MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT;
+    }
+
+    int MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW = 50;
+
+    /**
+     * Returns the maximum number of distinct destination sites per source site per rate limit
+     * window.
+     */
+    default int getMeasurementMaxDestinationsPerPublisherPerRateLimitWindow() {
+        return MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW;
+    }
+
+    int MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW = 200;
+
+    /**
+     * Returns the maximum number of distinct destination sites per source site X enrollment per
+     * rate limit window.
+     */
+    default int getMeasurementMaxDestPerPublisherXEnrollmentPerRateLimitWindow() {
+        return MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW;
+    }
+
+    long MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW = TimeUnit.MINUTES.toMillis(1);
+
+    /**
+     * Returns the duration that controls the rate-limiting window for destinations.
+     */
+    default long getMeasurementDestinationRateLimitWindow() {
+        return MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
+    }
+
     boolean MEASUREMENT_FLEX_LITE_API_ENABLED = true;
 
     /** Returns true if flex lite api is enabled else false. */
@@ -580,14 +646,14 @@ public interface Flags {
         return MEASUREMENT_FLEX_LITE_API_ENABLED;
     }
 
-    float MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT = 1.5849266F;
+    float MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT = 6.5F;
 
     /** Returns max information gain in Flexible Event API for Event sources */
     default float getMeasurementFlexApiMaxInformationGainEvent() {
         return MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT;
     }
 
-    float MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION = 11.4617280F;
+    float MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION = 11.46173F;
 
     /** Returns max information gain in Flexible Event API for Navigation sources */
     default float getMeasurementFlexApiMaxInformationGainNavigation() {
@@ -911,8 +977,9 @@ public interface Flags {
     boolean PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED = false;
     long PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS = 1L * 60L * 60L * 1000L; // 1 hour
     long PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS = 5L * 60L * 1000L; // 5 minutes
+    int PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES = (int) (1.5 * 1024); // 1.5 KB
 
-    /** Returns {@code true} if the Periodic encoding of Protected Signals is enabled. */
+    /** Returns {@code true} feature flag if Periodic encoding of Protected Signals is enabled. */
     default boolean getProtectedSignalsPeriodicEncodingEnabled() {
         return PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED;
     }
@@ -929,6 +996,13 @@ public interface Flags {
      */
     default long getProtectedSignalsPeriodicEncodingJobFlexMs() {
         return PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS;
+    }
+
+    /**
+     * @return the max size in bytes for encoded payload
+     */
+    default int getProtectedSignalsEncodedPayloadMaxSizeBytes() {
+        return PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES;
     }
 
     int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT = 10_000;
@@ -1313,7 +1387,7 @@ public interface Flags {
     }
 
     String FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI =
-            "https://d38za9ovyr65qt.cloudfront.net/v1alpha/publicKeys";
+            "https://publickeyservice-test1.bas-kms.xyz/v1alpha/publicKeys";
 
     /**
      * @return Uri to fetch auction encryption key for fledge ad selection.
@@ -1487,6 +1561,14 @@ public interface Flags {
         return FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH;
     }
 
+    // Protected signals cleanup feature flag disabled by default
+    boolean PROTECTED_SIGNALS_CLEANUP_ENABLED = false;
+
+    /** Returns {@code true} if protected signals cleanup is enabled. */
+    default boolean getProtectedSignalsCleanupEnabled() {
+        return PROTECTED_SIGNALS_CLEANUP_ENABLED;
+    }
+
     boolean ADSERVICES_ENABLED = false;
 
     default boolean getAdServicesEnabled() {
@@ -1543,15 +1625,18 @@ public interface Flags {
         return DOWNLOADER_MAX_DOWNLOAD_THREADS;
     }
 
-    /** MDD Topics API Classifier Manifest Url */
-    // TODO(b/236761740): We use this for now for testing. We need to update to the correct one
-    // when we actually upload the models.
+    /** MDD Topics API Classifier Manifest Url. Topics classifier v2-3. Build_id = 1467. */
     String MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
-            "https://dl.google.com/mdi-serving/adservices/topics_classifier/manifest_configs/2"
-                    + "/manifest_config_1661376643699.binaryproto";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/1467/80c34503413cea9ea44cbe94cd38dabc44ea8d70";
 
     default String getMddTopicsClassifierManifestFileUrl() {
         return MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
+    }
+
+    boolean CONSENT_MANAGER_LAZY_ENABLE_MODE = true;
+
+    default boolean getConsentManagerLazyEnableMode() {
+        return CONSENT_MANAGER_LAZY_ENABLE_MODE;
     }
 
     long CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS =
@@ -1609,10 +1694,13 @@ public interface Flags {
 
     /** Write and read consent from system server only. */
     int SYSTEM_SERVER_ONLY = FlagsConstants.SYSTEM_SERVER_ONLY;
+
     /** Write and read consent from PPAPI only */
     int PPAPI_ONLY = FlagsConstants.PPAPI_ONLY;
+
     /** Write consent to both PPAPI and system server. Read consent from system server only. */
     int PPAPI_AND_SYSTEM_SERVER = FlagsConstants.PPAPI_AND_SYSTEM_SERVER;
+
     /**
      * Write consent data to AppSearch only. To store consent data in AppSearch the flag
      * enable_appsearch_consent_data must also be true. This ensures that both writes and reads can
@@ -2590,6 +2678,7 @@ public interface Flags {
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE = true;
     boolean ENFORCE_FOREGROUND_STATUS_TOPICS = true;
+    boolean ENFORCE_FOREGROUND_STATUS_SIGNALS = true;
 
     /**
      * @return true if FLEDGE runAdSelection API should require that the calling API is running in
@@ -2704,6 +2793,14 @@ public interface Flags {
     /** @return true if Topics API should require that the calling API is running in foreground. */
     default boolean getEnforceForegroundStatusForTopics() {
         return ENFORCE_FOREGROUND_STATUS_TOPICS;
+    }
+
+    /**
+     * @return true if Protected Signals API should require that the calling API is running in
+     *     foreground.
+     */
+    default boolean getEnforceForegroundStatusForSignals() {
+        return ENFORCE_FOREGROUND_STATUS_SIGNALS;
     }
 
     /** @return true if AdId API should require that the calling API is running in foreground. */
@@ -3225,8 +3322,8 @@ public interface Flags {
     String MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG =
             String.join(
                     ",",
-                    Long.toString(TimeUnit.MINUTES.toMillis(10L)),
-                    Long.toString(TimeUnit.MINUTES.toMillis(50L)));
+                    Long.toString(TimeUnit.MINUTES.toMillis(0L)),
+                    Long.toString(TimeUnit.MINUTES.toMillis(10L)));
 
     /**
      * Returns configured comma separated aggregate report min delay and aggregate report delay
@@ -3268,6 +3365,14 @@ public interface Flags {
     /** Returns whether Measurement ARA deduplication alignment v1 feature is enabled. */
     default boolean getMeasurementEnableAraDeduplicationAlignmentV1() {
         return MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1;
+    }
+
+    /** Default Measurement source deactivation after filtering feature flag. */
+    boolean MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING = false;
+
+    /** Returns whether Measurement source deactivation after filtering feature is enabled. */
+    default boolean getMeasurementEnableSourceDeactivationAfterFiltering() {
+        return MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING;
     }
 
     /** Default Measurement app package name logging flag. */
@@ -3587,6 +3692,14 @@ public interface Flags {
         return DEFAULT_U18_UX_ENABLED;
     }
 
+    /** Default RVC UX feature flag.. */
+    boolean DEFAULT_RVC_UX_ENABLED = false;
+
+    /** RVC UX feature flag.. */
+    default boolean getEnableRvcUx() {
+        return DEFAULT_RVC_UX_ENABLED;
+    }
+
     /** Default enableAdServices system API feature flag.. */
     boolean DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API = false;
 
@@ -3799,6 +3912,29 @@ public interface Flags {
     /** Returns whether the U18 supervised account is enabled. */
     default boolean isU18SupervisedAccountEnabled() {
         return IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT;
+    }
+
+    /**
+     * Default value to determine whether {@link
+     * com.android.adservices.service.adid.AdIdCacheManager} is enabled to read AdId from and for
+     * AdIdProvider to update AdId to.
+     */
+    boolean DEFAULT_ADID_CACHE_ENABLED = false;
+
+    /**
+     * Returns if {@link com.android.adservices.service.adid.AdIdCacheManager} is enabled to read
+     * AdId from and for AdIdProvider to update AdId to.
+     *
+     * <ul>
+     *   <li>When enabled, AdIdCacheManager will read AdId from the cache and AdIdProvider will
+     *       update the cache if AdId changes.
+     *   <li>When disabled, AdIdCacheManager will call AdIdProvider to get the AdId.
+     * </ul>
+     *
+     * @return if {@link com.android.adservices.service.adid.AdIdCacheManager} is enabled.
+     */
+    default boolean getAdIdCacheEnabled() {
+        return DEFAULT_ADID_CACHE_ENABLED;
     }
 
     boolean APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT = false;

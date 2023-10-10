@@ -49,6 +49,6 @@ public final class AdServicesHostSideFlagsSetterRule
         super(
                 ConsoleLogger.getInstance(),
                 namespace -> new HostSideDeviceConfigHelper(namespace),
-                new HostSideSystemPropertiesHelper());
+                HostSideSystemPropertiesHelper.getInstance());
     }
 }

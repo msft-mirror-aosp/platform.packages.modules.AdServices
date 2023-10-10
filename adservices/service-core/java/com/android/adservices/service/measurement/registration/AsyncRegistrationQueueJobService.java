@@ -28,6 +28,7 @@ import android.content.ComponentName;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -44,7 +45,6 @@ import java.util.concurrent.Future;
 public class AsyncRegistrationQueueJobService extends JobService {
     private static final int MEASUREMENT_ASYNC_REGISTRATION_JOB_ID =
             MEASUREMENT_ASYNC_REGISTRATION_JOB.getJobId();
-
     private Future mExecutorFuture;
 
     @Override
@@ -62,7 +62,7 @@ public class AsyncRegistrationQueueJobService extends JobService {
                 .recordOnStartJob(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID);
 
         if (FlagsFactory.getFlags().getAsyncRegistrationJobQueueKillSwitch()) {
-            LogUtil.e("AsyncRegistrationQueueJobService is disabled");
+            LoggerFactory.getMeasurementLogger().e("AsyncRegistrationQueueJobService is disabled");
             return skipAndCancelBackgroundJob(
                     params,
                     AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON,
@@ -70,8 +70,10 @@ public class AsyncRegistrationQueueJobService extends JobService {
         }
 
         Instant jobStartTime = Clock.systemUTC().instant();
-        LogUtil.d(
-                "AsyncRegistrationQueueJobService.onStartJob " + "at %s", jobStartTime.toString());
+        LoggerFactory.getMeasurementLogger()
+                .d(
+                        "AsyncRegistrationQueueJobService.onStartJob " + "at %s",
+                        jobStartTime.toString());
 
         mExecutorFuture =
                 AdServicesExecutors.getBlockingExecutor()
@@ -107,12 +109,13 @@ public class AsyncRegistrationQueueJobService extends JobService {
                 lock.unlock();
             }
         }
-        LogUtil.d("AsyncRegistrationQueueJobService did not acquire the lock");
+        LoggerFactory.getMeasurementLogger()
+                .d("AsyncRegistrationQueueJobService did not acquire the lock");
     }
 
     @Override
     public boolean onStopJob(JobParameters params) {
-        LogUtil.d("AsyncRegistrationQueueJobService.onStopJob");
+        LoggerFactory.getMeasurementLogger().d("AsyncRegistrationQueueJobService.onStopJob");
         boolean shouldRetry = true;
         if (mExecutorFuture != null) {
             shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
@@ -155,13 +158,14 @@ public class AsyncRegistrationQueueJobService extends JobService {
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
         Flags flags = FlagsFactory.getFlags();
         if (flags.getAsyncRegistrationJobQueueKillSwitch()) {
-            LogUtil.e("AsyncRegistrationQueueJobService is disabled, skip scheduling");
+            LoggerFactory.getMeasurementLogger()
+                    .e("AsyncRegistrationQueueJobService is disabled, skip scheduling");
             return;
         }
 
         final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
         if (jobScheduler == null) {
-            LogUtil.e("JobScheduler not found");
+            LoggerFactory.getMeasurementLogger().e("JobScheduler not found");
             return;
         }
 
@@ -171,9 +175,10 @@ public class AsyncRegistrationQueueJobService extends JobService {
         JobInfo jobInfo = buildJobInfo(context, flags);
         if (forceSchedule || !jobInfo.equals(scheduledJobInfo)) {
             schedule(jobScheduler, jobInfo);
-            LogUtil.d("Scheduled AsyncRegistrationQueueJobService");
+            LoggerFactory.getMeasurementLogger().d("Scheduled AsyncRegistrationQueueJobService");
         } else {
-            LogUtil.d("AsyncRegistrationQueueJobService already scheduled, skipping reschedule");
+            LoggerFactory.getMeasurementLogger()
+                    .d("AsyncRegistrationQueueJobService already scheduled, skipping reschedule");
         }
     }
 

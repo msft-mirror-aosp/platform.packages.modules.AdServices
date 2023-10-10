@@ -19,6 +19,7 @@ package com.android.adservices.service.measurement;
 import android.net.Uri;
 import android.util.Pair;
 
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;

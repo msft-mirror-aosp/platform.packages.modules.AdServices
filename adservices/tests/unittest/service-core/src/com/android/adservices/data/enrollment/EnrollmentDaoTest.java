@@ -88,7 +88,7 @@ public class EnrollmentDaoTest {
                             Arrays.asList("https://1test.com/trigger"))
                     .setAttributionReportingUrl(Arrays.asList("https://1test.com"))
                     .setRemarketingResponseBasedRegistrationUrl(Arrays.asList("https://1test.com"))
-                    .setEncryptionKeyUrl(Arrays.asList("https://1test.com/keys"))
+                    .setEncryptionKeyUrl("https://1test.com/keys")
                     .build();
 
     private static final EnrollmentData ENROLLMENT_DATA2 =
@@ -107,7 +107,7 @@ public class EnrollmentDaoTest {
                                     "https://2test.com/trigger/extra/path"))
                     .setAttributionReportingUrl(Arrays.asList("https://2test.com"))
                     .setRemarketingResponseBasedRegistrationUrl(Arrays.asList("https://2test.com"))
-                    .setEncryptionKeyUrl(Arrays.asList("https://2test.com/keys"))
+                    .setEncryptionKeyUrl("https://2test.com/keys")
                     .build();
 
     private static final EnrollmentData ENROLLMENT_DATA3 =
@@ -121,7 +121,7 @@ public class EnrollmentDaoTest {
                             Arrays.asList("https://2test.com/trigger"))
                     .setAttributionReportingUrl(Arrays.asList("https://2test.com"))
                     .setRemarketingResponseBasedRegistrationUrl(Arrays.asList("https://2test.com"))
-                    .setEncryptionKeyUrl(Arrays.asList("https://2test.com/keys"))
+                    .setEncryptionKeyUrl("https://2test.com/keys")
                     .build();
 
     private static final EnrollmentData ENROLLMENT_DATA4 =
@@ -134,7 +134,7 @@ public class EnrollmentDaoTest {
                     .setAttributionTriggerRegistrationUrl(Arrays.asList("https://4test.com"))
                     .setAttributionReportingUrl(Arrays.asList("https://4test.com"))
                     .setRemarketingResponseBasedRegistrationUrl(Arrays.asList("https://4test.com"))
-                    .setEncryptionKeyUrl(Arrays.asList("https://4test.com/keys"))
+                    .setEncryptionKeyUrl("https://4test.com/keys")
                     .build();
 
     private static final EnrollmentData ENROLLMENT_DATA5 =
@@ -154,7 +154,7 @@ public class EnrollmentDaoTest {
                     .setAttributionReportingUrl(Arrays.asList("https://us.5test.com"))
                     .setRemarketingResponseBasedRegistrationUrl(
                             Arrays.asList("https://us.5test.com"))
-                    .setEncryptionKeyUrl(Arrays.asList("https://us.5test.com/keys"))
+                    .setEncryptionKeyUrl("https://us.5test.com/keys")
                     .build();
 
     private static final EnrollmentData DUPLICATE_ID_ENROLLMENT_DATA =
@@ -167,7 +167,7 @@ public class EnrollmentDaoTest {
                             Arrays.asList("https://4test.com/trigger"))
                     .setAttributionReportingUrl(Arrays.asList("https://4test.com"))
                     .setRemarketingResponseBasedRegistrationUrl(Arrays.asList("https://4test.com"))
-                    .setEncryptionKeyUrl(Arrays.asList("https://4test.com/keys"))
+                    .setEncryptionKeyUrl("https://4test.com/keys")
                     .build();
 
     private static final EnrollmentData ENROLLMENT_DATA_MULTIPLE_FLEDGE_RBR =
@@ -185,7 +185,7 @@ public class EnrollmentDaoTest {
                                             .toString(),
                                     CommonFixture.getUri(CommonFixture.VALID_BUYER_2, "")
                                             .toString()))
-                    .setEncryptionKeyUrl(Arrays.asList("https://6test.com/keys"))
+                    .setEncryptionKeyUrl("https://6test.com/keys")
                     .build();
 
     @Before
@@ -247,6 +247,7 @@ public class EnrollmentDaoTest {
         EnrollmentData e3 = spyEnrollmentDao.getEnrollmentData("E3");
         assertNotNull(e3);
         assertEquals(e3.getSdkNames().get(0), "sdk3");
+        spyEnrollmentDao.deleteAll();
     }
 
     @Test
@@ -395,6 +396,7 @@ public class EnrollmentDaoTest {
             EnrollmentData e = enrollmentDao.getEnrollmentData(enrollmentData.getEnrollmentId());
             assertEquals(enrollmentData, e);
         }
+        enrollmentDao.deleteAll();
     }
 
     @Test
@@ -804,7 +806,7 @@ public class EnrollmentDaoTest {
                         .setAttributionReportingUrl(Arrays.asList("https://5test.com"))
                         .setRemarketingResponseBasedRegistrationUrl(
                                 Arrays.asList("https://5test.com"))
-                        .setEncryptionKeyUrl(Arrays.asList("https://5test.com/keys"))
+                        .setEncryptionKeyUrl("https://5test.com/keys")
                         .build();
         mEnrollmentDao.insert(data);
         verify(mEnrollmentUtil, times(1))
@@ -851,7 +853,7 @@ public class EnrollmentDaoTest {
                         .setAttributionReportingUrl(Arrays.asList("https://4test.com"))
                         .setRemarketingResponseBasedRegistrationUrl(
                                 Arrays.asList("https://4test.com"))
-                        .setEncryptionKeyUrl(Arrays.asList("https://4test.com/keys"))
+                        .setEncryptionKeyUrl("https://4test.com/keys")
                         .build();
         mEnrollmentDao.insert(data);
         verify(mEnrollmentUtil, times(1))
@@ -1019,7 +1021,7 @@ public class EnrollmentDaoTest {
                         .setAttributionReportingUrl(Arrays.asList("https://4test.invalid"))
                         .setRemarketingResponseBasedRegistrationUrl(
                                 Arrays.asList("https://4test.invalid"))
-                        .setEncryptionKeyUrl(Arrays.asList("https://4test.invalid/keys"))
+                        .setEncryptionKeyUrl("https://4test.invalid/keys")
                         .build();
         mEnrollmentDao.insert(enrollmentData);
         verify(mEnrollmentUtil, times(2))

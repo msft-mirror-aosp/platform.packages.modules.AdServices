@@ -71,6 +71,7 @@ android_library {
     static_libs: [
         "androidx.test.runner",
         "compatibility-device-util-axt",
+        "modules-utils-preconditions",
     ],
     apex_available: ["com.android.adservices", "com.android.extservices"],
 }

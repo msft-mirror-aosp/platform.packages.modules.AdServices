@@ -22,7 +22,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
-import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -39,6 +38,7 @@ import com.android.adservices.data.enrollment.SqliteObjectMapper;
 import com.android.adservices.data.shared.migration.ISharedDbMigrator;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.common.WebAddresses;
+import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -60,19 +60,19 @@ import java.util.stream.Stream;
 public class SharedDbHelper extends SQLiteOpenHelper {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getLogger();
 
-    private static final String DATABASE_NAME = "adservices_shared.db";
+    private static final String DATABASE_NAME =
+            FileCompatUtils.getAdservicesFilename("adservices_shared.db");
     public static final int CURRENT_DATABASE_VERSION = 1;
     private static SharedDbHelper sSingleton = null;
     private final File mDbFile;
     private final int mDbVersion;
     private final DbHelper mDbHelper;
 
-    @SuppressLint("NewAdServicesFile")
     @VisibleForTesting
     public SharedDbHelper(
             @NonNull Context context, @NonNull String dbName, int dbVersion, DbHelper dbHelper) {
         super(context, dbName, null, dbVersion);
-        mDbFile = context.getDatabasePath(dbName);
+        mDbFile = FileCompatUtils.getDatabasePathHelper(context, dbName);
         this.mDbVersion = dbVersion;
         this.mDbHelper = dbHelper;
     }

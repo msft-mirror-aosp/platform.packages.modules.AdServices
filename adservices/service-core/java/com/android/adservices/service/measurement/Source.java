@@ -22,7 +22,7 @@ import android.annotation.Nullable;
 import android.net.Uri;
 import android.util.Pair;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
@@ -164,7 +164,8 @@ public class Source {
             JSONObject jsonObject = new JSONObject(eventReportWindows);
             return parseEventReportWindows(jsonObject);
         } catch (JSONException e) {
-            LogUtil.e(e, "Invalid JSON encountered: event_report_windows");
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "Invalid JSON encountered: event_report_windows");
             return null;
         }
     }
@@ -188,7 +189,8 @@ public class Source {
                 startDuration = endDuration;
             }
         } catch (JSONException e) {
-            LogUtil.e(e, "Invalid JSON encountered: event_report_windows");
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "Invalid JSON encountered: event_report_windows");
             return null;
         }
         return result;

@@ -1,7 +1,7 @@
 {
   "description": "W2W same registrant test for trigger-attributions-per-source-destination-limit debug report",
-  "api_config": {
-    "rate_limit_max_attributions": "1"
+  "phflags_override": {
+    "measurement_max_attribution_per_rate_limit_window": "1"
   },
   "input": {
     "web_sources": [

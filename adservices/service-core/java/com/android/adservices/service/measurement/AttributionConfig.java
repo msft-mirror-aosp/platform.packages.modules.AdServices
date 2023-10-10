@@ -34,7 +34,7 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.util.Pair;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.MathUtils;
@@ -227,7 +227,7 @@ public class AttributionConfig {
 
             return attributionConfig;
         } catch (JSONException e) {
-            LogUtil.d(e, "Serializing attribution config failed");
+            LoggerFactory.getMeasurementLogger().d(e, "Serializing attribution config failed");
             return null;
         }
     }

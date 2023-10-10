@@ -2758,6 +2758,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         AdServicesHttpClientRequest.builder()
                                 .setUri(DECISION_LOGIC_URI)
                                 .setUseCache(mFlags.getFledgeHttpJsCachingEnabled())
+                                .setDevContext(DevContext.createForDevOptionsDisabled())
                                 .build()))
                 .thenReturn(
                         Futures.immediateFuture(
@@ -2801,6 +2802,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         AdServicesHttpClientRequest.builder()
                                 .setUri(DECISION_LOGIC_URI)
                                 .setUseCache(true)
+                                .setDevContext(DevContext.createForDevOptionsDisabled())
                                 .build());
     }
 

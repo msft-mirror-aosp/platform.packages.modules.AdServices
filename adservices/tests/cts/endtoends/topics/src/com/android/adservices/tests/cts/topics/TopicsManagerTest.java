@@ -29,6 +29,7 @@ import android.adservices.topics.TopicsManager;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
@@ -37,6 +38,7 @@ import com.android.adservices.common.OutcomeReceiverForTests;
 import com.android.adservices.common.RequiresLowRamDevice;
 import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.service.FlagsConstants;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Before;
@@ -133,13 +135,14 @@ public class TopicsManagerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     // @RequiresGlobalKillSwitchDisabled // TODO(b/284971005): re-add when it uses the rule / runner
     public void testTopicsManager_testTopicsKillSwitch() throws Exception {
         // Override Topics kill switch to disable Topics API.
         flags.setTopicsKillSwitch(true);
 
         // Set classifier flag to use precomputed-then-on-device classifier.
-        flags.setTopicsClassifierType(DEFAULT_CLASSIFIER_TYPE);
+        flags.setFlag(FlagsConstants.KEY_CLASSIFIER_TYPE, DEFAULT_CLASSIFIER_TYPE);
 
         // Default classifier uses the precomputed list first, then on-device classifier.
         AdvertisingTopicsClient advertisingTopicsClient =
@@ -158,9 +161,10 @@ public class TopicsManagerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_disableDirectAppCalls_testEmptySdkNameRequests()
             throws Exception {
-        flags.setTopicsDisableDirectAppCalls(true);
+        flags.setFlag(FlagsConstants.KEY_TOPICS_DISABLE_DIRECT_APP_CALLS, true);
 
         AdvertisingTopicsClient advertisingTopicsClient =
                 new AdvertisingTopicsClient.Builder()
@@ -177,13 +181,14 @@ public class TopicsManagerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_testOnDeviceKillSwitch_shouldUsePrecomputedList()
             throws Exception {
         // Override Topics on device classifier kill switch to disable on device classifier.
         flags.setTopicsOnDeviceClassifierKillSwitch(true);
 
         // Set classifier flag to use on-device classifier.
-        flags.setTopicsClassifierType(ON_DEVICE_CLASSIFIER_TYPE);
+        flags.setFlag(FlagsConstants.KEY_CLASSIFIER_TYPE, ON_DEVICE_CLASSIFIER_TYPE);
 
         // The Test App has 1 SDK: sdk5
         // sdk3 calls the Topics API.
@@ -232,12 +237,14 @@ public class TopicsManagerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runDefaultClassifier_usingGetMethodToCreateManager()
             throws Exception {
         testTopicsManager_runDefaultClassifier(/* useGetMethodToCreateManager */ true);
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runDefaultClassifier() throws Exception {
         testTopicsManager_runDefaultClassifier(/* useGetMethodToCreateManager */ false);
     }
@@ -245,7 +252,7 @@ public class TopicsManagerTest {
     private void testTopicsManager_runDefaultClassifier(boolean useGetMethodToCreateManager)
             throws Exception {
         // Set classifier flag to use precomputed-then-on-device classifier.
-        flags.setTopicsClassifierType(DEFAULT_CLASSIFIER_TYPE);
+        flags.setFlag(FlagsConstants.KEY_CLASSIFIER_TYPE, DEFAULT_CLASSIFIER_TYPE);
 
         // Default classifier uses the precomputed list first, then on-device classifier.
         // The Test App has 2 SDKs: sdk1 calls the Topics API and sdk2 does not.
@@ -308,12 +315,14 @@ public class TopicsManagerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runOnDeviceClassifier_usingGetMethodToCreateManager()
             throws Exception {
         testTopicsManager_runOnDeviceClassifier(true);
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runOnDeviceClassifier() throws Exception {
         testTopicsManager_runOnDeviceClassifier(false);
     }
@@ -321,12 +330,14 @@ public class TopicsManagerTest {
     private void testTopicsManager_runOnDeviceClassifier(boolean useGetMethodToCreateManager)
             throws Exception {
         // Set classifier flag to use on-device classifier.
-        flags.setTopicsClassifierType(ON_DEVICE_CLASSIFIER_TYPE);
+        flags.setFlag(FlagsConstants.KEY_CLASSIFIER_TYPE, ON_DEVICE_CLASSIFIER_TYPE);
 
         // Set number of top labels returned by the on-device classifier to 5.
-        flags.setTopicsClassifierNumberOfTopLabels(TEST_CLASSIFIER_NUMBER_OF_TOP_LABELS);
+        flags.setFlag(
+                FlagsConstants.KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS,
+                TEST_CLASSIFIER_NUMBER_OF_TOP_LABELS);
         // Remove classifier threshold by setting it to 0.
-        flags.setTopicsClassifierThreshold(TEST_CLASSIFIER_THRESHOLD);
+        flags.setFlag(FlagsConstants.KEY_CLASSIFIER_THRESHOLD, TEST_CLASSIFIER_THRESHOLD);
 
         // The Test App has 1 SDK: sdk3
         // sdk3 calls the Topics API.
@@ -390,12 +401,14 @@ public class TopicsManagerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runPrecomputedClassifier_usingGetMethodToCreateManager()
             throws Exception {
         testTopicsManager_runPrecomputedClassifier(/* useGetMethodToCreateManager = */ true);
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runPrecomputedClassifier() throws Exception {
         testTopicsManager_runPrecomputedClassifier(/* useGetMethodToCreateManager = */ false);
     }
@@ -403,7 +416,7 @@ public class TopicsManagerTest {
     private void testTopicsManager_runPrecomputedClassifier(boolean useGetMethodToCreateManager)
             throws Exception {
         // Set classifier flag to use precomputed classifier.
-        flags.setTopicsClassifierType(PRECOMPUTED_CLASSIFIER_TYPE);
+        flags.setFlag(FlagsConstants.KEY_CLASSIFIER_TYPE, PRECOMPUTED_CLASSIFIER_TYPE);
 
         // The Test App has 1 SDK: sdk4
         // sdk4 calls the Topics API.

@@ -19,7 +19,7 @@ package com.android.adservices.service;
  * Defines constants used by {@code Flags}, {@code PhFlags} and testing infra (both device and host
  * side).
  *
- * <p><b>NOTE: </b>cannot have any dependency on Android or other AdServices code.>>>
+ * <p><b>NOTE: </b>cannot have any dependency on Android or other AdServices code.
  */
 public final class FlagsConstants {
 
@@ -61,6 +61,8 @@ public final class FlagsConstants {
     public static final String KEY_MAINTENANCE_JOB_FLEX_MS = "maintenance_job_flex_ms";
 
     public static final String KEY_ERROR_CODE_LOGGING_DENY_LIST = "error_code_logging_deny_list";
+
+    public static final String KEY_MAINLINE_TRAIN_VERSION = "mainline_train_version";
 
     // Topics keys
     public static final String KEY_TOPICS_EPOCH_JOB_PERIOD_MS = "topics_epoch_job_period_ms";
@@ -230,6 +232,27 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE =
             "measurement_max_distinct_destinations_in_active_source";
 
+    public static final String
+            KEY_MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW =
+                    "measurement_max_reporting_origins_per_source_reporting_site_per_window";
+
+    public static final String KEY_MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_SOURCE =
+            "measurement_max_distinct_reporting_origins_in_source";
+
+    public static final String KEY_MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT =
+            "measurement_enable_destination_rate_limit";
+
+    public static final String
+            KEY_MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW =
+                    "measurement_max_destinations_per_publisher_per_rate_limit_window";
+
+    public static final String
+            KEY_MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW =
+                    "measurement_max_dest_per_publisher_x_enrollment_per_rate_limit_window";
+
+    public static final String KEY_MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW =
+            "measurement_destination_rate_limit_window";
+
     public static final String KEY_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS =
             "measurement_enable_coarse_event_report_destinations";
 
@@ -244,8 +267,13 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1 =
             "measurement_enable_ara_deduplication_alignment_v1";
+
+    public static final String KEY_MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING =
+            "measurement_enable_source_deactivation_after_filtering";
+
     public static final String KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS =
             "measurement_debug_reporting_fallback_job_period_ms";
+
     public static final String KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS =
             "measurement_verbose_debug_reporting_fallback_job_period_ms";
 
@@ -368,6 +396,8 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED =
             "measurement_aggregate_fallback_reporting_job_persisted";
 
+    public static final String KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING =
+            "measurement_enable_aggregatable_report_payload_padding";
 
     // FLEDGE Custom Audience keys
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT =
@@ -440,6 +470,8 @@ public final class FlagsConstants {
             "protected_signals_periodic_encoding_job_period_ms";
     public static final String KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS =
             "protected_signals_periodic_encoding_job_flex_ms";
+    public static final String KEY_PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES =
+            "protected_signals_encoded_payload_max_size_bytes";
 
     // FLEDGE Ad Selection keys
     public static final String KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT =
@@ -607,9 +639,17 @@ public final class FlagsConstants {
     public static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE =
             "fledge_ad_selection_enforce_foreground_status_custom_audience";
 
+    // Protected Signals keys
+    public static final String KEY_PROTECTED_SIGNALS_CLEANUP_ENABLED =
+            "protected_signals_cleanup_enabled";
+
     // Topics invoking app status key.
     public static final String KEY_ENFORCE_FOREGROUND_STATUS_TOPICS =
             "topics_enforce_foreground_status";
+
+    // Signals invoking app status key.
+    public static final String KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS =
+            "signals_enforce_foreground_status";
 
     // AdId invoking app status key.
     public static final String KEY_ENFORCE_FOREGROUND_STATUS_ADID =
@@ -784,6 +824,9 @@ public final class FlagsConstants {
     // Consent Notification debug mode keys.
     public static final String KEY_CONSENT_NOTIFICATION_DEBUG_MODE =
             "consent_notification_debug_mode";
+
+    public static final String KEY_CONSENT_MANAGER_LAZY_ENABLE_MODE =
+            "consent_manager_lazy_enable_mode";
 
     // Consent Manager debug mode keys.
     public static final String KEY_CONSENT_MANAGER_DEBUG_MODE = "consent_manager_debug_mode";
@@ -975,6 +1018,8 @@ public final class FlagsConstants {
 
     public static final String KEY_U18_UX_ENABLED = "u18_ux_enabled";
 
+    public static final String KEY_RVC_UX_ENABLED = "rvc_ux_enabled";
+
     public static final String KEY_ENABLE_AD_SERVICES_SYSTEM_API = "enable_ad_services_system_api";
 
     public static final String KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED =
@@ -982,6 +1027,8 @@ public final class FlagsConstants {
 
     public static final String KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED =
             "is_u18_supervised_account_enabled";
+
+    public static final String KEY_AD_ID_CACHE_ENABLED = "ad_id_cache_enabled";
 
     public static final String KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT =
             "app_config_returns_enabled_by_detault";

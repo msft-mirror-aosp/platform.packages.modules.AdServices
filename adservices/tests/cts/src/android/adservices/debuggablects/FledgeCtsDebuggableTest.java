@@ -41,6 +41,7 @@ import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.AddAdSelectionFromOutcomesOverrideRequest;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
+import android.adservices.adselection.GetAdSelectionDataOutcome;
 import android.adservices.adselection.GetAdSelectionDataRequest;
 import android.adservices.adselection.PersistAdSelectionResultRequest;
 import android.adservices.adselection.ReportEventRequest;
@@ -67,20 +68,23 @@ import android.net.Uri;
 import android.os.Process;
 import android.util.Log;
 
+import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.adselection.AdCost;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.js.JSScriptEngine;
-import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -89,6 +93,7 @@ import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
 
@@ -352,27 +357,29 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     private boolean mHasAccessToDevOverrides;
 
     private String mAccessStatus;
-    private String mPreviousAppAllowList;
 
     private final ArrayList<CustomAudience> mCustomAudiencesToCleanUp = new ArrayList<>();
     private static final AtomicInteger sFrequencyCapKeyToFilter = new AtomicInteger(0);
 
+    @Rule(order = 0)
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
+    @Rule(order = 1)
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
+                    .setCompatModeFlags()
+                    .setPpapiAppAllowList(sContext.getPackageName());
+
     @Before
     public void setup() throws InterruptedException {
-        // Skip the test if it runs on unsupported platforms
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         if (SdkLevel.isAtLeastT()) {
             assertForegroundActivityStarted();
-            ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 2");
-        } else {
-            mPreviousAppAllowList =
-                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
-                            String.format(
-                                    "%s,%s",
-                                    sContext.getPackageName(), "ad-selection-from-outcomes"));
-            CompatAdServicesTestUtils.setFlags();
+            flags.setFlag(
+                    FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH,
+                    FlagsConstants.PPAPI_AND_SYSTEM_SERVER);
         }
 
         mAdSelectionClient =
@@ -434,8 +441,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
     @After
     public void tearDown() throws Exception {
-        if (!AdservicesTestHelper.isDeviceSupported()
-                || !JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable()) {
+        if (!JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable()) {
             return;
         }
 
@@ -449,11 +455,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Reset the filtering flag
         PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(false);
         AdservicesTestHelper.killAdservicesProcess(sContext);
-
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
     }
 
     @Test
@@ -4112,7 +4113,8 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     }
 
     @Test
-    public void testGetAdSelectionData_keyCouldntFetch_failure()
+    @FlakyTest(bugId = 298832350)
+    public void testGetAdSelectionData_collectsCa_success()
             throws ExecutionException, InterruptedException, TimeoutException {
         // TODO(b/293022107): Add success tests when encryption key fetch can be done in CTS
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
@@ -4129,49 +4131,82 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         joinCustomAudience(customAudience1);
         joinCustomAudience(customAudience2);
 
-        GetAdSelectionDataRequest failingRequest =
+        GetAdSelectionDataRequest request =
                 new GetAdSelectionDataRequest.Builder().setSeller(SELLER).build();
-        ThrowingRunnable runnable =
-                () ->
-                        mAdSelectionClient
-                                .getAdSelectionData(failingRequest)
-                                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        Throwable thrown = Assert.assertThrows(ExecutionException.class, runnable);
-        assertThat(thrown).hasCauseThat().isInstanceOf(IllegalStateException.class);
 
-        // TODO(b/293022107): Comment in when successful run can be achievable from CTS
-        //        GetAdSelectionDataOutcome outcome =
-        //                mAdSelectionClient
-        //                        .getAdSelectionData(request)
-        //                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        //
-        //        Assert.assertNotEquals(
-        //                AdSelectionOutcome.UNSET_AD_SELECTION_ID, outcome.getAdSelectionId());
-        //        Assert.assertNotNull(outcome.getAdSelectionData());
+        GetAdSelectionDataOutcome outcome =
+                mAdSelectionClient
+                        .getAdSelectionData(request)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        assertThat(outcome.getAdSelectionId())
+                .isNotEqualTo(AdSelectionOutcome.UNSET_AD_SELECTION_ID);
+        assertThat(outcome.getAdSelectionData()).isNotNull();
     }
 
     @Test
-    public void testPersistAdSelectionData_adSelectionIdDoesntExist_failure() {
+    @FlakyTest(bugId = 302669752)
+    public void testPersistAdSelectionData_adSelectionIdDoesntExist_failure()
+            throws ExecutionException, InterruptedException, TimeoutException {
         // TODO(b/293022107): This test is currently using a placeholder ad selection id that cause
         //  it to fail. Add success tests when encryption key fetch can be done in CTS
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
         PhFlagsFixture.overrideFledgeAdSelectionAuctionServerApisEnabled(false);
 
-        long adSelectionId = 1234567L;
-        PersistAdSelectionResultRequest failingRequest =
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        CustomAudience customAudience1 = createCustomAudience(BUYER_1, bidsForBuyer1);
+        CustomAudience customAudience2 = createCustomAudience(BUYER_2, bidsForBuyer2);
+        // Joining custom audiences, no result to do assertion on. Failures will generate an
+        // exception.
+        joinCustomAudience(customAudience1);
+        joinCustomAudience(customAudience2);
+
+        GetAdSelectionDataRequest request1 =
+                new GetAdSelectionDataRequest.Builder().setSeller(SELLER).build();
+
+        GetAdSelectionDataOutcome outcome1 =
+                mAdSelectionClient
+                        .getAdSelectionData(request1)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        assertThat(outcome1.getAdSelectionId())
+                .isNotEqualTo(AdSelectionOutcome.UNSET_AD_SELECTION_ID);
+        assertThat(outcome1.getAdSelectionData()).isNotNull();
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
+        String base64ServerResponse =
+                "6fKmaBsiN0bnJZ+7Z4rSc7rkRS1RtzJjO+M9pfbcxum2A4iPcSEK4sRHhTQf4EUDd82HImUxGYrik6UEF6"
+                        + "Ky/o4/scXj3wde0AKncnGeNtZGeL2qVdkXmVYqz1CRpsDst9XvMev+dYDHGl7iSfr1kZqNDF"
+                        + "ij+q/lCgCVO2AqXNP8sdi0mhc6GpdfTftLebkIAV6oHXVgbPbb71WCv5VaipxJz3Uok/anZN"
+                        + "zCXQQ/gfoPA1xleWZ7leNOTYJxMBfEASoIpsFmHfc1+VRUKYTemM0fMGA6zwWpyrKCJLec98"
+                        + "D894+6zQhnxElwIa7JtimBMO2jFE3zwLG9/PrhURYANJknYFr0zsndnO4u3PA2lRP7IHRpFQ"
+                        + "Vx7CfZaXJYZmat4igpELp1VsNq4zfhmakEyhDF08TYyac+FyD6WU4fv8y9RNlgLzx0EhUcsO"
+                        + "7TVciCic0paM4QGUCmefSMoY2LfodfZPFptDD4at0Un7ptGwviKXOx2vUDy7jcGKOZ6AP167"
+                        + "HeX9LhKHHWPsau8DyPZnU35Rf8gfa4FE9Mdem6vBj5pQNA41lHuz4YewQ/GvkRvtg0ZQCDK5"
+                        + "7wGSz6ue1a/JUTD21xJjP9XOb7BJP2A8Vuob+K2r45t5sfDvHhYbTpTfOD7hA/zhLHf2Ra/+"
+                        + "D36Tve3dmggMZIVnILIRUo/qksd54APEAAkHdpAo94SCpW37HBI1Q3NCgnxzn4ebnO86y87g"
+                        + "Pe8Gxft1AhQb1p+gc=";
+        PersistAdSelectionResultRequest request2 =
                 new PersistAdSelectionResultRequest.Builder()
-                        .setAdSelectionId(adSelectionId)
                         .setSeller(SELLER)
+                        .setAdSelectionId(outcome1.getAdSelectionId())
+                        .setAdSelectionResult(BaseEncoding.base64().decode(base64ServerResponse))
                         .build();
         ThrowingRunnable runnable =
                 () ->
                         mAdSelectionClient
-                                .persistAdSelectionResult(failingRequest)
+                                .persistAdSelectionResult(request2)
                                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         Throwable thrown = Assert.assertThrows(ExecutionException.class, runnable);
-        assertThat(thrown).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
-        // TODO(b/293022107): Assert results when overrides are implemented
+        assertThat(thrown).hasCauseThat().isInstanceOf(IllegalStateException.class);
+
+        // TODO(b/293022107): Assert render uri when proper payload is generated or a call to
+        //  auction servers is able to be made
+        // assertThat(outcome2.getAdSelectionId()).isEqualTo(outcome1.getAdSelectionId());
+        // assertThat(outcome2.getRenderUri()).isNotEqualTo(Uri.EMPTY);
     }
 
     private String insertJsWait(long waitTime) {

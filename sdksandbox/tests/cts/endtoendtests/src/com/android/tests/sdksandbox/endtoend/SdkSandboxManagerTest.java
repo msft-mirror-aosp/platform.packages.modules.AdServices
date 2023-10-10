@@ -28,8 +28,10 @@ import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentat
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
@@ -48,18 +50,20 @@ import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PermissionInfo;
+import android.content.res.Configuration;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Parcel;
 import android.os.RemoteException;
-import android.view.Surface;
 
 import androidx.lifecycle.Lifecycle;
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
+import androidx.test.uiautomator.Until;
 
 import com.android.compatibility.common.util.DeviceConfigStateHelper;
 import com.android.ctssdkprovider.IActivityActionExecutor;
@@ -70,7 +74,6 @@ import com.android.modules.utils.build.SdkLevel;
 import com.google.common.truth.Expect;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -78,12 +81,11 @@ import org.junit.runners.JUnit4;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.util.Random;
 
 /** End-to-end tests of {@link SdkSandboxManager} APIs. */
 @RunWith(JUnit4.class)
-public final class SdkSandboxManagerTest {
+public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
 
     private static final String TAG = SdkSandboxManagerTest.class.getSimpleName();
     private static final String NON_EXISTENT_SDK = "com.android.not_exist";
@@ -102,6 +104,12 @@ public final class SdkSandboxManagerTest {
             "ActivitySecurity__asm_restrictions_enabled";
     private static final String UNREGISTER_BEFORE_STARTING_KEY = "UNREGISTER_BEFORE_STARTING_KEY";
     private static final String ACTIVITY_STARTER_KEY = "ACTIVITY_STARTER_KEY";
+    private static final String TEXT_KEY = "TEXT_KEY";
+    private static final int WAIT_FOR_TEXT_IN_MS = 1000;
+    private static final String ORIENTATION_PORTRAIT_MESSAGE =
+            "orientation: " + Configuration.ORIENTATION_PORTRAIT;
+    private static final String ORIENTATION_LANDSCAPE_MESSAGE =
+            "orientation: " + Configuration.ORIENTATION_LANDSCAPE;
     private static final UiDevice sUiDevice = UiDevice.getInstance(getInstrumentation());
 
     @Rule(order = 0)
@@ -121,11 +129,12 @@ public final class SdkSandboxManagerTest {
     private final DeviceConfigStateHelper mDeviceConfig =
             new DeviceConfigStateHelper(NAMESPACE_WINDOW_MANAGER);
 
+    private final Random mRandom = new Random();
+
     @Before
     public void setup() throws Exception {
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
         mSdkSandboxManager = context.getSystemService(SdkSandboxManager.class);
-        killSandboxIfExists();
         mScenario = activityScenarioRule.getScenario();
         mDeviceConfig.set(ASM_RESTRICTIONS_ENABLED, "1");
         sUiDevice.setOrientationNatural();
@@ -765,9 +774,13 @@ public final class SdkSandboxManagerTest {
         assertThat(clearTopActivityStarter.isActivityResumed()).isTrue();
     }
 
+    /**
+     * Ensure that SDK can lock back navigation
+     *
+     * @throws RemoteException
+     */
     @Test
-    @Ignore("b/298171583")
-    public void testBackNavigation() throws Exception {
+    public void testBackNavigationControl() throws RemoteException {
         assumeTrue(SdkLevel.isAtLeastU());
 
         ICtsSdkProviderApi sdk = loadSdk();
@@ -778,28 +791,28 @@ public final class SdkSandboxManagerTest {
         assertThat(mScenario.getState()).isIn(Arrays.asList(State.CREATED, State.STARTED));
         assertThat(sandboxActivityStarter.isActivityResumed()).isTrue();
 
-        try {
-            actionExecutor.disableBackButton();
-        } catch (RemoteException e) {
-            fail("Error while disabling back button: " + e.getMessage());
-        }
+        actionExecutor.disableBackButton();
         sUiDevice.pressBack();
+        assertFalse(
+                sUiDevice.wait(Until.hasObject(By.text("DEFAULT_SHOW_TEXT")), WAIT_FOR_TEXT_IN_MS));
         assertThat(mScenario.getState()).isIn(Arrays.asList(State.CREATED, State.STARTED));
         assertThat(sandboxActivityStarter.isActivityResumed()).isTrue();
 
-        try {
-            actionExecutor.enableBackButton();
-        } catch (RemoteException e) {
-            fail("Error while enabling back button: " + e.getMessage());
-        }
+        actionExecutor.enableBackButton();
         sUiDevice.pressBack();
+        assertTrue(
+                sUiDevice.wait(Until.hasObject(By.text("DEFAULT_SHOW_TEXT")), WAIT_FOR_TEXT_IN_MS));
         assertThat(mScenario.getState()).isEqualTo(State.RESUMED);
         assertThat(sandboxActivityStarter.isActivityResumed()).isFalse();
     }
 
+    /**
+     * Tests that orientation work for sandbox activity
+     *
+     * @throws RemoteException
+     */
     @Test
-    @Ignore("b/298171583")
-    public void testSandboxActivityShouldRotateIfNotLocked() throws Exception {
+    public void testSandboxActivityShouldRotateIfNotLocked() throws RemoteException {
         assumeTrue(SdkLevel.isAtLeastU());
 
         ICtsSdkProviderApi sdk = loadSdk();
@@ -809,19 +822,28 @@ public final class SdkSandboxManagerTest {
         assertThat(mScenario.getState()).isIn(Arrays.asList(State.CREATED, State.STARTED));
         assertThat(sandboxActivityStarter.isActivityResumed()).isTrue();
 
-        // Assert Natural Rotation.
-        assertThat(sUiDevice.getDisplayRotation()).isEqualTo(Surface.ROTATION_0);
-        // Rotate device to landscape
+        // Assert Portrait Rotation.
+        assertTrue(
+                sUiDevice.wait(
+                        Until.hasObject(By.textContains(ORIENTATION_PORTRAIT_MESSAGE)),
+                        WAIT_FOR_TEXT_IN_MS));
+
         sUiDevice.setOrientationLandscape();
-        // Without SDK locking the orientation, display should rotate.
-        assertThat(sUiDevice.getDisplayRotation()).isEqualTo(Surface.ROTATION_90);
+        assertTrue(
+                sUiDevice.wait(
+                        Until.hasObject(By.textContains(ORIENTATION_LANDSCAPE_MESSAGE)),
+                        WAIT_FOR_TEXT_IN_MS));
         assertThat(mScenario.getState()).isIn(Arrays.asList(State.CREATED, State.STARTED));
         assertThat(sandboxActivityStarter.isActivityResumed()).isTrue();
     }
 
+    /**
+     * Tests that SDK can lock sandbox activity orientation
+     *
+     * @throws Exception
+     */
     @Test
-    @Ignore("b/298171583")
-    public void testSandboxActivityOrientationLocking() throws Exception {
+    public void testSandboxActivityOrientationLocking() throws RemoteException {
         assumeTrue(SdkLevel.isAtLeastU());
 
         ICtsSdkProviderApi sdk = loadSdk();
@@ -831,28 +853,40 @@ public final class SdkSandboxManagerTest {
         assertThat(mScenario.getState()).isIn(Arrays.asList(State.CREATED, State.STARTED));
         assertThat(sandboxActivityStarter.isActivityResumed()).isTrue();
 
-        // Assert Natural Rotation.
-        assertThat(sUiDevice.getDisplayRotation()).isEqualTo(Surface.ROTATION_0);
+        // Assert Portrait Rotation.
+        assertTrue(
+                sUiDevice.wait(
+                        Until.hasObject(By.textContains(ORIENTATION_PORTRAIT_MESSAGE)),
+                        WAIT_FOR_TEXT_IN_MS));
 
-        // Locking orientation to landscape should override device current orientation
-        // (portrait) and restart the sandbox activity in the landscape orientation.
+        // Locking orientation to landscape
         actionExecutor.setOrientationToLandscape();
-
-        assertThat(sUiDevice.getDisplayRotation()).isEqualTo(Surface.ROTATION_90);
+        assertTrue(
+                sUiDevice.wait(
+                        Until.hasObject(By.textContains(ORIENTATION_LANDSCAPE_MESSAGE)),
+                        WAIT_FOR_TEXT_IN_MS));
         // Rotation the device should not affect the locked display orientation.
         sUiDevice.setOrientationPortrait();
-        assertThat(sUiDevice.getDisplayRotation()).isEqualTo(Surface.ROTATION_90);
+        assertFalse(
+                sUiDevice.wait(
+                        Until.hasObject(By.textContains(ORIENTATION_PORTRAIT_MESSAGE)),
+                        WAIT_FOR_TEXT_IN_MS));
         assertThat(mScenario.getState()).isIn(Arrays.asList(State.CREATED, State.STARTED));
         assertThat(sandboxActivityStarter.isActivityResumed()).isTrue();
 
-        // Locking orientation to portrait should override device current orientation
-        // (landscape) and restart the sandbox activity in the portrait orientation.
+        // Locking orientation to portrait
         actionExecutor.setOrientationToPortrait();
+        assertTrue(
+                sUiDevice.wait(
+                        Until.hasObject(By.textContains(ORIENTATION_PORTRAIT_MESSAGE)),
+                        WAIT_FOR_TEXT_IN_MS));
 
-        assertThat(sUiDevice.getDisplayRotation()).isEqualTo(Surface.ROTATION_0);
         // Rotation the device should not affect the locked display orientation.
         sUiDevice.setOrientationLandscape();
-        assertThat(sUiDevice.getDisplayRotation()).isEqualTo(Surface.ROTATION_0);
+        assertFalse(
+                sUiDevice.wait(
+                        Until.hasObject(By.textContains(ORIENTATION_LANDSCAPE_MESSAGE)),
+                        WAIT_FOR_TEXT_IN_MS));
         assertThat(mScenario.getState()).isIn(Arrays.asList(State.CREATED, State.STARTED));
         assertThat(sandboxActivityStarter.isActivityResumed()).isTrue();
     }
@@ -873,6 +907,43 @@ public final class SdkSandboxManagerTest {
 
         assertThat(mScenario.getState()).isEqualTo(State.RESUMED);
         assertThat(activityStarter.isActivityResumed()).isFalse();
+    }
+
+    @Test
+    public void testSandboxActivityStartIntentViewWithNoSecurityExceptions() throws Exception {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        ICtsSdkProviderApi sdk = loadSdk();
+
+        ActivityStarter sandboxActivityStarter = new ActivityStarter();
+        IActivityActionExecutor actionExecutor = startSandboxActivity(sdk, sandboxActivityStarter);
+        assertThat(mScenario.getState()).isIn(Arrays.asList(State.CREATED, State.STARTED));
+        assertThat(sandboxActivityStarter.isActivityResumed()).isTrue();
+
+        actionExecutor.openLandingPage();
+    }
+
+    /**
+     * Ensure that SDK can finish the sandbox activity.
+     *
+     * @throws RemoteException
+     */
+    @Test
+    public void testSdkCanFinishSandboxActivity() throws RemoteException {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        ICtsSdkProviderApi sdk = loadSdk();
+
+        ActivityStarter sandboxActivityStarter = new ActivityStarter();
+        IActivityActionExecutor actionExecutor = startSandboxActivity(sdk, sandboxActivityStarter);
+        assertThat(mScenario.getState()).isIn(Arrays.asList(State.CREATED, State.STARTED));
+        assertThat(sandboxActivityStarter.isActivityResumed()).isTrue();
+
+        actionExecutor.finish();
+        assertTrue(
+                sUiDevice.wait(Until.hasObject(By.text("DEFAULT_SHOW_TEXT")), WAIT_FOR_TEXT_IN_MS));
+        assertThat(mScenario.getState()).isEqualTo(State.RESUMED);
+        assertThat(sandboxActivityStarter.isActivityResumed()).isFalse();
     }
 
     // Helper method to load SDK_NAME_1
@@ -900,6 +971,8 @@ public final class SdkSandboxManagerTest {
 
     private IActivityActionExecutor startSandboxActivity(
             ICtsSdkProviderApi sdk, ActivityStarter activityStarter, Bundle extras) {
+        final String randomText = mRandom.nextInt(Integer.MAX_VALUE) + "";
+        extras.putString(TEXT_KEY, randomText);
         ActivityExecutorContainer activityExecutorContainer = new ActivityExecutorContainer();
         mScenario.onActivity(
                 clientActivity -> {
@@ -916,6 +989,15 @@ public final class SdkSandboxManagerTest {
                 });
         IActivityActionExecutor actionExecutor = activityExecutorContainer.getExecutor();
         assertThat(actionExecutor).isNotNull();
+        if (extras.containsKey(UNREGISTER_BEFORE_STARTING_KEY)) {
+            assertFalse(
+                    sUiDevice.wait(
+                            Until.hasObject(By.textContains(randomText)), WAIT_FOR_TEXT_IN_MS));
+        } else {
+            assertTrue(
+                    sUiDevice.wait(
+                            Until.hasObject(By.textContains(randomText)), WAIT_FOR_TEXT_IN_MS));
+        }
         return actionExecutor;
     }
 
@@ -935,7 +1017,6 @@ public final class SdkSandboxManagerTest {
     private class ActivityStarter extends IActivityStarter.Stub {
         private Activity mFromActivity;
         private boolean mActivityResumed = false;
-        private final CountDownLatch mWaitingForActivityToStartLatch = new CountDownLatch(1);
 
         ActivityStarter() {}
 
@@ -945,14 +1026,12 @@ public final class SdkSandboxManagerTest {
             assertThat(mFromActivity).isNotNull();
 
             mSdkSandboxManager.startSdkSandboxActivity(mFromActivity, token);
-            waitForActivityToBeResumed();
         }
 
         // It is called to notify that onResume() is called against the new started Activity.
         @Override
         public void onActivityResumed() {
             mActivityResumed = true;
-            mWaitingForActivityToStartLatch.countDown();
         }
 
         // It is called to notify the new started Activity is no longer in the Resumed state.
@@ -971,13 +1050,15 @@ public final class SdkSandboxManagerTest {
         public void startLocalActivity(int flags) {
             assertThat(mFromActivity).isNotNull();
 
-            Intent intent = new Intent(mFromActivity, TestActivity.class);
-            Bundle params = new Bundle();
+            final Intent intent = new Intent(mFromActivity, TestActivity.class);
+            final Bundle params = new Bundle();
+            final String randomText = mRandom.nextInt(Integer.MAX_VALUE) + "";
+            params.putString(TEXT_KEY, randomText);
             params.putBinder(ACTIVITY_STARTER_KEY, this);
             intent.putExtras(params);
             intent.addFlags(flags);
             mFromActivity.startActivity(intent);
-            waitForActivityToBeResumed();
+            assertTrue(sUiDevice.wait(Until.hasObject(By.text(randomText)), WAIT_FOR_TEXT_IN_MS));
         }
 
         public void setFromActivity(Activity activity) {
@@ -986,14 +1067,6 @@ public final class SdkSandboxManagerTest {
 
         public boolean isActivityResumed() {
             return mActivityResumed;
-        }
-
-        private void waitForActivityToBeResumed() {
-            try {
-                mWaitingForActivityToStartLatch.await(1, TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
-                fail("Exception while waiting for the sandbox activity: " + e.getMessage());
-            }
         }
     }
 
@@ -1015,20 +1088,5 @@ public final class SdkSandboxManagerTest {
         FakeLoadSdkCallback callback2 = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_NAME_2, new Bundle(), Runnable::run, callback2);
         callback2.assertLoadSdkIsSuccessful();
-    }
-
-    // Returns true if the sandbox was already likely existing, false otherwise.
-    private boolean killSandboxIfExists() throws Exception {
-        FakeSdkSandboxProcessDeathCallback callback = new FakeSdkSandboxProcessDeathCallback();
-        mSdkSandboxManager.addSdkSandboxProcessDeathCallback(Runnable::run, callback);
-        killSandbox();
-
-        return callback.waitForSandboxDeath();
-    }
-
-    private void killSandbox() throws Exception {
-        // TODO(b/241542162): Avoid using reflection as a workaround once test apis can be run
-        //  without issue.
-        mSdkSandboxManager.getClass().getMethod("stopSdkSandbox").invoke(mSdkSandboxManager);
     }
 }

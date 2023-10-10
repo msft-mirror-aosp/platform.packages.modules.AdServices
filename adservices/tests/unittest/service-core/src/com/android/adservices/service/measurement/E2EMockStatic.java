@@ -41,6 +41,7 @@ public final class E2EMockStatic implements StaticMockFixture {
     public E2EMockStatic(E2ETest.ParamsProvider paramsProvider) {
         mParams = paramsProvider;
     }
+
     /**
      * {@inheritDoc}
      */
@@ -58,23 +59,8 @@ public final class E2EMockStatic implements StaticMockFixture {
     @Override
     public void setUpMockBehaviors() {
         // Privacy params
-        doAnswer((Answer<Integer>) invocation -> mParams.getMaxAttributionPerRateLimitWindow())
-                .when(
-                        () ->
-                                FlagsFactory.getFlags()
-                                        .getMeasurementMaxAttributionPerRateLimitWindow());
-        doAnswer((Answer<Integer>) invocation ->
-                mParams.getNavigationTriggerDataCardinality())
-                    .when(() -> PrivacyParams.getNavigationTriggerDataCardinality());
-        doAnswer((Answer<Integer>) invocation -> mParams.getMaxDistinctEnrollmentsInAttribution())
-                .when(
-                        () ->
-                                FlagsFactory.getFlags()
-                                        .getMeasurementMaxDistinctEnrollmentsInAttribution());
-        doAnswer((Answer<Integer>) invocation ->
-                mParams.getMaxDistinctEnrollmentsPerPublisherXDestinationInSource())
-                    .when(() -> PrivacyParams
-                            .getMaxDistinctEnrollmentsPerPublisherXDestinationInSource());
+        doAnswer((Answer<Integer>) invocation -> mParams.getNavigationTriggerDataCardinality())
+                .when(() -> PrivacyParams.getNavigationTriggerDataCardinality());
         // System health params
         doAnswer((Answer<Integer>) invocation -> mParams.getMaxSourcesPerPublisher())
                 .when(() -> FlagsFactory.getFlags().getMeasurementMaxSourcesPerPublisher());
@@ -93,11 +79,9 @@ public final class E2EMockStatic implements StaticMockFixture {
                                         any(), any(), anyString()));
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
-    public void tearDown() { }
+    public void tearDown() {}
 
     public static class E2EMockStaticRule extends AdServicesExtendedMockitoRule {
         public E2EMockStaticRule(E2ETest.ParamsProvider paramsProvider) {

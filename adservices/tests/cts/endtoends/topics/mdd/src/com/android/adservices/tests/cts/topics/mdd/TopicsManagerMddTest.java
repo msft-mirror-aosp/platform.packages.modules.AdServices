@@ -24,6 +24,7 @@ import android.adservices.topics.Topic;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
@@ -125,6 +126,7 @@ public class TopicsManagerMddTest {
     }
 
     @Test
+    @FlakyTest(bugId = 299573314)
     public void testTopicsManager_downloadModelViaMdd_runPrecomputedClassifier() throws Exception {
         // The Test App has 1 SDK: sdk1
         // sdk1 calls the Topics API.

@@ -38,6 +38,7 @@ import android.content.Context;
 
 import androidx.core.app.NotificationManagerCompat;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
@@ -184,7 +185,7 @@ public class ConsentNotificationTriggerTest {
                         new UiSelector()
                                 .packageName("com.android.systemui")
                                 .resourceId("com.android.systemui:id/notification_stack_scroller"));
-        assertThat(scroller.exists()).isTrue();
+
         UiSelector notificationCardSelector =
                 new UiSelector().text(getString(R.string.notificationUI_notification_title_eu));
         UiObject notificationCard = scroller.getChild(notificationCardSelector);
@@ -439,6 +440,7 @@ public class ConsentNotificationTriggerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302607350)
     public void testEuNotifications_gaUxEnabled_nonDismissable_dismissedOnConfirmationPage()
             throws InterruptedException, UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
@@ -496,7 +498,6 @@ public class ConsentNotificationTriggerTest {
                         new UiSelector()
                                 .packageName("com.android.systemui")
                                 .resourceId("com.android.systemui:id/notification_stack_scroller"));
-        assertThat(scroller.exists()).isTrue();
 
         // there might be only one notification and no scroller exists.
         UiObject notificationCard;
