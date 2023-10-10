@@ -25,7 +25,7 @@ android_test {
         "androidx.test.ext.junit",
         "androidx.test.runner",
         "compatibility-device-util-axt-minus-dexmaker",
-        "truth-prebuilt",
+        "truth",
         "modules-utils-build",
         "SdkSandboxTestUtils",
         "CtsSdkProviderApi",
@@ -37,8 +37,8 @@ android_test {
         "framework-configinfrastructure",
     ],
     data: [
-      ":SdkSandboxManagerCtsProvider",
-      ":EmptySdkProviderApp",
+        ":SdkSandboxManagerCtsProvider",
+        ":EmptySdkProviderApp",
     ],
     min_sdk_version: "Tiramisu",
     target_sdk_version: "Tiramisu",
@@ -57,7 +57,7 @@ android_test {
     static_libs: [
         "androidx.test.ext.junit",
         "androidx.test.runner",
-        "truth-prebuilt",
+        "truth",
         "SdkSandboxTestUtils",
     ],
     libs: [
@@ -66,7 +66,7 @@ android_test {
         "android.test.runner",
     ],
     data: [
-      ":SdkSandboxManagerCtsProvider",
+        ":SdkSandboxManagerCtsProvider",
     ],
     test_config: "DisabledAndroidTest.xml",
     manifest: "DisabledAndroidManifest.xml",
