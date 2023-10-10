@@ -29,7 +29,7 @@ android_test {
         "androidx.test.runner",
         "compatibility-device-util-axt",
         "SdkSandboxTestUtils",
-        "truth-prebuilt",
+        "truth",
     ],
     libs: [
         "android.test.base",
@@ -37,7 +37,7 @@ android_test {
         "android.test.runner",
     ],
     data: [
-      ":SdkFledge",
+        ":SdkFledge",
     ],
     min_sdk_version: "33",
     target_sdk_version: "33",

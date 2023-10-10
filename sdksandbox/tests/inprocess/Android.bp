@@ -35,7 +35,7 @@ android_test {
         "androidx.test.rules",
         "androidx.test.ext.truth",
         "androidx.test.ext.junit",
-        "truth-prebuilt",
+        "truth",
     ],
     test_suites: ["general-tests"],
 }

@@ -19,10 +19,10 @@ package {
 android_library {
     name: "CtsSdkSandboxTestScenario",
     srcs: [
-         "src/**/*.java",
+        "src/**/*.java",
     ],
     static_libs: [
-        "truth-prebuilt",
+        "truth",
         "CtsSdkSandboxTestExecutor",
         "SdkSandboxTestUtils",
         "compatibility-device-util-axt",
@@ -35,4 +35,3 @@ android_library {
     manifest: "AndroidManifest.xml",
     resource_dirs: ["res"],
 }
-
