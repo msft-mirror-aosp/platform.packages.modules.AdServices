@@ -46,6 +46,11 @@ import java.util.Objects;
  * <p>Most methods set {@link android.provider.DeviceConfig} flags, although some sets {@link
  * android.os.SystemProperties} instead - those are typically suffixed with {@code forTests}
  */
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// NOTE: DO NOT add new setXyz() methods, unless they need non-trivial logic. Instead, let your   //
+// test call setFlags(flagName) (statically import FlagsConstant.flagName), which will make it    //
+// easier to transition the test to an annotated-base approach.                                   //
+////////////////////////////////////////////////////////////////////////////////////////////////////
 abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFlagsSetterRule<T>>
         implements TestRule {
 
@@ -308,7 +313,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     /**
      * Overrides flag used by {@link com.android.adservices.service.PhFlags#getPpapiAppAllowList()}.
      */
-    // <p> TODO (b/303901926) - apploy consistent naming to allow list methods
+    // <p> TODO (b/303901926) - apply consistent naming to allow list methods
     public T setPpapiAppAllowList(String value) {
         return setOrCacheFlag(FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST, value, ALLOWLIST_SEPARATOR);
     }
@@ -366,6 +371,12 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     public T setMddBackgroundTaskKillSwitch(boolean value) {
         return setFlag(FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH, value);
     }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // NOTE: DO NOT add new setXyz() methods, unless they need non-trivial logic. Instead, let    //
+    // your test call setFlags(flagName) (statically import FlagsConstant.flagName), which will   //
+    // make it easier to transition the test to an annotated-base approach.                       //
+    ////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
      * Sets all flags needed to enable compatibility mode, according to the Android version of the
@@ -429,6 +440,12 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
                     setEnableBackCompat(true);
                 });
     }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // NOTE: DO NOT add new setXyz() methods, unless they need non-trivial logic. Instead, let    //
+    // your test call setFlags(flagName) (statically import FlagsConstant.flagName), which will   //
+    // make it easier to transition the test to an annotated-base approach.                       //
+    ////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
      * @deprecated only used by {@code CompatAdServicesTestUtils.resetFlagsToDefault()} - flags are
