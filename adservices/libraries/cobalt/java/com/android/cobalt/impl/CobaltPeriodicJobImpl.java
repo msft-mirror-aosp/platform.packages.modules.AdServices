@@ -25,6 +25,7 @@ import android.util.Log;
 
 import com.android.cobalt.CobaltPeriodicJob;
 import com.android.cobalt.crypto.Encrypter;
+import com.android.cobalt.crypto.EncryptionFailedException;
 import com.android.cobalt.data.DataService;
 import com.android.cobalt.data.ObservationGenerator;
 import com.android.cobalt.data.ObservationStoreEntity;
@@ -53,15 +54,21 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningScheduledExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.ByteString;
 
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /** Implementation of observation generation and upload for Cobalt. */
 public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
@@ -80,6 +87,8 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
     private final ReleaseStage mReleaseStage;
     private final DataService mDataService;
     private final ExecutorService mExecutor;
+    private final ListeningScheduledExecutorService mScheduledExecutor;
+    private final Duration mUploadDoneDelay;
     private final SystemClock mSystemClock;
     private final boolean mEnabled;
     private final SystemData mSystemData;
@@ -94,6 +103,7 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
             @NonNull ReleaseStage releaseStage,
             @NonNull DataService dataService,
             @NonNull ExecutorService executor,
+            @NonNull ScheduledExecutorService scheduledExecutor,
             @NonNull SystemClock systemClock,
             @NonNull SystemData systemData,
             @NonNull PrivacyGenerator privacyGenerator,
@@ -101,11 +111,15 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
             @NonNull Uploader uploader,
             @NonNull Encrypter encrypter,
             @NonNull ByteString apiKey,
+            @NonNull Duration uploadDoneDelay,
             boolean enabled) {
         mRegistry = Objects.requireNonNull(registry);
         mReleaseStage = Objects.requireNonNull(releaseStage);
         mDataService = Objects.requireNonNull(dataService);
         mExecutor = Objects.requireNonNull(executor);
+        mScheduledExecutor =
+                MoreExecutors.listeningDecorator(Objects.requireNonNull(scheduledExecutor));
+        mUploadDoneDelay = Objects.requireNonNull(uploadDoneDelay);
         mSystemClock = Objects.requireNonNull(systemClock);
         mEnabled = enabled;
         mSystemData = Objects.requireNonNull(systemData);
@@ -142,7 +156,8 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
                 .catching(Throwable.class, this::logSaveFailure, mExecutor)
                 .transform(unused -> mDataService.getOldestObservationsToSend(), mExecutor)
                 .transform(this::uploadObservations, mExecutor)
-                .catching(RuntimeException.class, this::logUploadFailure, mExecutor);
+                .catching(RuntimeException.class, this::logUploadFailure, mExecutor)
+                .transformAsync(unused -> uploadDone(), mExecutor);
     }
 
     /**
@@ -211,7 +226,8 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
      * Upload a set of observations, working in chunks to ensure data sent is below the limit
      * imposed by Cobalt's backend.
      */
-    private Void uploadObservations(ImmutableList<ObservationStoreEntity> observations) {
+    private Void uploadObservations(ImmutableList<ObservationStoreEntity> observations)
+            throws EncryptionFailedException {
         // Send observations in limited-sized batches to ensure they're under Cobalt's size limit.
         int currentTotalBytes = 0;
         ImmutableList.Builder<ObservationBatch> currentBatches = ImmutableList.builder();
@@ -243,7 +259,8 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
     /** Upload a set of observation batches and remove them from the observation store. */
     private void uploadAndRemoveObservationBatches(
             ImmutableList<ObservationBatch> observationBatches,
-            ImmutableList<Integer> observationStoreIds) {
+            ImmutableList<Integer> observationStoreIds)
+            throws EncryptionFailedException {
         checkArgument(
                 observationBatches.size() == observationStoreIds.size(),
                 "Mismatch in number of observation batches and observation store ids");
@@ -252,7 +269,9 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
         }
 
         logInfo("Uploading %s observations", observationBatches.size());
-        mUploader.upload(mEncrypter.encryptEnvelope(buildEnvelope(observationBatches)));
+        Optional<EncryptedMessage> encryptionResult =
+                mEncrypter.encryptEnvelope(buildEnvelope(observationBatches));
+        encryptionResult.ifPresent(mUploader::upload);
         mDataService.removeSentObservations(observationStoreIds);
     }
 
@@ -315,6 +334,17 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
         }
 
         return metricsAndReports.build();
+    }
+
+    private FluentFuture<Void> uploadDone() {
+        return FluentFuture.from(
+                mScheduledExecutor.schedule(
+                        () -> {
+                            mUploader.uploadDone();
+                            return null;
+                        },
+                        mUploadDoneDelay.toNanos(),
+                        TimeUnit.NANOSECONDS));
     }
 
     private Void logSaveFailure(Throwable t) {

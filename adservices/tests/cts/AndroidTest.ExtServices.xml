@@ -27,15 +27,20 @@
         <option name="max-sdk-level" value="32"/>
     </object>
 
-    <!-- Prevent tests from running on Android R- -->
+    <!-- Prevent tests from running on Android Q- -->
     <object type="module_controller"
-            class="com.android.tradefed.testtype.suite.module.Sdk31ModuleController"/>
+            class="com.android.tradefed.testtype.suite.module.Sdk30ModuleController"/>
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
         <option name="test-file-name" value="CtsAdExtServicesDeviceTestCases.apk"/>
     </target_preparer>
-
+    <target_preparer class="com.android.tradefed.targetprep.RebootTargetPreparer">
+        <option name="pre-reboot" value="true"/>
+    </target_preparer>
+    <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
+        <option name="run-command" value="am wait-for-broadcast-idle"/>
+    </target_preparer>
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
         <option name="run-command" value="setprop log.tag.adservices VERBOSE"/>
         <option name="run-command" value="setprop log.tag.adservices.topics VERBOSE"/>
@@ -90,6 +95,6 @@
         <option name="mainline-module-package-name" value="com.google.android.extservices"/>
     </object>
     <option name="config-descriptor:metadata" key="mainline-param"
-            value="com.google.android.extservices_sminus.apex"/>
+            value="com.google.android.extservices.apex"/>
 </configuration>
 

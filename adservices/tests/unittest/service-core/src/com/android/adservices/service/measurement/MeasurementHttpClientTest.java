@@ -28,7 +28,8 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.MockWebServerRuleFactory;
-import com.android.adservices.service.measurement.util.Web;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.WebAddresses;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
@@ -42,6 +43,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -69,6 +71,15 @@ public final class MeasurementHttpClientTest {
         Assert.assertEquals(
                 MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS, urlConnection.getConnectTimeout());
         Assert.assertEquals(MEASUREMENT_NETWORK_READ_TIMEOUT_MS, urlConnection.getReadTimeout());
+    }
+
+    @Test
+    public void testSetup_SetsMainlineModuleVersionAsHeader() throws IOException {
+        final URL url = new URL("https://adtech.com");
+        final URLConnection urlConnection = mNetworkConnection.setup(url);
+        Assert.assertEquals(
+                FlagsFactory.getFlagsForTest().getMainlineTrainVersion(),
+                urlConnection.getRequestProperty("Version"));
     }
 
     @Test
@@ -115,7 +126,7 @@ public final class MeasurementHttpClientTest {
 
             final URL url = server.getUrl("/test");
 
-            Assert.assertTrue(Web.isLocalhost(Uri.parse(url.toString())));
+            Assert.assertTrue(WebAddresses.isLocalhost(Uri.parse(url.toString())));
 
             final HttpURLConnection urlConnection =
                     (HttpURLConnection) mNetworkConnection.setup(url);
@@ -134,11 +145,11 @@ public final class MeasurementHttpClientTest {
         MockWebServer server = null;
         final MockitoSession mockitoSession =
                 ExtendedMockito.mockitoSession()
-                        .mockStatic(Web.class)
+                        .mockStatic(WebAddresses.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
         try {
-            ExtendedMockito.doReturn(false).when(() -> Web.isLocalhost(any(Uri.class)));
+            ExtendedMockito.doReturn(false).when(() -> WebAddresses.isLocalhost(any(Uri.class)));
             server =
                     mMockWebServerRule.startMockWebServer(
                             request -> {
@@ -151,7 +162,7 @@ public final class MeasurementHttpClientTest {
 
             final URL url = server.getUrl("/test");
 
-            Assert.assertFalse(Web.isLocalhost(Uri.parse(url.toString())));
+            Assert.assertFalse(WebAddresses.isLocalhost(Uri.parse(url.toString())));
 
             final HttpURLConnection urlConnection =
                     (HttpURLConnection) mNetworkConnection.setup(url);

@@ -20,7 +20,10 @@ import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_STATE_COMPAT;
 import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE;
 import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE_COMPAT;
+import static android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID;
+import static android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID_COMPAT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 
@@ -31,17 +34,28 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX;
+import static com.android.adservices.service.ui.constants.DebugMessages.BACK_COMPAT_FEATURE_ENABLED_MESSAGE;
+import static com.android.adservices.service.ui.constants.DebugMessages.ENABLE_AD_SERVICES_API_CALLED_MESSAGE;
+import static com.android.adservices.service.ui.constants.DebugMessages.ENABLE_AD_SERVICES_API_DISABLED_MESSAGE;
+import static com.android.adservices.service.ui.constants.DebugMessages.ENABLE_AD_SERVICES_API_ENABLED_MESSAGE;
+import static com.android.adservices.service.ui.constants.DebugMessages.IS_AD_SERVICES_ENABLED_API_CALLED_MESSAGE;
+import static com.android.adservices.service.ui.constants.DebugMessages.SET_AD_SERVICES_ENABLED_API_CALLED_MESSAGE;
+import static com.android.adservices.service.ui.constants.DebugMessages.UNAUTHORIZED_CALLER_MESSAGE;
 
+import android.adservices.adid.AdId;
 import android.adservices.common.AdServicesStates;
 import android.adservices.common.EnableAdServicesResponse;
 import android.adservices.common.IAdServicesCommonCallback;
 import android.adservices.common.IAdServicesCommonService;
 import android.adservices.common.IEnableAdServicesCallback;
+import android.adservices.common.IUpdateAdIdCallback;
 import android.adservices.common.IsAdServicesEnabledResult;
+import android.adservices.common.UpdateAdIdRequest;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Binder;
 import android.os.Build;
 import android.os.RemoteException;
 
@@ -51,6 +65,8 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.adid.AdIdCacheManager;
+import com.android.adservices.service.adid.AdIdWorker;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.consent.DeviceRegionProvider;
@@ -74,18 +90,26 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
     private final UxEngine mUxEngine;
     private final UxStatesManager mUxStatesManager;
     private final Flags mFlags;
+    private final AdIdWorker mAdIdWorker;
 
     public AdServicesCommonServiceImpl(
-            Context context, Flags flags, UxEngine uxEngine, UxStatesManager uxStatesManager) {
+            Context context,
+            Flags flags,
+            UxEngine uxEngine,
+            UxStatesManager uxStatesManager,
+            AdIdWorker adIdWorker) {
         mContext = context;
         mFlags = flags;
         mUxEngine = uxEngine;
         mUxStatesManager = uxStatesManager;
+        mAdIdWorker = adIdWorker;
     }
 
     @Override
     @RequiresPermission(anyOf = {ACCESS_ADSERVICES_STATE, ACCESS_ADSERVICES_STATE_COMPAT})
     public void isAdServicesEnabled(@NonNull IAdServicesCommonCallback callback) {
+        LogUtil.d(IS_AD_SERVICES_ENABLED_API_CALLED_MESSAGE);
+
         boolean hasAccessAdServicesStatePermission =
                 PermissionHelper.hasAccessAdServicesStatePermission(mContext);
 
@@ -93,26 +117,31 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                 () -> {
                     try {
                         if (!hasAccessAdServicesStatePermission) {
+                            LogUtil.e(UNAUTHORIZED_CALLER_MESSAGE);
                             callback.onFailure(STATUS_UNAUTHORIZED);
                             return;
                         }
 
-                        boolean isAdServicesEnabled =
-                                mFlags.getAdServicesEnabled();
+                        boolean isAdServicesEnabled = mFlags.getAdServicesEnabled();
                         if (mFlags.isBackCompatActivityFeatureEnabled()) {
+                            LogUtil.d(BACK_COMPAT_FEATURE_ENABLED_MESSAGE);
                             isAdServicesEnabled &=
                                     PackageManagerCompatUtils.isAdServicesActivityEnabled(mContext);
                         }
 
                         // TO-DO (b/286664178): remove the block after API is fully ramped up.
-                        if (!mFlags.getEnableAdServicesSystemApi()) {
+                        if (mFlags.getEnableAdServicesSystemApi()
+                                && ConsentManager.getInstance(mContext).getUx() != null) {
+                            LogUtil.d(ENABLE_AD_SERVICES_API_ENABLED_MESSAGE);
+                            // PS entry point should be hidden from unenrolled users.
+                            isAdServicesEnabled &= mUxStatesManager.isEnrolledUser(mContext);
+                        } else {
+                            LogUtil.d(ENABLE_AD_SERVICES_API_DISABLED_MESSAGE);
                             // Reconsent is already handled by the enableAdServices API.
                             reconsentIfNeededForEU();
-                        } else {
-                            // PS entry point should be hidden from unenrolled users.
-                            isAdServicesEnabled &= mUxStatesManager.isEnrolledUser();
                         }
 
+                        LogUtil.d("isAdServiceseEnabled: " + isAdServicesEnabled);
                         callback.onResult(
                                 new IsAdServicesEnabledResult.Builder()
                                         .setAdServicesEnabled(isAdServicesEnabled)
@@ -139,14 +168,17 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
     @Override
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
     public void setAdServicesEnabled(boolean adServicesEntryPointEnabled, boolean adIdEnabled) {
+        LogUtil.d(SET_AD_SERVICES_ENABLED_API_CALLED_MESSAGE);
+
         boolean hasModifyAdServicesStatePermission =
                 PermissionHelper.hasModifyAdServicesStatePermission(mContext);
+
         sBackgroundExecutor.execute(
                 () -> {
                     try {
                         if (!hasModifyAdServicesStatePermission) {
                             // TODO(b/242578032): handle the security exception in a better way
-                            LogUtil.d("Caller is not authorized to control AdServices state");
+                            LogUtil.d(UNAUTHORIZED_CALLER_MESSAGE);
                             return;
                         }
 
@@ -165,9 +197,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                             LogUtil.e("saving to the sharedpreference failed");
                             ErrorLogUtil.e(
                                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
-                                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX,
-                                    this.getClass().getSimpleName(),
-                                    new Object() {}.getClass().getEnclosingMethod().getName());
+                                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
                         }
                         LogUtil.d(
                                 "adid status is "
@@ -198,10 +228,9 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                                 "unable to save the adservices entry point status of "
                                         + e.getMessage());
                         ErrorLogUtil.e(
+                                e,
                                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_ENTRY_POINT_FAILURE,
-                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX,
-                                this.getClass().getSimpleName(),
-                                this.getClass().getEnclosingMethod().getName());
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
                     }
                 });
     }
@@ -254,6 +283,8 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
     public void enableAdServices(
             @NonNull AdServicesStates adServicesStates,
             @NonNull IEnableAdServicesCallback callback) {
+        LogUtil.d(ENABLE_AD_SERVICES_API_CALLED_MESSAGE);
+
         boolean authorizedCaller = PermissionHelper.hasModifyAdServicesStatePermission(mContext);
 
         sBackgroundExecutor.execute(
@@ -261,7 +292,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                     try {
                         if (!authorizedCaller) {
                             callback.onFailure(STATUS_UNAUTHORIZED);
-                            LogUtil.d("enableAdServices(): Caller is not authorized.");
+                            LogUtil.d(UNAUTHORIZED_CALLER_MESSAGE);
                             return;
                         }
 
@@ -288,6 +319,43 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                                         .build());
                     } catch (Exception e) {
                         LogUtil.e("enableAdServices() failed to complete: " + e.getMessage());
+                    }
+                });
+    }
+
+    /**
+     * Updates {@link AdId} cache in {@link AdIdCacheManager} when the device changes {@link AdId}.
+     * This API is used by AdIdProvider to update the {@link AdId} Cache.
+     */
+    @Override
+    @RequiresPermission(anyOf = {UPDATE_PRIVILEGED_AD_ID, UPDATE_PRIVILEGED_AD_ID_COMPAT})
+    public void updateAdIdCache(
+            @NonNull UpdateAdIdRequest updateAdIdRequest, @NonNull IUpdateAdIdCallback callback) {
+        boolean authorizedCaller = PermissionHelper.hasUpdateAdIdCachePermission(mContext);
+        int callerUid = Binder.getCallingUid();
+
+        sBackgroundExecutor.execute(
+                () -> {
+                    try {
+                        if (!mFlags.getAdIdCacheEnabled()) {
+                            LogUtil.w("notifyAdIdChange() is disabled.");
+                            callback.onFailure(STATUS_KILLSWITCH_ENABLED);
+                            return;
+                        }
+
+                        if (!authorizedCaller) {
+                            LogUtil.w(
+                                    "Caller %d is not authorized to update AdId Cache!", callerUid);
+                            callback.onFailure(STATUS_UNAUTHORIZED);
+                            return;
+                        }
+
+                        mAdIdWorker.updateAdId(updateAdIdRequest);
+
+                        // The message in on debugging purpose.
+                        callback.onResult("Success");
+                    } catch (Exception e) {
+                        LogUtil.e(e, "updateAdIdCache() failed to complete.");
                     }
                 });
     }

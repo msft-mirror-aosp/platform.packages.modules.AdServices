@@ -74,6 +74,31 @@ public class FlagsFactory {
             public boolean getMeasurementFlexibleEventReportingApiEnabled() {
                 return true;
             }
+
+            @Override
+            public boolean getEnableLoggedTopic() {
+                return true;
+            }
+
+            @Override
+            public boolean getEnableDatabaseSchemaVersion8() {
+                return true;
+            }
+
+            @Override
+            public boolean getFledgeAuctionServerEnabled() {
+                return true;
+            }
+
+            @Override
+            public boolean getFledgeEventLevelDebugReportingEnabled() {
+                return true;
+            }
+
+            @Override
+            public boolean getAppConfigReturnsEnabledByDefault() {
+                return false;
+            }
         };
     }
 }

@@ -25,12 +25,12 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.CompatAdServicesTestUtils;
-import com.android.compatibility.common.util.ShellUtils;
-import com.android.modules.utils.build.SdkLevel;
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.common.AdservicesTestHelper;
 
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -48,22 +48,20 @@ public class NotInAllowListTest {
             "java.lang.SecurityException: Caller is not authorized to call this API. "
                     + "Caller is not allowed.";
 
-    private String mPreviousSignatureAllowList;
+    @Rule(order = 0)
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
+    @Rule(order = 1)
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
+                    .setCompatModeFlags()
+                    .overridePpapiAppSignatureAllowList("empty");
 
     @Before
     public void setup() {
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setFlags();
-        }
-        overrideSignatureAllowListToEmpty();
-    }
-
-    @After
-    public void teardown() {
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
-        overrideSignatureAllowList();
+        // Kill AdServices process
+        AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
     @Test
@@ -79,21 +77,5 @@ public class NotInAllowListTest {
                 assertThrows(
                         ExecutionException.class, () -> advertisingTopicsClient1.getTopics().get());
         assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_ALLOWED);
-    }
-
-    // Override Signature Allow List to original
-    public void overrideSignatureAllowList() {
-        ShellUtils.runShellCommand(
-                "device_config put adservices ppapi_app_signature_allow_list %s",
-                mPreviousSignatureAllowList);
-    }
-
-    // Override Signature Allow List to deny the signature of this test
-    public void overrideSignatureAllowListToEmpty() {
-        mPreviousSignatureAllowList =
-                ShellUtils.runShellCommand(
-                        "device_config get adservices ppapi_app_signature_allow_list");
-        ShellUtils.runShellCommand(
-                "device_config put adservices ppapi_app_signature_allow_list %s", "empty");
     }
 }

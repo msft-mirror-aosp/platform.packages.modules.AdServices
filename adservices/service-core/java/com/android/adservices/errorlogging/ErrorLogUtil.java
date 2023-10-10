@@ -21,13 +21,13 @@ public class ErrorLogUtil {
     private static final AdServicesErrorLogger ERROR_LOGGER =
             AdServicesErrorLoggerImpl.getInstance();
 
-    /** Logs an atom in the Statsd for error. */
+    /** Logs an atom in the Statsd for error with exception info. */
     public static void e(Throwable tr, int errorCode, int ppapiName) {
         ERROR_LOGGER.logErrorWithExceptionInfo(tr, errorCode, ppapiName);
     }
 
     /** Logs an atom in the Statsd for error. */
-    public static void e(int errorCode, int ppapiName, String className, String methodName) {
-        ERROR_LOGGER.logError(errorCode, ppapiName, className, methodName);
+    public static void e(int errorCode, int ppapiName) {
+        ERROR_LOGGER.logError(errorCode, ppapiName);
     }
 }

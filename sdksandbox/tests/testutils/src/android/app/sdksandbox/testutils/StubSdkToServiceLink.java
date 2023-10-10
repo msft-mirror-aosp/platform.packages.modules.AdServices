@@ -18,9 +18,11 @@ package android.app.sdksandbox.testutils;
 
 import android.annotation.NonNull;
 import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
+import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.ISdkToServiceCallback;
 import android.app.sdksandbox.SandboxedSdk;
 import android.os.Binder;
+import android.os.Bundle;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +42,16 @@ public class StubSdkToServiceLink extends ISdkToServiceCallback.Stub {
         SandboxedSdk sandboxedSdk = new SandboxedSdk(new Binder());
         list.add(sandboxedSdk);
         return list;
+    }
+
+    @Override
+    public void loadSdk(
+            String callingPackageName,
+            String sdkName,
+            long timeAppCalledSystemServer,
+            Bundle params,
+            ILoadSdkCallback callback) {
+        return;
     }
 
     @Override

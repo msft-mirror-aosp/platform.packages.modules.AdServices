@@ -18,6 +18,7 @@ package android.app.sdksandbox.testutils;
 
 import android.app.sdksandbox.ISdkToServiceCallback;
 import android.app.sdksandbox.LoadSdkException;
+import android.app.sdksandbox.SandboxLatencyInfo;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.SharedPreferencesUpdate;
@@ -37,7 +38,6 @@ import com.android.sdksandbox.ISdkSandboxDisabledCallback;
 import com.android.sdksandbox.ISdkSandboxManagerToSdkSandboxCallback;
 import com.android.sdksandbox.ISdkSandboxService;
 import com.android.sdksandbox.IUnloadSdkCallback;
-import com.android.sdksandbox.SandboxLatencyInfo;
 
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -168,9 +168,11 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
                 new SandboxedSdk(new Binder()), mManagerToSdkCallback, sandboxLatencyInfo);
     }
 
-    public void sendLoadCodeSuccessfulWithSandboxLatencies() throws RemoteException {
+    public void sendLoadCodeSuccessfulWithSandboxLatencies(SandboxLatencyInfo sandboxLatencyInfo)
+            throws RemoteException {
+        setSandboxLatencyTimestamps(sandboxLatencyInfo);
         mLoadSdkInSandboxCallback.onLoadSdkSuccess(
-                new SandboxedSdk(new Binder()), mManagerToSdkCallback, createSandboxLatencyInfo());
+                new SandboxedSdk(new Binder()), mManagerToSdkCallback, sandboxLatencyInfo);
     }
 
     public boolean isSdkUnloaded() {
@@ -207,14 +209,16 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
     }
 
     public void sendUnloadSdkSuccess() throws Exception {
-        mUnloadSdkCallback.onUnloadSdk(createSandboxLatencyInfo());
+        final SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo();
+        setSandboxLatencyTimestamps(sandboxLatencyInfo);
+        mUnloadSdkCallback.onUnloadSdk(sandboxLatencyInfo);
     }
 
     // TODO(b/242684679): Use iRequestSurfacePackageFromSdkCallback instead of fake callback
     public void sendSurfacePackageError(
             int errorCode, String errorMsg, FakeRequestSurfacePackageCallbackBinder callback)
             throws RemoteException {
-        callback.onSurfacePackageError(errorCode, errorMsg, System.currentTimeMillis());
+        callback.onSurfacePackageError(errorCode, errorMsg, new SandboxLatencyInfo());
     }
 
     public boolean wasVisibilityPatchChecked() {
@@ -229,16 +233,13 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
         return mCustomizedInfo;
     }
 
-    private SandboxLatencyInfo createSandboxLatencyInfo() {
-        final SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo();
+    private void setSandboxLatencyTimestamps(SandboxLatencyInfo sandboxLatencyInfo) {
         sandboxLatencyInfo.setTimeSystemServerCalledSandbox(mTimeSystemServerCalledSandbox);
         sandboxLatencyInfo.setTimeSandboxReceivedCallFromSystemServer(
                 mTimeSandboxReceivedCallFromSystemServer);
         sandboxLatencyInfo.setTimeSandboxCalledSdk(mTimeSandboxCalledSdk);
         sandboxLatencyInfo.setTimeSdkCallCompleted(mTimeSdkCallCompleted);
         sandboxLatencyInfo.setTimeSandboxCalledSystemServer(mTimeSandboxCalledSystemServer);
-
-        return sandboxLatencyInfo;
     }
 
     private class FakeManagerToSdkCallback extends ISdkSandboxManagerToSdkSandboxCallback.Stub {

@@ -55,11 +55,9 @@ public final class DataService {
     private final DaoBuildingBlocks mDaoBuildingBlocks;
 
     public DataService(@NonNull ExecutorService executor, @NonNull CobaltDatabase cobaltDatabase) {
-        Objects.requireNonNull(executor);
-        Objects.requireNonNull(cobaltDatabase);
+        this.mExecutorService = Objects.requireNonNull(executor);
+        this.mCobaltDatabase = Objects.requireNonNull(cobaltDatabase);
 
-        this.mExecutorService = executor;
-        this.mCobaltDatabase = cobaltDatabase;
         this.mDaoBuildingBlocks = mCobaltDatabase.daoBuildingBlocks();
     }
 
@@ -262,7 +260,7 @@ public final class DataService {
                 mDaoBuildingBlocks.queryOneSystemProfileAndAggregateValue(
                         reportKey, dayIndex, eventVector, systemProfileHash);
 
-        if (existingSystemProfileAndAggregateValue.isEmpty()) {
+        if (!existingSystemProfileAndAggregateValue.isPresent()) {
             // No aggregate value was found for the provided report, day index, and event vector
             // combination, insert one.
             insertAggregateRow(
@@ -384,7 +382,7 @@ public final class DataService {
             ReportKey reportKey, int mostRecentDayIndex, int dayIndexLoggerEnabled) {
         Optional<Integer> lastSentDayIndex = mDaoBuildingBlocks.queryLastSentDayIndex(reportKey);
 
-        if (lastSentDayIndex.isEmpty()) {
+        if (!lastSentDayIndex.isPresent()) {
             // Report is missing. Store it with most recent day index as last_sent_day_index, so it
             // can be updated at the end of the observation generation.
             mDaoBuildingBlocks.insertLastSentDayIndex(reportKey, mostRecentDayIndex);

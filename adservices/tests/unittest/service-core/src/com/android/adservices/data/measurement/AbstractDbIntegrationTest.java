@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,10 +28,13 @@ import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
+import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.registration.AsyncRegistration;
+import com.android.adservices.service.measurement.reporting.DebugReport;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -137,6 +140,39 @@ public abstract class AbstractDbIntegrationTest {
                 areEqual(mOutput.mSourceDestinationList, dbState.mSourceDestinationList));
         Assert.assertTrue("Trigger mismatch",
                 areEqual(mOutput.mTriggerList, dbState.mTriggerList));
+        Assert.assertTrue(
+                "Async Registration mismatch",
+                areEqual(mOutput.mAsyncRegistrationList, dbState.mAsyncRegistrationList));
+        for (int i = 0; i < mOutput.mDebugReportList.size(); i++) {
+            Assert.assertTrue(
+                    "DebugReport Mismatch",
+                    areDebugReportContentsSimilar(
+                            mOutput.mDebugReportList.get(i), dbState.mDebugReportList.get(i)));
+        }
+        for (int i = 0; i < mOutput.mKeyValueDataList.size(); i++) {
+            Assert.assertTrue(
+                    "KeyValueData Mismatch",
+                    areEqualKeyValueData(
+                            mOutput.mKeyValueDataList.get(i), dbState.mKeyValueDataList.get(i)));
+        }
+    }
+
+    private boolean areDebugReportContentsSimilar(
+            DebugReport debugReport, DebugReport debugReport1) {
+        // TODO (b/300109438) Investigate DebugReport::equals
+        return Objects.equals(debugReport.getType(), debugReport1.getType())
+                && Objects.equals(
+                        debugReport.getBody().toString(), debugReport1.getBody().toString())
+                && Objects.equals(debugReport.getEnrollmentId(), debugReport1.getEnrollmentId())
+                && Objects.equals(
+                        debugReport.getRegistrationOrigin(), debugReport1.getRegistrationOrigin())
+                && Objects.equals(debugReport.getReferenceId(), debugReport1.getReferenceId());
+    }
+
+    private boolean areEqualKeyValueData(KeyValueData keyValueData, KeyValueData keyValueData1) {
+        return Objects.equals(keyValueData.getKey(), keyValueData1.getKey())
+                && Objects.equals(keyValueData.getDataType(), keyValueData1.getDataType())
+                && Objects.equals(keyValueData.getValue(), keyValueData1.getValue());
     }
 
     private boolean fuzzyCompareAggregateReport(
@@ -266,6 +302,9 @@ public abstract class AbstractDbIntegrationTest {
         db.delete(MeasurementTables.AttributionContract.TABLE, null, null);
         db.delete(MeasurementTables.AggregateReport.TABLE, null, null);
         db.delete(MeasurementTables.AggregateEncryptionKey.TABLE, null, null);
+        db.delete(MeasurementTables.AsyncRegistrationContract.TABLE, null, null);
+        db.delete(MeasurementTables.DebugReportContract.TABLE, null, null);
+        db.delete(MeasurementTables.KeyValueDataContract.TABLE, null, null);
     }
 
     /**
@@ -293,6 +332,15 @@ public abstract class AbstractDbIntegrationTest {
         }
         for (AggregateEncryptionKey key : input.mAggregateEncryptionKeyList) {
             insertToDb(key, db);
+        }
+        for (AsyncRegistration registration : input.mAsyncRegistrationList) {
+            insertToDb(registration, db);
+        }
+        for (DebugReport debugReport : input.mDebugReportList) {
+            insertToDb(debugReport, db);
+        }
+        for (KeyValueData keyValueData : input.mKeyValueDataList) {
+            insertToDb(keyValueData, db);
         }
     }
 
@@ -337,6 +385,9 @@ public abstract class AbstractDbIntegrationTest {
         values.put(
                 MeasurementTables.SourceContract.SHARED_AGGREGATION_KEYS,
                 source.getSharedAggregationKeys());
+        values.put(
+                MeasurementTables.SourceContract.SHARED_FILTER_DATA_KEYS,
+                source.getSharedFilterDataKeys());
         values.put(
                 MeasurementTables.SourceContract.REGISTRATION_ORIGIN,
                 source.getRegistrationOrigin().toString());
@@ -484,6 +535,9 @@ public abstract class AbstractDbIntegrationTest {
         values.put(
                 MeasurementTables.AggregateReport.DEBUG_CLEARTEXT_PAYLOAD,
                 aggregateReport.getDebugCleartextPayload());
+        values.put(
+                MeasurementTables.AggregateReport.DEBUG_REPORT_STATUS,
+                aggregateReport.getDebugReportStatus());
         values.put(MeasurementTables.AggregateReport.STATUS, aggregateReport.getStatus());
         values.put(MeasurementTables.AggregateReport.API_VERSION, aggregateReport.getApiVersion());
         values.put(MeasurementTables.AggregateReport.SOURCE_ID, aggregateReport.getSourceId());
@@ -520,7 +574,104 @@ public abstract class AbstractDbIntegrationTest {
         }
     }
 
+    /** Inserts an AsyncRegistration record into the given database. */
+    private static void insertToDb(AsyncRegistration asyncRegistration, SQLiteDatabase db)
+            throws SQLiteException {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.AsyncRegistrationContract.ID, asyncRegistration.getId());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.REGISTRATION_URI,
+                asyncRegistration.getRegistrationUri().toString());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.WEB_DESTINATION,
+                getNullableUriString(asyncRegistration.getWebDestination()));
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.VERIFIED_DESTINATION,
+                getNullableUriString(asyncRegistration.getVerifiedDestination()));
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.OS_DESTINATION,
+                getNullableUriString(asyncRegistration.getOsDestination()));
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.REGISTRANT,
+                getNullableUriString(asyncRegistration.getRegistrant()));
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.TOP_ORIGIN,
+                getNullableUriString(asyncRegistration.getTopOrigin()));
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.SOURCE_TYPE,
+                asyncRegistration.getSourceType() == null
+                        ? null
+                        : asyncRegistration.getSourceType().ordinal());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.REQUEST_TIME,
+                asyncRegistration.getRequestTime());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.RETRY_COUNT,
+                asyncRegistration.getRetryCount());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.TYPE,
+                asyncRegistration.getType().ordinal());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.DEBUG_KEY_ALLOWED,
+                asyncRegistration.getDebugKeyAllowed());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.AD_ID_PERMISSION,
+                asyncRegistration.hasAdIdPermission());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.REGISTRATION_ID,
+                asyncRegistration.getRegistrationId());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.PLATFORM_AD_ID,
+                asyncRegistration.getPlatformAdId());
+        long rowId =
+                db.insert(
+                        MeasurementTables.AsyncRegistrationContract.TABLE,
+                        /* nullColumnHack= */ null,
+                        values);
+        if (rowId == -1) {
+            throw new SQLiteException("Async Registration insertion failed.");
+        }
+    }
+
+    public static void insertToDb(KeyValueData keyValueData, SQLiteDatabase db)
+            throws SQLiteException {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.KeyValueDataContract.KEY, keyValueData.getKey());
+        values.put(MeasurementTables.KeyValueDataContract.VALUE, keyValueData.getValue());
+        values.put(
+                MeasurementTables.KeyValueDataContract.DATA_TYPE,
+                keyValueData.getDataType().toString());
+        long rowId =
+                db.insert(
+                        MeasurementTables.KeyValueDataContract.TABLE,
+                        /* nullColumnHack= */ null,
+                        values);
+        if (rowId == -1) {
+            throw new SQLiteException("KeyValueData insertion failed.");
+        }
+    }
+
+    public static void insertToDb(DebugReport debugReport, SQLiteDatabase db)
+            throws SQLiteException {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.DebugReportContract.ID, debugReport.getId());
+        values.put(MeasurementTables.DebugReportContract.BODY, debugReport.getBody().toString());
+        values.put(MeasurementTables.DebugReportContract.TYPE, debugReport.getType());
+        long rowId =
+                db.insert(
+                        MeasurementTables.DebugReportContract.TABLE,
+                        /* nullColumnHack= */ null,
+                        values);
+        if (rowId == -1) {
+            throw new SQLiteException("DebugReport insertion failed.");
+        }
+    }
+
     private static Long getNullableUnsignedLong(UnsignedLong ulong) {
         return Optional.ofNullable(ulong).map(UnsignedLong::getValue).orElse(null);
+    }
+
+    private static String getNullableUriString(Uri uri) {
+        return Optional.ofNullable(uri).map(Uri::toString).orElse(null);
     }
 }

@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.measurement.actions;
 
-import static com.android.adservices.service.measurement.E2ETest.getAttributionSource;
 import static com.android.adservices.service.measurement.E2ETest.getInputEvent;
 import static com.android.adservices.service.measurement.E2ETest.getUriConfigMap;
 import static com.android.adservices.service.measurement.E2ETest.getUriToResponseHeadersMap;
@@ -27,7 +26,6 @@ import static com.android.adservices.service.measurement.E2ETest.hasSourceDebugR
 import android.adservices.measurement.WebSourceParams;
 import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.adservices.measurement.WebSourceRegistrationRequestInternal;
-import android.content.AttributionSource;
 import android.net.Uri;
 
 import com.android.adservices.service.measurement.E2ETest.TestFormatJsonMapping;
@@ -63,9 +61,7 @@ public final class RegisterWebSource implements Action {
                 getNullableStringUri(
                         regParamsJson, TestFormatJsonMapping.SOURCE_VERIFIED_DESTINATION_URI_KEY);
 
-        AttributionSource attributionSource =
-                getAttributionSource(
-                        regParamsJson.optString(TestFormatJsonMapping.ATTRIBUTION_SOURCE_KEY));
+        String packageName = regParamsJson.optString(TestFormatJsonMapping.ATTRIBUTION_SOURCE_KEY);
 
         WebSourceRegistrationRequest registrationRequest =
                 new WebSourceRegistrationRequest.Builder(
@@ -87,7 +83,7 @@ public final class RegisterWebSource implements Action {
         mRegistrationRequest =
                 new WebSourceRegistrationRequestInternal.Builder(
                                 registrationRequest,
-                                attributionSource.getPackageName(),
+                                packageName,
                                 /* sdkPackageName = */ "",
                                 /* requestTime =*/ 2000L)
                         .build();

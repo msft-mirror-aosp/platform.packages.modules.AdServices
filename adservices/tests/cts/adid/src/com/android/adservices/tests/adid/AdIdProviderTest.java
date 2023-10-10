@@ -20,9 +20,9 @@ import android.adservices.adid.AdIdProviderService;
 import android.adservices.adid.GetAdIdResult;
 import android.adservices.adid.IAdIdProviderService;
 import android.adservices.adid.IGetAdIdProviderCallback;
+import android.adservices.common.AdServicesOutcomeReceiver;
 import android.content.Intent;
 import android.os.IBinder;
-import android.os.OutcomeReceiver;
 
 import androidx.test.runner.AndroidJUnit4;
 
@@ -60,8 +60,8 @@ public class AdIdProviderTest {
         Assert.assertNotNull(service);
 
         CompletableFuture<AdId> future = new CompletableFuture<>();
-        OutcomeReceiver<AdId, Exception> callback =
-                new OutcomeReceiver<AdId, Exception>() {
+        AdServicesOutcomeReceiver<AdId, Exception> callback =
+                new AdServicesOutcomeReceiver<>() {
                     @Override
                     public void onResult(AdId adId) {
                         future.complete(adId);

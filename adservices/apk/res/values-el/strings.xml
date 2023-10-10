@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Επιτρέπει σε μια εφαρμογή να αποκτήσει πρόσβαση στο AdServices Consent API."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Πρόσβαση στο Ad ID API"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Επιτρέπει σε μια εφαρμογή να αποκτήσει πρόσβαση στο Ad ID API."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"Πρόσβαση στο AdServices Cobalt Upload API"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Επιτρέπει σε μια εφαρμογή να αποκτήσει πρόσβαση στο AdServices Cobalt Upload API."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Πρόσβαση στο App Set ID API"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Επιτρέπει σε μια εφαρμογή να αποκτήσει πρόσβαση στο App Set ID API."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Πρόσβαση στο Consent Service API"</string>
@@ -40,13 +42,13 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Επιτρέπει σε μια εφαρμογή να αποκτήσει πρόσβαση στο AdService’s enablement state API."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Πρόσβαση στα API του AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Επιτρέπει σε μια εφαρμογή να αποκτήσει πρόσβαση στα API του AdServicesManager."</string>
-    <string name="app_label" msgid="5985320129629013968">"Σύστημα Android"</string>
+    <string name="app_label" msgid="5844694701336604490">"Απόρρητο διαφημίσεων"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Λάβετε μέρος στο πρόγραμμα beta απορρήτου διαφημίσεων του Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Το Android εξερευνά πιο ιδιωτικούς τρόπους για την εμφάνιση διαφημίσεων από εφαρμογές"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Μάθετε περισσότερα"</string>
     <string name="notificationUI_header_title_eu" msgid="4955298263079910371">"Beta απορρήτου διαφημίσεων του Android"</string>
     <string name="notificationUI_container1_title_eu" msgid="8315199862119660570">"Τι νέο υπάρχει;"</string>
-    <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"Οι νέες λειτουργίες απορρήτου στο Πλαίσιο ιδιωτικότητας επιτρέπουν στις εφαρμογές να εμφανίζουν διαφημίσεις που είναι συναφείς για εσάς, αλλά περιορίζουν τις πληροφορίες που μπορούν να μάθουν οι συγκεκριμένες εφαρμογές σχετικά με τις δραστηριότητές σας σε ιστοτόπους και εφαρμογές από άλλους προγραμματιστές."</string>
+    <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"Οι νέες λειτουργίες απορρήτου στο Privacy Sandbox επιτρέπουν στις εφαρμογές να εμφανίζουν διαφημίσεις που είναι συναφείς για εσάς, αλλά περιορίζουν τις πληροφορίες που μπορούν να μάθουν οι συγκεκριμένες εφαρμογές σχετικά με τις δραστηριότητές σας σε ιστοτόπους και εφαρμογές από άλλους προγραμματιστές."</string>
     <string name="notificationUI_container1_control_text_eu" msgid="3158258148321255153">"Πώς λειτουργεί"</string>
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Τρόπος συμμετοχής"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Η ενεργοποίηση του προγράμματος beta επιτρέπει στις εφαρμογές να δοκιμάσουν αυτούς τους νέους πιο ιδιωτικούς τρόπους για την εμφάνιση διαφημίσεων. Μπορείτε να απενεργοποιήσετε το πρόγραμμα beta οποιαδήποτε στιγμή στις ρυθμίσεις απορρήτου."</string>
@@ -54,16 +56,16 @@
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Ενεργοποίηση"</string>
     <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Περισσότερα"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Σας ευχαριστούμε για τη συμμετοχή σας"</string>
-    <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Συμμετέχετε στο πρόγραμμα beta απορρήτου διαφημίσεων του Android. Το Πλαίσιο ιδιωτικότητας είναι ενεργοποιημένο για τη συσκευή σας.\n\nΜπορείτε να μάθετε περισσότερα ή να απενεργοποιήσετε το πρόγραμμα beta οποιαδήποτε στιγμή στις ρυθμίσεις απορρήτου."</string>
+    <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Συμμετέχετε στο πρόγραμμα beta απορρήτου διαφημίσεων του Android. Το Privacy Sandbox είναι ενεργοποιημένο για τη συσκευή σας.\n\nΜπορείτε να μάθετε περισσότερα ή να απενεργοποιήσετε το πρόγραμμα beta οποιαδήποτε στιγμή στις ρυθμίσεις απορρήτου."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Επιλέξατε να μην συμμετάσχετε"</string>
-    <string name="notificationUI_confirmation_decline_subtitle" msgid="4194388733937808440">"Σας ευχαριστούμε για την απάντησή σας. Το Πλαίσιο ιδιωτικότητας είναι απενεργοποιημένο για τη συσκευή σας.\n\nΑν αλλάξετε γνώμη ή θέλετε να μάθετε περισσότερα, μεταβείτε στις ρυθμίσεις απορρήτου."</string>
+    <string name="notificationUI_confirmation_decline_subtitle" msgid="4194388733937808440">"Σας ευχαριστούμε για την απάντησή σας. Το Privacy Sandbox είναι απενεργοποιημένο για τη συσκευή σας.\n\nΑν αλλάξετε γνώμη ή θέλετε να μάθετε περισσότερα, μεταβείτε στις ρυθμίσεις απορρήτου."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"Ρυθμίσεις απορρήτου"</string>
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"Το κατάλαβα"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"Συμμετέχετε στο πρόγραμμα beta"</string>
-    <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Το Πλαίσιο ιδιωτικότητας είναι ενεργοποιημένο για τη συσκευή σας και οι εφαρμογές μπορούν να δοκιμάσουν αυτούς τους νέους πιο ιδιωτικούς τρόπους για την εμφάνιση διαφημίσεων. Μπορείτε να απενεργοποιήσετε το πρόγραμμα beta οποιαδήποτε στιγμή στις ρυθμίσεις απορρήτου."</string>
+    <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Το Privacy Sandbox είναι ενεργοποιημένο για τη συσκευή σας και οι εφαρμογές μπορούν να δοκιμάσουν αυτούς τους νέους πιο ιδιωτικούς τρόπους για την εμφάνιση διαφημίσεων. Μπορείτε να απενεργοποιήσετε το πρόγραμμα beta οποιαδήποτε στιγμή στις ρυθμίσεις απορρήτου."</string>
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Το κατάλαβα"</string>
-    <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Το Πλαίσιο ιδιωτικότητας του Android παρέχει νέες λειτουργίες τις οποίες μπορούν να χρησιμοποιούν οι εφαρμογές για να εμφανίζουν διαφημίσεις που μπορεί να σας αρέσουν. Αυτές οι τεχνολογίες δεν χρησιμοποιούν αναγνωριστικά συσκευών.\n\nΤο Android και οι εφαρμογές σας μπορούν να εκτιμήσουν τα είδη διαφημίσεων που μπορεί να σας ενδιαφέρουν και να αποθηκεύσουν τα ενδιαφέροντα προσωρινά στη συσκευή σας. Αυτό επιτρέπει στις εφαρμογές να εμφανίζουν διαφημίσεις που μπορεί να σας αρέσουν, χωρίς να παρακολουθούν τη δραστηριότητά σας σε ιστοτόπους και εφαρμογές από άλλους προγραμματιστές."</string>
-    <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Εξατομίκευση διαφημίσεων με το Πλαίσιο ιδιωτικότητας"</string>
+    <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Το Privacy Sandbox του Android παρέχει νέες λειτουργίες τις οποίες μπορούν να χρησιμοποιούν οι εφαρμογές για να εμφανίζουν διαφημίσεις που μπορεί να σας αρέσουν. Αυτές οι τεχνολογίες δεν χρησιμοποιούν αναγνωριστικά συσκευών.\n\nΤο Android και οι εφαρμογές σας μπορούν να εκτιμήσουν τα είδη διαφημίσεων που μπορεί να σας ενδιαφέρουν και να αποθηκεύσουν τα ενδιαφέροντα προσωρινά στη συσκευή σας. Αυτό επιτρέπει στις εφαρμογές να εμφανίζουν διαφημίσεις που μπορεί να σας αρέσουν, χωρίς να παρακολουθούν τη δραστηριότητά σας σε ιστοτόπους και εφαρμογές από άλλους προγραμματιστές."</string>
+    <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Εξατομίκευση διαφημίσεων με το Privacy Sandbox"</string>
     <string name="notificationUI_how_it_works_expanded_text3" msgid="603165966360369018">"•  Τα ενδιαφέροντα εκτιμώνται από το Android"</string>
     <string name="notificationUI_how_it_works_expanded_text4" msgid="3910573920883580609">"Το Android περιοδικά εκτιμά τα κορυφαία ενδιαφέροντά σας με βάση τις εφαρμογές που χρησιμοποιείτε, για παράδειγμα, \"Αθλήματα\" ή \"Ταξίδια.\"\n\nΑργότερα, μια εφαρμογή μπορεί να υποβάλει αίτημα στο Android για την άδεια να χρησιμοποιήσει αυτά τα ενδιαφέροντα, προκειμένου να εμφανίζει διαφημίσεις που είναι πιο συναφείς για εσάς.\n\nΜπορείτε να δείτε μια λίστα με τα τρέχοντα ενδιαφέροντα στις ρυθμίσεις απορρήτου και να αποκλείσετε οποιοδήποτε δεν σας αρέσει."</string>
     <string name="notificationUI_how_it_works_expanded_text5" msgid="7257714040472055781">"•  Τα ενδιαφέροντα εκτιμώνται από τις εφαρμογές"</string>
@@ -131,13 +133,13 @@
     <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"Διατίθενται τώρα νέες λειτουργίες σχετικά με το απόρρητο διαφημίσεων"</string>
     <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"Το Android προσφέρει τώρα νέες λειτουργίες απορρήτου που σας δίνουν περισσότερες επιλογές σχετικά με τις διαφημίσεις που βλέπετε."</string>
     <string name="notificationUI_next_button_text" msgid="5564270455474313663">"Επόμενο"</string>
-    <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Πλαίσιο ιδιωτικότητας"</string>
+    <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Συμμετάσχετε στο πρόγραμμα beta απορρήτου διαφημίσεων του Android"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Πλαίσιο ιδιωτικότητας"</string>
+    <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_title" msgid="5996189869721397937">"Ενδιαφέροντα που εκτιμήθηκαν από το Android"</string>
     <string name="settingsUI_apps_title" msgid="2772289096915264175">"Εφαρμογές που εκτιμούν ενδιαφέροντα"</string>
     <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"Μέτρηση διαφημίσεων"</string>
-    <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"Οι εφαρμογές μπορούν να χρησιμοποιούν το Πλαίσιο ιδιωτικότητας για τη μέτρηση της αποτελεσματικότητας των διαφημίσεών τους. Για να είναι αυτό δυνατό, οι διαφημιζόμενοι μπορούν να αποθηκεύουν προσωρινά δεδομένα με το Android σχετικά με τις αλληλεπιδράσεις σας μεταξύ των διαφημίσεών τους και των εφαρμογών. Η ποσότητα δεδομένων που μπορούν να αποθηκεύσουν είναι περιορισμένη και διαγράφεται τακτικά.\n\nΜπορείτε να διαγράψετε αυτά τα δεδομένα οποιαδήποτε στιγμή, απενεργοποιώντας το Πλαίσιο ιδιωτικότητας."</string>
+    <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"Οι εφαρμογές μπορούν να χρησιμοποιούν το Privacy Sandbox για τη μέτρηση της αποτελεσματικότητας των διαφημίσεών τους. Για να είναι αυτό δυνατό, οι διαφημιζόμενοι μπορούν να αποθηκεύουν προσωρινά δεδομένα με το Android σχετικά με τις αλληλεπιδράσεις σας μεταξύ των διαφημίσεών τους και των εφαρμογών. Η ποσότητα δεδομένων που μπορούν να αποθηκεύσουν είναι περιορισμένη και διαγράφεται τακτικά.\n\nΜπορείτε να διαγράψετε αυτά τα δεδομένα οποιαδήποτε στιγμή, απενεργοποιώντας το Privacy Sandbox."</string>
     <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"Το Android περιοδικά εκτιμά τα κορυφαία ενδιαφέροντά σας με βάση τις εφαρμογές που χρησιμοποιείτε. Οι εφαρμογές μπορούν να υποβάλουν αίτημα στο Android για την άδεια να χρησιμοποιούν αυτά τα ενδιαφέροντα, προκειμένου να εμφανίζουν διαφημίσεις που είναι πιο συναφείς για εσάς.\n\nΑν αποκλείσετε ένα ενδιαφέρον, δεν θα προστεθεί ξανά στη λίστα, παρά μόνο αν καταργήσετε τον αποκλεισμό του. Ενδέχεται να συνεχίσετε να βλέπετε μερικές σχετικές διαφημίσεις."</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Αποκλεισμός"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Κατάργηση αποκλεισμού"</string>
@@ -145,7 +147,7 @@
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Επαναφορά όλων των ενδιαφερόντων"</string>
     <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"Δεν υπάρχουν ενδιαφέροντα για εμφάνιση αυτήν τη στιγμή."</string>
     <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"Δεν υπάρχουν θέματα για εμφάνιση αυτήν τη στιγμή.\nΜάθετε περισσότερα σχετικά με τα "<a href="https://support.google.com/android?p=ad_privacy">"θέματα διαφημίσεων"</a></string>
-    <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Πλαίσιο ιδιωτικότητας"</string>
+    <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Το πρόγραμμα beta απορρήτου διαφημίσεων του Android παρέχει νέες λειτουργίες τις οποίες μπορούν να χρησιμοποιούν οι εφαρμογές για να εμφανίζουν διαφημίσεις που μπορεί να σας αρέσουν. Αυτές οι τεχνολογίες δεν χρησιμοποιούν αναγνωριστικά συσκευών.\n\nΤο Android μπορεί να εκτιμήσει τα είδη διαφημίσεων που μπορεί να σας ενδιαφέρουν και να αποθηκεύσει αυτά τα ενδιαφέροντα προσωρινά στη συσκευή σας. Αυτό επιτρέπει στις εφαρμογές να εμφανίζουν διαφημίσεις που είναι συναφείς για εσάς, χωρίς να παρακολουθούν τη δραστηριότητά σας σε ιστοτόπους και εφαρμογές από άλλους προγραμματιστές."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Δεν έχετε αποκλεισμένα ενδιαφέροντα"</string>
     <string name="settingsUI_no_blocked_topics_ga_text" msgid="377459829879121256">"Δεν υπάρχουν αποκλεισμένα θέματα"</string>
@@ -158,7 +160,7 @@
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Επαναφορά ενδιαφερόντων που έχουν εκτιμηθεί από εφαρμογές"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Δεν υπάρχουν εφαρμογές που να προτείνουν ενδιαφέροντα για εσάς αυτήν τη στιγμή"</string>
     <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"Δεν υπάρχουν εφαρμογές για εμφάνιση αυτήν τη στιγμή. \nΜάθετε περισσότερα σχετικά με τις "<a href="https://support.google.com/android?p=ad_privacy">"διαφημίσεις που προτείνονται από εφαρμογές"</a></string>
-    <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Πλαίσιο ιδιωτικότητας"</string>
+    <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Το πρόγραμμα beta απορρήτου διαφημίσεων του Android παρέχει νέες λειτουργίες τις οποίες μπορούν να χρησιμοποιούν οι εφαρμογές για να εμφανίζουν διαφημίσεις που μπορεί να σας αρέσουν. Αυτές οι τεχνολογίες δεν χρησιμοποιούν αναγνωριστικά συσκευών.\n\nΟι εφαρμογές μπορούν να εκτιμήσουν τα είδη διαφημίσεων που μπορεί να σας ενδιαφέρουν και να αποθηκεύσουν αυτά τα ενδιαφέροντα προσωρινά στη συσκευή σας. Αυτό επιτρέπει στις εφαρμογές να εμφανίζουν διαφημίσεις που είναι συναφείς για εσάς, χωρίς να παρακολουθούν τη δραστηριότητά σας σε ιστοτόπους και εφαρμογές από άλλους προγραμματιστές."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Δεν έχετε αποκλεισμένες εφαρμογές"</string>
     <string name="settingsUI_no_blocked_apps_ga_text" msgid="7488680173653861943">"Δεν υπάρχουν αποκλεισμένες εφαρμογές"</string>
@@ -168,7 +170,7 @@
     <string name="settingsUI_measurement_view_footer_text" msgid="5978750159738729308">"Το Android προστατεύει το απόρρητό σας περιορίζοντας τις πληροφορίες που μπορούν να κοινοποιήσουν οι εφαρμογές μεταξύ τους. Οι αναφορές αποστέλλονται με καθυστέρηση για την προστασία της ταυτότητάς σας.\n\nΤο πρόγραμμα περιήγησης που χρησιμοποιείτε μπορεί να έχει κάποια παρόμοια ρύθμιση. Αν η μέτρηση διαφημίσεων είναι ενεργή στο Android και στο πρόγραμμα περιήγησης, μια εταιρεία ίσως να μπορεί να μετρήσει την αποτελεσματικότητα μιας διαφήμισης μεταξύ των εφαρμογών που χρησιμοποιείτε και των ιστοτόπων που επισκέπτεστε. Το ιστορικό περιήγησης διατηρείται ιδιωτικό στη συσκευή σας.\n\nΜάθετε περισσότερα σχετικά με το πώς το Android προστατεύει τα δεδομένα σας στην "<a href="https://policies.google.com/privacy">"Πολιτική απορρήτου"</a>"."</string>
     <string name="settingsUI_measurement_are_reset" msgid="4375330550418573499">"Έγινε επαναφορά των δεδομένων μέτρησης διαφημίσεων"</string>
     <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Ακύρωση"</string>
-    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Να απενεργοποιηθεί το Πλαίσιο ιδιωτικότητας;"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Να απενεργοποιηθεί το Privacy Sandbox;"</string>
     <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Εάν αλλάξετε γνώμη ή θέλετε να μάθετε περισσότερα σχετικά με την έκδοση beta απορρήτου διαφημίσεων του Android, μεταβείτε στις ρυθμίσεις απορρήτου."</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Απενεργοποίηση"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Να αποκλειστεί το θέμα <xliff:g id="TOPIC">%1$s</xliff:g>;"</string>
@@ -193,7 +195,7 @@
     <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Αυτή η λίστα θεμάτων θα διαγραφεί. Το Android δεν θα σημειώνει πλέον θέματα που σας ενδιαφέρουν, αλλά μπορεί να βλέπετε ακόμα συναφείς διαφημίσεις."</string>
     <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Οι διαφημίσεις που προτείνονται από εφαρμογές είναι ενεργές"</string>
     <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Οι εφαρμογές μπορεί να ξεκινήσουν να προτείνουν διαφημίσεις. Θα δείτε μια λίστα με τις εφαρμογές μόλις ξεκινήσουν να προτείνουν διαφημίσεις."</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Να απενεργοποιηθούν οι διαφημίσεις που προτείνονται από εφαρμογές;"</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Απενεργοποίηση προτάσεων για διαφημίσεις από εφαρμογές;"</string>
     <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Όλα τα δεδομένα σχετικά με τις προτάσεις διαφημίσεων θα διαγραφούν. Οι εφαρμογές δεν θα μπορούν να προτείνουν πλέον διαφημίσεις, αλλά μπορεί να βλέπετε ακόμα συναφείς διαφημίσεις."</string>
     <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Η μέτρηση διαφημίσεων είναι ενεργή"</string>
     <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Το Android μπορεί να κοινοποιεί μόνο πολύ περιορισμένες πληροφορίες σε εφαρμογές για να τις βοηθάει στη μέτρηση της απόδοσης των διαφημίσεών τους."</string>

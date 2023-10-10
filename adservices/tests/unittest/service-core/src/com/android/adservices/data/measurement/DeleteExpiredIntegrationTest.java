@@ -17,11 +17,13 @@
 package com.android.adservices.data.measurement;
 
 import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.service.Flags;
 
 import org.json.JSONException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -49,7 +51,10 @@ public class DeleteExpiredIntegrationTest extends AbstractDbIntegrationTest {
     public void runActionToTest() {
         long earliestValidInsertion =
                 System.currentTimeMillis() - Flags.MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
-        new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest())
-                .runInTransaction(dao -> dao.deleteExpiredRecords(earliestValidInsertion));
+        int retryLimit = Flags.MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
+        AdServicesErrorLogger errorLogger = Mockito.mock(AdServicesErrorLogger.class);
+        new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), errorLogger)
+                .runInTransaction(
+                        dao -> dao.deleteExpiredRecords(earliestValidInsertion, retryLimit));
     }
 }

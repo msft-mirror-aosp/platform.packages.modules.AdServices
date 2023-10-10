@@ -22,6 +22,10 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACK_COMPAT_GET_TOPICS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_CONSENT_MIGRATED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_DATA_STORED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_FAILED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_FILE_DOWNLOADED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_MATCHED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_GET_TOP_TOPICS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED;
@@ -42,6 +46,7 @@ import com.android.adservices.errorlogging.AdServicesErrorStats;
 import com.android.adservices.errorlogging.StatsdAdServicesErrorLogger;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.spe.stats.ExecutionReportedStats;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
@@ -81,6 +86,15 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
         return sStatsdAdServicesLogger;
     }
 
+    private String getAllowlistedAppPackageName(String appPackageName) {
+        if (!mFlags.getMeasurementEnableAppPackageNameLogging()
+                || !AllowLists.isPackageAllowListed(
+                        mFlags.getMeasurementAppPackageNameLoggingAllowlist(), appPackageName)) {
+            return "";
+        }
+        return appPackageName;
+    }
+
     /** log method for measurement reporting. */
     public void logMeasurementReports(MeasurementReportsStats measurementReportsStats) {
         AdServicesStatsLog.write(
@@ -89,7 +103,11 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 measurementReportsStats.getResultCode(),
                 measurementReportsStats.getFailureType(),
                 measurementReportsStats.getUploadMethod(),
-                measurementReportsStats.getReportingDelay());
+                measurementReportsStats.getReportingDelay(),
+                getAllowlistedAppPackageName(measurementReportsStats.getSourceRegistrant()),
+                measurementReportsStats.getRetryCount(),
+                /* httpResponseCode */ 0,
+                /* isMarkedForDeletion */ false);
     }
 
     /** log method for API call stats. */
@@ -133,7 +151,11 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 stats.getSurfaceType(),
                 stats.getRegistrationStatus(),
                 stats.getFailureType(),
-                stats.getRegistrationDelay());
+                stats.getRegistrationDelay(),
+                getAllowlistedAppPackageName(stats.getSourceRegistrant()),
+                stats.getRetryCount(),
+                /* httpResponseCode */ 0,
+                stats.isRedirectOnly());
     }
 
     @Override
@@ -229,22 +251,35 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
 
     @Override
     public void logGetTopicsReportedStats(GetTopicsReportedStats stats) {
+        int[] topicIds = new int[] {};
+        if (stats.getTopicIds() != null) {
+            topicIds = stats.getTopicIds().stream().mapToInt(Integer::intValue).toArray();
+        }
+
         boolean isCompatLoggingEnabled = !mFlags.getCompatLoggingKillSwitch();
         if (isCompatLoggingEnabled) {
+            long modeBytesFieldId =
+                    ProtoOutputStream.FIELD_COUNT_REPEATED // topic_ids field is repeated.
+                            // topic_id is represented by int32 type.
+                            | ProtoOutputStream.FIELD_TYPE_INT32
+                            // Field ID of topic_ids field in AdServicesTopicIds proto.
+                            | AD_SERVICES_TOPIC_IDS_FIELD_ID;
+
             AdServicesStatsLog.write(
                     AD_SERVICES_BACK_COMPAT_GET_TOPICS_REPORTED,
                     // TODO(b/266626836) Add topic ids logging once long term solution is identified
                     stats.getDuplicateTopicCount(),
                     stats.getFilteredBlockedTopicCount(),
-                    stats.getTopicIdsCount());
+                    stats.getTopicIdsCount(),
+                    toBytes(modeBytesFieldId, topicIds));
         }
 
         // This atom can only be logged on T+ due to usage of repeated fields. See go/rbc-ww-logging
-        // for why we are temporarily double logging on T+.
+        // for why we are temporarily double logging on T+.s
         if (SdkLevel.isAtLeastT()) {
             AdServicesStatsLog.write(
                     AD_SERVICES_GET_TOPICS_REPORTED,
-                    new int[] {}, // TODO(b/256649873): Log empty list until long term solution.
+                    topicIds,
                     stats.getDuplicateTopicCount(),
                     stats.getFilteredBlockedTopicCount(),
                     stats.getTopicIdsCount());
@@ -306,7 +341,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 stats.getAttributionType(),
                 stats.isMatched(),
                 stats.getDebugJoinKeyHashedValue(),
-                stats.getDebugJoinKeyHashLimit());
+                stats.getDebugJoinKeyHashLimit(),
+                getAllowlistedAppPackageName(stats.getSourceRegistrant()));
     }
 
     @Override
@@ -317,7 +353,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 stats.getAttributionType(),
                 stats.isMatched(),
                 stats.getNumUniqueAdIds(),
-                stats.getNumUniqueAdIdsLimit());
+                stats.getNumUniqueAdIdsLimit(),
+                getAllowlistedAppPackageName(stats.getSourceRegistrant()));
     }
 
     @Override
@@ -354,13 +391,21 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 measurementAttributionStats.getFailureType(),
                 measurementAttributionStats.isSourceDerived(),
                 measurementAttributionStats.isInstallAttribution(),
-                measurementAttributionStats.getAttributionDelay());
+                measurementAttributionStats.getAttributionDelay(),
+                getAllowlistedAppPackageName(measurementAttributionStats.getSourceRegistrant()),
+                measurementAttributionStats.getAggregateReportCount(),
+                measurementAttributionStats.getAggregateDebugReportCount(),
+                measurementAttributionStats.getEventReportCount(),
+                measurementAttributionStats.getEventDebugReportCount(),
+                /* retryCount */ 0);
     }
 
     /** log method for measurement wipeout. */
     public void logMeasurementWipeoutStats(MeasurementWipeoutStats measurementWipeoutStats) {
         AdServicesStatsLog.write(
-                measurementWipeoutStats.getCode(), measurementWipeoutStats.getWipeoutType());
+                measurementWipeoutStats.getCode(),
+                measurementWipeoutStats.getWipeoutType(),
+                getAllowlistedAppPackageName(measurementWipeoutStats.getSourceRegistrant()));
     }
 
     /** log method for measurement attribution. */
@@ -369,7 +414,9 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
         AdServicesStatsLog.write(
                 measurementDelayedSourceRegistrationStats.getCode(),
                 measurementDelayedSourceRegistrationStats.getRegistrationStatus(),
-                measurementDelayedSourceRegistrationStats.getRegistrationDelay());
+                measurementDelayedSourceRegistrationStats.getRegistrationDelay(),
+                getAllowlistedAppPackageName(
+                        measurementDelayedSourceRegistrationStats.getRegistrant()));
     }
 
     /** log method for consent migrations. */
@@ -385,6 +432,38 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                     stats.getRegion(),
                     stats.getMigrationStatus().getMigrationStatusValue());
         }
+    }
+
+    /** log method for read/write status of enrollment data. */
+    public void logEnrollmentDataStats(int mType, boolean mIsSuccessful, int mBuildId) {
+        AdServicesStatsLog.write(
+                AD_SERVICES_ENROLLMENT_DATA_STORED, mType, mIsSuccessful, mBuildId);
+    }
+
+    /** log method for status of enrollment matching queries. */
+    public void logEnrollmentMatchStats(boolean mIsSuccessful, int mBuildId) {
+        AdServicesStatsLog.write(AD_SERVICES_ENROLLMENT_MATCHED, mIsSuccessful, mBuildId);
+    }
+
+    /** log method for status of enrollment downloads. */
+    public void logEnrollmentFileDownloadStats(boolean mIsSuccessful, int mBuildId) {
+        AdServicesStatsLog.write(AD_SERVICES_ENROLLMENT_FILE_DOWNLOADED, mIsSuccessful, mBuildId);
+    }
+
+    /** log method for enrollment-related status_caller_not_found errors. */
+    public void logEnrollmentFailedStats(
+            int mBuildId,
+            int mDataFileGroupStatus,
+            int mEnrollmentRecordCountInTable,
+            String mQueryParameter,
+            int mErrorCause) {
+        AdServicesStatsLog.write(
+                AD_SERVICES_ENROLLMENT_FAILED,
+                mBuildId,
+                mDataFileGroupStatus,
+                mEnrollmentRecordCountInTable,
+                mQueryParameter,
+                mErrorCause);
     }
 
     @NonNull

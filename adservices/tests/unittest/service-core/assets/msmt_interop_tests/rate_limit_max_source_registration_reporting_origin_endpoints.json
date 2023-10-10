@@ -4,11 +4,11 @@
     "rate_limit_max_source_registration_reporting_origins": "1"
   },
   "input": {
-    "sources": [
+    "registrations": [
       {
-        "timestamp": "1643235573000",
+        "timestamp": "0",
         "registration_request": {
-          "source_origin": "https://example.source1.test",
+          "context_origin": "https://example.source1.test",
           "attribution_src_url": "https://reporter1.test/register-source",
           "source_type": "navigation"
         },
@@ -24,9 +24,9 @@
       },
       // Should be registered as the source site is different.
       {
-        "timestamp": "1643235574000",
+        "timestamp": "1000",
         "registration_request": {
-          "source_origin": "https://source2.test",
+          "context_origin": "https://source2.test",
           "attribution_src_url": "https://reporter2.test/register-source",
           "source_type": "navigation"
         },
@@ -41,11 +41,32 @@
           }
         }]
       },
+      // Should be dropped due to the unattributed reporting origin limit for
+      // same reporting site.
+      {
+        "timestamp": "1999",
+        "registration_request": {
+          "context_origin": "https://source1.test",
+          "attribution_src_url": "https://example.reporter1.test/register-source",
+          "source_type": "navigation"
+        },
+        "responses": [{
+          "url": "https://example.reporter1.test/register-source",
+          "debug_permission": true,
+          "response": {
+            "Attribution-Reporting-Register-Source": {
+              "destination": "https://destination1.test",
+              "source_event_id": "888",
+              "debug_reporting": true
+            }
+          }
+        }]
+      },
       // Should be dropped due to the unattributed reporting origin limit.
       {
-        "timestamp": "1643235575000",
+        "timestamp": "2000",
         "registration_request": {
-          "source_origin": "https://source1.test",
+          "context_origin": "https://source1.test",
           "attribution_src_url": "https://reporter2.test/register-source",
           "source_type": "navigation"
         },
@@ -64,9 +85,9 @@
       // Should be dropped due to the unattributed reporting origin limit is
       // reached for one of the destinations.
       {
-        "timestamp": "1643235575001",
+        "timestamp": "2001",
         "registration_request": {
-          "source_origin": "https://source1.test",
+          "context_origin": "https://source1.test",
           "attribution_src_url": "https://reporter2.test/register-source",
           "source_type": "navigation"
         },
@@ -86,9 +107,9 @@
       },
       // Should be registered as the destination site is different.
       {
-        "timestamp": "1643235576000",
+        "timestamp": "3000",
         "registration_request": {
-          "source_origin": "https://source1.test",
+          "context_origin": "https://source1.test",
           "attribution_src_url": "https://reporter2.test/register-source",
           "source_type": "navigation"
         },
@@ -105,9 +126,9 @@
       // Should be dropped due to the unattributed reporting origin limit, but
       // verbose debug report is not created as debug_permission is not set.
       {
-        "timestamp": "1643235577000",
+        "timestamp": "4000",
         "registration_request": {
-          "source_origin": "https://source1.test",
+          "context_origin": "https://source1.test",
           "attribution_src_url": "https://reporter3.test/register-source",
           "source_type": "event"
         },
@@ -124,9 +145,9 @@
       },
       // Should be registered as the first source is outside the rate limit window.
       {
-        "timestamp": "1645827573000",
+        "timestamp": "2592000000",
         "registration_request": {
-          "source_origin": "https://source1.test",
+          "context_origin": "https://source1.test",
           "attribution_src_url": "https://reporter3.test/register-source",
           "source_type": "event"
         },
@@ -139,15 +160,13 @@
             }
           }
         }]
-      }
-    ],
-    "triggers": [
+      },
       // Should result in an event-level report.
       {
-        "timestamp": "1643235583000",
+        "timestamp": "10000",
         "registration_request": {
           "attribution_src_url": "https://reporter1.test/register-trigger",
-          "destination_origin": "https://destination1.test"
+          "context_origin": "https://destination1.test"
         },
         "responses": [{
           "url": "https://reporter1.test/register-trigger",
@@ -164,10 +183,10 @@
       },
       // Should result in an event-level report.
       {
-        "timestamp": "1643235584000",
+        "timestamp": "11000",
         "registration_request": {
           "attribution_src_url": "https://reporter2.test/register-trigger",
-          "destination_origin": "https://destination1.test"
+          "context_origin": "https://destination1.test"
         },
         "responses": [{
           "url": "https://reporter2.test/register-trigger",
@@ -184,10 +203,10 @@
       },
       // Should result in an event-level report.
       {
-        "timestamp": "1643235585000",
+        "timestamp": "12000",
         "registration_request": {
           "attribution_src_url": "https://reporter2.test/register-trigger",
-          "destination_origin": "https://destination2.test"
+          "context_origin": "https://destination2.test"
         },
         "responses": [{
           "url": "https://reporter2.test/register-trigger",
@@ -204,10 +223,10 @@
       },
       // Should not result in an event-level report due to no matching source.
       {
-        "timestamp": "1643235585001",
+        "timestamp": "12001",
         "registration_request": {
           "attribution_src_url": "https://reporter3.test/register-trigger",
-          "destination_origin": "https://destination1.test"
+          "context_origin": "https://destination1.test"
         },
         "responses": [{
           "url": "https://reporter3.test/register-trigger",
@@ -224,10 +243,10 @@
       },
       // Should result in an event-level report.
       {
-        "timestamp": "1645827574000",
+        "timestamp": "2592001000",
         "registration_request": {
           "attribution_src_url": "https://reporter3.test/register-trigger",
-          "destination_origin": "https://destination1.test"
+          "context_origin": "https://destination1.test"
         },
         "responses": [{
           "url": "https://reporter3.test/register-trigger",
@@ -245,57 +264,68 @@
     ]
   },
   "output": {
-    "event_level_results": [
+    "unparsable_registrations": [],
+    "reports": [
       {
         "payload": {
           "attribution_destination": "https://destination1.test",
           "randomized_trigger_rate": 0.0024263,
-          "scheduled_report_time": "1643411973",
+          "scheduled_report_time": "172800",
           "source_event_id": "111",
           "source_type": "navigation",
           "trigger_data": "7"
         },
         "report_url": "https://reporter1.test/.well-known/attribution-reporting/report-event-attribution",
-        "report_time": "1643411973000"
+        "report_time": "172800000"
       },
       {
         "payload": {
           "attribution_destination": "https://destination1.test",
           "randomized_trigger_rate": 0.0024263,
-          "scheduled_report_time": "1643411974",
+          "scheduled_report_time": "172801",
           "source_event_id": "222",
           "source_type": "navigation",
           "trigger_data": "6"
         },
         "report_url": "https://reporter2.test/.well-known/attribution-reporting/report-event-attribution",
-        "report_time": "1643411974000"
+        "report_time": "172801000"
       },
       {
         "payload": {
           "attribution_destination": "https://destination2.test",
           "randomized_trigger_rate": 0.0024263,
-          "scheduled_report_time": "1643411976",
+          "scheduled_report_time": "172803",
           "source_event_id": "333",
           "source_type": "navigation",
           "trigger_data": "5"
         },
         "report_url": "https://reporter2.test/.well-known/attribution-reporting/report-event-attribution",
-        "report_time": "1643411976000"
+        "report_time": "172803000"
       },
       {
         "payload": {
           "attribution_destination": "https://destination1.test",
           "randomized_trigger_rate": 0.0000025,
-          "scheduled_report_time": "1648423173",
+          "scheduled_report_time": "5184000",
           "source_event_id": "555",
           "source_type": "event",
           "trigger_data": "1"
         },
         "report_url": "https://reporter3.test/.well-known/attribution-reporting/report-event-attribution",
-        "report_time": "1648423173000"
-      }
-    ],
-    "verbose_debug_reports": [
+        "report_time": "5184000000"
+      },
+      {
+        "payload": [ {
+          "body": {
+             "attribution_destination": "https://destination1.test",
+             "source_event_id": "888",
+             "source_site": "https://source1.test"
+          },
+          "type": "source-success"
+       } ],
+       "report_time": "1999",
+       "report_url": "https://example.reporter1.test/.well-known/attribution-reporting/debug/verbose"
+      },
       {
         "payload": [ {
           "body": {
@@ -305,7 +335,7 @@
           },
           "type": "source-success"
        } ],
-       "report_time": "1643235575000",
+       "report_time": "2000",
        "report_url": "https://reporter2.test/.well-known/attribution-reporting/debug/verbose"
       }
     ]

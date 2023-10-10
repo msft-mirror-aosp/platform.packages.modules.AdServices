@@ -19,6 +19,7 @@ package com.android.adservices.service.measurement;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
@@ -27,6 +28,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -75,6 +77,7 @@ public final class SourceFixture {
                 .setAttributionMode(ValidSourceParams.ATTRIBUTION_MODE)
                 .setAggregateSource(ValidSourceParams.buildAggregateSource())
                 .setFilterData(ValidSourceParams.buildFilterData())
+                .setSharedFilterDataKeys(ValidSourceParams.SHARED_FILTER_DATA_KEYS)
                 .setIsDebugReporting(true)
                 .setRegistrationId(ValidSourceParams.REGISTRATION_ID)
                 .setSharedAggregationKeys(ValidSourceParams.SHARED_AGGREGATE_KEYS)
@@ -82,7 +85,9 @@ public final class SourceFixture {
                 .setPlatformAdId(ValidSourceParams.PLATFORM_AD_ID)
                 .setDebugAdId(ValidSourceParams.DEBUG_AD_ID)
                 .setRegistrationOrigin(ValidSourceParams.REGISTRATION_ORIGIN)
-                .setCoarseEventReportDestinations(true);
+                .setCoarseEventReportDestinations(true)
+                .setSharedDebugKey(ValidSourceParams.SHARED_DEBUG_KEY)
+                .setAttributedTriggers(new ArrayList<>());
     }
 
     public static class ValidSourceParams {
@@ -106,11 +111,14 @@ public final class SourceFixture {
         public static final int AGGREGATE_CONTRIBUTIONS = 0;
         public static final String REGISTRATION_ID = "R1";
         public static final String SHARED_AGGREGATE_KEYS = "[\"key1\"]";
+        public static final String SHARED_FILTER_DATA_KEYS =
+                "[\"conversion_subdomain\", \"product\"]";
         public static final Long INSTALL_TIME = 100L;
         public static final String PLATFORM_AD_ID = "test-platform-ad-id";
         public static final String DEBUG_AD_ID = "test-debug-ad-id";
         public static final Uri REGISTRATION_ORIGIN =
                 WebUtil.validUri("https://subdomain.example.test");
+        public static final UnsignedLong SHARED_DEBUG_KEY = new UnsignedLong(834690L);
 
         public static final String buildAggregateSource() {
             try {
@@ -164,18 +172,44 @@ public final class SourceFixture {
                                 TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7))
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2]}]";
-        return new ReportSpec(triggerSpecsString, "3");
+        return new ReportSpec(triggerSpecsString, "3", getValidSource());
+    }
+
+    public static ReportSpec getValidReportSpecCountBasedWithFewerState() throws JSONException {
+        String triggerSpecsString =
+                "[{\"trigger_data\": [1],"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": \"0\", "
+                        + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(2))
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": [1]}]";
+        return new ReportSpec(triggerSpecsString, "1", getValidSource());
     }
 
     public static ReportSpec getValidReportSpecValueSum() throws JSONException {
-        return new ReportSpec(getTriggerSpecValueSumEncodedJSONValidBaseline(), "3");
+        return new ReportSpec(getTriggerSpecValueSumEncodedJSONValidBaseline(), "3",
+                getValidSource());
     }
 
     public static Source getValidSourceWithFlexEventReport() {
         try {
             return getValidSourceBuilder()
+                    .setAttributedTriggers(new ArrayList<>())
                     .setFlexEventReportSpec(getValidReportSpecCountBased())
                     .setMaxEventLevelReports(getValidReportSpecCountBased().getMaxReports())
+                    .build();
+        } catch (JSONException e) {
+            return null;
+        }
+    }
+
+    public static Source getValidSourceWithFlexEventReportWithFewerState() {
+        try {
+            return getValidSourceBuilder()
+                    .setAttributedTriggers(new ArrayList<>())
+                    .setFlexEventReportSpec(getValidReportSpecCountBasedWithFewerState())
+                    .setMaxEventLevelReports(
+                            getValidReportSpecCountBasedWithFewerState().getMaxReports())
                     .build();
         } catch (JSONException e) {
             return null;
@@ -185,6 +219,7 @@ public final class SourceFixture {
     public static Source.Builder getValidFullSourceBuilderWithFlexEventReportValueSum() {
         try {
             return getValidSourceBuilder()
+                    .setAttributedTriggers(new ArrayList<>())
                     .setFlexEventReportSpec(getValidReportSpecValueSum());
         } catch (JSONException e) {
             return null;
@@ -196,9 +231,9 @@ public final class SourceFixture {
         ReportSpec reportSpec = getValidReportSpecValueSum();
         return getMinimalValidSourceBuilder()
                 .setId(UUID.randomUUID().toString())
-                .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
+                .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJson())
                 .setMaxEventLevelReports(reportSpec.getMaxReports())
-                .setEventAttributionStatus(reportSpec.encodeTriggerSpecsToJSON())
+                .setEventAttributionStatus(null)
                 .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());
     }
 
@@ -206,9 +241,9 @@ public final class SourceFixture {
         ReportSpec reportSpec = getValidReportSpecCountBased();
         return getMinimalValidSourceBuilder()
                 .setId(UUID.randomUUID().toString())
-                .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
+                .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJson())
                 .setMaxEventLevelReports(reportSpec.getMaxReports())
-                .setEventAttributionStatus(reportSpec.encodeTriggerSpecsToJSON())
+                .setEventAttributionStatus(null)
                 .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());
     }
 

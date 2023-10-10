@@ -19,12 +19,12 @@ package com.android.adservices.data.measurement.migration;
 import android.content.ContentValues;
 import android.net.Uri;
 
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
-import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -66,6 +66,9 @@ public class ContentValueFixtures {
 
         // Added in V13.
         public static final String PLATFORM_AD_ID = "sample_platform_ad_id";
+
+        // Added in V24
+        public static final String POST_BODY = "{\"ad_location\":\"bottom_right\"}";
     }
 
     public static class SourceValues {
@@ -131,6 +134,10 @@ public class ContentValueFixtures {
         // Added in V19
         public static final int MAX_EVENT_LEVEL_REPORTS = 3;
         public static final String EVENT_REPORT_WINDOWS = "{'end_times': [12, 123]}";
+        public static final long SHARED_DEBUG_KEY = 2345L;
+
+        // Added in V22
+        public static final String SHARED_FILTER_DATA_KEYS = "shared_filter_data_keys";
     }
 
     public static class SourceDestinationValues {
@@ -219,6 +226,9 @@ public class ContentValueFixtures {
         // Added in V3.
         public static final String SOURCE_ID = "source_id";
         public static final String TRIGGER_ID = "trigger_id";
+
+        // Added in V25
+        public static final Uri REGISTRATION_ORIGIN = ContentValueFixtures.REGISTRATION_ORIGIN;
     }
 
     public static class EventReportValues {
@@ -246,6 +256,9 @@ public class ContentValueFixtures {
         public static final long DEBUG_REPORT_STATUS = 4;
         // Added in V14
         public static final Uri REGISTRATION_ORIGIN = ContentValueFixtures.REGISTRATION_ORIGIN;
+
+        // Added in V23
+        public static final String TRIGGER_SUMMARY_BUCKET = "1,3";
     }
 
     public static class AggregateReportValues {
@@ -449,6 +462,38 @@ public class ContentValueFixtures {
         return generateAsyncRegistrationContentValuesV16();
     }
 
+    public static ContentValues generateAsyncRegistrationContentValuesV18() {
+        return generateAsyncRegistrationContentValuesV17();
+    }
+
+    public static ContentValues generateAsyncRegistrationContentValuesV19() {
+        return generateAsyncRegistrationContentValuesV18();
+    }
+
+    public static ContentValues generateAsyncRegistrationContentValuesV20() {
+        return generateAsyncRegistrationContentValuesV19();
+    }
+
+    public static ContentValues generateAsyncRegistrationContentValuesV21() {
+        return generateAsyncRegistrationContentValuesV20();
+    }
+
+    public static ContentValues generateAsyncRegistrationContentValuesV22() {
+        return generateAsyncRegistrationContentValuesV21();
+    }
+
+    public static ContentValues generateAsyncRegistrationContentValuesV23() {
+        return generateAsyncRegistrationContentValuesV22();
+    }
+
+    public static ContentValues generateAsyncRegistrationContentValuesV24() {
+        ContentValues asyncRegistration = generateAsyncRegistrationContentValuesV23();
+        asyncRegistration.put(
+                MeasurementTables.AsyncRegistrationContract.REQUEST_POST_BODY,
+                AsyncRegistrationValues.POST_BODY);
+        return asyncRegistration;
+    }
+
     public static ContentValues generateSourceContentValuesV1() {
         ContentValues source = new ContentValues();
 
@@ -632,6 +677,25 @@ public class ContentValueFixtures {
         return values;
     }
 
+    public static ContentValues generateSourceContentValuesV20() {
+        return generateSourceContentValuesV19();
+    }
+
+    public static ContentValues generateSourceContentValuesV21() {
+        ContentValues values = generateSourceContentValuesV20();
+        values.put(
+                MeasurementTables.SourceContract.SHARED_DEBUG_KEY, SourceValues.SHARED_DEBUG_KEY);
+        return values;
+    }
+
+    public static ContentValues generateSourceContentValuesV22() {
+        ContentValues values = generateSourceContentValuesV21();
+        values.put(
+                MeasurementTables.SourceContract.SHARED_FILTER_DATA_KEYS,
+                SourceValues.SHARED_FILTER_DATA_KEYS);
+        return values;
+    }
+
     public static ContentValues generateSourceDestinationContentValuesV9() {
         ContentValues sourceDestination = new ContentValues();
 
@@ -674,6 +738,26 @@ public class ContentValueFixtures {
 
     public static ContentValues generateSourceDestinationContentValuesV17() {
         return generateSourceDestinationContentValuesV16();
+    }
+
+    public static ContentValues generateSourceDestinationContentValuesV18() {
+        return generateSourceDestinationContentValuesV17();
+    }
+
+    public static ContentValues generateSourceDestinationContentValuesV19() {
+        return generateSourceDestinationContentValuesV18();
+    }
+
+    public static ContentValues generateSourceDestinationContentValuesV20() {
+        return generateSourceDestinationContentValuesV19();
+    }
+
+    public static ContentValues generateSourceDestinationContentValuesV21() {
+        return generateSourceDestinationContentValuesV20();
+    }
+
+    public static ContentValues generateSourceDestinationContentValuesV22() {
+        return generateSourceDestinationContentValuesV21();
     }
 
     public static ContentValues generateTriggerContentValuesV1() {
@@ -816,6 +900,22 @@ public class ContentValueFixtures {
         return values;
     }
 
+    public static ContentValues generateTriggerContentValuesV21() {
+        return generateTriggerContentValuesV20();
+    }
+
+    public static ContentValues generateTriggerContentValuesV22() {
+        ContentValues values = generateTriggerContentValuesV21();
+        values.put(
+                MeasurementTables.SourceContract.SHARED_FILTER_DATA_KEYS,
+                SourceValues.SHARED_FILTER_DATA_KEYS);
+        return values;
+    }
+
+    public static ContentValues generateTriggerContentValuesV23() {
+        return generateTriggerContentValuesV22();
+    }
+
     public static ContentValues generateAttributionContentValuesV1() {
         ContentValues attribution = new ContentValues();
 
@@ -905,6 +1005,18 @@ public class ContentValueFixtures {
 
     public static ContentValues generateAttributionContentValuesV17() {
         return generateAttributionContentValuesV16();
+    }
+
+    public static ContentValues generateAttributionContentValuesV24() {
+        return generateAttributionContentValuesV17();
+    }
+
+    public static ContentValues generateAttributionContentValuesV25() {
+        ContentValues values = generateAttributionContentValuesV24();
+        values.put(
+                MeasurementTables.AttributionContract.REGISTRATION_ORIGIN,
+                AttributionValues.REGISTRATION_ORIGIN.toString());
+        return values;
     }
 
     public static ContentValues generateEventReportContentValuesV1() {
@@ -1026,6 +1138,34 @@ public class ContentValueFixtures {
 
     public static ContentValues generateEventReportContentValuesV17() {
         return generateEventReportContentValuesV16();
+    }
+
+    public static ContentValues generateEventReportContentValuesV18() {
+        return generateEventReportContentValuesV17();
+    }
+
+    public static ContentValues generateEventReportContentValuesV19() {
+        return generateEventReportContentValuesV18();
+    }
+
+    public static ContentValues generateEventReportContentValuesV20() {
+        return generateEventReportContentValuesV19();
+    }
+
+    public static ContentValues generateEventReportContentValuesV21() {
+        return generateEventReportContentValuesV20();
+    }
+
+    public static ContentValues generateEventReportContentValuesV22() {
+        return generateEventReportContentValuesV21();
+    }
+
+    public static ContentValues generateEventReportContentValuesV23() {
+        ContentValues eventReport = generateEventReportContentValuesV22();
+        eventReport.put(
+                MeasurementTables.EventReportContract.TRIGGER_SUMMARY_BUCKET,
+                EventReportValues.TRIGGER_SUMMARY_BUCKET);
+        return eventReport;
     }
 
     public static ContentValues generateAggregateReportContentValuesV1() {

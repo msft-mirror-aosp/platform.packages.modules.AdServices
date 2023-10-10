@@ -28,7 +28,6 @@ import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.KeyValueData.DataType;
-import com.android.adservices.service.measurement.ReportSpec;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
@@ -72,6 +71,14 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
+     * Queries and returns the {@link Source}.
+     *
+     * @param sourceId ID of the requested Source
+     * @return the source registrant from requested Source
+     */
+    String getSourceRegistrant(@NonNull String sourceId) throws DatastoreException;
+
+    /**
      * Queries and returns the {@link Trigger}.
      *
      * @param triggerId Id of the request Trigger
@@ -89,6 +96,14 @@ public interface IMeasurementDao {
     int getNumAggregateReportsPerDestination(
             @NonNull Uri attributionDestination, @EventSurfaceType int destinationType)
             throws DatastoreException;
+
+    /**
+     * Fetches the count of aggregate reports for the provided source id.
+     *
+     * @param sourceId source id
+     * @return number of aggregate reports in the database attributed to the provided source id.
+     */
+    int getNumAggregateReportsPerSource(@NonNull String sourceId) throws DatastoreException;
 
     /**
      * Fetches the count of event reports for the provided destination.
@@ -116,25 +131,51 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
-     * Gets the count of distinct IDs of enrollments in the Attribution table in a time window with
-     * matching publisher and destination, excluding a given enrollment ID.
+     * Gets the count of distinct reporting origins in the Attribution table in a time window with
+     * matching publisher and destination, excluding a given reporting origin.
      */
-    Integer countDistinctEnrollmentsPerPublisherXDestinationInAttribution(
+    Integer countDistinctReportingOriginsPerPublisherXDestInAttribution(
             Uri sourceSite,
             Uri destination,
-            String excludedEnrollmentId,
+            Uri excludedReportingOrigin,
             long windowStartTime,
             long windowEndTime)
             throws DatastoreException;
 
     /**
      * Gets the count of distinct Uri's of destinations in the Source table in a time window with
-     * matching publisher, enrollment, and ACTIVE status, excluding a given destination.
+     * matching publisher, enrollment, unexpired and ACTIVE status, excluding a given destination.
+     */
+    Integer countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+            Uri publisher,
+            @EventSurfaceType int publisherType,
+            String enrollmentId,
+            List<Uri> excludedDestinations,
+            @EventSurfaceType int destinationType,
+            long windowStartTime,
+            long windowEndTime)
+            throws DatastoreException;
+
+    /**
+     * Gets the count of distinct Uri's of destinations in the Source table with matching publisher,
+     * enrollment, unexpired and ACTIVE status, excluding a given destination.
      */
     Integer countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
             Uri publisher,
             @EventSurfaceType int publisherType,
             String enrollmentId,
+            List<Uri> excludedDestinations,
+            @EventSurfaceType int destinationType,
+            long windowEndTime)
+            throws DatastoreException;
+
+    /**
+     * Gets the count of distinct Uri's of destinations in the Source table in a time window with
+     * matching publisher, and ACTIVE status, excluding a given destination.
+     */
+    Integer countDistinctDestinationsPerPublisherPerRateLimitWindow(
+            Uri publisher,
+            @EventSurfaceType int publisherType,
             List<Uri> excludedDestinations,
             @EventSurfaceType int destinationType,
             long windowStartTime,
@@ -158,11 +199,11 @@ public interface IMeasurementDao {
      * Gets the count of distinct IDs of enrollments in the Source table in a time window with
      * matching publisher and destination, excluding a given enrollment ID.
      */
-    Integer countDistinctEnrollmentsPerPublisherXDestinationInSource(
+    Integer countDistinctReportingOriginsPerPublisherXDestinationInSource(
             Uri publisher,
             @EventSurfaceType int publisherType,
             List<Uri> destinations,
-            String excludedEnrollmentId,
+            Uri excludedReportingOrigin,
             long windowStartTime,
             long windowEndTime)
             throws DatastoreException;
@@ -208,11 +249,11 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
-     * @param sourceId the source id
-     * @param reportSpec the new report specification in source
+     * @param sourceId the source ID
+     * @param attributionStatus the source's JSON-encoded attributed triggers
      * @throws DatastoreException throws DatastoreException
      */
-    void updateSourceAttributedTriggers(String sourceId, ReportSpec reportSpec)
+    void updateSourceAttributedTriggers(String sourceId, String attributionStatus)
             throws DatastoreException;
 
     /**
@@ -281,6 +322,17 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
+     * Change the summary bucket of the event report
+     *
+     * @param eventReportId the id of the event report to be updated
+     * @param summaryBucket the new summary bucket of the report
+     * @throws DatastoreException
+     */
+    void updateEventReportSummaryBucket(
+            @NonNull String eventReportId, @NonNull String summaryBucket) throws DatastoreException;
+    ;
+
+    /**
      * Change the status of an event debug report to DELIVERED
      *
      * @param eventReportId the id of the event report to be updated
@@ -345,7 +397,8 @@ public interface IMeasurementDao {
     boolean deleteAppRecords(Uri uri) throws DatastoreException;
 
     /** Deletes all expired records in measurement tables. */
-    void deleteExpiredRecords(long earliestValidInsertion) throws DatastoreException;
+    void deleteExpiredRecords(long earliestValidInsertion, int registrationRetryLimit)
+            throws DatastoreException;
 
     /**
      * Mark relevant source as install attributed.
@@ -416,21 +469,21 @@ public interface IMeasurementDao {
     void deleteSources(@NonNull List<String> sourceIds) throws DatastoreException;
 
     /**
-     * Delete records from Async Registration table whose registrant or app destination match with
-     * provided app URI.
-     *
-     * @param uri AsyncRegistrations registrant or OS Destination to match
-     * @throws DatastoreException database transaction issues
-     */
-    void deleteAsyncRegistrationsProvidedRegistrant(@NonNull String uri) throws DatastoreException;
-
-    /**
-     * Delete records from source table that match provided trigger IDs.
+     * Delete records from trigger table that match provided trigger IDs.
      *
      * @param triggerIds trigger IDs to match
      * @throws DatastoreException database transaction issues
      */
     void deleteTriggers(@NonNull List<String> triggerIds) throws DatastoreException;
+
+    /**
+     * Delete records from async registration table that match provided async registration IDs.
+     *
+     * @param asyncRegistrationIds async registration IDs to match
+     * @throws DatastoreException database transaction issues
+     */
+    void deleteAsyncRegistrations(@NonNull List<String> asyncRegistrationIds)
+            throws DatastoreException;
 
     /**
      * Insert a record into the Async Registration Table.
@@ -554,7 +607,7 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
-     * Returns list of triggers matching registrant, publishers and also in the provided time frame.
+     * Returns list of triggers matching registrant and destinations in the provided time frame.
      * It matches registrant and time range (start & end) irrespective of the {@code matchBehavior}.
      * In the resulting set, if matchBehavior is {@link
      * android.adservices.measurement.DeletionRequest.MatchBehavior#MATCH_BEHAVIOR_DELETE}, then it
@@ -573,6 +626,34 @@ public interface IMeasurementDao {
      * @throws DatastoreException database transaction level issues
      */
     List<String> fetchMatchingTriggers(
+            @NonNull Uri registrant,
+            @NonNull Instant start,
+            @NonNull Instant end,
+            @NonNull List<Uri> origins,
+            @NonNull List<Uri> domains,
+            @DeletionRequest.MatchBehavior int matchBehavior)
+            throws DatastoreException;
+
+    /**
+     * Returns list of async registrations matching registrant and top origins in the provided time
+     * frame. It matches registrant and time range (start & end) irrespective of the {@code
+     * matchBehavior}. In the resulting set, if matchBehavior is {@link
+     * android.adservices.measurement.DeletionRequest.MatchBehavior#MATCH_BEHAVIOR_DELETE}, then it
+     * matches origins and domains. In case of {@link
+     * android.adservices.measurement.DeletionRequest.MatchBehavior#MATCH_BEHAVIOR_PRESERVE}, it
+     * returns the records that don't match origins or domain.
+     *
+     * @param registrant registrant to match
+     * @param start request time should be after this instant (inclusive)
+     * @param end request time should be after this instant (inclusive)
+     * @param origins top origin site match
+     * @param domains top origin top level domain matches
+     * @param matchBehavior indicates whether to return matching or inversely matching (everything
+     *     except matching) data
+     * @return list of async registration IDs
+     * @throws DatastoreException database transaction level issues
+     */
+    List<String> fetchMatchingAsyncRegistrations(
             @NonNull Uri registrant,
             @NonNull Instant start,
             @NonNull Instant end,
@@ -603,6 +684,17 @@ public interface IMeasurementDao {
      * @param enrollmentId enrollment ID
      */
     void insertIgnoredSourceForEnrollment(@NonNull String sourceId, @NonNull String enrollmentId)
+            throws DatastoreException;
+
+    /**
+     * Increments Retry Counter for EventReporting Records and return the updated retry count. This
+     * is used for Retry Limiting.
+     *
+     * @param id Primary key id of Record in Measurement Event Report Table.
+     * @param reportType KeyValueData.DataType corresponding with Record type being incremented.
+     * @return current report count
+     */
+    int incrementAndGetReportingRetryCount(String id, DataType reportType)
             throws DatastoreException;
 
     /**

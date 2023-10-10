@@ -22,6 +22,7 @@ java_defaults {
     target_sdk_version: "33",
     static_libs: [
         "SdkInterfaces",
+        "SdkSandboxTestUtils",
         "modules-utils-build",
     ],
     resource_dirs: ["res"],

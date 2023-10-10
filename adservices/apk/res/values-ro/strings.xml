@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Permite unei aplicații să acceseze API-ul AdServices Consent."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Acces la API-ul Ad ID"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Permite unei aplicații să acceseze API-ul Ad ID."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"Acces la API-ul AdServices Cobalt Upload"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Permite unei aplicații să acceseze API-ul AdServices Cobalt Upload."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Acces la API-ul App Set ID"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Permite unei aplicații să acceseze API-ul App Set ID."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Acces la API-ul Consent Service"</string>
@@ -40,7 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Permite unei aplicații să acceseze API-ul AdService pentru starea de activare."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Acces la API-urile AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Permite unei aplicații să acceseze API-urile AdServicesManager."</string>
-    <string name="app_label" msgid="5985320129629013968">"Sistemul Android"</string>
+    <string name="app_label" msgid="5844694701336604490">"Confidențialitatea anunțurilor"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Înscrie-te în versiunea beta pentru confidențialitatea anunțurilor Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android explorează modalități mai private prin care aplicațiile îți pot afișa anunțuri"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Află mai multe"</string>
@@ -224,7 +226,7 @@
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Se întâmplă frecvent ca aplicațiile pe care le folosești să rețină lucrurile care te interesează pentru a-ți personaliza experiența. Aplicațiile pot și să stocheze informații pe Android despre subiectele tale.\n\nDe exemplu, dacă folosești o aplicație despre antrenamente pentru maraton, aplicația poate deduce că te interesează pantofii de alergare. Ulterior, dacă folosești altă aplicație, acea aplicație îți poate afișa un anunț pentru pantofi de alergare sugerat de prima aplicație.\n\nAndroid șterge automat datele sugerate de aplicații cu regularitate. Este posibil ca aplicațiile pe care le folosești din nou să reapară în listă. Poți să nu permiți unei aplicații să îți sugereze anunțuri.\n\nÎn aplicațiile pe care le folosești, un anunț pe care îl vezi poate fi personalizat în funcție de această setare, de setarea pentru subiectele anunțurilor, de setările tale pentru ID-ul publicitar și de capacitatea aplicației pe care o folosești de a personaliza anunțurile."</string>
     <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"Este disponibilă o nouă funcție pentru confidențialitatea anunțurilor"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Între aplicații sunt trimise informații foarte limitate pentru a ajuta la măsurarea performanței anunțurilor"</string>
-    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Lansăm o nouă funcție pentru confidențialitatea anunțurilor, numită cuantificarea anunțurilor. Android trimite doar informații foarte limitate între aplicații, de exemplu, când ți-a fost afișat un anunț, pentru a ajuta aplicațiile să măsoare performanța anunțurilor."</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Lansăm o nouă funcție pentru confidențialitatea anunțurilor, numită cuantificarea anunțurilor. Android trimite doar informații foarte limitate între aplicații, de exemplu, când ți s-a afișat un anunț, pentru a ajuta la măsurarea performanței anunțurilor."</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Poți face modificări în setările pentru confidențialitatea anunțurilor."</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Aplicațiile pe care le folosești pot solicita informații de la Android pentru a măsura performanța anunțurilor lor. Android permite aplicațiilor să colecteze doar tipuri de date limitate."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Ilustrație colorată cu simboluri care reprezintă subiecte de interes, cum ar fi muzică, știri și sport"</string>

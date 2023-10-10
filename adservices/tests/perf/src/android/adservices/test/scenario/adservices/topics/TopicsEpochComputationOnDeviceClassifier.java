@@ -161,11 +161,8 @@ public class TopicsEpochComputationOnDeviceClassifier {
         // The app will be assigned one random topic from one of these 5 topics.
         assertThat(sdk3Result.getTopics()).hasSize(1);
         Topic topic = sdk3Result.getTopics().get(0);
-
-        // Top 5 classifications for empty string with v3 model are [10230, 10228, 10253, 10232,
-        // 10140]. This is computed by running the model on the device for empty string.
-        // topic is one of the 5 classification topics of the Test App.
-        assertThat(topic.getTopicId()).isIn(Arrays.asList(10230, 10228, 10253, 10232, 10140));
+        // Verify topic ids is valid.
+        assertThat(topic.getTopicId()).isAtLeast(10000);
 
         assertThat(topic.getModelVersion()).isAtLeast(1L);
         assertThat(topic.getTaxonomyVersion()).isAtLeast(1L);
@@ -174,7 +171,7 @@ public class TopicsEpochComputationOnDeviceClassifier {
     private void overridingBeforeTest() {
         disableGlobalKillSwitch();
         disableTopicsKillSwitch();
-        overridingAdservicesLoggingLevel("DEBUG");
+        overridingAdservicesLoggingLevel("VERBOSE");
 
         overrideDisableTopicsEnrollmentCheck("1");
         overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);

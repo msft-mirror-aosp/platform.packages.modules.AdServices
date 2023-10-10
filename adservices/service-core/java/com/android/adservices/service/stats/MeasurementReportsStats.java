@@ -30,6 +30,8 @@ public class MeasurementReportsStats {
     private int mFailureType;
     private int mUploadMethod;
     private long mReportingDelay;
+    private String mSourceRegistrant;
+    private int mRetryCount;
 
     public MeasurementReportsStats() {}
 
@@ -44,13 +46,22 @@ public class MeasurementReportsStats {
                 && mResultCode == measurementReportsStats.getResultCode()
                 && mFailureType == measurementReportsStats.getFailureType()
                 && mUploadMethod == measurementReportsStats.getUploadMethod()
-                && mReportingDelay == measurementReportsStats.getReportingDelay();
+                && mReportingDelay == measurementReportsStats.getReportingDelay()
+                && Objects.equals(mSourceRegistrant, measurementReportsStats.getSourceRegistrant())
+                && mRetryCount == measurementReportsStats.getRetryCount();
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(
-                mCode, mType, mResultCode, mFailureType, mUploadMethod, mReportingDelay);
+                mCode,
+                mType,
+                mResultCode,
+                mFailureType,
+                mUploadMethod,
+                mReportingDelay,
+                mSourceRegistrant,
+                mRetryCount);
     }
 
     public int getCode() {
@@ -75,6 +86,14 @@ public class MeasurementReportsStats {
 
     public long getReportingDelay() {
         return mReportingDelay;
+    }
+
+    public String getSourceRegistrant() {
+        return mSourceRegistrant;
+    }
+
+    public int getRetryCount() {
+        return mRetryCount;
     }
 
     /**
@@ -128,6 +147,20 @@ public class MeasurementReportsStats {
             mBuilding.mReportingDelay = reportingDelay;
             return this;
         }
+
+        /** See {@link #getSourceRegistrant()}. */
+        public @NonNull MeasurementReportsStats.Builder setSourceRegistrant(
+                String sourceRegistrant) {
+            mBuilding.mSourceRegistrant = sourceRegistrant;
+            return this;
+        }
+
+        /** See {@link MeasurementReportsStats#getRetryCount()} . */
+        public @NonNull MeasurementReportsStats.Builder setRetryCount(int retryCount) {
+            mBuilding.mRetryCount = retryCount;
+            return this;
+        }
+
         /**
          * Build the {@link MeasurementReportsStats}.
          */

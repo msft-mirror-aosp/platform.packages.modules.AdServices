@@ -20,6 +20,8 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertThrows;
 
 import android.content.Context;
@@ -28,6 +30,7 @@ import androidx.javascriptengine.JavaScriptSandbox;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.profiling.JSScriptEngineLogConstants;
 import com.android.adservices.service.profiling.Profiler;
 import com.android.adservices.service.profiling.StopWatch;
@@ -50,6 +53,7 @@ import java.util.concurrent.TimeoutException;
 @SmallTest
 public class JavaScriptSandboxProviderTest {
     private final Context mApplicationContext = ApplicationProvider.getApplicationContext();
+    private final LoggerFactory.Logger mLogger = LoggerFactory.getFledgeLogger();
     private StaticMockitoSession mStaticMockSession;
     @Mock private StopWatch mSandboxInitWatch;
     @Mock private JavaScriptSandbox mSandbox;
@@ -72,12 +76,15 @@ public class JavaScriptSandboxProviderTest {
     }
 
     @Test
-    public void testJsSandboxProviderCreateFails() {
+    public void testJsSandboxProviderCreateFailsIfSandboxNotSupported() {
         when(JavaScriptSandbox.isSupported()).thenReturn(false);
-        mJsSandboxProvider = new JSScriptEngine.JavaScriptSandboxProvider(mProfilerMock);
+        mJsSandboxProvider = new JSScriptEngine.JavaScriptSandboxProvider(mProfilerMock, mLogger);
         ThrowingRunnable getFutureInstance =
-                () -> mJsSandboxProvider.getFutureInstance(mApplicationContext);
-        assertThrows(JSSandboxIsNotAvailableException.class, getFutureInstance);
+                () -> mJsSandboxProvider.getFutureInstance(mApplicationContext).get();
+        Exception futureException = assertThrows(ExecutionException.class, getFutureInstance);
+        assertThat(futureException)
+                .hasCauseThat()
+                .isInstanceOf(JSSandboxIsNotAvailableException.class);
         verify(JavaScriptSandbox::isSupported);
     }
 
@@ -94,7 +101,7 @@ public class JavaScriptSandboxProviderTest {
 
         when(mProfilerMock.start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME))
                 .thenReturn(mSandboxInitWatch);
-        mJsSandboxProvider = new JSScriptEngine.JavaScriptSandboxProvider(mProfilerMock);
+        mJsSandboxProvider = new JSScriptEngine.JavaScriptSandboxProvider(mProfilerMock, mLogger);
 
         mJsSandboxProvider.getFutureInstance(mApplicationContext).get(5, TimeUnit.SECONDS);
         mJsSandboxProvider.getFutureInstance(mApplicationContext).get(5, TimeUnit.SECONDS);
@@ -116,7 +123,7 @@ public class JavaScriptSandboxProviderTest {
 
         when(mProfilerMock.start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME))
                 .thenReturn(mSandboxInitWatch);
-        mJsSandboxProvider = new JSScriptEngine.JavaScriptSandboxProvider(mProfilerMock);
+        mJsSandboxProvider = new JSScriptEngine.JavaScriptSandboxProvider(mProfilerMock, mLogger);
         mJsSandboxProvider.getFutureInstance(mApplicationContext).get(5, TimeUnit.SECONDS);
 
         // Waiting for the first instance closure

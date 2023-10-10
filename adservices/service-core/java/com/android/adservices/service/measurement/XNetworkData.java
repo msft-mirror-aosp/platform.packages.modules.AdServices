@@ -21,7 +21,7 @@ import static com.android.adservices.service.measurement.XNetworkData.XNetworkDa
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONException;
@@ -73,7 +73,8 @@ public class XNetworkData {
                 try {
                     mKeyOffset = Optional.of(new UnsignedLong(keyOffset));
                 } catch (NumberFormatException e) {
-                    LogUtil.d(e, "XNetworkData.Builder: Failed to parse keyOffset.");
+                    LoggerFactory.getMeasurementLogger()
+                            .d(e, "XNetworkData.Builder: Failed to parse keyOffset.");
                     // Wrapped into JSONException so that it does not crash and becomes a checked
                     // Exception that is caught by the caller.
                     throw new JSONException("Failed to parse keyOffset", e);

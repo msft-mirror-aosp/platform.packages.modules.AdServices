@@ -1,7 +1,7 @@
 {
   "description": "A2W test for trigger-event-deduplicated debug report.",
   "phflags_override": {
-    "measurement_debug_join_key_enrollment_allowlist" : "enrollment-id-www.ad-tech1.test"
+    "measurement_debug_join_key_enrollment_allowlist" : "enrollment-id-ad-tech1.test"
   },
   "input": {
     "sources": [
@@ -100,7 +100,7 @@
           "trigger_debug_key" : "8971346781"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
-        "report_time": "1643411975000"
+        "report_time": "1643411973000"
       }
     ],
     "debug_event_level_results": [

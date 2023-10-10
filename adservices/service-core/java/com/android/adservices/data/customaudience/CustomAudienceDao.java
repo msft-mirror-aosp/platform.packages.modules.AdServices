@@ -75,6 +75,18 @@ public abstract class CustomAudienceDao {
             @NonNull DBCustomAudienceBackgroundFetchData fetchData);
 
     /**
+     * Adds a new {@link DBCustomAudienceQuarantine} entry to the {@code custom_audience_quarantine}
+     * table.
+     *
+     * <p>This method is not meant to be used on its own, since it doesn't take into account the
+     * maximum size of {@code custom_audience_quarantine}. Use {@link
+     * #safelyInsertCustomAudienceQuarantine} instead.
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    abstract void persistCustomAudienceQuarantineData(
+            DBCustomAudienceQuarantine dbCustomAudienceQuarantine);
+
+    /**
      * Adds or updates a given custom audience and background fetch data in a single transaction.
      *
      * <p>This transaction is separate in order to minimize the critical region while locking the
@@ -157,6 +169,33 @@ public abstract class CustomAudienceDao {
         persistCustomAudienceBackgroundFetchData(fetchData);
     }
 
+    /** Returns total size of the {@code custom_audience_quarantine} table. */
+    @Query("SELECT COUNT(*) FROM custom_audience_quarantine")
+    abstract long getTotalNumCustomAudienceQuarantineEntries();
+
+    /**
+     * Safely inserts a {@link DBCustomAudienceQuarantine} into the table.
+     *
+     * @throws IllegalStateException if {@link #getTotalNumCustomAudienceQuarantineEntries} exceeds
+     *     {@code maxEntries}.
+     *     <p>This transaction is separate in order to minimize the critical region while locking
+     *     the database.
+     */
+    @Transaction
+    public void safelyInsertCustomAudienceQuarantine(
+            @NonNull DBCustomAudienceQuarantine dbCustomAudienceQuarantine, long maxEntries)
+            throws IllegalStateException {
+        Objects.requireNonNull(dbCustomAudienceQuarantine);
+
+        if (getTotalNumCustomAudienceQuarantineEntries() >= maxEntries) {
+            String errorMessage =
+                    "Quarantine table maximum has been reached! Not persisting this entry";
+            sLogger.e(errorMessage);
+            throw new IllegalStateException(errorMessage);
+        }
+        persistCustomAudienceQuarantineData(dbCustomAudienceQuarantine);
+    }
+
     /** Get count of custom audience. */
     @Query("SELECT COUNT(*) FROM custom_audience")
     public abstract long getCustomAudienceCount();
@@ -218,15 +257,47 @@ public abstract class CustomAudienceDao {
             @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name);
 
     /**
+     * Checks if there is a row in the {@code custom_audience_quarantine} with the unique key
+     * combination of owner and buyer.
+     *
+     * @return true if row exists, false otherwise
+     */
+    @Query(
+            "SELECT EXISTS(SELECT 1 FROM custom_audience_quarantine WHERE owner = :owner "
+                    + "AND buyer = :buyer LIMIT 1)")
+    public abstract boolean doesCustomAudienceQuarantineExist(
+            @NonNull String owner, @NonNull AdTechIdentifier buyer);
+
+    /**
+     * Gets expiration time if it exists with the unique key combination of owner and buyer. Returns
+     * null otherwise.
+     */
+    @Nullable
+    @Query(
+            "SELECT quarantine_expiration_time FROM custom_audience_quarantine WHERE owner = :owner"
+                    + " AND buyer = :buyer")
+    public abstract Instant getCustomAudienceQuarantineExpiration(
+            @NonNull String owner, @NonNull AdTechIdentifier buyer);
+
+    /**
      * Get custom audience by its unique key.
      *
      * @return custom audience result if exists.
      */
     @Query("SELECT * FROM custom_audience WHERE owner = :owner AND buyer = :buyer AND name = :name")
     @Nullable
-    @VisibleForTesting
     public abstract DBCustomAudience getCustomAudienceByPrimaryKey(
             @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name);
+
+    /**
+     * Get custom audiences by buyer and name.
+     *
+     * @return custom audiences result if exists.
+     */
+    @Query("SELECT * FROM custom_audience WHERE buyer = :buyer AND name = :name")
+    @NonNull
+    public abstract List<DBCustomAudience> getCustomAudiencesForBuyerAndName(
+            @NonNull AdTechIdentifier buyer, @NonNull String name);
 
     /**
      * Get custom audience background fetch data by its unique key.
@@ -339,6 +410,25 @@ public abstract class CustomAudienceDao {
      */
     @Query("DELETE FROM custom_audience WHERE expiration_time <= :expiryTime")
     protected abstract int deleteAllExpiredCustomAudiences(@NonNull Instant expiryTime);
+
+    /**
+     * Deletes all expired entries of the {@code custom_audience_quarantine} table.
+     *
+     * @return the number of deleted entries
+     */
+    @Query(
+            "DELETE FROM custom_audience_quarantine WHERE quarantine_expiration_time <="
+                    + " :expiryTime")
+    public abstract int deleteAllExpiredQuarantineEntries(@NonNull Instant expiryTime);
+
+    /**
+     * Deletes all entries with the unique combination of owner and buyer.
+     *
+     * @return the number of deleted entries
+     */
+    @Query("DELETE FROM custom_audience_quarantine WHERE owner = :owner " + "AND buyer = :buyer")
+    public abstract int deleteQuarantineEntry(
+            @NonNull String owner, @NonNull AdTechIdentifier buyer);
 
     /**
      * Deletes background fetch data for all custom audiences which are expired, where the custom

@@ -32,7 +32,7 @@ import org.junit.Test;
 
 import java.time.Instant;
 
-// TODO(b/221876775): Move to CTS tests once public APIs are unhidden
+// TODO(b/265204820): Move to CTS tests once public APIs are unhidden
 @SmallTest
 public class SetAdCounterHistogramOverrideRequestTest {
     private static final ImmutableList<Instant> HISTOGRAM_TIMESTAMPS =

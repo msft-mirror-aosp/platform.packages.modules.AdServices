@@ -39,6 +39,7 @@ import android.util.Pair;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
@@ -234,7 +235,7 @@ public final class EventReportTest {
         Trigger trigger = createTriggerForTest(
                 baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION, EventSurfaceType.APP);
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -290,7 +291,7 @@ public final class EventReportTest {
                         APP_DESTINATION,
                         EventSurfaceType.APP);
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -333,7 +334,7 @@ public final class EventReportTest {
         Trigger trigger = createTriggerForTest(
                 baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION, EventSurfaceType.APP);
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventTrigger eventTrigger = spy(eventTriggers.get(0));
         when(eventTrigger.getTriggerData()).thenReturn(new UnsignedLong(-50003L));
         EventReport report =
@@ -380,7 +381,7 @@ public final class EventReportTest {
         Trigger trigger = createTriggerForTest(
                 baseTime + TimeUnit.SECONDS.toMillis(10), WEB_DESTINATION, EventSurfaceType.WEB);
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -420,7 +421,7 @@ public final class EventReportTest {
         Trigger trigger = createTriggerForTest(
                 baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION, EventSurfaceType.APP);
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -461,7 +462,7 @@ public final class EventReportTest {
         Trigger trigger = createTriggerForTest(
                 baseTime + TimeUnit.SECONDS.toMillis(10), WEB_DESTINATION, EventSurfaceType.WEB);
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -500,7 +501,7 @@ public final class EventReportTest {
         Trigger trigger = createTriggerForTest(
                 baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION, EventSurfaceType.APP);
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -542,7 +543,7 @@ public final class EventReportTest {
         Trigger trigger = createTriggerForTest(
                 baseTime + TimeUnit.SECONDS.toMillis(10), WEB_DESTINATION, EventSurfaceType.WEB);
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -584,7 +585,7 @@ public final class EventReportTest {
         Trigger trigger = createTriggerForTest(
                 baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION, EventSurfaceType.APP);
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -631,7 +632,7 @@ public final class EventReportTest {
         Trigger trigger = createTriggerForTest(
                 baseTime + TimeUnit.SECONDS.toMillis(10), WEB_DESTINATION, EventSurfaceType.WEB);
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -689,7 +690,7 @@ public final class EventReportTest {
                         WEB_DESTINATION,
                         EventSurfaceType.WEB);
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -794,7 +795,7 @@ public final class EventReportTest {
                         .setRegistrationOrigin(triggerRegistrationUrl)
                         .build();
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -818,13 +819,17 @@ public final class EventReportTest {
     public void populateFromSourceAndTrigger_flexApiNoPrevTrigger_returnsNewPriority()
             throws JSONException {
         // Setup
+        ReportSpec reportSpec =
+                new ReportSpec(
+                        SourceFixture.getTriggerSpecValueSumEncodedJSONValidBaseline(),
+                        "3",
+                        null);
         Source source =
                 getMinimalValidSourceBuilder()
-                        .setFlexEventReportSpec(
-                                new ReportSpec(
-                                        SourceFixture
-                                                .getTriggerSpecValueSumEncodedJSONValidBaseline(),
-                                        "3"))
+                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJson())
+                        .setMaxEventLevelReports(reportSpec.getMaxReports())
+                        .setEventAttributionStatus(new JSONArray().toString())
+                        .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
                         .build();
         String eventTriggers1 =
                 "[\n"
@@ -847,7 +852,7 @@ public final class EventReportTest {
                         + "]\n";
         Trigger trigger = getValidTriggerBuilder().setEventTriggers(eventTriggers1).build();
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report1 =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -906,14 +911,13 @@ public final class EventReportTest {
                 new ReportSpec(
                         SourceFixture.getTriggerSpecValueSumEncodedJSONValidBaseline(),
                         3,
-                        existingAttributes.toString(),
+                        null,
                         "{\"flip_probability\" :0.0024}");
         Source source =
                 getMinimalValidSourceBuilder()
-                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
+                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(reportSpec.getMaxReports())
-                        .setEventAttributionStatus(
-                                reportSpec.encodeTriggerStatusToJSON().toString())
+                        .setEventAttributionStatus(existingAttributes.toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
                         .setEventTime(baseTime)
                         .build();
@@ -938,7 +942,8 @@ public final class EventReportTest {
                         + "]\n";
         Trigger trigger = getValidTriggerBuilder().setEventTriggers(eventTriggers1).build();
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(true);
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report1 =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -987,10 +992,9 @@ public final class EventReportTest {
         long baseTime = System.currentTimeMillis();
         Source source =
                 getMinimalValidSourceBuilder()
-                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
+                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(reportSpec.getMaxReports())
-                        .setEventAttributionStatus(
-                                reportSpec.encodeTriggerStatusToJSON().toString())
+                        .setEventAttributionStatus(new JSONArray().toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
                         .setEventTime(baseTime)
                         .build();
@@ -1019,7 +1023,8 @@ public final class EventReportTest {
                         .setTriggerTime(baseTime + 8000)
                         .build();
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(true);
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report1 =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -1047,10 +1052,9 @@ public final class EventReportTest {
         long baseTime = System.currentTimeMillis();
         Source source =
                 getMinimalValidSourceBuilder()
-                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
+                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(reportSpec.getMaxReports())
-                        .setEventAttributionStatus(
-                                reportSpec.encodeTriggerStatusToJSON().toString())
+                        .setEventAttributionStatus(new JSONArray().toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
                         .setEventTime(baseTime)
                         .build();
@@ -1081,7 +1085,8 @@ public final class EventReportTest {
                         .setTriggerTime(baseTime + 8000)
                         .build();
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(true);
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report1 =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -1110,10 +1115,9 @@ public final class EventReportTest {
         long baseTime = System.currentTimeMillis();
         Source source =
                 getMinimalValidSourceBuilder()
-                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
+                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(reportSpec.getMaxReports())
-                        .setEventAttributionStatus(
-                                reportSpec.encodeTriggerStatusToJSON().toString())
+                        .setEventAttributionStatus(new JSONArray().toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
                         .setEventTime(baseTime)
                         .build();
@@ -1142,7 +1146,8 @@ public final class EventReportTest {
                         .setTriggerTime(baseTime + 18000000)
                         .build();
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(true);
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report1 =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -1159,6 +1164,24 @@ public final class EventReportTest {
         assertEquals(
                 TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 report1.getReportTime() - baseTime);
+    }
+
+    @Test
+    public void updateSummaryBucket_newBucket_equal() {
+        EventReport eventReport = createExample();
+        Pair<Long, Long> summaryBucket = new Pair<>(11L, 23L);
+        eventReport.updateSummaryBucket(summaryBucket);
+        assertEquals(summaryBucket, eventReport.getTriggerSummaryBucket());
+    }
+
+    @Test
+    public void setTriggerSummaryBucket_fromString_equalToExpectation() {
+        EventReport eventReport =
+                EventReportFixture.getBaseEventReportBuild()
+                        .setTriggerSummaryBucket("3,10")
+                        .build();
+
+        assertEquals(new Pair<>(3L, 10L), eventReport.getTriggerSummaryBucket());
     }
 
     private Source createSourceForTest(
@@ -1193,6 +1216,7 @@ public final class EventReportTest {
     }
 
     private EventReport createExample() {
+        String summaryBucket = null;
         return new EventReport.Builder()
                 .setId("1")
                 .setSourceEventId(new UnsignedLong(21L))
@@ -1212,6 +1236,7 @@ public final class EventReportTest {
                 .setSourceId(SOURCE_ID)
                 .setTriggerId(TRIGGER_ID)
                 .setRegistrationOrigin(REGISTRATION_ORIGIN)
+                .setTriggerSummaryBucket(summaryBucket)
                 .build();
     }
 

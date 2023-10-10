@@ -21,9 +21,11 @@ android_test {
         "src/**/*.java",
     ],
     defaults: ["modules-utils-testable-device-config-defaults"],
+    min_sdk_version: "30",
     manifest: "AndroidManifest.xml",
     test_config: "AndroidTest.xml",
     static_libs: [
+        "adservices-service-core",
         "androidx.test.core",
         "androidx.test.runner",
         "androidx.room_room-runtime",
@@ -31,6 +33,9 @@ android_test {
         "adservices-cobalt",
         "apache-commons-math",
         "truth-prebuilt",
+    ],
+    jni_libs: [
+        "libhpke_jni",
     ],
     libs: [
         "android.test.base",

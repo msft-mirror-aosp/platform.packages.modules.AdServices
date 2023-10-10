@@ -22,6 +22,7 @@ import android.net.Uri;
 
 import androidx.annotation.NonNull;
 
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.common.FledgeRoomConverters;
 
@@ -37,6 +38,7 @@ import java.util.Set;
 
 /** Factory for AdDataConversionStrategys */
 public class AdDataConversionStrategyFactory {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private static final String RENDER_URI_FIELD_NAME = "renderUri";
     private static final String METADATA_FIELD_NAME = "metadata";
     private static final String AD_COUNTER_KEYS_FIELD_NAME = "adCounterKeys";
@@ -99,6 +101,7 @@ public class AdDataConversionStrategyFactory {
         @Override
         public void fromServiceObject(
                 @NonNull AdData parcelable, @NonNull DBAdData.Builder adDataBuilder) {
+            sLogger.v("Setting ad render id");
             adDataBuilder.setAdRenderId(parcelable.getAdRenderId());
         }
     }
@@ -208,9 +211,11 @@ public class AdDataConversionStrategyFactory {
                 new CompositeConversionStrategy(new BaseConversionStrategy());
 
         if (filteringEnabled) {
+            sLogger.v("Adding Filtering Conversion Strategy to Composite Conversion Strategy");
             result.composeWith(new FilteringEnabledConversionStrategy());
         }
         if (adRenderIdEnabled) {
+            sLogger.v("Adding Ad Render Conversion Strategy to Composite Conversion Strategy");
             result.composeWith(new AdRenderIdEnabledConversionStrategy());
         }
         return result;

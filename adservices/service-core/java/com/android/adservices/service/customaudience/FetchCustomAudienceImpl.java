@@ -30,9 +30,11 @@ import android.adservices.common.FledgeErrorResponse;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceCallback;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceInput;
+import android.adservices.exceptions.RetryableAdServicesNetworkException;
 import android.annotation.NonNull;
 import android.net.Uri;
 import android.os.Build;
+import android.os.LimitExceededException;
 import android.os.RemoteException;
 
 import androidx.annotation.RequiresApi;
@@ -42,6 +44,7 @@ import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.AdDataConversionStrategy;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.data.customaudience.DBCustomAudienceQuarantine;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdRenderIdValidator;
@@ -53,6 +56,7 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequ
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 
@@ -122,12 +126,16 @@ public class FetchCustomAudienceImpl {
     @NonNull private final int mFledgeCustomAudienceMaxNumAds;
     @NonNull private final int mFledgeCustomAudienceMaxCustomHeaderSizeB;
     @NonNull private final int mFledgeCustomAudienceMaxCustomAudienceSizeB;
+    @NonNull private final long mFledgeCustomAuienceMaxTotal;
     private final boolean mFledgeAdSelectionFilteringEnabled;
     private final boolean mFledgeAuctionServerAdRenderIdEnabled;
     private final long mFledgeAuctionServerAdRenderIdMaxLength;
+    private final long mDefaultRetryDurationSeconds;
+    private final long mMaxRetryDurationSeconds;
 
     // TODO(b/289123035): Make these locally scoped, passed down by the orchestrator function.
     @NonNull private AdTechIdentifier mBuyer;
+    @NonNull private String mOwner;
     @NonNull private Uri mFetchUri;
     @NonNull private CustomAudienceBlob mRequestCustomAudience;
     @NonNull private CustomAudienceBlob mResponseCustomAudience;
@@ -185,6 +193,9 @@ public class FetchCustomAudienceImpl {
                 flags.getFledgeFetchCustomAudienceMaxRequestCustomHeaderSizeB();
         mFledgeCustomAudienceMaxCustomAudienceSizeB =
                 flags.getFledgeFetchCustomAudienceMaxCustomAudienceSizeB();
+        mFledgeCustomAuienceMaxTotal = flags.getFledgeCustomAudienceMaxCount();
+        mDefaultRetryDurationSeconds = flags.getFledgeFetchCustomAudienceMinRetryAfterValueMs();
+        mMaxRetryDurationSeconds = flags.getFledgeFetchCustomAudienceMaxRetryAfterValueMs();
 
         // Instantiate request, response and result CustomAudienceBlobs
         mRequestCustomAudience =
@@ -233,7 +244,8 @@ public class FetchCustomAudienceImpl {
     /** Adds a user to a fetched custom audience. */
     public void doFetchCustomAudience(
             @NonNull FetchAndJoinCustomAudienceInput request,
-            @NonNull FetchAndJoinCustomAudienceCallback callback) {
+            @NonNull FetchAndJoinCustomAudienceCallback callback,
+            @NonNull DevContext devContext) {
         try {
             // Failing fast and silently if fetchCustomAudience is disabled.
             if (!mFledgeFetchCustomAudienceEnabled) {
@@ -242,8 +254,8 @@ public class FetchCustomAudienceImpl {
             } else {
                 sLogger.v("fetchCustomAudience is enabled.");
                 // TODO(b/282017342): Evaluate correctness of futures chain.
-                filterAndValidateRequest(request)
-                        .transformAsync(this::performFetch, mExecutorService)
+                filterAndValidateRequest(request, devContext)
+                        .transformAsync(ignoredVoid -> performFetch(devContext), mExecutorService)
                         .transformAsync(this::validateResponse, mExecutorService)
                         .transformAsync(this::persistResponse, mExecutorService)
                         .addCallback(
@@ -260,7 +272,11 @@ public class FetchCustomAudienceImpl {
                                                 t,
                                                 "Error encountered in fetchCustomAudience"
                                                         + " execution");
-                                        if (t instanceof FilterException
+                                        if (t instanceof RetryableAdServicesNetworkException) {
+                                            tryToPersistQuarantineEntryAndNotifyCaller(
+                                                    ((RetryableAdServicesNetworkException) t),
+                                                    callback);
+                                        } else if (t instanceof FilterException
                                                 && t.getCause()
                                                         instanceof
                                                         ConsentManager.RevokedConsentException) {
@@ -284,7 +300,8 @@ public class FetchCustomAudienceImpl {
     }
 
     private FluentFuture<Void> filterAndValidateRequest(
-            @NonNull FetchAndJoinCustomAudienceInput input) {
+            @NonNull FetchAndJoinCustomAudienceInput input, @NonNull DevContext devContext) {
+        mOwner = input.getCallerPackageName();
         return FluentFuture.from(
                 mExecutorService.submit(
                         () -> {
@@ -301,10 +318,14 @@ public class FetchCustomAudienceImpl {
                                                         true,
                                                         mCallingAppUid,
                                                         API_NAME,
-                                                        FLEDGE_API_FETCH_CUSTOM_AUDIENCE);
+                                                        FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
+                                                        devContext);
                             } catch (Throwable t) {
                                 throw new FilterException(t);
                             }
+
+                            // Ensure request is not quarantined
+                            assertNotQuarantined();
 
                             // Check if Custom Audience API quota exists.
                             mCustomAudienceQuantityChecker.check(
@@ -322,7 +343,8 @@ public class FetchCustomAudienceImpl {
                         }));
     }
 
-    private ListenableFuture<AdServicesHttpClientResponse> performFetch(Void ignoredVoid) {
+    private ListenableFuture<AdServicesHttpClientResponse> performFetch(
+            @NonNull DevContext devContext) {
         sLogger.v("In fetchCustomAudience performFetch");
 
         // Optional fields as a json string.
@@ -343,7 +365,27 @@ public class FetchCustomAudienceImpl {
                 AdServicesHttpClientRequest.builder()
                         .setRequestProperties(requestProperties)
                         .setUri(mFetchUri)
+                        .setDevContext(devContext)
                         .build());
+    }
+
+    private void assertNotQuarantined() throws LimitExceededException {
+        if (mCustomAudienceDao.doesCustomAudienceQuarantineExist(mOwner, mBuyer)) {
+            Instant expiration =
+                    mCustomAudienceDao.getCustomAudienceQuarantineExpiration(mOwner, mBuyer);
+            Instant now = mClock.instant();
+            if (now.isBefore(expiration)) {
+                sLogger.d(
+                        String.format(
+                                "Combination of owner:%s and buyer%s is quarantined!",
+                                mOwner, mBuyer.toString()));
+                throw new LimitExceededException(
+                        "This combination of owner and buyer is quarantined!");
+            } else {
+                sLogger.v("Clearing stale quarantine entry");
+                mCustomAudienceDao.deleteQuarantineEntry(mOwner, mBuyer);
+            }
+        }
     }
 
     private ListenableFuture<Void> validateResponse(
@@ -443,6 +485,52 @@ public class FetchCustomAudienceImpl {
                         }));
     }
 
+    private void tryToPersistQuarantineEntryAndNotifyCaller(
+            RetryableAdServicesNetworkException retryableAdServicesNetworkException,
+            FetchAndJoinCustomAudienceCallback callback) {
+
+        retryableAdServicesNetworkException.setRetryAfterToValidDuration(
+                mDefaultRetryDurationSeconds, mMaxRetryDurationSeconds);
+
+        DBCustomAudienceQuarantine dbFetchCustomAudienceQuarantine =
+                DBCustomAudienceQuarantine.builder()
+                        .setOwner(mOwner)
+                        .setBuyer(mBuyer)
+                        .setQuarantineExpirationTime(
+                                mClock.instant()
+                                        .plusMillis(
+                                                retryableAdServicesNetworkException
+                                                        .getRetryAfter()
+                                                        .toMillis()))
+                        .build();
+
+        FluentFuture<Void> persistFuture =
+                FluentFuture.from(
+                        mExecutorService.submit(
+                                () -> {
+                                    mCustomAudienceDao.safelyInsertCustomAudienceQuarantine(
+                                            dbFetchCustomAudienceQuarantine,
+                                            mFledgeCustomAuienceMaxTotal);
+                                    return null;
+                                }));
+
+        persistFuture.addCallback(
+                new FutureCallback<Void>() {
+                    @Override
+                    public void onSuccess(Void result) {
+                        sLogger.d("Persisted to quarantine table successfully");
+                        notifyFailure(callback, retryableAdServicesNetworkException);
+                    }
+
+                    @Override
+                    public void onFailure(Throwable t) {
+                        sLogger.e(t, "Encountered failure while persisting to quarantine table!");
+                        notifyFailure(callback, new IllegalStateException());
+                    }
+                },
+                mExecutorService);
+    }
+
     private void notifyFailure(FetchAndJoinCustomAudienceCallback callback, Throwable t) {
         try {
             int resultCode;
@@ -455,6 +543,9 @@ public class FetchCustomAudienceImpl {
                 resultCode = AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
             } else if (t instanceof InvalidObjectException) {
                 resultCode = AdServicesStatusUtils.STATUS_INVALID_OBJECT;
+            } else if (t instanceof RetryableAdServicesNetworkException
+                    || (t instanceof LimitExceededException)) {
+                resultCode = AdServicesStatusUtils.STATUS_SERVER_RATE_LIMIT_REACHED;
             } else {
                 sLogger.d(t, "Unexpected error during operation");
                 resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;

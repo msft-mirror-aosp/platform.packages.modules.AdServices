@@ -190,7 +190,7 @@
                 },
                 "attribution_config": [
                   {
-                    "source_network": "enrollment-id-www.ad-tech1.test",
+                    "source_network": "enrollment-id-ad-tech1.test",
                     "source_priority_range": {
                       "start": 1,
                       "end": 1000
@@ -217,7 +217,7 @@
   "output": {
     "aggregatable_results": [
       {
-        "report_time": "800000600001",
+        "report_time": "800004200001",
         "report_url": "https://www.ad-tech2.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",

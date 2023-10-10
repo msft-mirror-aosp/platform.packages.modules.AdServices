@@ -16,7 +16,10 @@
 
 package com.android.adservices.service.common.httpclient;
 
+import android.annotation.NonNull;
 import android.net.Uri;
+
+import com.android.adservices.service.devapi.DevContext;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableMap;
@@ -39,6 +42,12 @@ public abstract class AdServicesHttpClientRequest {
     public abstract boolean getUseCache();
 
     /**
+     * @return DevContext associated with this call.
+     */
+    @NonNull
+    public abstract DevContext getDevContext();
+
+    /**
      * @param uri see {@link #getUri()}
      * @param requestProperties see {@link #getRequestProperties()}
      * @param responseHeaderKeys see {@link #getResponseHeaderKeys()}
@@ -49,12 +58,14 @@ public abstract class AdServicesHttpClientRequest {
             Uri uri,
             ImmutableMap<String, String> requestProperties,
             ImmutableSet<String> responseHeaderKeys,
-            boolean useCache) {
+            boolean useCache,
+            @NonNull DevContext devContext) {
         return builder()
                 .setUri(uri)
                 .setRequestProperties(requestProperties)
                 .setResponseHeaderKeys(responseHeaderKeys)
                 .setUseCache(useCache)
+                .setDevContext(devContext)
                 .build();
     }
 
@@ -86,6 +97,11 @@ public abstract class AdServicesHttpClientRequest {
 
         /** @param useCache flag to cache the response of this request */
         public abstract AdServicesHttpClientRequest.Builder setUseCache(boolean useCache);
+
+        /**
+         * @param devContext indicates the dev context associated with this request.
+         */
+        public abstract AdServicesHttpClientRequest.Builder setDevContext(DevContext devContext);
 
         /** @return an {@link AdServicesHttpClientRequest} */
         public abstract AdServicesHttpClientRequest build();

@@ -25,7 +25,7 @@ import static com.android.adservices.service.measurement.PrivacyParams.NAVIGATIO
 import android.annotation.NonNull;
 import android.util.Pair;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.PrivacyParams;
@@ -115,8 +115,7 @@ public class EventReportWindowCalcDelegate {
     }
 
     private boolean isWithinWindow(long time, Pair<Long, Long> window) {
-        // TODO(b/290223297) Fix the conditions below: Should be start <= time and time < end
-        return window.first <= time && time <= window.second;
+        return window.first <= time && time < window.second;
     }
 
     /**
@@ -276,7 +275,8 @@ public class EventReportWindowCalcDelegate {
         String earlyReportingWindowsString = pickEarlyReportingWindowsConfig(mFlags, sourceType);
 
         if (earlyReportingWindowsString == null) {
-            LogUtil.d("Invalid configurable early reporting windows; null");
+            LoggerFactory.getMeasurementLogger()
+                    .d("Invalid configurable early reporting windows; null");
             return defaultEarlyWindows;
         }
 
@@ -297,9 +297,10 @@ public class EventReportWindowCalcDelegate {
         String[] split =
                 earlyReportingWindowsString.split(EARLY_REPORTING_WINDOWS_CONFIG_DELIMITER);
         if (split.length > MAX_CONFIGURABLE_EVENT_REPORT_EARLY_REPORTING_WINDOWS) {
-            LogUtil.d(
-                    "Invalid configurable early reporting window; more than allowed size: "
-                            + MAX_CONFIGURABLE_EVENT_REPORT_EARLY_REPORTING_WINDOWS);
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "Invalid configurable early reporting window; more than allowed size: "
+                                    + MAX_CONFIGURABLE_EVENT_REPORT_EARLY_REPORTING_WINDOWS);
             return defaultEarlyWindows;
         }
 
@@ -307,7 +308,8 @@ public class EventReportWindowCalcDelegate {
             try {
                 earlyWindows.add(TimeUnit.SECONDS.toMillis(Long.parseLong(window)));
             } catch (NumberFormatException e) {
-                LogUtil.d(e, "Configurable early reporting window parsing failed.");
+                LoggerFactory.getMeasurementLogger()
+                        .d(e, "Configurable early reporting window parsing failed.");
                 return defaultEarlyWindows;
             }
         }

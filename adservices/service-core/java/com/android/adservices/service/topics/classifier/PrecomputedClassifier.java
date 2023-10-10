@@ -149,6 +149,15 @@ public class PrecomputedClassifier implements Classifier {
                 appTopics, mLabels, new Random(), numberOfTopTopics, numberOfRandomTopics, mLogger);
     }
 
+    List<Integer> getLabels() {
+        // Load assets if not loaded already.
+        if (!isLoaded()) {
+            load();
+        }
+
+        return mLabels;
+    }
+
     long getModelVersion() {
         // Load assets if not loaded already.
         if (!isLoaded()) {

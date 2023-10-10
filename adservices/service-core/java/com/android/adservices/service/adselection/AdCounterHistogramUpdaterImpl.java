@@ -16,13 +16,17 @@
 
 package com.android.adservices.service.adselection;
 
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FrequencyCapFilters;
 import android.annotation.NonNull;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBAdSelectionHistogramInfo;
 import com.android.adservices.data.adselection.FrequencyCapDao;
+import com.android.adservices.data.adselection.datahandlers.AdSelectionInitialization;
+import com.android.adservices.data.adselection.datahandlers.WinningCustomAudience;
 
 import com.google.common.base.Preconditions;
 
@@ -42,6 +46,7 @@ public class AdCounterHistogramUpdaterImpl implements AdCounterHistogramUpdater 
     private final int mLowerMaxTotalHistogramEventCount;
     private final int mAbsoluteMaxPerBuyerHistogramEventCount;
     private final int mLowerMaxPerBuyerHistogramEventCount;
+    private final boolean mAuctionServerEnabledForUpdateHistogram;
 
     public AdCounterHistogramUpdaterImpl(
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
@@ -49,7 +54,8 @@ public class AdCounterHistogramUpdaterImpl implements AdCounterHistogramUpdater 
             int absoluteMaxTotalHistogramEventCount,
             int lowerMaxTotalHistogramEventCount,
             int absoluteMaxPerBuyerHistogramEventCount,
-            int lowerMaxPerBuyerHistogramEventCount) {
+            int lowerMaxPerBuyerHistogramEventCount,
+            boolean auctionServerEnabledForUpdateHistogram) {
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(frequencyCapDao);
         Preconditions.checkArgument(absoluteMaxTotalHistogramEventCount > 0);
@@ -67,11 +73,80 @@ public class AdCounterHistogramUpdaterImpl implements AdCounterHistogramUpdater 
         mLowerMaxTotalHistogramEventCount = lowerMaxTotalHistogramEventCount;
         mAbsoluteMaxPerBuyerHistogramEventCount = absoluteMaxPerBuyerHistogramEventCount;
         mLowerMaxPerBuyerHistogramEventCount = lowerMaxPerBuyerHistogramEventCount;
+        mAuctionServerEnabledForUpdateHistogram = auctionServerEnabledForUpdateHistogram;
     }
 
     @Override
-    public void updateWinHistogram(@NonNull AdScoringOutcome outcome) {
-        // TODO(b/274171719): Implement win-type event updates
+    public void updateWinHistogram(@NonNull DBAdSelection dbAdSelection) {
+        Objects.requireNonNull(dbAdSelection);
+
+        if (dbAdSelection.getCustomAudienceSignals() == null) {
+            sLogger.v("Winning ad has no associated custom audience signals");
+            return;
+        }
+
+        if (dbAdSelection.getAdCounterIntKeys() == null
+                || dbAdSelection.getAdCounterIntKeys().isEmpty()) {
+            sLogger.v("Winning ad has no associated ad counter keys to update histogram");
+            return;
+        }
+
+        HistogramEvent.Builder eventBuilder =
+                HistogramEvent.builder()
+                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_WIN)
+                        .setBuyer(dbAdSelection.getCustomAudienceSignals().getBuyer())
+                        .setCustomAudienceOwner(dbAdSelection.getCustomAudienceSignals().getOwner())
+                        .setCustomAudienceName(dbAdSelection.getCustomAudienceSignals().getName())
+                        .setTimestamp(dbAdSelection.getCreationTimestamp())
+                        .setSourceApp(dbAdSelection.getCallerPackageName());
+
+        sLogger.v("Inserting %d histogram events", dbAdSelection.getAdCounterIntKeys().size());
+        for (Integer key : dbAdSelection.getAdCounterIntKeys()) {
+            // TODO(b/276528814): Insert in bulk instead of in multiple transactions
+            //  and handle eviction only once
+            mFrequencyCapDao.insertHistogramEvent(
+                    eventBuilder.setAdCounterKey(key).build(),
+                    mAbsoluteMaxTotalHistogramEventCount,
+                    mLowerMaxTotalHistogramEventCount,
+                    mAbsoluteMaxPerBuyerHistogramEventCount,
+                    mLowerMaxPerBuyerHistogramEventCount);
+        }
+    }
+
+    @Override
+    public void updateWinHistogram(
+            @NonNull AdTechIdentifier buyer,
+            @NonNull AdSelectionInitialization adSelectionInitialization,
+            @NonNull WinningCustomAudience winningCustomAudience) {
+        Objects.requireNonNull(adSelectionInitialization);
+        Objects.requireNonNull(winningCustomAudience);
+
+        Set<Integer> adCounterKeys = winningCustomAudience.getAdCounterKeys();
+        if (adCounterKeys == null || adCounterKeys.isEmpty()) {
+            sLogger.v("Winning ad has no associated ad counter keys to update histogram");
+            return;
+        }
+
+        HistogramEvent.Builder eventBuilder =
+                HistogramEvent.builder()
+                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_WIN)
+                        .setBuyer(buyer)
+                        .setCustomAudienceOwner(winningCustomAudience.getOwner())
+                        .setCustomAudienceName(winningCustomAudience.getName())
+                        .setTimestamp(adSelectionInitialization.getCreationInstant())
+                        .setSourceApp(adSelectionInitialization.getCallerPackageName());
+
+        sLogger.v("Inserting %d histogram events", adCounterKeys.size());
+        for (Integer key : adCounterKeys) {
+            // TODO(b/276528814): Insert in bulk instead of in multiple transactions
+            //  and handle eviction only once
+            mFrequencyCapDao.insertHistogramEvent(
+                    eventBuilder.setAdCounterKey(key).build(),
+                    mAbsoluteMaxTotalHistogramEventCount,
+                    mLowerMaxTotalHistogramEventCount,
+                    mAbsoluteMaxPerBuyerHistogramEventCount,
+                    mLowerMaxPerBuyerHistogramEventCount);
+        }
     }
 
     @Override
@@ -86,8 +161,17 @@ public class AdCounterHistogramUpdaterImpl implements AdCounterHistogramUpdater 
                         && adEventType != FrequencyCapFilters.AD_EVENT_TYPE_INVALID);
         Objects.requireNonNull(eventTimestamp);
 
-        DBAdSelectionHistogramInfo histogramInfo =
-                mAdSelectionEntryDao.getAdSelectionHistogramInfo(adSelectionId, callerPackageName);
+        DBAdSelectionHistogramInfo histogramInfo;
+        if (!mAuctionServerEnabledForUpdateHistogram) {
+            histogramInfo =
+                    mAdSelectionEntryDao.getAdSelectionHistogramInfoInOnDeviceTable(
+                            adSelectionId, callerPackageName);
+        } else {
+            histogramInfo =
+                    mAdSelectionEntryDao.getAdSelectionHistogramInfo(
+                            adSelectionId, callerPackageName);
+        }
+
         if (histogramInfo == null) {
             sLogger.v(
                     "No ad selection with ID %d and caller package name %s found",

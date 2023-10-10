@@ -15,20 +15,8 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-android_test {
-    name: "AdServicesServiceCoreUnitTests",
-    srcs: [
-        "src/**/*.java",
-    ],
-    exclude_srcs: [
-        // The tests below are interacting with the JsSandbox singleton and should
-        // be run in a separate process
-        "src/com/android/adservices/service/js/JSScriptEngineTest.java",
-        "src/com/android/adservices/service/js/JavaScriptSandboxProviderTest.java",
-        // Exclude Mobile Data Download Test. This test need network connection and download files.
-        // This will run in a separate test suite.
-        "src/com/android/adservices/download/MobileDataDownloadTest.java",
-    ],
+java_defaults {
+    name: "AdServices-ServiceCoreUnitTest-Defaults",
     defaults: ["adservices-extended-mockito-defaults"],
     sdk_version: "module_current",
     // Currently this test module is failing, which results in low test coverage
@@ -37,7 +25,6 @@ android_test {
     // See b/233124651 for details.
     compile_multilib: "both",
     min_sdk_version: "Tiramisu",
-
     plugins: [
         "auto_value_plugin",
         "auto_annotation_plugin"
@@ -85,6 +72,23 @@ android_test {
         "-0 .lite",
         "-0 .tflite",
     ],
+}
+
+android_test {
+    name: "AdServicesServiceCoreUnitTests",
+    srcs: [
+        "src/**/*.java",
+    ],
+    exclude_srcs: [
+        // The tests below are interacting with the JsSandbox singleton and should
+        // be run in a separate process
+        "src/com/android/adservices/service/js/JSScriptEngineTest.java",
+        "src/com/android/adservices/service/js/JavaScriptSandboxProviderTest.java",
+        // Exclude Mobile Data Download Test. This test need network connection and download files.
+        // This will run in a separate test suite.
+        "src/com/android/adservices/download/MobileDataDownloadTest.java",
+    ],
+    defaults: ["AdServices-ServiceCoreUnitTest-Defaults"],
 }
 
 android_test {
@@ -159,20 +163,8 @@ android_test {
     instrumentation_for: "AdServicesApk",
 }
 
-android_test {
-    name: "AdExtServicesServiceCoreUnitTests",
-    srcs: [
-        "src/**/*.java",
-    ],
-    exclude_srcs: [
-        // The tests below are interacting with the JsSandbox singleton and should
-        // be run in a separate process
-        "src/com/android/adservices/service/js/JSScriptEngineTest.java",
-        "src/com/android/adservices/service/js/JavaScriptSandboxProviderTest.java",
-        // Exclude Mobile Data Download Test. This test need network connection and download files.
-        // This will run in a separate test suite.
-        "src/com/android/adservices/download/MobileDataDownloadTest.java",
-    ],
+java_defaults {
+    name: "AdExtServices-ServiceCoreUnitTest-Defaults",
     defaults: ["adservices-extended-mockito-defaults"],
     sdk_version: "module_current",
     // Currently this test module is failing, which results in low test coverage
@@ -180,7 +172,7 @@ android_test {
     // configures. Add below line to address the issue.
     // See b/233124651 for details.
     compile_multilib: "both",
-    min_sdk_version: "31",
+    min_sdk_version: "30",
     max_sdk_version: "32",
     static_libs: [
         "adservices-assets",
@@ -210,8 +202,7 @@ android_test {
         "general-tests",
         "mts-extservices"
     ],
-    test_config: "AndroidTest.ExtServices.xml",
-    test_mainline_modules: ["com.google.android.extservices_sminus.apex"],
+    test_mainline_modules: ["com.google.android.extservices.apex"],
     instrumentation_for: "ExtServices-sminus",
     jni_libs: [
         "libhpke_jni",
@@ -228,6 +219,24 @@ android_test {
 }
 
 android_test {
+    name: "AdExtServicesServiceCoreUnitTests",
+    defaults: ["AdExtServices-ServiceCoreUnitTest-Defaults"],
+    srcs: [
+        "src/**/*.java",
+    ],
+    exclude_srcs: [
+        // The tests below are interacting with the JsSandbox singleton and should
+        // be run in a separate process
+        "src/com/android/adservices/service/js/JSScriptEngineTest.java",
+        "src/com/android/adservices/service/js/JavaScriptSandboxProviderTest.java",
+        // Exclude Mobile Data Download Test. This test need network connection and download files.
+        // This will run in a separate test suite.
+        "src/com/android/adservices/download/MobileDataDownloadTest.java",
+    ],
+    test_config: "AndroidTest.ExtServices.xml",
+}
+
+android_test {
     name: "AdExtServicesJsEngineUnitTests",
     srcs: [
         "src/com/android/adservices/service/js/JSScriptEngineTest.java",
@@ -236,7 +245,7 @@ android_test {
     defaults: ["modules-utils-testable-device-config-defaults"],
     sdk_version: "module_current",
     compile_multilib: "both",
-    min_sdk_version: "31",
+    min_sdk_version: "30",
     max_sdk_version: "32",
     static_libs: [
         "adservices-assets",
@@ -259,6 +268,7 @@ android_test {
         "mts-extservices"
     ],
     test_config: "AndroidTest.JsScriptEngine.ExtServices.xml",
+    test_mainline_modules: ["com.google.android.extservices.apex"],
     instrumentation_for: "ExtServices-sminus",
 }
 
@@ -273,7 +283,7 @@ android_test {
     defaults: ["modules-utils-testable-device-config-defaults"],
     sdk_version: "module_current",
     compile_multilib: "both",
-    min_sdk_version: "31",
+    min_sdk_version: "30",
     max_sdk_version: "32",
     static_libs: [
         "adservices-assets",
@@ -297,16 +307,6 @@ android_test {
         "mts-extservices"
     ],
     test_config: "AndroidTestMDD.ExtServices.xml",
-    test_mainline_modules: ["com.google.android.extservices_sminus.apex"],
+    test_mainline_modules: ["com.google.android.extservices.apex"],
     instrumentation_for: "ExtServices-sminus",
-}
-
-java_library {
-    name: "adservices-measurement-web-util-lib",
-    sdk_version: "module_current",
-    srcs: [
-      "src/com/android/adservices/service/measurement/WebUtil.java"
-    ],
-    visibility: ["//packages/modules/AdServices/adservices/tests/unittest/fixtures"]
-
 }

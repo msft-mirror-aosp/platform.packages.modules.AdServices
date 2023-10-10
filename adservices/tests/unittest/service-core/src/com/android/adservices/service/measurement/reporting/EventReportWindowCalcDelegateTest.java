@@ -1527,8 +1527,8 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTimeForNoisingFlexEventApi_validTime_equal() throws JSONException {
-        ReportSpec testObject1 =
-                new ReportSpec(SourceFixture.getTriggerSpecValueCountJSONTwoTriggerSpecs(), "3");
+        ReportSpec testObject1 = new ReportSpec(
+                SourceFixture.getTriggerSpecValueCountJSONTwoTriggerSpecs(), "3", null);
         // Assertion
         assertEquals(new UnsignedLong(1L), testObject1.getTriggerDataValue(0));
         assertEquals(new UnsignedLong(3L), testObject1.getTriggerDataValue(2));
@@ -1713,7 +1713,7 @@ public class EventReportWindowCalcDelegateTest {
                         sourceTime + TimeUnit.DAYS.toMillis(1) + TimeUnit.HOURS.toMillis(6),
                         EventSurfaceType.APP));
         assertEquals(
-                sourceTime + TimeUnit.DAYS.toMillis(5) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                sourceTime + TimeUnit.DAYS.toMillis(7) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         fiveWindowsWithStart,
                         sourceTime + TimeUnit.DAYS.toMillis(5),

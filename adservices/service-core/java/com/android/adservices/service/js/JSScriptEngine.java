@@ -25,7 +25,7 @@ import androidx.javascriptengine.IsolateStartupParameters;
 import androidx.javascriptengine.JavaScriptIsolate;
 import androidx.javascriptengine.JavaScriptSandbox;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.profiling.JSScriptEngineLogConstants;
@@ -76,6 +76,7 @@ public class JSScriptEngine {
     @NonNull private final JavaScriptSandboxProvider mJsSandboxProvider;
     @NonNull private final ListeningExecutorService mExecutorService;
     @NonNull private final Profiler mProfiler;
+    @NonNull private final LoggerFactory.Logger mLogger;
 
     /**
      * Extracting the logic to create the JavaScriptSandbox in a factory class for better
@@ -92,25 +93,32 @@ public class JSScriptEngine {
         private final Object mSandboxLock = new Object();
         private StopWatch mSandboxInitStopWatch;
         private Profiler mProfiler;
+        private LoggerFactory.Logger mLogger;
 
         @GuardedBy("mSandboxLock")
         private FluentFuture<JavaScriptSandbox> mFutureSandbox;
 
-        JavaScriptSandboxProvider(Profiler profiler) {
+        JavaScriptSandboxProvider(Profiler profiler, LoggerFactory.Logger logger) {
             mProfiler = profiler;
+            mLogger = logger;
         }
 
         public FluentFuture<JavaScriptSandbox> getFutureInstance(Context context) {
             synchronized (mSandboxLock) {
                 if (mFutureSandbox == null) {
                     if (!AvailabilityChecker.isJSSandboxAvailable()) {
-                        LogUtil.e(
+                        JSSandboxIsNotAvailableException exception =
+                                new JSSandboxIsNotAvailableException();
+                        mLogger.e(
+                                exception,
                                 "JS Sandbox is not available in this version of WebView "
                                         + "or WebView is not installed at all!");
-                        throw new JSSandboxIsNotAvailableException();
+                        mFutureSandbox =
+                                FluentFuture.from(Futures.immediateFailedFuture(exception));
+                        return mFutureSandbox;
                     }
 
-                    LogUtil.i("Creating JavaScriptSandbox");
+                    mLogger.d("Creating JavaScriptSandbox");
                     mSandboxInitStopWatch =
                             mProfiler.start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME);
 
@@ -126,13 +134,13 @@ public class JSScriptEngine {
                                 @Override
                                 public void onSuccess(JavaScriptSandbox result) {
                                     mSandboxInitStopWatch.stop();
-                                    LogUtil.i("JSScriptEngine created.");
+                                    mLogger.d("JSScriptEngine created.");
                                 }
 
                                 @Override
                                 public void onFailure(Throwable t) {
                                     mSandboxInitStopWatch.stop();
-                                    LogUtil.e(t, "JavaScriptSandbox initialization failed");
+                                    mLogger.e(t, "JavaScriptSandbox initialization failed");
                                 }
                             },
                             AdServicesExecutors.getLightWeightExecutor());
@@ -150,10 +158,10 @@ public class JSScriptEngine {
             synchronized (mSandboxLock) {
                 if (mFutureSandbox != null) {
                     ListenableFuture<Void> result =
-                            FluentFuture.from(mFutureSandbox)
+                            mFutureSandbox
                                     .<Void>transform(
                                             jsSandbox -> {
-                                                LogUtil.i(
+                                                mLogger.d(
                                                         "Closing connection from JSScriptEngine to"
                                                                 + " WebView Sandbox");
                                                 jsSandbox.close();
@@ -163,7 +171,8 @@ public class JSScriptEngine {
                                     .catching(
                                             Throwable.class,
                                             t -> {
-                                                LogUtil.i(
+                                                mLogger.w(
+                                                        t,
                                                         "JavaScriptSandbox initialization failed,"
                                                                 + " won't close");
                                                 return null;
@@ -181,17 +190,19 @@ public class JSScriptEngine {
     /**
      * @return JSScriptEngine instance
      */
-    public static JSScriptEngine getInstance(@NonNull Context context) {
+    public static JSScriptEngine getInstance(
+            @NonNull Context context, @NonNull LoggerFactory.Logger logger) {
         synchronized (JSScriptEngine.class) {
             if (sSingleton == null) {
                 Profiler profiler = Profiler.createNoOpInstance(TAG);
                 sSingleton =
                         new JSScriptEngine(
                                 context,
-                                new JavaScriptSandboxProvider(profiler),
+                                new JavaScriptSandboxProvider(profiler, logger),
                                 profiler,
                                 // There is no blocking call or IO code in the service logic
-                                AdServicesExecutors.getLightWeightExecutor());
+                                AdServicesExecutors.getLightWeightExecutor(),
+                                logger);
             }
 
             return sSingleton;
@@ -204,7 +215,7 @@ public class JSScriptEngine {
      */
     @VisibleForTesting
     public static JSScriptEngine getInstanceForTesting(
-            @NonNull Context context, @NonNull Profiler profiler) {
+            @NonNull Context context, @NonNull Profiler profiler, LoggerFactory.Logger logger) {
         synchronized (JSScriptEngine.class) {
             // If there is no instance already created or the instance was shutdown
             if (sSingleton != null) {
@@ -216,9 +227,10 @@ public class JSScriptEngine {
             sSingleton =
                     new JSScriptEngine(
                             context,
-                            new JavaScriptSandboxProvider(profiler),
+                            new JavaScriptSandboxProvider(profiler, logger),
                             profiler,
-                            AdServicesExecutors.getLightWeightExecutor());
+                            AdServicesExecutors.getLightWeightExecutor(),
+                            logger);
         }
 
         return sSingleton;
@@ -235,9 +247,14 @@ public class JSScriptEngine {
     public static JSScriptEngine createNewInstanceForTesting(
             @NonNull Context context,
             @NonNull JavaScriptSandboxProvider jsSandboxProvider,
-            @NonNull Profiler profiler) {
+            @NonNull Profiler profiler,
+            @NonNull LoggerFactory.Logger logger) {
         return new JSScriptEngine(
-                context, jsSandboxProvider, profiler, AdServicesExecutors.getLightWeightExecutor());
+                context,
+                jsSandboxProvider,
+                profiler,
+                AdServicesExecutors.getLightWeightExecutor(),
+                logger);
     }
 
     /**
@@ -258,16 +275,19 @@ public class JSScriptEngine {
             @NonNull Context context,
             @NonNull JavaScriptSandboxProvider jsSandboxProvider,
             @NonNull Profiler profiler,
-            @NonNull ListeningExecutorService executorService) {
+            @NonNull ListeningExecutorService executorService,
+            @NonNull LoggerFactory.Logger logger) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(jsSandboxProvider);
         Objects.requireNonNull(profiler);
         Objects.requireNonNull(executorService);
+        Objects.requireNonNull(logger);
 
         this.mContext = context;
         this.mJsSandboxProvider = jsSandboxProvider;
         this.mProfiler = profiler;
         this.mExecutorService = executorService;
+        this.mLogger = logger;
         // Forcing initialization of WebView
         jsSandboxProvider.getFutureInstance(mContext);
     }
@@ -375,10 +395,10 @@ public class JSScriptEngine {
         }
 
         JavaScriptIsolate jsIsolate = createIsolate(jsSandbox, isolateSettings);
-        closer.eventuallyClose(new CloseableIsolateWrapper(jsIsolate), mExecutorService);
+        closer.eventuallyClose(new CloseableIsolateWrapper(jsIsolate, mLogger), mExecutorService);
 
         if (hasWasmModule) {
-            LogUtil.d(
+            mLogger.d(
                     "Evaluating JS script with associated WASM on thread %s",
                     Thread.currentThread().getName());
 
@@ -386,13 +406,13 @@ public class JSScriptEngine {
                 throw new JSExecutionException("Unable to pass WASM byte array to JS Isolate");
             }
         } else {
-            LogUtil.d("Evaluating JS script on thread %s", Thread.currentThread().getName());
+            mLogger.d("Evaluating JS script on thread %s", Thread.currentThread().getName());
         }
 
         String entryPointCall = callEntryPoint(args, entryFunctionName, hasWasmModule);
 
         String fullScript = jsScript + "\n" + entryPointCall;
-        LogUtil.v("Calling WebView for script %s", fullScript);
+        mLogger.v("Calling WebView for script %s", fullScript);
 
         StopWatch jsExecutionStopWatch =
                 mProfiler.start(JSScriptEngineLogConstants.JAVA_EXECUTION_TIME);
@@ -401,7 +421,7 @@ public class JSScriptEngine {
                 .transform(
                         (ignoredCloser, result) -> {
                             jsExecutionStopWatch.stop();
-                            LogUtil.v("WebView result is " + result);
+                            mLogger.v("WebView result is " + result);
                             Tracing.endAsyncSection(
                                     Tracing.JSSCRIPTENGINE_EVALUATE_ON_SANDBOX, traceCookie);
                             return result;
@@ -432,7 +452,7 @@ public class JSScriptEngine {
         // returns a promises so all our code will be in a promise chain
         boolean promiseReturnSupported =
                 jsSandbox.isFeatureSupported(JavaScriptSandbox.JS_FEATURE_PROMISE_RETURN);
-        LogUtil.v(
+        mLogger.v(
                 String.format(
                         "Is WASM supported? WASM_COMPILATION: %b  PROVIDE_CONSUME_ARRAY_BUFFER: %b,"
                                 + " PROMISE_RETURN: %b",
@@ -454,10 +474,21 @@ public class JSScriptEngine {
                 .transform(this::isWasmSupported, mExecutorService);
     }
 
-    boolean isConfigurableHeapSizeSupported(JavaScriptSandbox jsSandbox) {
+    /**
+     * @return a future value indicating if the JS Sandbox installed on the device supports
+     *     configurable Heap size.
+     */
+    @VisibleForTesting
+    public ListenableFuture<Boolean> isConfigurableHeapSizeSupported() {
+        return mJsSandboxProvider
+                .getFutureInstance(mContext)
+                .transform(this::isConfigurableHeapSizeSupported, mExecutorService);
+    }
+
+    private boolean isConfigurableHeapSizeSupported(JavaScriptSandbox jsSandbox) {
         boolean isConfigurableHeapSupported =
                 jsSandbox.isFeatureSupported(JavaScriptSandbox.JS_FEATURE_ISOLATE_MAX_HEAP_SIZE);
-        LogUtil.v("Is configurable max heap size supported? : %b", isConfigurableHeapSupported);
+        mLogger.v("Is configurable max heap size supported? : %b", isConfigurableHeapSupported);
         return isConfigurableHeapSupported;
     }
 
@@ -477,14 +508,14 @@ public class JSScriptEngine {
         try {
             if (!isConfigurableHeapSizeSupported(jsSandbox)
                     && isolateSettings.getEnforceMaxHeapSizeFeature()) {
-                LogUtil.e("Memory limit enforcement required, but not supported by Isolate");
+                mLogger.e("Memory limit enforcement required, but not supported by Isolate");
                 throw new IllegalStateException(NON_SUPPORTED_MAX_HEAP_SIZE_EXCEPTION_MSG);
             }
 
             JavaScriptIsolate javaScriptIsolate;
             if (isolateSettings.getEnforceMaxHeapSizeFeature()
                     && isolateSettings.getMaxHeapSizeBytes() > 0) {
-                LogUtil.d(
+                mLogger.d(
                         "Creating JS isolate with memory limit: %d bytes",
                         isolateSettings.getMaxHeapSizeBytes());
                 IsolateStartupParameters startupParams = new IsolateStartupParameters();
@@ -495,18 +526,18 @@ public class JSScriptEngine {
                             "JS Isolate does not support setting max heap size");
                 }
             } else {
-                LogUtil.d("Creating JS isolate with unbounded memory limit");
+                mLogger.d("Creating JS isolate with unbounded memory limit");
                 javaScriptIsolate = jsSandbox.createIsolate();
             }
             return javaScriptIsolate;
         } catch (IllegalStateException isolateMemoryLimitUnsupported) {
-            LogUtil.e(
+            mLogger.e(
                     "JavaScriptIsolate does not support setting max heap size, cannot create an"
                             + " isolate to run JS code into.");
             throw new JSScriptEngineConnectionException(
                     JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_MSG, isolateMemoryLimitUnsupported);
         } catch (RuntimeException jsSandboxIsDisconnected) {
-            LogUtil.e(
+            mLogger.e(
                     "JavaScriptSandboxProcess is disconnected, cannot create an isolate to run JS"
                             + " code into. Resetting connection with AwJavaScriptSandbox to enable"
                             + " future calls.");
@@ -588,15 +619,18 @@ public class JSScriptEngine {
     private static class CloseableIsolateWrapper implements Closeable {
         @NonNull final JavaScriptIsolate mIsolate;
 
-        CloseableIsolateWrapper(@NonNull JavaScriptIsolate isolate) {
+        @NonNull final LoggerFactory.Logger mLogger;
+
+        CloseableIsolateWrapper(@NonNull JavaScriptIsolate isolate, LoggerFactory.Logger logger) {
             Objects.requireNonNull(isolate);
             mIsolate = isolate;
+            mLogger = logger;
         }
 
         @Override
         public void close() {
             int traceCookie = Tracing.beginAsyncSection(Tracing.JSSCRIPTENGINE_CLOSE_ISOLATE);
-            LogUtil.d("Closing WebView isolate");
+            mLogger.d("Closing WebView isolate");
             // Closing the isolate will also cause the thread in WebView to be terminated if
             // still running.
             // There is no need to verify if ISOLATE_TERMINATION is supported by WebView

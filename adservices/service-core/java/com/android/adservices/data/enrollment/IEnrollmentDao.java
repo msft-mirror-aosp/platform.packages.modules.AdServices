@@ -87,6 +87,20 @@ public interface IEnrollmentDao {
     EnrollmentData getEnrollmentDataFromSdkName(String sdkName);
 
     /**
+     * Returns the number of enrollment records in the DB table.
+     *
+     * @return count of records in the enrollment table
+     */
+    Long getEnrollmentRecordsCount();
+
+    /**
+     * Returns the number of enrollment records in the DB table for logging purposes.
+     *
+     * @return count of records in the enrollment table
+     */
+    int getEnrollmentRecordCountForLogging();
+
+    /**
      * Inserts {@link EnrollmentData} into DB table.
      *
      * @param enrollmentData the EnrollmentData to insert.

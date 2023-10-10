@@ -19,8 +19,8 @@
             "Attribution-Reporting-Register-Source": {
               "source_event_id": "1",
               "web_destination": "https://example.2d1.test",
-              // Clamped to one day (86400 seconds).
-              "aggregatable_report_window": "86390",
+              // Clamped to one hour (3600 seconds).
+              "aggregatable_report_window": 3590,
               "aggregation_keys": {
                 "a": "0x1"
               },
@@ -28,7 +28,7 @@
             }
           }
         }],
-        "timestamp": "1643235573000"
+        "timestamp": "0"
       }
     ],
     "web_triggers": [
@@ -66,7 +66,7 @@
             }
           }
         }],
-        "timestamp": "1643321973000"
+        "timestamp": "2000000"
       },
       // Should result in an event-level report, but not aggregatable report as
       // aggregatable report window has passed.
@@ -102,18 +102,18 @@
             }
           }
         }],
-        "timestamp": "1643321973001"
+        "timestamp": "3600000"
       }
     ]
   },
   "output": {
     "event_level_results": [
       {
-        "report_time": "1643411973000",
+        "report_time": "176400000",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
         "payload": {
           "attribution_destination": "https://2d1.test",
-          "scheduled_report_time": "1643411973",
+          "scheduled_report_time": "176400",
           "source_event_id": "1",
           "trigger_data": "1",
           "source_type": "navigation",
@@ -123,11 +123,11 @@
         }
       },
       {
-        "report_time": "1643411973000",
+        "report_time": "176400000",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
         "payload": {
           "attribution_destination": "https://2d1.test",
-          "scheduled_report_time": "1643411973",
+          "scheduled_report_time": "176400",
           "source_event_id": "1",
           "trigger_data": "2",
           "source_type": "navigation",
@@ -138,11 +138,11 @@
       }],
     "debug_event_level_results": [
       {
-        "report_time": "1643321973000",
+        "report_time": "2000000",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-event-attribution",
         "payload": {
           "attribution_destination": "https://2d1.test",
-          "scheduled_report_time": "1643411973",
+          "scheduled_report_time": "176400",
           "source_event_id": "1",
           "trigger_data": "1",
           "source_type": "navigation",
@@ -152,11 +152,11 @@
         }
       },
       {
-        "report_time": "1643321973001",
+        "report_time": "3600000",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-event-attribution",
         "payload": {
           "attribution_destination": "https://2d1.test",
-          "scheduled_report_time": "1643411973",
+          "scheduled_report_time": "176400",
           "source_event_id": "1",
           "trigger_data": "2",
           "source_type": "navigation",
@@ -179,7 +179,7 @@
           "trigger_debug_key" : "8971346781"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
-        "report_time": "1643323359221"
+        "report_time": "5600000"
       }
     ],
     "debug_aggregatable_results": [
@@ -196,7 +196,7 @@
           "trigger_debug_key" : "8971346781"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
-        "report_time": "1643323359221"
+        "report_time": "2000000"
       }
     ],
     "verbose_debug_reports": [

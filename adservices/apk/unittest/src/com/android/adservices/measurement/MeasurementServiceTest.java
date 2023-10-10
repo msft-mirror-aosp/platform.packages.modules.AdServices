@@ -49,12 +49,16 @@ import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.DeleteUninstalledJobService;
 import com.android.adservices.service.measurement.MeasurementImpl;
+import com.android.adservices.service.measurement.attribution.AttributionFallbackJobService;
 import com.android.adservices.service.measurement.attribution.AttributionJobService;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJobService;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.AggregateReportingJobService;
+import com.android.adservices.service.measurement.reporting.DebugReportingFallbackJobService;
 import com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.EventReportingJobService;
+import com.android.adservices.service.measurement.reporting.VerboseDebugReportingFallbackJobService;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -85,7 +89,7 @@ public class MeasurementServiceTest {
                     .setAttributionTriggerRegistrationUrl(List.of("https://test.com/trigger"))
                     .setAttributionReportingUrl(List.of("https://test.com"))
                     .setRemarketingResponseBasedRegistrationUrl(List.of("https://test.com"))
-                    .setEncryptionKeyUrl(List.of("https://test.com/keys"))
+                    .setEncryptionKeyUrl("https://test.com/keys")
                     .build();
 
     /** Setup for tests */
@@ -239,6 +243,7 @@ public class MeasurementServiceTest {
                         .spyStatic(AggregateFallbackReportingJobService.class)
                         .spyStatic(AppImportanceFilter.class)
                         .spyStatic(AttributionJobService.class)
+                        .spyStatic(AttributionFallbackJobService.class)
                         .spyStatic(ConsentManager.class)
                         .spyStatic(DevContextFilter.class)
                         .spyStatic(EnrollmentDao.class)
@@ -251,6 +256,9 @@ public class MeasurementServiceTest {
                         .spyStatic(FlagsFactory.class)
                         .spyStatic(MeasurementImpl.class)
                         .spyStatic(AsyncRegistrationQueueJobService.class)
+                        .spyStatic(AsyncRegistrationFallbackJobService.class)
+                        .spyStatic(VerboseDebugReportingFallbackJobService.class)
+                        .spyStatic(DebugReportingFallbackJobService.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
         try {
@@ -299,7 +307,11 @@ public class MeasurementServiceTest {
                                             any(), anyBoolean()));
             ExtendedMockito.doNothing()
                     .when(() -> AttributionJobService.scheduleIfNeeded(any(), anyBoolean()));
-
+            ExtendedMockito.doNothing()
+                    .when(
+                            () ->
+                                    AttributionFallbackJobService.scheduleIfNeeded(
+                                            any(), anyBoolean()));
             ExtendedMockito.doNothing()
                     .when(() -> EventReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
             ExtendedMockito.doNothing()
@@ -317,6 +329,21 @@ public class MeasurementServiceTest {
                     .when(
                             () ->
                                     AsyncRegistrationQueueJobService.scheduleIfNeeded(
+                                            any(), anyBoolean()));
+            ExtendedMockito.doNothing()
+                    .when(
+                            () ->
+                                    AsyncRegistrationFallbackJobService.scheduleIfNeeded(
+                                            any(), anyBoolean()));
+            ExtendedMockito.doNothing()
+                    .when(
+                            () ->
+                                    VerboseDebugReportingFallbackJobService.scheduleIfNeeded(
+                                            any(), anyBoolean()));
+            ExtendedMockito.doNothing()
+                    .when(
+                            () ->
+                                    DebugReportingFallbackJobService.scheduleIfNeeded(
                                             any(), anyBoolean()));
 
             // Execute
@@ -337,6 +364,9 @@ public class MeasurementServiceTest {
                 () -> AttributionJobService.scheduleIfNeeded(any(), anyBoolean()),
                 times(timesCalled));
         ExtendedMockito.verify(
+                () -> AttributionFallbackJobService.scheduleIfNeeded(any(), anyBoolean()),
+                times(timesCalled));
+        ExtendedMockito.verify(
                 () -> EventReportingJobService.scheduleIfNeeded(any(), anyBoolean()),
                 times(timesCalled));
         ExtendedMockito.verify(
@@ -352,6 +382,15 @@ public class MeasurementServiceTest {
                 () -> MddJobService.scheduleIfNeeded(any(), anyBoolean()), times(timesCalled));
         ExtendedMockito.verify(
                 () -> AsyncRegistrationQueueJobService.scheduleIfNeeded(any(), anyBoolean()),
+                times(timesCalled));
+        ExtendedMockito.verify(
+                () -> AsyncRegistrationFallbackJobService.scheduleIfNeeded(any(), anyBoolean()),
+                times(timesCalled));
+        ExtendedMockito.verify(
+                () -> VerboseDebugReportingFallbackJobService.scheduleIfNeeded(any(), anyBoolean()),
+                times(timesCalled));
+        ExtendedMockito.verify(
+                () -> DebugReportingFallbackJobService.scheduleIfNeeded(any(), anyBoolean()),
                 times(timesCalled));
     }
 }

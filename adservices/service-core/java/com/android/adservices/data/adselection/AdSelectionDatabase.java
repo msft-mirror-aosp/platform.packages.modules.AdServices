@@ -21,11 +21,11 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.room.AutoMigration;
 import androidx.room.Database;
-import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
 import com.android.adservices.data.common.FledgeRoomConverters;
+import com.android.adservices.service.common.compat.FileCompatUtils;
 
 import java.util.Objects;
 
@@ -37,7 +37,10 @@ import java.util.Objects;
             DBAdSelectionOverride.class,
             DBAdSelectionFromOutcomesOverride.class,
             DBRegisteredAdInteraction.class,
-            DBBuyerDecisionOverride.class
+            DBBuyerDecisionOverride.class,
+            DBReportingData.class,
+            DBAdSelectionInitialization.class,
+            DBAdSelectionResult.class
         },
         version = AdSelectionDatabase.DATABASE_VERSION,
         autoMigrations = {
@@ -46,14 +49,16 @@ import java.util.Objects;
             @AutoMigration(from = 3, to = 4),
             @AutoMigration(from = 4, to = 5),
             @AutoMigration(from = 5, to = 6),
+            @AutoMigration(from = 6, to = 7),
         })
 @TypeConverters({FledgeRoomConverters.class})
 public abstract class AdSelectionDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();
 
-    public static final int DATABASE_VERSION = 6;
+    public static final int DATABASE_VERSION = 7;
     // TODO(b/230653780): Should we separate the DB.
-    public static final String DATABASE_NAME = "adselection.db";
+    public static final String DATABASE_NAME =
+            FileCompatUtils.getAdservicesFilename("adselection.db");
 
     private static volatile AdSelectionDatabase sSingleton = null;
 
@@ -68,7 +73,8 @@ public abstract class AdSelectionDatabase extends RoomDatabase {
         synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
                 sSingleton =
-                        Room.databaseBuilder(context, AdSelectionDatabase.class, DATABASE_NAME)
+                        FileCompatUtils.roomDatabaseBuilderHelper(
+                                        context, AdSelectionDatabase.class, DATABASE_NAME)
                                 .fallbackToDestructiveMigration()
                                 .build();
             }

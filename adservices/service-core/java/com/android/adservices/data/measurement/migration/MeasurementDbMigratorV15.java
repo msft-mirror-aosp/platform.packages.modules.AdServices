@@ -23,12 +23,12 @@ import android.net.Uri;
 
 import androidx.annotation.NonNull;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.enrollment.EnrollmentTables;
 import com.android.adservices.data.measurement.MeasurementTables;
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.enrollment.EnrollmentData;
-import com.android.adservices.service.measurement.util.Web;
 
 import java.util.HashMap;
 import java.util.List;
@@ -86,8 +86,10 @@ public class MeasurementDbMigratorV15 extends AbstractMeasurementDbMigrator {
                         /*orderBy=*/ null,
                         /*limit=*/ null)) {
             if (cursor == null || cursor.getCount() <= 0) {
-                LogUtil.d(
-                        "Failed to find any enrollments with non-empty attribution reporting url");
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "Failed to find any enrollments with non-empty attribution"
+                                        + " reporting url");
                 return enrollmentIdToReportingUrl;
             }
 
@@ -107,7 +109,7 @@ public class MeasurementDbMigratorV15 extends AbstractMeasurementDbMigrator {
                     continue;
                 }
                 Optional<Uri> reportingOrigin =
-                        Web.originAndScheme(Uri.parse(reportingUrls.get(0)));
+                        WebAddresses.originAndScheme(Uri.parse(reportingUrls.get(0)));
                 reportingOrigin.ifPresent(
                         uri -> enrollmentIdToReportingUrl.putIfAbsent(enrollmentId, uri));
             }
@@ -139,7 +141,8 @@ public class MeasurementDbMigratorV15 extends AbstractMeasurementDbMigrator {
                 Uri reportingUri = enrollmentIdToReportingUrl.get(enrollmentId);
                 if (reportingUri == null) {
                     // no reporting origin found. delete the data
-                    LogUtil.d("Reporting origin not found for enrollment id - " + enrollmentId);
+                    LoggerFactory.getMeasurementLogger()
+                            .d("Reporting origin not found for enrollment id - " + enrollmentId);
 
                     deleteRecord(db, id);
 
@@ -154,11 +157,12 @@ public class MeasurementDbMigratorV15 extends AbstractMeasurementDbMigrator {
                                     ID_COLUMN + " = ? ",
                                     new String[] {id});
                     if (rows != 1) {
-                        LogUtil.d(
-                                "Failed to insert registration_origin for id "
-                                        + id
-                                        + " in table "
-                                        + MeasurementTables.DebugReportContract.TABLE);
+                        LoggerFactory.getMeasurementLogger()
+                                .d(
+                                        "Failed to insert registration_origin for id "
+                                                + id
+                                                + " in table "
+                                                + MeasurementTables.DebugReportContract.TABLE);
                         deleteRecord(db, id);
                     }
                 }
@@ -167,11 +171,12 @@ public class MeasurementDbMigratorV15 extends AbstractMeasurementDbMigrator {
     }
 
     private void deleteRecord(SQLiteDatabase db, String recordId) {
-        LogUtil.d(
-                "Deleting record with id - "
-                        + recordId
-                        + " from table - "
-                        + MeasurementTables.DebugReportContract.TABLE);
+        LoggerFactory.getMeasurementLogger()
+                .d(
+                        "Deleting record with id - "
+                                + recordId
+                                + " from table - "
+                                + MeasurementTables.DebugReportContract.TABLE);
         db.delete(
                 MeasurementTables.DebugReportContract.TABLE,
                 ID_COLUMN + " = ? ",

@@ -16,51 +16,117 @@
 
 package com.android.adservices.cobalt;
 
+import android.content.Context;
+
 import androidx.annotation.NonNull;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.Flags;
 import com.android.cobalt.CobaltLogger;
 import com.android.cobalt.CobaltPeriodicJob;
-import com.android.cobalt.NoOpCobaltLogger;
-import com.android.cobalt.NoOpCobaltPeriodicJob;
+import com.android.cobalt.CobaltPipelineType;
+import com.android.cobalt.crypto.HpkeEncrypter;
+import com.android.cobalt.data.DataService;
+import com.android.cobalt.impl.CobaltLoggerImpl;
+import com.android.cobalt.impl.CobaltPeriodicJobImpl;
+import com.android.cobalt.observations.PrivacyGenerator;
+import com.android.cobalt.system.SystemClockImpl;
+import com.android.cobalt.system.SystemData;
+import com.android.internal.annotations.GuardedBy;
 
+import com.google.cobalt.CobaltRegistry;
+
+import java.security.SecureRandom;
+import java.time.Duration;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
 
 /** Factory for Cobalt's logger and periodic job implementations. */
 public final class CobaltFactory {
+    private static final Object SINGLETON_LOCK = new Object();
+
+    /*
+     * Uses the prod pipeline because AdServices' reports are for either the DEBUG or GA release
+     * stage and DEBUG is sufficient for local testing.
+     */
+    private static final CobaltPipelineType PIPELINE_TYPE = CobaltPipelineType.PROD;
+
+    // Objects which are non-trivial to construct or need to be shared between the logger and
+    // periodic job are static.
+    private static CobaltRegistry sSingletonCobaltRegistry;
+    private static DataService sSingletonDataService;
+    private static SecureRandom sSingletonSecureRandom;
+
+    @GuardedBy("SINGLETON_LOCK")
     private static CobaltLogger sSingletonCobaltLogger;
+
+    @GuardedBy("SINGLETON_LOCK")
     private static CobaltPeriodicJob sSingletonCobaltPeriodicJob;
 
-    private CobaltFactory() {}
-
     /**
-     * Returns the singleton CobaltLogger.
+     * Returns the static singleton CobaltLogger.
      *
-     * <p>The implementation is a no-op implementation and does nothing.
+     * @throws CobaltInitializationException if an unrecoverable errors occurs during initialization
      */
     @NonNull
-    public CobaltLogger getCobaltLogger() {
-        synchronized (CobaltFactory.class) {
+    public static CobaltLogger getCobaltLogger(@NonNull Context context, @NonNull Flags flags)
+            throws CobaltInitializationException {
+        Objects.requireNonNull(context);
+        Objects.requireNonNull(flags);
+        synchronized (SINGLETON_LOCK) {
             if (sSingletonCobaltLogger == null) {
-                sSingletonCobaltLogger = new NoOpCobaltLogger(getExecutor());
+                sSingletonCobaltLogger =
+                        sSingletonCobaltLogger =
+                                new CobaltLoggerImpl(
+                                        getRegistry(context),
+                                        CobaltReleaseStages.getReleaseStage(
+                                                flags.getAdservicesReleaseStageForCobalt()),
+                                        getDataService(context),
+                                        new SystemData(),
+                                        getExecutor(),
+                                        new SystemClockImpl(),
+                                        flags.getTopicsCobaltLoggingEnabled());
             }
-
             return sSingletonCobaltLogger;
         }
     }
 
     /**
-     * Returns the singleton CobaltPeriodicJob.
+     * Returns the static singleton CobaltPeriodicJob.
      *
-     * <p>The implementation is a no-op implementation and does nothing.
+     * <p>Note, this implementation does not result in any data being uploaded because the upload
+     * API does not exist yet and the actual uploader is blocked on it landing.
+     *
+     * @throws CobaltInitializationException if an unrecoverable errors occurs during initialization
      */
     @NonNull
-    public CobaltPeriodicJob getCobaltPeriodicJob() {
-        synchronized (CobaltFactory.class) {
+    public static CobaltPeriodicJob getCobaltPeriodicJob(
+            @NonNull Context context, @NonNull Flags flags) throws CobaltInitializationException {
+        Objects.requireNonNull(context);
+        Objects.requireNonNull(flags);
+        synchronized (SINGLETON_LOCK) {
             if (sSingletonCobaltPeriodicJob == null) {
-                sSingletonCobaltPeriodicJob = new NoOpCobaltPeriodicJob(getExecutor());
+                sSingletonCobaltPeriodicJob =
+                        new CobaltPeriodicJobImpl(
+                                getRegistry(context),
+                                CobaltReleaseStages.getReleaseStage(
+                                        flags.getAdservicesReleaseStageForCobalt()),
+                                getDataService(context),
+                                getExecutor(),
+                                getScheduledExecutor(),
+                                new SystemClockImpl(),
+                                new SystemData(),
+                                new PrivacyGenerator(getSecureRandom()),
+                                getSecureRandom(),
+                                new CobaltUploader(context, PIPELINE_TYPE),
+                                HpkeEncrypter.createForEnvironment(
+                                        new HpkeEncryptImpl(), PIPELINE_TYPE),
+                                CobaltApiKeys.copyFromHexApiKey(
+                                        flags.getCobaltAdservicesApiKeyHex()),
+                                Duration.ofMillis(flags.getCobaltUploadServiceUnbindDelayMs()),
+                                flags.getTopicsCobaltLoggingEnabled());
             }
-
             return sSingletonCobaltPeriodicJob;
         }
     }
@@ -69,5 +135,40 @@ public final class CobaltFactory {
     private static ExecutorService getExecutor() {
         // Cobalt requires disk I/O and must run on the background executor.
         return AdServicesExecutors.getBackgroundExecutor();
+    }
+
+    @NonNull
+    private static ScheduledExecutorService getScheduledExecutor() {
+        // Cobalt requires a timeout to disconnect from the system server.
+        return AdServicesExecutors.getScheduler();
+    }
+
+    @NonNull
+    private static CobaltRegistry getRegistry(Context context)
+            throws CobaltInitializationException {
+        if (sSingletonCobaltRegistry == null) {
+            sSingletonCobaltRegistry = CobaltRegistryLoader.getRegistry(context);
+        }
+        return sSingletonCobaltRegistry;
+    }
+
+    @NonNull
+    private static DataService getDataService(@NonNull Context context) {
+        Objects.requireNonNull(context);
+        if (sSingletonDataService == null) {
+            sSingletonDataService =
+                    CobaltDataServiceFactory.createDataService(context, getExecutor());
+        }
+
+        return sSingletonDataService;
+    }
+
+    @NonNull
+    private static SecureRandom getSecureRandom() {
+        if (sSingletonSecureRandom == null) {
+            sSingletonSecureRandom = new SecureRandom();
+        }
+
+        return sSingletonSecureRandom;
     }
 }

@@ -23,6 +23,7 @@ import androidx.annotation.NonNull;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.common.BooleanFileDatastore;
+import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
@@ -43,7 +44,10 @@ import java.util.stream.Collectors;
  */
 public class AppConsentDao {
     @VisibleForTesting public static final int DATASTORE_VERSION = 1;
-    @VisibleForTesting public static final String DATASTORE_NAME = "adservices.appconsent.xml";
+
+    @VisibleForTesting
+    public static final String DATASTORE_NAME =
+            FileCompatUtils.getAdservicesFilename("adservices.appconsent.xml");
 
     private static final Object SINGLETON_LOCK = new Object();
 

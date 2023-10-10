@@ -28,23 +28,44 @@ import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
+import android.net.Uri;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.ParcelFileDescriptor;
 import android.os.Process;
 import android.os.RemoteException;
+import android.text.TextUtils;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.window.OnBackInvokedCallback;
 import android.window.OnBackInvokedDispatcher;
+
+import androidx.room.ColumnInfo;
+import androidx.room.Dao;
+import androidx.room.Database;
+import androidx.room.Entity;
+import androidx.room.Insert;
+import androidx.room.PrimaryKey;
+import androidx.room.Query;
+import androidx.room.Room;
+import androidx.room.RoomDatabase;
 
 import com.android.sdksandbox.SdkSandboxServiceImpl;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
     private final Context mContext;
@@ -202,6 +223,8 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
         SdkSandboxActivityHandler activityHandler =
                 activity -> {
                     actionExecutor.setActivity(activity);
+                    final String textToCheck = extras.getString("TEXT_KEY");
+                    buildActivityLayout(activity, textToCheck);
                     registerLifecycleEvents(iActivityStarter, activity, actionExecutor);
                 };
         assert controller != null;
@@ -230,6 +253,72 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
     public String getClientPackageName() {
         SdkSandboxController controller = mContext.getSystemService(SdkSandboxController.class);
         return controller.getClientPackageName();
+    }
+
+    @Override
+    public void checkRoomDatabaseAccess() {
+        RoomDatabaseTester.TestDatabase db =
+                Room.databaseBuilder(mContext, RoomDatabaseTester.TestDatabase.class, "test-db")
+                        .build();
+        RoomDatabaseTester.UserDao userDao = db.userDao();
+
+        if (!userDao.getAll().isEmpty()) {
+            throw new IllegalStateException("Room database access has failed");
+        }
+
+        RoomDatabaseTester.User testData = new RoomDatabaseTester.User(1, "SandboxUser");
+        userDao.insertAll(testData);
+        if (!userDao.getAll().contains(testData)) {
+            throw new IllegalStateException(
+                    "Room database access has failed - does not contain inserted data");
+        }
+    }
+
+    @Override
+    public void checkCanUseSharedPreferences() {
+        SharedPreferences sharedPref = mContext.getSharedPreferences("test", Context.MODE_PRIVATE);
+
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putInt("test_value", 54321);
+        if (!editor.commit() && sharedPref.getInt("test_value", 0) != 54321) {
+            throw new IllegalStateException("Sandboxed SDK could not access shared preferences");
+        }
+    }
+
+    /**
+     * Checks that the passed file descriptor contains the expected String. If not, an
+     * IllegalStateException is thrown.
+     */
+    @Override
+    public void checkReadFileDescriptor(ParcelFileDescriptor pFd, String expectedValue) {
+        String readValue;
+        try {
+            FileInputStream fis = new FileInputStream(pFd.getFileDescriptor());
+            readValue = new String(fis.readAllBytes(), StandardCharsets.UTF_8);
+            fis.close();
+            pFd.close();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+
+        if (!TextUtils.equals(readValue, expectedValue)) {
+            throw new IllegalStateException(
+                    "Read value " + readValue + " does not match expected value " + expectedValue);
+        }
+    }
+
+    @Override
+    public ParcelFileDescriptor createFileDescriptor(String valueToWrite) {
+        try {
+            String fileName = "createFileDescriptor";
+            FileOutputStream fout = mContext.openFileOutput(fileName, Context.MODE_PRIVATE);
+            fout.write(valueToWrite.getBytes(StandardCharsets.UTF_8));
+            fout.close();
+            File file = new File(mContext.getFilesDir(), fileName);
+            return ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_WRITE);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     private void registerLifecycleEvents(
@@ -277,6 +366,20 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
                 });
     }
 
+    private void buildActivityLayout(Activity activity, String textToCheck) {
+        final LinearLayout layout = new LinearLayout(activity);
+        layout.setLayoutParams(
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT));
+        layout.setOrientation(LinearLayout.HORIZONTAL);
+        final TextView tv1 = new TextView(activity);
+        int orientation = activity.getResources().getConfiguration().orientation;
+        tv1.setText(textToCheck + "_orientation: " + orientation);
+        layout.addView(tv1);
+        activity.setContentView(layout);
+    }
+
     private static class ActivityActionExecutor extends IActivityActionExecutor.Stub {
         private final OnBackInvokedCallback mBackNavigationDisablingCallback;
         private OnBackInvokedDispatcher mDispatcher;
@@ -319,6 +422,21 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
             mActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         }
 
+        @Override
+        public void openLandingPage() {
+            String url = "http://www.google.com";
+            Intent visitUrl = new Intent(Intent.ACTION_VIEW);
+            visitUrl.setData(Uri.parse(url));
+            visitUrl.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+            mActivity.startActivity(visitUrl);
+        }
+
+        @Override
+        public void finish() {
+            mActivity.finish();
+        }
+
         public void setActivity(Activity activity) {
             mActivity = activity;
             mDispatcher = activity.getOnBackInvokedDispatcher();
@@ -350,5 +468,45 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
                         + "/"
                         + SDK_NAME
                         + "@");
+    }
+
+    public static class RoomDatabaseTester {
+        @Entity(tableName = "user")
+        public static class User {
+            @PrimaryKey public int id;
+
+            @ColumnInfo(name = "name")
+            public String name;
+
+            User(int id, String name) {
+                this.id = id;
+                this.name = name;
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                if (this == o) return true;
+                if (!(o instanceof User)) return false;
+                User that = (User) o;
+                return id == that.id && name.equals(that.name);
+            }
+        }
+
+        @Dao
+        public interface UserDao {
+            @Query("SELECT * FROM user")
+            List<User> getAll();
+
+            @Insert
+            void insertAll(User... users);
+        }
+
+        @Database(
+                entities = {User.class},
+                version = 1,
+                exportSchema = false)
+        public abstract static class TestDatabase extends RoomDatabase {
+            public abstract UserDao userDao();
+        }
     }
 }

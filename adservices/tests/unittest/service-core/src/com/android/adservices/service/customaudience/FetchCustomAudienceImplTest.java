@@ -26,6 +26,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ER
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_OBJECT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SERVER_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
@@ -40,6 +41,7 @@ import static android.adservices.customaudience.CustomAudienceFixture.VALID_NAME
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_OWNER;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS;
 import static android.adservices.customaudience.CustomAudienceFixture.getValidDailyUpdateUriByBuyer;
+import static android.adservices.exceptions.RetryableAdServicesNetworkException.DEFAULT_RETRY_AFTER_VALUE;
 
 import static com.android.adservices.service.common.AdTechUriValidator.IDENTIFIER_AND_URI_ARE_INCONSISTENT;
 import static com.android.adservices.service.common.Validator.EXCEPTION_MESSAGE_FORMAT;
@@ -81,6 +83,9 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.times;
 
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CallingAppUidSupplierProcessImpl;
@@ -90,15 +95,12 @@ import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceCallback;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceInput;
 import android.adservices.http.MockWebServerRule;
-import android.content.Context;
 import android.net.Uri;
 import android.os.LimitExceededException;
 import android.os.Process;
 import android.os.RemoteException;
 
-import androidx.test.core.app.ApplicationProvider;
-
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AppInstallDao;
@@ -107,6 +109,7 @@ import com.android.adservices.data.customaudience.AdDataConversionStrategy;
 import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceStats;
+import com.android.adservices.data.customaudience.DBCustomAudienceQuarantine;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
 import com.android.adservices.service.common.AdRenderIdValidator;
@@ -118,14 +121,17 @@ import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.mockwebserver.Dispatcher;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
+import com.google.mockwebserver.RecordedRequest;
 
 import org.json.JSONObject;
 import org.junit.After;
@@ -145,12 +151,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @RunWith(MockitoJUnitRunner.class)
 public class FetchCustomAudienceImplTest {
     private static final int API_NAME =
             AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final ExecutorService DIRECT_EXECUTOR = MoreExecutors.newDirectExecutorService();
     private static final AdDataConversionStrategy AD_DATA_CONVERSION_STRATEGY =
             AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
@@ -216,7 +222,8 @@ public class FetchCustomAudienceImplTest {
                         true,
                         Process.myUid(),
                         API_NAME,
-                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE);
+                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
+                        DevContext.createForDevOptionsDisabled());
 
         doReturn(
                         CustomAudienceStats.builder()
@@ -230,6 +237,10 @@ public class FetchCustomAudienceImplTest {
                                 .build())
                 .when(mCustomAudienceDaoMock)
                 .getCustomAudienceStats(eq(VALID_OWNER));
+
+        doReturn(false)
+                .when(mCustomAudienceDaoMock)
+                .doesCustomAudienceQuarantineExist(VALID_OWNER, BUYER);
     }
 
     @After
@@ -281,7 +292,8 @@ public class FetchCustomAudienceImplTest {
                         true,
                         Process.myUid(),
                         API_NAME,
-                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE);
+                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
+                        DevContext.createForDevOptionsDisabled());
 
         FetchCustomAudienceTestCallback callback =
                 callFetchCustomAudience(
@@ -311,7 +323,8 @@ public class FetchCustomAudienceImplTest {
                         true,
                         Process.myUid(),
                         API_NAME,
-                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE);
+                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
+                        DevContext.createForDevOptionsDisabled());
 
         FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
 
@@ -338,7 +351,8 @@ public class FetchCustomAudienceImplTest {
                         true,
                         Process.myUid(),
                         API_NAME,
-                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE);
+                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
+                        DevContext.createForDevOptionsDisabled());
 
         FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
 
@@ -366,7 +380,8 @@ public class FetchCustomAudienceImplTest {
                         true,
                         Process.myUid(),
                         API_NAME,
-                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE);
+                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
+                        DevContext.createForDevOptionsDisabled());
 
         FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
 
@@ -394,7 +409,8 @@ public class FetchCustomAudienceImplTest {
                         true,
                         Process.myUid(),
                         API_NAME,
-                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE);
+                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
+                        DevContext.createForDevOptionsDisabled());
 
         FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
 
@@ -422,7 +438,8 @@ public class FetchCustomAudienceImplTest {
                         true,
                         Process.myUid(),
                         API_NAME,
-                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE);
+                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
+                        DevContext.createForDevOptionsDisabled());
 
         FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
 
@@ -816,11 +833,133 @@ public class FetchCustomAudienceImplTest {
                 .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_SUCCESS), anyInt());
     }
 
+    @Test
+    public void testImpl_runNormally_differentResponsesToSameFetchUri() throws Exception {
+        // Respond with a complete custom audience including the request values as is.
+        JSONObject response1 = getFullSuccessfulJsonResponse(BUYER);
+        Uri differentDailyUpdateUri = CommonFixture.getUri(BUYER, "/differentUpdate");
+        JSONObject response2 =
+                getFullSuccessfulJsonResponse(BUYER)
+                        .put(DAILY_UPDATE_URI_KEY, differentDailyUpdateUri.toString());
+
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        new Dispatcher() {
+                            AtomicInteger mNumCalls = new AtomicInteger(0);
+
+                            @Override
+                            public MockResponse dispatch(RecordedRequest request) {
+                                if (mNumCalls.get() == 0) {
+                                    mNumCalls.addAndGet(1);
+                                    return new MockResponse().setBody(response1.toString());
+                                } else if (mNumCalls.get() == 1) {
+                                    mNumCalls.addAndGet(1);
+                                    return new MockResponse().setBody(response2.toString());
+                                } else {
+                                    throw new IllegalStateException("Expected only 2 calls!");
+                                }
+                            }
+                        });
+
+        FetchCustomAudienceTestCallback callback1 = callFetchCustomAudience(mInputBuilder.build());
+        assertTrue(callback1.mIsSuccess);
+        verify(mCustomAudienceDaoMock)
+                .insertOrOverwriteCustomAudience(
+                        FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
+                        getValidDailyUpdateUriByBuyer(BUYER));
+
+        FetchCustomAudienceTestCallback callback2 = callFetchCustomAudience(mInputBuilder.build());
+        assertTrue(callback2.mIsSuccess);
+        verify(mCustomAudienceDaoMock)
+                .insertOrOverwriteCustomAudience(
+                        FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
+                        differentDailyUpdateUri);
+
+        verify(mAdServicesLoggerMock, times(2))
+                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_SUCCESS), anyInt());
+    }
+
+    @Test
+    public void testImpl_AddsToQuarantineTableWhenServerReturns429() throws Exception {
+        // Respond with a 429
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(new MockResponse().setResponseCode(429)));
+
+        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+        assertEquals(1, mockWebServer.getRequestCount());
+        assertFalse(callback.mIsSuccess);
+        assertEquals(
+                STATUS_SERVER_RATE_LIMIT_REACHED, callback.mFledgeErrorResponse.getStatusCode());
+        verify(mCustomAudienceDaoMock)
+                .safelyInsertCustomAudienceQuarantine(
+                        any(DBCustomAudienceQuarantine.class), anyLong());
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(STATUS_SERVER_RATE_LIMIT_REACHED), anyInt());
+    }
+
+    @Test
+    public void testImpl_ReturnsServerRateLimitReachedWhenEntryIsInQuarantineTable()
+            throws Exception {
+        doReturn(true)
+                .when(mCustomAudienceDaoMock)
+                .doesCustomAudienceQuarantineExist(VALID_OWNER, BUYER);
+        // Return a time in the future so request gets filtered
+        doReturn(CLOCK.instant().plusMillis(2 * DEFAULT_RETRY_AFTER_VALUE.toMillis()))
+                .when(mCustomAudienceDaoMock)
+                .getCustomAudienceQuarantineExpiration(VALID_OWNER, BUYER);
+
+        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+        assertFalse(callback.mIsSuccess);
+        assertEquals(
+                STATUS_SERVER_RATE_LIMIT_REACHED, callback.mFledgeErrorResponse.getStatusCode());
+        verify(mCustomAudienceDaoMock).doesCustomAudienceQuarantineExist(VALID_OWNER, BUYER);
+        verify(mCustomAudienceDaoMock).getCustomAudienceQuarantineExpiration(VALID_OWNER, BUYER);
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(STATUS_SERVER_RATE_LIMIT_REACHED), anyInt());
+    }
+
+    @Test
+    public void testImpl_SucceedsAndRemovesEntryFromQuarantineTable() throws Exception {
+        doReturn(true)
+                .when(mCustomAudienceDaoMock)
+                .doesCustomAudienceQuarantineExist(VALID_OWNER, BUYER);
+        // Return a time in the past so request is not filtered
+        doReturn(CLOCK.instant().minusMillis(2 * DEFAULT_RETRY_AFTER_VALUE.toMillis()))
+                .when(mCustomAudienceDaoMock)
+                .getCustomAudienceQuarantineExpiration(VALID_OWNER, BUYER);
+
+        // Respond with a complete custom audience including the request values as is.
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse()
+                                        .setBody(getFullSuccessfulJsonResponseString(BUYER))));
+
+        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+        assertEquals(1, mockWebServer.getRequestCount());
+        assertTrue(callback.mIsSuccess);
+
+        verify(mCustomAudienceDaoMock).doesCustomAudienceQuarantineExist(VALID_OWNER, BUYER);
+        verify(mCustomAudienceDaoMock).getCustomAudienceQuarantineExpiration(VALID_OWNER, BUYER);
+        verify(mCustomAudienceDaoMock).deleteQuarantineEntry(VALID_OWNER, BUYER);
+        verify(mCustomAudienceDaoMock)
+                .insertOrOverwriteCustomAudience(
+                        FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
+                        getValidDailyUpdateUriByBuyer(BUYER));
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_SUCCESS), anyInt());
+    }
+
     private FetchCustomAudienceTestCallback callFetchCustomAudience(
             FetchAndJoinCustomAudienceInput input) throws Exception {
         CountDownLatch resultLatch = new CountDownLatch(1);
         FetchCustomAudienceTestCallback callback = new FetchCustomAudienceTestCallback(resultLatch);
-        mFetchCustomAudienceImpl.doFetchCustomAudience(input, callback);
+        mFetchCustomAudienceImpl.doFetchCustomAudience(
+                input, callback, DevContext.createForDevOptionsDisabled());
         resultLatch.await();
         return callback;
     }
@@ -856,14 +995,16 @@ public class FetchCustomAudienceImplTest {
 
         @Override
         public void onSuccess() {
-            LogUtil.v("Reporting success to FetchCustomAudienceTestCallback.");
+            LoggerFactory.getFledgeLogger()
+                    .v("Reporting success to FetchCustomAudienceTestCallback.");
             mIsSuccess = true;
             mCountDownLatch.countDown();
         }
 
         @Override
         public void onFailure(FledgeErrorResponse fledgeErrorResponse) throws RemoteException {
-            LogUtil.v("Reporting failure to FetchCustomAudienceTestCallback.");
+            LoggerFactory.getFledgeLogger()
+                    .v("Reporting failure to FetchCustomAudienceTestCallback.");
             mFledgeErrorResponse = fledgeErrorResponse;
             mCountDownLatch.countDown();
         }

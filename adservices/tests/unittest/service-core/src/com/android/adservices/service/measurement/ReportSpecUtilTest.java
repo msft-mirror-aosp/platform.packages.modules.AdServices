@@ -20,10 +20,19 @@ import static com.android.adservices.service.Flags.MEASUREMENT_MIN_EVENT_REPORT_
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import android.content.Context;
 import android.net.Uri;
 import android.util.Pair;
 
+import androidx.test.core.app.ApplicationProvider;
+
+import com.android.adservices.common.WebUtil;
+import com.android.adservices.data.measurement.DatastoreException;
+import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -35,21 +44,24 @@ import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class ReportSpecUtilTest {
+    protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final long BASE_TIME = System.currentTimeMillis();
     private MockitoSession mStaticMockSession;
     @Mock Flags mFlags;
+
+    @Mock IMeasurementDao mMeasurementDao;
 
     @Before
     public void setup() {
@@ -70,8 +82,9 @@ public class ReportSpecUtilTest {
     @Test
     public void processIncomingReport_higherPriority_lowerPriorityReportDeleted()
             throws JSONException {
-        ReportSpec testReportSpec =
-                new ReportSpec(SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(), "2");
+        Source source = SourceFixture.getValidSource();
+        ReportSpec testReportSpec = new ReportSpec(
+                SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(), "2", source);
         List<EventReport> existingReports = new ArrayList<>();
         EventReport existingReport_1 =
                 EventReportFixture.getBaseEventReportBuild()
@@ -141,7 +154,8 @@ public class ReportSpecUtilTest {
                                 TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7))
                         + "\"summary_window_operator\": \"value_sum\", "
                         + "\"summary_buckets\": [10, 100]}]";
-        ReportSpec testReportSpec = new ReportSpec(triggerSpecsString, "2");
+        Source source = SourceFixture.getValidSource();
+        ReportSpec testReportSpec = new ReportSpec(triggerSpecsString, "2", source);
         List<EventReport> existingReports = new ArrayList<>();
         EventReport existingReport_1 =
                 EventReportFixture.getBaseEventReportBuild()
@@ -194,16 +208,15 @@ public class ReportSpecUtilTest {
                         ReportSpecUtil.countBucketIncrements(testReportSpec, incomingReport),
                         incomingReport,
                         existingReports);
-        assertEquals(
-                new Pair<>(new ArrayList<>(Arrays.asList(existingReport_1, existingReport_2)), 2),
-                actualResult);
+        assertEquals(new Pair<>(List.of(existingReport_1, existingReport_2), 2), actualResult);
     }
 
     @Test
     public void processIncomingReport_highValueAndPriority_lowerPriorityReportDeleted()
             throws JSONException {
-        ReportSpec testReportSpec =
-                new ReportSpec(SourceFixture.getTriggerSpecValueSumEncodedJSONValidBaseline(), "2");
+        Source source = SourceFixture.getValidSource();
+        ReportSpec testReportSpec = new ReportSpec(
+                SourceFixture.getTriggerSpecValueSumEncodedJSONValidBaseline(), "2", source);
         List<EventReport> existingReports = new ArrayList<>();
         EventReport existingReport_1 =
                 EventReportFixture.getBaseEventReportBuild()
@@ -246,8 +259,9 @@ public class ReportSpecUtilTest {
 
     @Test
     public void processIncomingReport_equalPriority_noReportDeleted() throws JSONException {
-        ReportSpec testReportSpec =
-                new ReportSpec(SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(), "2");
+        Source source = SourceFixture.getValidSource();
+        ReportSpec testReportSpec = new ReportSpec(
+                SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(), "2", source);
         List<EventReport> existingReports = new ArrayList<>();
         EventReport existingReport_1 =
                 EventReportFixture.getBaseEventReportBuild()
@@ -309,8 +323,9 @@ public class ReportSpecUtilTest {
     @Test
     public void processIncomingReport_higherPriority_reportWithLaterTriggerTimeDeleted()
             throws JSONException {
-        ReportSpec testReportSpec =
-                new ReportSpec(SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(), "2");
+        Source source = SourceFixture.getValidSource();
+        ReportSpec testReportSpec = new ReportSpec(
+                SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(), "2", source);
         List<EventReport> existingReports = new ArrayList<>();
         EventReport existingReport_1 =
                 EventReportFixture.getBaseEventReportBuild()
@@ -374,8 +389,9 @@ public class ReportSpecUtilTest {
     @Test
     public void processIncomingReport_earlierReportTime_reportWithLaterTimeDeleted()
             throws JSONException {
-        ReportSpec testReportSpec =
-                new ReportSpec(SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(), "2");
+        Source source = SourceFixture.getValidSource();
+        ReportSpec testReportSpec = new ReportSpec(
+                SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(), "2", source);
         List<EventReport> existingReports = new ArrayList<>();
         EventReport existingReport_1 =
                 EventReportFixture.getBaseEventReportBuild()
@@ -437,8 +453,9 @@ public class ReportSpecUtilTest {
     @Test
     public void processIncomingReport_countBasedNoBucketIncrement_noReportsDeleted()
             throws JSONException {
-        ReportSpec testReportSpec =
-                new ReportSpec(SourceFixture.getTriggerSpecValueSumEncodedJSONValidBaseline(), "2");
+        Source source = SourceFixture.getValidSource();
+        ReportSpec testReportSpec = new ReportSpec(
+                SourceFixture.getTriggerSpecValueSumEncodedJSONValidBaseline(), "2", source);
         List<EventReport> existingReports = new ArrayList<>();
         EventReport existingReport_1 =
                 EventReportFixture.getBaseEventReportBuild()
@@ -497,8 +514,10 @@ public class ReportSpecUtilTest {
     @Test
     public void processIncomingReport_earlierReportTimeLowerPriority_reportWithLaterTimeDeleted()
             throws JSONException {
+        Source source = SourceFixture.getValidSource();
         ReportSpec testReportSpec =
-                new ReportSpec(SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(), "2");
+                new ReportSpec(
+                        SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(), "2", source);
         List<EventReport> existingReports = new ArrayList<>();
         EventReport existingReport_1 =
                 EventReportFixture.getBaseEventReportBuild()
@@ -587,11 +606,17 @@ public class ReportSpecUtilTest {
         triggerRecord1.put("trigger_data", currentEventReport1.getTriggerData());
         triggerRecord1.put("dedup_key", currentEventReport1.getTriggerDedupKey());
         existingAttributes.put(triggerRecord1);
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventAttributionStatus(existingAttributes.toString())
+                        .setAttributedTriggers(null)
+                        .build();
+        source.buildAttributedTriggers();
         ReportSpec testReportSpec =
                 new ReportSpec(
-                        templateReportSpec.encodeTriggerSpecsToJSON(),
+                        templateReportSpec.encodeTriggerSpecsToJson(),
                         Integer.toString(templateReportSpec.getMaxReports()),
-                        existingAttributes.toString(),
+                        source,
                         templateReportSpec.encodePrivacyParametersToJSONString());
 
         EventReport incomingReport =
@@ -613,7 +638,7 @@ public class ReportSpecUtilTest {
                         templateReportSpec,
                         incrementingBucket,
                         incomingReport,
-                        new ArrayList<>(Arrays.asList(currentEventReport1, currentEventReport1)));
+                        List.of(currentEventReport1, currentEventReport1));
         assertEquals(
                 new Pair<>(new ArrayList<>(Collections.singletonList(currentEventReport1)), 2),
                 actualResult);
@@ -621,8 +646,9 @@ public class ReportSpecUtilTest {
 
     @Test
     public void numDecrementingBucket_valueInHighestBucket_correctlyCounts() throws JSONException {
-        ReportSpec testReportSpec =
-                new ReportSpec(SourceFixture.getTriggerSpecValueSumEncodedJSONValidBaseline(), "2");
+        Source source = SourceFixture.getValidSource();
+        ReportSpec testReportSpec = new ReportSpec(
+                SourceFixture.getTriggerSpecValueSumEncodedJSONValidBaseline(), "2", source);
         EventReport existingReport_1 =
                 EventReportFixture.getBaseEventReportBuild()
                         .setTriggerData(new UnsignedLong(1L))
@@ -674,8 +700,9 @@ public class ReportSpecUtilTest {
 
     @Test
     public void numDecrementingBucket_valueInFirstBucket_correctlyCounts() throws JSONException {
-        ReportSpec testReportSpec =
-                new ReportSpec(SourceFixture.getTriggerSpecValueSumEncodedJSONValidBaseline(), "2");
+        Source source = SourceFixture.getValidSource();
+        ReportSpec testReportSpec = new ReportSpec(
+                SourceFixture.getTriggerSpecValueSumEncodedJSONValidBaseline(), "2", source);
         EventReport existingReport_1 =
                 EventReportFixture.getBaseEventReportBuild()
                         .setTriggerData(new UnsignedLong(1L))
@@ -710,7 +737,8 @@ public class ReportSpecUtilTest {
                                 TimeUnit.DAYS.toMillis(30))
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [2, 4, 6, 8, 10]}]";
-        ReportSpec testReportSpec = new ReportSpec(triggerSpecsString, "5");
+        Source source = SourceFixture.getValidSource();
+        ReportSpec testReportSpec = new ReportSpec(triggerSpecsString, "5", source);
         EventReport existingReport_1 =
                 EventReportFixture.getBaseEventReportBuild()
                         .setTriggerData(new UnsignedLong(1L))
@@ -748,8 +776,10 @@ public class ReportSpecUtilTest {
 
     @Test
     public void countBucketIncrements_singleTrigger_correctlyCounts() throws JSONException {
+        Source source = SourceFixture.getValidSource();
         ReportSpec testReportSpec =
-                new ReportSpec(SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(), "3");
+                new ReportSpec(
+                        SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(), "3", source);
         EventReport existingReport_1 =
                 EventReportFixture.getBaseEventReportBuild()
                         .setTriggerData(new UnsignedLong(1L))
@@ -764,8 +794,10 @@ public class ReportSpecUtilTest {
     @Test
     public void numDecrementingBucket_countBasedInsertingMultipleTriggers_correctlyCounts()
             throws JSONException {
+        Source source = SourceFixture.getValidSource();
         ReportSpec testReportSpec =
-                new ReportSpec(SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(), "3");
+                new ReportSpec(
+                        SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(), "3", source);
         EventReport existingReport_1 =
                 EventReportFixture.getBaseEventReportBuild()
                         .setTriggerId("12345")
@@ -794,7 +826,8 @@ public class ReportSpecUtilTest {
     public void getFlexEventReportingTime_triggerTimeEarlierThanSourceTime_signalsInvalid()
             throws JSONException {
         ReportSpec testReportSpec =
-                new ReportSpec(SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(), "3");
+                new ReportSpec(
+                        SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(), "3", null);
         assertEquals(
                 -1,
                 ReportSpecUtil.getFlexEventReportingTime(
@@ -812,7 +845,8 @@ public class ReportSpecUtilTest {
         jsonTriggerSpec1.put("event_report_windows", windows1);
         jsonTriggerSpec1.put("summary_buckets", new JSONArray(new int[] {1, 10, 100}));
         ReportSpec testReportSpec =
-                new ReportSpec(new JSONArray(new JSONObject[] {jsonTriggerSpec1}).toString(), "3");
+                new ReportSpec(
+                        new JSONArray(new JSONObject[] {jsonTriggerSpec1}).toString(), "3", null);
 
         // Assertion
         assertEquals(
@@ -832,7 +866,8 @@ public class ReportSpecUtilTest {
         jsonTriggerSpec.put("event_report_windows", windows);
         jsonTriggerSpec.put("summary_buckets", new JSONArray(new int[] {1, 10, 100}));
         ReportSpec testReportSpec =
-                new ReportSpec(new JSONArray(new JSONObject[] {jsonTriggerSpec}).toString(), "3");
+                new ReportSpec(
+                        new JSONArray(new JSONObject[] {jsonTriggerSpec}).toString(), "3", null);
 
         // Assertion
         assertEquals(
@@ -883,7 +918,8 @@ public class ReportSpecUtilTest {
         jsonTriggerSpec.put("event_report_windows", windows);
         jsonTriggerSpec.put("summary_buckets", new JSONArray(new int[] {1, 10, 100}));
         ReportSpec testReportSpec =
-                new ReportSpec(new JSONArray(new JSONObject[] {jsonTriggerSpec}).toString(), "3");
+                new ReportSpec(
+                        new JSONArray(new JSONObject[] {jsonTriggerSpec}).toString(), "3", null);
 
         long minReportDelay = 23000L;
         doReturn(minReportDelay).when(mFlags).getMeasurementMinEventReportDelayMillis();
@@ -902,8 +938,9 @@ public class ReportSpecUtilTest {
 
     @Test
     public void countBucketIncrements_singleOrNoIncrements_correctlyCounts() throws JSONException {
-        ReportSpec testReportSpec =
-                new ReportSpec(SourceFixture.getTriggerSpecValueSumEncodedJSONValidBaseline(), "2");
+        Source source = SourceFixture.getValidSource();
+        ReportSpec testReportSpec = new ReportSpec(
+                SourceFixture.getTriggerSpecValueSumEncodedJSONValidBaseline(), "2", source);
         EventReport existingReport_1 =
                 EventReportFixture.getBaseEventReportBuild()
                         .setTriggerData(new UnsignedLong(1L))
@@ -957,7 +994,8 @@ public class ReportSpecUtilTest {
                                 TimeUnit.DAYS.toMillis(30))
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [2, 4, 6, 8, 10]}]";
-        ReportSpec testReportSpec = new ReportSpec(triggerSpecsString, "5");
+        Source source = SourceFixture.getValidSource();
+        ReportSpec testReportSpec = new ReportSpec(triggerSpecsString, "5", source);
         EventReport existingReport_1 =
                 EventReportFixture.getBaseEventReportBuild()
                         .setTriggerData(new UnsignedLong(1L))
@@ -996,5 +1034,201 @@ public class ReportSpecUtilTest {
         assertEquals(0, ReportSpecUtil.countBucketIncrements(testReportSpec, existingReport_3));
         testReportSpec.insertAttributedTrigger(existingReport_3);
         assertEquals(3, ReportSpecUtil.countBucketIncrements(testReportSpec, existingReport_4));
+    }
+
+    @Test
+    public void getSummaryBucketFromIndex_baseline_equal() throws JSONException {
+        String triggerSpecsString =
+                "[{\"trigger_data\": [1, 2, 3],"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": \"0\", "
+                        + String.format(
+                                "\"end_times\": [%s, %s, %s]}, ",
+                                TimeUnit.DAYS.toMillis(2),
+                                TimeUnit.DAYS.toMillis(7),
+                                TimeUnit.DAYS.toMillis(30))
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": [2, 4, 6, 8, 10]}]";
+        ReportSpec testReportSpec = new ReportSpec(triggerSpecsString, "5", null);
+
+        // Assertion
+        List<Long> summaryBucket =
+                ReportSpecUtil.getSummaryBucketsForTriggerData(
+                        testReportSpec, new UnsignedLong(1L));
+        assertEquals(
+                new Pair<>(2L, 3L), ReportSpecUtil.getSummaryBucketFromIndex(0, summaryBucket));
+        assertEquals(
+                new Pair<>(4L, 5L), ReportSpecUtil.getSummaryBucketFromIndex(1, summaryBucket));
+        assertEquals(
+                new Pair<>(10L, 2147483646L),
+                ReportSpecUtil.getSummaryBucketFromIndex(4, summaryBucket));
+    }
+
+    @Test
+    public void resetSummaryBucketForAllEventReport_multiTriggerDataAndWindow_equal()
+            throws DatastoreException {
+        Source source =
+                SourceFixture.getValidFullSourceBuilderWithFlexEventReportValueSum()
+                        .setId("1234")
+                        .build();
+        long baseTime = System.currentTimeMillis();
+        List<EventReport> reportList1 = new ArrayList<>();
+        reportList1.add(
+                getEventReportBuilder(source)
+                        .setId("1")
+                        .setStatus(EventReport.Status.PENDING)
+                        .setTriggerId("101")
+                        .setTriggerTime(baseTime)
+                        .setTriggerDebugKey(new UnsignedLong(9999L))
+                        .setTriggerData(new UnsignedLong(2L))
+                        .setTriggerSummaryBucket("10,99")
+                        .build());
+        reportList1.add(
+                getEventReportBuilder(source)
+                        .setId("7")
+                        .setStatus(EventReport.Status.PENDING)
+                        .setTriggerId("102")
+                        .setTriggerTime(baseTime + 36000000)
+                        .setTriggerDebugKey(new UnsignedLong(9998L))
+                        .setTriggerData(new UnsignedLong(2L))
+                        .build());
+
+        reportList1.add(
+                getEventReportBuilder(source)
+                        .setId("17")
+                        .setStatus(EventReport.Status.PENDING)
+                        .setTriggerId("103")
+                        .setTriggerTime(baseTime + 72000000)
+                        .setTriggerDebugKey(new UnsignedLong(9979L))
+                        .setTriggerData(new UnsignedLong(1L))
+                        .build());
+
+        when(mMeasurementDao.getSourceEventReports(source)).thenReturn(reportList1);
+
+        ReportSpecUtil.resetSummaryBucketForAllEventReport(source, mMeasurementDao);
+        ArgumentCaptor<String> statusArgEventReportID = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> statusArgSummaryBucket = ArgumentCaptor.forClass(String.class);
+        verify(mMeasurementDao, times(2))
+                .updateEventReportSummaryBucket(
+                        statusArgEventReportID.capture(), statusArgSummaryBucket.capture());
+
+        assertEquals(List.of("17", "7"), statusArgEventReportID.getAllValues());
+        assertEquals(List.of("10,99", "100,2147483646"), statusArgSummaryBucket.getAllValues());
+    }
+
+    @Test
+    public void resetSummaryBucketForAllEventReport_involveDeliveredReport_equal()
+            throws DatastoreException {
+        Source source =
+                SourceFixture.getValidFullSourceBuilderWithFlexEventReportValueSum()
+                        .setId("1234")
+                        .build();
+        long baseTime = System.currentTimeMillis();
+        List<EventReport> reportList1 = new ArrayList<>();
+        reportList1.add(
+                getEventReportBuilder(source)
+                        .setId("1")
+                        .setStatus(EventReport.Status.DELIVERED)
+                        .setTriggerId("101")
+                        .setTriggerTime(baseTime)
+                        .setTriggerDebugKey(new UnsignedLong(9999L))
+                        .setTriggerData(new UnsignedLong(2L))
+                        .setTriggerSummaryBucket("10,99")
+                        .build());
+        reportList1.add(
+                getEventReportBuilder(source)
+                        .setId("7")
+                        .setStatus(EventReport.Status.PENDING)
+                        .setTriggerId("102")
+                        .setTriggerTime(baseTime + 36000000)
+                        .setTriggerDebugKey(new UnsignedLong(9998L))
+                        .setTriggerData(new UnsignedLong(2L))
+                        .build());
+
+        reportList1.add(
+                getEventReportBuilder(source)
+                        .setId("17")
+                        .setStatus(EventReport.Status.PENDING)
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setTriggerId("103")
+                        .setTriggerTime(baseTime + 72000000)
+                        .setTriggerDebugKey(new UnsignedLong(9979L))
+                        .setTriggerData(new UnsignedLong(1L))
+                        .build());
+
+        when(mMeasurementDao.getSourceEventReports(source)).thenReturn(reportList1);
+
+        ReportSpecUtil.resetSummaryBucketForAllEventReport(source, mMeasurementDao);
+        ArgumentCaptor<String> statusArgEventReportID = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> statusArgSummaryBucket = ArgumentCaptor.forClass(String.class);
+        verify(mMeasurementDao, times(2))
+                .updateEventReportSummaryBucket(
+                        statusArgEventReportID.capture(), statusArgSummaryBucket.capture());
+
+        assertEquals(List.of("17", "7"), statusArgEventReportID.getAllValues());
+        assertEquals(List.of("10,99", "100,2147483646"), statusArgSummaryBucket.getAllValues());
+    }
+
+    @Test
+    public void resetSummaryBucketForAllEventReport_involveDeletedReport_equal()
+            throws DatastoreException {
+        Source source =
+                SourceFixture.getValidFullSourceBuilderWithFlexEventReportValueSum()
+                        .setId("1234")
+                        .build();
+        long baseTime = System.currentTimeMillis();
+        List<EventReport> reportList1 = new ArrayList<>();
+        reportList1.add(
+                getEventReportBuilder(source)
+                        .setId("1")
+                        .setStatus(EventReport.Status.MARKED_TO_DELETE)
+                        .setTriggerId("101")
+                        .setTriggerTime(baseTime)
+                        .setTriggerDebugKey(new UnsignedLong(9999L))
+                        .setTriggerData(new UnsignedLong(2L))
+                        .setTriggerSummaryBucket("10,99")
+                        .build());
+        reportList1.add(
+                getEventReportBuilder(source)
+                        .setId("7")
+                        .setStatus(EventReport.Status.PENDING)
+                        .setTriggerId("102")
+                        .setTriggerTime(baseTime + 36000000)
+                        .setTriggerDebugKey(new UnsignedLong(9998L))
+                        .setTriggerData(new UnsignedLong(2L))
+                        .build());
+
+        reportList1.add(
+                getEventReportBuilder(source)
+                        .setId("17")
+                        .setStatus(EventReport.Status.PENDING)
+                        .setTriggerId("103")
+                        .setTriggerTime(baseTime + 72000000)
+                        .setTriggerDebugKey(new UnsignedLong(9979L))
+                        .setTriggerData(new UnsignedLong(1L))
+                        .build());
+
+        when(mMeasurementDao.getSourceEventReports(source)).thenReturn(reportList1);
+
+        ReportSpecUtil.resetSummaryBucketForAllEventReport(source, mMeasurementDao);
+        ArgumentCaptor<String> statusArgEventReportID = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> statusArgSummaryBucket = ArgumentCaptor.forClass(String.class);
+        verify(mMeasurementDao, times(2))
+                .updateEventReportSummaryBucket(
+                        statusArgEventReportID.capture(), statusArgSummaryBucket.capture());
+
+        assertEquals(List.of("17", "7"), statusArgEventReportID.getAllValues());
+        assertEquals(List.of("10,99", "10,99"), statusArgSummaryBucket.getAllValues());
+    }
+
+    private static EventReport.Builder getEventReportBuilder(Source source) {
+        return EventReportFixture.getBaseEventReportBuild()
+                .setSourceType(source.getSourceType())
+                .setRegistrationOrigin(source.getRegistrationOrigin())
+                .setSourceEventId(source.getEventId())
+                .setEnrollmentId(source.getEnrollmentId())
+                // Event report attribution destination derivation skipped since it's not relevant.
+                .setSourceType(source.getSourceType())
+                .setSourceId(source.getId());
     }
 }

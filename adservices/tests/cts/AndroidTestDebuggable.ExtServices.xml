@@ -38,7 +38,7 @@
 
     <!-- For this test suite to get picked up in presubmit -->
     <option name="config-descriptor:metadata" key="mainline-param"
-            value="com.google.android.extservices_sminus.apex" />
+            value="com.google.android.extservices.apex" />
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
@@ -49,6 +49,7 @@
         <!-- Disable kill switches to ignore the effect of actual PH values. -->
         <option name="run-command" value="setprop debug.adservices.global_kill_switch false"/>
         <option name="run-command" value="device_config put adservices enable_back_compat true"/>
+        <option name="run-command" value="setprop debug.adservices.adid_kill_switch false" />
 
         <option name="run-command"
                 value="setprop debug.adservices.fledge_select_ads_kill_switch false"/>

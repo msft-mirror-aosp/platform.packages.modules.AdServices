@@ -1,7 +1,7 @@
 {
   "description": "A2W test for trigger-event-low-priority debug report.",
   "phflags_override": {
-    "measurement_debug_join_key_enrollment_allowlist" : "enrollment-id-www.ad-tech1.test"
+    "measurement_debug_join_key_enrollment_allowlist" : "enrollment-id-ad-tech1.test"
   },
   "input": {
     "sources": [
@@ -156,7 +156,7 @@
           "trigger_debug_key" : "8971346781"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
-        "report_time": "1643411975000"
+        "report_time": "1643411973000"
       },
       {
         "payload": {
@@ -170,7 +170,7 @@
           "trigger_debug_key" : "8971346782"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
-        "report_time": "1643411976000"
+        "report_time": "1643411973000"
       },
       {
         "payload": {
@@ -184,7 +184,7 @@
           "trigger_debug_key" : "8971346783"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
-        "report_time": "1643411977000"
+        "report_time": "1643411973000"
       }
     ],
     "debug_event_level_results": [

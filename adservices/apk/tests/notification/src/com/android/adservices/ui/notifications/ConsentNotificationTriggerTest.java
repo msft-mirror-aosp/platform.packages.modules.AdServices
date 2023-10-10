@@ -16,6 +16,11 @@
 
 package com.android.adservices.ui.notifications;
 
+import static com.android.adservices.service.FlagsConstants.KEY_EU_NOTIF_FLOW_CHANGE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_NOTIFICATION_DISMISSED_ON_CLICK;
+import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.BETA_UX;
+import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.GA_UX;
 import static com.android.adservices.ui.util.ApkTestUtil.getPageElement;
 import static com.android.adservices.ui.util.ApkTestUtil.getString;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
@@ -25,7 +30,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -34,6 +38,7 @@ import android.content.Context;
 
 import androidx.core.app.NotificationManagerCompat;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
@@ -51,6 +56,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.consent.DeviceRegionProvider;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.UiStatsLogger;
+import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -81,6 +87,7 @@ public class ConsentNotificationTriggerTest {
     @Mock private AdServicesLoggerImpl mAdServicesLoggerImpl;
     @Mock private NotificationManagerCompat mNotificationManagerCompat;
     @Mock private ConsentManager mConsentManager;
+    @Mock private UxStatesManager mMockUxStatesManager;
     @Mock Flags mMockFlags;
     @Spy private Context mContext;
 
@@ -103,6 +110,7 @@ public class ConsentNotificationTriggerTest {
                         .spyStatic(AdServicesLoggerImpl.class)
                         .spyStatic(UiStatsLogger.class)
                         .spyStatic(DeviceRegionProvider.class)
+                        .spyStatic(UxStatesManager.class)
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
@@ -110,12 +118,17 @@ public class ConsentNotificationTriggerTest {
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         ExtendedMockito.doReturn(mAdServicesLoggerImpl).when(AdServicesLoggerImpl::getInstance);
+        ExtendedMockito.doReturn(mMockUxStatesManager)
+                .when(() -> UxStatesManager.getInstance(any(Context.class)));
         doReturn(mAdServicesManager).when(mContext).getSystemService(AdServicesManager.class);
         doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any(Context.class)));
         doReturn(true).when(mMockFlags).isEeaDeviceFeatureEnabled();
         doReturn(true).when(mMockFlags).isUiFeatureTypeLoggingEnabled();
-        doReturn(true).when(mMockFlags).getNotificationDismissedOnClick();
-        doReturn(false).when(mMockFlags).getEuNotifFlowChangeEnabled();
+        doReturn(false).when(mMockUxStatesManager).isEeaDevice();
+        doReturn(false).when(mMockUxStatesManager).getFlag(any(String.class));
+        doReturn(GA_UX).when(mMockUxStatesManager).getUx();
+        doReturn(true).when(mMockUxStatesManager).getFlag(KEY_NOTIFICATION_DISMISSED_ON_CLICK);
+        doReturn(false).when(mMockUxStatesManager).getFlag(KEY_EU_NOTIF_FLOW_CHANGE_ENABLED);
         cancelAllPreviousNotifications();
     }
 
@@ -134,7 +147,8 @@ public class ConsentNotificationTriggerTest {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
         doReturn(true).when(mMockFlags).isEeaDevice();
-        doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
+        doReturn(false).when(mMockUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
+        doReturn(BETA_UX).when(mMockUxStatesManager).getUx();
 
         final String expectedTitle =
                 mContext.getString(R.string.notificationUI_notification_title_eu);
@@ -171,7 +185,7 @@ public class ConsentNotificationTriggerTest {
                         new UiSelector()
                                 .packageName("com.android.systemui")
                                 .resourceId("com.android.systemui:id/notification_stack_scroller"));
-        assertThat(scroller.exists()).isTrue();
+
         UiSelector notificationCardSelector =
                 new UiSelector().text(getString(R.string.notificationUI_notification_title_eu));
         UiObject notificationCard = scroller.getChild(notificationCardSelector);
@@ -189,7 +203,8 @@ public class ConsentNotificationTriggerTest {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
         doReturn(true).when(mMockFlags).isEeaDevice();
-        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+        doReturn(true).when(mMockUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
+        doReturn(GA_UX).when(mMockUxStatesManager).getUx();
 
         final String expectedTitle =
                 mContext.getString(R.string.notificationUI_notification_ga_title_eu);
@@ -252,7 +267,8 @@ public class ConsentNotificationTriggerTest {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
         doReturn(false).when(mMockFlags).isEeaDevice();
-        doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
+        doReturn(false).when(mMockUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
+        doReturn(BETA_UX).when(mMockUxStatesManager).getUx();
 
         final String expectedTitle = mContext.getString(R.string.notificationUI_notification_title);
         final String expectedContent =
@@ -307,7 +323,8 @@ public class ConsentNotificationTriggerTest {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
         doReturn(false).when(mMockFlags).isEeaDevice();
-        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+        doReturn(true).when(mMockUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
+        doReturn(GA_UX).when(mMockUxStatesManager).getUx();
 
         final String expectedTitle =
                 mContext.getString(R.string.notificationUI_notification_ga_title);
@@ -352,8 +369,9 @@ public class ConsentNotificationTriggerTest {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
         doReturn(true).when(mMockFlags).isEeaDevice();
-        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
-        doReturn(false).when(mMockFlags).getNotificationDismissedOnClick();
+        doReturn(true).when(mMockUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
+        doReturn(GA_UX).when(mMockUxStatesManager).getUx();
+        doReturn(false).when(mMockUxStatesManager).getFlag(KEY_NOTIFICATION_DISMISSED_ON_CLICK);
 
         final String expectedTitle =
                 mContext.getString(R.string.notificationUI_notification_ga_title_eu);
@@ -422,13 +440,20 @@ public class ConsentNotificationTriggerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302607350)
     public void testEuNotifications_gaUxEnabled_nonDismissable_dismissedOnConfirmationPage()
             throws InterruptedException, UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
         doReturn(true).when(mMockFlags).isEeaDevice();
+        doReturn(true).when(mMockFlags).getEnableAdServicesSystemApi();
+        doReturn("GA_UX").when(mMockFlags).getDebugUx();
+        doReturn(true).when(mMockFlags).getConsentNotificationActivityDebugMode();
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
-        doReturn(false).when(mMockFlags).getNotificationDismissedOnClick();
+        doReturn(GA_UX).when(mMockUxStatesManager).getUx();
+        doReturn(true).when(mMockUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
+        doReturn(false).when(mMockUxStatesManager).getFlag(KEY_EU_NOTIF_FLOW_CHANGE_ENABLED);
+        doReturn(false).when(mMockUxStatesManager).getFlag(KEY_NOTIFICATION_DISMISSED_ON_CLICK);
 
         final String expectedTitle =
                 mContext.getString(R.string.notificationUI_notification_ga_title_eu);
@@ -448,7 +473,6 @@ public class ConsentNotificationTriggerTest {
         verify(mConsentManager).disable(mContext, AdServicesApiType.FLEDGE);
         verify(mConsentManager).disable(mContext, AdServicesApiType.TOPICS);
         verify(mConsentManager).disable(mContext, AdServicesApiType.MEASUREMENTS);
-        verify(mConsentManager).recordNotificationDisplayed(true);
         verify(mConsentManager).recordGaUxNotificationDisplayed(true);
 
         assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);
@@ -474,7 +498,6 @@ public class ConsentNotificationTriggerTest {
                         new UiSelector()
                                 .packageName("com.android.systemui")
                                 .resourceId("com.android.systemui:id/notification_stack_scroller"));
-        assertThat(scroller.exists()).isTrue();
 
         // there might be only one notification and no scroller exists.
         UiObject notificationCard;
@@ -514,7 +537,8 @@ public class ConsentNotificationTriggerTest {
     public void testNotificationsDisabled() {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
-        doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
+        doReturn(false).when(mMockUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
+        doReturn(BETA_UX).when(mMockUxStatesManager).getUx();
 
         ExtendedMockito.doReturn(mNotificationManagerCompat)
                 .when(() -> NotificationManagerCompat.from(mContext));

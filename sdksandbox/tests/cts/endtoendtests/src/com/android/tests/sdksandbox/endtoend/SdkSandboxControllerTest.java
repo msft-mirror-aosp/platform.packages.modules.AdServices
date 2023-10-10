@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotNull;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
+import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.content.Context;
 import android.os.Bundle;
 
@@ -40,10 +41,13 @@ import org.junit.runners.JUnit4;
 
 /** End-to-end tests of {@link SdkSandboxController} APIs. */
 @RunWith(JUnit4.class)
-public class SdkSandboxControllerTest {
+public class SdkSandboxControllerTest extends SandboxKillerBeforeTest {
 
-    @Rule
-    public final ActivityScenarioRule<TestActivity> mRule =
+    @Rule(order = 0)
+    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
+
+    @Rule(order = 1)
+    public final ActivityScenarioRule<TestActivity> activityScenarioRule =
             new ActivityScenarioRule<>(TestActivity.class);
 
     private static final String SDK_NAME = "com.android.ctssdkprovider";
