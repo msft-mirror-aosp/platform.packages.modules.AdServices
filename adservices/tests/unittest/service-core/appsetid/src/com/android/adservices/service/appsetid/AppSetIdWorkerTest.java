@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import org.mockito.Mockito;
 
 import java.util.concurrent.CompletableFuture;
 
-/** Unit test for {@link com.android.adservices.service.adid.AppSetIdWorker}. */
+/** Unit test for {@link com.android.adservices.service.appsetid.AppSetIdWorker}. */
 public class AppSetIdWorkerTest {
 
     private boolean mTestSuccess;
