@@ -24,7 +24,7 @@ java_defaults {
     static_libs: [
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt", // Needed for ShellUtils.runShellCommand
-        "truth-prebuilt",
+        "truth",
         "adservices-clients",
         "adservices-test-utility",
     ],
@@ -42,7 +42,7 @@ android_test {
     test_suites: [
         "cts",
         "general-tests",
-        "mts-adservices"
+        "mts-adservices",
     ],
     min_sdk_version: "Tiramisu",
     manifest: "CtsAdServicesEndToEndTestsManifest.xml",
@@ -64,4 +64,3 @@ android_test {
     test_config: "CtsAdExtServicesEndToEndTests.xml",
     test_mainline_modules: ["com.google.android.extservices.apex"],
 }
-

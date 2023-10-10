@@ -415,8 +415,8 @@ android_test {
         "src/**/*.java",
     ],
     exclude_srcs: [
-      // jetpack beta01 release has broken AdTechIdentifier toString, causing failures in ad selection
-      "src/com/android/adservices/protectedaudience/FledgeCtsDebuggableJetpackTest.java",
+        // jetpack beta01 release has broken AdTechIdentifier toString, causing failures in ad selection
+        "src/com/android/adservices/protectedaudience/FledgeCtsDebuggableJetpackTest.java",
     ],
     sdk_version: "module_current",
     static_libs: [
@@ -428,7 +428,7 @@ android_test {
         "compatibility-device-util-axt",
         "kotlinx-coroutines-android",
         "mockito-target-extended-minus-junit4",
-        "truth-prebuilt",
+        "truth",
         "framework-adservices.impl",
         "framework-sdksandbox.impl",
         "adservices-test-fixtures",
@@ -436,7 +436,7 @@ android_test {
     ],
     libs: [
         "android.test.base",
-        ],
+    ],
     test_suites: [
         "general-tests",
     ],
@@ -458,7 +458,7 @@ android_test {
         "compatibility-device-util-axt",
         "kotlinx-coroutines-android",
         "mockito-target-extended-minus-junit4",
-        "truth-prebuilt",
+        "truth",
         "framework-adservices.impl",
         "framework-sdksandbox.impl",
         "adservices-test-fixtures",
@@ -466,7 +466,7 @@ android_test {
     ],
     libs: [
         "android.test.base",
-        ],
+    ],
     test_suites: [
         "general-tests",
     ],
@@ -488,7 +488,7 @@ android_test {
         "compatibility-device-util-axt",
         "kotlinx-coroutines-android",
         "mockito-target-extended-minus-junit4",
-        "truth-prebuilt",
+        "truth",
         "framework-adservices.impl",
         "framework-sdksandbox.impl",
         "adservices-test-fixtures",
@@ -496,7 +496,7 @@ android_test {
     ],
     libs: [
         "android.test.base",
-        ],
+    ],
     test_suites: [
         "general-tests",
     ],
@@ -518,7 +518,7 @@ android_test {
         "compatibility-device-util-axt",
         "kotlinx-coroutines-android",
         "mockito-target-extended-minus-junit4",
-        "truth-prebuilt",
+        "truth",
         "framework-adservices.impl",
         "framework-sdksandbox.impl",
         "adservices-test-fixtures",
@@ -526,7 +526,7 @@ android_test {
     ],
     libs: [
         "android.test.base",
-        ],
+    ],
     test_suites: [
         "general-tests",
     ],
@@ -548,7 +548,7 @@ android_test {
         "compatibility-device-util-axt",
         "kotlinx-coroutines-android",
         "mockito-target-extended-minus-junit4",
-        "truth-prebuilt",
+        "truth",
         "framework-adservices.impl",
         "framework-sdksandbox.impl",
         "adservices-test-fixtures",
@@ -556,7 +556,7 @@ android_test {
     ],
     libs: [
         "android.test.base",
-        ],
+    ],
     test_suites: [
         "general-tests",
     ],

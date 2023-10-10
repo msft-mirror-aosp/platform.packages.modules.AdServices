@@ -36,10 +36,10 @@ android_test {
         "androidx.test.ext.truth",
         "androidx.test.ext.junit",
         "SdkSandboxTestUtils",
-        "truth-prebuilt",
+        "truth",
     ],
     test_suites: ["general-tests"],
     test_options: {
-        extra_test_configs: [ "AndroidTest_SdkInSandbox.xml" ]
+        extra_test_configs: ["AndroidTest_SdkInSandbox.xml"],
     },
 }
