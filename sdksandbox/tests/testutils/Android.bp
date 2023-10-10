@@ -26,7 +26,7 @@ java_library {
     ],
     static_libs: [
         "service-sdksandbox.impl",
-        "truth-prebuilt",
+        "truth",
         "androidx.test.ext.junit",
         "SdkSandbox-java-lib",
         "platform-screenshot-diff-core",

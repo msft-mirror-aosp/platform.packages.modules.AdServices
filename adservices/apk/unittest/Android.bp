@@ -35,7 +35,7 @@ android_test {
         "androidx.test.rules",
         "compatibility-device-util-axt",
         "mockito-target-extended-minus-junit4",
-        "truth-prebuilt",
+        "truth",
         "androidx.room_room-runtime",
     ],
     libs: [
@@ -73,10 +73,10 @@ android_test {
         "androidx.test.rules",
         "compatibility-device-util-axt",
         "mockito-target-extended-minus-junit4",
-        "truth-prebuilt",
+        "truth",
     ],
     libs: [
-    	"android.ext.adservices",
+        "android.ext.adservices",
         "android.test.base",
         "android.test.mock.stubs",
     ],

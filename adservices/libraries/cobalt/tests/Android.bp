@@ -24,9 +24,9 @@ android_test {
     manifest: "AndroidManifest.xml",
     test_config: "AndroidTest.xml",
     static_libs: [
-	"androidx.test.runner",
+        "androidx.test.runner",
         "adservices-cobalt",
-    	"truth-prebuilt",
+        "truth",
     ],
     libs: [
         "android.test.base",
