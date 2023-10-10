@@ -908,7 +908,7 @@ public class AdSelectionManager {
     private String getCallerSdkName() {
         SandboxedSdkContext sandboxedSdkContext =
                 SandboxedSdkContextUtils.getAsSandboxedSdkContext(mContext);
-        return sandboxedSdkContext == null ? null : sandboxedSdkContext.getSdkPackageName();
+        return sandboxedSdkContext == null ? "" : sandboxedSdkContext.getSdkPackageName();
     }
 
     private interface AdSelectionAdIdCallback {

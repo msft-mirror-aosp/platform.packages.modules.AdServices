@@ -144,6 +144,7 @@ public final class CobaltUploaderTest {
 
     @Test
     public void uploadThrowsRemoteException_logsError() throws Exception {
+        RemoteException exception = new RemoteException("D'OH!");
         CobaltUploader uploader =
                 new CobaltUploader(
                         ApplicationProvider.getApplicationContext(), CobaltPipelineType.PROD);
@@ -153,7 +154,7 @@ public final class CobaltUploaderTest {
                     @Override
                     public void uploadEncryptedCobaltEnvelope(EncryptedCobaltEnvelopeParams params)
                             throws RemoteException {
-                        throw new RemoteException();
+                        throw exception;
                     }
                 };
         doReturn(interfaceStub).when(spyUploader).getService();
@@ -165,8 +166,8 @@ public final class CobaltUploaderTest {
                         .setCiphertext(ByteString.copyFrom(BYTES))
                         .build());
         verifyErrorLogUtilError(
+                exception,
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__COBALT_UPLOAD_API_REMOTE_EXCEPTION,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED,
-                /* numberOfInvocations= */ 1);
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED);
     }
 }

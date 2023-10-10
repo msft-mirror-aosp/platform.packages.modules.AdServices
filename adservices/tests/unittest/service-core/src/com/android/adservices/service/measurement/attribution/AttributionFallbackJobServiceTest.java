@@ -35,6 +35,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -74,6 +75,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class AttributionFallbackJobServiceTest {
     private static final long WAIT_IN_MILLIS = 1_000L;
+    private static final long JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(24);
 
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final int MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID =
@@ -273,15 +275,17 @@ public class AttributionFallbackJobServiceTest {
                     doReturn(mMockJobScheduler)
                             .when(mockContext)
                             .getSystemService(JobScheduler.class);
+                    when(mMockFlags.getMeasurementAttributionFallbackJobPersisted())
+                            .thenReturn(true);
+                    when(mMockFlags.getMeasurementAttributionFallbackJobPeriodMs())
+                            .thenReturn(JOB_PERIOD_MS);
                     final JobInfo mockJobInfo =
                             new JobInfo.Builder(
                                             MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID,
                                             new ComponentName(
                                                     mockContext,
                                                     AttributionFallbackJobService.class))
-                                    .setPeriodic(
-                                            FlagsFactory.getFlags()
-                                                    .getMeasurementAttributionFallbackJobPeriodMs())
+                                    .setPeriodic(JOB_PERIOD_MS)
                                     .setPersisted(true)
                                     .build();
                     doReturn(mockJobInfo)
@@ -311,8 +315,6 @@ public class AttributionFallbackJobServiceTest {
                     doReturn(mMockJobScheduler)
                             .when(mockContext)
                             .getSystemService(JobScheduler.class);
-                    long periodMs =
-                            FlagsFactory.getFlags().getMeasurementAttributionFallbackJobPeriodMs();
                     final JobInfo mockJobInfo =
                             new JobInfo.Builder(
                                             MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID,
@@ -320,7 +322,7 @@ public class AttributionFallbackJobServiceTest {
                                                     mockContext,
                                                     AttributionFallbackJobService.class))
                                     // difference
-                                    .setPeriodic(periodMs - 1)
+                                    .setPeriodic(JOB_PERIOD_MS - 1)
                                     .setPersisted(true)
                                     .build();
                     doReturn(mockJobInfo)
@@ -408,6 +410,10 @@ public class AttributionFallbackJobServiceTest {
                     doReturn(null)
                             .when(jobScheduler)
                             .getPendingJob(eq(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID));
+                    when(mMockFlags.getMeasurementAttributionFallbackJobPersisted())
+                            .thenReturn(true);
+                    when(mMockFlags.getMeasurementAttributionFallbackJobPeriodMs())
+                            .thenReturn(JOB_PERIOD_MS);
 
                     // Execute
                     ExtendedMockito.doCallRealMethod()

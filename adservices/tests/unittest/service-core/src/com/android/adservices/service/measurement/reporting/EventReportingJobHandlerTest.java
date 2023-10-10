@@ -16,7 +16,9 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -36,17 +38,18 @@ import android.net.Uri;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
+import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.EventReport;
-import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -97,6 +100,7 @@ public class EventReportingJobHandlerTest {
 
     @Mock Flags mFlags;
     @Mock AdServicesLogger mLogger;
+    @Mock AdServicesErrorLogger mErrorLogger;
 
     EventReportingJobHandler mEventReportingJobHandler;
     EventReportingJobHandler mSpyEventReportingJobHandler;
@@ -104,6 +108,10 @@ public class EventReportingJobHandlerTest {
 
 
     class FakeDatasoreManager extends DatastoreManager {
+        FakeDatasoreManager() {
+            super(mErrorLogger);
+        }
+
         @Override
         public ITransaction createNewTransaction() {
             return mTransaction;
@@ -137,8 +145,7 @@ public class EventReportingJobHandlerTest {
         doReturn(false).when(mFlags).getMeasurementEnableReportingJobsThrowJsonException();
         doReturn(false).when(mFlags).getMeasurementEnableReportingJobsThrowCryptoException();
         doReturn(false).when(mFlags).getMeasurementEnableReportingJobsThrowUnaccountedException();
-        ExtendedMockito.doNothing()
-                .when(() -> ErrorLogUtil.e(anyInt(), anyInt(), anyString(), anyString()));
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         mEventReportingJobHandler =
                 new EventReportingJobHandler(mEnrollmentDao, mDatastoreManager, mFlags, mLogger);
@@ -729,8 +736,8 @@ public class EventReportingJobHandlerTest {
         verify(mMeasurementDao, times(2)).markEventReportStatus(any(), anyInt());
         verify(mSpyEventReportingJobHandler, times(2))
                 .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
-        verify(mTransaction, times(5)).begin();
-        verify(mTransaction, times(5)).end();
+        verify(mTransaction, times(7)).begin();
+        verify(mTransaction, times(7)).end();
     }
 
     @Test

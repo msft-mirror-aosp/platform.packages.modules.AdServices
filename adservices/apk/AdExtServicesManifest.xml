@@ -99,6 +99,12 @@
                 android:description="@string/permdesc_accessAdServicesState"
                 android:protectionLevel="signature|configurator"/>
 
+    <!-- Permission to allow calling updating AdId Cache API via Common Service. -->
+    <permission android:name="android.permission.UPDATE_AD_ID_CACHE_COMPAT"
+                android:label="@string/permlab_accessUpdateAdIdCache"
+                android:description="@string/permdesc_accessUpdateAdIdCache"
+                android:protectionLevel="signature"/>
+
     <uses-permission android:name="android.permission.ACCESS_PRIVILEGED_AD_ID_COMPAT"/>
     <uses-permission android:name="android.permission.ACCESS_PRIVILEGED_APP_SET_ID_COMPAT"/>
     <uses-permission android:name="android.permission.ACCESS_PRIVILEGED_ADSERVICES_COBALT_UPLOAD_COMPAT" />
@@ -222,6 +228,17 @@
             <intent-filter android:priority="1">
                 <action android:name=
                             "android.adservices.customaudience.CUSTOM_AUDIENCE_SERVICE"/>
+            </intent-filter>
+        </service>
+
+        <service android:name=
+                     "android.adservices.signals.ProtectedSignalsService"
+                 android:exported="true"
+                 android:visibleToInstantApps="false"
+                 android:process=".adservices">
+            <intent-filter android:priority="1">
+                <action android:name=
+                            "android.adservices.signals.PROTECTED_SIGNALS_SERVICE"/>
             </intent-filter>
         </service>
 

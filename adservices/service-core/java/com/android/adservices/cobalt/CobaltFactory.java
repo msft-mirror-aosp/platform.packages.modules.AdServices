@@ -32,17 +32,22 @@ import com.android.cobalt.impl.CobaltPeriodicJobImpl;
 import com.android.cobalt.observations.PrivacyGenerator;
 import com.android.cobalt.system.SystemClockImpl;
 import com.android.cobalt.system.SystemData;
+import com.android.internal.annotations.GuardedBy;
 
 import com.google.cobalt.CobaltRegistry;
 
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
 
 /** Factory for Cobalt's logger and periodic job implementations. */
 public final class CobaltFactory {
+    private static final Object SINGLETON_LOCK = new Object();
+
     /*
-     * Use the prod pipeline because AdServices' reports are for either the DEBUG or GA release
+     * Uses the prod pipeline because AdServices' reports are for either the DEBUG or GA release
      * stage and DEBUG is sufficient for local testing.
      */
     private static final CobaltPipelineType PIPELINE_TYPE = CobaltPipelineType.PROD;
@@ -53,7 +58,10 @@ public final class CobaltFactory {
     private static DataService sSingletonDataService;
     private static SecureRandom sSingletonSecureRandom;
 
+    @GuardedBy("SINGLETON_LOCK")
     private static CobaltLogger sSingletonCobaltLogger;
+
+    @GuardedBy("SINGLETON_LOCK")
     private static CobaltPeriodicJob sSingletonCobaltPeriodicJob;
 
     /**
@@ -66,12 +74,12 @@ public final class CobaltFactory {
             throws CobaltInitializationException {
         Objects.requireNonNull(context);
         Objects.requireNonNull(flags);
-        synchronized (CobaltFactory.class) {
+        synchronized (SINGLETON_LOCK) {
             if (sSingletonCobaltLogger == null) {
                 sSingletonCobaltLogger =
                         sSingletonCobaltLogger =
                                 new CobaltLoggerImpl(
-                                        getRegistry(),
+                                        getRegistry(context),
                                         CobaltReleaseStages.getReleaseStage(
                                                 flags.getAdservicesReleaseStageForCobalt()),
                                         getDataService(context),
@@ -97,15 +105,16 @@ public final class CobaltFactory {
             @NonNull Context context, @NonNull Flags flags) throws CobaltInitializationException {
         Objects.requireNonNull(context);
         Objects.requireNonNull(flags);
-        synchronized (CobaltFactory.class) {
+        synchronized (SINGLETON_LOCK) {
             if (sSingletonCobaltPeriodicJob == null) {
                 sSingletonCobaltPeriodicJob =
                         new CobaltPeriodicJobImpl(
-                                getRegistry(),
+                                getRegistry(context),
                                 CobaltReleaseStages.getReleaseStage(
                                         flags.getAdservicesReleaseStageForCobalt()),
                                 getDataService(context),
                                 getExecutor(),
+                                getScheduledExecutor(),
                                 new SystemClockImpl(),
                                 new SystemData(),
                                 new PrivacyGenerator(getSecureRandom()),
@@ -115,6 +124,7 @@ public final class CobaltFactory {
                                         new HpkeEncryptImpl(), PIPELINE_TYPE),
                                 CobaltApiKeys.copyFromHexApiKey(
                                         flags.getCobaltAdservicesApiKeyHex()),
+                                Duration.ofMillis(flags.getCobaltUploadServiceUnbindDelayMs()),
                                 flags.getTopicsCobaltLoggingEnabled());
             }
             return sSingletonCobaltPeriodicJob;
@@ -128,9 +138,16 @@ public final class CobaltFactory {
     }
 
     @NonNull
-    private static CobaltRegistry getRegistry() throws CobaltInitializationException {
+    private static ScheduledExecutorService getScheduledExecutor() {
+        // Cobalt requires a timeout to disconnect from the system server.
+        return AdServicesExecutors.getScheduler();
+    }
+
+    @NonNull
+    private static CobaltRegistry getRegistry(Context context)
+            throws CobaltInitializationException {
         if (sSingletonCobaltRegistry == null) {
-            sSingletonCobaltRegistry = CobaltRegistryLoader.getRegistry();
+            sSingletonCobaltRegistry = CobaltRegistryLoader.getRegistry(context);
         }
         return sSingletonCobaltRegistry;
     }

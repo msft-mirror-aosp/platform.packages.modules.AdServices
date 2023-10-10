@@ -31,6 +31,13 @@ import androidx.test.core.app.ApplicationProvider;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 public class EncodedPayloadDaoTest {
 
     public static AdTechIdentifier BUYER_1 = CommonFixture.VALID_BUYER_1;
@@ -62,7 +69,7 @@ public class EncodedPayloadDaoTest {
     }
 
     @Test
-    public void testExistsAndGetAnEncoder() {
+    public void testExistsAndGetAnEncodedPayload() {
         assertNull(
                 "Initial state should have been empty",
                 mEncodedPayloadDao.getEncodedPayload(BUYER_1));
@@ -84,6 +91,60 @@ public class EncodedPayloadDaoTest {
         }
         assertEquals(payload.getVersion(), retrieved.getVersion());
         assertEquals(payload.getBuyer(), retrieved.getBuyer());
+    }
+
+    @Test
+    public void testGetAllEncodedPayloads() {
+        assertNull(
+                "Initial state should have been empty",
+                mEncodedPayloadDao.getEncodedPayload(BUYER_1));
+
+        DBEncodedPayload payload = DBEncodedPayloadFixture.anEncodedPayload();
+        mEncodedPayloadDao.persistEncodedPayload(payload);
+        mEncodedPayloadDao.persistEncodedPayload(
+                DBEncodedPayloadFixture.anEncodedPayloadBuilder().setBuyer(BUYER_2).build());
+
+        List<DBEncodedPayload> encodedPayloadList = mEncodedPayloadDao.getAllEncodedPayloads();
+        assertEquals(2, encodedPayloadList.size());
+
+        Set<AdTechIdentifier> buyers =
+                encodedPayloadList.stream().map(a -> a.getBuyer()).collect(Collectors.toSet());
+        assertTrue(buyers.contains(BUYER_1));
+        assertTrue(buyers.contains(BUYER_2));
+
+        Set<AdTechIdentifier> allBuyers =
+                new HashSet<>(mEncodedPayloadDao.getAllBuyersWithEncodedPayloads());
+        assertTrue(allBuyers.contains(BUYER_1));
+        assertTrue(allBuyers.contains(BUYER_2));
+    }
+
+    @Test
+    public void testDeleteAllBuyersRegisteredBefore() {
+        assertNull(
+                "Initial state should have been empty",
+                mEncodedPayloadDao.getEncodedPayload(BUYER_1));
+
+        DBEncodedPayload payload =
+                DBEncodedPayloadFixture.anEncodedPayloadBuilder()
+                        .setCreationTime(Instant.now())
+                        .build();
+        mEncodedPayloadDao.persistEncodedPayload(payload);
+        mEncodedPayloadDao.persistEncodedPayload(
+                DBEncodedPayloadFixture.anEncodedPayloadBuilder()
+                        .setBuyer(BUYER_2)
+                        .setCreationTime(Instant.now().plus(10, ChronoUnit.DAYS))
+                        .build());
+
+        List<DBEncodedPayload> encodedPayloadList = mEncodedPayloadDao.getAllEncodedPayloads();
+        assertEquals(2, encodedPayloadList.size());
+
+        mEncodedPayloadDao.deleteEncodedPayloadsBeforeTime(Instant.now().plus(1, ChronoUnit.DAYS));
+        encodedPayloadList = mEncodedPayloadDao.getAllEncodedPayloads();
+        assertEquals(1, encodedPayloadList.size());
+        Set<AdTechIdentifier> buyers =
+                encodedPayloadList.stream().map(a -> a.getBuyer()).collect(Collectors.toSet());
+        assertTrue(buyers.contains(BUYER_2));
+        assertFalse("Buyer 1 should have been deleted", buyers.contains(BUYER_1));
     }
 
     @Test

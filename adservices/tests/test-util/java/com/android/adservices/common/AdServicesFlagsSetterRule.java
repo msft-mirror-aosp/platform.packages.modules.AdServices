@@ -16,7 +16,14 @@
 package com.android.adservices.common;
 
 import static com.android.adservices.common.DeviceSideDeviceConfigHelper.callWithDeviceConfigPermissions;
-import static com.android.adservices.service.FlagsConstants.KEY_MSMT_API_APP_ALLOW_LIST;
+import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_STATUS_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST;
 
 import android.os.Build;
@@ -41,7 +48,7 @@ public final class AdServicesFlagsSetterRule
         super(
                 AndroidLogger.getInstance(),
                 namespace -> new DeviceSideDeviceConfigHelper(namespace, usedByLegacyHelper),
-                new DeviceSideSystemPropertiesHelper());
+                DeviceSideSystemPropertiesHelper.getInstance());
         mUsedByLegacyHelper = usedByLegacyHelper;
     }
 
@@ -74,6 +81,29 @@ public final class AdServicesFlagsSetterRule
                 .setAdIdRequestPermitsPerSecond(25.0)
                 .setPpapiAppAllowList(packageName)
                 .setCompatModeFlag();
+    }
+
+    /** Factory method for Measurement E2E CTS tests */
+    public static AdServicesFlagsSetterRule forMeasurementE2ETests(String packageName) {
+        return forGlobalKillSwitchDisabledTests()
+                .setCompatModeFlags()
+                .setMsmtApiAppAllowList(packageName)
+                .setMsmtWebContextClientAllowList(packageName)
+                .setConsentManagerDebugMode(true)
+                .setOrCacheDebugSystemProperty(KEY_GLOBAL_KILL_SWITCH, false)
+                .setOrCacheDebugSystemProperty(KEY_MEASUREMENT_KILL_SWITCH, false)
+                .setOrCacheDebugSystemProperty(
+                        KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH, false)
+                .setOrCacheDebugSystemProperty(
+                        KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH, false)
+                .setOrCacheDebugSystemProperty(
+                        KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH, false)
+                .setOrCacheDebugSystemProperty(
+                        KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH, false)
+                .setOrCacheDebugSystemProperty(
+                        KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH, false)
+                .setOrCacheDebugSystemProperty(KEY_MEASUREMENT_API_STATUS_KILL_SWITCH, false)
+                .setAdIdKillSwitchForTests(false);
     }
 
     /**
@@ -147,15 +177,6 @@ public final class AdServicesFlagsSetterRule
     String getPpapiAppAllowList() {
         assertCalledByLegacyHelper();
         return mDeviceConfig.get(KEY_PPAPI_APP_ALLOW_LIST);
-    }
-
-    /**
-     * @deprecated only used by {@code CompatAdServicesTestUtils}
-     */
-    @Deprecated
-    String getMsmtApiAppAllowList() {
-        assertCalledByLegacyHelper();
-        return mDeviceConfig.get(KEY_MSMT_API_APP_ALLOW_LIST);
     }
 
     @Override

@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement;
 
 import android.net.Uri;
 
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import java.util.List;

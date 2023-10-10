@@ -34,7 +34,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.util.Pair;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -132,7 +132,8 @@ public class AsyncSourceFetcher {
                     eventId = new UnsignedLong(
                             json.getString(SourceHeaderContract.SOURCE_EVENT_ID));
                 } catch (NumberFormatException e) {
-                    LogUtil.d(e, "parseCommonSourceParams: parsing source_event_id failed.");
+                    LoggerFactory.getMeasurementLogger()
+                            .d(e, "parseCommonSourceParams: parsing source_event_id failed.");
                 }
             }
         }
@@ -245,7 +246,8 @@ public class AsyncSourceFetcher {
                     builder.setDebugKey(
                             new UnsignedLong(json.getString(SourceHeaderContract.DEBUG_KEY)));
                 } catch (NumberFormatException e) {
-                    LogUtil.e(e, "parseCommonSourceParams: parsing debug key failed");
+                    LoggerFactory.getMeasurementLogger()
+                            .e(e, "parseCommonSourceParams: parsing debug key failed");
                 }
             }
         }
@@ -277,18 +279,22 @@ public class AsyncSourceFetcher {
             if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
                 JSONObject maybeFilterData = json.optJSONObject(SourceHeaderContract.FILTER_DATA);
                 if (maybeFilterData != null && maybeFilterData.has("source_type")) {
-                    LogUtil.d("Source filter-data includes 'source_type' key.");
+                    LoggerFactory.getMeasurementLogger()
+                            .d("Source filter-data includes 'source_type' key.");
                     return false;
                 }
-                if (!FetcherUtil.areValidAttributionFilters(maybeFilterData)) {
-                    LogUtil.d("Source filter-data is invalid.");
+                if (!FetcherUtil.areValidAttributionFilters(
+                        maybeFilterData, mFlags, /* canIncludeLookbackWindow= */ false)) {
+                    LoggerFactory.getMeasurementLogger().d("Source filter-data is invalid.");
                     return false;
                 }
                 builder.setFilterData(maybeFilterData.toString());
             } else {
                 if (!FetcherUtil.areValidAttributionFilters(
-                        json.optJSONObject(SourceHeaderContract.FILTER_DATA))) {
-                    LogUtil.d("Source filter-data is invalid.");
+                        json.optJSONObject(SourceHeaderContract.FILTER_DATA),
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false)) {
+                    LoggerFactory.getMeasurementLogger().d("Source filter-data is invalid.");
                     return false;
                 }
                 builder.setFilterData(
@@ -300,13 +306,15 @@ public class AsyncSourceFetcher {
         if (!json.isNull(SourceHeaderContract.DESTINATION)) {
             appUri = Uri.parse(json.getString(SourceHeaderContract.DESTINATION));
             if (appUri.getScheme() == null) {
-                LogUtil.d("App destination is missing app scheme, adding.");
+                LoggerFactory.getMeasurementLogger()
+                        .d("App destination is missing app scheme, adding.");
                 appUri = Uri.parse(DEFAULT_ANDROID_APP_URI_PREFIX + appUri);
             }
             if (!DEFAULT_ANDROID_APP_SCHEME.equals(appUri.getScheme())) {
-                LogUtil.e(
-                        "Invalid scheme for app destination: %s; dropping the source.",
-                        appUri.getScheme());
+                LoggerFactory.getMeasurementLogger()
+                        .e(
+                                "Invalid scheme for app destination: %s; dropping the source.",
+                                appUri.getScheme());
                 return false;
             }
         }
@@ -334,7 +342,8 @@ public class AsyncSourceFetcher {
                 // Only validate when non-null in request
                 && asyncRegistration.getOsDestination() != null
                 && !asyncRegistration.getOsDestination().equals(appUri)) {
-            LogUtil.d("Expected destination to match with the supplied one!");
+            LoggerFactory.getMeasurementLogger()
+                    .d("Expected destination to match with the supplied one!");
             return false;
         }
 
@@ -357,7 +366,8 @@ public class AsyncSourceFetcher {
                 jsonDestinations = json.getJSONArray(SourceHeaderContract.WEB_DESTINATION);
             }
             if (jsonDestinations.length() > MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION) {
-                LogUtil.d("Source registration exceeded the number of allowed destinations.");
+                LoggerFactory.getMeasurementLogger()
+                        .d("Source registration exceeded the number of allowed destinations.");
                 return false;
             }
             for (int i = 0; i < jsonDestinations.length(); i++) {
@@ -369,8 +379,10 @@ public class AsyncSourceFetcher {
                 Optional<Uri> topPrivateDomainAndScheme =
                         WebAddresses.topPrivateDomainAndScheme(destination);
                 if (topPrivateDomainAndScheme.isEmpty()) {
-                    LogUtil.d("Unable to extract top private domain and scheme from web "
-                            + "destination.");
+                    LoggerFactory.getMeasurementLogger()
+                            .d(
+                                    "Unable to extract top private domain and scheme from web "
+                                            + "destination.");
                     return false;
                 } else {
                     destinationSet.add(topPrivateDomainAndScheme.get());
@@ -387,7 +399,8 @@ public class AsyncSourceFetcher {
         }
 
         if (shouldMatchAtLeastOneWebDestination && !matchedOneWebDestination) {
-            LogUtil.d("Expected at least one web_destination to match with the supplied one!");
+            LoggerFactory.getMeasurementLogger()
+                    .d("Expected at least one web_destination to match with the supplied one!");
             return false;
         }
 
@@ -406,8 +419,10 @@ public class AsyncSourceFetcher {
 
             if (!json.isNull(SourceHeaderContract.EVENT_REPORT_WINDOWS)) {
                 if (!json.isNull(SourceHeaderContract.EVENT_REPORT_WINDOW)) {
-                    LogUtil.d(
-                            "Only one of event_report_window and event_report_windows is expected");
+                    LoggerFactory.getMeasurementLogger()
+                            .d(
+                                    "Only one of event_report_window and event_report_windows is"
+                                            + " expected");
                     return false;
                 }
                 Optional<JSONObject> maybeEventReportWindows =
@@ -416,7 +431,8 @@ public class AsyncSourceFetcher {
                                         json.getString(SourceHeaderContract.EVENT_REPORT_WINDOWS)),
                                 expiry);
                 if (!maybeEventReportWindows.isPresent()) {
-                    LogUtil.d("Invalid value for event_report_windows");
+                    LoggerFactory.getMeasurementLogger()
+                            .d("Invalid value for event_report_windows");
                     return false;
                 }
                 eventReportWindows =
@@ -433,7 +449,7 @@ public class AsyncSourceFetcher {
                     getValidTriggerSpecArray(triggerSpecString, expiry);
 
             if (!maybeTriggerSpecArray.isPresent()) {
-                LogUtil.d("Invalid Trigger Spec format");
+                LoggerFactory.getMeasurementLogger().d("Invalid Trigger Spec format");
                 return false;
             }
 
@@ -454,7 +470,8 @@ public class AsyncSourceFetcher {
                 builder.setSharedDebugKey(
                         new UnsignedLong(json.getString(SourceHeaderContract.SHARED_DEBUG_KEY)));
             } catch (NumberFormatException e) {
-                LogUtil.e(e, "parseCommonSourceParams: parsing shared debug key failed");
+                LoggerFactory.getMeasurementLogger()
+                        .e(e, "parseCommonSourceParams: parsing shared debug key failed");
             }
         }
         return true;
@@ -524,7 +541,7 @@ public class AsyncSourceFetcher {
             }
             return Optional.of(validTriggerSpecArray);
         } catch (JSONException | IllegalArgumentException ex) {
-            LogUtil.d(ex, "Trigger Spec parsing failed");
+            LoggerFactory.getMeasurementLogger().d(ex, "Trigger Spec parsing failed");
             return Optional.empty();
         }
     }
@@ -653,7 +670,8 @@ public class AsyncSourceFetcher {
             Map<String, List<String>> headers,
             AsyncFetchStatus asyncFetchStatus) {
         boolean arDebugPermission = asyncRegistration.getDebugKeyAllowed();
-        LogUtil.d("Source ArDebug permission enabled %b", arDebugPermission);
+        LoggerFactory.getMeasurementLogger()
+                .d("Source ArDebug permission enabled %b", arDebugPermission);
         Source.Builder builder = new Source.Builder();
         builder.setRegistrationId(asyncRegistration.getRegistrationId());
         builder.setPublisher(getBaseUri(asyncRegistration.getTopOrigin()));
@@ -669,10 +687,11 @@ public class AsyncSourceFetcher {
         Optional<Uri> registrationUriOrigin =
                 WebAddresses.originAndScheme(asyncRegistration.getRegistrationUri());
         if (!registrationUriOrigin.isPresent()) {
-            LogUtil.d(
-                    "AsyncSourceFetcher: "
-                            + "Invalid or empty registration uri - "
-                            + asyncRegistration.getRegistrationUri());
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "AsyncSourceFetcher: "
+                                    + "Invalid or empty registration uri - "
+                                    + asyncRegistration.getRegistrationUri());
             return Optional.empty();
         }
         builder.setRegistrationOrigin(registrationUriOrigin.get());
@@ -682,9 +701,10 @@ public class AsyncSourceFetcher {
         List<String> field =
                 headers.get(SourceHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE);
         if (field == null || field.size() != 1) {
-            LogUtil.d(
-                    "AsyncSourceFetcher: "
-                            + "Invalid Attribution-Reporting-Register-Source header.");
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "AsyncSourceFetcher: "
+                                    + "Invalid Attribution-Reporting-Register-Source header.");
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.HEADER_ERROR);
             return Optional.empty();
         }
@@ -722,11 +742,11 @@ public class AsyncSourceFetcher {
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.SUCCESS);
             return Optional.of(builder.build());
         } catch (JSONException e) {
-            LogUtil.d(e, "AsyncSourceFetcher: invalid JSON");
+            LoggerFactory.getMeasurementLogger().d(e, "AsyncSourceFetcher: invalid JSON");
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.PARSING_ERROR);
             return Optional.empty();
         } catch (IllegalArgumentException e) {
-            LogUtil.d(e, "AsyncSourceFetcher: illegal argument");
+            LoggerFactory.getMeasurementLogger().d(e, "AsyncSourceFetcher: illegal argument");
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
             return Optional.empty();
         }
@@ -752,7 +772,7 @@ public class AsyncSourceFetcher {
         HttpURLConnection urlConnection = null;
         Map<String, List<String>> headers;
         if (!asyncRegistration.getRegistrationUri().getScheme().equalsIgnoreCase("https")) {
-            LogUtil.d("Invalid scheme for registrationUri.");
+            LoggerFactory.getMeasurementLogger().d("Invalid scheme for registrationUri.");
             asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.INVALID_URL);
             return Optional.empty();
         }
@@ -764,7 +784,7 @@ public class AsyncSourceFetcher {
             urlConnection.setRequestMethod("POST");
             urlConnection.setRequestProperty(
                     SourceRequestContract.SOURCE_INFO,
-                    asyncRegistration.getSourceType().toString());
+                    asyncRegistration.getSourceType().getValue());
             urlConnection.setInstanceFollowRedirects(false);
             String body = asyncRegistration.getPostBody();
             if (mFlags.getFledgeMeasurementReportAndRegisterEventApiEnabled() && body != null) {
@@ -780,7 +800,7 @@ public class AsyncSourceFetcher {
             headers = urlConnection.getHeaderFields();
             asyncFetchStatus.setResponseSize(FetcherUtil.calculateHeadersCharactersLength(headers));
             int responseCode = urlConnection.getResponseCode();
-            LogUtil.d("Response code = " + responseCode);
+            LoggerFactory.getMeasurementLogger().d("Response code = " + responseCode);
             if (!FetcherUtil.isRedirect(responseCode) && !FetcherUtil.isSuccess(responseCode)) {
                 asyncFetchStatus.setResponseStatus(
                         AsyncFetchStatus.ResponseStatus.SERVER_UNAVAILABLE);
@@ -788,11 +808,11 @@ public class AsyncSourceFetcher {
             }
             asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
         } catch (MalformedURLException e) {
-            LogUtil.d(e, "Malformed registration target URL");
+            LoggerFactory.getMeasurementLogger().d(e, "Malformed registration target URL");
             asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.INVALID_URL);
             return Optional.empty();
         } catch (IOException e) {
-            LogUtil.e(e, "Failed to get registration response");
+            LoggerFactory.getMeasurementLogger().e(e, "Failed to get registration response");
             asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.NETWORK_ERROR);
             return Optional.empty();
         } finally {
@@ -807,6 +827,7 @@ public class AsyncSourceFetcher {
 
         if (!isSourceHeaderPresent(headers)) {
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.HEADER_MISSING);
+            asyncFetchStatus.setRedirectOnlyStatus(true);
             return Optional.empty();
         }
 
@@ -820,9 +841,10 @@ public class AsyncSourceFetcher {
                                 mContext,
                                 mFlags);
         if (enrollmentId.isEmpty()) {
-            LogUtil.d(
-                    "fetchSource: Valid enrollment id not found. Registration URI: %s",
-                    asyncRegistration.getRegistrationUri());
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "fetchSource: Valid enrollment id not found. Registration URI: %s",
+                            asyncRegistration.getRegistrationUri());
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.INVALID_ENROLLMENT);
             return Optional.empty();
         }
@@ -840,19 +862,22 @@ public class AsyncSourceFetcher {
     private boolean areValidAggregationKeys(JSONObject aggregationKeys) {
         if (aggregationKeys.length()
                 > mFlags.getMeasurementMaxAggregateKeysPerSourceRegistration()) {
-            LogUtil.d(
-                    "Aggregation-keys have more entries than permitted. %s",
-                    aggregationKeys.length());
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "Aggregation-keys have more entries than permitted. %s",
+                            aggregationKeys.length());
             return false;
         }
         for (String id : aggregationKeys.keySet()) {
             if (!FetcherUtil.isValidAggregateKeyId(id)) {
-                LogUtil.d("SourceFetcher: aggregation key ID is invalid. %s", id);
+                LoggerFactory.getMeasurementLogger()
+                        .d("SourceFetcher: aggregation key ID is invalid. %s", id);
                 return false;
             }
             String keyPiece = aggregationKeys.optString(id);
             if (!FetcherUtil.isValidAggregateKeyPiece(keyPiece, mFlags)) {
-                LogUtil.d("SourceFetcher: aggregation key-piece is invalid. %s", keyPiece);
+                LoggerFactory.getMeasurementLogger()
+                        .d("SourceFetcher: aggregation key-piece is invalid. %s", keyPiece);
                 return false;
             }
         }

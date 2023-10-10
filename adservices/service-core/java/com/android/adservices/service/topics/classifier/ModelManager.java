@@ -283,9 +283,7 @@ public class ModelManager {
                 sLogger.e("Failed to find downloaded model file");
                 ErrorLogUtil.e(
                         AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DOWNLOADED_CLASSIFIER_MODEL_FILE_NOT_FOUND,
-                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
-                        this.getClass().getSimpleName(),
-                        new Object() {}.getClass().getEnclosingMethod().getName());
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
                 return ByteBuffer.allocate(0);
             } else {
                 buffer =
@@ -465,9 +463,7 @@ public class ModelManager {
                                 appTopic, app);
                         ErrorLogUtil.e(
                                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__INVALID_TOPIC_ID,
-                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
-                                this.getClass().getSimpleName(),
-                                new Object() {}.getClass().getEnclosingMethod().getName());
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
                         continue;
                     }
 
@@ -565,9 +561,7 @@ public class ModelManager {
                                                 + "metadata property.");
                                 ErrorLogUtil.e(
                                         AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CLASSIFIER_METADATA_REDUNDANT_PROPERTY,
-                                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
-                                        this.getClass().getSimpleName(),
-                                        new Object() {}.getClass().getEnclosingMethod().getName());
+                                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
                             }
                         }
                     } else if (elementKeyName.equals(ASSET_ELEMENT_NAME)) {
@@ -587,9 +581,7 @@ public class ModelManager {
                                         " is a redundant metadata attribution of asset.");
                                 ErrorLogUtil.e(
                                         AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CLASSIFIER_METADATA_REDUNDANT_ASSET,
-                                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
-                                        this.getClass().getSimpleName(),
-                                        new Object() {}.getClass().getEnclosingMethod().getName());
+                                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
                             }
                         }
                     } else {
@@ -603,9 +595,7 @@ public class ModelManager {
                                         + "can't be found in the json element.");
                         ErrorLogUtil.e(
                                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CLASSIFIER_METADATA_MISSING_PROPERTY_OR_ASSET_NAME,
-                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
-                                this.getClass().getSimpleName(),
-                                new Object() {}.getClass().getEnclosingMethod().getName());
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
                     }
                 }
                 reader.endObject();
@@ -724,9 +714,7 @@ public class ModelManager {
             sLogger.e("Failed to find downloaded %s file", fileId);
             ErrorLogUtil.e(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DOWNLOADED_CLASSIFIER_MODEL_FILE_NOT_FOUND,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
-                    this.getClass().getSimpleName(),
-                    new Object() {}.getClass().getEnclosingMethod().getName());
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             return inputStream;
         }
         try {

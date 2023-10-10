@@ -133,7 +133,8 @@
             "aggregatable_values": {
               "campaignCounts": 32768,
               "geoValue": 1664
-            }
+            },
+            "debug_key": "147982378"
           },
           "Location": null,
           "Attribution-Reporting-Redirect": null
@@ -153,11 +154,12 @@
         "trigger_data": "2",
         "source_type": "navigation",
         "randomized_trigger_rate": 0.0024263,
-        "source_debug_key": "347982378"
+        "source_debug_key": "347982378",
+        "trigger_debug_key": "147982378"
       }
     }],
     "aggregatable_results": [{
-      "report_time": "800000600001",
+      "report_time": "800004200001",
       "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
       "payload": {
         "attribution_destination": "android-app://example.2d1.test",
@@ -166,7 +168,8 @@
           {"key": "0x559", "value": 32768},
           {"key": "0xa85", "value": 1664}
         ],
-        "source_debug_key": "347982378"
+        "source_debug_key": "347982378",
+        "trigger_debug_key": "147982378"
       }
     }],
     "debug_event_level_results": [{
@@ -179,7 +182,8 @@
         "trigger_data": "2",
         "source_type": "navigation",
         "randomized_trigger_rate": 0.0024263,
-        "source_debug_key": "347982378"
+        "source_debug_key": "347982378",
+        "trigger_debug_key": "147982378"
       }
     }],
     "debug_aggregatable_results": [{
@@ -192,7 +196,8 @@
           {"key": "0x559", "value": 32768},
           {"key": "0xa85", "value": 1664}
         ],
-        "source_debug_key": "347982378"
+        "source_debug_key": "347982378",
+        "trigger_debug_key": "147982378"
       }
     }],
     "verbose_debug_reports": [

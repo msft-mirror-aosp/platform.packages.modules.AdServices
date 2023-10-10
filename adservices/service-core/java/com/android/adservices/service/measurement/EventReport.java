@@ -23,10 +23,9 @@ import android.util.Pair;
 
 import androidx.annotation.Nullable;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
-import com.android.adservices.service.measurement.util.Debug;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import com.google.common.collect.ImmutableMultiset;
@@ -476,8 +475,7 @@ public class EventReport {
             mBuilding.mSourceDebugKey = debugKeyPair.first;
             mBuilding.mTriggerDebugKey = debugKeyPair.second;
             mBuilding.mDebugReportStatus = DebugReportStatus.NONE;
-            if (Debug.isAttributionDebugReportPermitted(source, trigger,
-                    mBuilding.mSourceDebugKey, mBuilding.mTriggerDebugKey)) {
+            if (mBuilding.mSourceDebugKey != null && mBuilding.mTriggerDebugKey != null) {
                 mBuilding.mDebugReportStatus = DebugReportStatus.PENDING;
             }
             mBuilding.mSourceId = source.getId();
@@ -490,10 +488,11 @@ public class EventReport {
                 try {
                     source.buildFlexibleEventReportApi();
                 } catch (JSONException e) {
-                    LogUtil.d(
-                            e,
-                            "EventReport::populateFromSourceAndTrigger cannot parse JSON for flex"
-                                    + " event API");
+                    LoggerFactory.getMeasurementLogger()
+                            .d(
+                                    e,
+                                    "EventReport::populateFromSourceAndTrigger cannot parse JSON"
+                                            + " for flex event API");
                 }
                 mBuilding.mTriggerPriority =
                         source.getFlexEventReportSpec()

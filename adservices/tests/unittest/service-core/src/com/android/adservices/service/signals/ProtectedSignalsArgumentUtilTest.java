@@ -179,7 +179,7 @@ public class ProtectedSignalsArgumentUtilTest {
         }
     }
 
-    private static String getBase64String(String str) {
+    private String getBase64String(String str) {
         return Base64.getEncoder().encodeToString(str.getBytes());
     }
 }

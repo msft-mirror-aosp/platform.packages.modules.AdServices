@@ -38,16 +38,17 @@ import android.net.Uri;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
+import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.exception.CryptoException;
-import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
@@ -101,6 +102,7 @@ public class AggregateReportingJobHandlerTest {
     @Mock EnrollmentDao mEnrollmentDao;
     @Mock Flags mMockFlags;
     @Mock AdServicesLogger mLogger;
+    @Mock AdServicesErrorLogger mErrorLogger;
 
     AggregateReportingJobHandler mAggregateReportingJobHandler;
     AggregateReportingJobHandler mSpyAggregateReportingJobHandler;
@@ -108,6 +110,10 @@ public class AggregateReportingJobHandlerTest {
     private StaticMockitoSession mMockitoSession;
 
     class FakeDatasoreManager extends DatastoreManager {
+
+        FakeDatasoreManager() {
+            super(mErrorLogger);
+        }
 
         @Override
         public ITransaction createNewTransaction() {
@@ -166,8 +172,7 @@ public class AggregateReportingJobHandlerTest {
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         when(mMockFlags.getMeasurementAggregationCoordinatorOriginEnabled()).thenReturn(true);
         when(mMockFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
-        ExtendedMockito.doNothing()
-                .when(() -> ErrorLogUtil.e(anyInt(), anyInt(), anyString(), anyString()));
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
     }
 
@@ -523,8 +528,8 @@ public class AggregateReportingJobHandlerTest {
                         1000, 1100));
 
         verify(mMeasurementDao, times(2)).markAggregateReportStatus(any(), anyInt());
-        verify(mTransaction, times(5)).begin();
-        verify(mTransaction, times(5)).end();
+        verify(mTransaction, times(7)).begin();
+        verify(mTransaction, times(7)).end();
     }
 
     @Test

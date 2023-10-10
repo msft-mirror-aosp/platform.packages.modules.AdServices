@@ -42,7 +42,6 @@ import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_CA_AND_CONTEXTUAL_ADS_AVAILABLE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_VALID_BIDS_OR_CONTEXTUAL_ADS_FOR_SCORING;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_WINNING_AD_FOUND;
-import static com.android.adservices.service.adselection.AdSelectionRunner.JS_SANDBOX_IS_NOT_AVAILABLE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ON_DEVICE_AUCTION_KILL_SWITCH_ENABLED;
 import static com.android.adservices.service.adselection.AdSelectionScriptEngine.NUM_BITS_STOCHASTIC_ROUNDING;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.BIDDING_STAGE_END_TIMESTAMP;
@@ -80,7 +79,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyList;
 
@@ -156,7 +154,6 @@ import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.function.ThrowingRunnable;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
@@ -2561,46 +2558,6 @@ public class OnDeviceAdSelectionRunnerTest {
     }
 
     @Test
-    public void testAdSelectionRunnerInstanceNotCreatedIfJSSandboxNotInWebView() {
-        doReturn(null).when(WebView::getCurrentWebViewPackage);
-
-        mAdSelectionExecutionLogger =
-                new AdSelectionExecutionLogger(
-                        sCallerMetadata,
-                        mAdSelectionExecutionLoggerClockMock,
-                        mContextSpy,
-                        mAdServicesLoggerMock);
-
-        ThrowingRunnable initializeAdSelectionRunner =
-                () ->
-                        new OnDeviceAdSelectionRunner(
-                                mContextSpy,
-                                mCustomAudienceDao,
-                                mAdSelectionEntryDao,
-                                mAdServicesHttpsClient,
-                                mLightweightExecutorService,
-                                mBackgroundExecutorService,
-                                mScheduledExecutor,
-                                mMockAdsScoreGenerator,
-                                mMockAdSelectionIdGenerator,
-                                mClockSpy,
-                                mAdServicesLoggerMock,
-                                mFlags,
-                                CALLER_UID,
-                                mAdSelectionServiceFilterMock,
-                                mAdSelectionExecutionLogger,
-                                mPerBuyerBiddingRunnerMock,
-                                mAdFilterer,
-                                mAdCounterKeyCopier,
-                                mAdCounterHistogramUpdater,
-                                mFrequencyCapAdDataValidator,
-                                mDebugReportingMock);
-        Throwable throwable =
-                assertThrows(IllegalArgumentException.class, initializeAdSelectionRunner);
-        verifyErrorMessageIsCorrect(throwable.getMessage(), JS_SANDBOX_IS_NOT_AVAILABLE);
-    }
-
-    @Test
     public void testFilterOneAd() throws AdServicesException {
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
         verifyAndSetupCommonSuccessScenario(adSelectionConfig);
@@ -2801,6 +2758,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         AdServicesHttpClientRequest.builder()
                                 .setUri(DECISION_LOGIC_URI)
                                 .setUseCache(mFlags.getFledgeHttpJsCachingEnabled())
+                                .setDevContext(DevContext.createForDevOptionsDisabled())
                                 .build()))
                 .thenReturn(
                         Futures.immediateFuture(
@@ -2844,6 +2802,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         AdServicesHttpClientRequest.builder()
                                 .setUri(DECISION_LOGIC_URI)
                                 .setUseCache(true)
+                                .setDevContext(DevContext.createForDevOptionsDisabled())
                                 .build());
     }
 

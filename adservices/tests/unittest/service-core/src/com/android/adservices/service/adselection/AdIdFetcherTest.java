@@ -29,7 +29,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.adid.AdIdCacheManager;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -51,23 +51,33 @@ public class AdIdFetcherTest {
     @Before
     public void setup() {
         mContext = ApplicationProvider.getApplicationContext();
-        mFlags = FlagsFactory.getFlagsForTest();
+        mFlags = new AdIdFetcherTestFlags(false);
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mScheduledExecutor = AdServicesExecutors.getScheduler();
-        mMockAdIdWorker = new MockAdIdWorker(mContext, mFlags);
+        mMockAdIdWorker = new MockAdIdWorker(new AdIdCacheManager(mContext));
     }
 
     @Test
     public void testConstructorNullArguments() {
         assertThrows(
                 NullPointerException.class,
-                () -> new AdIdFetcher(null, mLightweightExecutorService, mScheduledExecutor));
+                () ->
+                        new AdIdFetcher(
+                                null, mLightweightExecutorService, mScheduledExecutor, mFlags));
         assertThrows(
                 NullPointerException.class,
-                () -> new AdIdFetcher(mMockAdIdWorker, null, mScheduledExecutor));
+                () -> new AdIdFetcher(mMockAdIdWorker, null, mScheduledExecutor, mFlags));
         assertThrows(
                 NullPointerException.class,
-                () -> new AdIdFetcher(mMockAdIdWorker, mLightweightExecutorService, null));
+                () -> new AdIdFetcher(mMockAdIdWorker, mLightweightExecutorService, null, mFlags));
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new AdIdFetcher(
+                                mMockAdIdWorker,
+                                mLightweightExecutorService,
+                                mScheduledExecutor,
+                                null));
     }
 
     @Test
@@ -75,7 +85,8 @@ public class AdIdFetcherTest {
             throws ExecutionException, InterruptedException {
         mMockAdIdWorker.setResult(MockAdIdWorker.MOCK_AD_ID, false);
         mAdIdFetcher =
-                new AdIdFetcher(mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor);
+                new AdIdFetcher(
+                        mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor, mFlags);
 
         Boolean isLatEnabled =
                 mAdIdFetcher.isLimitedAdTrackingEnabled(CALLER_PACKAGE_NAME, CALLER_UID).get();
@@ -88,7 +99,8 @@ public class AdIdFetcherTest {
             throws ExecutionException, InterruptedException {
         mMockAdIdWorker.setResult(MockAdIdWorker.MOCK_AD_ID, true);
         mAdIdFetcher =
-                new AdIdFetcher(mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor);
+                new AdIdFetcher(
+                        mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor, mFlags);
 
         Boolean isLatEnabled =
                 mAdIdFetcher.isLimitedAdTrackingEnabled(CALLER_PACKAGE_NAME, CALLER_UID).get();
@@ -101,7 +113,8 @@ public class AdIdFetcherTest {
             throws ExecutionException, InterruptedException {
         mMockAdIdWorker.setResult(AdId.ZERO_OUT, false);
         mAdIdFetcher =
-                new AdIdFetcher(mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor);
+                new AdIdFetcher(
+                        mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor, mFlags);
 
         Boolean isLatEnabled =
                 mAdIdFetcher.isLimitedAdTrackingEnabled(CALLER_PACKAGE_NAME, CALLER_UID).get();
@@ -112,10 +125,11 @@ public class AdIdFetcherTest {
     @Test
     public void testIsLimitedTrackingEnabled_TimeoutException_ReturnsTrue()
             throws ExecutionException, InterruptedException {
-        mMockAdIdWorker.setResult(MockAdIdWorker.MOCK_AD_ID, true);
-        mMockAdIdWorker.setDelay(1000L);
+        mMockAdIdWorker.setResult(MockAdIdWorker.MOCK_AD_ID, false);
+        mMockAdIdWorker.setDelay(AdIdFetcher.AD_ID_TIMEOUT_IN_MS * 2);
         mAdIdFetcher =
-                new AdIdFetcher(mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor);
+                new AdIdFetcher(
+                        mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor, mFlags);
 
         Boolean isLatEnabled =
                 mAdIdFetcher.isLimitedAdTrackingEnabled(CALLER_PACKAGE_NAME, CALLER_UID).get();
@@ -128,11 +142,40 @@ public class AdIdFetcherTest {
             throws ExecutionException, InterruptedException {
         mMockAdIdWorker.setError(20);
         mAdIdFetcher =
-                new AdIdFetcher(mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor);
+                new AdIdFetcher(
+                        mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor, mFlags);
 
         Boolean isLatEnabled =
                 mAdIdFetcher.isLimitedAdTrackingEnabled(CALLER_PACKAGE_NAME, CALLER_UID).get();
 
         assertTrue(isLatEnabled);
+    }
+
+    @Test
+    public void testIsLimitedTrackingEnabled_OnAdIdKillSwitchTrue_ReturnsTrue()
+            throws ExecutionException, InterruptedException {
+        Flags flags = new AdIdFetcherTestFlags(true);
+        mMockAdIdWorker.setResult(MockAdIdWorker.MOCK_AD_ID, false);
+        mAdIdFetcher =
+                new AdIdFetcher(
+                        mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor, flags);
+
+        Boolean isLatEnabled =
+                mAdIdFetcher.isLimitedAdTrackingEnabled(CALLER_PACKAGE_NAME, CALLER_UID).get();
+
+        assertTrue(isLatEnabled);
+    }
+
+    static class AdIdFetcherTestFlags implements Flags {
+        private final boolean mAdIdKillSwitch;
+
+        AdIdFetcherTestFlags(boolean adIdKillSwitch) {
+            mAdIdKillSwitch = adIdKillSwitch;
+        }
+
+        @Override
+        public boolean getAdIdKillSwitch() {
+            return mAdIdKillSwitch;
+        }
     }
 }

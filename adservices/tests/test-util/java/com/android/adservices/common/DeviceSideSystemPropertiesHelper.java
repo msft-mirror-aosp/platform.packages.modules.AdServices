@@ -27,6 +27,15 @@ final class DeviceSideSystemPropertiesHelper implements SystemPropertiesHelper.I
     private static final Logger sLogger =
             new Logger(AndroidLogger.getInstance(), DeviceSideSystemPropertiesHelper.class);
 
+    private static final DeviceSideSystemPropertiesHelper sInstance =
+            new DeviceSideSystemPropertiesHelper();
+
+    public static DeviceSideSystemPropertiesHelper getInstance() {
+        return sInstance;
+    }
+
+    private DeviceSideSystemPropertiesHelper() {}
+
     @Override
     public String get(String name) {
         return SystemProperties.get(name);

@@ -29,7 +29,9 @@ import com.android.adservices.service.measurement.registration.AsyncFetchStatus;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
 import com.android.adservices.service.measurement.util.Enrollment;
 
+import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.runner.RunWith;
@@ -40,6 +42,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -49,11 +52,8 @@ import java.util.function.Supplier;
  * requests.
  *
  * <p>Tests in assets/msmt_interop_tests/ directory were copied from Chromium
- * src/content/test/data/attribution_reporting/interop April 21, 2023. Files destination_limit.json,
- * max_aggregatable_reports_per_source.json, parse_failures.json, rate_limit_max_attributions.json,
- * event_level_report_time.json, aggregatable_report_window.json, and
- * event_source_event_report_windows.json were updated with GitHub commit
- * 8eaed64bc0ce875f31005f1c649afc823105596e
+ * src/content/test/data/attribution_reporting/interop GitHub commit
+ * 2c690dc66df7cbd626568768b0c408f65def5489.
  */
 @RunWith(Parameterized.class)
 public class E2EInteropMockTest extends E2EMockTest {
@@ -63,18 +63,47 @@ public class E2EInteropMockTest extends E2EMockTest {
             AsyncFetchStatus.EntityStatus.PARSING_ERROR,
             AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
     private static final Map<String, String> sApiConfigPhFlags =
-            Map.of("max_event_info_gain", "measurement_flex_api_max_information_gain_event");
+            Map.of(
+                    // measurement_max_attribution_per_rate_limit_window
+                    "rate_limit_max_attributions",
+                    "measurement_max_attribution_per_rate_limit_window",
+                    // measurement_max_distinct_enrollments_in_attribution
+                    "rate_limit_max_attribution_reporting_origins",
+                    "measurement_max_distinct_enrollments_in_attribution",
+                    // measurement_max_distinct_reporting_origins_in_source
+                    "rate_limit_max_source_registration_reporting_origins",
+                    "measurement_max_distinct_reporting_origins_in_source",
+                    // measurement_max_distinct_destinations_in_active_source
+                    "max_destinations_per_source_site_reporting_site",
+                    "measurement_max_distinct_destinations_in_active_source",
+                    // measurement_flex_api_max_information_gain_event
+                    "max_event_info_gain",
+                    "measurement_flex_api_max_information_gain_event",
+                    // measurement_max_reporting_origins_per_source_reporting_site_per_window
+                    "rate_limit_max_reporting_origins_per_source_reporting_site",
+                    "measurement_max_reporting_origins_per_source_reporting_site_per_window",
+
+                    "max_destinations_per_rate_limit_window",
+                    "measurement_max_destinations_per_publisher_per_rate_limit_window",
+
+                    "max_destinations_per_rate_limit_window_reporting_site",
+                    "measurement_max_dest_per_publisher_x_enrollment_per_rate_limit_window");
 
     private static String preprocessor(String json) {
-        return json.replaceAll("\\.test(?=[\"\\/])", ".com")
-                // Remove comments
-                .replaceAll("^\\s*\\/\\/.+\\n", "")
-                .replaceAll("\"destination\":", "\"web_destination\":");
+        // TODO(b/290098169): Cleanup anchorTime when this bug is addressed. Handling cases where
+        // Source event report window is already stored as mEventTime + mEventReportWindow.
+        return anchorTime(
+            json.replaceAll("\\.test(?=[\"\\/])", ".com")
+                    // Remove comments
+                    .replaceAll("^\\s*\\/\\/.+\\n", "")
+                    .replaceAll("\"destination\":", "\"web_destination\":"),
+            System.currentTimeMillis() / 1000L * 1000L);
     }
 
     private static Map<String, String> sPhFlagsForInterop = Map.of(
             // TODO (b/295382171): remove this after the flag is removed.
-            "measurement_enable_max_aggregate_reports_per_source", "true");
+            "measurement_enable_max_aggregate_reports_per_source", "true",
+            "measurement_min_event_report_delay_millis", "0");
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> getData() throws IOException, JSONException {
@@ -102,17 +131,19 @@ public class E2EInteropMockTest extends E2EMockTest {
                         }
                 ).get()
         );
-        mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager, mFlags);
+        mAttributionHelper =
+                TestObjectProvider.getAttributionJobHandler(
+                        mDatastoreManager, mFlags, mErrorLogger);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(
-                        sDatastoreManager,
+                        mDatastoreManager,
                         mClickVerifier,
                         mMeasurementDataDeleter,
                         mMockContentResolver);
         mAsyncRegistrationQueueRunner =
                 TestObjectProvider.getAsyncRegistrationQueueRunner(
                         TestObjectProvider.Type.DENOISED,
-                        sDatastoreManager,
+                        mDatastoreManager,
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,
                         mDebugReportApi,
@@ -214,12 +245,10 @@ public class E2EInteropMockTest extends E2EMockTest {
         if (maybeSource.isPresent()) {
             Assert.assertTrue(
                     "mAsyncRegistrationQueueRunner.storeSource failed",
-                    sDatastoreManager.runInTransaction(
+                    mDatastoreManager.runInTransaction(
                             measurementDao ->
                                     mAsyncRegistrationQueueRunner.storeSource(
-                                            maybeSource.get(),
-                                            asyncRegistration,
-                                            measurementDao)));
+                                            maybeSource.get(), asyncRegistration, measurementDao)));
         } else {
             Assert.assertTrue(sParsingErrors.contains(status.getEntityStatus()));
         }
@@ -259,11 +288,10 @@ public class E2EInteropMockTest extends E2EMockTest {
         if (maybeTrigger.isPresent()) {
             Assert.assertTrue(
                     "mAsyncRegistrationQueueRunner.storeTrigger failed",
-                    sDatastoreManager.runInTransaction(
+                    mDatastoreManager.runInTransaction(
                             measurementDao ->
                                     mAsyncRegistrationQueueRunner.storeTrigger(
-                                            maybeTrigger.get(),
-                                            measurementDao)));
+                                            maybeTrigger.get(), measurementDao)));
         } else {
             Assert.assertTrue(sParsingErrors.contains(status.getEntityStatus()));
         }
@@ -277,5 +305,49 @@ public class E2EInteropMockTest extends E2EMockTest {
 
     private static Uri getRegistrant(String packageName) {
         return Uri.parse(ANDROID_APP_SCHEME + "://" + packageName);
+    }
+
+    private static String anchorTime(String jsonStr, long time) {
+        try {
+            JSONObject json = new JSONObject(jsonStr);
+            long t0 = json.getJSONObject(TestFormatJsonMapping.TEST_INPUT_KEY)
+                    .getJSONArray(TestFormatJsonMapping.REGISTRATIONS_KEY)
+                    .getJSONObject(0)
+                    .getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
+            return ((JSONObject) anchorTime(json, t0, time)).toString();
+        } catch (JSONException ignored) {
+            return null;
+        }
+    }
+
+    private static Object anchorTime(Object obj, long t0, long anchor) throws JSONException {
+        if (obj instanceof JSONArray) {
+            JSONArray newJson = new JSONArray();
+            JSONArray jsonArray = (JSONArray) obj;
+            for (int i = 0; i < jsonArray.length(); i++) {
+                newJson.put(i, anchorTime(jsonArray.get(i), t0, anchor));
+            }
+            return newJson;
+        } else if (obj instanceof JSONObject) {
+            JSONObject newJson = new JSONObject();
+            JSONObject jsonObj = (JSONObject) obj;
+            Set<String> keys = jsonObj.keySet();
+            for (String key : keys) {
+                if (key.equals(TestFormatJsonMapping.TIMESTAMP_KEY)
+                        || key.equals(TestFormatJsonMapping.REPORT_TIME_KEY)) {
+                    long time = jsonObj.getLong(key);
+                    newJson.put(key, String.valueOf(time - t0 + anchor));
+                } else if (key.equals("scheduled_report_time")) {
+                    long time = TimeUnit.SECONDS.toMillis(jsonObj.getLong(key));
+                    newJson.put(key, String.valueOf(
+                            TimeUnit.MILLISECONDS.toSeconds(time - t0 + anchor)));
+                } else {
+                    newJson.put(key, anchorTime(jsonObj.get(key), t0, anchor));
+                }
+            }
+            return newJson;
+        } else {
+            return obj;
+        }
     }
 }

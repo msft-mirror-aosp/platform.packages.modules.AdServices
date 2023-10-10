@@ -19,12 +19,12 @@ package com.android.adservices.data.measurement.migration;
 import android.content.ContentValues;
 import android.net.Uri;
 
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
-import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -226,6 +226,9 @@ public class ContentValueFixtures {
         // Added in V3.
         public static final String SOURCE_ID = "source_id";
         public static final String TRIGGER_ID = "trigger_id";
+
+        // Added in V25
+        public static final Uri REGISTRATION_ORIGIN = ContentValueFixtures.REGISTRATION_ORIGIN;
     }
 
     public static class EventReportValues {
@@ -1002,6 +1005,18 @@ public class ContentValueFixtures {
 
     public static ContentValues generateAttributionContentValuesV17() {
         return generateAttributionContentValuesV16();
+    }
+
+    public static ContentValues generateAttributionContentValuesV24() {
+        return generateAttributionContentValuesV17();
+    }
+
+    public static ContentValues generateAttributionContentValuesV25() {
+        ContentValues values = generateAttributionContentValuesV24();
+        values.put(
+                MeasurementTables.AttributionContract.REGISTRATION_ORIGIN,
+                AttributionValues.REGISTRATION_ORIGIN.toString());
+        return values;
     }
 
     public static ContentValues generateEventReportContentValuesV1() {

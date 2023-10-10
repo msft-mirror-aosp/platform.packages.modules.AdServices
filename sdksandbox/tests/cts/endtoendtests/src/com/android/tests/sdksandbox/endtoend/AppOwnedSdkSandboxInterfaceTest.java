@@ -28,7 +28,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public class AppOwnedSdkSandboxInterfaceTest {
+public class AppOwnedSdkSandboxInterfaceTest extends SandboxKillerBeforeTest {
     private static final String APP_OWNED_SDK_SANDBOX_INTERFACE_NAME =
             "com.android.ctsappownedsdksandboxinterface";
 

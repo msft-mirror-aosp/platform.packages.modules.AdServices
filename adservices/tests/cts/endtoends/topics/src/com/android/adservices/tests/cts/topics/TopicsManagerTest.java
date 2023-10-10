@@ -29,6 +29,7 @@ import android.adservices.topics.TopicsManager;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
@@ -61,7 +62,7 @@ public class TopicsManagerTest {
     // Override the Epoch Job Period to this value to speed up the epoch computation.
     private static final long TEST_EPOCH_JOB_PERIOD_MS = 5000;
     // Expected model versions.
-    private static final long EXPECTED_MODEL_VERSION = 4L;
+    private static final long EXPECTED_MODEL_VERSION = 5L;
     // Expected taxonomy version.
     private static final long EXPECTED_TAXONOMY_VERSION = 2L;
 
@@ -133,6 +134,7 @@ public class TopicsManagerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     // @RequiresGlobalKillSwitchDisabled // TODO(b/284971005): re-add when it uses the rule / runner
     public void testTopicsManager_testTopicsKillSwitch() throws Exception {
         // Override Topics kill switch to disable Topics API.
@@ -158,6 +160,7 @@ public class TopicsManagerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_disableDirectAppCalls_testEmptySdkNameRequests()
             throws Exception {
         flags.setTopicsDisableDirectAppCalls(true);
@@ -177,6 +180,7 @@ public class TopicsManagerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_testOnDeviceKillSwitch_shouldUsePrecomputedList()
             throws Exception {
         // Override Topics on device classifier kill switch to disable on device classifier.
@@ -232,12 +236,14 @@ public class TopicsManagerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runDefaultClassifier_usingGetMethodToCreateManager()
             throws Exception {
         testTopicsManager_runDefaultClassifier(/* useGetMethodToCreateManager */ true);
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runDefaultClassifier() throws Exception {
         testTopicsManager_runDefaultClassifier(/* useGetMethodToCreateManager */ false);
     }
@@ -308,12 +314,14 @@ public class TopicsManagerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runOnDeviceClassifier_usingGetMethodToCreateManager()
             throws Exception {
         testTopicsManager_runOnDeviceClassifier(true);
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runOnDeviceClassifier() throws Exception {
         testTopicsManager_runOnDeviceClassifier(false);
     }
@@ -368,17 +376,21 @@ public class TopicsManagerTest {
                 .that(topic.getTaxonomyVersion())
                 .isEqualTo(EXPECTED_TAXONOMY_VERSION);
 
-        // Top 5 classifications for empty string with v4 model are:
-        // S-: [10420, 10189, 10301, 10230, 10010].
-        // T+: [10166, 10010, 10301, 10230, 10184].
-        // V4 model uses package name as part of input, which differs between
+        // Top 5 classifications and corresponding input for v5 model are:
+        // S-:
+        //  Input string: ". android adextservices tests cts endtoendtest"
+        //  Predictions: [10301, 10009, 10230, 10010, 10184].
+        // T+:
+        //  Input string: ". android adservices tests cts endtoendtest"
+        //  Predictions: [10166, 10010, 10301, 10230, 10184].
+        // V5 model uses package name as part of input, which differs between
         // versions for back-compat, changing the returned topics for each version.
         // This is computed by running the model on the device; topics are checked
         // depending on whether the package name is that for S- or T+.
         // Returned topic is one of the 5 classification topics of the test app.
         List<Integer> expectedTopTopicIds;
         if (ADSERVICES_PACKAGE_NAME.contains("ext.services")) {
-            expectedTopTopicIds = Arrays.asList(10420, 10189, 10301, 10230, 10010);
+            expectedTopTopicIds = Arrays.asList(10301, 10009, 10230, 10010, 10184);
         } else {
             expectedTopTopicIds = Arrays.asList(10166, 10010, 10301, 10230, 10184);
         }
@@ -386,12 +398,14 @@ public class TopicsManagerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runPrecomputedClassifier_usingGetMethodToCreateManager()
             throws Exception {
         testTopicsManager_runPrecomputedClassifier(/* useGetMethodToCreateManager = */ true);
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runPrecomputedClassifier() throws Exception {
         testTopicsManager_runPrecomputedClassifier(/* useGetMethodToCreateManager = */ false);
     }

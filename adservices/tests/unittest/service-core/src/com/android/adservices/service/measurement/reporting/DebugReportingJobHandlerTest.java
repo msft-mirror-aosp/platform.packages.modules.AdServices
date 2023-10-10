@@ -35,15 +35,16 @@ import android.net.Uri;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
+import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSession;
@@ -83,11 +84,16 @@ public class DebugReportingJobHandlerTest {
     @Mock private Flags mFlags;
     private StaticMockitoSession mMockitoSession;
     @Mock private AdServicesLogger mLogger;
+    @Mock private AdServicesErrorLogger mErrorLogger;
 
     DebugReportingJobHandler mDebugReportingJobHandler;
     DebugReportingJobHandler mSpyDebugReportingJobHandler;
 
     class FakeDatasoreManager extends DatastoreManager {
+        FakeDatasoreManager() {
+            super(mErrorLogger);
+        }
+
         @Override
         public ITransaction createNewTransaction() {
             return mTransaction;
@@ -113,8 +119,7 @@ public class DebugReportingJobHandlerTest {
                         .spyStatic(ErrorLogUtil.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
-        ExtendedMockito.doNothing()
-                .when(() -> ErrorLogUtil.e(anyInt(), anyInt(), anyString(), anyString()));
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
 
         mDebugReportingJobHandler =
@@ -205,8 +210,8 @@ public class DebugReportingJobHandlerTest {
         mSpyDebugReportingJobHandler.performScheduledPendingReports();
 
         verify(mMeasurementDao, times(2)).deleteDebugReport(any());
-        verify(mTransaction, times(5)).begin();
-        verify(mTransaction, times(5)).end();
+        verify(mTransaction, times(7)).begin();
+        verify(mTransaction, times(7)).end();
     }
 
     @Test

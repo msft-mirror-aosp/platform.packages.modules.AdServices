@@ -21,8 +21,6 @@ import static android.view.MotionEvent.obtain;
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION;
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_FILTERS;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_VALUES_PER_ATTRIBUTION_FILTER;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE;
 
@@ -42,6 +40,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.adservices.measurement.RegistrationRequest;
+import android.adservices.measurement.RegistrationRequestFixture;
 import android.adservices.measurement.WebSourceParams;
 import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.content.Context;
@@ -54,12 +53,12 @@ import android.view.MotionEvent.PointerProperties;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
-import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -229,6 +228,10 @@ public final class AsyncSourceFetcherTest {
                 .when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
         when(mFlags.getMeasurementMaxAggregateKeysPerSourceRegistration()).thenReturn(
                 Flags.MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION);
+        when(mFlags.getMeasurementMaxAttributionFilters())
+                .thenReturn(Flags.DEFAULT_MEASUREMENT_MAX_ATTRIBUTION_FILTERS);
+        when(mFlags.getMeasurementMaxValuesPerAttributionFilter())
+                .thenReturn(Flags.DEFAULT_MEASUREMENT_MAX_VALUES_PER_ATTRIBUTION_FILTER);
     }
 
     public void cleanup() throws InterruptedException {
@@ -304,10 +307,13 @@ public final class AsyncSourceFetcherTest {
                                                 UNKNOWN_REGISTRATION_FAILURE_TYPE,
                                                 0,
                                                 ANDROID_APP_SCHEME_URI_PREFIX
-                                                        + sContext.getPackageName())
+                                                        + sContext.getPackageName(),
+                                                0,
+                                                false)
                                         .setAdTechDomain(null)
                                         .build()));
         verify(mUrlConnection).setRequestMethod("POST");
+        verify(mUrlConnection).setRequestProperty("Attribution-Reporting-Source-Info", "event");
     }
 
     @Test
@@ -674,7 +680,12 @@ public final class AsyncSourceFetcherTest {
 
     @Test
     public void registerSource_nonHttpsUrl_rejectsSource() {
-        RegistrationRequest request = buildRequest(WebUtil.validUrl("http://foo.test"));
+        RegistrationRequest request =
+                RegistrationRequestFixture.getInvalidRegistrationRequest(
+                        RegistrationRequest.REGISTER_SOURCE,
+                        WebUtil.validUri("http://foo.test"),
+                        sContext.getPackageName(),
+                        SDK_PACKAGE_NAME);
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -689,7 +700,12 @@ public final class AsyncSourceFetcherTest {
 
     @Test
     public void testBadSourceUrl() {
-        RegistrationRequest request = buildRequest(WebUtil.validUrl("bad-schema://foo.test"));
+        RegistrationRequest request =
+                RegistrationRequestFixture.getInvalidRegistrationRequest(
+                        RegistrationRequest.REGISTER_SOURCE,
+                        WebUtil.validUri("bad-schema://foo.test"),
+                        sContext.getPackageName(),
+                        SDK_PACKAGE_NAME);
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -2779,7 +2795,7 @@ public final class AsyncSourceFetcherTest {
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         StringBuilder filters = new StringBuilder("{");
         filters.append(
-                IntStream.range(0, MAX_ATTRIBUTION_FILTERS + 1)
+                IntStream.range(0, Flags.DEFAULT_MEASUREMENT_MAX_ATTRIBUTION_FILTERS + 1)
                         .mapToObj(i -> "\"filter-string-" + i + "\": [\"filter-value\"]")
                         .collect(Collectors.joining(",")));
         filters.append("}");
@@ -2854,7 +2870,7 @@ public final class AsyncSourceFetcherTest {
                                 + "\"filter-string-1\": [\"filter-value-1\"],"
                                 + "\"filter-string-2\": [");
         filters.append(
-                IntStream.range(0, MAX_VALUES_PER_ATTRIBUTION_FILTER + 1)
+                IntStream.range(0, Flags.DEFAULT_MEASUREMENT_MAX_VALUES_PER_ATTRIBUTION_FILTER + 1)
                         .mapToObj(i -> "\"filter-value-" + i + "\"")
                         .collect(Collectors.joining(",")));
         filters.append("]}");
@@ -2893,6 +2909,39 @@ public final class AsyncSourceFetcherTest {
                 "  \"filter_data\": {\"product\":[\"1234\",\""
                         + LONG_FILTER_STRING
                         + "\"], \"ctid\":[\"id\"]} \n";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "  \"destination\": \"android-app://com"
+                                                + ".myapps\",\n"
+                                                + "  \"priority\": \"123\",\n"
+                                                + "  \"expiry\": \"456789\",\n"
+                                                + "  \"source_event_id\": \"987654321\",\n"
+                                                + filterData
+                                                + "}\n")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testSourceRequest_filterData_shouldNotIncludeKookbackWindow() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        String filterData =
+                "  \"filter_data\": {\"product\":[\"1234\"], \"ctid\":[\"id\"], "
+                        + "\"_lookback_window\": 123} \n";
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
@@ -4790,7 +4839,9 @@ public final class AsyncSourceFetcherTest {
                                                 UNKNOWN_REGISTRATION_FAILURE_TYPE,
                                                 0,
                                                 ANDROID_APP_SCHEME_URI_PREFIX
-                                                        + sContext.getPackageName())
+                                                        + sContext.getPackageName(),
+                                                0,
+                                                false)
                                         .setAdTechDomain(WebUtil.validUrl("https://foo.test"))
                                         .build()));
     }

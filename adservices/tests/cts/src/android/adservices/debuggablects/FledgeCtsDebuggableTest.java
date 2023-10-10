@@ -68,16 +68,18 @@ import android.net.Uri;
 import android.os.Process;
 import android.util.Log;
 
+import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.adselection.AdCost;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.js.JSScriptEngine;
-import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
@@ -91,6 +93,7 @@ import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
 
@@ -354,27 +357,27 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     private boolean mHasAccessToDevOverrides;
 
     private String mAccessStatus;
-    private String mPreviousAppAllowList;
 
     private final ArrayList<CustomAudience> mCustomAudiencesToCleanUp = new ArrayList<>();
     private static final AtomicInteger sFrequencyCapKeyToFilter = new AtomicInteger(0);
 
+    @Rule(order = 0)
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
+    @Rule(order = 1)
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
+                    .setCompatModeFlags()
+                    .setPpapiAppAllowList(sContext.getPackageName());
+
     @Before
     public void setup() throws InterruptedException {
-        // Skip the test if it runs on unsupported platforms
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         if (SdkLevel.isAtLeastT()) {
             assertForegroundActivityStarted();
-            ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 2");
-        } else {
-            mPreviousAppAllowList =
-                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
-                            String.format(
-                                    "%s,%s",
-                                    sContext.getPackageName(), "ad-selection-from-outcomes"));
-            CompatAdServicesTestUtils.setFlags();
+            flags.setConsentSourceOfTruth(FlagsConstants.PPAPI_AND_SYSTEM_SERVER);
         }
 
         mAdSelectionClient =
@@ -436,8 +439,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
     @After
     public void tearDown() throws Exception {
-        if (!AdservicesTestHelper.isDeviceSupported()
-                || !JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable()) {
+        if (!JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable()) {
             return;
         }
 
@@ -451,11 +453,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Reset the filtering flag
         PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(false);
         AdservicesTestHelper.killAdservicesProcess(sContext);
-
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
     }
 
     @Test
@@ -4114,6 +4111,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     }
 
     @Test
+    @FlakyTest(bugId = 298832350)
     public void testGetAdSelectionData_collectsCa_success()
             throws ExecutionException, InterruptedException, TimeoutException {
         // TODO(b/293022107): Add success tests when encryption key fetch can be done in CTS
@@ -4144,6 +4142,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302669752)
     public void testPersistAdSelectionData_adSelectionIdDoesntExist_failure()
             throws ExecutionException, InterruptedException, TimeoutException {
         // TODO(b/293022107): This test is currently using a placeholder ad selection id that cause

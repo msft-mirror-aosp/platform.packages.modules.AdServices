@@ -34,14 +34,6 @@ public class AdServicesPermissions {
     public static final String ACCESS_ADSERVICES_CUSTOM_AUDIENCE =
             "android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE";
 
-    /**
-     * This permission needs to be declared by the caller of Protected Signals APIs.
-     *
-     * @hide
-     */
-    public static final String ACCESS_ADSERVICES_PROTECTED_SIGNALS =
-            "android.permission.ACCESS_ADSERVICES_PROTECTED_SIGNALS";
-
     /** This permission needs to be declared by the caller of Advertising ID APIs. */
     public static final String ACCESS_ADSERVICES_AD_ID =
             "android.permission.ACCESS_ADSERVICES_AD_ID";
@@ -122,4 +114,19 @@ public class AdServicesPermissions {
     @SystemApi
     public static final String ACCESS_PRIVILEGED_ADSERVICES_COBALT_UPLOAD =
             "android.permission.ACCESS_PRIVILEGED_AD_SERVICES_COBALT_UPLOAD";
+
+    /**
+     * The permission that allows calling updating AdId Cache API via Common Service.
+     *
+     * @hide
+     */
+    public static final String UPDATE_AD_ID_CACHE = "android.permission.UPDATE_AD_ID_CACHE";
+
+    /**
+     * The permission that allows calling updating AdId Cache API via Common Service on S-.
+     *
+     * @hide
+     */
+    public static final String UPDATE_AD_ID_CACHE_COMPAT =
+            "android.permission.UPDATE_AD_ID_CACHE_COMPAT";
 }

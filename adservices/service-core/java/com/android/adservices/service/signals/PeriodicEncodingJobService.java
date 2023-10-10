@@ -148,6 +148,7 @@ public class PeriodicEncodingJobService extends JobService {
     @Override
     public boolean onStopJob(JobParameters params) {
         LoggerFactory.getFledgeLogger().d("PeriodicEncodingJobService.onStopJob");
+        PeriodicEncodingJobWorker.getInstance(this).stopWork();
 
         boolean shouldRetry = true;
         AdservicesJobServiceLogger.getInstance(PeriodicEncodingJobService.this)
@@ -160,6 +161,10 @@ public class PeriodicEncodingJobService extends JobService {
      * Attempts to schedule the Periodic encoding as a singleton job if it is not already scheduled.
      */
     public static void scheduleIfNeeded(Context context, Flags flags, boolean forceSchedule) {
+        LoggerFactory.getFledgeLogger()
+                .v(
+                        "Attempting to schedule job:%s if needed",
+                        PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID);
         if (!flags.getProtectedSignalsPeriodicEncodingEnabled()) {
             LoggerFactory.getFledgeLogger()
                     .v("Protected Signals periodic encoding is disabled; skipping schedule");

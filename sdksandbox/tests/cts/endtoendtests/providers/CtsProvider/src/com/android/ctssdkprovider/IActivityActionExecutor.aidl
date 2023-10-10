@@ -20,4 +20,5 @@ interface IActivityActionExecutor {
     void setOrientationToLandscape();
     void setOrientationToPortrait();
     void openLandingPage();
+    void finish();
 }

@@ -17,7 +17,7 @@ package com.android.adservices.service.measurement.aggregation;
 
 import android.net.Uri;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.common.AllowLists;
@@ -71,7 +71,8 @@ public final class AggregateEncryptionKeyManager {
     public List<AggregateEncryptionKey> getAggregateEncryptionKeys(
             Uri coordinatorOrigin, int numKeys) {
         if (!isAllowlisted(mAggregationCoordinatorOriginList, coordinatorOrigin.toString())) {
-            LogUtil.w("Fetching aggregate encryption keys failed, invalid url.");
+            LoggerFactory.getMeasurementLogger()
+                    .w("Fetching aggregate encryption keys failed, invalid url.");
             return Collections.emptyList();
         }
         Uri aggregationCoordinatorUrl = createURL(coordinatorOrigin, mAggregationCoordinatorPath);
@@ -105,7 +106,8 @@ public final class AggregateEncryptionKeyManager {
                 mDatastoreManager.runInTransaction((dao) ->
                         dao.deleteExpiredAggregateEncryptionKeys(eventTime));
             } else {
-                LogUtil.d("Fetching aggregate encryption keys over the network failed.");
+                LoggerFactory.getMeasurementLogger()
+                        .d("Fetching aggregate encryption keys over the network failed.");
             }
         }
 
