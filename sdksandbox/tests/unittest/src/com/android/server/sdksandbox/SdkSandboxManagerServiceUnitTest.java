@@ -105,7 +105,9 @@ import com.android.server.wm.ActivityInterceptorCallback;
 import com.android.server.wm.ActivityInterceptorCallbackRegistry;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -195,30 +197,64 @@ public class SdkSandboxManagerServiceUnitTest {
 
     private static final String PROPERTY_ACTIVITY_ALLOWLIST =
             "sdksandbox_activity_allowlist_per_targetSdkVersion";
-    private String mInitialActivityAllowlistValue;
 
     private static final String PROPERTY_NEXT_ACTIVITY_ALLOWLIST =
             "sdksandbox_next_activity_allowlist";
-    private String mInitialNextActivityAllowlistValue;
 
     private static final String INTENT_ACTION = "action.test";
     private static final String PACKAGE_NAME = "packageName.test";
     private static final String COMPONENT_CLASS_NAME = "className.test";
     private static final String COMPONENT_PACKAGE_NAME = "componentPackageName.test";
-    private String mInitialServiceAllowlistValue;
 
     private static final String PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS =
             "apply_sdk_sandbox_next_restrictions";
-
-    private String mInitialApplyNextSdkSandboxRestrictions = null;
     private static final String PROPERTY_NEXT_SERVICE_ALLOWLIST =
             "sdksandbox_next_service_allowlist";
-    private String mInitialValueNextServiceAllowlist;
 
-    private String mInitialEnforceRestrictions;
+    // Initial values that will be reset after the tests.
+    private static String sInitialApplyNextSdkSandboxRestrictions;
+    private static String sInitialValueNextServiceAllowlist;
+    private static String sInitialActivityAllowlistValue;
+    private static String sInitialEnforceRestrictions;
+    private static String sInitialServiceAllowlistValue;
+    private static String sInitialNextActivityAllowlistValue;
 
     @Rule(order = 0)
     public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
+
+    @BeforeClass
+    public static void setupClass() {
+        // Required to access <sdk-library> information and DeviceConfig update.
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(
+                        Manifest.permission.ACCESS_SHARED_LIBRARIES,
+                        Manifest.permission.INSTALL_PACKAGES,
+                        Manifest.permission.READ_DEVICE_CONFIG,
+                        Manifest.permission.WRITE_DEVICE_CONFIG,
+                        // for Context#registerReceiverForAllUsers
+                        Manifest.permission.INTERACT_ACROSS_USERS_FULL);
+        sInitialApplyNextSdkSandboxRestrictions =
+                DeviceConfig.getProperty(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS);
+        sInitialEnforceRestrictions =
+                DeviceConfig.getProperty(
+                        DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_ENFORCE_RESTRICTIONS);
+        sInitialServiceAllowlistValue =
+                DeviceConfig.getProperty(
+                        DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_SERVICES_ALLOWLIST);
+        sInitialActivityAllowlistValue =
+                DeviceConfig.getProperty(
+                        DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_ACTIVITY_ALLOWLIST);
+        sInitialNextActivityAllowlistValue =
+                DeviceConfig.getProperty(
+                        DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_NEXT_ACTIVITY_ALLOWLIST);
+        sInitialValueNextServiceAllowlist =
+                DeviceConfig.getProperty(
+                        DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_NEXT_SERVICE_ALLOWLIST);
+    }
+
 
     @Before
     public void setup() {
@@ -256,16 +292,6 @@ public class SdkSandboxManagerServiceUnitTest {
 
         Mockito.when(mSpyContext.getSystemService(ActivityManager.class)).thenReturn(mAmSpy);
 
-        // Required to access <sdk-library> information and DeviceConfig update.
-        InstrumentationRegistry.getInstrumentation()
-                .getUiAutomation()
-                .adoptShellPermissionIdentity(
-                        Manifest.permission.ACCESS_SHARED_LIBRARIES,
-                        Manifest.permission.INSTALL_PACKAGES,
-                        Manifest.permission.READ_DEVICE_CONFIG,
-                        Manifest.permission.WRITE_DEVICE_CONFIG,
-                        // for Context#registerReceiverForAllUsers
-                        Manifest.permission.INTERACT_ACROSS_USERS_FULL);
         mSdkSandboxService = Mockito.spy(FakeSdkSandboxService.class);
         mSdkSandboxService.setTimeValues(
                 TIME_SYSTEM_SERVER_CALLED_SANDBOX,
@@ -303,44 +329,16 @@ public class SdkSandboxManagerServiceUnitTest {
         mClientAppUid = Process.myUid();
         mSandboxLatencyInfo = new SandboxLatencyInfo();
 
-        /** Save the initial value to reset the property to original configuration */
-        mInitialServiceAllowlistValue =
-                DeviceConfig.getProperty(
-                        DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_SERVICES_ALLOWLIST);
         DeviceConfig.deleteProperty(DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_SERVICES_ALLOWLIST);
-
-        mInitialApplyNextSdkSandboxRestrictions =
-                DeviceConfig.getProperty(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS);
         DeviceConfig.deleteProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS);
-
-        mInitialEnforceRestrictions =
-                DeviceConfig.getProperty(
-                        DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_ENFORCE_RESTRICTIONS);
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS);
         DeviceConfig.deleteProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_ENFORCE_RESTRICTIONS);
-
-        mInitialServiceAllowlistValue =
-                DeviceConfig.getProperty(
-                        DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_SERVICES_ALLOWLIST);
-        DeviceConfig.deleteProperty(DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_SERVICES_ALLOWLIST);
-
-        mInitialValueNextServiceAllowlist =
-                DeviceConfig.getProperty(
-                        DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_NEXT_SERVICE_ALLOWLIST);
         DeviceConfig.deleteProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_NEXT_SERVICE_ALLOWLIST);
-
-        mInitialActivityAllowlistValue =
-                DeviceConfig.getProperty(
-                        DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_ACTIVITY_ALLOWLIST);
-        DeviceConfig.deleteProperty(DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_ACTIVITY_ALLOWLIST);
-
-        mInitialNextActivityAllowlistValue =
-                DeviceConfig.getProperty(
-                        DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_NEXT_ACTIVITY_ALLOWLIST);
+        DeviceConfig.deleteProperty(DeviceConfig.NAMESPACE_ADSERVICES,
+                PROPERTY_ACTIVITY_ALLOWLIST);
         DeviceConfig.deleteProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_NEXT_ACTIVITY_ALLOWLIST);
     }
@@ -350,22 +348,24 @@ public class SdkSandboxManagerServiceUnitTest {
         if (sSdkSandboxSettingsListener != null) {
             sSdkSandboxSettingsListener.unregisterPropertiesListener();
         }
-
         mStaticMockSession.finishMocking();
-
-        resetDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, mInitialEnforceRestrictions);
-        resetDeviceConfigProperty(PROPERTY_SERVICES_ALLOWLIST, mInitialServiceAllowlistValue);
-        resetDeviceConfigProperty(
-                PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS,
-                mInitialApplyNextSdkSandboxRestrictions);
-        resetDeviceConfigProperty(
-                PROPERTY_NEXT_SERVICE_ALLOWLIST, mInitialValueNextServiceAllowlist);
-        resetDeviceConfigProperty(PROPERTY_ACTIVITY_ALLOWLIST, mInitialActivityAllowlistValue);
-        resetDeviceConfigProperty(
-                PROPERTY_NEXT_ACTIVITY_ALLOWLIST, mInitialNextActivityAllowlistValue);
     }
 
-    private void resetDeviceConfigProperty(String property, String value) {
+    @AfterClass
+    public static void tearDownClass() {
+        resetDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, sInitialEnforceRestrictions);
+        resetDeviceConfigProperty(PROPERTY_SERVICES_ALLOWLIST, sInitialServiceAllowlistValue);
+        resetDeviceConfigProperty(
+                PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS,
+                sInitialApplyNextSdkSandboxRestrictions);
+        resetDeviceConfigProperty(
+                PROPERTY_NEXT_SERVICE_ALLOWLIST, sInitialValueNextServiceAllowlist);
+        resetDeviceConfigProperty(PROPERTY_ACTIVITY_ALLOWLIST, sInitialActivityAllowlistValue);
+        resetDeviceConfigProperty(
+                PROPERTY_NEXT_ACTIVITY_ALLOWLIST, sInitialNextActivityAllowlistValue);
+    }
+
+    private static void resetDeviceConfigProperty(String property, String value) {
         if (Objects.isNull(value)) {
             DeviceConfig.deleteProperty(DeviceConfig.NAMESPACE_ADSERVICES, property);
         } else {
