@@ -20,6 +20,10 @@ import android.os.Looper;
 /**
  * Rule used to protect the test process from crashing if an uncaught exception is thrown in the
  * background.
+ *
+ * <p><b>NOTE: </b>once this rule is used, it will call {@link
+ * Thread#setUncaughtExceptionHandler(java.lang.Thread.UncaughtExceptionHandler)} and never reset
+ * it.
  */
 public final class ProcessLifeguardRule extends AbstractProcessLifeguardRule {
 
