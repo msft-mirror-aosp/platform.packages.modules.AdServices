@@ -433,12 +433,20 @@ public class SdkSandboxManagerServiceUnitTest {
         assertThat(thrown).hasMessageThat().contains("does.not.exist not found");
     }
 
+    // Tests the failure of attempting to load an SDK when the calling package name and calling uid
+    // does not match.
     @Test
     public void testLoadSdkIncorrectCallingPackage() {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
 
+        // Try loading the SDK from another installed sample app with a different uid.
         mService.loadSdk(
-                SDK_PROVIDER_PACKAGE, null, SDK_NAME, mSandboxLatencyInfo, new Bundle(), callback);
+                "com.android.emptysampleapp",
+                null,
+                SDK_NAME,
+                mSandboxLatencyInfo,
+                new Bundle(),
+                callback);
 
         LoadSdkException thrown = callback.getLoadSdkException();
         assertEquals(LOAD_SDK_INTERNAL_ERROR, thrown.getLoadSdkErrorCode());
