@@ -24,7 +24,7 @@ android_test {
     static_libs: [
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt",
-        "truth-prebuilt",
+        "truth",
         "adservices-clients",
         "adservices-test-utility",
     ],
@@ -36,7 +36,7 @@ android_test {
     test_suites: [
         "cts",
         "general-tests",
-        "mts-adservices"
+        "mts-adservices",
     ],
     data: [
         // Sample App will be installed and uninstalled in the test.
@@ -55,7 +55,7 @@ android_test {
     static_libs: [
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt",
-        "truth-prebuilt",
+        "truth",
         "adservices-clients",
         "adservices-test-utility",
     ],

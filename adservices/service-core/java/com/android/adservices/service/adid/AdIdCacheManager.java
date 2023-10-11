@@ -29,6 +29,7 @@ import android.adservices.adid.GetAdIdResult;
 import android.adservices.adid.IAdIdProviderService;
 import android.adservices.adid.IGetAdIdCallback;
 import android.adservices.adid.IGetAdIdProviderCallback;
+import android.adservices.common.UpdateAdIdRequest;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -112,6 +113,25 @@ public final class AdIdCacheManager {
     }
 
     /**
+     * Updates the AdId cache.
+     *
+     * @param updateAdIdRequest the request contains new AdId to update the cache.
+     */
+    public void updateAdId(@NonNull UpdateAdIdRequest updateAdIdRequest) {
+        LogUtil.v("AdIdCacheManager.updateAdId to %s", updateAdIdRequest);
+        mReadWriteLock.writeLock().lock();
+
+        try {
+            setAdIdInStorage(
+                    new AdId(
+                            updateAdIdRequest.getAdId(),
+                            updateAdIdRequest.isLimitAdTrackingEnabled()));
+        } finally {
+            mReadWriteLock.writeLock().unlock();
+        }
+    }
+
+    /**
      * Gets adId from {@link AdIdProviderService}.
      *
      * @param packageName is the app package name
@@ -183,6 +203,7 @@ public final class AdIdCacheManager {
     void setAdIdInStorage(@NonNull AdId adId) {
         // TODO(b/300147424): Remove the flag once the feature is rolled out.
         if (!FlagsFactory.getFlags().getAdIdCacheEnabled()) {
+            LogUtil.d("Ad Id Cache is not enabled. Set nothing.");
             return;
         }
         Objects.requireNonNull(adId);
@@ -208,6 +229,7 @@ public final class AdIdCacheManager {
     AdId getAdIdInStorage() {
         // TODO(b/300147424): Remove the flag once the feature is rolled out.
         if (!FlagsFactory.getFlags().getAdIdCacheEnabled()) {
+            LogUtil.d("Ad Id Cache is not enabled. Return default value.");
             return UNSET_AD_ID;
         }
 

@@ -27,13 +27,13 @@ java_defaults {
     min_sdk_version: "Tiramisu",
     plugins: [
         "auto_value_plugin",
-        "auto_annotation_plugin"
+        "auto_annotation_plugin",
     ],
     static_libs: [
         "androidx.concurrent_concurrent-futures",
         "androidx.test.rules",
         "compatibility-device-util-axt",
-        "truth-prebuilt",
+        "truth",
         "adservices-assets",
         "adservices-service-core-schema",
         "adservices-test-utility",
@@ -56,7 +56,7 @@ java_defaults {
     ],
     test_suites: [
         "general-tests",
-        "mts-adservices"
+        "mts-adservices",
     ],
     test_mainline_modules: ["com.google.android.adservices.apex"],
     instrumentation_for: "AdServicesApk",
@@ -106,7 +106,7 @@ android_test {
         "androidx.test.rules",
         "compatibility-device-util-axt",
         "mockito-target-extended-minus-junit4",
-        "truth-prebuilt",
+        "truth",
         "adservices-assets",
         "adservices-test-fixtures",
     ],
@@ -119,7 +119,7 @@ android_test {
     ],
     test_suites: [
         "general-tests",
-        "mts-adservices"
+        "mts-adservices",
     ],
     test_config: "AndroidTest.JsScriptEngine.xml",
     test_mainline_modules: ["com.google.android.adservices.apex"],
@@ -143,7 +143,7 @@ android_test {
         "androidx.test.rules",
         "compatibility-device-util-axt",
         "mockito-target-extended-minus-junit4",
-        "truth-prebuilt",
+        "truth",
         "adservices-assets",
         "adservices-test-fixtures",
         "mobile_data_downloader_lib",
@@ -156,7 +156,7 @@ android_test {
     ],
     test_suites: [
         "general-tests",
-        "mts-adservices"
+        "mts-adservices",
     ],
     test_config: "AndroidTestMDD.xml",
     test_mainline_modules: ["com.google.android.adservices.apex"],
@@ -188,7 +188,7 @@ java_defaults {
         "opencensus-java-api",
         "opencensus-java-contrib-grpc-metrics",
         "tflite_support_classifiers_java",
-        "truth-prebuilt",
+        "truth",
     ],
     libs: [
         "android.ext.adservices",
@@ -200,7 +200,7 @@ java_defaults {
     ],
     test_suites: [
         "general-tests",
-        "mts-extservices"
+        "mts-extservices",
     ],
     test_mainline_modules: ["com.google.android.extservices.apex"],
     instrumentation_for: "ExtServices-sminus",
@@ -254,7 +254,7 @@ android_test {
         "androidx.test.rules",
         "compatibility-device-util-axt",
         "mockito-target-extended-minus-junit4",
-        "truth-prebuilt",
+        "truth",
     ],
     libs: [
         "android.ext.adservices",
@@ -265,7 +265,7 @@ android_test {
     ],
     test_suites: [
         "general-tests",
-        "mts-extservices"
+        "mts-extservices",
     ],
     test_config: "AndroidTest.JsScriptEngine.ExtServices.xml",
     test_mainline_modules: ["com.google.android.extservices.apex"],
@@ -293,7 +293,7 @@ android_test {
         "compatibility-device-util-axt",
         "mobile_data_downloader_lib",
         "mockito-target-extended-minus-junit4",
-        "truth-prebuilt",
+        "truth",
     ],
     libs: [
         "android.ext.adservices",
@@ -304,7 +304,7 @@ android_test {
     ],
     test_suites: [
         "general-tests",
-        "mts-extservices"
+        "mts-extservices",
     ],
     test_config: "AndroidTestMDD.ExtServices.xml",
     test_mainline_modules: ["com.google.android.extservices.apex"],

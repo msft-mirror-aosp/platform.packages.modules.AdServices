@@ -26,6 +26,7 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.adid.AdIdWorker;
 import com.android.adservices.service.common.AdServicesCommonServiceImpl;
 import com.android.adservices.service.common.AdServicesSyncUtil;
 import com.android.adservices.service.ui.UxEngine;
@@ -52,7 +53,8 @@ public class AdServicesCommonService extends Service {
                             this,
                             FlagsFactory.getFlags(),
                             UxEngine.getInstance(this),
-                            UxStatesManager.getInstance(this));
+                            UxStatesManager.getInstance(this),
+                            AdIdWorker.getInstance(this));
         }
         LogUtil.d("created adservices common service");
         try {

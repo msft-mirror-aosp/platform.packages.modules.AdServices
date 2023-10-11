@@ -109,6 +109,15 @@
       ]
     },
     {
+      // Install com.google.android.extservices.apex and run AdServicesCobaltUnitTests.
+      "name": "AdServicesCobaltUnitTests[com.google.android.extservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
       // Install com.google.android.adservices.apex and run AdServicesFrameworkUnitTests.
       "name": "AdServicesFrameworkUnitTests[com.google.android.adservices.apex]",
       "options": [

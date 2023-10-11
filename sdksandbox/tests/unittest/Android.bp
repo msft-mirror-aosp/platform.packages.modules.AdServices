@@ -22,13 +22,13 @@ java_defaults {
     target_sdk_version: "Tiramisu",
     test_suites: [
         "mts-adservices",
-        "general-tests"
+        "general-tests",
     ],
     static_libs: [
         "androidx.test.runner",
         "compatibility-device-util-axt-minus-dexmaker",
         "mockito-target-extended-minus-junit4",
-        "truth-prebuilt",
+        "truth",
         "SdkSandboxTestUtils",
         "SdkSandbox-java-lib",
     ],
@@ -85,9 +85,9 @@ android_test {
         "modules-utils-build",
     ],
     data: [
-      ":SampleCodeProviderApp",
-      ":SampleServiceApp",
-      ":CodeProviderWithResources",
+        ":SampleCodeProviderApp",
+        ":SampleServiceApp",
+        ":CodeProviderWithResources",
     ],
 }
 
@@ -104,7 +104,6 @@ android_test {
     manifest: "SdkSandboxFrameworkManifest.xml",
     test_config: "SdkSandboxFrameworkTest.xml",
     data: [
-      ":CodeProviderWithResources",
+        ":CodeProviderWithResources",
     ],
 }
-
