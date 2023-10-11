@@ -239,9 +239,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
      * Property to enforce restrictions for SDK sandbox processes. If the value of this property is
      * {@code true}, the restrictions will be enforced.
      */
-    private static final String PROPERTY_ENFORCE_RESTRICTIONS = "sdksandbox_enforce_restrictions";
+    static final String PROPERTY_ENFORCE_RESTRICTIONS = "sdksandbox_enforce_restrictions";
 
-    private static final boolean DEFAULT_VALUE_ENFORCE_RESTRICTIONS = true;
+    static final boolean DEFAULT_VALUE_ENFORCE_RESTRICTIONS = true;
 
     private static final String PROPERTY_ACTIVITY_ALLOWLIST =
             "sdksandbox_activity_allowlist_per_targetSdkVersion";

@@ -24,8 +24,10 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.DeviceConfig;
 import android.util.Log;
 
+import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.sdksandbox.verifier.SdkDexVerifier;
 
 /**
@@ -38,6 +40,7 @@ public class SdkSandboxVerifierReceiver extends BroadcastReceiver {
 
     private static final String TAG = "SdkSandboxVerifier";
     private static final Handler MAIN_HANDLER = new Handler(Looper.getMainLooper());
+    private SdkDexVerifier mSdkDexVerifier;
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -48,11 +51,30 @@ public class SdkSandboxVerifierReceiver extends BroadcastReceiver {
         Log.d(TAG, "Received sdk sandbox verification intent " + intent.toString());
         Log.d(TAG, "Extras " + intent.getExtras());
 
-        verifySdkHandler(context, intent);
+        verifySdkHandler(context, intent, MAIN_HANDLER);
     }
 
-    private void verifySdkHandler(Context context, Intent intent) {
+    @VisibleForTesting
+    void setSdkDexVerifier(SdkDexVerifier sdkDexVerifier) {
+        mSdkDexVerifier = sdkDexVerifier;
+    }
+
+    @VisibleForTesting
+    void verifySdkHandler(Context context, Intent intent, Handler handler) {
         int verificationId = intent.getIntExtra(PackageManager.EXTRA_VERIFICATION_ID, -1);
+
+        boolean enforceRestrictions =
+                DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        SdkSandboxManagerService.PROPERTY_ENFORCE_RESTRICTIONS,
+                        SdkSandboxManagerService.DEFAULT_VALUE_ENFORCE_RESTRICTIONS);
+        if (!enforceRestrictions) {
+            context.getPackageManager()
+                    .verifyPendingInstall(verificationId, PackageManager.VERIFICATION_ALLOW);
+            Log.d(TAG, "Restrictions disabled. Sent VERIFICATION_ALLOW");
+            return;
+        }
+
         String apkPath = intent.getData() != null ? intent.getData().getPath() : null;
 
         PackageInfo packageInfo = null;
@@ -67,12 +89,14 @@ public class SdkSandboxVerifierReceiver extends BroadcastReceiver {
             return;
         }
 
+        if (mSdkDexVerifier == null) {
+            mSdkDexVerifier = SdkDexVerifier.getInstance();
+        }
         int targetSdkVersion =
                 packageInfo.applicationInfo != null
                         ? packageInfo.applicationInfo.targetSdkVersion
                         : Build.VERSION.SDK_INT;
-        MAIN_HANDLER.post(
-                () -> SdkDexVerifier.getInstance().startDexVerification(apkPath, targetSdkVersion));
+        handler.post(() -> mSdkDexVerifier.startDexVerification(apkPath, targetSdkVersion));
 
         // Verification will continue to run on background, return VERIFICATION_ALLOW to
         // unblock install
