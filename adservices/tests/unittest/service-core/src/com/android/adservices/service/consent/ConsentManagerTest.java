@@ -175,7 +175,7 @@ import java.util.stream.Collectors;
 @SmallTest
 public class ConsentManagerTest {
     private static final int UX_TYPE_COUNT = 5;
-    private static final int ENROLLMENT_CHANNEL_COUNT = 19;
+    private static final int ENROLLMENT_CHANNEL_COUNT = 20;
 
     @Spy
     private final Context mContextSpy = ApplicationProvider.getApplicationContext();
