@@ -42,35 +42,35 @@ public interface EncoderLogicDao {
      * @param buyer Ad-tech owner for the encoding logic
      * @return an instance of {@link DBEncoderLogic} if present
      */
-    @Query("SELECT * FROM encoder_logic WHERE buyer = :buyer")
+    @Query("SELECT * FROM encoder_logics WHERE buyer = :buyer") // NOTYPO
     DBEncoderLogic getEncoder(AdTechIdentifier buyer);
 
     /**
      * @param buyer Ad-tech owner for the encoding logic
      * @return true if the encoder for the buyer exists
      */
-    @Query("SELECT EXISTS(SELECT 1 FROM encoder_logic WHERE buyer = :buyer)")
+    @Query("SELECT EXISTS(SELECT 1 FROM encoder_logics WHERE buyer = :buyer)") // NOTYPO
     boolean doesEncoderExist(AdTechIdentifier buyer);
 
     /**
      * @return list of all the buyers which have their encoder logic registered
      */
-    @Query("SELECT DISTINCT buyer FROM encoder_logic")
+    @Query("SELECT DISTINCT buyer FROM encoder_logics") // NOTYPO
     List<AdTechIdentifier> getAllBuyersWithRegisteredEncoders();
 
     /**
      * @return list of buyers which registered encoders before the expiryTime
      */
-    @Query("SELECT DISTINCT buyer FROM encoder_logic WHERE creation_time < :expiryTime")
+    @Query("SELECT DISTINCT buyer FROM encoder_logics WHERE creation_time < :expiryTime") // NOTYPO
     List<AdTechIdentifier> getBuyersWithEncodersBeforeTime(@NonNull Instant expiryTime);
 
     /**
      * @param buyer Ad-tech identifier whose encoding logic we delete
      */
-    @Query("DELETE FROM encoder_logic WHERE buyer = :buyer")
+    @Query("DELETE FROM encoder_logics WHERE buyer = :buyer") // NOTYPO
     void deleteEncoder(AdTechIdentifier buyer);
 
     /** Deletes all persisted encoding logic */
-    @Query("DELETE FROM encoder_logic")
+    @Query("DELETE FROM encoder_logics") // NOTYPO
     void deleteAllEncoders();
 }
