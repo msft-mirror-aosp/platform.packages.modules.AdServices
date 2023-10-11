@@ -46,6 +46,11 @@ import java.util.Objects;
  * <p>Most methods set {@link android.provider.DeviceConfig} flags, although some sets {@link
  * android.os.SystemProperties} instead - those are typically suffixed with {@code forTests}
  */
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// NOTE: DO NOT add new setXyz() methods, unless they need non-trivial logic. Instead, let your   //
+// test call setFlags(flagName) (statically import FlagsConstant.flagName), which will make it    //
+// easier to transition the test to an annotated-base approach.                                   //
+////////////////////////////////////////////////////////////////////////////////////////////////////
 abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFlagsSetterRule<T>>
         implements TestRule {
 
@@ -234,6 +239,9 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
 
     // Add more generic setFlag for other types as needed
 
+    // Helper methods to set more commonly used flags such as kill switches.
+    // Less common flags can be set directly using setFlags methods.
+
     /** Overrides the flag that sets the global AdServices kill switch. */
     public T setGlobalKillSwitch(boolean value) {
         return setFlag(FlagsConstants.KEY_GLOBAL_KILL_SWITCH, value);
@@ -261,11 +269,6 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         return setFlag(FlagsConstants.KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH, value);
     }
 
-    /** Overrides the flag that sets the enrollment seed. */
-    public T setEnableEnrollmentTestSeed(boolean value) {
-        return setFlag(FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED, value);
-    }
-
     /**
      * Overrides the system property that sets max time period between each epoch computation job
      * run.
@@ -278,34 +281,6 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     public T setTopicsPercentageForRandomTopicForTests(long value) {
         return setOrCacheDebugSystemProperty(
                 FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC, value);
-    }
-
-    /** Overrides the flag to select the topics classifier type. */
-    public T setTopicsClassifierType(int value) {
-        return setFlag(FlagsConstants.KEY_CLASSIFIER_TYPE, value);
-    }
-
-    /**
-     * Overrides the flag to change the number of top labels returned by on-device topic classifier
-     * type.
-     */
-    public T setTopicsClassifierNumberOfTopLabels(int value) {
-        return setFlag(FlagsConstants.KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS, value);
-    }
-
-    /** Overrides the flag to change the threshold for the classifier. */
-    public T setTopicsClassifierThreshold(float value) {
-        return setFlag(FlagsConstants.KEY_CLASSIFIER_THRESHOLD, value);
-    }
-
-    /** Overrides the flag that disables direct app calls for Topics. */
-    public T setTopicsDisableDirectAppCalls(boolean value) {
-        return setFlag(FlagsConstants.KEY_TOPICS_DISABLE_DIRECT_APP_CALLS, value);
-    }
-
-    /** Overrides the flag that forces the use of bundle files for the Topics classifier. */
-    public T setTopicsClassifierForceUseBundleFiles(boolean value) {
-        return setFlag(FlagsConstants.KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES, value);
     }
 
     /** Overrides the system property used to disable topics enrollment check. */
@@ -328,30 +303,6 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
 
     /**
      * Overrides flag used by {@link
-     * com.android.adservices.service.PhFlags#getConsentSourceOfTruth()}.
-     */
-    public T setConsentSourceOfTruth(int value) {
-        return setFlag(FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH, value);
-    }
-
-    /**
-     * Overrides flag used by {@link
-     * com.android.adservices.service.PhFlags#getBlockedTopicsSourceOfTruth()}.
-     */
-    public T setBlockedTopicsSourceOfTruth(int value) {
-        return setFlag(FlagsConstants.KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH, value);
-    }
-
-    /**
-     * Overrides flag used by {@link
-     * com.android.adservices.service.PhFlags#getEnableAppsearchConsentData()}.
-     */
-    public T setEnableAppsearchConsentData(boolean value) {
-        return setFlag(FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA, value);
-    }
-
-    /**
-     * Overrides flag used by {@link
      * com.android.adservices.service.PhFlags#getMeasurementRollbackDeletionAppSearchKillSwitch()}.
      */
     public T setMeasurementRollbackDeletionAppSearchKillSwitch(boolean value) {
@@ -362,7 +313,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     /**
      * Overrides flag used by {@link com.android.adservices.service.PhFlags#getPpapiAppAllowList()}.
      */
-    // <p> TODO (b/303901926) - apploy consistent naming to allow list methods
+    // <p> TODO (b/303901926) - apply consistent naming to allow list methods
     public T setPpapiAppAllowList(String value) {
         return setOrCacheFlag(FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST, value, ALLOWLIST_SEPARATOR);
     }
@@ -397,18 +348,20 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
 
     /**
      * Overrides flag used by {@link
-     * com.android.adservices.service.PhFlags#getAdIdRequestPermitsPerSecond()}.
-     */
-    public T setAdIdRequestPermitsPerSecond(double value) {
-        return setFlag(FlagsConstants.KEY_ADID_REQUEST_PERMITS_PER_SECOND, value);
-    }
-
-    /**
-     * Overrides flag used by {@link
      * com.android.adservices.service.PhFlags#getAdIdKillSwitchForTests()}.
      */
     public T setAdIdKillSwitchForTests(boolean value) {
         return setOrCacheDebugSystemProperty(FlagsConstants.KEY_ADID_KILL_SWITCH, value);
+    }
+
+    /** Overrides flag used by {@link android.adservices.common.AdServicesCommonManager}. */
+    public T setAdserviceEnableStatus(boolean value) {
+        return setFlag(FlagsConstants.KEY_ADSERVICES_ENABLED, value);
+    }
+
+    /** Overrides flag used by {@link android.adservices.common.AdServicesCommonManager}. */
+    public T setUpdateAdIdCacheEnabled(boolean value) {
+        return setFlag(FlagsConstants.KEY_AD_ID_CACHE_ENABLED, value);
     }
 
     /**
@@ -418,6 +371,12 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     public T setMddBackgroundTaskKillSwitch(boolean value) {
         return setFlag(FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH, value);
     }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // NOTE: DO NOT add new setXyz() methods, unless they need non-trivial logic. Instead, let    //
+    // your test call setFlags(flagName) (statically import FlagsConstant.flagName), which will   //
+    // make it easier to transition the test to an annotated-base approach.                       //
+    ////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
      * Sets all flags needed to enable compatibility mode, according to the Android version of the
@@ -435,20 +394,31 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
 
                     if (isAtLeastS()) {
                         mLog.d("setCompatModeFlags(): setting flags for S+");
-                        setEnableBackCompat(true);
-                        setBlockedTopicsSourceOfTruth(FlagsConstants.APPSEARCH_ONLY);
-                        setConsentSourceOfTruth(FlagsConstants.APPSEARCH_ONLY);
-                        setEnableAppsearchConsentData(true);
-                        setMeasurementRollbackDeletionAppSearchKillSwitch(false);
+                        setFlag(FlagsConstants.KEY_ENABLE_BACK_COMPAT, true);
+                        setFlag(
+                                FlagsConstants.KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH,
+                                FlagsConstants.APPSEARCH_ONLY);
+                        setFlag(
+                                FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH,
+                                FlagsConstants.APPSEARCH_ONLY);
+                        setFlag(FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA, true);
+                        setFlag(
+                                FlagsConstants
+                                        .KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH,
+                                false);
                         return;
                     }
                     mLog.d("setCompatModeFlags(): setting flags for R+");
-                    setEnableBackCompat(true);
+                    setFlag(FlagsConstants.KEY_ENABLE_BACK_COMPAT, true);
                     // TODO (b/285208753): Update flags once AppSearch is supported on R.
-                    setBlockedTopicsSourceOfTruth(FlagsConstants.PPAPI_ONLY);
-                    setConsentSourceOfTruth(FlagsConstants.PPAPI_ONLY);
-                    setEnableAppsearchConsentData(false);
-                    setMeasurementRollbackDeletionAppSearchKillSwitch(true);
+                    setFlag(
+                            FlagsConstants.KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH,
+                            FlagsConstants.PPAPI_ONLY);
+                    setFlag(FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH, FlagsConstants.PPAPI_ONLY);
+                    setFlag(FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA, false);
+                    setFlag(
+                            FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH,
+                            true);
                 });
     }
 
@@ -471,6 +441,12 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
                 });
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // NOTE: DO NOT add new setXyz() methods, unless they need non-trivial logic. Instead, let    //
+    // your test call setFlags(flagName) (statically import FlagsConstant.flagName), which will   //
+    // make it easier to transition the test to an annotated-base approach.                       //
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
     /**
      * @deprecated only used by {@code CompatAdServicesTestUtils.resetFlagsToDefault()} - flags are
      *     automatically reset when used as a JUnit Rule.
@@ -492,9 +468,9 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
                     boolean atLeastS = isAtLeastS();
                     int sourceOfTruth =
                             atLeastS ? FlagsConstants.APPSEARCH_ONLY : FlagsConstants.PPAPI_ONLY;
-                    setBlockedTopicsSourceOfTruth(sourceOfTruth);
-                    setConsentSourceOfTruth(sourceOfTruth);
-                    setEnableAppsearchConsentData(atLeastS);
+                    setFlag(FlagsConstants.KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH, sourceOfTruth);
+                    setFlag(FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH, sourceOfTruth);
+                    setFlag(FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA, atLeastS);
                     setMeasurementRollbackDeletionAppSearchKillSwitch(!atLeastS);
                 });
     }
@@ -763,6 +739,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         FlagOrSystemProperty(String name, String value) {
             this(name, value, /* separator= */ null);
         }
+
         // TODO(b/294423183): need to add unit test for equals() / hashcode() as they don't use
         // separator
 

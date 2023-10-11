@@ -21,14 +21,14 @@ package {
 android_test {
     name: "AdServicesTestUtilityTests",
     srcs: [
-          "src/**/*.java",
-          "side-less/**/*.java",
+        "src/**/*.java",
+        "side-less/**/*.java",
     ],
     static_libs: [
         "adservices-test-utility",
         "auto_value_annotations",
         "androidx.test.core",
-        "truth-prebuilt",
+        "truth",
     ],
     defaults: ["adservices-extended-mockito-defaults"],
     sdk_version: "module_current",

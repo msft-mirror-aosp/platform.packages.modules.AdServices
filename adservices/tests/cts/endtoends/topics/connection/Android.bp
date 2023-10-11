@@ -24,7 +24,7 @@ android_test {
     static_libs: [
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt",
-        "truth-prebuilt",
+        "truth",
         "adservices-clients",
         "adservices-test-utility",
     ],
@@ -36,7 +36,7 @@ android_test {
     test_suites: [
         "cts",
         "general-tests",
-        "mts-adservices"
+        "mts-adservices",
     ],
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
@@ -51,7 +51,7 @@ android_test {
     static_libs: [
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt",
-        "truth-prebuilt",
+        "truth",
         "adservices-clients",
         "adservices-test-utility",
     ],

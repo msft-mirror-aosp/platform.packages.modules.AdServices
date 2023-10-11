@@ -2860,7 +2860,8 @@ public interface Flags {
     }
 
     /** Ui OTA strings manifest file url, used for MDD download. */
-    String UI_OTA_STRINGS_MANIFEST_FILE_URL = "";
+    String UI_OTA_STRINGS_MANIFEST_FILE_URL =
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-ui-ota-strings/1341/95580b00edbd8cbf62bfa0df9ebd79fba1e5b7ca";
 
     /** UI OTA strings manifest file url. */
     default String getUiOtaStringsManifestFileUrl() {

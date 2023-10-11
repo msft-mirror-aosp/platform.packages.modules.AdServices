@@ -100,10 +100,10 @@
                 android:protectionLevel="signature|configurator"/>
 
     <!-- Permission to allow calling updating AdId Cache API via Common Service. -->
-    <permission android:name="android.permission.UPDATE_AD_ID_CACHE_COMPAT"
-                android:label="@string/permlab_accessUpdateAdIdCache"
-                android:description="@string/permdesc_accessUpdateAdIdCache"
-                android:protectionLevel="signature"/>
+    <permission android:name="android.permission.UPDATE_PRIVILEGED_AD_ID_COMPAT"
+                android:label="@string/permlab_updateAdservicesAdId"
+                android:description="@string/permdesc_updateAdservicesAdId"
+                android:protectionLevel="signature|configurator"/>
 
     <uses-permission android:name="android.permission.ACCESS_PRIVILEGED_AD_ID_COMPAT"/>
     <uses-permission android:name="android.permission.ACCESS_PRIVILEGED_APP_SET_ID_COMPAT"/>
