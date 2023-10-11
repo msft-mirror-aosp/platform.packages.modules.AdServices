@@ -3733,6 +3733,61 @@ public interface Flags {
         return DEFAULT_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS;
     }
 
+    /** Privacy Params */
+    int MEASUREMENT_MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION = 3;
+
+    /** Max distinct web destinations in a source registration. */
+    default int getMeasurementMaxDistinctWebDestinationsInSourceRegistration() {
+        return MEASUREMENT_MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION;
+    }
+
+    long MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS =
+            TimeUnit.DAYS.toSeconds(30);
+
+    /**
+     * Max expiration value in seconds for attribution reporting register source. This value is also
+     * the default if no expiration was specified.
+     */
+    default long getMeasurementMaxReportingRegisterSourceExpirationInSeconds() {
+        return MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+    }
+
+    long MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS =
+            TimeUnit.DAYS.toSeconds(1);
+
+    /** Min expiration value in seconds for attribution reporting register source. */
+    default long getMeasurementMinReportingRegisterSourceExpirationInSeconds() {
+        return MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+    }
+
+    long MEASUREMENT_MAX_INSTALL_ATTRIBUTION_WINDOW = TimeUnit.DAYS.toSeconds(30);
+
+    /** Maximum limit of duration to determine attribution for a verified installation. */
+    default long getMeasurementMaxInstallAttributionWindow() {
+        return MEASUREMENT_MAX_INSTALL_ATTRIBUTION_WINDOW;
+    }
+
+    long MEASUREMENT_MIN_INSTALL_ATTRIBUTION_WINDOW = TimeUnit.DAYS.toSeconds(1);
+
+    /** Minimum limit of duration to determine attribution for a verified installation. */
+    default long getMeasurementMinInstallAttributionWindow() {
+        return MEASUREMENT_MIN_INSTALL_ATTRIBUTION_WINDOW;
+    }
+
+    long MEASUREMENT_MAX_POST_INSTALL_EXCLUSIVITY_WINDOW = TimeUnit.DAYS.toSeconds(30);
+
+    /** Maximum acceptable install cooldown period. */
+    default long getMeasurementMaxPostInstallExclusivityWindow() {
+        return MEASUREMENT_MAX_POST_INSTALL_EXCLUSIVITY_WINDOW;
+    }
+
+    long MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW = 0L;
+
+    /** Default and minimum value for cooldown period of source which led to installation. */
+    default long getMeasurementMinPostInstallExclusivityWindow() {
+        return MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW;
+    }
+
     /** Default value of flag for logging consent migration metrics when OTA from S to T+. */
     boolean DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED = true;
 
