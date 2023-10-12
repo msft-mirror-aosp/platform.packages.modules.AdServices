@@ -20,6 +20,12 @@ import static com.android.adservices.service.FlagsConstants.NAMESPACE_ADSERVICES
 
 import com.android.adservices.common.DeviceConfigHelper.SyncDisabledModeForTest;
 import com.android.adservices.common.Logger.RealLogger;
+import com.android.adservices.common.annotations.SetFlagDisabled;
+import com.android.adservices.common.annotations.SetFlagEnabled;
+import com.android.adservices.common.annotations.SetFlagsDisabled;
+import com.android.adservices.common.annotations.SetFlagsEnabled;
+import com.android.adservices.common.annotations.SetIntegerFlag;
+import com.android.adservices.common.annotations.SetIntegerFlags;
 import com.android.adservices.service.FlagsConstants;
 
 import com.google.errorprone.annotations.FormatMethod;
@@ -32,6 +38,7 @@ import org.junit.runners.model.Statement;
 
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -110,6 +117,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
             public void evaluate() throws Throwable {
                 mDeviceConfig.setSyncDisabledMode(SyncDisabledModeForTest.PERSISTENT);
                 setInitialSystemProperties(testName);
+                setAnnotatedFlags(description);
                 setInitialFlags(testName);
                 runInitialCommands(testName);
                 List<Throwable> cleanUpErrors = new ArrayList<>();
@@ -538,6 +546,28 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         }
     }
 
+    // Set the annotated flags with the specified value for a particular test method.
+    protected void setAnnotatedFlags(Description description) {
+        for (Annotation annotation : description.getAnnotations()) {
+            if (annotation instanceof SetFlagEnabled) {
+                setAnnotatedFlag((SetFlagEnabled) annotation);
+            } else if (annotation instanceof SetFlagsEnabled) {
+                setAnnotatedFlag((SetFlagsEnabled) annotation);
+            } else if (annotation instanceof SetFlagDisabled) {
+                setAnnotatedFlag((SetFlagDisabled) annotation);
+            } else if (annotation instanceof SetFlagsDisabled) {
+                setAnnotatedFlag((SetFlagsDisabled) annotation);
+            } else if (annotation instanceof SetIntegerFlag) {
+                setAnnotatedFlag((SetIntegerFlag) annotation);
+            } else if (annotation instanceof SetIntegerFlags) {
+                setAnnotatedFlag((SetIntegerFlags) annotation);
+            }
+            // TODO(b/300146214): Add below annotations for String, double values for the flag in
+            // the follow-up cl.
+        }
+        // TODO(b/300146214) Add code to scan class / superclasses flag annotations.
+    }
+
     // TODO(b/294423183): make private once not used by subclass for legacy methods
     protected void setInitialFlags(String testName) {
         if (mInitialFlags == null) {
@@ -689,6 +719,42 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         } catch (Throwable e) {
             mLog.e(e, "runSafely() failed");
             errors.add(e);
+        }
+    }
+
+    // Single SetFlagEnabled annotations present
+    private void setAnnotatedFlag(SetFlagEnabled annotation) {
+        setFlag(annotation.name(), true);
+    }
+
+    // Multiple SetFlagEnabled annotations present
+    private void setAnnotatedFlag(SetFlagsEnabled repeatedAnnotation) {
+        for (SetFlagEnabled annotation : repeatedAnnotation.value()) {
+            setAnnotatedFlag(annotation);
+        }
+    }
+
+    // Single SetFlagDisabled annotations present
+    private void setAnnotatedFlag(SetFlagDisabled annotation) {
+        setFlag(annotation.name(), false);
+    }
+
+    // Multiple SetFlagDisabled annotations present
+    private void setAnnotatedFlag(SetFlagsDisabled repeatedAnnotation) {
+        for (SetFlagDisabled annotation : repeatedAnnotation.value()) {
+            setAnnotatedFlag(annotation);
+        }
+    }
+
+    // Single SetIntegerFlag annotations present
+    private void setAnnotatedFlag(SetIntegerFlag annotation) {
+        setFlag(annotation.name(), annotation.value());
+    }
+
+    // Multiple SetIntegerFlags annotations present
+    private void setAnnotatedFlag(SetIntegerFlags repeatedAnnotation) {
+        for (SetIntegerFlag annotation : repeatedAnnotation.value()) {
+            setAnnotatedFlag(annotation);
         }
     }
 
