@@ -22,6 +22,7 @@ import android.net.Uri;
 
 import androidx.annotation.NonNull;
 
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.signals.DBEncoderEndpoint;
 import com.android.adservices.data.signals.EncoderEndpointsDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
@@ -38,6 +39,8 @@ import java.util.Objects;
 
 /** Takes appropriate action be it update or download encoder based on {@link UpdateEncoderEvent} */
 public class UpdateEncoderEventHandler {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+
     @NonNull private final EncoderEndpointsDao mEncoderEndpointsDao;
     @NonNull private final EncoderLogicHandler mEncoderLogicHandler;
     private List<Observer> mUpdatesObserver;
@@ -97,9 +100,20 @@ public class UpdateEncoderEventHandler {
 
                 if (previousRegisteredEncoder == null) {
                     // We immediately download and update if no previous encoder existed
+                    sLogger.v(
+                            String.format(
+                                    "No previous encoder found for buyer: %s,"
+                                            + "initiating download and update",
+                                    buyer));
                     FluentFuture<Boolean> downloadAndUpdate =
                             mEncoderLogicHandler.downloadAndUpdate(buyer, devContext);
                     notifyObservers(buyer, event.getUpdateType().toString(), downloadAndUpdate);
+                } else {
+                    sLogger.v(
+                            String.format(
+                                    "Encoder already downloaded for buyer: %s,"
+                                            + "skipping download and update",
+                                    buyer));
                 }
                 break;
             default:
