@@ -17,9 +17,8 @@ package {
 }
 
 android_test_helper_app {
-    name: "SampleServiceApp",
+    name: "SampleApp",
     defaults: ["platform_app_defaults"],
-    srcs: ["src/**/*.java"],
     manifest: "AndroidManifest.xml",
     sdk_version: "current",
     compile_dex: true,

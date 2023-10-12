@@ -40,12 +40,12 @@ import android.adservices.common.CallerMetadata;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Binder;
-import android.os.IBinder;
 import android.os.Process;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.IntFailureSyncCallback;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
@@ -58,7 +58,6 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,11 +67,9 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 /** Unit test for {@link com.android.adservices.service.appsetid.AppSetIdServiceImpl}. */
 public class AppSetIdServiceImplTest {
@@ -82,9 +79,6 @@ public class AppSetIdServiceImplTest {
     private static final String SOME_SDK_NAME = "SomeSdkName";
     private static final int BINDER_CONNECTION_TIMEOUT_MS = 5_000;
     private static final String SDK_PACKAGE_NAME = "test_package_name";
-    private static final String ALLOWED_SDK_ID = "1234567";
-    // This is not allowed per the ad_services_config.xml manifest config.
-    private static final String DISALLOWED_SDK_ID = "123";
     private static final String APPSETID_API_ALLOW_LIST =
             "com.android.adservices.servicecoreappsetidtest";
     private static final int SANDBOX_UID = 25000;
@@ -93,7 +87,6 @@ public class AppSetIdServiceImplTest {
     private final AdServicesLogger mAdServicesLogger =
             Mockito.spy(AdServicesLoggerImpl.getInstance());
 
-    private CountDownLatch mGetAppSetIdCallbackLatch;
     private CallerMetadata mCallerMetadata;
     private AppSetIdWorker mAppSetIdWorker;
     private GetAppSetIdParam mRequest;
@@ -103,7 +96,6 @@ public class AppSetIdServiceImplTest {
     @Mock private Flags mMockFlags;
     @Mock private Clock mClock;
     @Mock private Context mMockSdkContext;
-    @Mock private Context mMockAppContext;
     @Mock private Throttler mMockThrottler;
     @Mock private AppSetIdServiceImpl mAppSetIdServiceImpl;
     @Mock private AppImportanceFilter mMockAppImportanceFilter;
@@ -243,8 +235,6 @@ public class AppSetIdServiceImplTest {
     public void testGetAppSetId_enforceCallingPackage_invalidPackage() throws InterruptedException {
         when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
 
-        AppSetIdServiceImpl appSetIdService = createTestAppSetIdServiceImplInstance();
-
         // A request with an invalid package name.
         mRequest =
                 new GetAppSetIdParam.Builder()
@@ -268,19 +258,18 @@ public class AppSetIdServiceImplTest {
             GetAppSetIdParam request,
             boolean checkLoggingStatus)
             throws InterruptedException {
-        CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
+        SyncIGetAppSetIdCallback callback =
+                new SyncIGetAppSetIdCallback(BINDER_CONNECTION_TIMEOUT_MS);
 
         CountDownLatch logOperationCalledLatch = new CountDownLatch(1);
         Mockito.doAnswer(
-                        new Answer<Object>() {
-                            @Override
-                            public Object answer(InvocationOnMock invocation) throws Throwable {
-                                // The method logAPiCallStats is called.
-                                invocation.callRealMethod();
-                                logOperationCalledLatch.countDown();
-                                return null;
-                            }
-                        })
+                        (Answer<Object>)
+                                invocation -> {
+                                    // The method logAPiCallStats is called.
+                                    invocation.callRealMethod();
+                                    logOperationCalledLatch.countDown();
+                                    return null;
+                                })
                 .when(mAdServicesLogger)
                 .logApiCallStats(ArgumentMatchers.any(ApiCallStats.class));
 
@@ -293,28 +282,8 @@ public class AppSetIdServiceImplTest {
                         mMockFlags,
                         mMockThrottler,
                         mMockAppImportanceFilter);
-        mAppSetIdServiceImpl.getAppSetId(
-                request,
-                mCallerMetadata,
-                new IGetAppSetIdCallback() {
-                    @Override
-                    public void onResult(GetAppSetIdResult responseParcel) {
-                        Assert.fail();
-                        jobFinishedCountDown.countDown();
-                    }
-
-                    @Override
-                    public void onError(int resultCode) {
-                        assertThat(resultCode).isEqualTo(expectedResultCode);
-                        jobFinishedCountDown.countDown();
-                    }
-
-                    @Override
-                    public IBinder asBinder() {
-                        return null;
-                    }
-                });
-        jobFinishedCountDown.await();
+        mAppSetIdServiceImpl.getAppSetId(request, mCallerMetadata, callback);
+        callback.assertFailed(expectedResultCode);
 
         if (checkLoggingStatus) {
             // getAppSetId method finished executing.
@@ -344,45 +313,22 @@ public class AppSetIdServiceImplTest {
                         .setAppSetIdScope(0)
                         .build();
 
-        final GetAppSetIdResult[] capturedResponseParcel = getAppSetIdResults(appSetIdServiceImpl);
+        GetAppSetIdResult getAppSetIdResult = getAppSetIdResults(appSetIdServiceImpl);
 
-        assertThat(
-                        mGetAppSetIdCallbackLatch.await(
-                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-                .isTrue();
-
-        GetAppSetIdResult getAppSetIdResult = capturedResponseParcel[0];
         assertThat(getAppSetIdResult.getAppSetId())
                 .isEqualTo(expectedGetAppSetIdResult.getAppSetId());
     }
 
     @NonNull
-    private GetAppSetIdResult[] getAppSetIdResults(AppSetIdServiceImpl appSetIdServiceImpl) {
+    private GetAppSetIdResult getAppSetIdResults(AppSetIdServiceImpl appSetIdServiceImpl)
+            throws Exception {
         // To capture result in inner class, we have to declare final.
-        final GetAppSetIdResult[] capturedResponseParcel = new GetAppSetIdResult[1];
-        mGetAppSetIdCallbackLatch = new CountDownLatch(1);
-        appSetIdServiceImpl.getAppSetId(
-                mRequest,
-                mCallerMetadata,
-                new IGetAppSetIdCallback() {
-                    @Override
-                    public void onResult(GetAppSetIdResult responseParcel) {
-                        capturedResponseParcel[0] = responseParcel;
-                        mGetAppSetIdCallbackLatch.countDown();
-                    }
+        SyncIGetAppSetIdCallback callback =
+                new SyncIGetAppSetIdCallback(BINDER_CONNECTION_TIMEOUT_MS);
 
-                    @Override
-                    public void onError(int resultCode) {
-                        Assert.fail();
-                    }
+        appSetIdServiceImpl.getAppSetId(mRequest, mCallerMetadata, callback);
 
-                    @Override
-                    public IBinder asBinder() {
-                        return null;
-                    }
-                });
-
-        return capturedResponseParcel;
+        return callback.assertSuccess();
     }
 
     @NonNull
@@ -407,5 +353,18 @@ public class AppSetIdServiceImplTest {
                 mMockFlags,
                 mMockThrottler,
                 mMockAppImportanceFilter);
+    }
+
+    private static final class SyncIGetAppSetIdCallback
+            extends IntFailureSyncCallback<GetAppSetIdResult> implements IGetAppSetIdCallback {
+
+        private SyncIGetAppSetIdCallback(int timeout) {
+            super(timeout);
+        }
+
+        @Override
+        public void onError(int resultCode) {
+            onFailure(resultCode);
+        }
     }
 }
