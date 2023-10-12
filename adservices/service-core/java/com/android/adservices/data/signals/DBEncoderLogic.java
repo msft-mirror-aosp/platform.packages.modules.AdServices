@@ -36,7 +36,7 @@ import java.time.Instant;
 @Entity(tableName = DBEncoderLogic.TABLE_NAME, inheritSuperIndices = true)
 public abstract class DBEncoderLogic {
 
-    public static final String TABLE_NAME = "encoder_logics"; // NOTYPO
+    public static final String TABLE_NAME = "encoder_logic";
 
     /** The ad-tech buyer who owns the logic */
     @AutoValue.CopyAnnotations
