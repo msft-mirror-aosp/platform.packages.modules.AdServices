@@ -91,7 +91,6 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     // TODO(b/294423183): make private once not used by subclass for legacy methods
     protected final DeviceConfigHelper mDeviceConfig;
     protected final SystemPropertiesHelper mSystemProperties;
-
     protected final Logger mLog;
 
     // Cache methods that were called before the test started, so the rule can be
@@ -101,6 +100,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     private final SyncDisabledModeForTest mPreviousSyncDisabledModeForTest;
 
     private boolean mIsRunning;
+    private boolean mFlagsClearedBeforeTest;
 
     protected AbstractAdServicesFlagsSetterRule(
             RealLogger logger,
@@ -141,15 +141,31 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
                 List<Throwable> cleanUpErrors = new ArrayList<>();
                 Throwable testError = null;
                 StringBuilder dump = new StringBuilder("*** Flags before:\n");
-                dumpFlagsSafely(dump).append("\n\n*** SystemProperties before:\n");
+                if (mFlagsClearedBeforeTest) {
+                    dump.append("\tTest explicitly cleared all flags\n");
+                } else {
+                    dumpFlagsSafely(dump);
+                }
+                dump.append("\n\n*** SystemProperties before:\n");
                 dumpSystemPropertiesSafely(dump);
                 try {
                     base.evaluate();
                 } catch (Throwable t) {
                     testError = t;
                 } finally {
+                    mIsRunning = false;
                     dump.append("\n*** Flags after:\n");
-                    dumpFlagsSafely(dump).append("\n\n***SystemProperties after:\n");
+                    if (mFlagsClearedBeforeTest) {
+                        runSafely(
+                                cleanUpErrors,
+                                () -> {
+                                    clearFlags();
+                                    dump.append("\tTest explicitly cleared all flags\n");
+                                });
+                    } else {
+                        dumpFlagsSafely(dump);
+                    }
+                    dump.append("\n\n***SystemProperties after:\n");
                     dumpSystemPropertiesSafely(dump);
                     runSafely(cleanUpErrors, () -> resetFlags(testName));
                     runSafely(cleanUpErrors, () -> resetSystemProperties(testName));
@@ -237,6 +253,22 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
             dump.append("Failed to dump SystemProperties: ").append(t);
         }
         return dump;
+    }
+
+    /** Clear all flags from the {@code AdServices} namespace */
+    public T clearFlags() {
+        return runOrCache(
+                "clerFlags()",
+                () -> {
+                    mLog.i("Clearing all flags. mIsRunning=%b", mIsRunning);
+                    mDeviceConfig.clearFlags();
+                    // TODO(b/294423183): ideally we should save the flags and restore - possibly
+                    // using
+                    // DeviceConfig properties - but for now let's just clear it.
+                    if (!mIsRunning) {
+                        mFlagsClearedBeforeTest = true;
+                    }
+                });
     }
 
     /** Sets the flag with the given value. */
