@@ -115,6 +115,10 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         mDeviceConfig =
                 new DeviceConfigHelper(deviceConfigInterfaceFactory, NAMESPACE_ADSERVICES, logger);
         mSystemProperties = new SystemPropertiesHelper(systemPropertiesInterface, logger);
+
+        mLog.v(
+                "Constructor: mDeviceConfig=%s, mSystemProperties=%s",
+                mDeviceConfig, mSystemProperties);
     }
 
     @Override
@@ -123,6 +127,17 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
+                // TODO(b/294423183): ideally the current mode should be returned by
+                // setSyncDisabledMode(),
+                // but unfortunately getting the current mode is not straightforward due to
+                // different
+                // behaviors:
+                // - T+ provides get_sync_disabled_for_tests
+                // - S provides is_sync_disabled_for_tests
+                // - R doesn't provide anything
+                SyncDisabledModeForTest previousSyncDisabledModeForTest =
+                        SyncDisabledModeForTest.NONE;
+
                 mDeviceConfig.setSyncDisabledMode(SyncDisabledModeForTest.PERSISTENT);
                 setInitialSystemProperties(testName);
                 setAnnotatedFlags(description);
@@ -145,7 +160,9 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
                     runSafely(cleanUpErrors, () -> resetSystemProperties(testName));
                     runSafely(
                             cleanUpErrors,
-                            () -> mDeviceConfig.setSyncDisabledMode(SyncDisabledModeForTest.NONE));
+                            () ->
+                                    mDeviceConfig.setSyncDisabledMode(
+                                            previousSyncDisabledModeForTest));
                 }
                 // TODO(b/294423183): ideally it should throw an exception if cleanUpErrors is not
                 // empty, but it's better to wait until this class is unit tested to do so (for now,
