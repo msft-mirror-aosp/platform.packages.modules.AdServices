@@ -27,8 +27,10 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import android.app.adservices.AdServicesManager;
+import android.content.Context;
 
 import androidx.appsearch.app.AppSearchSession;
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -51,6 +53,9 @@ public class AppSearchMeasurementRollbackDaoTest {
     private static final long APEX_VERSION = 100L;
 
     private final Executor mExecutor = AdServicesExecutors.getBackgroundExecutor();
+    private final Context mContext = ApplicationProvider.getApplicationContext();
+    private final String mAdServicePackageName =
+            AppSearchConsentWorker.getAdServicesPackageName(mContext);
     @Mock private ListenableFuture<AppSearchSession> mAppSearchSession;
 
     @Test
@@ -134,20 +139,22 @@ public class AppSearchMeasurementRollbackDaoTest {
         try {
             assertThrows(
                     NullPointerException.class,
-                    () -> AppSearchMeasurementRollbackDao.readDocument(null, mExecutor, USER1));
+                    () ->
+                            AppSearchMeasurementRollbackDao.readDocument(
+                                    null, mExecutor, USER1, mAdServicePackageName));
             assertThrows(
                     NullPointerException.class,
                     () ->
                             AppSearchMeasurementRollbackDao.readDocument(
-                                    mAppSearchSession, null, USER1));
+                                    mAppSearchSession, null, USER1, mAdServicePackageName));
             assertThrows(
                     NullPointerException.class,
                     () ->
                             AppSearchMeasurementRollbackDao.readDocument(
-                                    mAppSearchSession, mExecutor, null));
+                                    mAppSearchSession, mExecutor, null, mAdServicePackageName));
             assertThat(
                             AppSearchMeasurementRollbackDao.readDocument(
-                                    mAppSearchSession, mExecutor, ""))
+                                    mAppSearchSession, mExecutor, "", mAdServicePackageName))
                     .isNull();
         } finally {
             mockitoSession.finishMocking();
@@ -168,11 +175,11 @@ public class AppSearchMeasurementRollbackDaoTest {
                     .when(
                             () ->
                                     AppSearchDao.readAppSearchSessionData(
-                                            any(), any(), any(), any(), any()));
+                                            any(), any(), any(), any(), any(), any()));
 
             AppSearchMeasurementRollbackDao returned =
                     AppSearchMeasurementRollbackDao.readDocument(
-                            mAppSearchSession, mExecutor, USER1);
+                            mAppSearchSession, mExecutor, USER1, mAdServicePackageName);
             assertThat(returned).isEqualTo(mockDao);
             verify(
                     () ->
@@ -181,7 +188,8 @@ public class AppSearchMeasurementRollbackDaoTest {
                                     eq(mAppSearchSession),
                                     eq(mExecutor),
                                     eq(AppSearchMeasurementRollbackDao.NAMESPACE),
-                                    eq(AppSearchMeasurementRollbackDao.getQuery(USER1))));
+                                    eq(AppSearchMeasurementRollbackDao.getQuery(USER1)),
+                                    eq(mAdServicePackageName)));
         } finally {
             mockitoSession.finishMocking();
         }
