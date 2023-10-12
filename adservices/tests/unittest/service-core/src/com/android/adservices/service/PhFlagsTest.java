@@ -24,6 +24,7 @@ import static com.android.adservices.service.Flags.ADSERVICES_ENABLED;
 import static com.android.adservices.service.Flags.ADSERVICES_ERROR_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.ADSERVICES_RELEASE_STAGE_FOR_COBALT;
 import static com.android.adservices.service.Flags.APPSEARCH_ONLY;
+import static com.android.adservices.service.Flags.APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE;
 import static com.android.adservices.service.Flags.APPSETID_KILL_SWITCH;
 import static com.android.adservices.service.Flags.APPSETID_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS;
@@ -404,6 +405,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABL
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ERROR_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_RELEASE_STAGE_FOR_COBALT;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_CACHE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSETID_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSETID_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS;
@@ -5864,6 +5866,24 @@ public class PhFlagsTest {
                 /* makeDefault */ false);
 
         assertThat(mPhFlags.getPpapiAppSignatureAllowList()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetAppsearchWriterAllowListOverride() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getAppsearchWriterAllowListOverride())
+                .isEqualTo(APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE);
+
+        // Now overriding with the value from PH.
+        String phOverridingValue =
+                APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE + "SomePackageName,AnotherPackageName";
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE,
+                phOverridingValue,
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getAppsearchWriterAllowListOverride()).isEqualTo(phOverridingValue);
     }
 
     @Test

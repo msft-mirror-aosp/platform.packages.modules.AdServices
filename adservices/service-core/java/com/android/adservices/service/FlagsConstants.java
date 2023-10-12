@@ -762,6 +762,9 @@ public final class FlagsConstants {
     public static final String KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST =
             "ppapi_app_signature_allow_list";
 
+    public static final String KEY_APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE =
+            "appsearch_writer_allow_list_override";
+
     // AdServices APK sha certs.
     public static final String KEY_ADSERVICES_APK_SHA_CERTS = "adservices_apk_sha_certs";
 
