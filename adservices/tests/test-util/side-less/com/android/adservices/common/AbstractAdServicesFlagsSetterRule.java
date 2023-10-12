@@ -20,12 +20,20 @@ import static com.android.adservices.service.FlagsConstants.NAMESPACE_ADSERVICES
 
 import com.android.adservices.common.DeviceConfigHelper.SyncDisabledModeForTest;
 import com.android.adservices.common.Logger.RealLogger;
+import com.android.adservices.common.annotations.SetDoubleFlag;
+import com.android.adservices.common.annotations.SetDoubleFlags;
 import com.android.adservices.common.annotations.SetFlagDisabled;
 import com.android.adservices.common.annotations.SetFlagEnabled;
 import com.android.adservices.common.annotations.SetFlagsDisabled;
 import com.android.adservices.common.annotations.SetFlagsEnabled;
+import com.android.adservices.common.annotations.SetFloatFlag;
+import com.android.adservices.common.annotations.SetFloatFlags;
 import com.android.adservices.common.annotations.SetIntegerFlag;
 import com.android.adservices.common.annotations.SetIntegerFlags;
+import com.android.adservices.common.annotations.SetLongFlag;
+import com.android.adservices.common.annotations.SetLongFlags;
+import com.android.adservices.common.annotations.SetStringFlag;
+import com.android.adservices.common.annotations.SetStringFlags;
 import com.android.adservices.service.FlagsConstants;
 
 import com.google.errorprone.annotations.FormatMethod;
@@ -561,9 +569,23 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
                 setAnnotatedFlag((SetIntegerFlag) annotation);
             } else if (annotation instanceof SetIntegerFlags) {
                 setAnnotatedFlag((SetIntegerFlags) annotation);
+            } else if (annotation instanceof SetLongFlag) {
+                setAnnotatedFlag((SetLongFlag) annotation);
+            } else if (annotation instanceof SetLongFlags) {
+                setAnnotatedFlag((SetLongFlags) annotation);
+            } else if (annotation instanceof SetFloatFlag) {
+                setAnnotatedFlag((SetFloatFlag) annotation);
+            } else if (annotation instanceof SetFloatFlags) {
+                setAnnotatedFlag((SetFloatFlags) annotation);
+            } else if (annotation instanceof SetDoubleFlag) {
+                setAnnotatedFlag((SetDoubleFlag) annotation);
+            } else if (annotation instanceof SetDoubleFlags) {
+                setAnnotatedFlag((SetDoubleFlags) annotation);
+            } else if (annotation instanceof SetStringFlag) {
+                setAnnotatedFlag((SetStringFlag) annotation);
+            } else if (annotation instanceof SetStringFlags) {
+                setAnnotatedFlag((SetStringFlags) annotation);
             }
-            // TODO(b/300146214): Add below annotations for String, double values for the flag in
-            // the follow-up cl.
         }
         // TODO(b/300146214) Add code to scan class / superclasses flag annotations.
     }
@@ -751,9 +773,57 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         setFlag(annotation.name(), annotation.value());
     }
 
-    // Multiple SetIntegerFlags annotations present
+    // Multiple SetIntegerFlag annotations present
     private void setAnnotatedFlag(SetIntegerFlags repeatedAnnotation) {
         for (SetIntegerFlag annotation : repeatedAnnotation.value()) {
+            setAnnotatedFlag(annotation);
+        }
+    }
+
+    // Single SetLongFlag annotations present
+    private void setAnnotatedFlag(SetLongFlag annotation) {
+        setFlag(annotation.name(), annotation.value());
+    }
+
+    // Multiple SetLongFlag annotations present
+    private void setAnnotatedFlag(SetLongFlags repeatedAnnotation) {
+        for (SetLongFlag annotation : repeatedAnnotation.value()) {
+            setAnnotatedFlag(annotation);
+        }
+    }
+
+    // Single SetLongFlag annotations present
+    private void setAnnotatedFlag(SetFloatFlag annotation) {
+        setFlag(annotation.name(), annotation.value());
+    }
+
+    // Multiple SetLongFlag annotations present
+    private void setAnnotatedFlag(SetFloatFlags repeatedAnnotation) {
+        for (SetFloatFlag annotation : repeatedAnnotation.value()) {
+            setAnnotatedFlag(annotation);
+        }
+    }
+
+    // Single SetDoubleFlag annotations present
+    private void setAnnotatedFlag(SetDoubleFlag annotation) {
+        setFlag(annotation.name(), annotation.value());
+    }
+
+    // Multiple SetDoubleFlag annotations present
+    private void setAnnotatedFlag(SetDoubleFlags repeatedAnnotation) {
+        for (SetDoubleFlag annotation : repeatedAnnotation.value()) {
+            setAnnotatedFlag(annotation);
+        }
+    }
+
+    // Single SetStringFlag annotations present
+    private void setAnnotatedFlag(SetStringFlag annotation) {
+        setFlag(annotation.name(), annotation.value());
+    }
+
+    // Multiple SetStringFlag annotations present
+    private void setAnnotatedFlag(SetStringFlags repeatedAnnotation) {
+        for (SetStringFlag annotation : repeatedAnnotation.value()) {
             setAnnotatedFlag(annotation);
         }
     }
