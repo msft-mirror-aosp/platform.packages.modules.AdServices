@@ -387,7 +387,7 @@ public final class SdkSandboxManager {
     }
 
     /**
-     * Unregisters {@link AppOwnedSdkSandboxInterfaces} for an app process.
+     * Unregisters {@link AppOwnedSdkSandboxInterface}s for an app process.
      *
      * @param name the name under which AppOwnedSdkSandboxInterface was registered.
      */
