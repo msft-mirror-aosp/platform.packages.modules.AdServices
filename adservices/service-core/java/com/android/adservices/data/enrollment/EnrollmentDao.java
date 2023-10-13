@@ -159,7 +159,8 @@ public class EnrollmentDao implements IEnrollmentDao {
         LogUtil.v("Enrollment database seeding complete");
     }
 
-    private void unSeed() {
+    @VisibleForTesting
+    void unSeed() {
         LogUtil.v("Clearing enrollment database seed status");
 
         SharedPreferences prefs =
