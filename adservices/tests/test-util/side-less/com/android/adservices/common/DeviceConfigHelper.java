@@ -115,17 +115,11 @@ final class DeviceConfigHelper {
     }
 
     private void setOnly(String name, String value) {
-        if (!mInterface.set(name, value)) {
-            // TODO(b/294423183): throw exception instead, to make it clear why it failed
-            mLog.e("Fail to set %s=%s", name, value);
-        }
+        mInterface.syncSet(name, value);
     }
 
     private void delete(String name) {
-        if (!mInterface.delete(name)) {
-            // TODO(b/294423183): throw exception instead, to make it clear why it failed
-            mLog.e("Fail to delete %s", name);
-        }
+        mInterface.syncDelete(name);
     }
 
     enum SyncDisabledModeForTest {
@@ -144,6 +138,9 @@ final class DeviceConfigHelper {
      */
     protected abstract static class Interface {
 
+        private static final int CHANGE_CHECK_TIMEOUT_MS = 5_000;
+        private static final int CHANGE_CHECK_SLEEP_TIME_MS = 500;
+
         protected final Logger mLog;
         protected final String mNamespace;
 
@@ -152,12 +149,13 @@ final class DeviceConfigHelper {
             mLog = new Logger(Objects.requireNonNull(logger), DeviceConfigHelper.class);
         }
 
-        void setSyncDisabledModeForTest(SyncDisabledModeForTest mode) {
+        public void setSyncDisabledModeForTest(SyncDisabledModeForTest mode) {
             String value = mode.name().toLowerCase();
             mLog.v("SyncDisabledModeForTest(%s)", value);
             runShellCommand("device_config set_sync_disabled_for_test %s", value);
         }
 
+        /** Gets the value of a property. */
         public String get(String name, String defaultValue) {
             mLog.d("get(%s, %s): using runShellCommand", name, defaultValue);
             String value = runShellCommand("device_config get %s %s", mNamespace, name).trim();
@@ -180,16 +178,103 @@ final class DeviceConfigHelper {
             return defaultValue;
         }
 
-        // TODO(b/294423183): throw exception instead, to make it clear why it failed
-        public boolean set(String name, @Nullable String value) {
-            mLog.d("set(%s, %s): using runShellCommand", name, value);
+        /**
+         * Sets the value of a property and blocks until the value is changed.
+         *
+         * @throws IllegalStateException if the value could not be updated.
+         */
+        public void syncSet(String name, @Nullable String value) {
+            if (value == null) {
+                syncDelete(name);
+                return;
+            }
+            // TODO(b/300136201): check current value first and return right away if it matches
+
+            // TODO(b/294423183): optimize code below (once it's unit tested), there's too much
+            // duplication.
+            String currentValue = get(name, /* defaultValue= */ null);
+            boolean changed = !value.equals(currentValue);
+            if (!changed) {
+                mLog.v("syncSet(%s, %s): already %s, ignoring", name, value, value);
+                return;
+                // TODO(b/294423183): change it to return a boolean instead so the value doesn't
+                // need to be restored. But there would be many corner cases (for example, what if
+                // asyncSet() fails? What if the value is the same because it was set by the rule
+                // before), so it's better to wait until we have unit tests for it.
+            }
+            long deadline = System.currentTimeMillis() + CHANGE_CHECK_TIMEOUT_MS;
+            do {
+                if (!asyncSet(name, value)) {
+                    mLog.w("syncSet(%s, %s): call to asyncSet() returned false", name, value);
+                    throw new IllegalStateException(
+                            "Low-level call to set " + name + "=" + value + " returned false");
+                }
+                currentValue = get(name, /* defaultValue= */ null);
+                changed = value.equals(currentValue);
+                if (changed) {
+                    mLog.v("change propagated, returning");
+                    return;
+                }
+                if (System.currentTimeMillis() > deadline) {
+                    mLog.e(
+                            "syncSet(%s, %s): value didn't change after %d ms",
+                            name, value, CHANGE_CHECK_TIMEOUT_MS);
+                    throw new IllegalStateException(
+                            "Low-level call to set "
+                                    + name
+                                    + "="
+                                    + value
+                                    + " succeeded, but value change was not propagated after "
+                                    + CHANGE_CHECK_TIMEOUT_MS
+                                    + "ms");
+                }
+                mLog.d(
+                        "syncSet(%s, %s): current value is still %s, sleeping %d ms",
+                        name, value, currentValue, CHANGE_CHECK_SLEEP_TIME_MS);
+                sleepBeforeCheckingAgain(name);
+            } while (true);
+        }
+
+        private void sleepBeforeCheckingAgain(String name) {
+            mLog.v(
+                    "Sleeping for %dms before checking value of %s again",
+                    CHANGE_CHECK_SLEEP_TIME_MS, name);
+            try {
+                Thread.sleep(CHANGE_CHECK_SLEEP_TIME_MS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        /**
+         * Sets the value of a property, without checking if it changed.
+         *
+         * @return whether the low-level {@code DeviceConfig} call succeeded.
+         */
+        public boolean asyncSet(String name, @Nullable String value) {
+            mLog.d("asyncSet(%s, %s): using runShellCommand", name, value);
             runShellCommand("device_config put %s %s %s", mNamespace, name, value);
             // TODO(b/294423183): parse result
             return true;
         }
 
-        public boolean delete(String name) {
-            mLog.d("delete(%s): using runShellCommand", name);
+        /**
+         * Deletes a property and blocks until the value is changed.
+         *
+         * @throws IllegalStateException if the value could not be updated.
+         */
+        public void syncDelete(String name) {
+            // TODO(b/294423183): add wait logic here too
+            asyncDelete(name);
+        }
+
+        /**
+         * Deletes a property, without checking if it changed.
+         *
+         * @return whether the low-level {@code DeviceConfig} call succeeded.
+         */
+        public boolean asyncDelete(String name) {
+            mLog.d("asyncDelete(%s): using runShellCommand", name);
             runShellCommand("device_config delete %s %s", mNamespace, name);
             // TODO(b/294423183): parse result
             return true;
