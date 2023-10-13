@@ -512,6 +512,8 @@ public final class FlagsConstants {
     public static final String KEY_FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS =
             "fledge_http_cache_default_max_age_seconds";
     public static final String KEY_FLEDGE_HTTP_CACHE_MAX_ENTRIES = "fledge_http_cache_max_entries";
+    public static final String KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES =
+            "fledge_on_device_auction_should_use_unified_tables";
 
     // FLEDGE Ad Counter Histogram keys
     public static final String KEY_FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT =
@@ -1006,6 +1008,29 @@ public final class FlagsConstants {
                     "fledge_measurement_report_and_register_event_api_fallback_enabled";
 
     public static final String KEY_ENABLE_LOGGED_TOPIC = "enable_logged_topic";
+
+    // Privacy Params
+    public static final String
+            KEY_MEASUREMENT_MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION =
+                    "measurement_max_distinct_web_destinations_in_source_registration";
+
+    public static final String KEY_MEASUREMENT_MAX_INSTALL_ATTRIBUTION_WINDOW =
+            "measurement_max_install_attribution_window";
+
+    public static final String KEY_MEASUREMENT_MIN_INSTALL_ATTRIBUTION_WINDOW =
+            "measurement_min_install_attribution_window";
+
+    public static final String KEY_MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS =
+            "measurement_max_reporting_register_source_expiration_in_seconds";
+
+    public static final String KEY_MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS =
+            "measurement_min_reporting_register_source_expiration_in_seconds";
+
+    public static final String KEY_MEASUREMENT_MAX_POST_INSTALL_EXCLUSIVITY_WINDOW =
+            "measurement_max_post_install_exclusivity_window";
+
+    public static final String KEY_MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW =
+            "measurement_min_post_install_exclusivity_window";
 
     // Database Schema Version Flags
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 =

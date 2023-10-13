@@ -42,6 +42,8 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Membolehkan aplikasi mengakses API keadaan pendayaan AdService."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Akses kepada API AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Membenarkan aplikasi mengakses API AdServicesManager."</string>
+    <string name="permlab_accessUpdateAdIdCache" msgid="6912755067998635886">"Akses kepada langkah kemas kini API cache AdId AdService."</string>
+    <string name="permdesc_accessUpdateAdIdCache" msgid="2907546830224186022">"Membenarkan aplikasi mengakses langkah kemas kini API cache AdId AdService."</string>
     <string name="app_label" msgid="5844694701336604490">"Privasi Iklan"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Sertai beta privasi iklan Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android sedang meneroka lebih banyak cara yang peribadi untuk apl memaparkan iklan kepada anda"</string>

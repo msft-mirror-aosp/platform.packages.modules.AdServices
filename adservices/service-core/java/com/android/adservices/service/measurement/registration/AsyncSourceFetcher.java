@@ -15,13 +15,6 @@
  */
 package com.android.adservices.service.measurement.registration;
 
-import static com.android.adservices.service.measurement.PrivacyParams.MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION;
-import static com.android.adservices.service.measurement.PrivacyParams.MAX_INSTALL_ATTRIBUTION_WINDOW;
-import static com.android.adservices.service.measurement.PrivacyParams.MAX_POST_INSTALL_EXCLUSIVITY_WINDOW;
-import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
-import static com.android.adservices.service.measurement.PrivacyParams.MIN_INSTALL_ATTRIBUTION_WINDOW;
-import static com.android.adservices.service.measurement.PrivacyParams.MIN_POST_INSTALL_EXCLUSIVITY_WINDOW;
-import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.measurement.ReportSpec.encodeTriggerSpecsToJson;
 import static com.android.adservices.service.measurement.Source.getOrDefaultEventReportWindows;
 import static com.android.adservices.service.measurement.TriggerSpec.getLongListFromJSON;
@@ -145,23 +138,23 @@ public class AsyncSourceFetcher {
                         extractValidNumberInRange(
                                 new UnsignedLong(json.getString(SourceHeaderContract.EXPIRY)),
                                 new UnsignedLong(
-                                        MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
+                                        mFlags.getMeasurementMinReportingRegisterSourceExpirationInSeconds()),
                                 new UnsignedLong(
-                                        MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS));
+                                        mFlags.getMeasurementMaxReportingRegisterSourceExpirationInSeconds()));
                 // Relies on expiryUnsigned not using the 64th bit.
                 expiry = expiryUnsigned.getValue();
             } else {
                 expiry =
                         extractValidNumberInRange(
                                 json.getLong(SourceHeaderContract.EXPIRY),
-                                MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+                                mFlags.getMeasurementMinReportingRegisterSourceExpirationInSeconds(),
+                                mFlags.getMeasurementMaxReportingRegisterSourceExpirationInSeconds());
             }
             if (asyncRegistration.getSourceType() == Source.SourceType.EVENT) {
                 expiry = roundSecondsToWholeDays(expiry);
             }
         } else {
-            expiry = MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+            expiry = mFlags.getMeasurementMaxReportingRegisterSourceExpirationInSeconds();
         }
         builder.setExpiryTime(sourceEventTime + TimeUnit.SECONDS.toMillis(expiry));
         if (!json.isNull(SourceHeaderContract.EVENT_REPORT_WINDOW)) {
@@ -174,7 +167,7 @@ public class AsyncSourceFetcher {
                                 new UnsignedLong(
                                         mFlags.getMeasurementMinimumEventReportWindowInSeconds()),
                                 new UnsignedLong(
-                                        MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS));
+                                        mFlags.getMeasurementMaxReportingRegisterSourceExpirationInSeconds()));
                 // Relies on eventReportWindowUnsigned not using the 64th bit.
                 eventReportWindow = Math.min(expiry, eventReportWindowUnsigned.getValue());
             } else {
@@ -184,7 +177,7 @@ public class AsyncSourceFetcher {
                                 extractValidNumberInRange(
                                         json.getLong(SourceHeaderContract.EVENT_REPORT_WINDOW),
                                         mFlags.getMeasurementMinimumEventReportWindowInSeconds(),
-                                        MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS));
+                                        mFlags.getMeasurementMaxReportingRegisterSourceExpirationInSeconds()));
             }
             builder.setEventReportWindow(TimeUnit.SECONDS.toMillis(eventReportWindow));
         }
@@ -194,23 +187,21 @@ public class AsyncSourceFetcher {
                 // Registration will be rejected if parsing unsigned long throws.
                 UnsignedLong aggregateReportWindowUnsigned =
                         extractValidNumberInRange(
-                                new UnsignedLong(json.getString(
-                                        SourceHeaderContract.AGGREGATABLE_REPORT_WINDOW)),
-                                new UnsignedLong(mFlags
-                                        .getMeasurementMinimumAggregatableReportWindowInSeconds()),
                                 new UnsignedLong(
-                                        MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS));
+                                        json.getString(
+                                                SourceHeaderContract.AGGREGATABLE_REPORT_WINDOW)),
+                                new UnsignedLong(
+                                        mFlags.getMeasurementMinimumAggregatableReportWindowInSeconds()),
+                                new UnsignedLong(
+                                        mFlags.getMeasurementMaxReportingRegisterSourceExpirationInSeconds()));
                 // Relies on aggregateReportWindowUnsigned not using the 64th bit.
                 aggregateReportWindow = Math.min(expiry, aggregateReportWindowUnsigned.getValue());
             } else {
-                aggregateReportWindow =
-                        Math.min(
-                                expiry,
-                                extractValidNumberInRange(
-                                        json.getLong(
-                                                SourceHeaderContract.AGGREGATABLE_REPORT_WINDOW),
-                                        MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
-                                        MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS));
+                aggregateReportWindow = Math.min(expiry, extractValidNumberInRange(
+                        json.getLong(
+                                SourceHeaderContract.AGGREGATABLE_REPORT_WINDOW),
+                                mFlags.getMeasurementMinReportingRegisterSourceExpirationInSeconds(),
+                                mFlags.getMeasurementMaxReportingRegisterSourceExpirationInSeconds()));
             }
         } else {
             aggregateReportWindow = expiry;
@@ -255,24 +246,25 @@ public class AsyncSourceFetcher {
             long installAttributionWindow =
                     extractValidNumberInRange(
                             json.getLong(SourceHeaderContract.INSTALL_ATTRIBUTION_WINDOW_KEY),
-                            MIN_INSTALL_ATTRIBUTION_WINDOW,
-                            MAX_INSTALL_ATTRIBUTION_WINDOW);
+                            mFlags.getMeasurementMinInstallAttributionWindow(),
+                            mFlags.getMeasurementMaxInstallAttributionWindow());
             builder.setInstallAttributionWindow(
                     TimeUnit.SECONDS.toMillis(installAttributionWindow));
         } else {
             builder.setInstallAttributionWindow(
-                    TimeUnit.SECONDS.toMillis(MAX_INSTALL_ATTRIBUTION_WINDOW));
+                    TimeUnit.SECONDS.toMillis(mFlags.getMeasurementMaxInstallAttributionWindow()));
         }
         if (!json.isNull(SourceHeaderContract.POST_INSTALL_EXCLUSIVITY_WINDOW_KEY)) {
             long installCooldownWindow =
                     extractValidNumberInRange(
                             json.getLong(SourceHeaderContract.POST_INSTALL_EXCLUSIVITY_WINDOW_KEY),
-                            MIN_POST_INSTALL_EXCLUSIVITY_WINDOW,
-                            MAX_POST_INSTALL_EXCLUSIVITY_WINDOW);
+                            mFlags.getMeasurementMinPostInstallExclusivityWindow(),
+                            mFlags.getMeasurementMaxPostInstallExclusivityWindow());
             builder.setInstallCooldownWindow(TimeUnit.SECONDS.toMillis(installCooldownWindow));
         } else {
             builder.setInstallCooldownWindow(
-                    TimeUnit.SECONDS.toMillis(MIN_POST_INSTALL_EXCLUSIVITY_WINDOW));
+                    TimeUnit.SECONDS.toMillis(
+                            mFlags.getMeasurementMinPostInstallExclusivityWindow()));
         }
         // This "filter_data" field is used to generate reports.
         if (!json.isNull(SourceHeaderContract.FILTER_DATA)) {
@@ -365,7 +357,8 @@ public class AsyncSourceFetcher {
             } else {
                 jsonDestinations = json.getJSONArray(SourceHeaderContract.WEB_DESTINATION);
             }
-            if (jsonDestinations.length() > MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION) {
+            if (jsonDestinations.length()
+                    > mFlags.getMeasurementMaxDistinctWebDestinationsInSourceRegistration()) {
                 LoggerFactory.getMeasurementLogger()
                         .d("Source registration exceeded the number of allowed destinations.");
                 return false;
