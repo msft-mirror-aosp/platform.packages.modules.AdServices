@@ -125,8 +125,7 @@ public final class AdServicesFlagsSetterRule
         String testName = helperClass.getSimpleName();
         // This object won't be used as a JUnit rule, so we need to explicitly
         // initialize it
-        rule.setInitialSystemProperties(testName);
-        rule.setInitialFlags(testName);
+        rule.runInitialCommands(testName);
         return rule;
     }
 
