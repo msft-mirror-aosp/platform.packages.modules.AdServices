@@ -1,10 +1,8 @@
 {
   "description": "A2W test for trigger-aggregate-storage-limit debug report",
-  "api_config": {
-    "max_aggregatable_reports_per_destination": "1"
-  },
   "phflags_override": {
-    "measurement_debug_join_key_enrollment_allowlist": "enrollment-id-ad-tech1.test"
+    "measurement_debug_join_key_enrollment_allowlist": "enrollment-id-ad-tech1.test",
+    "measurement_max_aggregate_reports_per_destination": "1"
   },
   "input": {
     "sources": [

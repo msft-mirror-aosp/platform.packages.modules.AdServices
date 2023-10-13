@@ -50,6 +50,10 @@ public class NotificationLandingPage {
     @Before
     public void setup() throws Exception {
         UiUtils.disableGlobalKillswitch();
+        UiUtils.setFlipFlow(false);
+        UiUtils.setAsEuDevice();
+        UiUtils.enableGa();
+        AdservicesTestHelper.killAdservicesProcess(sContext);
         // Initialize UiDevice instance
         sDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
         // Extra flags need to be set when test is executed on S- for service to run (e.g.

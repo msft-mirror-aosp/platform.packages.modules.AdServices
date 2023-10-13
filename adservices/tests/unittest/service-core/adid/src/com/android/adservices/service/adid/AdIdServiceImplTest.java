@@ -48,12 +48,12 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Binder;
-import android.os.IBinder;
 import android.os.Process;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.IntFailureSyncCallback;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -66,7 +66,6 @@ import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.Clock;
 import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
@@ -83,7 +82,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /** Unit test for {@link com.android.adservices.service.adid.AdIdServiceImpl}. */
-public class AdIdServiceImplTest {
+public final class AdIdServiceImplTest {
     @Rule
     public final AdServicesExtendedMockitoRule mExtendedMockitoRule =
             new AdServicesExtendedMockitoRule.Builder(this)
@@ -104,8 +103,6 @@ public class AdIdServiceImplTest {
 
     private final Context mSpyContext = spy(sContext);
     private final AdServicesLogger mSpyAdServicesLogger = spy(AdServicesLoggerImpl.getInstance());
-
-    private CountDownLatch mGetAdIdCallbackLatch;
     private CallerMetadata mCallerMetadata;
     private AdIdWorker mAdIdWorker;
     private GetAdIdParam mRequest;
@@ -278,34 +275,12 @@ public class AdIdServiceImplTest {
                         .setSdkPackageName(SOME_SDK_NAME)
                         .build();
 
-        mGetAdIdCallbackLatch = new CountDownLatch(1);
+        SyncIGetAdIdCallback callback = new SyncIGetAdIdCallback(BINDER_CONNECTION_TIMEOUT_MS);
         CountDownLatch logOperationCalledLatch = new CountDownLatch(1);
         mockLoggerEvent(logOperationCalledLatch);
 
-        adidService.getAdId(
-                mRequest,
-                mCallerMetadata,
-                new IGetAdIdCallback() {
-                    @Override
-                    public void onResult(GetAdIdResult responseParcel) {
-                        Assert.fail();
-                    }
-
-                    @Override
-                    public void onError(int resultCode) {
-                        assertThat(resultCode).isEqualTo(STATUS_CALLER_NOT_ALLOWED);
-                        mGetAdIdCallbackLatch.countDown();
-                    }
-
-                    @Override
-                    public IBinder asBinder() {
-                        return null;
-                    }
-                });
-
-        // This ensures that the callback was called.
-        assertThat(mGetAdIdCallbackLatch.await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-                .isTrue();
+        adidService.getAdId(mRequest, mCallerMetadata, callback);
+        callback.assertFailed(STATUS_CALLER_NOT_ALLOWED);
 
         // Verify the logger event has occurred.
         assertWithMessage("Logger event:")
@@ -325,8 +300,7 @@ public class AdIdServiceImplTest {
             GetAdIdParam request,
             boolean checkLoggingStatus)
             throws InterruptedException {
-        CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
-
+        SyncIGetAdIdCallback callback = new SyncIGetAdIdCallback(BINDER_CONNECTION_TIMEOUT_MS);
         CountDownLatch logOperationCalledLatch = new CountDownLatch(1);
         mockLoggerEvent(logOperationCalledLatch);
 
@@ -339,28 +313,8 @@ public class AdIdServiceImplTest {
                         mMockFlags,
                         mMockThrottler,
                         mMockAppImportanceFilter);
-        mAdIdServiceImpl.getAdId(
-                request,
-                mCallerMetadata,
-                new IGetAdIdCallback() {
-                    @Override
-                    public void onResult(GetAdIdResult responseParcel) {
-                        Assert.fail();
-                        jobFinishedCountDown.countDown();
-                    }
-
-                    @Override
-                    public void onError(int resultCode) {
-                        assertThat(resultCode).isEqualTo(expectedResultCode);
-                        jobFinishedCountDown.countDown();
-                    }
-
-                    @Override
-                    public IBinder asBinder() {
-                        return null;
-                    }
-                });
-        jobFinishedCountDown.await();
+        mAdIdServiceImpl.getAdId(request, mCallerMetadata, callback);
+        callback.assertFailed(expectedResultCode);
 
         if (checkLoggingStatus) {
             // Verify the logger event has occurred.
@@ -391,49 +345,24 @@ public class AdIdServiceImplTest {
         GetAdIdResult expectedGetAdIdResult =
                 new GetAdIdResult.Builder().setAdId(AdId.ZERO_OUT).setLatEnabled(false).build();
 
-        final GetAdIdResult[] capturedResponseParcel = getAdIdResults(adIdServiceImpl);
         CountDownLatch loggerCountDownLatch = new CountDownLatch(1);
         mockLoggerEvent(loggerCountDownLatch);
-
-        assertThat(mGetAdIdCallbackLatch.await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-                .isTrue();
+        final GetAdIdResult getAdIdResult = getAdIdResults(adIdServiceImpl);
+        assertThat(getAdIdResult.getAdId()).isEqualTo(expectedGetAdIdResult.getAdId());
 
         // Verify the logger event has occurred.
         assertWithMessage("Logger event:")
                 .that(loggerCountDownLatch.await(LOGGER_EVENT_TIMEOUT_MS, TimeUnit.MILLISECONDS))
                 .isTrue();
-
-        GetAdIdResult getAdIdResult = capturedResponseParcel[0];
-        assertThat(getAdIdResult.getAdId()).isEqualTo(expectedGetAdIdResult.getAdId());
     }
 
     @NonNull
-    private GetAdIdResult[] getAdIdResults(AdIdServiceImpl adIdServiceImpl) {
+    private GetAdIdResult getAdIdResults(AdIdServiceImpl adIdServiceImpl) throws Exception {
         // To capture result in inner class, we have to declare final.
-        final GetAdIdResult[] capturedResponseParcel = new GetAdIdResult[1];
-        mGetAdIdCallbackLatch = new CountDownLatch(1);
-        adIdServiceImpl.getAdId(
-                mRequest,
-                mCallerMetadata,
-                new IGetAdIdCallback() {
-                    @Override
-                    public void onResult(GetAdIdResult responseParcel) {
-                        capturedResponseParcel[0] = responseParcel;
-                        mGetAdIdCallbackLatch.countDown();
-                    }
+        SyncIGetAdIdCallback callback = new SyncIGetAdIdCallback(BINDER_CONNECTION_TIMEOUT_MS);
+        adIdServiceImpl.getAdId(mRequest, mCallerMetadata, callback);
 
-                    @Override
-                    public void onError(int resultCode) {
-                        Assert.fail();
-                    }
-
-                    @Override
-                    public IBinder asBinder() {
-                        return null;
-                    }
-                });
-
-        return capturedResponseParcel;
+        return callback.assertSuccess();
     }
 
     @NonNull
@@ -480,5 +409,18 @@ public class AdIdServiceImplTest {
                                 })
                 .when(mSpyAdServicesLogger)
                 .logApiCallStats(ArgumentMatchers.any(ApiCallStats.class));
+    }
+
+    private static final class SyncIGetAdIdCallback extends IntFailureSyncCallback<GetAdIdResult>
+            implements IGetAdIdCallback {
+
+        private SyncIGetAdIdCallback(int timeout) {
+            super(timeout);
+        }
+
+        @Override
+        public void onError(int resultCode) {
+            onFailure(resultCode);
+        }
     }
 }

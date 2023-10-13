@@ -23,7 +23,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.dx.mockito.inline.extended.StaticMockitoSessionBuilder;
 import com.android.modules.utils.testing.StaticMockFixture;
@@ -61,16 +60,6 @@ public final class E2EMockStatic implements StaticMockFixture {
         // Privacy params
         doAnswer((Answer<Integer>) invocation -> mParams.getNavigationTriggerDataCardinality())
                 .when(() -> PrivacyParams.getNavigationTriggerDataCardinality());
-        // System health params
-        doAnswer((Answer<Integer>) invocation -> mParams.getMaxSourcesPerPublisher())
-                .when(() -> FlagsFactory.getFlags().getMeasurementMaxSourcesPerPublisher());
-        doAnswer((Answer<Integer>) invocation -> mParams.getMaxEventReportsPerDestination())
-                .when(() -> FlagsFactory.getFlags().getMeasurementMaxEventReportsPerDestination());
-        doAnswer((Answer<Integer>) invocation -> mParams.getMaxAggregateReportsPerDestination())
-                .when(
-                        () ->
-                                FlagsFactory.getFlags()
-                                        .getMeasurementMaxAggregateReportsPerDestination());
         // Pass manifest checks
         doReturn(true)
                 .when(
