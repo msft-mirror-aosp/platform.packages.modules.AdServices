@@ -31,7 +31,8 @@ import android.os.Parcelable;
  * SdkSandboxManager#registerAppOwnedSdkSandboxInterface}.
  *
  * <p>The SDK in sandbox process can then query the list of registered AppOwnedSdkSandboxInterfaces
- * using {@link SdkSandboxController#getAppOwnedSdkSandboxInterfaces}.
+ * using {@link
+ * android.app.sdksandbox.sdkprovider.SdkSandboxController#getAppOwnedSdkSandboxInterfaces}.
  *
  * <p>Once SDK has the AppOwnedSdkSandboxInterface it wants to communicate with, it will have to
  * cast the binder object from {@link #getInterface} to the prearranged interface before initiating
