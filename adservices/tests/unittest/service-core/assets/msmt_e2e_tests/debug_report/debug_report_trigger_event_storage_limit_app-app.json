@@ -1,7 +1,7 @@
 {
   "description": "A2A test for trigger-event-storage-limit debug report.",
-  "api_config": {
-    "max_event_level_reports_per_destination": "1"
+  "phflags_override": {
+    "measurement_max_event_reports_per_destination": "1"
   },
   "input": {
     "sources": [

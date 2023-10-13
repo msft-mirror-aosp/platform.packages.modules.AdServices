@@ -15,7 +15,6 @@
  */
 package com.android.adservices.tests.ui.libs.pages;
 
-import static com.android.adservices.tests.ui.libs.UiConstants.SYSTEM_UI_NAME;
 import static com.android.adservices.tests.ui.libs.UiConstants.SYSTEM_UI_RESOURCE_ID;
 import static com.android.adservices.tests.ui.libs.UiUtils.LAUNCH_TIMEOUT;
 import static com.android.adservices.tests.ui.libs.UiUtils.PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT;
@@ -31,7 +30,6 @@ import android.util.Log;
 
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
-import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObject2;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
@@ -98,19 +96,15 @@ public class NotificationPages {
         UiSelector notificationCardSelector =
                 new UiSelector().text(getString(context, notificationTitle));
 
-        UiObject scroller =
-                device.findObject(
-                        new UiSelector()
-                                .packageName(SYSTEM_UI_NAME)
-                                .resourceId(SYSTEM_UI_RESOURCE_ID));
-
-        UiObject notificationCard = scroller.getChild(notificationCardSelector);
+        UiObject2 scroller = device.findObject(By.res(SYSTEM_UI_RESOURCE_ID));
+        UiObject2 notificationCard =
+                scroller.findObject(By.textContains(getString(context, notificationTitle)));
         if (!isDisplayed) {
-            assertThat(notificationCard.exists()).isFalse();
+            assertThat(notificationCard).isNull();
             return;
         }
-        assertThat(notificationCard.exists()).isTrue();
 
+        assertThat(notificationCard).isNotNull();
         notificationCard.click();
         Thread.sleep(LAUNCH_TIMEOUT);
         UiObject2 title = getPageElement(context, device, notificationHeader);

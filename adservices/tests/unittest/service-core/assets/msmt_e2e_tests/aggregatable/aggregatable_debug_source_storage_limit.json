@@ -1,7 +1,7 @@
 {
   "description": "A2A test: given two sources when max_sources_per_origin is set to 1, has_ad_id_permission is enabled. Can generate both event and aggregate reports. Expected source-storage-limit for additional debug report",
-  "api_config": {
-    "max_sources_per_origin": "1"
+  "phflags_override": {
+    "measurement_max_sources_per_publisher": "1"
   },
   "input": {
     "sources": [
