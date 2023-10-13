@@ -1744,13 +1744,13 @@ public interface Flags {
     }
 
     /**
-     * The SHA certificates of the AdServices and the AdExtServices APKs. This is required when
-     * writing consent data to AppSearch in order to allow reads from T+ APK. This is a comma
-     * searpated list.
+     * The debug and release SHA certificates of the AdServices APK. This is required when writing
+     * consent data to AppSearch in order to allow reads from T+ APK. This is a comma separated
+     * list.
      */
-    // TODO: Add the release key signed cert.
     String ADSERVICES_APK_SHA_CERTIFICATE =
-            "686d5c450e00ebe600f979300a29234644eade42f24ede07a073f2bc6b94a3a2";
+            "686d5c450e00ebe600f979300a29234644eade42f24ede07a073f2bc6b94a3a2," // debug
+                    + "80f8fbb9a026807f58d98dbc28bf70724d8f66bbfcec997c6bdc0102c3230dee"; // release
 
     /** Only App signatures belonging to this Allow List can use PP APIs. */
     default String getAdservicesApkShaCertificate() {
