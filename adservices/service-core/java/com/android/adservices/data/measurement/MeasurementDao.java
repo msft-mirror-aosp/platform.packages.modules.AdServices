@@ -1249,7 +1249,7 @@ class MeasurementDao implements IMeasurementDao {
                         Locale.ENGLISH,
                         "WITH source_ids AS ("
                                 + "SELECT %1$s FROM %2$s "
-                                + "WHERE %3$s AND %4$s = ? AND %5$s = ? "
+                                + "WHERE %3$s AND %4$s = ? AND %5$s != ? "
                                 + "AND %6$s > ?"
                                 + ") "
                                 + "SELECT COUNT(DISTINCT %7$s) FROM %8$s "
@@ -1272,7 +1272,7 @@ class MeasurementDao implements IMeasurementDao {
                         query,
                         new String[] {
                             enrollmentId,
-                            String.valueOf(Source.Status.ACTIVE),
+                            String.valueOf(Source.Status.MARKED_TO_DELETE),
                             String.valueOf(windowEndTime),
                             String.valueOf(destinationType)
                         });
@@ -1400,9 +1400,6 @@ class MeasurementDao implements IMeasurementDao {
                                 + "AND source."
                                 + MeasurementTables.SourceContract.EVENT_TIME
                                 + " <= ? "
-                                + "AND source."
-                                + MeasurementTables.SourceContract.EXPIRY_TIME
-                                + " > ? "
                                 + "AND source_dest."
                                 + MeasurementTables.SourceDestination.DESTINATION
                                 + " IN %2$s), distinct_registration_origins as (SELECT DENSE_RANK()"
@@ -1420,7 +1417,6 @@ class MeasurementDao implements IMeasurementDao {
                         new String[] {
                             excludedReportingOrigin.toString(),
                             String.valueOf(windowStartTime),
-                            String.valueOf(windowEndTime),
                             String.valueOf(windowEndTime)
                         });
     }

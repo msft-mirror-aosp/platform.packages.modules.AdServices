@@ -21,6 +21,7 @@ android_test {
         "src/**/*.java",
     ],
     defaults: ["modules-utils-testable-device-config-defaults"],
+    min_sdk_version: "30",
     manifest: "AndroidManifest.xml",
     test_config: "AndroidTest.xml",
     static_libs: [

@@ -47,6 +47,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 @RunWith(AndroidJUnit4.class)
 public class NotificationActivityGAV2UxSelectorUiAutomatorTest {
@@ -62,8 +63,12 @@ public class NotificationActivityGAV2UxSelectorUiAutomatorTest {
             new AdServicesDeviceSupportedRule();
 
     @BeforeClass
-    public static void classSetup() {
+    public static void classSetup() throws InterruptedException {
         AdservicesTestHelper.killAdservicesProcess(ApplicationProvider.getApplicationContext());
+        // sleep for 1 min for bootCompleteReceiver to get invoked on S-
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            TimeUnit.SECONDS.sleep(60);
+        }
     }
 
     @Before

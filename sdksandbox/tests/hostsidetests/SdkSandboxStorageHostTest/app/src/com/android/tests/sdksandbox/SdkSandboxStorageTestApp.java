@@ -25,6 +25,7 @@ import static org.junit.Assert.assertThrows;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.EmptyActivity;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
+import android.app.sdksandbox.testutils.SdkLifecycleHelper;
 import android.app.usage.StorageStats;
 import android.app.usage.StorageStatsManager;
 import android.content.Context;
@@ -68,29 +69,28 @@ public class SdkSandboxStorageTestApp {
 
     @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(EmptyActivity.class);
 
-    private Context mContext;
+    private final Context mContext = ApplicationProvider.getApplicationContext();
+    private final SdkLifecycleHelper mSdkLifecycleHelper = new SdkLifecycleHelper(mContext);
+
     private SdkSandboxManager mSdkSandboxManager;
     private IStorageTestSdk1Api mSdk;
     private UiDevice mUiDevice;
 
     @Before
     public void setup() {
-        mContext = ApplicationProvider.getApplicationContext();
         mSdkSandboxManager = mContext.getSystemService(SdkSandboxManager.class);
         assertThat(mSdkSandboxManager).isNotNull();
         mRule.getScenario();
         mUiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
         // unload SDK to fix flakiness
-        mSdkSandboxManager.unloadSdk(SDK_NAME);
+        mSdkLifecycleHelper.unloadSdk(SDK_NAME);
     }
 
     @After
     public void tearDown() {
         // unload SDK to fix flakiness
-        if (mSdkSandboxManager != null) {
-            mSdkSandboxManager.unloadSdk(SDK_NAME);
-        }
+        mSdkLifecycleHelper.unloadSdk(SDK_NAME);
     }
 
     @Test
