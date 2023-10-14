@@ -20,8 +20,13 @@ import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_STATE_COMPAT;
 import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE;
 import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE_COMPAT;
+import static android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID;
+import static android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID_COMPAT;
 
+import android.adservices.FlagsConstants;
+import android.adservices.adid.AdId;
 import android.annotation.CallbackExecutor;
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.annotation.SystemApi;
@@ -281,5 +286,82 @@ public class AdServicesCommonManager {
             executor.execute(
                     () -> callback.onError(new IllegalStateException("Internal Error!", e)));
         }
+    }
+
+    /**
+     * Updates {@link AdId} in Adservices when the device changes {@link AdId}. This API is used by
+     * AdIdProvider.
+     *
+     * @param updateAdIdRequest the request that contains {@link AdId} information to update.
+     * @param executor the executor for the callback.
+     * @param callback the callback in type {@link AdServicesOutcomeReceiver}, available on Android
+     *     R and above.
+     * @throws IllegalStateException when service is not available or the feature is not enabled, or
+     *     if there is any {@code Binder} invocation error.
+     * @throws SecurityException when the caller is not authorized to call this API.
+     * @hide
+     */
+    // TODO(b/295205476): Move exceptions into the callback.
+    @SystemApi
+    @FlaggedApi(FlagsConstants.KEY_AD_ID_CACHE_ENABLED)
+    @RequiresPermission(anyOf = {UPDATE_PRIVILEGED_AD_ID, UPDATE_PRIVILEGED_AD_ID_COMPAT})
+    public void updateAdId(
+            @NonNull UpdateAdIdRequest updateAdIdRequest,
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull AdServicesOutcomeReceiver<Boolean, Exception> callback) {
+        Objects.requireNonNull(updateAdIdRequest);
+        Objects.requireNonNull(executor);
+        Objects.requireNonNull(callback);
+
+        IAdServicesCommonService service = getService();
+        try {
+            service.updateAdIdCache(
+                    updateAdIdRequest,
+                    new IUpdateAdIdCallback.Stub() {
+                        @Override
+                        public void onResult(String message) {
+                            executor.execute(() -> callback.onResult(true));
+                        }
+
+                        @Override
+                        public void onFailure(int statusCode) {
+                            executor.execute(
+                                    () ->
+                                            callback.onError(
+                                                    AdServicesStatusUtils.asException(statusCode)));
+                        }
+                    });
+        } catch (RemoteException e) {
+            LogUtil.e(e, "RemoteException calling updateAdIdCache with %s", updateAdIdRequest);
+            executor.execute(
+                    () -> callback.onError(new IllegalStateException("Internal Error!", e)));
+        }
+    }
+
+    /**
+     * Updates {@link AdId} in Adservices when the device changes {@link AdId}. This API is used by
+     * AdIdProvider.
+     *
+     * @param updateAdIdRequest the request that contains {@link AdId} information to update.
+     * @param executor the executor for the callback.
+     * @param callback the callback in type {@link OutcomeReceiver}, available on Android S and
+     *     above.
+     * @throws IllegalStateException when service is not available or the feature is not enabled, or
+     *     if there is any {@code Binder} invocation error.
+     * @throws SecurityException when the caller is not authorized to call this API.
+     * @hide
+     */
+    @SystemApi
+    @FlaggedApi(FlagsConstants.KEY_AD_ID_CACHE_ENABLED)
+    @RequiresPermission(anyOf = {UPDATE_PRIVILEGED_AD_ID, UPDATE_PRIVILEGED_AD_ID_COMPAT})
+    @RequiresApi(Build.VERSION_CODES.S)
+    public void updateAdId(
+            @NonNull UpdateAdIdRequest updateAdIdRequest,
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull OutcomeReceiver<Boolean, Exception> callback) {
+        updateAdId(
+                updateAdIdRequest,
+                executor,
+                OutcomeReceiverConverter.toAdServicesOutcomeReceiver(callback));
     }
 }

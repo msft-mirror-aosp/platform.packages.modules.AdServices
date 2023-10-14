@@ -133,10 +133,10 @@ public final class PermissionHelper {
     public static boolean hasUpdateAdIdCachePermission(@NonNull Context context) {
         return PackageManager.PERMISSION_GRANTED
                         == context.checkCallingOrSelfPermission(
-                                AdServicesPermissions.UPDATE_AD_ID_CACHE)
+                                AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID)
                 || PackageManager.PERMISSION_GRANTED
                         == context.checkCallingOrSelfPermission(
-                                AdServicesPermissions.UPDATE_AD_ID_CACHE_COMPAT);
+                                AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID_COMPAT);
     }
 
     private static boolean hasPermission(

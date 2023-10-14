@@ -120,7 +120,7 @@
           "trigger_debug_key": "8971346782"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
-        "report_time": "1643237477618"
+        "report_time": "1643239175000"
       }
     ],
     "debug_aggregatable_results": [
@@ -137,7 +137,7 @@
           "trigger_debug_key": "8971346782"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
-        "report_time": "1643237477618"
+        "report_time": "1643235575000"
       }
     ],
     "verbose_debug_reports": [

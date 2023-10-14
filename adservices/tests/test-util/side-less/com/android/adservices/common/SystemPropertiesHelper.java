@@ -71,6 +71,17 @@ public final class SystemPropertiesHelper {
         addProperties(dump, properties, prefix);
     }
 
+    @Override
+    public String toString() {
+        return "SystemPropertiesHelper [mInterface="
+                + mInterface
+                + ",mPropsToBeReset="
+                + mPropsToBeReset
+                + ", mLog="
+                + mLog
+                + "]";
+    }
+
     private String get(String name) {
         return mInterface.get(name);
     }

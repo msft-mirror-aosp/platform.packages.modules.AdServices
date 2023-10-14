@@ -162,9 +162,14 @@ public class UiUtils {
         forceSetFlag("ga_ux_enabled", true);
     }
 
-    /** Override flag rvc_ux_enabled in tests */
+    /** Override flag rvc_ux_enabled in tests to true */
     public static void enableRvc() throws Exception {
         forceSetFlag("rvc_ux_enabled", true);
+    }
+
+    /** Override flag rvc_ux_enabled in tests to false */
+    public static void disableRvc() throws Exception {
+        forceSetFlag("rvc_ux_enabled", false);
     }
 
     public static void disableGa() throws Exception {
@@ -211,6 +216,11 @@ public class UiUtils {
 
     public static void setSourceOfTruthToPPAPI() {
         ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 1");
+    }
+
+    /** Set flag consent_manager_debug_mode to true in tests */
+    public static void setConsentManagerDebugMode() {
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
     }
 
     public static void enableNotificationPermission() {

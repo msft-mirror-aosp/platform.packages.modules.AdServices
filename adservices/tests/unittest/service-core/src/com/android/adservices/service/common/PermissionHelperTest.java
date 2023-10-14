@@ -124,7 +124,8 @@ public class PermissionHelperTest {
     @Test
     public void testUpdateAdIdCache() {
         Context mockContextGrant =
-                getMockContext(AdServicesPermissions.UPDATE_AD_ID_CACHE, mMockPackageManagerGrant);
+                getMockContext(
+                        AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID, mMockPackageManagerGrant);
         assertThat(PermissionHelper.hasUpdateAdIdCachePermission(mockContextGrant)).isTrue();
 
         // The mMockPackageManagerDeny is used to deny the other setup, but using it here for better
@@ -137,7 +138,8 @@ public class PermissionHelperTest {
     public void testUpdateAdIdCache_compat() {
         Context mockContextGrant =
                 getMockContext(
-                        AdServicesPermissions.UPDATE_AD_ID_CACHE_COMPAT, mMockPackageManagerGrant);
+                        AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID_COMPAT,
+                        mMockPackageManagerGrant);
         assertThat(PermissionHelper.hasUpdateAdIdCachePermission(mockContextGrant)).isTrue();
 
         // The mMockPackageManagerDeny is used to deny the other setup, but using it here for better
