@@ -1897,7 +1897,8 @@ public final class PhFlags implements Flags {
 
     @Override
     public boolean getTopicsOnDeviceClassifierKillSwitch() {
-        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        // This is an emergency flag that could be used to divert all traffic from on-device
+        // classifier to precomputed classifier in case of fatal ML model crashes in Topics.
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
         return SystemProperties.getBoolean(
