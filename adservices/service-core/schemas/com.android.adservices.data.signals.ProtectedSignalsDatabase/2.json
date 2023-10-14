@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 2,
-    "identityHash": "5e37d7fd44fb6ae8bbf437f698b4ad22",
+    "identityHash": "c48c7b8c1fd7027e491ac524f5b7f39f",
     "entities": [
       {
         "tableName": "protected_signals",
@@ -107,7 +107,7 @@
         "foreignKeys": []
       },
       {
-        "tableName": "encoder_logic",
+        "tableName": "encoder_logics",
         "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`buyer` TEXT NOT NULL, `version` INTEGER NOT NULL, `creation_time` INTEGER NOT NULL, PRIMARY KEY(`buyer`))",
         "fields": [
           {
@@ -137,13 +137,13 @@
         },
         "indices": [
           {
-            "name": "index_encoder_logic_creation_time",
+            "name": "index_encoder_logics_creation_time",
             "unique": false,
             "columnNames": [
               "creation_time"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_encoder_logic_creation_time` ON `${TABLE_NAME}` (`creation_time`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_encoder_logics_creation_time` ON `${TABLE_NAME}` (`creation_time`)"
           }
         ],
         "foreignKeys": []
@@ -200,7 +200,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '5e37d7fd44fb6ae8bbf437f698b4ad22')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c48c7b8c1fd7027e491ac524f5b7f39f')"
     ]
   }
 }

@@ -25,15 +25,13 @@ import com.android.cobalt.CobaltLogger;
 import com.android.cobalt.data.DataService;
 import com.android.cobalt.data.EventVector;
 import com.android.cobalt.data.ReportKey;
+import com.android.cobalt.domain.Project;
 import com.android.cobalt.system.CobaltClock;
 import com.android.cobalt.system.SystemClock;
 import com.android.cobalt.system.SystemData;
 
-import com.google.cobalt.CobaltRegistry;
-import com.google.cobalt.CustomerConfig;
 import com.google.cobalt.MetricDefinition;
 import com.google.cobalt.MetricDefinition.MetricType;
-import com.google.cobalt.ProjectConfig;
 import com.google.cobalt.ReleaseStage;
 import com.google.cobalt.ReportDefinition;
 import com.google.cobalt.ReportDefinition.ReportType;
@@ -53,36 +51,29 @@ import java.util.concurrent.ExecutorService;
 public final class CobaltLoggerImpl implements CobaltLogger {
     private static final String LOG_TAG = "cobalt.logger";
 
-    private final CobaltRegistry mRegistry;
+    private final Project mProject;
     private final ReleaseStage mReleaseStage;
     private final DataService mDataService;
     private final SystemData mSystemData;
     private final ExecutorService mExecutor;
     private final SystemClock mSystemClock;
     private final boolean mEnabled;
-    private final int mCustomerId;
-    private final int mProjectId;
 
     public CobaltLoggerImpl(
-            @NonNull CobaltRegistry registry,
+            @NonNull Project project,
             @NonNull ReleaseStage releaseStage,
             @NonNull DataService dataService,
             @NonNull SystemData systemData,
             @NonNull ExecutorService executor,
             @NonNull SystemClock systemClock,
             boolean enabled) {
-        mRegistry = Objects.requireNonNull(registry);
+        mProject = Objects.requireNonNull(project);
         mReleaseStage = Objects.requireNonNull(releaseStage);
         mDataService = Objects.requireNonNull(dataService);
         mSystemData = Objects.requireNonNull(systemData);
         mExecutor = Objects.requireNonNull(executor);
         mSystemClock = Objects.requireNonNull(systemClock);
         mEnabled = enabled;
-
-        CustomerConfig customer = registry.getCustomers(0);
-        mCustomerId = customer.getCustomerId();
-        ProjectConfig project = customer.getProjects(0);
-        mProjectId = project.getProjectId();
     }
 
     @Override
@@ -161,7 +152,11 @@ public final class CobaltLoggerImpl implements CobaltLogger {
                 continue;
             }
             ReportKey reportKey =
-                    ReportKey.create(mCustomerId, mProjectId, metric.getId(), report.getId());
+                    ReportKey.create(
+                            mProject.getCustomerId(),
+                            mProject.getProjectId(),
+                            metric.getId(),
+                            report.getId());
 
             if (report.getReportType() == ReportType.FLEETWIDE_OCCURRENCE_COUNTS) {
                 dbWrites.add(
@@ -180,17 +175,13 @@ public final class CobaltLoggerImpl implements CobaltLogger {
 
     private MetricDefinition validateOccurrenceAndGetMetric(
             long metricId, long count, List<Integer> eventCodes) {
-        checkArgument(mRegistry.getCustomersCount() == 1, "must be one customer");
-        checkArgument(mRegistry.getCustomers(0).getProjectsCount() == 1, "must be one project");
         checkArgument(count >= 0, "occurrence count can't be negative");
         checkArgument(
                 eventCodes.stream().allMatch(c -> c >= 0),
                 "event vectors can't contain negative event codes");
 
         Optional<MetricDefinition> foundMetric =
-                mRegistry.getCustomers(0).getProjects(0).getMetricsList().stream()
-                        .filter(m -> m.getId() == metricId)
-                        .findFirst();
+                mProject.getMetrics().stream().filter(m -> m.getId() == metricId).findFirst();
         checkArgument(foundMetric.isPresent(), "failed to find metric with ID: %s", metricId);
         MetricType foundMetricType = foundMetric.get().getMetricType();
         checkArgument(

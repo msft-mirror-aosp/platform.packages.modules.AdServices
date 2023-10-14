@@ -19,7 +19,9 @@ package com.android.server.sdksandbox;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -51,11 +53,26 @@ public class SdkSandboxVerifierReceiver extends BroadcastReceiver {
 
     private void verifySdkHandler(Context context, Intent intent) {
         int verificationId = intent.getIntExtra(PackageManager.EXTRA_VERIFICATION_ID, -1);
+        String apkPath = intent.getData() != null ? intent.getData().getPath() : null;
 
+        PackageInfo packageInfo = null;
+        if (apkPath != null) {
+            packageInfo = context.getPackageManager().getPackageArchiveInfo(apkPath, /* flags */ 0);
+        }
+
+        if (packageInfo == null) {
+            Log.e(TAG, "Package data to verify was absent or invalid.");
+            context.getPackageManager()
+                    .verifyPendingInstall(verificationId, PackageManager.VERIFICATION_REJECT);
+            return;
+        }
+
+        int targetSdkVersion =
+                packageInfo.applicationInfo != null
+                        ? packageInfo.applicationInfo.targetSdkVersion
+                        : Build.VERSION.SDK_INT;
         MAIN_HANDLER.post(
-                () ->
-                        SdkDexVerifier.getInstance()
-                                .startDexVerification(intent.getData().getPath()));
+                () -> SdkDexVerifier.getInstance().startDexVerification(apkPath, targetSdkVersion));
 
         // Verification will continue to run on background, return VERIFICATION_ALLOW to
         // unblock install
