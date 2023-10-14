@@ -25,7 +25,7 @@ android_test {
         "adservices-assets",
         "adservices-service-core",
         "compatibility-device-util-axt",
-        "truth-prebuilt",
+        "truth",
         "adservices-test-utility",
         "adservices-ui-cts-root-test-lib",
         "platform-test-rules",
@@ -37,7 +37,7 @@ android_test {
     test_suites: [
         "cts_root",
         "general-tests",
-        "mts-adservices"
+        "mts-adservices",
     ],
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
