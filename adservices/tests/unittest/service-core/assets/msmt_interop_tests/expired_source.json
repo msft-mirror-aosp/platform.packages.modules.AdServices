@@ -3,7 +3,7 @@
   "input": {
     "registrations": [
       {
-        "timestamp": "1643235573000",
+        "timestamp": "0",
         "registration_request": {
           "context_origin": "https://source.test",
           "attribution_src_url": "https://reporter.test/register-source",
@@ -21,8 +21,52 @@
           }
         }]
       },
+      // Should result in an event-level report as the expiry time was clamped
+      // to one day.
       {
-        "timestamp": "1643321974000",
+        "timestamp": "86390000",
+        "registration_request": {
+          "attribution_src_url": "https://reporter.test/register-trigger",
+          "context_origin": "https://destination.test"
+        },
+        "responses": [{
+          "url": "https://reporter.test/register-trigger",
+          "response": {
+            "Attribution-Reporting-Register-Trigger": {
+              "event_trigger_data": [
+                {
+                  "trigger_data": "0"
+                }
+              ]
+            }
+          }
+        }]
+      },
+      // Should not result in an event-level report as the source expired at
+      // one day.
+      {
+        "timestamp": "86400000",
+        "registration_request": {
+          "attribution_src_url": "https://reporter.test/register-trigger",
+          "context_origin": "https://destination.test"
+        },
+        "responses": [{
+          "url": "https://reporter.test/register-trigger",
+          "debug_permission": true,
+          "response": {
+            "Attribution-Reporting-Register-Trigger": {
+              "event_trigger_data": [
+                {
+                  "trigger_data": "7"
+                }
+              ],
+              "debug_reporting": true
+            }
+          }
+        }]
+      },
+      {
+        "timestamp": "86401000",
         "registration_request": {
           "context_origin": "https://source.test",
           "attribution_src_url": "https://reporter.test/register-source",
@@ -44,7 +88,7 @@
         }]
       },
       {
-        "timestamp": "1643321974001",
+        "timestamp": "86401001",
         "registration_request": {
           "context_origin": "https://source.test",
           "attribution_src_url": "https://reporter.test/register-source",
@@ -63,7 +107,7 @@
         }]
       },
       {
-        "timestamp": "1643321975000",
+        "timestamp": "86402000",
         "registration_request": {
           "context_origin": "https://source.test",
           "attribution_src_url": "https://another-reporter.test/register-source",
@@ -80,54 +124,10 @@
           }
         }]
       },
-      // Should result in an event-level report as the expiry time was clamped
-      // to one day.
-      {
-        "timestamp": "1643321963000",
-        "registration_request": {
-          "attribution_src_url": "https://reporter.test/register-trigger",
-          "context_origin": "https://destination.test"
-        },
-        "responses": [{
-          "url": "https://reporter.test/register-trigger",
-          "response": {
-            "Attribution-Reporting-Register-Trigger": {
-              "event_trigger_data": [
-                {
-                  "trigger_data": "0"
-                }
-              ]
-            }
-          }
-        }]
-      },
-      // Should not result in an event-level report as the source expired at
-      // one day.
-      {
-        "timestamp": "1643321973000",
-        "registration_request": {
-          "attribution_src_url": "https://reporter.test/register-trigger",
-          "context_origin": "https://destination.test"
-        },
-        "responses": [{
-          "url": "https://reporter.test/register-trigger",
-          "debug_permission": true,
-          "response": {
-            "Attribution-Reporting-Register-Trigger": {
-              "event_trigger_data": [
-                {
-                  "trigger_data": "7"
-                }
-              ],
-              "debug_reporting": true
-            }
-          }
-        }]
-      },
       // Should not result in an aggregatable report as the expiry time was
       // rounded to one day.
       {
-        "timestamp": "1643408374000",
+        "timestamp": "172801000",
         "registration_request": {
           "attribution_src_url": "https://reporter.test/register-trigger",
           "context_origin": "https://destination.test"
@@ -153,7 +153,7 @@
       },
       // Should result in an event-level report as the expiry time was not rounded.
       {
-        "timestamp": "1643410374999",
+        "timestamp": "174801999",
         "registration_request": {
           "attribution_src_url": "https://another-reporter.test/register-trigger",
           "context_origin": "https://destination.test"
@@ -174,7 +174,7 @@
       // Should result in an event-level report as the expiry time was rounded
       // to two days.
       {
-        "timestamp": "1643494774000",
+        "timestamp": "259201000",
         "registration_request": {
           "attribution_src_url": "https://reporter.test/register-trigger",
           "context_origin": "https://another-destination.test"
@@ -201,57 +201,57 @@
         "payload": {
           "attribution_destination": "https://destination.test",
           "randomized_trigger_rate": 0.0001372,
-          "scheduled_report_time": "1643321973",
+          "scheduled_report_time": "86400",
           "source_event_id": "123",
           "source_type": "navigation",
           "trigger_data": "0"
        },
-       "report_time": "1643321973000",
+       "report_time": "86400000",
        "report_url": "https://reporter.test/.well-known/attribution-reporting/report-event-attribution"
+      },
+      {
+        "payload": [ {
+          "body": {
+             "attribution_destination": "https://destination.test"
+          },
+          "type": "trigger-no-matching-source"
+       } ],
+       "report_time": "86400000",
+       "report_url": "https://reporter.test/.well-known/attribution-reporting/debug/verbose"
+      },
+      {
+        "payload": [ {
+          "body": {
+             "attribution_destination": "https://destination.test"
+          },
+          "type": "trigger-no-matching-source"
+       } ],
+       "report_time": "172801000",
+       "report_url": "https://reporter.test/.well-known/attribution-reporting/debug/verbose"
       },
       {
         "payload": {
           "attribution_destination": "https://destination.test",
           "randomized_trigger_rate": 0.0001372,
-          "scheduled_report_time": "1643410375",
+          "scheduled_report_time": "174802",
           "source_event_id": "789",
           "source_type": "navigation",
           "trigger_data": "5"
        },
-       "report_time": "1643410375000",
+       "report_time": "174802000",
        "report_url": "https://another-reporter.test/.well-known/attribution-reporting/report-event-attribution"
       },
       {
         "payload": {
           "attribution_destination": "https://another-destination.test",
           "randomized_trigger_rate": 0.0000025,
-          "scheduled_report_time": "1643494774",
+          "scheduled_report_time": "259201",
           "source_event_id": "654",
           "source_type": "event",
           "trigger_data": "1"
        },
-       "report_time": "1643494774001",
+       "report_time": "259201001",
        "report_url": "https://reporter.test/.well-known/attribution-reporting/report-event-attribution"
-      },
-      {
-        "payload": [ {
-          "body": {
-             "attribution_destination": "https://destination.test"
-          },
-          "type": "trigger-no-matching-source"
-       } ],
-       "report_time": "1643321973000",
-       "report_url": "https://reporter.test/.well-known/attribution-reporting/debug/verbose"
-      },
-      {
-        "payload": [ {
-          "body": {
-             "attribution_destination": "https://destination.test"
-          },
-          "type": "trigger-no-matching-source"
-       } ],
-       "report_time": "1643408374000",
-       "report_url": "https://reporter.test/.well-known/attribution-reporting/debug/verbose"
       }
     ]
   }

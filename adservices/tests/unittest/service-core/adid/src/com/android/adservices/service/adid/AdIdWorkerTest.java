@@ -18,7 +18,9 @@ package com.android.adservices.service.adid;
 
 import static org.mockito.Mockito.verify;
 
+import android.adservices.adid.AdId;
 import android.adservices.adid.IGetAdIdCallback;
+import android.adservices.common.UpdateAdIdRequest;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -47,5 +49,14 @@ public class AdIdWorkerTest {
         mAdIdWorker.getAdId(PACKAGE_NAME, DUMMY_CALLER_UID, CALLBACK);
 
         verify(mMockAdIdCacheManager).getAdId(PACKAGE_NAME, DUMMY_CALLER_UID, CALLBACK);
+    }
+
+    @Test
+    public void testUpdateAdId() {
+        UpdateAdIdRequest request = new UpdateAdIdRequest.Builder(AdId.ZERO_OUT).build();
+
+        mAdIdWorker.updateAdId(request);
+
+        verify(mMockAdIdCacheManager).updateAdId(request);
     }
 }

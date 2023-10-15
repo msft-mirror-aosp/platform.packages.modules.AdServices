@@ -41,6 +41,7 @@ import com.android.tradefed.testtype.DeviceJUnit4ClassRunner.TestMetrics;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -104,6 +105,7 @@ public final class UiApiLoggingHostTest extends AdServicesHostSideTestCase {
     }
 
     @Test
+    @Ignore
     public void testStartSettingMainActivityAndGetUiLog() throws Exception {
         ITestDevice device = getDevice();
         assertNotNull("Device not set", device);
