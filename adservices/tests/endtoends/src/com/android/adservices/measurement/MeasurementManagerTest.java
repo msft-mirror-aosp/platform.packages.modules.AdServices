@@ -40,6 +40,7 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.service.FlagsConstants;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -804,10 +805,9 @@ public class MeasurementManagerTest {
         if (SdkLevel.isAtLeastS()) {
             return;
         }
-
-        flags.setConsentSourceOfTruth(1)
-                .setBlockedTopicsSourceOfTruth(1)
-                .setEnableAppsearchConsentData(false)
+        flags.setFlag(FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH, FlagsConstants.PPAPI_ONLY)
+                .setFlag(FlagsConstants.KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH, 1)
+                .setFlag(FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA, false)
                 .setMeasurementRollbackDeletionAppSearchKillSwitch(true);
     }
 }

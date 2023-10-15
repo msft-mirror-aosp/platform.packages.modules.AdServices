@@ -42,6 +42,10 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"‏מאפשרת לאפליקציה לגשת למצב ההפעלה של ממשק ה-API ב-AdService."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"‏גישה לממשק ה-API של AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"‏ההגדרה הזו מאפשרת לאפליקציה לגשת לממשק ה-API של AdServicesManager."</string>
+    <!-- no translation found for permlab_accessUpdateAdIdCache (6912755067998635886) -->
+    <skip />
+    <!-- no translation found for permdesc_accessUpdateAdIdCache (2907546830224186022) -->
+    <skip />
     <string name="app_label" msgid="5844694701336604490">"פרטיות בפרסום"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"‏רוצה להצטרף לתוכנית הבטא של פרטיות בפרסום ב-Android?"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"‏מערכת Android בודקת איך האפליקציות יכולות להציג לך מודעות בדרכים פרטיות יותר"</string>
