@@ -38,14 +38,13 @@ import com.android.cobalt.data.DataService;
 import com.android.cobalt.data.EventVector;
 import com.android.cobalt.data.ReportKey;
 import com.android.cobalt.data.TestOnlyDao;
+import com.android.cobalt.domain.Project;
 import com.android.cobalt.observations.PrivacyGenerator;
 import com.android.cobalt.observations.testing.ConstantFakeSecureRandom;
 import com.android.cobalt.system.SystemData;
 import com.android.cobalt.system.testing.FakeSystemClock;
 import com.android.cobalt.upload.testing.NoOpUploader;
 
-import com.google.cobalt.CobaltRegistry;
-import com.google.cobalt.CustomerConfig;
 import com.google.cobalt.Envelope;
 import com.google.cobalt.IntegerObservation;
 import com.google.cobalt.MetricDefinition;
@@ -57,7 +56,6 @@ import com.google.cobalt.ObservationBatch;
 import com.google.cobalt.ObservationMetadata;
 import com.google.cobalt.ObservationToEncrypt;
 import com.google.cobalt.PrivateIndexObservation;
-import com.google.cobalt.ProjectConfig;
 import com.google.cobalt.ReleaseStage;
 import com.google.cobalt.ReportDefinition;
 import com.google.cobalt.ReportDefinition.PrivacyLevel;
@@ -80,6 +78,7 @@ import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -249,18 +248,11 @@ public class CobaltPeriodicJobImplTest {
                     .setMetaData(Metadata.newBuilder().setMaxReleaseStage(ReleaseStage.DOGFOOD))
                     .build();
 
-    private CobaltRegistry mRegistry =
-            CobaltRegistry.newBuilder()
-                    .addCustomers(
-                            CustomerConfig.newBuilder()
-                                    .setCustomerId((int) REPORT_1.customerId())
-                                    .addProjects(
-                                            ProjectConfig.newBuilder()
-                                                    .setProjectId((int) REPORT_1.projectId())
-                                                    .addMetrics(METRIC_1)
-                                                    .addMetrics(METRIC_2)
-                                                    .addMetrics(METRIC_3)))
-                    .build();
+    private Project mProject =
+            Project.create(
+                    (int) REPORT_1.customerId(),
+                    (int) REPORT_1.projectId(),
+                    List.of(METRIC_1, METRIC_2, METRIC_3));
 
     private CobaltDatabase mCobaltDatabase;
     private TestOnlyDao mTestOnlyDao;
@@ -317,7 +309,7 @@ public class CobaltPeriodicJobImplTest {
         mEncrypter = new NoOpEncrypter();
         mPeriodicJob =
                 new CobaltPeriodicJobImpl(
-                        mRegistry,
+                        mProject,
                         RELEASE_STAGE,
                         mDataService,
                         EXECUTOR,
@@ -672,16 +664,9 @@ public class CobaltPeriodicJobImplTest {
                                         .setPrivacyLevel(PrivacyLevel.NO_ADDED_PRIVACY))
                         .setMetaData(Metadata.newBuilder().setMaxReleaseStage(ReleaseStage.DOGFOOD))
                         .build();
-        mRegistry =
-                CobaltRegistry.newBuilder()
-                        .addCustomers(
-                                CustomerConfig.newBuilder()
-                                        .setCustomerId((int) REPORT_1.customerId())
-                                        .addProjects(
-                                                ProjectConfig.newBuilder()
-                                                        .setProjectId((int) REPORT_1.projectId())
-                                                        .addMetrics(metric)))
-                        .build();
+        mProject =
+                Project.create(
+                        (int) REPORT_1.customerId(), (int) REPORT_1.projectId(), List.of(metric));
 
         // Setup the classes.
         manualSetUp();
@@ -759,16 +744,9 @@ public class CobaltPeriodicJobImplTest {
                                         .setPoissonMean(0.1))
                         .setMetaData(Metadata.newBuilder().setMaxReleaseStage(ReleaseStage.DOGFOOD))
                         .build();
-        mRegistry =
-                CobaltRegistry.newBuilder()
-                        .addCustomers(
-                                CustomerConfig.newBuilder()
-                                        .setCustomerId((int) REPORT_1.customerId())
-                                        .addProjects(
-                                                ProjectConfig.newBuilder()
-                                                        .setProjectId((int) REPORT_1.projectId())
-                                                        .addMetrics(metric)))
-                        .build();
+        mProject =
+                Project.create(
+                        (int) REPORT_1.customerId(), (int) REPORT_1.projectId(), List.of(metric));
 
         // Setup the classes.
         manualSetUp();
@@ -930,21 +908,19 @@ public class CobaltPeriodicJobImplTest {
             generateAggregatedObservations_oneLoggedCountReportForMetricInLaterReleaseStage_nothingSent()
                     throws Exception {
         // Update the first report's metric to only be collected in an earlier release stage.
-        MetricDefinition metric =
-                mRegistry.getCustomers(0).getProjects(0).getMetrics(1).toBuilder()
+        MetricDefinition newMetric =
+                mProject.getMetrics().get(1).toBuilder()
                         .setMetaData(
                                 Metadata.newBuilder().setMaxReleaseStage(ReleaseStage.FISHFOOD))
                         .build();
-        mRegistry =
-                mRegistry.toBuilder()
-                        .setCustomers(
-                                0,
-                                mRegistry.getCustomers(0).toBuilder()
-                                        .setProjects(
-                                                0,
-                                                mRegistry.getCustomers(0).getProjects(0).toBuilder()
-                                                        .setMetrics(1, metric)))
-                        .build();
+        mProject =
+                Project.create(
+                        mProject.getCustomerId(),
+                        mProject.getProjectId(),
+                        List.of(
+                                mProject.getMetrics().get(0),
+                                newMetric,
+                                mProject.getMetrics().get(2)));
 
         // Setup the classes.
         manualSetUp();
@@ -978,33 +954,17 @@ public class CobaltPeriodicJobImplTest {
             generateAggregatedObservations_oneLoggedCountReportForReportInLaterReleaseStage_nothingSent()
                     throws Exception {
         // Update the first report to only be collected in an earlier release stage.
-        ReportDefinition report =
-                mRegistry.getCustomers(0).getProjects(0).getMetrics(1).getReports(2).toBuilder()
-                        .setMaxReleaseStage(ReleaseStage.FISHFOOD)
-                        .build();
-        mRegistry =
-                mRegistry =
-                        mRegistry.toBuilder()
-                                .setCustomers(
-                                        0,
-                                        mRegistry.getCustomers(0).toBuilder()
-                                                .setProjects(
-                                                        0,
-                                                        mRegistry
-                                                                .getCustomers(0)
-                                                                .getProjects(0)
-                                                                .toBuilder()
-                                                                .setMetrics(
-                                                                        1,
-                                                                        mRegistry
-                                                                                .getCustomers(0)
-                                                                                .getProjects(0)
-                                                                                .getMetrics(1)
-                                                                                .toBuilder()
-                                                                                .setReports(
-                                                                                        2,
-                                                                                        report))))
-                                .build();
+        MetricDefinition metric = mProject.getMetrics().get(1);
+        ReportDefinition newReport =
+                metric.getReports(2).toBuilder().setMaxReleaseStage(ReleaseStage.FISHFOOD).build();
+        mProject =
+                Project.create(
+                        mProject.getCustomerId(),
+                        mProject.getProjectId(),
+                        List.of(
+                                mProject.getMetrics().get(0),
+                                metric.toBuilder().setReports(2, newReport).build(),
+                                mProject.getMetrics().get(2)));
 
         // Setup the classes.
         manualSetUp();

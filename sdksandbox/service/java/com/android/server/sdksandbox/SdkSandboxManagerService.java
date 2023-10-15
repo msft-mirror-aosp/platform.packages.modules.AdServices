@@ -296,6 +296,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                             Intent.ACTION_EDIT,
                             Intent.ACTION_INSERT));
 
+    static final ArraySet<String> DEFAULT_CONTENTPROVIDER_ALLOWED_AUTHORITIES =
+            new ArraySet<>(
+                    Arrays.asList(
+                            Settings.AUTHORITY, "com.android.textclassifier.icons", "downloads"));
+
     static class Injector {
         private final Context mContext;
         private SdkSandboxManagerLocal mLocalManager;
@@ -1781,6 +1786,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         DEFAULT_VALUE_DISABLE_SDK_SANDBOX);
 
         @GuardedBy("mLock")
+        private boolean mCustomizedSdkContextEnabled =
+                DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        PROPERTY_CUSTOMIZED_SDK_CONTEXT_ENABLED,
+                        DEFAULT_VALUE_CUSTOMIZED_SDK_CONTEXT_ENABLED);
+
+        @GuardedBy("mLock")
         private boolean mEnforceRestrictions =
                 DeviceConfig.getBoolean(
                         DeviceConfig.NAMESPACE_ADSERVICES,
@@ -1891,10 +1903,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             if (!SdkLevel.isAtLeastU()) {
                 return false;
             }
-            return DeviceConfig.getBoolean(
-                    DeviceConfig.NAMESPACE_ADSERVICES,
-                    PROPERTY_CUSTOMIZED_SDK_CONTEXT_ENABLED,
-                    DEFAULT_VALUE_CUSTOMIZED_SDK_CONTEXT_ENABLED);
+            synchronized (mLock) {
+                return mCustomizedSdkContextEnabled;
+            }
         }
 
         boolean areRestrictionsEnforced() {
@@ -1986,6 +1997,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                     stopAllSandboxesLocked();
                                 }
                             }
+                            break;
+                        case PROPERTY_CUSTOMIZED_SDK_CONTEXT_ENABLED:
+                            mCustomizedSdkContextEnabled =
+                                    properties.getBoolean(
+                                            PROPERTY_CUSTOMIZED_SDK_CONTEXT_ENABLED,
+                                            DEFAULT_VALUE_CUSTOMIZED_SDK_CONTEXT_ENABLED);
                             break;
                         case PROPERTY_ENFORCE_RESTRICTIONS:
                             mEnforceRestrictions =
@@ -2644,8 +2661,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     private ArraySet<String> getContentProviderAllowlist() {
-        final String curWebViewPackageName = WebViewUpdateService.getCurrentWebViewPackageName();
-        final ArraySet<String> contentProviderAuthoritiesAllowlist = new ArraySet<>();
+        String curWebViewPackageName = WebViewUpdateService.getCurrentWebViewPackageName();
+        ArraySet<String> contentProviderAuthoritiesAllowlist = new ArraySet<>();
         // TODO(b/279557220): Make curWebViewPackageName a static variable once fixed.
         for (String webViewAuthority :
                 new String[] {
@@ -2654,17 +2671,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             contentProviderAuthoritiesAllowlist.add(curWebViewPackageName + '.' + webViewAuthority);
         }
 
-        // Required by WebView. Adding temporarily since all restrictions are enabled by default.
-        // TODO(b/274070295): Update the default allowlist value.
-        contentProviderAuthoritiesAllowlist.add(Settings.AUTHORITY);
         synchronized (mLock) {
-            if (mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()) {
-                if (mSdkSandboxSettingsListener.getNextContentProviderAllowlist() != null) {
-                    contentProviderAuthoritiesAllowlist.addAll(
-                            mSdkSandboxSettingsListener
-                                    .getNextContentProviderAllowlist()
-                                    .getAuthoritiesList());
-                }
+            if (mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()
+                    && mSdkSandboxSettingsListener.getNextContentProviderAllowlist() != null) {
+                contentProviderAuthoritiesAllowlist.addAll(
+                        mSdkSandboxSettingsListener
+                                .getNextContentProviderAllowlist()
+                                .getAuthoritiesList());
                 return contentProviderAuthoritiesAllowlist;
             }
 
@@ -2676,9 +2689,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             if (contentProviderAllowlistForTargetSdkVersion != null) {
                 contentProviderAuthoritiesAllowlist.addAll(
                         contentProviderAllowlistForTargetSdkVersion.getAuthoritiesList());
+            } else {
+                contentProviderAuthoritiesAllowlist.addAll(
+                        DEFAULT_CONTENTPROVIDER_ALLOWED_AUTHORITIES);
             }
         }
-
         return contentProviderAuthoritiesAllowlist;
     }
 
