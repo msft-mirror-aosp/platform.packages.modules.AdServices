@@ -41,8 +41,7 @@ final class DeviceConfigHelper {
     private final String mNamespace;
     private final Interface mInterface;
     private final Map<String, String> mFlagsToBeReset = new HashMap<>();
-
-    final Logger mLog;
+    private final Logger mLog;
 
     DeviceConfigHelper(InterfaceFactory interfaceFactory, String namespace, RealLogger logger) {
         mNamespace = Objects.requireNonNull(namespace);
@@ -97,6 +96,19 @@ final class DeviceConfigHelper {
         dump.append(flags.isEmpty() ? "(no flags on namespace " + mNamespace + ")" : flags);
     }
 
+    @Override
+    public String toString() {
+        return "DeviceConfigHelper[mNamespace="
+                + mNamespace
+                + ", mInterface="
+                + mInterface
+                + ", mFlagsToBeReset="
+                + mFlagsToBeReset
+                + ", mLog="
+                + mLog
+                + "]";
+    }
+
     // TODO(b/294423183): temporarily exposed as it's used by legacy helper methods on
     // AdServicesFlagsSetterRule
     String get(String name) {
@@ -149,10 +161,11 @@ final class DeviceConfigHelper {
             mLog = new Logger(Objects.requireNonNull(logger), DeviceConfigHelper.class);
         }
 
+        // TODO(b/294423183): should check for SDK version as it doesn't existing on R
         public void setSyncDisabledModeForTest(SyncDisabledModeForTest mode) {
             String value = mode.name().toLowerCase();
             mLog.v("SyncDisabledModeForTest(%s)", value);
-            runShellCommand("device_config set_sync_disabled_for_test %s", value);
+            runShellCommand("device_config set_sync_disabled_for_tests %s", value);
         }
 
         /** Gets the value of a property. */
@@ -166,8 +179,7 @@ final class DeviceConfigHelper {
                 return value;
             }
             // "null" could mean the value doesn't exist, or it's the string "null", so we need to
-            // check
-            // them
+            // check them
             String allFlags = runShellCommand("device_config list %s", mNamespace);
             for (String line : allFlags.split("\n")) {
                 if (line.equals(name + "=null")) {
@@ -284,6 +296,9 @@ final class DeviceConfigHelper {
             return runShellCommand("device_config list %s", mNamespace).trim();
         }
 
+        // TODO(b/294423183): need to refactor it (or implementation) so it doesn't ignore errors.
+        // For example, setSyncDisabledModeForTest() was calling set_sync_disabled_for_tests
+        // instead of set_sync_disabled_for_test
         @FormatMethod
         protected String runShellCommand(@FormatString String cmdFmt, @Nullable Object... cmdArgs) {
             throw new UnsupportedOperationException(
