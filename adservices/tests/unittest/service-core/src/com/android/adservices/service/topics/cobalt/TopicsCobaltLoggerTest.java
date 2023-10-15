@@ -32,8 +32,8 @@ import androidx.test.filters.SmallTest;
 import com.android.adservices.cobalt.CobaltRegistryLoader;
 import com.android.adservices.data.topics.Topic;
 import com.android.cobalt.CobaltLogger;
+import com.android.cobalt.domain.Project;
 
-import com.google.cobalt.CobaltRegistry;
 import com.google.cobalt.MetricDefinition;
 import com.google.common.collect.ImmutableList;
 
@@ -75,11 +75,9 @@ public final class TopicsCobaltLoggerTest {
         // See
         // //packages/modules/AdServices/adservices/service-core/resources/cobalt_registry.textpb
         // for the actual registy.
-        CobaltRegistry cobaltRegistry = CobaltRegistryLoader.getRegistry(sContext);
-        assertThat(cobaltRegistry.getCustomersCount()).isAtLeast(1);
-        assertThat(cobaltRegistry.getCustomers(0).getProjectsCount()).isAtLeast(1);
+        Project cobaltRegistry = CobaltRegistryLoader.getRegistry(sContext);
         MetricDefinition topicsMetric =
-                cobaltRegistry.getCustomers(0).getProjects(0).getMetricsList().stream()
+                cobaltRegistry.getMetrics().stream()
                         .filter(m -> m.getMetricName().equals("returned_topics"))
                         .findFirst()
                         .orElseThrow();

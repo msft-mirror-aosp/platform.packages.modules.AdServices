@@ -16,6 +16,8 @@
 
 package android.adservices.common;
 
+import android.adservices.FlagsConstants;
+import android.annotation.FlaggedApi;
 import android.annotation.SystemApi;
 
 /** Permissions used by the AdServices APIs. */
@@ -120,13 +122,18 @@ public class AdServicesPermissions {
      *
      * @hide
      */
-    public static final String UPDATE_AD_ID_CACHE = "android.permission.UPDATE_AD_ID_CACHE";
+    @SystemApi
+    @FlaggedApi(FlagsConstants.KEY_AD_ID_CACHE_ENABLED)
+    public static final String UPDATE_PRIVILEGED_AD_ID =
+            "android.permission.UPDATE_PRIVILEGED_AD_ID";
 
     /**
      * The permission that allows calling updating AdId Cache API via Common Service on S-.
      *
      * @hide
      */
-    public static final String UPDATE_AD_ID_CACHE_COMPAT =
-            "android.permission.UPDATE_AD_ID_CACHE_COMPAT";
+    @SystemApi
+    @FlaggedApi(FlagsConstants.KEY_AD_ID_CACHE_ENABLED)
+    public static final String UPDATE_PRIVILEGED_AD_ID_COMPAT =
+            "android.permission.UPDATE_PRIVILEGED_AD_ID_COMPAT";
 }

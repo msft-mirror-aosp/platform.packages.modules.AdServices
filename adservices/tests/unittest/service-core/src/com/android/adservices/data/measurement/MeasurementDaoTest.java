@@ -1948,7 +1948,7 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testCountDistinctEnrollmentsPerPublisherXDestinationInSource_beyondWindow() {
+    public void testCountDistinctReportingOriginsPerPublisherXDestinationInSource_beyondWindow() {
         Uri publisher = Uri.parse("android-app://publisher.app");
         List<Uri> webDestinations = List.of(WebUtil.validUri("https://web-destination.test"));
         List<Uri> appDestinations = List.of(Uri.parse("android-app://destination.app"));
@@ -1980,7 +1980,7 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testCountDistinctEnrollmentsPerPublisherXDestinationInSource_expiredSource() {
+    public void testCountDistinctReportingOriginsPerPublisherXDestinationInSource_expiredSource() {
         Uri publisher = Uri.parse("android-app://publisher.app");
         List<Uri> webDestinations = List.of(WebUtil.validUri("https://web-destination.test"));
         List<Uri> appDestinations = List.of(Uri.parse("android-app://destination.app"));
@@ -1997,7 +1997,7 @@ public class MeasurementDaoTest {
                         4,
                         appDestinations,
                         webDestinations,
-                        4500000000L,
+                        4500000001L,
                         6000000000L,
                         publisher,
                         Source.Status.ACTIVE);
@@ -2011,7 +2011,7 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
-                            Integer.valueOf(1),
+                            Integer.valueOf(3),
                             measurementDao
                                     .countDistinctReportingOriginsPerPublisherXDestinationInSource(
                                             publisher,
@@ -2024,7 +2024,7 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testCountDistinctEnrollmentsPerPublisherXDestinationInSource_appDestination() {
+    public void testCountDistinctReportingOriginsPerPublisherXDestinationInSource_appDestination() {
         Uri publisher = Uri.parse("android-app://publisher.app");
         List<Uri> webDestinations = List.of(WebUtil.validUri("https://web-destination.test"));
         List<Uri> appDestinations = List.of(Uri.parse("android-app://destination.app"));
@@ -2091,7 +2091,7 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testCountDistinctEnrollmentsPerPublisherXDestinationInSource_webDestination() {
+    public void testCountDistinctReportingOriginsPerPublisherXDestinationInSource_webDestination() {
         Uri publisher = Uri.parse("android-app://publisher.app");
         List<Uri> webDestinations = List.of(WebUtil.validUri("https://web-destination.test"));
         List<Uri> appDestinations = List.of(Uri.parse("android-app://destination.app"));
@@ -2159,7 +2159,7 @@ public class MeasurementDaoTest {
 
     // countDistinctEnrollmentsPerPublisherXDestinationInSource
     @Test
-    public void countDistinctEnrollmentsPerPublisher_webDestination_multipleDestinations() {
+    public void countDistinctReportingOriginsPerPublisher_webDestination_multipleDestinations() {
         Uri publisher = Uri.parse("android-app://publisher.app");
         List<Uri> webDestinations1 = List.of(WebUtil.validUri("https://web-destination-1.test"));
         List<Uri> webDestinations2 =

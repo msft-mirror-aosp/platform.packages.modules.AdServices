@@ -27,14 +27,13 @@ import com.android.cobalt.CobaltPeriodicJob;
 import com.android.cobalt.CobaltPipelineType;
 import com.android.cobalt.crypto.HpkeEncrypter;
 import com.android.cobalt.data.DataService;
+import com.android.cobalt.domain.Project;
 import com.android.cobalt.impl.CobaltLoggerImpl;
 import com.android.cobalt.impl.CobaltPeriodicJobImpl;
 import com.android.cobalt.observations.PrivacyGenerator;
 import com.android.cobalt.system.SystemClockImpl;
 import com.android.cobalt.system.SystemData;
 import com.android.internal.annotations.GuardedBy;
-
-import com.google.cobalt.CobaltRegistry;
 
 import java.security.SecureRandom;
 import java.time.Duration;
@@ -54,7 +53,7 @@ public final class CobaltFactory {
 
     // Objects which are non-trivial to construct or need to be shared between the logger and
     // periodic job are static.
-    private static CobaltRegistry sSingletonCobaltRegistry;
+    private static Project sSingletonCobaltRegistryProject;
     private static DataService sSingletonDataService;
     private static SecureRandom sSingletonSecureRandom;
 
@@ -144,12 +143,11 @@ public final class CobaltFactory {
     }
 
     @NonNull
-    private static CobaltRegistry getRegistry(Context context)
-            throws CobaltInitializationException {
-        if (sSingletonCobaltRegistry == null) {
-            sSingletonCobaltRegistry = CobaltRegistryLoader.getRegistry(context);
+    private static Project getRegistry(Context context) throws CobaltInitializationException {
+        if (sSingletonCobaltRegistryProject == null) {
+            sSingletonCobaltRegistryProject = CobaltRegistryLoader.getRegistry(context);
         }
-        return sSingletonCobaltRegistry;
+        return sSingletonCobaltRegistryProject;
     }
 
     @NonNull

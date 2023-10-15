@@ -1400,9 +1400,6 @@ class MeasurementDao implements IMeasurementDao {
                                 + "AND source."
                                 + MeasurementTables.SourceContract.EVENT_TIME
                                 + " <= ? "
-                                + "AND source."
-                                + MeasurementTables.SourceContract.EXPIRY_TIME
-                                + " > ? "
                                 + "AND source_dest."
                                 + MeasurementTables.SourceDestination.DESTINATION
                                 + " IN %2$s), distinct_registration_origins as (SELECT DENSE_RANK()"
@@ -1420,7 +1417,6 @@ class MeasurementDao implements IMeasurementDao {
                         new String[] {
                             excludedReportingOrigin.toString(),
                             String.valueOf(windowStartTime),
-                            String.valueOf(windowEndTime),
                             String.valueOf(windowEndTime)
                         });
     }
