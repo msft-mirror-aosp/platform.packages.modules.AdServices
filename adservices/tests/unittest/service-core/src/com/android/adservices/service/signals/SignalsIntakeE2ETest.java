@@ -28,6 +28,7 @@ import static com.android.adservices.service.signals.UpdatesDownloader.PACKAGE_N
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -93,6 +94,7 @@ import org.mockito.junit.MockitoRule;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -468,10 +470,28 @@ public class SignalsIntakeE2ETest {
                 new UpdateSignalsInput.Builder(uri, CommonFixture.TEST_PACKAGE_NAME).build();
         CallbackForTesting callback = new CallbackForTesting();
         mService.updateSignals(input, callback);
-        callback.mFailureLatch.await(WAIT_TIME_SECONDS, TimeUnit.SECONDS);
+        assertTrue(callback.mFailureLatch.await(WAIT_TIME_SECONDS, TimeUnit.SECONDS));
         FledgeErrorResponse cause = callback.mFailureCause;
         assertEquals(AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, cause.getStatusCode());
         assertEquals(CONVERSION_ERROR_MSG, callback.mFailureCause.getErrorMessage());
+    }
+
+    @Test
+    public void testNoConsent() throws Exception {
+        when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(any()))
+                .thenReturn(true);
+        setupService(false);
+        String json =
+                "{" + "\"put\":{\"" + BASE64_KEY_1 + "\":\"" + BASE64_VALUE_1 + "\"" + "}" + "}";
+        Uri uri = mMockWebServerRule.uriForPath(SIGNALS_PATH);
+        MockResponse response1 = new MockResponse().setBody(json);
+        mMockWebServerRule.startMockWebServer(Arrays.asList(response1));
+        UpdateSignalsInput input =
+                new UpdateSignalsInput.Builder(uri, CommonFixture.TEST_PACKAGE_NAME).build();
+        CallbackForTesting callback = new CallbackForTesting();
+        mService.updateSignals(input, callback);
+        assertTrue(callback.mSuccessLatch.await(WAIT_TIME_SECONDS, TimeUnit.SECONDS));
+        assertEquals(Collections.emptyList(), mSignalsDao.getSignalsByBuyer(BUYER));
     }
 
     private void callForUri(Uri uri) throws Exception {
@@ -479,7 +499,7 @@ public class SignalsIntakeE2ETest {
                 new UpdateSignalsInput.Builder(uri, CommonFixture.TEST_PACKAGE_NAME).build();
         CallbackForTesting callback = new CallbackForTesting();
         mService.updateSignals(input, callback);
-        callback.mSuccessLatch.await(WAIT_TIME_SECONDS, TimeUnit.SECONDS);
+        assertTrue(callback.mSuccessLatch.await(WAIT_TIME_SECONDS, TimeUnit.SECONDS));
     }
 
     private void setupAndRunUpdateSignals(String json) throws Exception {
