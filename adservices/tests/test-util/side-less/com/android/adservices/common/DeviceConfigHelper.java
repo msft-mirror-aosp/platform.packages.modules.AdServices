@@ -96,6 +96,10 @@ final class DeviceConfigHelper {
         dump.append(flags.isEmpty() ? "(no flags on namespace " + mNamespace + ")" : flags);
     }
 
+    public void clearFlags() {
+        mInterface.clear();
+    }
+
     @Override
     public String toString() {
         return "DeviceConfigHelper[mNamespace="
@@ -108,7 +112,6 @@ final class DeviceConfigHelper {
                 + mLog
                 + "]";
     }
-
     // TODO(b/294423183): temporarily exposed as it's used by legacy helper methods on
     // AdServicesFlagsSetterRule
     String get(String name) {
@@ -290,6 +293,36 @@ final class DeviceConfigHelper {
             runShellCommand("device_config delete %s %s", mNamespace, name);
             // TODO(b/294423183): parse result
             return true;
+        }
+
+        /** Clears all flags. */
+        public void clear() {
+            runShellCommand("device_config reset untrusted_clear %s", mNamespace);
+
+            // TODO(b/300136201): copied from syncSet(), should reuse
+            // Need to wait until it's cleared
+            long deadline = System.currentTimeMillis() + CHANGE_CHECK_TIMEOUT_MS;
+            do {
+                String dump = dump();
+                if (dump.isEmpty()) {
+                    return;
+                }
+                if (System.currentTimeMillis() > deadline) {
+                    mLog.e(
+                            "clear(): dump() still showing some flags(%s) after %d ms",
+                            dump, CHANGE_CHECK_SLEEP_TIME_MS);
+                    throw new IllegalStateException(
+                            "Still showing flags ("
+                                    + dump
+                                    + ") after "
+                                    + CHANGE_CHECK_TIMEOUT_MS
+                                    + "ms");
+                }
+                mLog.d(
+                        "clear(): dump() still showing some flags(%s), sleeping %d ms",
+                        dump, CHANGE_CHECK_SLEEP_TIME_MS);
+                sleepBeforeCheckingAgain("dump()");
+            } while (true);
         }
 
         public String dump() {
