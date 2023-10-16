@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement;
 
+import static java.util.Map.entry;
+
 import android.adservices.measurement.RegistrationRequest;
 import android.net.Uri;
 import android.os.RemoteException;
@@ -53,7 +55,7 @@ import java.util.function.Supplier;
  *
  * <p>Tests in assets/msmt_interop_tests/ directory were copied from Chromium
  * src/content/test/data/attribution_reporting/interop GitHub commit
- * c0f2911e1d90cf29be88d7e0cd2d1c2295e7f387.
+ * 2bba98de81613f3f4580a1c5711ca5221ea95a14.
  */
 @RunWith(Parameterized.class)
 public class E2EInteropMockTest extends E2EMockTest {
@@ -62,38 +64,40 @@ public class E2EInteropMockTest extends E2EMockTest {
     private static final List<AsyncFetchStatus.EntityStatus> sParsingErrors = List.of(
             AsyncFetchStatus.EntityStatus.PARSING_ERROR,
             AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
-    private static final Map<String, String> sApiConfigPhFlags =
-            Map.of(
-                    // measurement_max_attribution_per_rate_limit_window
+    private static final Map<String, String> sApiConfigPhFlags = Map.ofEntries(
+            entry(
                     "rate_limit_max_attributions",
-                    "measurement_max_attribution_per_rate_limit_window",
-                    // measurement_max_distinct_enrollments_in_attribution
+                    "measurement_max_attribution_per_rate_limit_window"),
+            entry(
                     "rate_limit_max_attribution_reporting_origins",
-                    "measurement_max_distinct_enrollments_in_attribution",
-                    // measurement_max_distinct_reporting_origins_in_source
+                    "measurement_max_distinct_enrollments_in_attribution"),
+            entry(
                     "rate_limit_max_source_registration_reporting_origins",
-                    "measurement_max_distinct_reporting_origins_in_source",
-                    // measurement_max_distinct_destinations_in_active_source
+                    "measurement_max_distinct_reporting_origins_in_source"),
+            entry(
                     "max_destinations_per_source_site_reporting_site",
-                    "measurement_max_distinct_destinations_in_active_source",
-                    // measurement_flex_api_max_information_gain_event
+                    "measurement_max_distinct_destinations_in_active_source"),
+            entry(
                     "max_event_info_gain",
-                    "measurement_flex_api_max_information_gain_event",
-                    // measurement_max_reporting_origins_per_source_reporting_site_per_window
+                    "measurement_flex_api_max_information_gain_event"),
+            entry(
                     "rate_limit_max_reporting_origins_per_source_reporting_site",
-                    "measurement_max_reporting_origins_per_source_reporting_site_per_window",
-                    // measurement_max_destinations_per_publisher_per_rate_limit_window
+                    "measurement_max_reporting_origins_per_source_reporting_site_per_window"),
+            entry(
                     "max_destinations_per_rate_limit_window",
-                    "measurement_max_destinations_per_publisher_per_rate_limit_window",
-                    // measurement_max_dest_per_publisher_x_enrollment_per_rate_limit_window
+                    "measurement_max_destinations_per_publisher_per_rate_limit_window"),
+            entry(
                     "max_destinations_per_rate_limit_window_reporting_site",
-                    "measurement_max_dest_per_publisher_x_enrollment_per_rate_limit_window",
-                    // measurement_max_sources_per_publisher
+                    "measurement_max_dest_per_publisher_x_enrollment_per_rate_limit_window"),
+            entry(
                     "max_sources_per_origin",
-                    "measurement_max_sources_per_publisher",
-                    // measurement_max_event_reports_per_destination
+                    "measurement_max_sources_per_publisher"),
+            entry(
                     "max_event_level_reports_per_destination",
-                    "measurement_max_event_reports_per_destination");
+                    "measurement_max_event_reports_per_destination"),
+            entry(
+                    "max_aggregatable_reports_per_destination",
+                    "measurement_max_aggregate_reports_per_destination"));
 
     private static String preprocessor(String json) {
         // TODO(b/290098169): Cleanup anchorTime when this bug is addressed. Handling cases where

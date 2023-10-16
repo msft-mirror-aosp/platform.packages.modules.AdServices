@@ -1,5 +1,5 @@
 {
-  "description": "trigger attributed to source with highest priority",
+  "description": "Sources with source type 'event' round expiry to the nearest day.",
   "input": {
     "registrations": [
       {
@@ -7,7 +7,7 @@
         "registration_request": {
           "context_origin": "https://source.test",
           "attribution_src_url": "https://reporter.test/register-source",
-          "source_type": "navigation"
+          "source_type": "event"
         },
         "responses": [
           {
@@ -16,18 +16,24 @@
               "Attribution-Reporting-Register-Source": {
                 "destination": "https://destination.test",
                 "source_event_id": "123",
-                "priority": "1"
+                // 1 day, 11 hours, 59 minutes and 59 seconds
+                // will round down to 1 day (86400 seconds)
+                "expiry": "129599",
+                "priority": "300"
               }
             }
           }
         ]
       },
+      // Registration will be rejected since after rounding down expiry and clamping
+      // the last end-time in event_report_windows["end_times"] to expiry, the end-times
+      // list will no longer be strictly increasing.
       {
         "timestamp": "1000",
         "registration_request": {
           "context_origin": "https://source.test",
           "attribution_src_url": "https://reporter.test/register-source",
-          "source_type": "navigation"
+          "source_type": "event"
         },
         "responses": [
           {
@@ -36,7 +42,13 @@
               "Attribution-Reporting-Register-Source": {
                 "destination": "https://destination.test",
                 "source_event_id": "456",
-                "priority": "3"
+                // 1 day, 11 hours, 59 minutes and 59 seconds
+                // will round down to 1 day (86400 seconds)
+                "expiry": "129599",
+                "priority": "200",
+                "event_report_windows": {
+                  "end_times": [43200, 86400, 108000]
+                }
               }
             }
           }
@@ -47,7 +59,7 @@
         "registration_request": {
           "context_origin": "https://source.test",
           "attribution_src_url": "https://reporter.test/register-source",
-          "source_type": "navigation"
+          "source_type": "event"
         },
         "responses": [
           {
@@ -56,14 +68,17 @@
               "Attribution-Reporting-Register-Source": {
                 "destination": "https://destination.test",
                 "source_event_id": "789",
-                "priority": "2"
+                "expiry": "86400",
+                "priority": "100"
               }
             }
           }
         ]
       },
+      // Trigger is at the first source's expiry time and is attributed to the
+      // source at time 2000.
       {
-        "timestamp": "3000",
+        "timestamp": "86400000",
         "registration_request": {
           "attribution_src_url": "https://reporter.test/register-trigger",
           "context_origin": "https://destination.test"
@@ -86,19 +101,21 @@
     ]
   },
   "output": {
-    "unparsable_registrations": [],
+    "unparsable_registrations": [
+      { "time": "1000", "type": "source" }
+    ],
     "reports": [
       {
         "payload": {
           "attribution_destination": "https://destination.test",
-          "randomized_trigger_rate": 0.0024263,
-          "scheduled_report_time": "172801",
-          "source_event_id": "456",
-          "source_type": "navigation",
-          "trigger_data": "7"
+          "randomized_trigger_rate": 0.0000025,
+          "scheduled_report_time": "86402",
+          "source_event_id": "789",
+          "source_type": "event",
+          "trigger_data": "1"
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-event-attribution",
-        "report_time": "172801000"
+        "report_time": "86402000"
       }
     ]
   }
