@@ -65,7 +65,7 @@
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Privacy Sandbox d\'Android ofereix noves funcions que les aplicacions poden utilitzar per mostrar-te anuncis que et poden agradar. Aquestes tecnologies no fan servir identificadors de dispositiu.\n\nAndroid i les teves aplicacions poden estimar els tipus d\'anuncis que et poden interessar i desar aquests interessos temporalment al teu dispositiu. Això permet que les aplicacions et mostrin anuncis que et poden agradar sense fer un seguiment de la teva activitat en llocs web i aplicacions d\'altres desenvolupadors."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Personalització d\'anuncis amb Privacy Sandbox"</string>
     <string name="notificationUI_how_it_works_expanded_text3" msgid="603165966360369018">"•  Interessos estimats per Android"</string>
-    <string name="notificationUI_how_it_works_expanded_text4" msgid="3910573920883580609">"Periòdicament, Android estima els teus interessos principals en funció de les aplicacions que utilitzes, per exemple \"esports\" o \"viatges\".\n\nMés endavant, una aplicació pot demanar a Android que faci servir aquests interessos per mostrar-te anuncis més rellevants.\n\nPots veure la llista d\'interessos actuals a la configuració de privadesa i bloquejar els que no t\'agradin."</string>
+    <string name="notificationUI_how_it_works_expanded_text4" msgid="3910573920883580609">"Periòdicament, Android estima els teus interessos principals en funció de les aplicacions que utilitzes, per exemple \"Esports\" o \"Viatges\"\n\nMés endavant, una aplicació pot demanar a Android que faci servir aquests interessos per mostrar-te anuncis més rellevants.\n\nPots veure la llista d\'interessos actuals a la configuració de privadesa i bloquejar els que no t\'agradin."</string>
     <string name="notificationUI_how_it_works_expanded_text5" msgid="7257714040472055781">"•  Interessos estimats per les aplicacions"</string>
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"Les aplicacions poden estimar els teus interessos i desar-los temporalment a Android. Per exemple, una aplicació que utilitzis per comprar sabatilles de córrer pot estimar el teu interès en \"córrer maratons\".\n\nMés endavant, basant-se en aquest interès, una altra aplicació pot mostrar-te un anunci relacionat amb les maratons.\n\nA la configuració de privadesa, pots gestionar la llista de les aplicacions que han desat interessos."</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"Noves funcions de privadesa d\'anuncis"</string>
@@ -143,8 +143,8 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Desbloqueja"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Interessos que has bloquejat"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Restableix tots els interessos"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"Ara mateix, no hi ha cap interès per mostrar."</string>
-    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"Ara mateix, no hi ha cap tema per mostrar.\nMés informació sobre els "<a href="https://support.google.com/android?p=ad_privacy">"temes d\'anuncis"</a></string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Ara mateix, no hi ha cap interès per mostrar"</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"Ara mateix, no hi ha cap tema per mostrar"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"La versió beta de la privadesa d\'anuncis d\'Android ofereix noves funcions que les aplicacions poden utilitzar per mostrar-te anuncis que et poden agradar. Aquestes tecnologies no fan servir identificadors de dispositiu.\n\nAndroid pot estimar els tipus d\'anuncis que et poden interessar i desar-los temporalment al teu dispositiu. Això permet que les aplicacions et mostrin anuncis rellevants sense fer un seguiment de la teva activitat en llocs web i aplicacions d\'altres desenvolupadors."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"No tens cap interès bloquejat"</string>
@@ -157,7 +157,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"Mostra les aplicacions bloquejades"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Restableix els interessos estimats per les aplicacions"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"En aquests moments, cap aplicació no està generant interessos per a tu"</string>
-    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"Ara mateix, no hi ha cap aplicació per mostrar. \nMés informació sobre els "<a href="https://support.google.com/android?p=ad_privacy">"anuncis suggerits per aplicacions"</a></string>
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"Ara mateix, no hi ha cap aplicació per mostrar"</string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"La versió beta de la privadesa d\'anuncis d\'Android ofereix noves funcions que les aplicacions poden utilitzar per mostrar-te anuncis que et poden agradar. Aquestes tecnologies no fan servir identificadors de dispositiu.\n\nLes aplicacions poden estimar els tipus d\'anuncis que et poden interessar i desar aquests interessos temporalment al teu dispositiu. Això permet que les aplicacions et mostrin anuncis rellevants sense fer un seguiment de la teva activitat en llocs web i aplicacions d\'altres desenvolupadors."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"No tens cap aplicació bloquejada"</string>
@@ -187,25 +187,14 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Vols restablir els anuncis suggerits per les aplicacions?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Les dades de suggeriments d\'anuncis de les aplicacions de la llista se suprimiran i les aplicacions suggeriran anuncis nous a partir d\'aquest moment. Pot ser que continuïs veient alguns anuncis relacionats."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Les dades de l\'aplicació s\'han restablert"</string>
-    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Els temes d\'anuncis estan activats"</string>
-    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android començarà a prendre nota dels temes d\'interès, però és possible que els primers tardin una mica a mostrar-se."</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Vols desactivar els temes d\'anuncis?"</string>
-    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Aquesta llista de temes se suprimirà. Android deixarà de prendre nota dels temes d\'interès, però és possible que encara vegis anuncis rellevants."</string>
-    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Els anuncis suggerits per aplicacions estan activats"</string>
-    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"És possible que les aplicacions comencin a suggerir anuncis. Veuràs una llista d\'aplicacions un cop comencin a suggerir anuncis."</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Vols desactivar els anuncis suggerits per aplicacions?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Totes les dades de suggeriment d\'anuncis se suprimiran. Les aplicacions ja no podran suggerir anuncis, però és possible que encara vegis anuncis rellevants."</string>
-    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"El mesurament d\'anuncis està activat"</string>
-    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android només pot compartir informació molt limitada amb les aplicacions per ajudar-les a mesurar el rendiment dels seus anuncis."</string>
-    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Vols desactivar el mesurament d\'anuncis?"</string>
-    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"Tots els informes de mesurament d\'anuncis pendents se suprimiran i no se\'n generaran ni compartiran de nous."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Vols restablir tots els temes?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Vols restablir els anuncis suggerits per les aplicacions?"</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Privadesa d\'anuncis"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Temes d\'anuncis"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Anuncis suggerits per aplicacions"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android pren nota dels temes d\'interès segons les aplicacions que has utilitzat recentment i amb quina freqüència les utilitzes."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Les aplicacions que utilitzes també poden determinar què t\'agrada segons l\'ús que en fas."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Les aplicacions que utilitzes poden demanar a Android informació que les ajuda a mesurar el rendiment dels seus anuncis. Android permet que les aplicacions recullin tipus de dades limitats."</string>
-    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916">"Més informació sobre la "<a href="https://support.google.com/android?p=ad_privacy">"privadesa d\'anuncis a Android"</a></string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Activat / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> temes"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Activat / # tema}many{Activat / # temes}other{Activat / # temes}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Activat / <xliff:g id="APPS_COUNT">%1$d</xliff:g> aplicacions"</string>
@@ -222,11 +211,6 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Aplicacions que has bloquejat"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Restableix les dades suggerides per aplicacions"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"És habitual que les aplicacions que utilitzes recordin coses que t\'interessen per personalitzar la teva experiència. Les aplicacions també poden emmagatzemar informació amb Android sobre els teus temes.\n\nPer exemple, si utilitzes una aplicació sobre entrenament de maratons, l\'aplicació pot decidir que t\'interessen les sabatilles de córrer. Més endavant, si utilitzes una altra aplicació, aquesta aplicació pot mostrar-te un anunci de sabatilles de córrer suggerit per la primera aplicació.\n\nAndroid suprimeix automàticament les dades suggerides per aplicacions de manera regular. Pot ser que una aplicació que utilitzis de nou torni a aparèixer a la llista. O pots bloquejar una aplicació per impedir que et suggereixi anuncis.\n\nA les teves aplicacions, un anunci que vegis pot estar personalitzat, depenent d\'aquesta configuració, de la configuració de temes d\'anuncis, de la configuració d\'identificador de publicitat i de si l\'aplicació que utilitzes personalitza anuncis."</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"Nova funció de privadesa d\'anuncis disponible"</string>
-    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Només es comparteix informació molt limitada entre aplicacions per ajudar a mesurar el rendiment dels anuncis"</string>
-    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Estem llançant una nova funció de privadesa d\'anuncis anomenada \"mesurament d\'anuncis\". Android comparteix només informació molt limitada entre aplicacions, com ara quan se t\'ha mostrat un anunci, per ajudar les aplicacions a mesurar el rendiment dels anuncis."</string>
-    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Pots fer canvis a la configuració de privadesa d\'anuncis."</string>
-    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Les aplicacions que utilitzes poden demanar a Android informació per ajudar-les a mesurar el rendiment dels seus anuncis. Android permet que les aplicacions només recullin tipus de dades limitats."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Il·lustració de símbols acolorida que representa temes d\'interès, com música, notícies i esports"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Il·lustració acolorida d\'un cadenat dins d\'un cercle"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Il·lustració petita en blanc i negre de nou punts que formen un quadrat"</string>
@@ -285,7 +269,7 @@
     <string name="topic10052" msgid="8213269199807045473">"Galeries d\'imatges en línia"</string>
     <string name="topic10053" msgid="1378192203082454197">"Vídeo en línia"</string>
     <string name="topic10054" msgid="3727401645405134505">"Reproducció de vídeo en directe"</string>
-    <string name="topic10055" msgid="4943174831732192854">"Serveis de reproducció en continu de programes de televisió i pel·lícules"</string>
+    <string name="topic10055" msgid="4943174831732192854">"Reproducció de pel·lícules i televisió"</string>
     <string name="topic10056" msgid="3066058636154255073">"Òpera"</string>
     <string name="topic10057" msgid="387445514677222034">"Guies i materials de consulta de televisió"</string>
     <string name="topic10058" msgid="9149178644022969766">"Emissores i cadenes de TV"</string>
