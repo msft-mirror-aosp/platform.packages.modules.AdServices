@@ -1,0 +1,25 @@
+{
+  "mocks": [
+    {
+      "request": {
+        "path": "signalsWithValidEncoder"
+      },
+      "response": {
+        "body": "ProtectedSignalsWithEncoder.json"
+      },
+      "verify_called": true
+    },
+    {
+      "request": {
+        "path": "encoder"
+      },
+      "response": {
+        "body": "SignalsEncoder.js"
+      },
+      "verify_called": false
+    }
+  ],
+  "substitutions": {
+    "<encoder_endpoint>": "{base_url}/encoder"
+  }
+}

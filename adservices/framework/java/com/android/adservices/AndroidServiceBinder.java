@@ -26,6 +26,7 @@ import static com.android.adservices.AdServicesCommon.ACTION_APPSETID_PROVIDER_S
 import static com.android.adservices.AdServicesCommon.ACTION_APPSETID_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_CUSTOM_AUDIENCE_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_MEASUREMENT_SERVICE;
+import static com.android.adservices.AdServicesCommon.ACTION_PROTECTED_SIGNALS_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_TOPICS_SERVICE;
 import static com.android.adservices.AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW;
 
@@ -219,7 +220,8 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
                 && !mServiceIntentAction.equals(ACTION_APPSETID_SERVICE)
                 && !mServiceIntentAction.equals(ACTION_APPSETID_PROVIDER_SERVICE)
                 && !mServiceIntentAction.equals(ACTION_AD_SERVICES_COBALT_UPLOAD_SERVICE)
-                && !mServiceIntentAction.equals(ACTION_AD_SERVICES_COMMON_SERVICE)) {
+                && !mServiceIntentAction.equals(ACTION_AD_SERVICES_COMMON_SERVICE)
+                && !mServiceIntentAction.equals(ACTION_PROTECTED_SIGNALS_SERVICE)) {
             LogUtil.e("Bad service intent action: " + mServiceIntentAction);
             return null;
         }
