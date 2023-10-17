@@ -45,6 +45,7 @@ import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV2
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV23;
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV24;
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV25;
+import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV26;
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV7;
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV8;
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV9;
@@ -64,7 +65,7 @@ import java.util.stream.Stream;
 public class MeasurementDbHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME =
             FileCompatUtils.getAdservicesFilename("adservices_msmt.db");
-    public static final int CURRENT_DATABASE_VERSION = 25;
+    public static final int CURRENT_DATABASE_VERSION = 26;
     public static final int OLD_DATABASE_FINAL_VERSION = 6;
 
     private static MeasurementDbHelper sSingleton = null;
@@ -161,7 +162,8 @@ public class MeasurementDbHelper extends SQLiteOpenHelper {
                 new MeasurementDbMigratorV22(),
                 new MeasurementDbMigratorV23(),
                 new MeasurementDbMigratorV24(),
-                new MeasurementDbMigratorV25());
+                new MeasurementDbMigratorV25(),
+                new MeasurementDbMigratorV26());
     }
 
     private boolean hasAllV6MeasurementTables(SQLiteDatabase db) {
