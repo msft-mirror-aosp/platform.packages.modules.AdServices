@@ -41,7 +41,7 @@ public class EncryptionKeyTest {
     private static EncryptionKey createKeyCommitment(String enrollmentId) {
         return new EncryptionKey.Builder()
                 .setId(ID)
-                .setKeyType(EncryptionKey.KeyType.ENCRYPTION_KEY)
+                .setKeyType(EncryptionKey.KeyType.ENCRYPTION)
                 .setEnrollmentId(enrollmentId)
                 .setReportingOrigin(REPORTING_ORIGIN)
                 .setEncryptionKeyUrl(ENCRYPTION_KEY_URL)
@@ -58,7 +58,7 @@ public class EncryptionKeyTest {
         EncryptionKey result = createKeyCommitment(ENROLLMENT_ID1);
 
         assertEquals(ID, result.getId());
-        assertEquals(EncryptionKey.KeyType.ENCRYPTION_KEY, result.getKeyType());
+        assertEquals(EncryptionKey.KeyType.ENCRYPTION, result.getKeyType());
         assertEquals(ENROLLMENT_ID1, result.getEnrollmentId());
         assertEquals(REPORTING_ORIGIN, result.getReportingOrigin());
         assertEquals(ENCRYPTION_KEY_URL, result.getEncryptionKeyUrl());
@@ -74,7 +74,7 @@ public class EncryptionKeyTest {
         EncryptionKey result = new EncryptionKey.Builder().build();
 
         assertNull(result.getId());
-        assertEquals(EncryptionKey.KeyType.ENCRYPTION_KEY, result.getKeyType());
+        assertEquals(EncryptionKey.KeyType.ENCRYPTION, result.getKeyType());
         assertNull(result.getEnrollmentId());
         assertNull(result.getReportingOrigin());
         assertNull(result.getEncryptionKeyUrl());
