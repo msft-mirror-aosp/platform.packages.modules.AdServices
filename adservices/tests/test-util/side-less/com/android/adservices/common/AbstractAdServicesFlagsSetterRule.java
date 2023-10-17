@@ -258,7 +258,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     /** Clear all flags from the {@code AdServices} namespace */
     public T clearFlags() {
         return runOrCache(
-                "clearFlags()",
+                "clerFlags()",
                 () -> {
                     mLog.i("Clearing all flags. mIsRunning=%b", mIsRunning);
                     mDeviceConfig.clearFlags();
