@@ -54,8 +54,10 @@ public final class TestDeviceHelper {
         return device;
     }
 
+    // cmdFmt must be final because it's being passed to a method taking @FormatString
     @FormatMethod
-    public static String runShellCommand(@FormatString String cmdFmt, @Nullable Object... cmdArgs) {
+    public static String runShellCommand(
+            @FormatString final String cmdFmt, @Nullable Object... cmdArgs) {
         return runShellCommand(getTestDevice(), cmdFmt, cmdArgs);
     }
 

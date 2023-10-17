@@ -16,11 +16,13 @@
 package com.android.adservices.common;
 
 import static com.android.adservices.common.TestDeviceHelper.getProperty;
-import static com.android.adservices.common.TestDeviceHelper.runShellCommand;
 import static com.android.adservices.common.TestDeviceHelper.setProperty;
 
+import com.google.errorprone.annotations.FormatMethod;
+import com.google.errorprone.annotations.FormatString;
+
 /** Host-side implementation of {@link SystemPropertiesHelper.Interface}. */
-final class HostSideSystemPropertiesHelper implements SystemPropertiesHelper.Interface {
+final class HostSideSystemPropertiesHelper extends SystemPropertiesHelper.Interface {
 
     private static final Logger sLogger =
             new Logger(ConsoleLogger.getInstance(), HostSideSystemPropertiesHelper.class);
@@ -31,6 +33,8 @@ final class HostSideSystemPropertiesHelper implements SystemPropertiesHelper.Int
     static HostSideSystemPropertiesHelper getInstance() {
         return sInstance;
     }
+
+    private HostSideSystemPropertiesHelper() {}
 
     @Override
     public String get(String name) {
@@ -43,15 +47,16 @@ final class HostSideSystemPropertiesHelper implements SystemPropertiesHelper.Int
         setProperty(name, value);
     }
 
+    // cmdFmt must be final because it's being passed to a method taking @FormatString
     @Override
-    public String dumpSystemProperties() {
-        return runShellCommand("getprop").trim();
+    @FormatMethod
+    protected String runShellCommand(
+            @FormatString final String cmdFmt, @Nullable Object... cmdArgs) {
+        return TestDeviceHelper.runShellCommand(cmdFmt, cmdArgs);
     }
 
     @Override
     public String toString() {
         return HostSideSystemPropertiesHelper.class.getSimpleName();
     }
-
-    private HostSideSystemPropertiesHelper() {}
 }
