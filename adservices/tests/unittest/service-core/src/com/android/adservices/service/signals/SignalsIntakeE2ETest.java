@@ -54,8 +54,8 @@ import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.data.signals.EncoderEndpointsDao;
-import com.android.adservices.data.signals.EncoderLogicDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
+import com.android.adservices.data.signals.EncoderLogicMetadataDao;
 import com.android.adservices.data.signals.EncoderPersistenceDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
@@ -127,7 +127,7 @@ public class SignalsIntakeE2ETest {
 
     private ProtectedSignalsDao mSignalsDao;
     private EncoderEndpointsDao mEncoderEndpointsDao;
-    private EncoderLogicDao mEncoderLogicDao;
+    private EncoderLogicMetadataDao mEncoderLogicMetadataDao;
     private ProtectedSignalsServiceImpl mService;
     private UpdateSignalsOrchestrator mUpdateSignalsOrchestrator;
     private UpdatesDownloader mUpdatesDownloader;
@@ -152,10 +152,10 @@ public class SignalsIntakeE2ETest {
                 Room.inMemoryDatabaseBuilder(mContextSpy, ProtectedSignalsDatabase.class)
                         .build()
                         .getEncoderEndpointsDao();
-        mEncoderLogicDao =
+        mEncoderLogicMetadataDao =
                 Room.inMemoryDatabaseBuilder(mContextSpy, ProtectedSignalsDatabase.class)
                         .build()
-                        .getEncoderLogicDao();
+                        .getEncoderLogicMetadataDao();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mUpdateProcessorSelector = new UpdateProcessorSelector();
@@ -164,7 +164,7 @@ public class SignalsIntakeE2ETest {
                 new EncoderLogicHandler(
                         mEncoderPersistenceDao,
                         mEncoderEndpointsDao,
-                        mEncoderLogicDao,
+                        mEncoderLogicMetadataDao,
                         mAdServicesHttpsClientMock,
                         mBackgroundExecutorService);
         mUpdateEncoderEventHandler =

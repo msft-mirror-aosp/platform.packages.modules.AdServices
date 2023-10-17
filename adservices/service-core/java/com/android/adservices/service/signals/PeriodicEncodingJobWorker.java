@@ -24,7 +24,7 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.data.signals.EncodedPayloadDao;
-import com.android.adservices.data.signals.EncoderLogicDao;
+import com.android.adservices.data.signals.EncoderLogicMetadataDao;
 import com.android.adservices.data.signals.EncoderPersistenceDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.Flags;
@@ -69,7 +69,7 @@ public class PeriodicEncodingJobWorker {
 
     private static volatile PeriodicEncodingJobWorker sPeriodicEncodingJobWorker;
 
-    private final EncoderLogicDao mEncoderLogicDao;
+    private final EncoderLogicMetadataDao mEncoderLogicMetadataDao;
     private final EncoderPersistenceDao mEncoderPersistenceDao;
     private final EncodedPayloadDao mEncodedPayloadDao;
     private final SignalsProvider mSignalsProvider;
@@ -84,7 +84,7 @@ public class PeriodicEncodingJobWorker {
 
     @VisibleForTesting
     protected PeriodicEncodingJobWorker(
-            @NonNull EncoderLogicDao encoderLogicDao,
+            @NonNull EncoderLogicMetadataDao encoderLogicMetadataDao,
             @NonNull EncoderPersistenceDao encoderPersistenceDao,
             @NonNull EncodedPayloadDao encodedPayloadDao,
             @NonNull SignalsProviderImpl signalStorageManager,
@@ -92,7 +92,7 @@ public class PeriodicEncodingJobWorker {
             @NonNull ListeningExecutorService backgroundExecutor,
             @NonNull ListeningExecutorService lightWeightExecutor,
             @NonNull Flags flags) {
-        mEncoderLogicDao = encoderLogicDao;
+        mEncoderLogicMetadataDao = encoderLogicMetadataDao;
         mEncoderPersistenceDao = encoderPersistenceDao;
         mEncodedPayloadDao = encodedPayloadDao;
         mSignalsProvider = signalStorageManager;
@@ -121,7 +121,7 @@ public class PeriodicEncodingJobWorker {
                         ProtectedSignalsDatabase.getInstance(context);
                 sPeriodicEncodingJobWorker =
                         new PeriodicEncodingJobWorker(
-                                signalsDatabase.getEncoderLogicDao(),
+                                signalsDatabase.getEncoderLogicMetadataDao(),
                                 EncoderPersistenceDao.getInstance(context),
                                 signalsDatabase.getEncodedPayloadDao(),
                                 new SignalsProviderImpl(signalsDatabase.protectedSignalsDao()),
@@ -157,7 +157,9 @@ public class PeriodicEncodingJobWorker {
         FluentFuture<List<AdTechIdentifier>> buyers =
                 FluentFuture.from(
                         mBackgroundExecutor.submit(
-                                () -> mEncoderLogicDao.getAllBuyersWithRegisteredEncoders()));
+                                () ->
+                                        mEncoderLogicMetadataDao
+                                                .getAllBuyersWithRegisteredEncoders()));
 
         return buyers.transformAsync(b -> doEncodingForRegisteredBuyers(b), mBackgroundExecutor);
     }
@@ -177,7 +179,7 @@ public class PeriodicEncodingJobWorker {
     @VisibleForTesting
     FluentFuture<Boolean> runEncodingPerBuyer(AdTechIdentifier buyer, int timeout) {
         String encodingLogic = mEncoderPersistenceDao.getEncoder(buyer);
-        int version = mEncoderLogicDao.getEncoder(buyer).getVersion();
+        int version = mEncoderLogicMetadataDao.getMetadata(buyer).getVersion();
         Map<String, List<ProtectedSignal>> signals = mSignalsProvider.getSignals(buyer);
 
         return FluentFuture.from(
