@@ -1,9 +1,11 @@
 {
-  "description": "trigger attributed to most recent source for the same priority",
+  "description": "Max source registration reporting endpoints per rate limit window ignores source expiry.",
+  "api_config": {
+    "rate_limit_max_source_registration_reporting_origins": "1"
+  },
   "input": {
     "registrations": [
       {
-        "timestamp": "0",
         "registration_request": {
           "context_origin": "https://source.test",
           "attribution_src_url": "https://reporter.test/register-source",
@@ -14,70 +16,64 @@
             "url": "https://reporter.test/register-source",
             "response": {
               "Attribution-Reporting-Register-Source": {
+                "source_event_id": "123",
                 "destination": "https://destination.test",
-                "source_event_id": "123"
+                "expiry": "86400"
               }
             }
           }
-        ]
+        ],
+        "timestamp": "0"
       },
+      // Source is rejected for exceeding the distinct reporting origin
+      // limit. Although the previous source has expired, it is still within
+      // the rate limit window.
       {
-        "timestamp": "1000",
         "registration_request": {
           "context_origin": "https://source.test",
-          "attribution_src_url": "https://reporter.test/register-source",
-          "source_type": "navigation"
+          "attribution_src_url": "https://example.reporter.test/register-source",
+          "source_type": "event"
         },
         "responses": [
           {
-            "url": "https://reporter.test/register-source",
+            "url": "https://example.reporter.test/register-source",
             "response": {
               "Attribution-Reporting-Register-Source": {
-                "destination": "https://example.destination.test",
-                "source_event_id": "456"
+                "source_event_id": "456",
+                "destination": "https://destination.test"
               }
             }
           }
-        ]
+        ],
+        "timestamp": "86400001"
       },
+      // Should not result in any report since the reporting origins
+      // do not match.
       {
-        "timestamp": "2000",
         "registration_request": {
-          "attribution_src_url": "https://reporter.test/register-trigger",
+          "attribution_src_url": "https://example.reporter.test/register-trigger",
           "context_origin": "https://destination.test"
         },
         "responses": [
           {
-            "url": "https://reporter.test/register-trigger",
+            "url": "https://example.reporter.test/register-trigger",
             "response": {
               "Attribution-Reporting-Register-Trigger": {
                 "event_trigger_data": [
                   {
-                    "trigger_data": "7"
+                    "trigger_data": "1"
                   }
                 ]
               }
             }
           }
-        ]
+        ],
+        "timestamp": "86401001"
       }
     ]
   },
   "output": {
     "unparsable_registrations": [],
-    "reports": [
-      {
-        "payload": {
-          "attribution_destination": "https://destination.test",
-          "randomized_trigger_rate": 0.0024263,
-          "scheduled_report_time": "172801",
-          "source_event_id": "456",
-          "source_type": "navigation",
-          "trigger_data": "7"
-        },
-        "report_url": "https://reporter.test/.well-known/attribution-reporting/report-event-attribution",
-        "report_time": "172801000"
-      }
-    ]
+    "reports": []
   }
 }

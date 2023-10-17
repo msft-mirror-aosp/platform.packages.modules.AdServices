@@ -1,5 +1,5 @@
 {
-  "description": "source matching is based on the same reporting origin",
+  "description": "Large aggregation key values can involve nuanced handling. For example, Java BigInteger::toByteArray may sometimes add a byte for sign, and JSON libraries may alter data depending on its type during encoding or decoding.",
   "input": {
     "registrations": [
       {
@@ -7,7 +7,7 @@
         "registration_request": {
           "context_origin": "https://source.test",
           "attribution_src_url": "https://reporter.test/register-source",
-          "source_type": "navigation"
+          "source_type": "event"
         },
         "responses": [
           {
@@ -15,7 +15,9 @@
             "response": {
               "Attribution-Reporting-Register-Source": {
                 "destination": "https://destination.test",
-                "source_event_id": "123"
+                "aggregation_keys": {
+                  "a": "0x8A554C048C95986ACF3F015F3411A047"
+                }
               }
             }
           }
@@ -32,32 +34,15 @@
             "url": "https://reporter.test/register-trigger",
             "response": {
               "Attribution-Reporting-Register-Trigger": {
-                "event_trigger_data": [
+                "aggregatable_trigger_data": [
                   {
-                    "trigger_data": "7"
+                    "source_keys": ["a"],
+                    "key_piece": "0x77A118E365D9C45E3A62370AE6B214D9"
                   }
-                ]
-              }
-            }
-          }
-        ]
-      },
-      {
-        "timestamp": "2000",
-        "registration_request": {
-          "attribution_src_url": "https://another-reporter.test/register-trigger",
-          "context_origin": "https://destination.test"
-        },
-        "responses": [
-          {
-            "url": "https://another-reporter.test/register-trigger",
-            "response": {
-              "Attribution-Reporting-Register-Trigger": {
-                "event_trigger_data": [
-                  {
-                    "trigger_data": "6"
-                  }
-                ]
+                ],
+                "aggregatable_values": {
+                  "a": 123
+                }
               }
             }
           }
@@ -71,14 +56,15 @@
       {
         "payload": {
           "attribution_destination": "https://destination.test",
-          "randomized_trigger_rate": 0.0024263,
-          "scheduled_report_time": "172800",
-          "source_event_id": "123",
-          "source_type": "navigation",
-          "trigger_data": "7"
+          "histograms": [
+            {
+              "key": "0xfff55ce7eddddc7eff7f375ff6b3b4df",
+              "value": 123
+            }
+          ]
         },
-        "report_url": "https://reporter.test/.well-known/attribution-reporting/report-event-attribution",
-        "report_time": "172800000"
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
+        "report_time": "3601000"
       }
     ]
   }
