@@ -64,9 +64,15 @@ public final class AdServicesFlagsSetterRule
         return withDefaultLogcatTags().setGlobalKillSwitch(false);
     }
 
+    // TODO(b/297085722): pass clearFlags() on forGlobalKillSwitchDisabledTests() by default?
+    /** Factory method that clears all flags then disables the global kill switch. */
+    public static AdServicesFlagsSetterRule forGlobalKillSwitchDisabledOnClearSlateTests() {
+        return withDefaultLogcatTags().clearFlags().setGlobalKillSwitch(false);
+    }
+
     /** Factory method for Topics end-to-end CTS tests. */
     public static AdServicesFlagsSetterRule forTopicsE2ETests() {
-        return forGlobalKillSwitchDisabledTests()
+        return forGlobalKillSwitchDisabledOnClearSlateTests()
                 .setLogcatTag(LOGCAT_TAG_TOPICS, LOGCAT_LEVEL_VERBOSE)
                 .setTopicsKillSwitch(false)
                 .setTopicsOnDeviceClassifierKillSwitch(false)
