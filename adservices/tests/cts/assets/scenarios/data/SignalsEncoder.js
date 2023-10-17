@@ -14,18 +14,9 @@
  * limitations under the License.
  */
 
-package android.adservices;
-
-/**
- * Class to store flags related constants.
- *
- * <p>The constants are cloned from service side's {@code FlagsConstants} class.
- *
- * @hide
- */
-// TODO(b/302041492): Extend FlagsConstants class to framework package.
-public final class FlagsConstants {
-    public static final String KEY_AD_ID_CACHE_ENABLED = "ad_id_cache_enabled";
-    public static final String KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH =
-            "protected_signals_service_kill_switch";
+function encodeSignals(signals, maxSize) {
+    var base64Array = ['MA==', 'MQ==', 'Mg==', 'Mw==', 'NA==', 'NQ==', 'Ng==', 'Nw==',
+        'OA==', 'OQ==', 'Og==', 'Ow==', 'PA==', 'PQ==', 'Pg==', 'Pw==', 'QA==', 'QQ==', 'Qg==', 'Qw==',
+    ];
+    return { status: 0, results: base64Array[signals.length] };
 }

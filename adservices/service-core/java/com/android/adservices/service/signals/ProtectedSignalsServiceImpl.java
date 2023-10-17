@@ -222,7 +222,8 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                                     input.getCallerPackageName(),
                                     mFlags.getDisableFledgeEnrollmentCheck(),
                                     mFlags.getEnforceForegroundStatusForSignals(),
-                                    true,
+                                    // Consent is enforced in a separate call below.
+                                    false,
                                     callerUid,
                                     apiName,
                                     PROTECTED_SIGNAL_API_UPDATE_SIGNALS,
