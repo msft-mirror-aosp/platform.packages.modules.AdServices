@@ -61,8 +61,9 @@ public class EncryptionKeyDao implements IEncryptionKeyDao {
 
     @Override
     @Nullable
-    public EncryptionKey getEncryptionKeyFromEnrollmentId(
+    public List<EncryptionKey> getEncryptionKeyFromEnrollmentId(
             String enrollmentId, EncryptionKey.KeyType keyType) throws SQLException {
+        List<EncryptionKey> encryptionKeyList = new ArrayList<>();
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         try (Cursor cursor =
                 db.query(
@@ -79,12 +80,19 @@ public class EncryptionKeyDao implements IEncryptionKeyDao {
                         null,
                         null)) {
             if (cursor == null || cursor.getCount() <= 0) {
-                sLogger.e(
-                        "Failed to find EncryptionKey in DB with enrollment id: %s.", enrollmentId);
+                sLogger.i(
+                        "Failed to find any EncryptionKey in DB with enrollment id: %s.",
+                        enrollmentId);
                 return null;
             }
-            cursor.moveToNext();
-            return SqliteObjectMapper.constructEncryptionKeyFromCursor(cursor);
+
+            sLogger.i(
+                    "Found %s keys for key type: %s, enrollment id %s.",
+                    cursor.getCount(), keyType, enrollmentId);
+            while (cursor.moveToNext()) {
+                encryptionKeyList.add(SqliteObjectMapper.constructEncryptionKeyFromCursor(cursor));
+            }
+            return encryptionKeyList;
         } catch (SQLException e) {
             sLogger.e(
                     "Failed to find EncryptionKey in DB with enrollment id: %s, error: %s",
@@ -125,8 +133,9 @@ public class EncryptionKeyDao implements IEncryptionKeyDao {
 
     @Override
     @Nullable
-    public EncryptionKey getEncryptionKeyFromReportingOrigin(
+    public List<EncryptionKey> getEncryptionKeyFromReportingOrigin(
             Uri reportingOrigin, EncryptionKey.KeyType keyType) {
+        List<EncryptionKey> encryptionKeyList = new ArrayList<>();
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         try (Cursor cursor =
                 db.query(
@@ -143,13 +152,19 @@ public class EncryptionKeyDao implements IEncryptionKeyDao {
                         null,
                         null)) {
             if (cursor == null || cursor.getCount() <= 0) {
-                sLogger.e(
+                sLogger.i(
                         "Failed to find EncryptionKey in DB with reportingOrigin: %s.",
                         reportingOrigin.toString());
                 return null;
             }
-            cursor.moveToNext();
-            return SqliteObjectMapper.constructEncryptionKeyFromCursor(cursor);
+
+            sLogger.i(
+                    "Found %s keys for key type: %s, reporting origin %s.",
+                    cursor.getCount(), keyType, reportingOrigin);
+            while (cursor.moveToNext()) {
+                encryptionKeyList.add(SqliteObjectMapper.constructEncryptionKeyFromCursor(cursor));
+            }
+            return encryptionKeyList;
         } catch (SQLException e) {
             sLogger.e(
                     "Failed to find EncryptionKey in DB with reportingOrigin: %s, error: %s",
