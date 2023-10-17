@@ -1095,7 +1095,12 @@ public class MeasurementManagerCtsTest {
     }
 
     private void enableGlobalKillSwitch(boolean enabled) {
-        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + enabled);
+        if (SdkLevel.isAtLeastT()) {
+            ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + enabled);
+        } else {
+            ShellUtils.runShellCommand(
+                    "device_config put adservices enable_back_compat " + !enabled);
+        }
     }
 
     private void enableMeasurementKillSwitch(boolean enabled) {
