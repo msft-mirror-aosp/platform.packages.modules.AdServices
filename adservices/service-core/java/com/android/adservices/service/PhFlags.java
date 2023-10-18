@@ -5855,4 +5855,20 @@ public final class PhFlags implements Flags {
                 /* flagName */ FlagsConstants.KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT,
                 /* defaultValue */ Flags.APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT);
     }
+
+    @Override
+    public boolean getEnableAdservicesApiEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_ENABLE_ADSERVICES_API_ENABLED,
+                /* defaultValue */ DEFAULT_ENABLE_ADSERVICES_API_ENABLED);
+    }
+
+    @Override
+    public boolean getAdservicesEnablementCheckEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED,
+                /* defaultValue */ DEFAULT_ADSERVICES_ENABLEMENT_CHECK_ENABLED);
+    }
 }
