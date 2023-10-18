@@ -29,21 +29,21 @@ import java.util.List;
 
 /** Dao to persist, access and delete encoding logic for buyers */
 @Dao
-public interface EncoderLogicDao {
+public interface EncoderLogicMetadataDao {
 
     /**
-     * @param logic an entry for encoding logic
+     * @param logic an entry for encoding logic metadata
      * @return the rowId of the entry persisted
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    long persistEncoder(DBEncoderLogic logic);
+    long persistEncoderLogicMetadata(DBEncoderLogicMetadata logic);
 
     /**
      * @param buyer Ad-tech owner for the encoding logic
-     * @return an instance of {@link DBEncoderLogic} if present
+     * @return an instance of {@link DBEncoderLogicMetadata} if present
      */
     @Query("SELECT * FROM encoder_logics WHERE buyer = :buyer") // NOTYPO
-    DBEncoderLogic getEncoder(AdTechIdentifier buyer);
+    DBEncoderLogicMetadata getMetadata(AdTechIdentifier buyer);
 
     /**
      * @param buyer Ad-tech owner for the encoding logic

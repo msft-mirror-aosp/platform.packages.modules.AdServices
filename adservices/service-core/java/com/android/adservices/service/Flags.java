@@ -984,6 +984,7 @@ public interface Flags {
     long PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS = 1L * 60L * 60L * 1000L; // 1 hour
     long PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS = 5L * 60L * 1000L; // 5 minutes
     int PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES = (int) (1.5 * 1024); // 1.5 KB
+    int PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES = (int) (10 * 1024);
 
     /** Returns {@code true} feature flag if Periodic encoding of Protected Signals is enabled. */
     default boolean getProtectedSignalsPeriodicEncodingEnabled() {
@@ -1009,6 +1010,11 @@ public interface Flags {
      */
     default int getProtectedSignalsEncodedPayloadMaxSizeBytes() {
         return PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES;
+    }
+
+    /** Returns the maximum size of the signal update payload. */
+    default int getProtectedSignalsFetchSignalUpdatesMaxSizeBytes() {
+        return PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES;
     }
 
     int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT = 10_000;
