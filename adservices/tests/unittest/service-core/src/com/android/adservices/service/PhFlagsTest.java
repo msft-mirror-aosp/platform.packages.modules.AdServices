@@ -7086,6 +7086,9 @@ public class PhFlagsTest {
 
     @Test
     public void testGetMeasurementRollbackDeletionAppSearchKillSwitch() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_ENABLE_BACK_COMPAT,
@@ -7101,6 +7104,58 @@ public class PhFlagsTest {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH,
                 Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getMeasurementRollbackDeletionAppSearchKillSwitch())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetMeasurementRollbackDeletionAppSearchKillSwitch_globalOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENABLE_BACK_COMPAT,
+                Boolean.toString(true),
+                /* makeDefault */ false);
+        mockIsAtLeastT(false);
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getMeasurementRollbackDeletionAppSearchKillSwitch())
+                .isEqualTo(MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH);
+
+        boolean phOverridingValue = !MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_GLOBAL_KILL_SWITCH,
+                Boolean.toString(true),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getMeasurementRollbackDeletionAppSearchKillSwitch())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetMeasurementRollbackDeletionAppSearchKillSwitch_measurementOverride() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENABLE_BACK_COMPAT,
+                Boolean.toString(true),
+                /* makeDefault */ false);
+        mockIsAtLeastT(false);
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getMeasurementRollbackDeletionAppSearchKillSwitch())
+                .isEqualTo(MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH);
+
+        boolean phOverridingValue = !MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_KILL_SWITCH,
+                Boolean.toString(true),
                 /* makeDefault */ false);
 
         assertThat(mPhFlags.getMeasurementRollbackDeletionAppSearchKillSwitch())
