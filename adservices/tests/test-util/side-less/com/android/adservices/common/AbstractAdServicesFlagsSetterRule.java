@@ -486,25 +486,6 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
                 });
     }
 
-    /**
-     * Sets just the flag needed by {@link
-     * com.android.adservices.service.PhFlags#getEnableBackCompat()}, but only if required by the
-     * Android version of the device running the test.
-     */
-    public T setCompatModeFlag() {
-        return runOrCache(
-                "setCompatModeFlag()",
-                () -> {
-                    if (isAtLeastT()) {
-                        mLog.d("setCompatModeFlag(): ignored on SDK %d", getDeviceSdk());
-                        // Do nothing; this method is intended to set flags for Android S- only.
-                        return;
-                    }
-                    mLog.d("setCompatModeFlag(): setting flags on SDK %d", getDeviceSdk());
-                    setEnableBackCompat(true);
-                });
-    }
-
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // NOTE: DO NOT add new setXyz() methods, unless they need non-trivial logic. Instead, let    //
     // your test call setFlags(flagName) (statically import FlagsConstant.flagName), which will   //

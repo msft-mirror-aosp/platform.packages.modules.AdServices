@@ -83,7 +83,7 @@ public final class AdServicesFlagsSetterRule
                 .setAdIdKillSwitchForTests(false)
                 .setFlag(KEY_ADID_REQUEST_PERMITS_PER_SECOND, 25.0)
                 .setPpapiAppAllowList(packageName)
-                .setCompatModeFlag();
+                .setCompatModeFlags();
     }
 
     /** Factory method for Measurement E2E CTS tests */
@@ -111,7 +111,7 @@ public final class AdServicesFlagsSetterRule
 
     /** Factory method for AdservicesCommonManager end-to-end CTS tests. */
     public static AdServicesFlagsSetterRule forCommonManagerE2ETests(String packageName) {
-        return withDefaultLogcatTags().setCompatModeFlag().setPpapiAppAllowList(packageName);
+        return withDefaultLogcatTags().setCompatModeFlags().setPpapiAppAllowList(packageName);
     }
 
     /**
