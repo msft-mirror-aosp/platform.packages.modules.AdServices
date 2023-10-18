@@ -17,6 +17,7 @@
 package com.android.adservices.data.encryptionkey;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import android.database.Cursor;
 import android.net.Uri;
@@ -47,33 +48,46 @@ public class EncryptionKeyDaoTest {
                     .setProtocolType(EncryptionKey.ProtocolType.HPKE)
                     .setKeyCommitmentId(11)
                     .setBody("AVZBTFVF")
-                    .setExpiration(100000L)
+                    .setExpiration(100001L)
                     .build();
 
-    private static final EncryptionKey ENCRYPTION_KEY2 =
+    private static final EncryptionKey SIGNING_KEY1 =
             new EncryptionKey.Builder()
                     .setId("2")
                     .setKeyType(EncryptionKey.KeyType.SIGNING)
                     .setEnrollmentId("100")
                     .setReportingOrigin(Uri.parse("https://test1.com"))
                     .setEncryptionKeyUrl("https://test1.com/.well-known/encryption-keys")
-                    .setProtocolType(EncryptionKey.ProtocolType.WebPKI)
+                    .setProtocolType(EncryptionKey.ProtocolType.ECDSA)
                     .setKeyCommitmentId(12)
                     .setBody("BVZBTFVF")
-                    .setExpiration(100000L)
+                    .setExpiration(100002L)
                     .build();
 
-    private static final EncryptionKey ENCRYPTION_KEY3 =
+    private static final EncryptionKey SIGNING_KEY2 =
             new EncryptionKey.Builder()
                     .setId("3")
+                    .setKeyType(EncryptionKey.KeyType.SIGNING)
+                    .setEnrollmentId("100")
+                    .setReportingOrigin(Uri.parse("https://test1.com"))
+                    .setEncryptionKeyUrl("https://test1.com/.well-known/encryption-keys")
+                    .setProtocolType(EncryptionKey.ProtocolType.ECDSA)
+                    .setKeyCommitmentId(13)
+                    .setBody("CVZBTFVF")
+                    .setExpiration(100003L)
+                    .build();
+
+    private static final EncryptionKey ENCRYPTION_KEY2 =
+            new EncryptionKey.Builder()
+                    .setId("4")
                     .setKeyType(EncryptionKey.KeyType.ENCRYPTION)
                     .setEnrollmentId("101")
                     .setReportingOrigin(Uri.parse("https://test2.com"))
                     .setEncryptionKeyUrl("https://test2.com/.well-known/encryption-keys")
                     .setProtocolType(EncryptionKey.ProtocolType.HPKE)
-                    .setKeyCommitmentId(13)
-                    .setBody("CVZBTFVF")
-                    .setExpiration(100000L)
+                    .setKeyCommitmentId(14)
+                    .setBody("DVZBTFVF")
+                    .setExpiration(100004L)
                     .build();
 
     /** Unit test set up. */
@@ -120,10 +134,11 @@ public class EncryptionKeyDaoTest {
     @Test
     public void testGetAllEncryptionKeys() {
         mEncryptionKeyDao.insert(ENCRYPTION_KEY1);
+        mEncryptionKeyDao.insert(SIGNING_KEY1);
+        mEncryptionKeyDao.insert(SIGNING_KEY2);
         mEncryptionKeyDao.insert(ENCRYPTION_KEY2);
-        mEncryptionKeyDao.insert(ENCRYPTION_KEY3);
         List<EncryptionKey> encryptionKeyList = mEncryptionKeyDao.getAllEncryptionKeys();
-        assertEquals(3, encryptionKeyList.size());
+        assertEquals(4, encryptionKeyList.size());
     }
 
     /** Unit test for EncryptionKeyDao delete() method. */
@@ -143,59 +158,88 @@ public class EncryptionKeyDaoTest {
     @Test
     public void testGetEncryptionKeyFromEnrollmentId() {
         mEncryptionKeyDao.insert(ENCRYPTION_KEY1);
-        mEncryptionKeyDao.insert(ENCRYPTION_KEY2);
-        EncryptionKey encryptionKey =
+        mEncryptionKeyDao.insert(SIGNING_KEY1);
+        mEncryptionKeyDao.insert(SIGNING_KEY2);
+
+        List<EncryptionKey> encryptionKeyList =
                 mEncryptionKeyDao.getEncryptionKeyFromEnrollmentId(
                         "100", EncryptionKey.KeyType.ENCRYPTION);
-
+        assertNotNull(encryptionKeyList);
+        assertEquals(1, encryptionKeyList.size());
+        EncryptionKey encryptionKey = encryptionKeyList.get(0);
         assertEquals("1", encryptionKey.getId());
         assertEquals(EncryptionKey.ProtocolType.HPKE, encryptionKey.getProtocolType());
         assertEquals(11, encryptionKey.getKeyCommitmentId());
         assertEquals("AVZBTFVF", encryptionKey.getBody());
+        assertEquals(100001L, encryptionKey.getExpiration());
+
+        List<EncryptionKey> signingKeyList =
+                mEncryptionKeyDao.getEncryptionKeyFromEnrollmentId(
+                        "100", EncryptionKey.KeyType.SIGNING);
+        assertNotNull(signingKeyList);
+        assertSigningKeyListResult(signingKeyList);
     }
 
     /** Unit test for EncryptionKeyDao getEncryptionKeyFromKeyCommitmentId() method. */
     @Test
     public void testGetEncryptionKeyFromKeyCommitmentId() {
         mEncryptionKeyDao.insert(ENCRYPTION_KEY1);
-        mEncryptionKeyDao.insert(ENCRYPTION_KEY2);
+        mEncryptionKeyDao.insert(SIGNING_KEY1);
         EncryptionKey encryptionKey = mEncryptionKeyDao.getEncryptionKeyFromKeyCommitmentId(12);
 
+        assertNotNull(encryptionKey);
         assertEquals("2", encryptionKey.getId());
-        assertEquals(EncryptionKey.ProtocolType.WebPKI, encryptionKey.getProtocolType());
+        assertEquals(EncryptionKey.ProtocolType.ECDSA, encryptionKey.getProtocolType());
         assertEquals(12, encryptionKey.getKeyCommitmentId());
         assertEquals("BVZBTFVF", encryptionKey.getBody());
+        assertEquals(100002L, encryptionKey.getExpiration());
     }
 
     /** Unit test for EncryptionKeyDao getEncryptionKeyFromReportingOrigin() method. */
     @Test
     public void testGetEncryptionKeyFromReportingOrigin() {
-        mEncryptionKeyDao.insert(ENCRYPTION_KEY1);
+        mEncryptionKeyDao.insert(SIGNING_KEY1);
+        mEncryptionKeyDao.insert(SIGNING_KEY2);
         mEncryptionKeyDao.insert(ENCRYPTION_KEY2);
-        mEncryptionKeyDao.insert(ENCRYPTION_KEY3);
-        EncryptionKey encryptionKey1 =
+
+        List<EncryptionKey> signingKeyList =
                 mEncryptionKeyDao.getEncryptionKeyFromReportingOrigin(
-                        Uri.parse("https://test1.com"), EncryptionKey.KeyType.ENCRYPTION);
+                        Uri.parse("https://test1.com"), EncryptionKey.KeyType.SIGNING);
+        assertNotNull(signingKeyList);
+        assertSigningKeyListResult(signingKeyList);
 
-        assertEquals("1", encryptionKey1.getId());
-        assertEquals(EncryptionKey.ProtocolType.HPKE, encryptionKey1.getProtocolType());
-        assertEquals(11, encryptionKey1.getKeyCommitmentId());
-        assertEquals("AVZBTFVF", encryptionKey1.getBody());
-
-        EncryptionKey encryptionKey2 =
+        List<EncryptionKey> encryptionKeyList =
                 mEncryptionKeyDao.getEncryptionKeyFromReportingOrigin(
                         Uri.parse("https://test2.com"), EncryptionKey.KeyType.ENCRYPTION);
-
-        assertEquals("3", encryptionKey2.getId());
-        assertEquals(EncryptionKey.ProtocolType.HPKE, encryptionKey2.getProtocolType());
-        assertEquals(13, encryptionKey2.getKeyCommitmentId());
-        assertEquals("CVZBTFVF", encryptionKey2.getBody());
+        assertNotNull(encryptionKeyList);
+        assertEquals(1, encryptionKeyList.size());
+        EncryptionKey encryptionKey = encryptionKeyList.get(0);
+        assertEquals("4", encryptionKey.getId());
+        assertEquals(EncryptionKey.ProtocolType.HPKE, encryptionKey.getProtocolType());
+        assertEquals(14, encryptionKey.getKeyCommitmentId());
+        assertEquals("DVZBTFVF", encryptionKey.getBody());
+        assertEquals(100004L, encryptionKey.getExpiration());
     }
 
     /** Unit test cleanup. */
     @After
     public void cleanup() {
         clearAllTables();
+    }
+
+    private void assertSigningKeyListResult(List<EncryptionKey> signingKeyList) {
+        assertEquals(2, signingKeyList.size());
+        EncryptionKey signingKey1 = signingKeyList.get(0);
+        assertEquals(EncryptionKey.ProtocolType.ECDSA, signingKey1.getProtocolType());
+        assertEquals(12, signingKey1.getKeyCommitmentId());
+        assertEquals("BVZBTFVF", signingKey1.getBody());
+        assertEquals(100002L, signingKey1.getExpiration());
+
+        EncryptionKey signingKey2 = signingKeyList.get(1);
+        assertEquals(EncryptionKey.ProtocolType.ECDSA, signingKey2.getProtocolType());
+        assertEquals(13, signingKey2.getKeyCommitmentId());
+        assertEquals("CVZBTFVF", signingKey2.getBody());
+        assertEquals(100003L, signingKey2.getExpiration());
     }
 
     private void clearAllTables() {
