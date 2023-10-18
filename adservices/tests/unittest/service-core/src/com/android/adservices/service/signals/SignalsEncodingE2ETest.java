@@ -307,7 +307,10 @@ public class SignalsEncodingE2ETest {
 
     @After
     public void teardown() {
-        mEncoderPersistenceDao.deleteAllEncoders();
+        if (mEncoderPersistenceDao != null) {
+            mEncoderPersistenceDao.deleteAllEncoders();
+        }
+
         if (mStaticMockSession != null) {
             mStaticMockSession.finishMocking();
         }
