@@ -2078,6 +2078,15 @@ public final class PhFlags implements Flags {
                 /* defaultValue */ PPAPI_APP_SIGNATURE_ALLOW_LIST);
     }
 
+    // AppSearch writer allow-list
+    @Override
+    public String getAppsearchWriterAllowListOverride() {
+        return DeviceConfig.getString(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE,
+                /* defaultValue */ APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE);
+    }
+
     // Rate Limit Flags.
     @Override
     public float getSdkRequestPermitsPerSecond() {

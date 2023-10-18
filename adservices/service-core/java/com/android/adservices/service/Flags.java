@@ -2522,6 +2522,17 @@ public interface Flags {
     }
 
     /**
+     * The allow list for AppSearch writers. If non-empty, only results written by a package on the
+     * allow list will be read for consent migration.
+     */
+    String APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE = "";
+
+    /** Only data written by packages in the allow list will be read from AppSearch. */
+    default String getAppsearchWriterAllowListOverride() {
+        return APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE;
+    }
+
+    /**
      * The client app packages that are allowed to invoke web context APIs, i.e. {@link
      * android.adservices.measurement.MeasurementManager#registerWebSource} and {@link
      * android.adservices.measurement.MeasurementManager#deleteRegistrations}. App packages that do
