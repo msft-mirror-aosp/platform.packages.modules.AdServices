@@ -484,7 +484,7 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(TEST_PACKAGE, null, SDK_NAME, mSandboxLatencyInfo, new Bundle(), callback);
         // Assume sdk sandbox loads successfully
-        mSdkSandboxService.sendLoadCodeSuccessful();
+        mSdkSandboxService.sendLoadSdkSuccessful();
         callback.assertLoadSdkIsSuccessful();
     }
 
@@ -536,7 +536,7 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
 
         mService.loadSdk(TEST_PACKAGE, null, SDK_NAME, mSandboxLatencyInfo, new Bundle(), callback);
-        mSdkSandboxService.sendLoadCodeError();
+        mSdkSandboxService.sendLoadSdkError();
 
         // Verify loading failed
         callback.assertLoadSdkIsUnsuccessful();
@@ -580,8 +580,8 @@ public class SdkSandboxManagerServiceUnitTest {
             FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
             mService.loadSdk(
                     TEST_PACKAGE, null, SDK_NAME, mSandboxLatencyInfo, new Bundle(), callback);
-            // Assume SupplementalProcess loads successfully
-            mSdkSandboxService.sendLoadCodeSuccessful();
+            // Assume SdkSandbox loads successfully
+            mSdkSandboxService.sendLoadSdkSuccessful();
             callback.assertLoadSdkIsSuccessful();
         }
 
@@ -628,13 +628,13 @@ public class SdkSandboxManagerServiceUnitTest {
         disableNetworkPermissionChecks();
         disableForegroundCheck();
 
-        // Load code, but make it fail
+        // Load SDK, but make it fail
         {
             FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
             mService.loadSdk(
                     TEST_PACKAGE, null, SDK_NAME, mSandboxLatencyInfo, new Bundle(), callback);
             // Assume sdk load fails
-            mSdkSandboxService.sendLoadCodeError();
+            mSdkSandboxService.sendLoadSdkError();
             callback.assertLoadSdkIsUnsuccessful();
         }
 
@@ -766,8 +766,8 @@ public class SdkSandboxManagerServiceUnitTest {
                 mSandboxLatencyInfo,
                 new Bundle(),
                 callback);
-        // Assume SupplementalProcess loads successfully
-        mSdkSandboxService.sendLoadCodeSuccessful();
+        // Assume SdkSandbox loads successfully
+        mSdkSandboxService.sendLoadSdkSuccessful();
         callback.assertLoadSdkIsSuccessful();
 
         // Trying to request package with not exist SDK packageName
@@ -847,7 +847,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 ArgumentCaptor.forClass(IBinder.DeathRecipient.class);
 
         mService.loadSdk(TEST_PACKAGE, null, SDK_NAME, mSandboxLatencyInfo, new Bundle(), callback);
-        mSdkSandboxService.sendLoadCodeSuccessful();
+        mSdkSandboxService.sendLoadSdkSuccessful();
         callback.assertLoadSdkIsSuccessful();
 
         Mockito.verify(callback.asBinder())
@@ -897,7 +897,7 @@ public class SdkSandboxManagerServiceUnitTest {
         // Load an sdk
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(TEST_PACKAGE, null, SDK_NAME, mSandboxLatencyInfo, new Bundle(), callback);
-        mSdkSandboxService.sendLoadCodeSuccessful();
+        mSdkSandboxService.sendLoadSdkSuccessful();
         callback.assertLoadSdkIsSuccessful();
 
         // Request surface package from the SDK
@@ -1640,7 +1640,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 mSandboxLatencyInfo,
                 new Bundle(),
                 callback2);
-        mSdkSandboxService.sendLoadCodeSuccessful();
+        mSdkSandboxService.sendLoadSdkSuccessful();
         callback2.assertLoadSdkIsSuccessful();
         assertThat(sProvider.getSdkSandboxServiceForApp(callingInfo)).isNotNull();
     }
@@ -1665,7 +1665,7 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
 
         mService.loadSdk(TEST_PACKAGE, null, SDK_NAME, mSandboxLatencyInfo, new Bundle(), callback);
-        mSdkSandboxService.sendLoadCodeError();
+        mSdkSandboxService.sendLoadSdkError();
 
         // Verify sdkInfo is missing when loading failed
         callback.assertLoadSdkIsUnsuccessful();
@@ -2171,7 +2171,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 () -> mService.unloadSdk(TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER));
 
         // After loading the SDK, unloading should not fail
-        mSdkSandboxService.sendLoadCodeSuccessful();
+        mSdkSandboxService.sendLoadSdkSuccessful();
         callback.assertLoadSdkIsSuccessful();
         mService.unloadSdk(TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER);
     }
@@ -2696,7 +2696,7 @@ public class SdkSandboxManagerServiceUnitTest {
         // timestamps are set in SdkSandboxManager.
         sandboxLatencyInfo.setTimeAppCalledSystemServer(TIME_APP_CALLED_SYSTEM_SERVER);
         loadSdk(SDK_NAME, sandboxLatencyInfo);
-        mSdkSandboxService.sendLoadCodeSuccessfulWithSandboxLatencies(sandboxLatencyInfo);
+        mSdkSandboxService.sendLoadSdkSuccessfulWithSandboxLatencies(sandboxLatencyInfo);
         sandboxLatencyInfo.setTimeAppReceivedCallFromSystemServer(
                 TIME_APP_RECEIVED_CALL_FROM_SYSTEM_SERVER);
         mService.logLatencies(sandboxLatencyInfo);
@@ -2795,7 +2795,7 @@ public class SdkSandboxManagerServiceUnitTest {
         // timestamps are set in SdkSandboxManager.
         sandboxLatencyInfo.setTimeAppCalledSystemServer(TIME_APP_CALLED_SYSTEM_SERVER);
         mService.loadSdk(TEST_PACKAGE, null, SDK_NAME, sandboxLatencyInfo, new Bundle(), callback);
-        mSdkSandboxService.sendLoadCodeSuccessfulWithSandboxLatencies(sandboxLatencyInfo);
+        mSdkSandboxService.sendLoadSdkSuccessfulWithSandboxLatencies(sandboxLatencyInfo);
         sandboxLatencyInfo.setTimeAppReceivedCallFromSystemServer(
                 TIME_APP_RECEIVED_CALL_FROM_SYSTEM_SERVER);
         mService.logLatencies(sandboxLatencyInfo);
@@ -2933,7 +2933,7 @@ public class SdkSandboxManagerServiceUnitTest {
             FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
             mService.loadSdk(
                     TEST_PACKAGE, null, SDK_NAME, mSandboxLatencyInfo, new Bundle(), callback);
-            mSdkSandboxService.sendLoadCodeSuccessful();
+            mSdkSandboxService.sendLoadSdkSuccessful();
         }
 
         // Load it again
@@ -3990,7 +3990,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 mSandboxLatencyInfo,
                 new Bundle(),
                 callback);
-        mSdkSandboxService.sendLoadCodeSuccessful();
+        mSdkSandboxService.sendLoadSdkSuccessful();
         callback.assertLoadSdkIsSuccessful();
 
         Mockito.verify(callback.asBinder())
@@ -4284,7 +4284,7 @@ public class SdkSandboxManagerServiceUnitTest {
         disableForegroundCheck();
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(TEST_PACKAGE, null, sdkName, sandboxLatencyInfo, new Bundle(), callback);
-        mSdkSandboxService.sendLoadCodeSuccessful();
+        mSdkSandboxService.sendLoadSdkSuccessful();
         callback.assertLoadSdkIsSuccessful();
     }
 
