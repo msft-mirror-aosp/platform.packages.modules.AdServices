@@ -4034,4 +4034,32 @@ public interface Flags {
     default boolean getAppConfigReturnsEnabledByDefault() {
         return APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT;
     }
+
+    /**
+     * Default value to determine whether {@link
+     * android.adservices.common.AdServicesCommonManager#enableAdServices} is enabled.
+     */
+    boolean DEFAULT_ENABLE_ADSERVICES_API_ENABLED = true;
+
+    /**
+     * Returns whether {@link android.adservices.common.AdServicesCommonManager#enableAdServices} is
+     * enabled.
+     */
+    default boolean getEnableAdservicesApiEnabled() {
+        return DEFAULT_ENABLE_ADSERVICES_API_ENABLED;
+    }
+
+    /**
+     * Default value to determine whether {@link
+     * android.adservices.common.AdServicesCommonManager#isAdServicesEnabled} is enabled.
+     */
+    boolean DEFAULT_ADSERVICES_ENABLEMENT_CHECK_ENABLED = true;
+
+    /**
+     * Returns whether {@link android.adservices.common.AdServicesCommonManager#isAdServicesEnabled}
+     * is enabled.
+     */
+    default boolean getAdservicesEnablementCheckEnabled() {
+        return DEFAULT_ADSERVICES_ENABLEMENT_CHECK_ENABLED;
+    }
 }
