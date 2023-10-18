@@ -100,7 +100,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     private final SyncDisabledModeForTest mPreviousSyncDisabledModeForTest;
 
     private boolean mIsRunning;
-    private boolean mFlagsClearedBeforeTest;
+    private boolean mFlagsClearedByTest;
 
     protected AbstractAdServicesFlagsSetterRule(
             RealLogger logger,
@@ -141,11 +141,12 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
                 List<Throwable> cleanUpErrors = new ArrayList<>();
                 Throwable testError = null;
                 StringBuilder dump = new StringBuilder("*** Flags before:\n");
-                if (mFlagsClearedBeforeTest) {
-                    dump.append("\tTest explicitly cleared all flags\n");
-                } else {
-                    dumpFlagsSafely(dump);
+                if (mFlagsClearedByTest) {
+                    dump.append(
+                            "    NOTE: Test explicitly cleared flags; flags below were most likely"
+                                    + " set by the test itself\n");
                 }
+                dumpFlagsSafely(dump);
                 dump.append("\n\n*** SystemProperties before:\n");
                 dumpSystemPropertiesSafely(dump);
                 try {
@@ -155,16 +156,19 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
                 } finally {
                     mIsRunning = false;
                     dump.append("\n*** Flags after:\n");
-                    if (mFlagsClearedBeforeTest) {
-                        runSafely(
-                                cleanUpErrors,
-                                () -> {
+                    runSafely(
+                            cleanUpErrors,
+                            () -> {
+                                dumpFlagsSafely(dump);
+                                if (mFlagsClearedByTest) {
+                                    // TODO(b/297085722): ideally it should restore the flags prior
+                                    // to the clear() call.
+                                    dump.append(
+                                            "\n    NOTE: Test explicitly cleared flags, so "
+                                                    + "they'll be cleared again\n");
                                     clearFlags();
-                                    dump.append("\tTest explicitly cleared all flags\n");
-                                });
-                    } else {
-                        dumpFlagsSafely(dump);
-                    }
+                                }
+                            });
                     dump.append("\n\n***SystemProperties after:\n");
                     dumpSystemPropertiesSafely(dump);
                     runSafely(cleanUpErrors, () -> resetFlags(testName));
@@ -258,16 +262,13 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     /** Clear all flags from the {@code AdServices} namespace */
     public T clearFlags() {
         return runOrCache(
-                "clerFlags()",
+                "clearFlags()",
                 () -> {
                     mLog.i("Clearing all flags. mIsRunning=%b", mIsRunning);
                     mDeviceConfig.clearFlags();
                     // TODO(b/294423183): ideally we should save the flags and restore - possibly
-                    // using
-                    // DeviceConfig properties - but for now let's just clear it.
-                    if (!mIsRunning) {
-                        mFlagsClearedBeforeTest = true;
-                    }
+                    // using DeviceConfig properties - but for now let's just clear it.
+                    mFlagsClearedByTest = true;
                 });
     }
 
