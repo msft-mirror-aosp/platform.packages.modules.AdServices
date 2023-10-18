@@ -253,8 +253,8 @@
       ]
     },
     {
-      // Install com.google.android.adservices.apex and run CtsAdServicesRootDeviceTestCases.
-      "name": "CtsAdServicesRootDeviceTestCases[com.google.android.adservices.apex]",
+      // Install com.google.android.adservices.apex and run CtsAdServicesRootTestCases.
+      "name": "CtsAdServicesRootTestCases[com.google.android.adservices.apex]",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"
