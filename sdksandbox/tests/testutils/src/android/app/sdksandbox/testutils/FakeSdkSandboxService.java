@@ -161,14 +161,14 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
         return mInitializationCount;
     }
 
-    public void sendLoadCodeSuccessful() throws RemoteException {
+    public void sendLoadSdkSuccessful() throws RemoteException {
         final SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo();
         sandboxLatencyInfo.setTimeSystemServerCalledSandbox(mTimeSystemServerCalledSandbox);
         mLoadSdkInSandboxCallback.onLoadSdkSuccess(
                 new SandboxedSdk(new Binder()), mManagerToSdkCallback, sandboxLatencyInfo);
     }
 
-    public void sendLoadCodeSuccessfulWithSandboxLatencies(SandboxLatencyInfo sandboxLatencyInfo)
+    public void sendLoadSdkSuccessfulWithSandboxLatencies(SandboxLatencyInfo sandboxLatencyInfo)
             throws RemoteException {
         setSandboxLatencyTimestamps(sandboxLatencyInfo);
         mLoadSdkInSandboxCallback.onLoadSdkSuccess(
@@ -184,7 +184,7 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
         mComputeSdkStorageCallback.onStorageInfoComputed(0, 0);
     }
 
-    public void sendLoadCodeError() throws Exception {
+    public void sendLoadSdkError() throws Exception {
         Class<?> clz = Class.forName("android.app.sdksandbox.LoadSdkException");
         final SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo();
         sandboxLatencyInfo.setTimeSystemServerCalledSandbox(mTimeSystemServerCalledSandbox);
