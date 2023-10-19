@@ -172,7 +172,8 @@ public final class MeasurementImpl {
                                             ? null
                                             : getSourceType(
                                                     request.getInputEvent(),
-                                                    request.getRequestTime()),
+                                                    request.getRequestTime(),
+                                                    request.getAppPackageName()),
                                     /* postBody */ null,
                                     mDatastoreManager,
                                     mContentResolver)
@@ -202,7 +203,8 @@ public final class MeasurementImpl {
                             requestTime,
                             getSourceType(
                                     request.getSourceRegistrationRequest().getInputEvent(),
-                                    request.getBootRelativeRequestTime()),
+                                    request.getBootRelativeRequestTime(),
+                                    request.getAppPackageName()),
                             /* postBody*/ null,
                             mDatastoreManager,
                             mContentResolver)
@@ -237,7 +239,8 @@ public final class MeasurementImpl {
                             requestTime,
                             getSourceType(
                                     sourceRegistrationRequest.getInputEvent(),
-                                    request.getRequestTime()),
+                                    request.getRequestTime(),
+                                    request.getAppPackageName()),
                             mDatastoreManager,
                             mContentResolver);
             if (enqueueStatus) {
@@ -319,7 +322,10 @@ public final class MeasurementImpl {
                             request.isAdIdPermissionGranted(),
                             registrationUri,
                             apiRequestTime,
-                            getSourceType(inputEvent, request.getRequestTime()),
+                            getSourceType(
+                                    inputEvent,
+                                    request.getRequestTime(),
+                                    request.getAppPackageName()),
                             postBody,
                             mDatastoreManager,
                             mContentResolver)
@@ -428,12 +434,14 @@ public final class MeasurementImpl {
     }
 
     @VisibleForTesting
-    Source.SourceType getSourceType(InputEvent inputEvent, long requestTime) {
+    Source.SourceType getSourceType(
+            InputEvent inputEvent, long requestTime, String sourceRegistrant) {
         // If click verification is enabled and the InputEvent is not null, but it cannot be
         // verified, then the SourceType is demoted to EVENT.
         if (mFlags.getMeasurementIsClickVerificationEnabled()
                 && inputEvent != null
-                && !mClickVerifier.isInputEventVerifiable(inputEvent, requestTime)) {
+                && !mClickVerifier.isInputEventVerifiable(
+                        inputEvent, requestTime, sourceRegistrant)) {
             return Source.SourceType.EVENT;
         } else {
             return inputEvent == null ? Source.SourceType.EVENT : Source.SourceType.NAVIGATION;

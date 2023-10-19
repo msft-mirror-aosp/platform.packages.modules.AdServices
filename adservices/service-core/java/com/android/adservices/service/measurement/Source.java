@@ -291,6 +291,10 @@ public class Source {
         public String getValue() {
             return mValue;
         }
+
+        public int getIntValue() {
+            return this.equals(SourceType.NAVIGATION) ? 1 : 0;
+        }
     }
 
     private Source() {

@@ -20,6 +20,7 @@ import static com.android.adservices.ResultCode.RESULT_OK;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -215,7 +216,7 @@ public abstract class E2EMockTest extends E2ETest {
         when(mMockContentProviderClient.insert(
                         eq(AsyncRegistrationContentProvider.TRIGGER_URI), any()))
                 .thenReturn(AsyncRegistrationContentProvider.TRIGGER_URI);
-        when(mClickVerifier.isInputEventVerifiable(any(), anyLong())).thenReturn(true);
+        when(mClickVerifier.isInputEventVerifiable(any(), anyLong(), anyString())).thenReturn(true);
     }
 
     @Override
