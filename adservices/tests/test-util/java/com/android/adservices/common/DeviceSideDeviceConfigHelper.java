@@ -70,7 +70,6 @@ final class DeviceSideDeviceConfigHelper extends DeviceConfigHelper.Interface {
         return ShellUtils.runShellCommand(cmdFmt, cmdArgs);
     }
 
-
     // TODO(b/294423183): remove (and change calls above to callWithDeviceConfigPermissions()) once
     // legacy usage is gone
     private <T> T call(Callable<T> c) {
