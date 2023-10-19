@@ -1833,6 +1833,28 @@ public class MeasurementDbSchemaTrail {
                     + " TEXT "
                     + ")";
 
+    private static final String CREATE_TABLE_DEBUG_REPORT_V26 =
+            "CREATE TABLE IF NOT EXISTS "
+                    + DebugReportContract.TABLE
+                    + " ("
+                    + DebugReportContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + DebugReportContract.TYPE
+                    + " TEXT, "
+                    + DebugReportContract.BODY
+                    + " TEXT, "
+                    + DebugReportContract.ENROLLMENT_ID
+                    + " TEXT, "
+                    + DebugReportContract.REGISTRATION_ORIGIN
+                    + " TEXT, "
+                    + DebugReportContract.REFERENCE_ID
+                    + " TEXT, "
+                    + DebugReportContract.INSERTION_TIME
+                    + " INTEGER, "
+                    + DebugReportContract.REGISTRANT
+                    + " TEXT "
+                    + ")";
+
     private static final String CREATE_TABLE_XNA_IGNORED_SOURCES_V6 =
             "CREATE TABLE "
                     + XnaIgnoredSourcesContract.TABLE
@@ -2165,6 +2187,12 @@ public class MeasurementDbSchemaTrail {
         return createStatements;
     }
 
+    private static Map<String, String> getCreateStatementByTableV26() {
+        Map<String, String> createStatements = new HashMap<>(getCreateStatementByTableV25());
+        createStatements.put(DebugReportContract.TABLE, CREATE_TABLE_DEBUG_REPORT_V26);
+        return createStatements;
+    }
+
     private static Map<String, String> getCreateIndexesV7() {
         Map<String, String> createIndexes = new HashMap<>();
         createIndexes.putAll(CREATE_INDEXES_V6);
@@ -2248,6 +2276,10 @@ public class MeasurementDbSchemaTrail {
         return getCreateIndexesV24();
     }
 
+    private static Map<String, String> getCreateIndexesV26() {
+        return getCreateIndexesV25();
+    }
+
     private static final Map<Integer, Collection<String>> CREATE_TABLES_STATEMENTS_BY_VERSION =
             new ImmutableMap.Builder<Integer, Collection<String>>()
                     .put(6, CREATE_STATEMENT_BY_TABLE_V6.values())
@@ -2270,6 +2302,7 @@ public class MeasurementDbSchemaTrail {
                     .put(23, getCreateStatementByTableV23().values())
                     .put(24, getCreateStatementByTableV24().values())
                     .put(25, getCreateStatementByTableV25().values())
+                    .put(26, getCreateStatementByTableV26().values())
                     .build();
 
     private static final Map<Integer, Collection<String>> CREATE_INDEXES_STATEMENTS_BY_VERSION =
@@ -2294,6 +2327,7 @@ public class MeasurementDbSchemaTrail {
                     .put(23, getCreateIndexesV23().values())
                     .put(24, getCreateIndexesV24().values())
                     .put(25, getCreateIndexesV25().values())
+                    .put(26, getCreateIndexesV26().values())
                     .build();
 
     /**
