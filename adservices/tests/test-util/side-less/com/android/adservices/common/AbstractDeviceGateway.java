@@ -18,18 +18,15 @@ package com.android.adservices.common;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
-/** Host-side implementation of {@link DeviceConfigHelper.Interface}. */
-final class HostSideDeviceConfigHelper extends DeviceConfigHelper.Interface {
+/** Abstraction for classes that need to interact with the device. */
+abstract class AbstractDeviceGateway {
 
-    HostSideDeviceConfigHelper(String namespace) {
-        super(namespace, ConsoleLogger.getInstance());
-    }
-
-    // cmdFmt must be final because it's being passed to a method taking @FormatString
-    @Override
+    // TODO(b/294423183): need to refactor it (or implementation) so it doesn't ignore errors.
+    // For example, setSyncDisabledModeForTest() was calling set_sync_disabled_for_tests
+    // instead of set_sync_disabled_for_test
     @FormatMethod
-    protected String runShellCommand(
-            @FormatString final String cmdFmt, @Nullable Object... cmdArgs) {
-        return TestDeviceHelper.runShellCommand(cmdFmt, cmdArgs);
+    protected String runShellCommand(@FormatString String cmdFmt, @Nullable Object... cmdArgs) {
+        throw new UnsupportedOperationException(
+                "Subclass must either implement this or the methods that use it");
     }
 }
