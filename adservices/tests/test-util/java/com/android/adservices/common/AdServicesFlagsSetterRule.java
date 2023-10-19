@@ -115,6 +115,19 @@ public final class AdServicesFlagsSetterRule
                 .setAdIdKillSwitchForTests(false);
     }
 
+    /** Factory method for Topics CB tests */
+    public static AdServicesFlagsSetterRule forTopicsPerfTests(
+            long epochPeriodMs, int pctRandomTopic) {
+        return forGlobalKillSwitchDisabledTests()
+                .setLogcatTag(LOGCAT_TAG_TOPICS, LOGCAT_LEVEL_VERBOSE)
+                .setTopicsKillSwitch(false)
+                .setConsentManagerDebugMode(true)
+                .setDisableTopicsEnrollmentCheckForTests(true)
+                .setTopicsEpochJobPeriodMsForTests(epochPeriodMs)
+                .setTopicsPercentageForRandomTopicForTests(pctRandomTopic)
+                .setCompatModeFlags();
+    }
+
     /** Factory method for AdservicesCommonManager end-to-end CTS tests. */
     public static AdServicesFlagsSetterRule forCommonManagerE2ETests(String packageName) {
         return withDefaultLogcatTags().setCompatModeFlags().setPpapiAppAllowList(packageName);
