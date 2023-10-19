@@ -117,7 +117,7 @@ public class LoadSdkSessionUnitTest {
 
         // Load the SDK in this session and fail it.
         sdkSession.load(mSdkSandboxService, new ApplicationInfo(), mSandboxLatencyInfo);
-        mSdkSandboxService.sendLoadCodeError();
+        mSdkSandboxService.sendLoadSdkError();
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOAD_FAILED);
         callback.assertLoadSdkIsUnsuccessful();
     }
@@ -140,7 +140,7 @@ public class LoadSdkSessionUnitTest {
 
         // Load the SDK in this session and fail it.
         sdkSession.load(mSdkSandboxService, new ApplicationInfo(), mSandboxLatencyInfo);
-        mSdkSandboxService.sendLoadCodeError();
+        mSdkSandboxService.sendLoadSdkError();
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOAD_FAILED);
         callback.assertLoadSdkIsUnsuccessful();
 
@@ -283,7 +283,7 @@ public class LoadSdkSessionUnitTest {
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOAD_PENDING);
 
         // Complete the loading.
-        mSdkSandboxService.sendLoadCodeSuccessful();
+        mSdkSandboxService.sendLoadSdkSuccessful();
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOADED);
     }
 
@@ -303,7 +303,7 @@ public class LoadSdkSessionUnitTest {
 
         // Load the SDK in this session and fail it.
         sdkSession.load(mSdkSandboxService, new ApplicationInfo(), mSandboxLatencyInfo);
-        mSdkSandboxService.sendLoadCodeError();
+        mSdkSandboxService.sendLoadSdkError();
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOAD_FAILED);
         callback.assertLoadSdkIsUnsuccessful();
 
@@ -433,7 +433,7 @@ public class LoadSdkSessionUnitTest {
         // Load the SDK in this session.
         sdkSession.load(mSdkSandboxService, new ApplicationInfo(), mSandboxLatencyInfo);
         // Assert it was successful
-        mSdkSandboxService.sendLoadCodeSuccessful();
+        mSdkSandboxService.sendLoadSdkSuccessful();
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOADED);
         callback.assertLoadSdkIsSuccessful();
 
