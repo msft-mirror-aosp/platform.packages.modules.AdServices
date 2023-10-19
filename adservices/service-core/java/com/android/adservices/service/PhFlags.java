@@ -1364,6 +1364,15 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeAuctionServerPayloadSizeShouldExceedLimit() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_SIZE_SHOULD_EXCEED_LIMIT,
+                /* defaultValue */ FLEDGE_AUCTION_SERVER_PAYLOAD_SIZE_SHOULD_EXCEED_LIMIT);
+    }
+
+    @Override
     public long getFledgeHttpCacheMaxAgeSeconds() {
         return DeviceConfig.getLong(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -4270,6 +4279,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES
                         + " = "
                         + getFledgeOnDeviceAuctionShouldUseUnifiedTables());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_SIZE_SHOULD_EXCEED_LIMIT
+                        + " = "
+                        + getFledgeAuctionServerPayloadSizeShouldExceedLimit());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS
