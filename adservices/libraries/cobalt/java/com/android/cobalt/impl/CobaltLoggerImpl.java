@@ -99,6 +99,12 @@ public final class CobaltLoggerImpl implements CobaltLogger {
                         mExecutor);
     }
 
+    @Override
+    public ListenableFuture<Void> noOpLogString(
+            long metricId, String stringValue, List<Integer> eventVector) {
+        return Futures.immediateFuture(null);
+    }
+
     private ListenableFuture<Void> loggerEnabledLogOccurrence(
             MetricDefinition metric, long count, List<Integer> eventCodes, long currentTimeMillis) {
         EventVector eventVector = EventVector.create(eventCodes);

@@ -503,4 +503,19 @@ public class CobaltLoggerImplTest {
         // Check that no report data was added to the DB.
         assertThat(mTestOnlyDao.getAllAggregates()).isEmpty();
     }
+
+    @Test
+    public void noOpLogString_doesNothing() throws Exception {
+        // Log some data with the expectation nothing will be logged.
+        mLogger.noOpLogString(
+                        ONE_REPORT.metricId(),
+                        /* value= */ "Test",
+                        /* eventCodes= */ ImmutableList.of(1, 2))
+                .get();
+
+        // Check that no data was added to the DB.
+        assertThat(mTestOnlyDao.getAllAggregates()).isEmpty();
+        assertThat(mTestOnlyDao.getInitialEnabledTime().isPresent()).isFalse();
+        assertThat(mTestOnlyDao.getStartDisabledTime().isPresent()).isFalse();
+    }
 }
