@@ -161,8 +161,11 @@ public class TopicsConnectionTest {
     // If enabled = true, override global_kill_switch to ON to turn off Adservices.
     // If enabled = false, the AdServices is enabled.
     private void enableGlobalKillSwitch(boolean enabled) {
-        String overrideString = enabled ? "true" : "false";
-        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
+        if (SdkLevel.isAtLeastT()) {
+            flags.setGlobalKillSwitch(enabled);
+        } else {
+            flags.setEnableBackCompat(!enabled);
+        }
     }
 
     // Override the Epoch Period to shorten the Epoch Length in the test.
