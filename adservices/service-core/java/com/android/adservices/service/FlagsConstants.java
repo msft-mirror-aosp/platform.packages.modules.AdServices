@@ -762,6 +762,9 @@ public final class FlagsConstants {
     public static final String KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST =
             "ppapi_app_signature_allow_list";
 
+    public static final String KEY_APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE =
+            "appsearch_writer_allow_list_override";
+
     // AdServices APK sha certs.
     public static final String KEY_ADSERVICES_APK_SHA_CERTS = "adservices_apk_sha_certs";
 
@@ -1033,6 +1036,9 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW =
             "measurement_min_post_install_exclusivity_window";
+
+    public static final String KEY_MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK =
+            "measurement_enable_api_status_allow_list_check";
 
     // Database Schema Version Flags
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 =
