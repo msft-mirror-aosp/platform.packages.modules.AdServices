@@ -1368,13 +1368,14 @@ public final class PhFlags implements Flags {
     public boolean getGlobalKillSwitch() {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
-        return SystemProperties.getBoolean(
+        return SdkLevel.isAtLeastT()
+                ? SystemProperties.getBoolean(
                         getSystemPropertyName(FlagsConstants.KEY_GLOBAL_KILL_SWITCH),
                         /* defaultValue */ DeviceConfig.getBoolean(
                                 FlagsConstants.NAMESPACE_ADSERVICES,
                                 /* flagName */ FlagsConstants.KEY_GLOBAL_KILL_SWITCH,
                                 /* defaultValue */ GLOBAL_KILL_SWITCH))
-                || /* S Minus Kill Switch */ !(SdkLevel.isAtLeastT() || getEnableBackCompat());
+                : !getEnableBackCompat();
     }
 
     // MEASUREMENT Killswitches
@@ -1986,6 +1987,15 @@ public final class PhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST,
                 /* defaultValue */ PPAPI_APP_SIGNATURE_ALLOW_LIST);
+    }
+
+    // AppSearch writer allow-list
+    @Override
+    public String getAppsearchWriterAllowListOverride() {
+        return DeviceConfig.getString(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE,
+                /* defaultValue */ APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE);
     }
 
     // Rate Limit Flags.

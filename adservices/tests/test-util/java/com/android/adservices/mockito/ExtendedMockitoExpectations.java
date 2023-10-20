@@ -32,6 +32,8 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.server.LocalManagerRegistry;
 
+import org.mockito.verification.VerificationMode;
+
 /**
  * Provides Mockito expectation for common calls.
  *
@@ -102,26 +104,58 @@ public final class ExtendedMockitoExpectations {
         doReturn(mockedFlags).when(FlagsFactory::getFlags);
     }
 
-    /** Verifies {@link ErrorLogUtil#e()} was called with the expected values. */
-    public static void verifyErrorLogUtilErrorWithException(
-            int errorCode, int ppapiName, int numberOfInvocations) {
-        verify(
-                () -> {
-                    ErrorLogUtil.e(any(), eq(errorCode), eq(ppapiName));
-                },
-                times(numberOfInvocations));
+    /**
+     * Verifies {@link ErrorLogUtil#e()} was called with the expected values.
+     *
+     * <p><b>Note: </b>you must call {@link #doNothingOnErrorLogUtilError()} before the test calls
+     * {@link ErrorLogUtil#e()}.
+     */
+    public static void verifyErrorLogUtilErrorWithAnyException(int errorCode, int ppapiName) {
+        verify(() -> ErrorLogUtil.e(any(), eq(errorCode), eq(ppapiName)));
     }
 
-    /** Verifies {@link ErrorLogUtil#e()} was called with the expected values. */
+    /**
+     * Verifies {@link ErrorLogUtil#e()} was called with the expected values.
+     *
+     * <p><b>Note: </b>you must call {@link #doNothingOnErrorLogUtilError()} before the test calls
+     * {@link ErrorLogUtil#e()}.
+     */
+    public static void verifyErrorLogUtilError(Exception exception, int errorCode, int ppapiName) {
+        verifyErrorLogUtilError(exception, errorCode, ppapiName, times(1));
+    }
+
+    /**
+     * Verifies {@link ErrorLogUtil#e()} was called with the expected values, using Mockito's {@link
+     * VerificationMode} to set the number of times (like {@code times(2)} or {@code never}).
+     *
+     * <p><b>Note: </b>you must call {@link #doNothingOnErrorLogUtilError()} before the test calls
+     * {@link ErrorLogUtil#e()}.
+     */
     public static void verifyErrorLogUtilError(
-            int errorCode,
-            int ppapiName,
-            int numberOfInvocations) {
-        verify(
-                () -> {
-                    ErrorLogUtil.e(eq(errorCode), eq(ppapiName));
-                },
-                times(numberOfInvocations));
+            Exception exception, int errorCode, int ppapiName, VerificationMode mode) {
+        verify(() -> ErrorLogUtil.e(exception, errorCode, ppapiName), mode);
+    }
+
+    /**
+     * Verifies {@link ErrorLogUtil#e()} was called with the expected values.
+     *
+     * <p><b>Note: </b>you must call {@link #doNothingOnErrorLogUtilError()} before the test calls
+     * {@link ErrorLogUtil#e()}.
+     */
+    public static void verifyErrorLogUtilError(int errorCode, int ppapiName) {
+        verify(() -> ErrorLogUtil.e(errorCode, ppapiName));
+    }
+
+    /**
+     * Verifies {@link ErrorLogUtil#e()} was called with the expected values, using Mockito's {@link
+     * VerificationMode} to set the number of times (like {@code times(2)} or {@code never}).
+     *
+     * <p><b>Note: </b>you must call {@link #doNothingOnErrorLogUtilError()} before the test calls
+     * {@link ErrorLogUtil#e()}.
+     */
+    public static void verifyErrorLogUtilError(
+            int errorCode, int ppapiName, VerificationMode mode) {
+        verify(() -> ErrorLogUtil.e(errorCode, ppapiName), mode);
     }
 
     private ExtendedMockitoExpectations() {
