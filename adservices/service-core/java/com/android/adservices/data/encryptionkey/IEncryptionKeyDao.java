@@ -28,11 +28,11 @@ public interface IEncryptionKeyDao {
     /**
      * Returns the {@link EncryptionKey}.
      *
-     * @param enrollmentId ID provided to the adtech during the enrollment process.
+     * @param enrollmentId enrollment id provided to the adtech during the enrollment process.
      * @param keyType the key type of this key, can be either encryption key or signing key.
-     * @return the EncryptionKey; Null in case of SQL failure
+     * @return a list of EncryptionKey; Null in case of SQL failure
      */
-    EncryptionKey getEncryptionKeyFromEnrollmentId(
+    List<EncryptionKey> getEncryptionKeyFromEnrollmentId(
             String enrollmentId, EncryptionKey.KeyType keyType);
 
     /**
@@ -47,9 +47,10 @@ public interface IEncryptionKeyDao {
      * Returns the {@link EncryptionKey}.
      *
      * @param reportingOrigin provided as triggerRegistrationUrl during trigger attestation.
-     * @return the EncryptionKey; Null in case of SQL failure
+     * @param keyType the key type of this key, can be either encryption key or signing key.
+     * @return a list of EncryptionKey; Null in case of SQL failure
      */
-    EncryptionKey getEncryptionKeyFromReportingOrigin(
+    List<EncryptionKey> getEncryptionKeyFromReportingOrigin(
             Uri reportingOrigin, EncryptionKey.KeyType keyType);
 
     /**

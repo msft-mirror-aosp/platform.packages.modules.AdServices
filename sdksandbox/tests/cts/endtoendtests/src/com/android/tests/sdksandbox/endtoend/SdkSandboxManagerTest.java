@@ -21,10 +21,14 @@ import static android.app.sdksandbox.SdkSandboxManager.EXTRA_HEIGHT_IN_PIXELS;
 import static android.app.sdksandbox.SdkSandboxManager.EXTRA_HOST_TOKEN;
 import static android.app.sdksandbox.SdkSandboxManager.EXTRA_WIDTH_IN_PIXELS;
 import static android.app.sdksandbox.SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR;
+
 import static androidx.lifecycle.Lifecycle.State;
 import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
+
 import static com.android.sdksandbox.flags.Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT;
+
 import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -59,7 +63,6 @@ import android.platform.test.annotations.RequiresFlagsEnabled;
 import android.platform.test.flag.junit.CheckFlagsRule;
 import android.platform.test.flag.junit.DeviceFlagsValueProvider;
 import android.provider.DeviceConfig;
-import android.view.Surface;
 
 import androidx.lifecycle.Lifecycle;
 import androidx.test.core.app.ActivityScenario;
@@ -644,7 +647,8 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
         assertThat(mScenario.getState()).isEqualTo(State.RESUMED);
         SecurityException exception =
                 assertThrows(
-                        SecurityException.class, () -> sdk.startSandboxActivityDirectlyByAction());
+                        SecurityException.class,
+                        () -> sdk.startSandboxActivityDirectlyByAction(getSdkSandboxPackageName()));
         assertThat(exception.getMessage())
                 .isEqualTo("Sandbox process is not allowed to start sandbox activities.");
         assertThat(mScenario.getState()).isEqualTo(State.RESUMED);
@@ -660,7 +664,9 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
         SecurityException exception =
                 assertThrows(
                         SecurityException.class,
-                        () -> sdk.startSandboxActivityDirectlyByComponent());
+                        () ->
+                                sdk.startSandboxActivityDirectlyByComponent(
+                                        getSdkSandboxPackageName()));
         assertThat(exception.getMessage())
                 .isEqualTo("Sandbox process is not allowed to start sandbox activities.");
         assertThat(mScenario.getState()).isEqualTo(State.RESUMED);
