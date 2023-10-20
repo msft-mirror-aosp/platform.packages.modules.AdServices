@@ -26,8 +26,8 @@ interface ICtsSdkProviderApi {
     int getContextHashCode(boolean useApplicationContext);
     void testStoragePaths();
     int getProcessImportance();
-    void startSandboxActivityDirectlyByAction();
-    void startSandboxActivityDirectlyByComponent();
+    void startSandboxActivityDirectlyByAction(String sandboxPackageName);
+    void startSandboxActivityDirectlyByComponent(String sandboxPackageName);
     IActivityActionExecutor startActivity(IActivityStarter callback, in Bundle extras);
     String getPackageName();
     String getOpPackageName();

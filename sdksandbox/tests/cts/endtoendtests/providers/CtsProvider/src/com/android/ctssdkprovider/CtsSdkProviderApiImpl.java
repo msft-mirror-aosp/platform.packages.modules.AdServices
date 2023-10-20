@@ -186,10 +186,10 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
     }
 
     @Override
-    public void startSandboxActivityDirectlyByAction() {
+    public void startSandboxActivityDirectlyByAction(String sandboxPackageName) {
         Intent intent = new Intent();
         intent.setAction("android.app.sdksandbox.action.START_SANDBOXED_ACTIVITY");
-        intent.setPackage(mContext.getPackageManager().getSdkSandboxPackageName());
+        intent.setPackage(sandboxPackageName);
         intent.setFlags(FLAG_ACTIVITY_NEW_TASK);
 
         Bundle params = new Bundle();
@@ -200,12 +200,10 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
     }
 
     @Override
-    public void startSandboxActivityDirectlyByComponent() {
+    public void startSandboxActivityDirectlyByComponent(String sandboxPackageName) {
         Intent intent = new Intent();
         intent.setComponent(
-                new ComponentName(
-                        mContext.getPackageManager().getSdkSandboxPackageName(),
-                        "com.android.sdksandbox.SandboxedActivity"));
+                new ComponentName(sandboxPackageName, "com.android.sdksandbox.SandboxedActivity"));
         intent.setFlags(FLAG_ACTIVITY_NEW_TASK);
 
         Bundle params = new Bundle();

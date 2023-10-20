@@ -299,30 +299,21 @@ final class DeviceConfigHelper {
         public void clear() {
             runShellCommand("device_config reset untrusted_clear %s", mNamespace);
 
-            // TODO(b/300136201): copied from syncSet(), should reuse
-            // Need to wait until it's cleared
-            long deadline = System.currentTimeMillis() + CHANGE_CHECK_TIMEOUT_MS;
-            do {
-                String dump = dump();
-                if (dump.isEmpty()) {
-                    return;
-                }
-                if (System.currentTimeMillis() > deadline) {
-                    mLog.e(
-                            "clear(): dump() still showing some flags(%s) after %d ms",
-                            dump, CHANGE_CHECK_SLEEP_TIME_MS);
-                    throw new IllegalStateException(
-                            "Still showing flags ("
-                                    + dump
-                                    + ") after "
-                                    + CHANGE_CHECK_TIMEOUT_MS
-                                    + "ms");
-                }
-                mLog.d(
-                        "clear(): dump() still showing some flags(%s), sleeping %d ms",
-                        dump, CHANGE_CHECK_SLEEP_TIME_MS);
-                sleepBeforeCheckingAgain("dump()");
-            } while (true);
+            // TODO(b/305877958): command above will "delete all settings set by untrusted packages,
+            // which is packages that aren't a part of the system", so it might not delete them
+            // all. In fact, after this method was first called, it cause test breakages because
+            // disable_sdk_sandbox was still set. So, we should also explicitly delete all flags
+            // that remain, but for now clearing those from untrusted packages is enough
+            String dump = dump();
+            if (!dump.isEmpty()) {
+                mLog.w(
+                        "clear(): not all flags were deleted, which is a known limitation."
+                                + " Following flags remain:\n\n"
+                                + "%s",
+                        dump);
+            }
+
+            // TODO(b/300136201): should wait until they're all cleared
         }
 
         public String dump() {

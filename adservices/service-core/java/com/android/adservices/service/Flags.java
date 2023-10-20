@@ -353,8 +353,8 @@ public interface Flags {
 
     /** Measurement manifest file url, used for MDD download. */
     String MEASUREMENT_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/2324"
-                    + "/3927729583a9dbfdb9a3eaa84ddcef3d9b46c3c7";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/2483"
+                    + "/99f68a201189da021b1f3dd4ebdef7b0fbe75892";
 
     /** Measurement manifest file url. */
     default String getMeasurementManifestFileUrl() {
@@ -4033,5 +4033,33 @@ public interface Flags {
      */
     default boolean getAppConfigReturnsEnabledByDefault() {
         return APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT;
+    }
+
+    /**
+     * Default value to determine whether {@link
+     * android.adservices.common.AdServicesCommonManager#enableAdServices} is enabled.
+     */
+    boolean DEFAULT_ENABLE_ADSERVICES_API_ENABLED = true;
+
+    /**
+     * Returns whether {@link android.adservices.common.AdServicesCommonManager#enableAdServices} is
+     * enabled.
+     */
+    default boolean getEnableAdservicesApiEnabled() {
+        return DEFAULT_ENABLE_ADSERVICES_API_ENABLED;
+    }
+
+    /**
+     * Default value to determine whether {@link
+     * android.adservices.common.AdServicesCommonManager#isAdServicesEnabled} is enabled.
+     */
+    boolean DEFAULT_ADSERVICES_ENABLEMENT_CHECK_ENABLED = true;
+
+    /**
+     * Returns whether {@link android.adservices.common.AdServicesCommonManager#isAdServicesEnabled}
+     * is enabled.
+     */
+    default boolean getAdservicesEnablementCheckEnabled() {
+        return DEFAULT_ADSERVICES_ENABLEMENT_CHECK_ENABLED;
     }
 }
