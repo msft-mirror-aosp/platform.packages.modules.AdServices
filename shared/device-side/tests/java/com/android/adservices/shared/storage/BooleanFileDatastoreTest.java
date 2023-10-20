@@ -18,6 +18,7 @@ package com.android.adservices.shared.storage;
 
 import static com.android.adservices.common.DumpHelper.assertDumpHasPrefix;
 import static com.android.adservices.common.DumpHelper.dump;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastS;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
@@ -30,10 +31,15 @@ import static org.junit.Assert.assertTrue;
 
 import android.content.Context;
 import android.os.Build;
+import android.util.Log;
+import android.util.Pair;
 
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.modules.utils.build.SdkLevel;
+
+import com.google.common.truth.StringSubject;
 
 import org.junit.After;
 import org.junit.Before;
@@ -41,9 +47,14 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class BooleanFileDatastoreTest {
+    private static final String TAG = BooleanFileDatastoreTest.class.getSimpleName();
+
     private static final Context APPLICATION_CONTEXT = ApplicationProvider.getApplicationContext();
     private static final String FILENAME = "BooleanFileDatastoreTest.xml";
     private static final int DATASTORE_VERSION = 1;
@@ -54,7 +65,10 @@ public class BooleanFileDatastoreTest {
 
     @Rule
     public final AdServicesExtendedMockitoRule extendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder().spyStatic(Build.class).build();
+            new AdServicesExtendedMockitoRule.Builder()
+                    .spyStatic(Build.class)
+                    .spyStatic(SdkLevel.class)
+                    .build();
 
     @Before
     public void setup() throws IOException {
@@ -125,6 +139,18 @@ public class BooleanFileDatastoreTest {
                 IllegalArgumentException.class,
                 () -> {
                     mDatastore.remove("");
+                });
+
+        assertThrows(
+                NullPointerException.class,
+                () -> {
+                    mDatastore.removeByPrefix(null);
+                });
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    mDatastore.removeByPrefix("");
                 });
     }
 
@@ -306,18 +332,71 @@ public class BooleanFileDatastoreTest {
     }
 
     @Test
-    public void testDump() throws Exception {
+    public void testDump_R() throws Exception {
+        dumpTest(/* isAtleastS= */ false);
+    }
+
+    @Test
+    public void testDump_sPlus() throws Exception {
+        dumpTest(/* isAtleastS= */ true);
+    }
+
+    private void dumpTest(boolean isAtleastS) throws Exception {
+        mockIsAtLeastS(isAtleastS);
+
         String keyUnlikelyToBeOnDump = "I can't believe it's dumper!";
         mDatastore.put(keyUnlikelyToBeOnDump, true);
 
         String prefix = "_";
         String dump = dump(pw -> mDatastore.dump(pw, prefix));
+        Log.d(TAG, "Contents of dump: \n" + dump);
 
         assertCommonDumpContents(dump, prefix);
 
         assertWithMessage("content of dump() (# keys)").that(dump).containsMatch("1 entries\n");
         // Make sure content of datastore itself is not dumped, as it could contain PII
         assertWithMessage("content of dump()").that(dump).doesNotContain(keyUnlikelyToBeOnDump);
+
+        StringSubject atomicFileSubject =
+                assertWithMessage("content of dump() - atomic file").that(dump);
+        if (isAtleastS) {
+            atomicFileSubject.contains("last modified");
+        } else {
+            atomicFileSubject.doesNotContain("last modified");
+        }
+    }
+
+    @Test
+    public void testRemovePrefix() throws IOException {
+        // Create
+        int numEntries = 10;
+        // Keys begin with either TEST_KEY+0 or TEST_KEY+1. Even entries are true, odd are false.
+        final List<Pair<String, Boolean>> entriesToAdd =
+                IntStream.range(0, numEntries)
+                        .mapToObj(i -> new Pair<>(TEST_KEY + (i & 1) + i, (i & 1) == 0))
+                        .collect(Collectors.toList());
+
+        // Add to data store
+        for (Pair<String, Boolean> entry : entriesToAdd) {
+            assertNull(mDatastore.get(entry.first)); // Should not exist yet
+            mDatastore.put(entry.first, entry.second);
+        }
+
+        // Delete everything beginning with TEST_KEY + 0.
+        // This should leave behind all keys with starting with TEST_KEY + 1.
+        mDatastore.removeByPrefix(TEST_KEY + 0);
+
+        // Compute the expected set of entries that should remain.
+        final Set<Pair<String, Boolean>> entriesThatShouldRemain =
+                entriesToAdd.stream()
+                        .filter(s -> s.first.startsWith(TEST_KEY + 1))
+                        .collect(Collectors.toSet());
+
+        // Verify that all the expected keys remain in the data store, with the right values.
+        assertEquals(entriesThatShouldRemain.size(), mDatastore.keySet().size());
+        for (Pair<String, Boolean> item : entriesThatShouldRemain) {
+            assertEquals(item.second, mDatastore.get(item.first));
+        }
     }
 
     private void assertCommonDumpContents(String dump, String prefix) {
