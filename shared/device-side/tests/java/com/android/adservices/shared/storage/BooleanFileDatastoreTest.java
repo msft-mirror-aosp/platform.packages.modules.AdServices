@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.server.adservices.common;
+package com.android.adservices.shared.storage;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

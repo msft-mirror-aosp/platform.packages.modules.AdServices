@@ -29,8 +29,8 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.shared.storage.BooleanFileDatastore;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.server.adservices.common.BooleanFileDatastore;
 
 import org.junit.After;
 import org.junit.Before;
