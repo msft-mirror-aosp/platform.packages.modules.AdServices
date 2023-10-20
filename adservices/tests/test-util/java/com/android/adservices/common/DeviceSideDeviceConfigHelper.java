@@ -30,18 +30,14 @@ import java.util.concurrent.Callable;
 /** Device-side implementation of {@link DeviceConfigHelper.Interface}. */
 final class DeviceSideDeviceConfigHelper extends DeviceConfigHelper.Interface {
 
-    // TODO(b/294423183): remove once legacy usage is gone
-    private final boolean mUsedByLegacyHelper;
-
-    DeviceSideDeviceConfigHelper(String namespace, boolean usedByLegacyHelper) {
+    DeviceSideDeviceConfigHelper(String namespace) {
         super(namespace, AndroidLogger.getInstance());
-
-        mUsedByLegacyHelper = usedByLegacyHelper;
     }
 
     @Override
     public String get(String name, String defaultValue) {
-        return call(() -> DeviceConfig.getString(mNamespace, name, /* defaultValue= */ null));
+        return callWithDeviceConfigPermissions(
+                () -> DeviceConfig.getString(mNamespace, name, /* defaultValue= */ null));
     }
 
     // TODO(b/300136201): override non-async methods to use a DeviceConfig listener
@@ -49,7 +45,7 @@ final class DeviceSideDeviceConfigHelper extends DeviceConfigHelper.Interface {
     @Override
     public boolean asyncSet(String name, String value) {
         mLog.v("asyncSet(%s=%s)", name, value);
-        return call(
+        return callWithDeviceConfigPermissions(
                 () -> DeviceConfig.setProperty(mNamespace, name, value, /* makeDefault= */ false));
     }
 
@@ -58,7 +54,8 @@ final class DeviceSideDeviceConfigHelper extends DeviceConfigHelper.Interface {
         mLog.v("asyncDelete(%s)", name);
 
         if (SdkLevel.isAtLeastT()) {
-            return call(() -> DeviceConfig.deleteProperty(mNamespace, name));
+            return callWithDeviceConfigPermissions(
+                    () -> DeviceConfig.deleteProperty(mNamespace, name));
         }
         // Use shell command instead
         return super.asyncDelete(name);
@@ -68,20 +65,6 @@ final class DeviceSideDeviceConfigHelper extends DeviceConfigHelper.Interface {
     @FormatMethod
     protected String runShellCommand(@FormatString String cmdFmt, @Nullable Object... cmdArgs) {
         return ShellUtils.runShellCommand(cmdFmt, cmdArgs);
-    }
-
-    // TODO(b/294423183): remove (and change calls above to callWithDeviceConfigPermissions()) once
-    // legacy usage is gone
-    private <T> T call(Callable<T> c) {
-        T result = callWithDeviceConfigPermissions(c);
-        if (mUsedByLegacyHelper) {
-            String permission = android.Manifest.permission.WRITE_DEVICE_CONFIG;
-            mLog.d("re-adopting Shell permission %s for legacy purposes", permission);
-            androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
-                    .getUiAutomation()
-                    .adoptShellPermissionIdentity(permission);
-        }
-        return result;
     }
 
     static <T> T callWithDeviceConfigPermissions(Callable<T> c) {
