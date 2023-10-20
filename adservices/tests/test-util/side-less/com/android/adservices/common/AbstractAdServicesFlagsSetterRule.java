@@ -99,9 +99,8 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
                             || prop.name.startsWith(
                                     SYSTEM_PROPERTY_FOR_LOGCAT_TAGS_PREFIX + "adservices");
 
-    // TODO(b/294423183): make private once not used by subclass for legacy methods
-    protected final DeviceConfigHelper mDeviceConfig;
-    protected final SystemPropertiesHelper mSystemProperties;
+    private final DeviceConfigHelper mDeviceConfig;
+    private final SystemPropertiesHelper mSystemProperties;
     protected final Logger mLog;
 
     // Cache methods that were called before the test started, so the rule can be
@@ -560,34 +559,6 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     // make it easier to transition the test to an annotated-base approach.                       //
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
-    /**
-     * @deprecated only used by {@code CompatAdServicesTestUtils.resetFlagsToDefault()} - flags are
-     *     automatically reset when used as a JUnit Rule.
-     */
-    @Deprecated
-    T resetCompatModeFlags() {
-        assertCalledByLegacyHelper();
-        return runOrCache(
-                "resetCompatModeFlags()",
-                () -> {
-                    if (isAtLeastT()) {
-                        mLog.d("resetCompatModeFlags(): ignored on %d", getDeviceSdk());
-                        // Do nothing; this method is intended to set flags for Android S- only.
-                        return;
-                    }
-                    mLog.v("resetCompatModeFlags(): setting flags on %d", getDeviceSdk());
-                    setEnableBackCompat(false);
-                    // TODO (b/285208753): Set to AppSearch always once it's supported on R.
-                    boolean atLeastS = isAtLeastS();
-                    int sourceOfTruth =
-                            atLeastS ? FlagsConstants.APPSEARCH_ONLY : FlagsConstants.PPAPI_ONLY;
-                    setFlag(FlagsConstants.KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH, sourceOfTruth);
-                    setFlag(FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH, sourceOfTruth);
-                    setFlag(FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA, atLeastS);
-                    setMeasurementRollbackDeletionAppSearchKillSwitch(!atLeastS);
-                });
-    }
-
     /** Sets a {@code logcat} tag. */
     public T setLogcatTag(String tag, String level) {
         setOrCacheLogtagSystemProperty(tag, level);
@@ -633,22 +604,6 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
 
     protected boolean isAtLeastT() {
         return getDeviceSdk() > 32;
-    }
-
-    // TODO(b/294423183): remove once legacy usage is gone
-    /**
-     * Checks whether this rule is used to implement some "legacy" helpers (i.e., deprecated classes
-     * that will be removed once their clients use the rule) like {@code CompatAdServicesTestUtils}.
-     */
-    protected boolean isCalledByLegacyHelper() {
-        return false;
-    }
-
-    // TODO(b/294423183): remove once legacy usage is gone
-    protected final void assertCalledByLegacyHelper() {
-        if (!isCalledByLegacyHelper()) {
-            throw new UnsupportedOperationException("Only available for legacy helpers");
-        }
     }
 
     // Set the annotated flags with the specified value for a particular test method.
@@ -698,7 +653,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     // TODO(b/294423183): need to add unit test for setters that call this
     private T setOrCacheFlag(String name, String value, @Nullable String separator) {
         NameValuePair flag = new NameValuePair(name, value, separator);
-        if (!mIsRunning && !isCalledByLegacyHelper()) {
+        if (!mIsRunning) {
             if (isFlagManagedByRunner(name)) {
                 return getThis();
             }
@@ -747,7 +702,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
 
     private T setOrCacheSystemProperty(String name, String value) {
         NameValuePair systemProperty = new NameValuePair(name, value);
-        if (!mIsRunning && !isCalledByLegacyHelper()) {
+        if (!mIsRunning) {
             cacheCommand(new SetSystemPropertyCommand(systemProperty));
             return getThis();
         }
@@ -768,7 +723,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
 
     private T runOrCache(String description, Runnable r) {
         RunnableCommand command = new RunnableCommand(description, r);
-        if (!mIsRunning && !isCalledByLegacyHelper()) {
+        if (!mIsRunning) {
             cacheCommand(command);
             return getThis();
         }
@@ -790,8 +745,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         runnable.run();
     }
 
-    // TODO(b/294423183): make private once not used by subclass for legacy methods
-    protected void runInitialCommands(String testName) {
+    private void runInitialCommands(String testName) {
         if (mInitialCommands.isEmpty()) {
             mLog.d("Not executing any command before %s", testName);
         } else {
