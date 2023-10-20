@@ -46,6 +46,7 @@ android_test {
         "SettingsLibMainSwitchPreference",
         "androidx.test.uiautomator_uiautomator",
         "adservices-clients",
+        "adservices-ui-cts-root-test-lib",
     ],
     libs: [
         "android.test.base",
@@ -94,6 +95,7 @@ android_test {
         "SettingsLibMainSwitchPreference",
         "androidx.test.uiautomator_uiautomator",
         "adservices-clients",
+        "adservices-ui-cts-root-test-lib",
     ],
     libs: [
         "android.test.base",
