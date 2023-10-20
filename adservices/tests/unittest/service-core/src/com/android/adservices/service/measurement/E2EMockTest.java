@@ -25,6 +25,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
+import static java.util.Map.entry;
+
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.net.Uri;
@@ -135,9 +137,13 @@ public abstract class E2EMockTest extends E2ETest {
 
     @Rule public final E2EMockStatic.E2EMockStaticRule mE2EMockStaticRule;
 
-    private static Map<String, String> sPhFlags = Map.of(
-            "measurement_enable_configurable_aggregate_report_delay", "true",
-            "measurement_aggregate_report_delay_config", "0,0");
+    private static Map<String, String> sPhFlags = Map.ofEntries(
+            entry(
+                    "measurement_enable_configurable_aggregate_report_delay",
+                    "true"),
+            entry(
+                    "measurement_aggregate_report_delay_config",
+                    "0,0"));
 
     E2EMockTest(
             Collection<Action> actions,
