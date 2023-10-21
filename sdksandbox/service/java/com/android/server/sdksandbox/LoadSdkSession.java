@@ -286,7 +286,7 @@ class LoadSdkSession {
         try {
             mLoadCallback.onLoadSdkSuccess(getSandboxedSdk(), sandboxLatencyInfo);
         } catch (RemoteException e) {
-            Log.w(TAG, "Failed to send onLoadCodeSuccess", e);
+            Log.w(TAG, "Failed to send onLoadSdkSuccess", e);
         }
     }
 
@@ -329,7 +329,7 @@ class LoadSdkSession {
         try {
             mLoadCallback.onLoadSdkFailure(exception, sandboxLatencyInfo);
         } catch (RemoteException e) {
-            Log.w(TAG, "Failed to send onLoadCodeFailure", e);
+            Log.w(TAG, "Failed to send onLoadSdkFailure", e);
         }
     }
 

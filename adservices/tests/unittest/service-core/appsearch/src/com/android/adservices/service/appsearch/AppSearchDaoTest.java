@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.appsearch;
 
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -25,6 +26,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.verify;
 
+import android.content.Context;
 import android.content.pm.Signature;
 
 import androidx.appsearch.app.AppSearchBatchResult;
@@ -37,9 +39,14 @@ import androidx.appsearch.app.SearchResult;
 import androidx.appsearch.app.SearchResults;
 import androidx.appsearch.app.SetSchemaRequest;
 import androidx.appsearch.app.SetSchemaResponse;
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.AdServicesCommon;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentConstants;
 
 import com.google.common.util.concurrent.FluentFuture;
@@ -47,6 +54,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -62,7 +70,11 @@ public class AppSearchDaoTest {
     @Mock List<SearchResult> mMockPage;
     @Mock GlobalSearchSession mGlobalSearchSession;
     @Mock AppSearchSession mAppSearchSession;
+    @Mock Flags mFlags;
     private final Executor mExecutor = AdServicesExecutors.getBackgroundExecutor();
+    private final Context mContext = ApplicationProvider.getApplicationContext();
+    private final String mAdServicesPackageName =
+            AppSearchConsentWorker.getAdServicesPackageName(mContext);
 
     private static final String ID = "1";
     private static final String NAMESPACE = "consent";
@@ -75,9 +87,15 @@ public class AppSearchDaoTest {
             new PackageIdentifier(
                     /* packageName= */ TEST, /* sha256= */ new Signature(SHA).toByteArray());
 
+    @Rule
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this).mockStatic(FlagsFactory.class).build();
+
     @Before
     public void before() {
         MockitoAnnotations.initMocks(this);
+        when(mFlags.getAppsearchWriterAllowListOverride()).thenReturn("");
+        doReturn(mFlags).when(FlagsFactory::getFlags);
     }
 
     @Test
@@ -112,6 +130,32 @@ public class AppSearchDaoTest {
     }
 
     @Test
+    public void testGetAllowedPackages_noOverride() {
+        when(mFlags.getAppsearchWriterAllowListOverride()).thenReturn("");
+
+        String expected =
+                mAdServicesPackageName.replace(
+                        AdServicesCommon.ADSERVICES_APK_PACKAGE_NAME_SUFFIX,
+                        AdServicesCommon.ADEXTSERVICES_PACKAGE_NAME_SUFFIX);
+
+        List<String> allowedPackages = AppSearchDao.getAllowedPackages(mAdServicesPackageName);
+
+        assertThat(allowedPackages.size()).isEqualTo(1);
+        assertThat(allowedPackages.get(0)).isEqualTo(expected);
+    }
+
+    @Test
+    public void testGetAllowedPackages_withOverride() {
+        String allowedPackage = "allowed.package";
+        when(mFlags.getAppsearchWriterAllowListOverride()).thenReturn(allowedPackage);
+
+        List<String> allowedPackages = AppSearchDao.getAllowedPackages(mAdServicesPackageName);
+
+        assertThat(allowedPackages.size()).isEqualTo(1);
+        assertThat(allowedPackages.get(0)).isEqualTo(allowedPackage);
+    }
+
+    @Test
     public void testReadConsentData_emptyQuery() {
         AppSearchDao dao =
                 AppSearchDao.readConsentData(
@@ -119,7 +163,8 @@ public class AppSearchDaoTest {
                         Futures.immediateFuture(mGlobalSearchSession),
                         mExecutor,
                         NAMESPACE,
-                        null);
+                        null,
+                        mAdServicesPackageName);
         assertThat(dao).isEqualTo(null);
 
         AppSearchDao dao2 =
@@ -128,7 +173,8 @@ public class AppSearchDaoTest {
                         Futures.immediateFuture(mGlobalSearchSession),
                         mExecutor,
                         NAMESPACE,
-                        "");
+                        "",
+                        mAdServicesPackageName);
         assertThat(dao2).isEqualTo(null);
     }
 
@@ -153,7 +199,8 @@ public class AppSearchDaoTest {
                         Futures.immediateFuture(mGlobalSearchSession),
                         mExecutor,
                         NAMESPACE,
-                        TEST);
+                        TEST,
+                        mAdServicesPackageName);
         assertThat(result).isEqualTo(dao);
     }
 
@@ -165,7 +212,8 @@ public class AppSearchDaoTest {
                         Futures.immediateFuture(mAppSearchSession),
                         mExecutor,
                         NAMESPACE,
-                        null);
+                        null,
+                        mAdServicesPackageName);
         assertThat(dao).isEqualTo(null);
 
         AppSearchDao dao2 =
@@ -174,7 +222,8 @@ public class AppSearchDaoTest {
                         Futures.immediateFuture(mAppSearchSession),
                         mExecutor,
                         NAMESPACE,
-                        "");
+                        "",
+                        mAdServicesPackageName);
         assertThat(dao2).isEqualTo(null);
     }
 
@@ -199,7 +248,8 @@ public class AppSearchDaoTest {
                         Futures.immediateFuture(mAppSearchSession),
                         mExecutor,
                         NAMESPACE,
-                        TEST);
+                        TEST,
+                        mAdServicesPackageName);
         assertThat(result).isEqualTo(dao);
     }
 

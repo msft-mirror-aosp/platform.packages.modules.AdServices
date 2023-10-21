@@ -25,9 +25,11 @@ final class HostSideDeviceConfigHelper extends DeviceConfigHelper.Interface {
         super(namespace, ConsoleLogger.getInstance());
     }
 
+    // cmdFmt must be final because it's being passed to a method taking @FormatString
     @Override
     @FormatMethod
-    protected String runShellCommand(@FormatString String cmdFmt, @Nullable Object... cmdArgs) {
+    protected String runShellCommand(
+            @FormatString final String cmdFmt, @Nullable Object... cmdArgs) {
         return TestDeviceHelper.runShellCommand(cmdFmt, cmdArgs);
     }
 }

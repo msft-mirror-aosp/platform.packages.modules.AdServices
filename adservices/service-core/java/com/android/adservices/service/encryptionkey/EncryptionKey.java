@@ -37,7 +37,7 @@ public class EncryptionKey {
 
     private EncryptionKey() {
         mId = null;
-        mKeyType = KeyType.ENCRYPTION_KEY;
+        mKeyType = KeyType.ENCRYPTION;
         mEnrollmentId = null;
         mReportingOrigin = null;
         mEncryptionKeyUrl = null;
@@ -196,15 +196,16 @@ public class EncryptionKey {
 
     // The key type for this key, a key can be either an encryption key or a signing key.
     public enum KeyType {
-        ENCRYPTION_KEY(0),
-        SIGNING_KEY(1);
-        private final int mValue;
+        ENCRYPTION("encryption"),
+        SIGNING("signing");
 
-        KeyType(int value) {
+        private final String mValue;
+
+        KeyType(String value) {
             mValue = value;
         }
 
-        public int getValue() {
+        public String getValue() {
             return mValue;
         }
     }
@@ -214,6 +215,10 @@ public class EncryptionKey {
      * support more algorithm if we need in the future.
      */
     public enum ProtocolType {
+        // TODO(b/300707076): check which algo PA will use for signing key, update fetching default
+        //  value.
+        WebPKI("webpki"),
+        ECDSA("ecdsa"),
         HPKE("hpke");
         private final String mValue;
 

@@ -143,6 +143,18 @@ public abstract class AdSelectionEntryDao {
             String adSelectionConfigId, String appPackageName);
 
     /**
+     * Checks if there is a row in the {@link DBReportingComputationInfo} table with the unique key
+     * ad_selection_id in on device auction tables
+     *
+     * @param adSelectionId which is the key to query the corresponding ad selection data.
+     * @return true if row exists, false otherwise
+     */
+    @Query(
+            "SELECT EXISTS(SELECT 1 FROM reporting_computation_info WHERE ad_selection_id ="
+                    + " :adSelectionId LIMIT 1)")
+    public abstract boolean doesReportingComputationInfoExist(long adSelectionId);
+
+    /**
      * Checks if there is a row in the registered_ad_interactions table that matches the primary key
      * combination of adSelectionId, interactionKey, and destination
      *
@@ -630,6 +642,19 @@ public abstract class AdSelectionEntryDao {
     public abstract boolean doesAdSelectionIdExistInInitializationTable(long adSelectionId);
 
     /**
+     * Checks if adSelectionId exists in {@link DBAdSelectionInitialization} or in {@link
+     * DBAdSelection}, depending on the flag.
+     */
+    @Transaction
+    public boolean doesAdSelectionIdExistUponFlag(
+            long adSelectionId, boolean shouldCheckUnifiedTable) {
+        if (shouldCheckUnifiedTable) {
+            return doesAdSelectionIdExistInInitializationTable(adSelectionId);
+        }
+        return doesAdSelectionIdExist(adSelectionId);
+    }
+
+    /**
      * Checks if there is a row in the ad selection with the unique key ad_selection_id and caller
      * package name.
      *
@@ -862,6 +887,10 @@ public abstract class AdSelectionEntryDao {
      */
     @Insert(onConflict = OnConflictStrategy.ABORT)
     abstract void insertDBAdSelectionResult(DBAdSelectionResult dbAdSelectionResult);
+
+    /** Insert new {@link DBReportingComputationInfo} record. */
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    abstract void insertDBReportingComputationInfo(DBReportingComputationInfo dbAdSelectionResult);
 
     /**
      * Insert a reporting URI record. Aborts if adselectionId already exists.
