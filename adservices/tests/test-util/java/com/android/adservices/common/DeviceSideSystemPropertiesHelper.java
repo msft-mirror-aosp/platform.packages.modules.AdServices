@@ -16,13 +16,18 @@
 
 package com.android.adservices.common;
 
+import static com.android.compatibility.common.util.ShellUtils.runShellCommand;
+
 import android.os.SystemProperties;
 import android.text.TextUtils;
 
-import static com.android.compatibility.common.util.ShellUtils.runShellCommand;
+import com.android.compatibility.common.util.ShellUtils;
+
+import com.google.errorprone.annotations.FormatMethod;
+import com.google.errorprone.annotations.FormatString;
 
 /** Device-side implementation of {@link SystemPropertiesHelper.Interface}. */
-final class DeviceSideSystemPropertiesHelper implements SystemPropertiesHelper.Interface {
+final class DeviceSideSystemPropertiesHelper extends SystemPropertiesHelper.Interface {
 
     private static final Logger sLogger =
             new Logger(AndroidLogger.getInstance(), DeviceSideSystemPropertiesHelper.class);
@@ -61,8 +66,9 @@ final class DeviceSideSystemPropertiesHelper implements SystemPropertiesHelper.I
     }
 
     @Override
-    public String dumpSystemProperties() {
-        return runShellCommand("getprop").trim();
+    @FormatMethod
+    protected String runShellCommand(@FormatString String cmdFmt, @Nullable Object... cmdArgs) {
+        return ShellUtils.runShellCommand(cmdFmt, cmdArgs);
     }
 
     @Override

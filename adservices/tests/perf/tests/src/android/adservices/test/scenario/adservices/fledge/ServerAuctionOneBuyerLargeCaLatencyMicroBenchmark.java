@@ -14,16 +14,7 @@
  * limitations under the License.
  */
 
-package android.adservices.test.scenario.adservices.topics;
+package android.adservices.test.scenario.adservices.fledge;
 
-import android.platform.test.microbenchmark.Microbenchmark;
-import android.platform.test.rule.DropCachesRule;
-
-import org.junit.Rule;
-import org.junit.rules.RuleChain;
-import org.junit.runner.RunWith;
-
-@RunWith(Microbenchmark.class)
-public class GetTopicsDisabledApiCallMicrobenchmark extends GetTopicsDisabledApiCall {
-    @Rule public RuleChain rules = RuleChain.outerRule(new DropCachesRule());
-}
+public class ServerAuctionOneBuyerLargeCaLatencyMicroBenchmark
+        extends ServerAuctionOneBuyerLargeCaLatency {}
