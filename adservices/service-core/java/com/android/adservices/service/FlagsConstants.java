@@ -472,6 +472,8 @@ public final class FlagsConstants {
             "protected_signals_periodic_encoding_job_flex_ms";
     public static final String KEY_PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES =
             "protected_signals_encoded_payload_max_size_bytes";
+    public static final String KEY_PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES =
+            "key_protected_signals_fetch_signal_updates_max_size_bytes";
 
     // FLEDGE Ad Selection keys
     public static final String KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT =
@@ -514,6 +516,8 @@ public final class FlagsConstants {
     public static final String KEY_FLEDGE_HTTP_CACHE_MAX_ENTRIES = "fledge_http_cache_max_entries";
     public static final String KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES =
             "fledge_on_device_auction_should_use_unified_tables";
+    public static final String KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_SIZE_SHOULD_EXCEED_LIMIT =
+            "fledge_auction_server_payload_size_should_exceed_limit";
 
     // FLEDGE Ad Counter Histogram keys
     public static final String KEY_FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT =
@@ -759,6 +763,9 @@ public final class FlagsConstants {
 
     public static final String KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST =
             "ppapi_app_signature_allow_list";
+
+    public static final String KEY_APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE =
+            "appsearch_writer_allow_list_override";
 
     // AdServices APK sha certs.
     public static final String KEY_ADSERVICES_APK_SHA_CERTS = "adservices_apk_sha_certs";
@@ -1032,6 +1039,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW =
             "measurement_min_post_install_exclusivity_window";
 
+    public static final String KEY_MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK =
+            "measurement_enable_api_status_allow_list_check";
+
     // Database Schema Version Flags
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 =
             "enable_database_schema_version_8";
@@ -1057,4 +1067,9 @@ public final class FlagsConstants {
 
     public static final String KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT =
             "app_config_returns_enabled_by_detault";
+
+    public static final String KEY_ENABLE_ADSERVICES_API_ENABLED = "enable_adservices_api_enabled";
+
+    public static final String KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED =
+            "adservices_enablement_check_enabled";
 }

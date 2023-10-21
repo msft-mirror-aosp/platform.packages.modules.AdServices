@@ -353,8 +353,8 @@ public interface Flags {
 
     /** Measurement manifest file url, used for MDD download. */
     String MEASUREMENT_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/2324"
-                    + "/3927729583a9dbfdb9a3eaa84ddcef3d9b46c3c7";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/2483"
+                    + "/99f68a201189da021b1f3dd4ebdef7b0fbe75892";
 
     /** Measurement manifest file url. */
     default String getMeasurementManifestFileUrl() {
@@ -874,10 +874,19 @@ public interface Flags {
     long FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS = 2 * 24 * 60 * 60; // 2 days
     long FLEDGE_HTTP_CACHE_MAX_ENTRIES = 100;
     boolean FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES = false;
+    boolean FLEDGE_AUCTION_SERVER_PAYLOAD_SIZE_SHOULD_EXCEED_LIMIT = false;
 
     /** Returns {@code true} if the on device auction should use the unified flow tables */
     default boolean getFledgeOnDeviceAuctionShouldUseUnifiedTables() {
         return FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES;
+    }
+
+    /**
+     * Returns {@code true} if the response of the {@code getAdSelectionData} API can exceed the
+     * 64Kb maximum
+     */
+    default boolean getFledgeAuctionServerPayloadSizeShouldExceedLimit() {
+        return FLEDGE_AUCTION_SERVER_PAYLOAD_SIZE_SHOULD_EXCEED_LIMIT;
     }
 
     /** Returns {@code true} if the FLEDGE Background Fetch is enabled. */
@@ -984,6 +993,7 @@ public interface Flags {
     long PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS = 1L * 60L * 60L * 1000L; // 1 hour
     long PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS = 5L * 60L * 1000L; // 5 minutes
     int PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES = (int) (1.5 * 1024); // 1.5 KB
+    int PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES = (int) (10 * 1024);
 
     /** Returns {@code true} feature flag if Periodic encoding of Protected Signals is enabled. */
     default boolean getProtectedSignalsPeriodicEncodingEnabled() {
@@ -1009,6 +1019,11 @@ public interface Flags {
      */
     default int getProtectedSignalsEncodedPayloadMaxSizeBytes() {
         return PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES;
+    }
+
+    /** Returns the maximum size of the signal update payload. */
+    default int getProtectedSignalsFetchSignalUpdatesMaxSizeBytes() {
+        return PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES;
     }
 
     int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT = 10_000;
@@ -1744,13 +1759,13 @@ public interface Flags {
     }
 
     /**
-     * The SHA certificates of the AdServices and the AdExtServices APKs. This is required when
-     * writing consent data to AppSearch in order to allow reads from T+ APK. This is a comma
-     * searpated list.
+     * The debug and release SHA certificates of the AdServices APK. This is required when writing
+     * consent data to AppSearch in order to allow reads from T+ APK. This is a comma separated
+     * list.
      */
-    // TODO: Add the release key signed cert.
     String ADSERVICES_APK_SHA_CERTIFICATE =
-            "686d5c450e00ebe600f979300a29234644eade42f24ede07a073f2bc6b94a3a2";
+            "686d5c450e00ebe600f979300a29234644eade42f24ede07a073f2bc6b94a3a2," // debug
+                    + "80f8fbb9a026807f58d98dbc28bf70724d8f66bbfcec997c6bdc0102c3230dee"; // release
 
     /** Only App signatures belonging to this Allow List can use PP APIs. */
     default String getAdservicesApkShaCertificate() {
@@ -2513,6 +2528,17 @@ public interface Flags {
     /** Only App signatures belonging to this Allow List can use PP APIs. */
     default String getPpapiAppSignatureAllowList() {
         return PPAPI_APP_SIGNATURE_ALLOW_LIST;
+    }
+
+    /**
+     * The allow list for AppSearch writers. If non-empty, only results written by a package on the
+     * allow list will be read for consent migration.
+     */
+    String APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE = "";
+
+    /** Only data written by packages in the allow list will be read from AppSearch. */
+    default String getAppsearchWriterAllowListOverride() {
+        return APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE;
     }
 
     /**
@@ -3873,6 +3899,14 @@ public interface Flags {
         return ENABLE_DATABASE_SCHEMA_VERSION_8;
     }
 
+    /** Flag to control which allow list in getMeasurementApiStatus. */
+    boolean MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK = false;
+
+    /** Returns the flag to control which allow list to use in getMeasurementApiStatus. */
+    default boolean getMsmtEnableApiStatusAllowListCheck() {
+        return MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK;
+    }
+
     /**
      * Default whether to limit logging for enrollment metrics to avoid performance issues. This
      * includes not logging data that requires database queries and downloading MDD files.
@@ -4008,5 +4042,33 @@ public interface Flags {
      */
     default boolean getAppConfigReturnsEnabledByDefault() {
         return APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT;
+    }
+
+    /**
+     * Default value to determine whether {@link
+     * android.adservices.common.AdServicesCommonManager#enableAdServices} is enabled.
+     */
+    boolean DEFAULT_ENABLE_ADSERVICES_API_ENABLED = true;
+
+    /**
+     * Returns whether {@link android.adservices.common.AdServicesCommonManager#enableAdServices} is
+     * enabled.
+     */
+    default boolean getEnableAdservicesApiEnabled() {
+        return DEFAULT_ENABLE_ADSERVICES_API_ENABLED;
+    }
+
+    /**
+     * Default value to determine whether {@link
+     * android.adservices.common.AdServicesCommonManager#isAdServicesEnabled} is enabled.
+     */
+    boolean DEFAULT_ADSERVICES_ENABLEMENT_CHECK_ENABLED = true;
+
+    /**
+     * Returns whether {@link android.adservices.common.AdServicesCommonManager#isAdServicesEnabled}
+     * is enabled.
+     */
+    default boolean getAdservicesEnablementCheckEnabled() {
+        return DEFAULT_ADSERVICES_ENABLEMENT_CHECK_ENABLED;
     }
 }

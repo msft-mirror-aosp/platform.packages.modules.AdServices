@@ -156,6 +156,9 @@ public class MeasurementDaoTest {
     private static final Uri REGISTRATION_ORIGIN =
             WebUtil.validUri("https://subdomain.example.test");
 
+    private static final Uri SOURCE_REGISTRANT = Uri.parse("android-app://com.example.abc");
+    private static final long INSERTION_TIME = 1617297798;
+
     // Fake ID count for initializing triggers.
     private int mValueId = 1;
     private MockitoSession mStaticMockSession;
@@ -552,6 +555,8 @@ public class MeasurementDaoTest {
             assertEquals(debugReport.getEnrollmentId(), report.getEnrollmentId());
             assertEquals(debugReport.getRegistrationOrigin(), report.getRegistrationOrigin());
             assertEquals(debugReport.getReferenceId(), report.getReferenceId());
+            assertEquals(debugReport.getInsertionTime(), report.getInsertionTime());
+            assertEquals(debugReport.getRegistrant(), report.getRegistrant());
         }
     }
 
@@ -9057,6 +9062,8 @@ public class MeasurementDaoTest {
                                 + "    }")
                 .setEnrollmentId("1")
                 .setRegistrationOrigin(REGISTRATION_ORIGIN)
+                .setRegistrant(SOURCE_REGISTRANT)
+                .setInsertionTime(INSERTION_TIME)
                 .build();
     }
 

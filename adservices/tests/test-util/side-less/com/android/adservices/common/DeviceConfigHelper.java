@@ -17,13 +17,14 @@ package com.android.adservices.common;
 
 import com.android.adservices.common.Logger.RealLogger;
 
-import com.google.errorprone.annotations.FormatMethod;
-import com.google.errorprone.annotations.FormatString;
-
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 // TODO(b/294423183): add unit tests
 // TODO(b/294423183): use an existing class like DeviceConfigStateManager or DeviceConfigStateHelper
@@ -37,6 +38,8 @@ import java.util.Objects;
  * <p><b>NOTE: </b>this class is not thread safe.
  */
 final class DeviceConfigHelper {
+
+    private static final Pattern FLAG_LINE_PATTERN = Pattern.compile("^(?<name>.*)=(?<value>.*)$");
 
     private final String mNamespace;
     private final Interface mInterface;
@@ -91,9 +94,8 @@ final class DeviceConfigHelper {
         mInterface.setSyncDisabledModeForTest(mode);
     }
 
-    public void dumpFlags(StringBuilder dump) {
-        String flags = mInterface.dump();
-        dump.append(flags.isEmpty() ? "(no flags on namespace " + mNamespace + ")" : flags);
+    public void clearFlags() {
+        mInterface.clear();
     }
 
     @Override
@@ -108,11 +110,14 @@ final class DeviceConfigHelper {
                 + mLog
                 + "]";
     }
-
     // TODO(b/294423183): temporarily exposed as it's used by legacy helper methods on
     // AdServicesFlagsSetterRule
     String get(String name) {
         return mInterface.get(name, /* defaultValue= */ null);
+    }
+
+    public List<NameValuePair> getAll() {
+        return mInterface.getAll();
     }
 
     private String savePreviousValue(String name) {
@@ -148,7 +153,7 @@ final class DeviceConfigHelper {
      * could override them (for example, device-side implementation could use {@code DeviceConfig}
      * instead.
      */
-    protected abstract static class Interface {
+    protected abstract static class Interface extends AbstractDeviceGateway {
 
         private static final int CHANGE_CHECK_TIMEOUT_MS = 5_000;
         private static final int CHANGE_CHECK_SLEEP_TIME_MS = 500;
@@ -292,17 +297,41 @@ final class DeviceConfigHelper {
             return true;
         }
 
-        public String dump() {
-            return runShellCommand("device_config list %s", mNamespace).trim();
+        /** Clears all flags. */
+        public void clear() {
+            runShellCommand("device_config reset untrusted_clear %s", mNamespace);
+
+            // TODO(b/305877958): command above will "delete all settings set by untrusted packages,
+            // which is packages that aren't a part of the system", so it might not delete them
+            // all. In fact, after this method was first called, it cause test breakages because
+            // disable_sdk_sandbox was still set. So, we should also explicitly delete all flags
+            // that remain, but for now clearing those from untrusted packages is enough
+            List<NameValuePair> currentFlags = getAll();
+            if (!currentFlags.isEmpty()) {
+                mLog.w(
+                        "clear(): not all flags were deleted, which is a known limitation."
+                                + " Following flags remain:\n\n"
+                                + "%s",
+                        currentFlags);
+            }
+
+            // TODO(b/300136201): should wait until they're all cleared
         }
 
-        // TODO(b/294423183): need to refactor it (or implementation) so it doesn't ignore errors.
-        // For example, setSyncDisabledModeForTest() was calling set_sync_disabled_for_tests
-        // instead of set_sync_disabled_for_test
-        @FormatMethod
-        protected String runShellCommand(@FormatString String cmdFmt, @Nullable Object... cmdArgs) {
-            throw new UnsupportedOperationException(
-                    "Subclass must either implement this or the methods that use it");
+        public List<NameValuePair> getAll() {
+            String dump = runShellCommand("device_config list %s", mNamespace).trim();
+            String[] lines = dump.split("\n");
+            List<NameValuePair> allFlags = new ArrayList<>(lines.length);
+            for (int i = 0; i < lines.length; i++) {
+                String line = lines[i];
+                Matcher matcher = FLAG_LINE_PATTERN.matcher(line);
+                if (matcher.matches()) {
+                    String name = matcher.group("name");
+                    String value = matcher.group("value");
+                    allFlags.add(new NameValuePair(name, value));
+                }
+            }
+            return allFlags;
         }
 
         @Override
