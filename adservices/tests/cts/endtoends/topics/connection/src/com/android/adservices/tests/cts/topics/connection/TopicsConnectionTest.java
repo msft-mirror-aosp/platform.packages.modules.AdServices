@@ -32,6 +32,7 @@ import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -148,8 +149,11 @@ public class TopicsConnectionTest {
     // If enabled = true, override global_kill_switch to ON to turn off Adservices.
     // If enabled = false, the AdServices is enabled.
     private void enableGlobalKillSwitch(boolean enabled) {
-        String overrideString = enabled ? "true" : "false";
-        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
+        if (SdkLevel.isAtLeastT()) {
+            flags.setGlobalKillSwitch(enabled);
+        } else {
+            flags.setEnableBackCompat(!enabled);
+        }
     }
 
     /** Forces JobScheduler to run the Epoch Computation job */
