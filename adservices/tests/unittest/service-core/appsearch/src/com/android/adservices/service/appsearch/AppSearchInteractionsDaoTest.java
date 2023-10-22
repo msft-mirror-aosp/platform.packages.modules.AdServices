@@ -21,6 +21,9 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 
+import android.content.Context;
+
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
@@ -42,6 +45,9 @@ import java.util.concurrent.Executor;
 public class AppSearchInteractionsDaoTest {
     private static final String ID = "1";
     private static final String NAMESPACE = "notifications";
+    private final Context mContext = ApplicationProvider.getApplicationContext();
+    private final String mAdServicesPackageName =
+            AppSearchConsentWorker.getAdServicesPackageName(mContext);
     private MockitoSession mStaticMockSession;
 
     @Before
@@ -116,10 +122,10 @@ public class AppSearchInteractionsDaoTest {
         ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
         Executor mockExecutor = Mockito.mock(Executor.class);
         ExtendedMockito.doReturn(null)
-                .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), any()));
+                .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), any(), any()));
         PrivacySandboxFeatureType result =
                 AppSearchInteractionsDao.getPrivacySandboxFeatureType(
-                        mockSearchSession, mockExecutor, ID);
+                        mockSearchSession, mockExecutor, ID, mAdServicesPackageName);
         assertThat(result).isEqualTo(PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED);
     }
 
@@ -134,10 +140,13 @@ public class AppSearchInteractionsDaoTest {
         Mockito.when(dao.getValue())
                 .thenReturn(PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT.ordinal());
         ExtendedMockito.doReturn(dao)
-                .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), eq(query)));
+                .when(
+                        () ->
+                                AppSearchDao.readConsentData(
+                                        any(), any(), any(), any(), eq(query), any()));
         PrivacySandboxFeatureType result =
                 AppSearchInteractionsDao.getPrivacySandboxFeatureType(
-                        mockSearchSession, mockExecutor, ID);
+                        mockSearchSession, mockExecutor, ID, mAdServicesPackageName);
         assertThat(result).isEqualTo(PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT);
     }
 
@@ -146,9 +155,10 @@ public class AppSearchInteractionsDaoTest {
         ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
         Executor mockExecutor = Mockito.mock(Executor.class);
         ExtendedMockito.doReturn(null)
-                .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), any()));
+                .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), any(), any()));
         int result =
-                AppSearchInteractionsDao.getManualInteractions(mockSearchSession, mockExecutor, ID);
+                AppSearchInteractionsDao.getManualInteractions(
+                        mockSearchSession, mockExecutor, ID, mAdServicesPackageName);
         assertThat(result).isEqualTo(ConsentManager.NO_MANUAL_INTERACTIONS_RECORDED);
     }
 
@@ -162,9 +172,13 @@ public class AppSearchInteractionsDaoTest {
         AppSearchInteractionsDao dao = Mockito.mock(AppSearchInteractionsDao.class);
         Mockito.when(dao.getValue()).thenReturn(ConsentManager.MANUAL_INTERACTIONS_RECORDED);
         ExtendedMockito.doReturn(dao)
-                .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), eq(query)));
+                .when(
+                        () ->
+                                AppSearchDao.readConsentData(
+                                        any(), any(), any(), any(), eq(query), any()));
         int result =
-                AppSearchInteractionsDao.getManualInteractions(mockSearchSession, mockExecutor, ID);
+                AppSearchInteractionsDao.getManualInteractions(
+                        mockSearchSession, mockExecutor, ID, mAdServicesPackageName);
         assertThat(result).isEqualTo(ConsentManager.MANUAL_INTERACTIONS_RECORDED);
     }
 }

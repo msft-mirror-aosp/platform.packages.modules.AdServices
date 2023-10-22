@@ -96,7 +96,8 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                                         AdServicesExecutors.getBlockingExecutor(),
                                         TIMEOUT_MS,
                                         TIMEOUT_MS,
-                                        MAX_SIZE_BYTES)),
+                                        FlagsFactory.getFlags()
+                                                .getProtectedSignalsFetchSignalUpdatesMaxSizeBytes())),
                         new UpdateProcessingOrchestrator(
                                 ProtectedSignalsDatabase.getInstance(context).protectedSignalsDao(),
                                 new UpdateProcessorSelector(),
@@ -222,7 +223,8 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                                     input.getCallerPackageName(),
                                     mFlags.getDisableFledgeEnrollmentCheck(),
                                     mFlags.getEnforceForegroundStatusForSignals(),
-                                    true,
+                                    // Consent is enforced in a separate call below.
+                                    false,
                                     callerUid,
                                     apiName,
                                     PROTECTED_SIGNAL_API_UPDATE_SIGNALS,

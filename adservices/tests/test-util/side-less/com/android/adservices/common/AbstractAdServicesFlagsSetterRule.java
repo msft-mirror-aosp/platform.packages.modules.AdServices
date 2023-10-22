@@ -20,6 +20,7 @@ import static com.android.adservices.service.FlagsConstants.NAMESPACE_ADSERVICES
 
 import com.android.adservices.common.DeviceConfigHelper.SyncDisabledModeForTest;
 import com.android.adservices.common.Logger.RealLogger;
+import com.android.adservices.common.NameValuePair.Matcher;
 import com.android.adservices.common.annotations.SetDoubleFlag;
 import com.android.adservices.common.annotations.SetDoubleFlags;
 import com.android.adservices.common.annotations.SetFlagDisabled;
@@ -48,8 +49,10 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 // TODO(b/294423183): add unit tests for the most relevant / less repetitive stuff (don't need to
 // test all setters / getters, for example)
@@ -88,24 +91,34 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     protected static final String LOGCAT_TAG_ADID = LOGCAT_TAG_ADSERVICES + ".adid";
     protected static final String LOGCAT_TAG_APPSETID = LOGCAT_TAG_ADSERVICES + ".appsetid";
 
-    // TODO(b/294423183): make private once not used by subclass for legacy methods
-    protected final DeviceConfigHelper mDeviceConfig;
-    protected final SystemPropertiesHelper mSystemProperties;
+    // TODO(b/294423183): instead of hardcoding the SYSTEM_PROPERTY_FOR_LOGCAT_TAGS_PREFIX, we
+    // should dynamically calculate it based on setLogcatTag() calls
+    private static final Matcher PROPERTIES_PREFIX_MATCHER =
+            (prop) ->
+                    prop.name.startsWith(SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX)
+                            || prop.name.startsWith(
+                                    SYSTEM_PROPERTY_FOR_LOGCAT_TAGS_PREFIX + "adservices");
 
+    private final DeviceConfigHelper mDeviceConfig;
+    private final SystemPropertiesHelper mSystemProperties;
     protected final Logger mLog;
 
-    // Cache flags that were set before the test started, so the rule can be instantiated using a
-    // builder-like approach - will be set to null after test starts.
-    @Nullable private List<FlagOrSystemProperty> mInitialFlags = new ArrayList<>();
-
-    // Cache system properties that were set before the test started, so the rule can be
-    // instantiated using a builder-like approach - will be set to null after test starts.
-    @Nullable private List<FlagOrSystemProperty> mInitialSystemProperties = new ArrayList<>();
-
     // Cache methods that were called before the test started, so the rule can be
-    // instantiated using a builder-like approach - will be set to null after test starts.
-    // TODO(b/294423183): get rid of mInitialFlags / mInitialSystemProperties and use just this
-    @Nullable private List<Command> mInitialCommands = new ArrayList<>();
+    // instantiated using a builder-like approach.
+    private final List<Command> mInitialCommands = new ArrayList<>();
+
+    // Name of flags that were changed by the test
+    private final Set<String> mChangedFlags = new LinkedHashSet<>();
+    // Name of system properties that were changed by the test
+    private final Set<String> mChangedSystemProperties = new LinkedHashSet<>();
+
+    private List<NameValuePair> mPreTestFlags = new ArrayList<>();
+    private List<NameValuePair> mPreTestSystemProperties = new ArrayList<>();
+
+    private final SyncDisabledModeForTest mPreviousSyncDisabledModeForTest;
+
+    private boolean mIsRunning;
+    private boolean mFlagsClearedByTest;
 
     protected AbstractAdServicesFlagsSetterRule(
             RealLogger logger,
@@ -115,10 +128,23 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         mDeviceConfig =
                 new DeviceConfigHelper(deviceConfigInterfaceFactory, NAMESPACE_ADSERVICES, logger);
         mSystemProperties = new SystemPropertiesHelper(systemPropertiesInterface, logger);
+        // TODO(b/294423183): ideally the current mode should be returned by
+        // setSyncDisabledMode(),
+        // but unfortunately getting the current mode is not straightforward due to
+        // different
+        // behaviors:
+        // - T+ provides get_sync_disabled_for_tests
+        // - S provides is_sync_disabled_for_tests
+        // - R doesn't provide anything
+        mPreviousSyncDisabledModeForTest = SyncDisabledModeForTest.NONE;
+        // Must set right away to avoid race conditions (for example, backend setting flags before
+        // apply() is called)
+        setSyncDisabledMode(SyncDisabledModeForTest.PERSISTENT);
 
         mLog.v(
-                "Constructor: mDeviceConfig=%s, mSystemProperties=%s",
-                mDeviceConfig, mSystemProperties);
+                "Constructor: mDeviceConfig=%s, mSystemProperties=%s,"
+                        + " mPreviousSyncDisabledModeForTest=%s",
+                mDeviceConfig, mSystemProperties, mPreviousSyncDisabledModeForTest);
     }
 
     @Override
@@ -127,53 +153,61 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                // TODO(b/294423183): ideally the current mode should be returned by
-                // setSyncDisabledMode(),
-                // but unfortunately getting the current mode is not straightforward due to
-                // different
-                // behaviors:
-                // - T+ provides get_sync_disabled_for_tests
-                // - S provides is_sync_disabled_for_tests
-                // - R doesn't provide anything
-                SyncDisabledModeForTest previousSyncDisabledModeForTest =
-                        SyncDisabledModeForTest.NONE;
-
-                mDeviceConfig.setSyncDisabledMode(SyncDisabledModeForTest.PERSISTENT);
-                setInitialSystemProperties(testName);
-                setAnnotatedFlags(description);
-                setInitialFlags(testName);
-                runInitialCommands(testName);
+                mIsRunning = true;
                 List<Throwable> cleanUpErrors = new ArrayList<>();
+
+                // TODO(b/294423183): ideally should be "setupErrors", but it's not used yet (other
+                // than logging), so it doesn't matter
+                runSafely(cleanUpErrors, () -> mPreTestFlags.addAll(mDeviceConfig.getAll()));
+                runSafely(
+                        cleanUpErrors,
+                        () ->
+                                mPreTestSystemProperties.addAll(
+                                        mSystemProperties.getAll(PROPERTIES_PREFIX_MATCHER)));
+
+                setAnnotatedFlags(description);
+                runInitialCommands(testName);
+                List<NameValuePair> postTestFlags = new ArrayList<>();
+                List<NameValuePair> postTestSystemProperties = new ArrayList<>();
                 Throwable testError = null;
-                StringBuilder dump = new StringBuilder("*** Flags before:\n");
-                dumpFlagsSafely(dump).append("\n\n*** SystemProperties before:\n");
-                dumpSystemPropertiesSafely(dump);
+
                 try {
                     base.evaluate();
                 } catch (Throwable t) {
                     testError = t;
+                    runSafely(cleanUpErrors, () -> postTestFlags.addAll(mDeviceConfig.getAll()));
+                    runSafely(
+                            cleanUpErrors,
+                            () ->
+                                    postTestSystemProperties.addAll(
+                                            mSystemProperties.getAll(PROPERTIES_PREFIX_MATCHER)));
                 } finally {
-                    dump.append("\n*** Flags after:\n");
-                    dumpFlagsSafely(dump).append("\n\n***SystemProperties after:\n");
-                    dumpSystemPropertiesSafely(dump);
                     runSafely(cleanUpErrors, () -> resetFlags(testName));
                     runSafely(cleanUpErrors, () -> resetSystemProperties(testName));
                     runSafely(
                             cleanUpErrors,
-                            () ->
-                                    mDeviceConfig.setSyncDisabledMode(
-                                            previousSyncDisabledModeForTest));
+                            () -> setSyncDisabledMode(mPreviousSyncDisabledModeForTest));
+                    mIsRunning = false;
                 }
                 // TODO(b/294423183): ideally it should throw an exception if cleanUpErrors is not
                 // empty, but it's better to wait until this class is unit tested to do so (for now,
                 // it's just logging it)
-                throwIfNecessary(testName, dump, testError);
+                throwIfNecessary(testName, testError, postTestFlags, postTestSystemProperties);
             }
         };
     }
 
+    private void setSyncDisabledMode(SyncDisabledModeForTest mode) {
+        runOrCache(
+                "setSyncDisabledMode(" + mode + ")", () -> mDeviceConfig.setSyncDisabledMode(mode));
+    }
+
     private void throwIfNecessary(
-            String testName, StringBuilder dump, @Nullable Throwable testError) throws Throwable {
+            String testName,
+            @Nullable Throwable testError,
+            List<NameValuePair> postTestFlags,
+            List<NameValuePair> postTestSystemProperties)
+            throws Throwable {
         if (testError == null) {
             mLog.v("Good News, Everyone! %s passed.", testName);
             return;
@@ -182,8 +216,74 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
             mLog.i("%s is being ignored: %s", testName, testError);
             throw testError;
         }
+
+        StringBuilder dump = new StringBuilder();
+        if (mFlagsClearedByTest) {
+            dump.append("NOTE: test explicitly cleared all flags.\n");
+        }
+
+        logAllAndDumpDiff("flags", dump, mChangedFlags, mPreTestFlags, postTestFlags);
+        logAllAndDumpDiff(
+                "system properties",
+                dump,
+                mChangedSystemProperties,
+                mPreTestSystemProperties,
+                postTestSystemProperties);
+
         mLog.e("%s failed with %s.\n%s", testName, testError, dump);
         throw new TestFailure(testError, dump);
+    }
+
+    private void logAllAndDumpDiff(
+            String what,
+            StringBuilder dump,
+            Set<String> changedNames,
+            List<NameValuePair> preTest,
+            List<NameValuePair> postTest) {
+        // Log all values
+        log(preTest, "%s before the test", what);
+        log(postTest, "%s after the test", what);
+
+        // Dump only what was change
+        appendChanges(dump, what, changedNames, preTest, postTest);
+    }
+
+    private void appendChanges(
+            StringBuilder dump,
+            String what,
+            Set<String> changedNames,
+            List<NameValuePair> preTest,
+            List<NameValuePair> postTest) {
+        if (changedNames.isEmpty()) {
+            dump.append("Tested didn't change any ").append(what).append('\n');
+            return;
+        }
+        dump.append("Test changed ")
+                .append(changedNames.size())
+                .append(' ')
+                .append(what)
+                .append(" (see log for all changes): \n");
+
+        for (String name : changedNames) {
+            String before = getValue("before", preTest, name);
+            String after = getValue("after", postTest, name);
+            dump.append('\t')
+                    .append(name)
+                    .append(": ")
+                    .append(before)
+                    .append(", ")
+                    .append(after)
+                    .append('\n');
+        }
+    }
+
+    private String getValue(String when, List<NameValuePair> list, String name) {
+        for (NameValuePair candidate : list) {
+            if (candidate.name.equals(name)) {
+                return when + "=" + candidate.value;
+            }
+        }
+        return "(not set " + when + ")";
     }
 
     /**
@@ -193,23 +293,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
      */
     @FormatMethod
     public void dumpFlags(@FormatString String reasonFmt, @Nullable Object... reasonArgs) {
-        StringBuilder message =
-                new StringBuilder("Logging all flags on ")
-                        .append(mLog.getTag())
-                        .append(". Reason: ")
-                        .append(String.format(reasonFmt, reasonArgs))
-                        .append(". Flags: \n");
-        dumpFlagsSafely(message);
-        mLog.i("%s", message);
-    }
-
-    private StringBuilder dumpFlagsSafely(StringBuilder dump) {
-        try {
-            mDeviceConfig.dumpFlags(dump);
-        } catch (Throwable t) {
-            dump.append("Failed to dump flags: ").append(t);
-        }
-        return dump;
+        log(mDeviceConfig.getAll(), "flags (Reason: %s)", String.format(reasonFmt, reasonArgs));
     }
 
     /**
@@ -221,23 +305,37 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     @FormatMethod
     public void dumpSystemProperties(
             @FormatString String reasonFmt, @Nullable Object... reasonArgs) {
-        StringBuilder message =
-                new StringBuilder("Logging all SystemProperties on ")
-                        .append(mLog.getTag())
-                        .append(". Reason: ")
-                        .append(String.format(reasonFmt, reasonArgs))
-                        .append(". SystemProperties: \n");
-        dumpSystemPropertiesSafely(message);
-        mLog.i("%s", message);
+        log(
+                mSystemProperties.getAll(PROPERTIES_PREFIX_MATCHER),
+                "system properties (Reason: %s)",
+                String.format(reasonFmt, reasonArgs));
     }
 
-    private StringBuilder dumpSystemPropertiesSafely(StringBuilder dump) {
-        try {
-            mSystemProperties.dumpSystemProperties(dump, SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX);
-        } catch (Throwable t) {
-            dump.append("Failed to dump SystemProperties: ").append(t);
+    @FormatMethod
+    private void log(
+            List<NameValuePair> values,
+            @FormatString String whatFmt,
+            @Nullable Object... whatArgs) {
+        String what = String.format(whatFmt, whatArgs);
+        if (values.isEmpty()) {
+            mLog.e("%s: empty", what);
+            return;
         }
-        return dump;
+        mLog.i("Logging name/value of %d %s:", values.size(), what);
+        values.forEach(value -> mLog.i("\t%s", value));
+    }
+
+    /** Clear all flags from the {@code AdServices} namespace */
+    public T clearFlags() {
+        return runOrCache(
+                "clearFlags()",
+                () -> {
+                    mLog.i("Clearing all flags. mIsRunning=%b", mIsRunning);
+                    mDeviceConfig.clearFlags();
+                    // TODO(b/294423183): ideally we should save the flags and restore - possibly
+                    // using DeviceConfig properties - but for now let's just clear it.
+                    mFlagsClearedByTest = true;
+                });
     }
 
     /** Sets the flag with the given value. */
@@ -352,7 +450,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     }
 
     /**
-     * Overrides flag used by (@link
+     * Overrides flag used by {@link
      * com.android.adservices.service.PhFlags#getPpapiAppSignatureAllowList()}. NOTE: this will
      * completely override the allow list, *not* append to it.
      */
@@ -455,58 +553,11 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
                 });
     }
 
-    /**
-     * Sets just the flag needed by {@link
-     * com.android.adservices.service.PhFlags#getEnableBackCompat()}, but only if required by the
-     * Android version of the device running the test.
-     */
-    public T setCompatModeFlag() {
-        return runOrCache(
-                "setCompatModeFlag()",
-                () -> {
-                    if (isAtLeastT()) {
-                        mLog.d("setCompatModeFlag(): ignored on SDK %d", getDeviceSdk());
-                        // Do nothing; this method is intended to set flags for Android S- only.
-                        return;
-                    }
-                    mLog.d("setCompatModeFlag(): setting flags on SDK %d", getDeviceSdk());
-                    setEnableBackCompat(true);
-                });
-    }
-
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // NOTE: DO NOT add new setXyz() methods, unless they need non-trivial logic. Instead, let    //
     // your test call setFlags(flagName) (statically import FlagsConstant.flagName), which will   //
     // make it easier to transition the test to an annotated-base approach.                       //
     ////////////////////////////////////////////////////////////////////////////////////////////////
-
-    /**
-     * @deprecated only used by {@code CompatAdServicesTestUtils.resetFlagsToDefault()} - flags are
-     *     automatically reset when used as a JUnit Rule.
-     */
-    @Deprecated
-    T resetCompatModeFlags() {
-        assertCalledByLegacyHelper();
-        return runOrCache(
-                "resetCompatModeFlags()",
-                () -> {
-                    if (isAtLeastT()) {
-                        mLog.d("resetCompatModeFlags(): ignored on %d", getDeviceSdk());
-                        // Do nothing; this method is intended to set flags for Android S- only.
-                        return;
-                    }
-                    mLog.v("resetCompatModeFlags(): setting flags on %d", getDeviceSdk());
-                    setEnableBackCompat(false);
-                    // TODO (b/285208753): Set to AppSearch always once it's supported on R.
-                    boolean atLeastS = isAtLeastS();
-                    int sourceOfTruth =
-                            atLeastS ? FlagsConstants.APPSEARCH_ONLY : FlagsConstants.PPAPI_ONLY;
-                    setFlag(FlagsConstants.KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH, sourceOfTruth);
-                    setFlag(FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH, sourceOfTruth);
-                    setFlag(FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA, atLeastS);
-                    setMeasurementRollbackDeletionAppSearchKillSwitch(!atLeastS);
-                });
-    }
 
     /** Sets a {@code logcat} tag. */
     public T setLogcatTag(String tag, String level) {
@@ -555,22 +606,6 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         return getDeviceSdk() > 32;
     }
 
-    // TODO(b/294423183): remove once legacy usage is gone
-    /**
-     * Checks whether this rule is used to implement some "legacy" helpers (i.e., deprecated classes
-     * that will be removed once their clients use the rule) like {@code CompatAdServicesTestUtils}.
-     */
-    protected boolean isCalledByLegacyHelper() {
-        return false;
-    }
-
-    // TODO(b/294423183): remove once legacy usage is gone
-    protected final void assertCalledByLegacyHelper() {
-        if (!isCalledByLegacyHelper()) {
-            throw new UnsupportedOperationException("Only available for legacy helpers");
-        }
-    }
-
     // Set the annotated flags with the specified value for a particular test method.
     protected void setAnnotatedFlags(Description description) {
         for (Annotation annotation : description.getAnnotations()) {
@@ -607,23 +642,6 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         // TODO(b/300146214) Add code to scan class / superclasses flag annotations.
     }
 
-    // TODO(b/294423183): make private once not used by subclass for legacy methods
-    protected void setInitialFlags(String testName) {
-        if (mInitialFlags == null) {
-            throw new IllegalStateException("already called");
-        }
-        if (mInitialFlags.isEmpty()) {
-            mLog.d("Not setting any flag before %s", testName);
-        } else {
-            int size = mInitialFlags.size();
-            mLog.d("Setting %d flags before %s", size, testName);
-            for (FlagOrSystemProperty flag : mInitialFlags) {
-                setFlag(flag);
-            }
-        }
-        mInitialFlags = null;
-    }
-
     private T setOrCacheFlagWithSeparator(String name, String value, String separator) {
         return setOrCacheFlag(name, value, Objects.requireNonNull(separator));
     }
@@ -634,13 +652,12 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
 
     // TODO(b/294423183): need to add unit test for setters that call this
     private T setOrCacheFlag(String name, String value, @Nullable String separator) {
-        FlagOrSystemProperty flag = new FlagOrSystemProperty(name, value, separator);
-        if (mInitialFlags != null && !isCalledByLegacyHelper()) {
+        NameValuePair flag = new NameValuePair(name, value, separator);
+        if (!mIsRunning) {
             if (isFlagManagedByRunner(name)) {
                 return getThis();
             }
-            mLog.d("Caching flag %s as test is not running yet", flag);
-            mInitialFlags.add(flag);
+            cacheCommand(new SetFlagCommand(flag));
             return getThis();
         }
         return setFlag(flag);
@@ -651,36 +668,20 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         return false;
     }
 
-    private T setFlag(FlagOrSystemProperty flag) {
-        mLog.v("Setting flag: %s", flag);
+    private T setFlag(NameValuePair flag) {
+        mLog.d("Setting flag: %s", flag);
         if (flag.separator == null) {
             mDeviceConfig.set(flag.name, flag.value);
         } else {
             mDeviceConfig.setWithSeparator(flag.name, flag.value, flag.separator);
         }
+        mChangedFlags.add(flag.name);
         return getThis();
     }
 
     private void resetFlags(String testName) {
         mLog.d("Resetting flags after %s", testName);
         mDeviceConfig.reset();
-    }
-
-    // TODO(b/294423183): make private once not used by subclass for legacy methods
-    protected void setInitialSystemProperties(String testName) {
-        if (mInitialSystemProperties == null) {
-            throw new IllegalStateException("already called");
-        }
-        if (mInitialSystemProperties.isEmpty()) {
-            mLog.d("Not setting any SystemProperty before %s", testName);
-        } else {
-            int size = mInitialSystemProperties.size();
-            mLog.d("Setting %d SystemProperties before %s", size, testName);
-            for (FlagOrSystemProperty flag : mInitialSystemProperties) {
-                setSystemProperty(flag.name, flag.value);
-            }
-        }
-        mInitialSystemProperties = null;
     }
 
     protected T setOrCacheDebugSystemProperty(String name, boolean value) {
@@ -700,16 +701,18 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     }
 
     private T setOrCacheSystemProperty(String name, String value) {
-        if (mInitialSystemProperties != null && !isCalledByLegacyHelper()) {
-            mLog.v("Caching SystemProperty %s=%s as test is not running yet", name, value);
-            mInitialSystemProperties.add(new FlagOrSystemProperty(name, value));
+        NameValuePair systemProperty = new NameValuePair(name, value);
+        if (!mIsRunning) {
+            cacheCommand(new SetSystemPropertyCommand(systemProperty));
             return getThis();
         }
-        return setSystemProperty(name, value);
+        return setSystemProperty(systemProperty);
     }
 
-    private T setSystemProperty(String name, String value) {
-        mSystemProperties.set(name, value);
+    private T setSystemProperty(NameValuePair systemProperty) {
+        mLog.d("Setting system property: %s", systemProperty);
+        mSystemProperties.set(systemProperty.name, systemProperty.value);
+        mChangedSystemProperties.add(systemProperty.name);
         return getThis();
     }
 
@@ -719,37 +722,41 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     }
 
     private T runOrCache(String description, Runnable r) {
-        if (mInitialCommands != null && !isCalledByLegacyHelper()) {
-            // mInitialCommands is initialized with an empty list, which is set to null after the
-            // test starts (on runInitialCommands())
-            mLog.v("Caching %s as test is not running yet", description);
-            mInitialCommands.add(new Command(description, r));
+        RunnableCommand command = new RunnableCommand(description, r);
+        if (!mIsRunning) {
+            cacheCommand(command);
             return getThis();
         }
-        runCommand(description, r);
+        command.execute();
         return getThis();
     }
 
+    private void cacheCommand(Command command) {
+        if (mIsRunning) {
+            throw new IllegalStateException(
+                    "Cannot cache " + command + " as test is already running");
+        }
+        mLog.v("Caching %s as test is not running yet", command);
+        mInitialCommands.add(command);
+    }
+
     private void runCommand(String description, Runnable runnable) {
-        mLog.v("Running %s", description);
+        mLog.v("Running runnable for %s", description);
         runnable.run();
     }
 
     private void runInitialCommands(String testName) {
-        if (mInitialCommands == null) {
-            throw new IllegalStateException("already called");
-        }
         if (mInitialCommands.isEmpty()) {
-            mLog.d("Not running any command before %s", testName);
+            mLog.d("Not executing any command before %s", testName);
         } else {
             int size = mInitialCommands.size();
-            mLog.d("Running %d commands before %s", size, testName);
-            for (Command command : mInitialCommands) {
-                runCommand(command.description, command.runnable);
+            mLog.d("Executing %d commands before %s", size, testName);
+            for (int i = 0; i < mInitialCommands.size(); i++) {
+                Command command = mInitialCommands.get(i);
+                mLog.v("\t%d: %s", i, command);
+                command.execute();
             }
         }
-        // Sets it to null so next calls to runOrCache() will run (instead of caching)
-        mInitialCommands = null;
     }
 
     private void runSafely(List<Throwable> errors, Runnable r) {
@@ -845,14 +852,21 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         }
     }
 
-    @SuppressWarnings("serial")
+    // Helper to get a reference to this object, taking care of the generic casting.
+    @SuppressWarnings("unchecked")
+    private T getThis() {
+        return (T) this;
+    }
+
+    // toString() is overridden to remove the AbstractAdServicesFlagsSetterRule$ from the name
+    @SuppressWarnings("OverrideThrowableToString")
     public static final class TestFailure extends Exception {
 
         private final String mDump;
 
         TestFailure(Throwable cause, StringBuilder dump) {
             super(
-                    "Test failed (see flags / system properties below the stack trace)",
+                    "Test failed (see flags / system properties state below the stack trace)",
                     cause,
                     /* enableSuppression= */ false,
                     /* writableStackTrace= */ false);
@@ -872,72 +886,75 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
             s.println(mDump);
         }
 
+        @Override
+        public String toString() {
+            return getClass().getSimpleName() + ": " + getMessage();
+        }
+
         /** Gets the flags / system properties state. */
         public String getFlagsState() {
             return mDump;
         }
     }
 
-    private static final class FlagOrSystemProperty {
-        public final String name;
-        public final String value;
-        public final @Nullable String separator;
+    @SuppressWarnings("ClassCanBeStatic") // Subclasses reference enclosing class
+    private abstract class Command {
+        protected final String mDescription;
 
-        FlagOrSystemProperty(String name, String value, @Nullable String separator) {
-            this.name = name;
-            this.value = value;
-            this.separator = separator;
+        Command(String description) {
+            mDescription = description;
         }
 
-        FlagOrSystemProperty(String name, String value) {
-            this(name, value, /* separator= */ null);
-        }
-
-        // TODO(b/294423183): need to add unit test for equals() / hashcode() as they don't use
-        // separator
+        abstract void execute();
 
         @Override
-        public int hashCode() {
-            return Objects.hash(name, value);
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj) return true;
-            if (obj == null) return false;
-            if (getClass() != obj.getClass()) return false;
-            FlagOrSystemProperty other = (FlagOrSystemProperty) obj;
-            return Objects.equals(name, other.name) && Objects.equals(value, other.value);
-        }
-
-        @Override
-        public String toString() {
-            StringBuilder string = new StringBuilder(name).append('=').append(value);
-            if (separator != null) {
-                string.append(" (separator=").append(separator).append(')');
-            }
-            return string.toString();
+        public final String toString() {
+            return mDescription;
         }
     }
 
-    private static final class Command {
-        public final String description;
-        public final Runnable runnable;
+    private final class RunnableCommand extends Command {
+        private final Runnable mRunnable;
 
-        Command(String description, Runnable runnable) {
-            this.description = description;
-            this.runnable = runnable;
+        RunnableCommand(String description, Runnable runnable) {
+            super(description);
+            mRunnable = runnable;
         }
 
         @Override
-        public String toString() {
-            return description;
+        void execute() {
+            runCommand(mDescription, mRunnable);
         }
     }
 
-    // Helper to get a reference to this object, taking care of the generic casting.
-    @SuppressWarnings("unchecked")
-    private T getThis() {
-        return (T) this;
+    private abstract class SetFlagOrSystemPropertyCommand extends Command {
+        protected final NameValuePair mFlagOrSystemProperty;
+
+        SetFlagOrSystemPropertyCommand(String description, NameValuePair flagOrSystemProperty) {
+            super(description + "(" + flagOrSystemProperty + ")");
+            mFlagOrSystemProperty = flagOrSystemProperty;
+        }
+    }
+
+    private final class SetFlagCommand extends SetFlagOrSystemPropertyCommand {
+        SetFlagCommand(NameValuePair flag) {
+            super("SetFlag", flag);
+        }
+
+        @Override
+        void execute() {
+            setFlag(mFlagOrSystemProperty);
+        }
+    }
+
+    private final class SetSystemPropertyCommand extends SetFlagOrSystemPropertyCommand {
+        SetSystemPropertyCommand(NameValuePair flag) {
+            super("SetSystemProperty", flag);
+        }
+
+        @Override
+        void execute() {
+            setSystemProperty(mFlagOrSystemProperty);
+        }
     }
 }

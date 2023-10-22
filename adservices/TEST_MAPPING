@@ -253,6 +253,15 @@
       ]
     },
     {
+      // Install com.google.android.adservices.apex and run CtsAdServicesRootTestCases.
+      "name": "CtsAdServicesRootTestCases[com.google.android.adservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
       // Install com.google.android.extservices.apex and run CtsAdExtServicesDebuggableDeviceTestCases.
       "name": "CtsAdExtServicesDebuggableDeviceTestCases[com.google.android.extservices.apex]",
       "options": [
@@ -502,7 +511,8 @@
       "name": "CtsAdServicesHostTests[com.google.android.adservices.apex]",
       "options": [
         {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
+          // NOTE: host-side tests use a different package
+          "exclude-annotation": "android.platform.test.annotations.FlakyTest"
         }
       ]
     },
@@ -511,7 +521,8 @@
       "name": "CtsAdExtServicesHostTests[com.google.android.extservices.apex]",
       "options": [
         {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
+          // NOTE: host-side tests use a different package
+          "exclude-annotation": "android.platform.test.annotations.FlakyTest"
         }
       ]
     },
