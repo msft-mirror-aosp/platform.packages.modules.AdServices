@@ -28,14 +28,16 @@ import com.google.auto.value.AutoValue;
 import java.time.Instant;
 
 /**
- * Represents an entry for encoder logic for a buyer, the actual logic will be persisted on the
- * device as flat files. This DB entry is meant for record keeping of file-system storage.
+ * Represents an entry for encoder logic metadata for a buyer, the actual logic will be persisted on
+ * the device as flat files. This DB entry is meant for record keeping of file-system storage.
  */
 @AutoValue
 @AutoValue.CopyAnnotations
-@Entity(tableName = DBEncoderLogic.TABLE_NAME, inheritSuperIndices = true)
-public abstract class DBEncoderLogic {
+@Entity(tableName = DBEncoderLogicMetadata.TABLE_NAME, inheritSuperIndices = true)
+public abstract class DBEncoderLogicMetadata {
 
+    // Due to the table name already into the M train.
+    // Retain the table name as table delete is not permitted.
     public static final String TABLE_NAME = "encoder_logics"; // NOTYPO
 
     /** The ad-tech buyer who owns the logic */
@@ -57,21 +59,21 @@ public abstract class DBEncoderLogic {
     public abstract Instant getCreationTime();
 
     /**
-     * @return an instance of {@link DBEncoderLogic}
+     * @return an instance of {@link DBEncoderLogicMetadata}
      */
-    public static DBEncoderLogic create(
+    public static DBEncoderLogicMetadata create(
             @NonNull AdTechIdentifier buyer, int version, @NonNull Instant creationTime) {
         return builder().setBuyer(buyer).setVersion(version).setCreationTime(creationTime).build();
     }
 
     /**
-     * @return a builder for creating a {@link DBEncoderLogic}
+     * @return a builder for creating a {@link DBEncoderLogicMetadata}
      */
-    public static DBEncoderLogic.Builder builder() {
-        return new AutoValue_DBEncoderLogic.Builder();
+    public static DBEncoderLogicMetadata.Builder builder() {
+        return new AutoValue_DBEncoderLogicMetadata.Builder();
     }
 
-    /** Provides a builder to create an instance of {@link DBEncoderLogic} */
+    /** Provides a builder to create an instance of {@link DBEncoderLogicMetadata} */
     @AutoValue.Builder
     public abstract static class Builder {
 
@@ -85,8 +87,8 @@ public abstract class DBEncoderLogic {
         public abstract Builder setCreationTime(@NonNull Instant value);
 
         /**
-         * @return an instance of {@link DBEncoderLogic}
+         * @return an instance of {@link DBEncoderLogicMetadata}
          */
-        public abstract DBEncoderLogic build();
+        public abstract DBEncoderLogicMetadata build();
     }
 }

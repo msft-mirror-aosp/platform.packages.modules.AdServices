@@ -77,7 +77,7 @@ public final class PhFlagsFixture {
     public static final long EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS =
             FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS + ADDITIONAL_TIMEOUT;
     public static final long EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS =
-            FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS + ADDITIONAL_TIMEOUT;
+            FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS + ADDITIONAL_TIMEOUT * 4;
     public static final long EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS =
             FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS + ADDITIONAL_TIMEOUT;
     public static final long EXTENDED_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS =
@@ -423,6 +423,26 @@ public final class PhFlagsFixture {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH,
                 Boolean.toString(value),
+                false);
+    }
+
+    /** Overrides the timeouts for on-device auctions. */
+    public static void overrideFledgeOnDeviceAdSelectionTimeouts(
+            long biddingTimeoutPerCaMs, long scoringTimeoutMs, long overallTimeoutMs) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS,
+                Long.toString(biddingTimeoutPerCaMs),
+                false);
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS,
+                Long.toString(scoringTimeoutMs),
+                false);
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS,
+                Long.toString(overallTimeoutMs),
                 false);
     }
 }

@@ -33,7 +33,7 @@ import java.util.Objects;
         entities = {
             DBProtectedSignal.class,
             DBEncoderEndpoint.class,
-            DBEncoderLogic.class,
+            DBEncoderLogicMetadata.class,
             DBEncodedPayload.class
         },
         version = ProtectedSignalsDatabase.DATABASE_VERSION)
@@ -89,7 +89,7 @@ public abstract class ProtectedSignalsDatabase extends RoomDatabase {
      *
      * @return Dao to access persisted encoder logic entries
      */
-    public abstract EncoderLogicDao getEncoderLogicDao();
+    public abstract EncoderLogicMetadataDao getEncoderLogicMetadataDao();
 
     /**
      * Encoded Payloads Dao
