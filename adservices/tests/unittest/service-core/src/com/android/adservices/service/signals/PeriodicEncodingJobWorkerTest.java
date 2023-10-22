@@ -35,9 +35,9 @@ import android.adservices.common.CommonFixture;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.signals.DBEncodedPayload;
-import com.android.adservices.data.signals.DBEncoderLogic;
+import com.android.adservices.data.signals.DBEncoderLogicMetadata;
 import com.android.adservices.data.signals.EncodedPayloadDao;
-import com.android.adservices.data.signals.EncoderLogicDao;
+import com.android.adservices.data.signals.EncoderLogicMetadataDao;
 import com.android.adservices.data.signals.EncoderPersistenceDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.AdSelectionScriptEngine;
@@ -78,7 +78,7 @@ public class PeriodicEncodingJobWorkerTest {
 
     @Rule public MockitoRule rule = MockitoJUnit.rule();
 
-    @Mock private EncoderLogicDao mEncoderLogicDao;
+    @Mock private EncoderLogicMetadataDao mEncoderLogicMetadataDao;
     @Mock private EncoderPersistenceDao mEncoderPersistenceDao;
     @Mock private EncodedPayloadDao mEncodedPayloadDao;
     @Mock private SignalsProviderImpl mSignalStorageManager;
@@ -99,7 +99,7 @@ public class PeriodicEncodingJobWorkerTest {
         when(mFlags.getProtectedSignalsEncodedPayloadMaxSizeBytes()).thenReturn(MAX_SIZE_BYTES);
         mJobWorker =
                 new PeriodicEncodingJobWorker(
-                        mEncoderLogicDao,
+                        mEncoderLogicMetadataDao,
                         mEncoderPersistenceDao,
                         mEncodedPayloadDao,
                         mSignalStorageManager,
@@ -139,7 +139,7 @@ public class PeriodicEncodingJobWorkerTest {
                 .thenReturn(reallySmallMaxSizeLimit);
         mJobWorker =
                 new PeriodicEncodingJobWorker(
-                        mEncoderLogicDao,
+                        mEncoderLogicMetadataDao,
                         mEncoderPersistenceDao,
                         mEncodedPayloadDao,
                         mSignalStorageManager,
@@ -159,15 +159,15 @@ public class PeriodicEncodingJobWorkerTest {
             throws ExecutionException, InterruptedException, TimeoutException {
         String encoderLogic = "function fakeEncodeJs() {}";
         int version = 2;
-        DBEncoderLogic fakeEncoderLogicEntry =
-                DBEncoderLogic.builder()
+        DBEncoderLogicMetadata fakeEncoderLogicEntry =
+                DBEncoderLogicMetadata.builder()
                         .setBuyer(BUYER)
                         .setVersion(version)
                         .setCreationTime(Instant.now())
                         .build();
         Map<String, List<ProtectedSignal>> fakeSignals = new HashMap<>();
 
-        when(mEncoderLogicDao.getEncoder(BUYER)).thenReturn(fakeEncoderLogicEntry);
+        when(mEncoderLogicMetadataDao.getMetadata(BUYER)).thenReturn(fakeEncoderLogicEntry);
         when(mEncoderPersistenceDao.getEncoder(BUYER)).thenReturn(encoderLogic);
         when(mSignalStorageManager.getSignals(BUYER)).thenReturn(fakeSignals);
 
@@ -193,13 +193,13 @@ public class PeriodicEncodingJobWorkerTest {
             throws ExecutionException, InterruptedException, TimeoutException {
         String encoderLogic = "function fakeEncodeJs() {}";
         int version = 2;
-        DBEncoderLogic fakeEncoderLogicEntry =
-                DBEncoderLogic.builder()
+        DBEncoderLogicMetadata fakeEncoderLogicEntry =
+                DBEncoderLogicMetadata.builder()
                         .setBuyer(BUYER)
                         .setVersion(version)
                         .setCreationTime(Instant.now())
                         .build();
-        when(mEncoderLogicDao.getEncoder(BUYER)).thenReturn(fakeEncoderLogicEntry);
+        when(mEncoderLogicMetadataDao.getMetadata(BUYER)).thenReturn(fakeEncoderLogicEntry);
         when(mEncoderPersistenceDao.getEncoder(BUYER)).thenReturn(encoderLogic);
 
         Map<String, List<ProtectedSignal>> fakeSignals = new HashMap<>();
@@ -219,13 +219,13 @@ public class PeriodicEncodingJobWorkerTest {
     public void testEncodingPerBuyerFailedFuture() {
         String encoderLogic = "function fakeEncodeJs() {}";
         int version = 2;
-        DBEncoderLogic fakeEncoderLogicEntry =
-                DBEncoderLogic.builder()
+        DBEncoderLogicMetadata fakeEncoderLogicEntry =
+                DBEncoderLogicMetadata.builder()
                         .setBuyer(BUYER)
                         .setVersion(version)
                         .setCreationTime(Instant.now())
                         .build();
-        when(mEncoderLogicDao.getEncoder(BUYER)).thenReturn(fakeEncoderLogicEntry);
+        when(mEncoderLogicMetadataDao.getMetadata(BUYER)).thenReturn(fakeEncoderLogicEntry);
         when(mEncoderPersistenceDao.getEncoder(BUYER)).thenReturn(encoderLogic);
 
         Map<String, List<ProtectedSignal>> fakeSignals = new HashMap<>();
@@ -253,13 +253,13 @@ public class PeriodicEncodingJobWorkerTest {
     public void testEncodingPerBuyerFailedTimeout() throws InterruptedException {
         String encoderLogic = "function fakeEncodeJs() {}";
         int version = 1;
-        DBEncoderLogic fakeEncoderLogicEntry =
-                DBEncoderLogic.builder()
+        DBEncoderLogicMetadata fakeEncoderLogicEntry =
+                DBEncoderLogicMetadata.builder()
                         .setBuyer(BUYER)
                         .setVersion(version)
                         .setCreationTime(Instant.now())
                         .build();
-        when(mEncoderLogicDao.getEncoder(BUYER)).thenReturn(fakeEncoderLogicEntry);
+        when(mEncoderLogicMetadataDao.getMetadata(BUYER)).thenReturn(fakeEncoderLogicEntry);
         when(mEncoderPersistenceDao.getEncoder(BUYER)).thenReturn(encoderLogic);
 
         Map<String, List<ProtectedSignal>> fakeSignals = new HashMap<>();
@@ -313,14 +313,14 @@ public class PeriodicEncodingJobWorkerTest {
         // Buyer 1 encoding would succeed
         String encoderLogic1 = "function buyer1_EncodeJs() {\" correct result \"}";
         int version1 = 1;
-        DBEncoderLogic fakeEncoderLogicEntry =
-                DBEncoderLogic.builder()
+        DBEncoderLogicMetadata fakeEncoderLogicEntry =
+                DBEncoderLogicMetadata.builder()
                         .setBuyer(BUYER)
                         .setVersion(version1)
                         .setCreationTime(Instant.now())
                         .build();
         Map<String, List<ProtectedSignal>> fakeSignals = new HashMap<>();
-        when(mEncoderLogicDao.getEncoder(BUYER)).thenReturn(fakeEncoderLogicEntry);
+        when(mEncoderLogicMetadataDao.getMetadata(BUYER)).thenReturn(fakeEncoderLogicEntry);
         when(mEncoderPersistenceDao.getEncoder(BUYER)).thenReturn(encoderLogic1);
         when(mSignalStorageManager.getSignals(BUYER)).thenReturn(fakeSignals);
         String validBase64Response = getBase64String("Valid payload");
@@ -331,13 +331,13 @@ public class PeriodicEncodingJobWorkerTest {
         // Buyer 2 encoding would fail
         String encoderLogic2 = "function buyer2_EncodeJs() {\" throws exception \"}";
         int version2 = 2;
-        DBEncoderLogic fakeEncoderLogicEntry2 =
-                DBEncoderLogic.builder()
+        DBEncoderLogicMetadata fakeEncoderLogicEntry2 =
+                DBEncoderLogicMetadata.builder()
                         .setBuyer(BUYER_2)
                         .setVersion(version2)
                         .setCreationTime(Instant.now())
                         .build();
-        when(mEncoderLogicDao.getEncoder(BUYER_2)).thenReturn(fakeEncoderLogicEntry2);
+        when(mEncoderLogicMetadataDao.getMetadata(BUYER_2)).thenReturn(fakeEncoderLogicEntry2);
         when(mEncoderPersistenceDao.getEncoder(BUYER_2)).thenReturn(encoderLogic2);
         when(mSignalStorageManager.getSignals(BUYER_2)).thenReturn(fakeSignals);
         ListenableFuture<String> failureResponse =
@@ -345,7 +345,7 @@ public class PeriodicEncodingJobWorkerTest {
         when(mScriptEngine.encodeSignals(eq(encoderLogic2), any(), anyInt()))
                 .thenReturn(failureResponse);
 
-        when(mEncoderLogicDao.getAllBuyersWithRegisteredEncoders())
+        when(mEncoderLogicMetadataDao.getAllBuyersWithRegisteredEncoders())
                 .thenReturn(List.of(BUYER, BUYER_2));
 
         // This should gracefully handle Buyer_2 failure and not impact Buyer_1's encoding

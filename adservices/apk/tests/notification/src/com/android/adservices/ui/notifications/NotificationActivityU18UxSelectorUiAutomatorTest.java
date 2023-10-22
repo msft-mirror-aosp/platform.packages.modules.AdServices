@@ -15,6 +15,12 @@
  */
 package com.android.adservices.ui.notifications;
 
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_DEBUG_UX;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
+import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import android.content.Intent;
@@ -34,8 +40,8 @@ import androidx.test.uiautomator.Until;
 import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
 
@@ -58,9 +64,19 @@ public class NotificationActivityU18UxSelectorUiAutomatorTest {
             UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
     private String mTestName;
 
-    @Rule
+    @Rule(order = 0)
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
             new AdServicesDeviceSupportedRule();
+
+    @Rule(order = 1)
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
+                    .setCompatModeFlags()
+                    .setFlag(KEY_ENABLE_AD_SERVICES_SYSTEM_API, true)
+                    .setFlag(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true)
+                    .setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
+                    .setFlag(KEY_U18_UX_ENABLED, true)
+                    .setFlag(KEY_DEBUG_UX, "U18_UX");
 
     @BeforeClass
     public static void classSetup() throws InterruptedException {
@@ -73,17 +89,6 @@ public class NotificationActivityU18UxSelectorUiAutomatorTest {
 
     @Before
     public void setup() throws UiObjectNotFoundException, IOException {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            CompatAdServicesTestUtils.setFlags();
-        }
-        ShellUtils.runShellCommand(
-                "device_config put adservices enable_ad_services_system_api true");
-        ShellUtils.runShellCommand(
-                "device_config put adservices consent_notification_activity_debug_mode true");
-        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
-        ShellUtils.runShellCommand("device_config put adservices u18_ux_enabled true");
-        ShellUtils.runShellCommand("device_config put adservices debug_ux U18_UX");
-
         sDevice.pressHome();
         final String launcherPackage = sDevice.getLauncherPackageName();
         assertThat(launcherPackage).isNotNull();
@@ -95,10 +100,6 @@ public class NotificationActivityU18UxSelectorUiAutomatorTest {
         ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + mTestName + "_");
 
         AdservicesTestHelper.killAdservicesProcess(ApplicationProvider.getApplicationContext());
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
-        ShellUtils.runShellCommand("device_config put adservices u18_ux_enabled false");
     }
 
     @Test

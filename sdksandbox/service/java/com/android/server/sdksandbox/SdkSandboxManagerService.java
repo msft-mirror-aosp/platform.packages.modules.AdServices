@@ -791,7 +791,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         new LoadSdkException(LOAD_SDK_INTERNAL_ERROR, e.getMessage(), e),
                         sandboxLatencyInfo);
             } catch (RemoteException ex) {
-                Log.e(TAG, "Failed to send onLoadCodeFailure", e);
+                Log.e(TAG, "Failed to send onLoadSdkFailure", e);
             }
         }
     }
@@ -1141,7 +1141,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         e.getMessage(),
                         sandboxLatencyInfo);
             } catch (RemoteException ex) {
-                Log.e(TAG, "Failed to send onLoadCodeFailure", e);
+                Log.e(TAG, "Failed to send onRequestSurfacePackageError", e);
             }
         }
     }
@@ -1319,7 +1319,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         ISharedPreferencesSyncCallback.PREFERENCES_SYNC_INTERNAL_ERROR,
                         e.getMessage());
             } catch (RemoteException ex) {
-                Log.e(TAG, "Failed to send onLoadCodeFailure", e);
+                Log.e(TAG, "Failed to send ISharedPreferencesSyncCallback.onError", e);
             }
         }
     }

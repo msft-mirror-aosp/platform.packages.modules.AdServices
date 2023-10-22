@@ -27,7 +27,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_STATUS_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
-import static com.android.adservices.service.FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST;
 
 import android.os.Build;
 
@@ -40,19 +39,11 @@ import com.android.modules.utils.build.SdkLevel;
 public final class AdServicesFlagsSetterRule
         extends AbstractAdServicesFlagsSetterRule<AdServicesFlagsSetterRule> {
 
-    // TODO(b/294423183): remove once legacy usage is gone
-    private final boolean mUsedByLegacyHelper;
-
     private AdServicesFlagsSetterRule() {
-        this(/* usedByLegacyHelper= */ false);
-    }
-
-    private AdServicesFlagsSetterRule(boolean usedByLegacyHelper) {
         super(
                 AndroidLogger.getInstance(),
-                namespace -> new DeviceSideDeviceConfigHelper(namespace, usedByLegacyHelper),
+                DeviceSideDeviceConfigHelper::new,
                 DeviceSideSystemPropertiesHelper.getInstance());
-        mUsedByLegacyHelper = usedByLegacyHelper;
     }
 
     private static AdServicesFlagsSetterRule withDefaultLogcatTags() {
@@ -64,9 +55,15 @@ public final class AdServicesFlagsSetterRule
         return withDefaultLogcatTags().setGlobalKillSwitch(false);
     }
 
+    // TODO(b/297085722): pass clearFlags() on forGlobalKillSwitchDisabledTests() by default?
+    /** Factory method that clears all flags then disables the global kill switch. */
+    public static AdServicesFlagsSetterRule forGlobalKillSwitchDisabledOnClearSlateTests() {
+        return withDefaultLogcatTags().clearFlags().setGlobalKillSwitch(false);
+    }
+
     /** Factory method for Topics end-to-end CTS tests. */
     public static AdServicesFlagsSetterRule forTopicsE2ETests() {
-        return forGlobalKillSwitchDisabledTests()
+        return forGlobalKillSwitchDisabledOnClearSlateTests()
                 .setLogcatTag(LOGCAT_TAG_TOPICS, LOGCAT_LEVEL_VERBOSE)
                 .setTopicsKillSwitch(false)
                 .setTopicsOnDeviceClassifierKillSwitch(false)
@@ -83,7 +80,7 @@ public final class AdServicesFlagsSetterRule
                 .setAdIdKillSwitchForTests(false)
                 .setFlag(KEY_ADID_REQUEST_PERMITS_PER_SECOND, 25.0)
                 .setPpapiAppAllowList(packageName)
-                .setCompatModeFlag();
+                .setCompatModeFlags();
     }
 
     /** Factory method for Measurement E2E CTS tests */
@@ -109,25 +106,22 @@ public final class AdServicesFlagsSetterRule
                 .setAdIdKillSwitchForTests(false);
     }
 
-    /** Factory method for AdservicesCommonManager end-to-end CTS tests. */
-    public static AdServicesFlagsSetterRule forCommonManagerE2ETests(String packageName) {
-        return withDefaultLogcatTags().setCompatModeFlag().setPpapiAppAllowList(packageName);
+    /** Factory method for Topics CB tests */
+    public static AdServicesFlagsSetterRule forTopicsPerfTests(
+            long epochPeriodMs, int pctRandomTopic) {
+        return forGlobalKillSwitchDisabledTests()
+                .setLogcatTag(LOGCAT_TAG_TOPICS, LOGCAT_LEVEL_VERBOSE)
+                .setTopicsKillSwitch(false)
+                .setConsentManagerDebugMode(true)
+                .setDisableTopicsEnrollmentCheckForTests(true)
+                .setTopicsEpochJobPeriodMsForTests(epochPeriodMs)
+                .setTopicsPercentageForRandomTopicForTests(pctRandomTopic)
+                .setCompatModeFlags();
     }
 
-    /**
-     * @deprecated temporary method used only by {@code CompatAdServicesTestUtils} and similar
-     *     helpers, it will be remove once such helpers are replaced by this rule.
-     */
-    @Deprecated
-    static AdServicesFlagsSetterRule forLegacyHelpers(Class<?> helperClass) {
-        AdServicesFlagsSetterRule rule =
-                new AdServicesFlagsSetterRule(/* usedByLegacyHelper= */ true);
-        String testName = helperClass.getSimpleName();
-        // This object won't be used as a JUnit rule, so we need to explicitly
-        // initialize it
-        rule.setInitialSystemProperties(testName);
-        rule.setInitialFlags(testName);
-        return rule;
+    /** Factory method for AdservicesCommonManager end-to-end CTS tests. */
+    public static AdServicesFlagsSetterRule forCommonManagerE2ETests(String packageName) {
+        return withDefaultLogcatTags().setCompatModeFlags().setPpapiAppAllowList(packageName);
     }
 
     // NOTE: add more factory methods as needed
@@ -176,19 +170,5 @@ public final class AdServicesFlagsSetterRule
                     defaultValue);
             return defaultValue;
         }
-    }
-
-    /**
-     * @deprecated only used by {@code CompatAdServicesTestUtils}
-     */
-    @Deprecated
-    String getPpapiAppAllowList() {
-        assertCalledByLegacyHelper();
-        return mDeviceConfig.get(KEY_PPAPI_APP_ALLOW_LIST);
-    }
-
-    @Override
-    protected boolean isCalledByLegacyHelper() {
-        return mUsedByLegacyHelper;
     }
 }

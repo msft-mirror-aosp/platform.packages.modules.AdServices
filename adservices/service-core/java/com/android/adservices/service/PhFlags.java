@@ -1171,6 +1171,16 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public int getProtectedSignalsFetchSignalUpdatesMaxSizeBytes() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES,
+                /* defaultValue */ PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES);
+    }
+
+    @Override
     public int getAdSelectionMaxConcurrentBiddingCount() {
         return DeviceConfig.getInt(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -1354,6 +1364,15 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeAuctionServerPayloadSizeShouldExceedLimit() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_SIZE_SHOULD_EXCEED_LIMIT,
+                /* defaultValue */ FLEDGE_AUCTION_SERVER_PAYLOAD_SIZE_SHOULD_EXCEED_LIMIT);
+    }
+
+    @Override
     public long getFledgeHttpCacheMaxAgeSeconds() {
         return DeviceConfig.getLong(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -1447,13 +1466,14 @@ public final class PhFlags implements Flags {
     public boolean getGlobalKillSwitch() {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
-        return SystemProperties.getBoolean(
+        return SdkLevel.isAtLeastT()
+                ? SystemProperties.getBoolean(
                         getSystemPropertyName(FlagsConstants.KEY_GLOBAL_KILL_SWITCH),
                         /* defaultValue */ DeviceConfig.getBoolean(
                                 FlagsConstants.NAMESPACE_ADSERVICES,
                                 /* flagName */ FlagsConstants.KEY_GLOBAL_KILL_SWITCH,
                                 /* defaultValue */ GLOBAL_KILL_SWITCH))
-                || /* S Minus Kill Switch */ !(SdkLevel.isAtLeastT() || getEnableBackCompat());
+                : !getEnableBackCompat();
     }
 
     // MEASUREMENT Killswitches
@@ -1817,14 +1837,17 @@ public final class PhFlags implements Flags {
     @Override
     public boolean getMeasurementRollbackDeletionAppSearchKillSwitch() {
         final boolean defaultValue = MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH;
-        return SystemProperties.getBoolean(
-                getSystemPropertyName(
-                        FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH),
-                /* def= */ DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* name= */ FlagsConstants
-                                .KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH,
-                        defaultValue));
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(
+                                FlagsConstants
+                                        .KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH),
+                        /* def= */ DeviceConfig.getBoolean(
+                                FlagsConstants.NAMESPACE_ADSERVICES,
+                                /* name= */ FlagsConstants
+                                        .KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH,
+                                defaultValue));
     }
 
     @Override
@@ -2066,6 +2089,15 @@ public final class PhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST,
                 /* defaultValue */ PPAPI_APP_SIGNATURE_ALLOW_LIST);
+    }
+
+    // AppSearch writer allow-list
+    @Override
+    public String getAppsearchWriterAllowListOverride() {
+        return DeviceConfig.getString(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE,
+                /* defaultValue */ APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE);
     }
 
     // Rate Limit Flags.
@@ -3307,6 +3339,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMsmtEnableApiStatusAllowListCheck() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK,
+                /* defaultValue */ MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK);
+    }
+
+    @Override
     public boolean getFledgeMeasurementReportAndRegisterEventApiEnabled() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -4242,6 +4282,11 @@ public final class PhFlags implements Flags {
                         + getFledgeOnDeviceAuctionShouldUseUnifiedTables());
         writer.println(
                 "\t"
+                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_SIZE_SHOULD_EXCEED_LIMIT
+                        + " = "
+                        + getFledgeAuctionServerPayloadSizeShouldExceedLimit());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS
                         + " = "
                         + getFledgeHttpCacheMaxAgeSeconds());
@@ -4333,6 +4378,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES
                         + " = "
                         + getProtectedSignalsEncodedPayloadMaxSizeBytes());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES
+                        + " = "
+                        + getProtectedSignalsFetchSignalUpdatesMaxSizeBytes());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT
@@ -5819,5 +5869,21 @@ public final class PhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT,
                 /* defaultValue */ Flags.APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT);
+    }
+
+    @Override
+    public boolean getEnableAdservicesApiEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_ENABLE_ADSERVICES_API_ENABLED,
+                /* defaultValue */ DEFAULT_ENABLE_ADSERVICES_API_ENABLED);
+    }
+
+    @Override
+    public boolean getAdservicesEnablementCheckEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED,
+                /* defaultValue */ DEFAULT_ADSERVICES_ENABLEMENT_CHECK_ENABLED);
     }
 }

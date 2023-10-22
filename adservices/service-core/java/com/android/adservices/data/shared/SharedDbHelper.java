@@ -18,7 +18,7 @@ package com.android.adservices.data.shared;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_WRITE_EXCEPTION;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -33,9 +33,11 @@ import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.DbHelper;
+import com.android.adservices.data.encryptionkey.EncryptionKeyTables;
 import com.android.adservices.data.enrollment.EnrollmentTables;
 import com.android.adservices.data.enrollment.SqliteObjectMapper;
 import com.android.adservices.data.shared.migration.ISharedDbMigrator;
+import com.android.adservices.data.shared.migration.SharedDbMigratorV2;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.common.compat.FileCompatUtils;
@@ -62,7 +64,7 @@ public class SharedDbHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME =
             FileCompatUtils.getAdservicesFilename("adservices_shared.db");
-    public static final int CURRENT_DATABASE_VERSION = 1;
+    public static final int CURRENT_DATABASE_VERSION = 2;
     private static SharedDbHelper sSingleton = null;
     private final File mDbFile;
     private final int mDbVersion;
@@ -97,11 +99,18 @@ public class SharedDbHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         sLogger.d(
                 "SharedDbHelper.onCreate with version %d. Name: %s", mDbVersion, mDbFile.getName());
-        SQLiteDatabase oldEnrollmentDb = mDbHelper.safeGetWritableDatabase();
-        if (hasAllTables(oldEnrollmentDb, EnrollmentTables.ENROLLMENT_TABLES)) {
-            migrateEnrollmentTables(db, oldEnrollmentDb);
+        SQLiteDatabase oldDb = mDbHelper.safeGetWritableDatabase();
+        // Only need to check enrollment table, as that one was the only table living previously in
+        // adservices.db
+        if (hasAllTables(oldDb, EnrollmentTables.ENROLLMENT_TABLES)) {
+            // Create encryption key table V1 schema so migration works as expected
+            createEncryptionKeyV1Schema(db);
+            // Copy enrollment data from old db to new db.
+            migrateEnrollmentTables(db, oldDb);
+            // Update new db from version 1 to latest
+            upgradeSchema(db, 1, mDbVersion);
         } else {
-            sLogger.d("SharedDbHelper.onCreate creating empty database");
+            // Create current schema for both enrollment and encryption key tables.
             createSchema(db);
         }
     }
@@ -129,10 +138,11 @@ public class SharedDbHelper extends SQLiteOpenHelper {
     }
 
     private List<ISharedDbMigrator> getOrderedDbMigrators() {
-        return ImmutableList.of();
+        return ImmutableList.of(new SharedDbMigratorV2());
     }
 
-    private boolean hasAllTables(SQLiteDatabase db, String[] tableArray) {
+    /** Check whether db has all tables. */
+    public static boolean hasAllTables(SQLiteDatabase db, String[] tableArray) {
         List<String> selectionArgList = new ArrayList<>(Arrays.asList(tableArray));
         selectionArgList.add("table"); // Schema type to match
         String[] selectionArgs = new String[selectionArgList.size()];
@@ -160,7 +170,7 @@ public class SharedDbHelper extends SQLiteOpenHelper {
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_WRITE_EXCEPTION,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED);
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
             return null;
         }
     }
@@ -175,17 +185,22 @@ public class SharedDbHelper extends SQLiteOpenHelper {
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED);
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
             return null;
         }
+    }
+
+    private void createSchema(SQLiteDatabase db) {
+        EnrollmentTables.CREATE_STATEMENTS_V1.forEach(db::execSQL);
+        EncryptionKeyTables.CREATE_STATEMENTS_V1.forEach(db::execSQL);
     }
 
     private void createEnrollmentV1Schema(SQLiteDatabase db) {
         EnrollmentTables.CREATE_STATEMENTS_V1.forEach(db::execSQL);
     }
 
-    private void createSchema(SQLiteDatabase db) {
-        EnrollmentTables.CREATE_STATEMENTS.forEach(db::execSQL);
+    private void createEncryptionKeyV1Schema(SQLiteDatabase db) {
+        EncryptionKeyTables.CREATE_STATEMENTS_V1.forEach(db::execSQL);
     }
 
     private void migrateOldDataToNewDatabase(
