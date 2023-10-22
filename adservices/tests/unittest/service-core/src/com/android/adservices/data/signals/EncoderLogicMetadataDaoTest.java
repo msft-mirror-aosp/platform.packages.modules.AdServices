@@ -36,89 +36,108 @@ import java.time.temporal.ChronoUnit;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class EncoderLogicDaoTest {
+public class EncoderLogicMetadataDaoTest {
 
     public static AdTechIdentifier BUYER_1 = CommonFixture.VALID_BUYER_1;
     public static AdTechIdentifier BUYER_2 = CommonFixture.VALID_BUYER_2;
 
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
 
-    private EncoderLogicDao mEncoderLogicDao;
+    private EncoderLogicMetadataDao mEncoderLogicMetadataDao;
 
     @Before
     public void setup() {
-        mEncoderLogicDao =
+        mEncoderLogicMetadataDao =
                 Room.inMemoryDatabaseBuilder(CONTEXT, ProtectedSignalsDatabase.class)
                         .build()
-                        .getEncoderLogicDao();
+                        .getEncoderLogicMetadataDao();
     }
 
     @Test
     public void testPersistEncoderLogic() {
-        assertNull("Initial state should have been empty", mEncoderLogicDao.getEncoder(BUYER_1));
+        assertNull(
+                "Initial state should have been empty",
+                mEncoderLogicMetadataDao.getMetadata(BUYER_1));
 
-        DBEncoderLogic logic = DBEncoderLogicFixture.anEncoderLogic();
+        DBEncoderLogicMetadata logic = DBEncoderLogicFixture.anEncoderLogic();
         assertEquals(
-                "One entry should have been inserted", 1, mEncoderLogicDao.persistEncoder(logic));
+                "One entry should have been inserted",
+                1,
+                mEncoderLogicMetadataDao.persistEncoderLogicMetadata(logic));
     }
 
     @Test
     public void testExistsAndGetAnEncoder() {
-        assertNull("Initial state should have been empty", mEncoderLogicDao.getEncoder(BUYER_1));
+        assertNull(
+                "Initial state should have been empty",
+                mEncoderLogicMetadataDao.getMetadata(BUYER_1));
 
-        DBEncoderLogic logic = DBEncoderLogicFixture.anEncoderLogic();
+        DBEncoderLogicMetadata logic = DBEncoderLogicFixture.anEncoderLogic();
         assertEquals(
-                "One entry should have been inserted", 1, mEncoderLogicDao.persistEncoder(logic));
+                "One entry should have been inserted",
+                1,
+                mEncoderLogicMetadataDao.persistEncoderLogicMetadata(logic));
 
         assertTrue(
                 "Encoder for the buyer should have existed",
-                mEncoderLogicDao.doesEncoderExist(BUYER_1));
+                mEncoderLogicMetadataDao.doesEncoderExist(BUYER_1));
 
-        DBEncoderLogic retrieved = mEncoderLogicDao.getEncoder(BUYER_1);
+        DBEncoderLogicMetadata retrieved = mEncoderLogicMetadataDao.getMetadata(BUYER_1);
         assertEquals(logic.getVersion(), retrieved.getVersion());
         assertEquals(logic.getBuyer(), retrieved.getBuyer());
     }
 
     @Test
     public void testPersistEncoderLogicOverwrites() {
-        assertNull("Initial state should have been empty", mEncoderLogicDao.getEncoder(BUYER_1));
+        assertNull(
+                "Initial state should have been empty",
+                mEncoderLogicMetadataDao.getMetadata(BUYER_1));
 
-        DBEncoderLogic v1 = DBEncoderLogicFixture.anEncoderLogicBuilder().setVersion(1).build();
-        assertEquals("One entry should have been inserted", 1, mEncoderLogicDao.persistEncoder(v1));
+        DBEncoderLogicMetadata v1 =
+                DBEncoderLogicFixture.anEncoderLogicBuilder().setVersion(1).build();
+        assertEquals(
+                "One entry should have been inserted",
+                1,
+                mEncoderLogicMetadataDao.persistEncoderLogicMetadata(v1));
         assertEquals(
                 "Version should have been 1",
                 v1.getVersion(),
-                mEncoderLogicDao.getEncoder(BUYER_1).getVersion());
+                mEncoderLogicMetadataDao.getMetadata(BUYER_1).getVersion());
 
-        DBEncoderLogic v2 = DBEncoderLogicFixture.anEncoderLogicBuilder().setVersion(2).build();
-        mEncoderLogicDao.persistEncoder(v2);
+        DBEncoderLogicMetadata v2 =
+                DBEncoderLogicFixture.anEncoderLogicBuilder().setVersion(2).build();
+        mEncoderLogicMetadataDao.persistEncoderLogicMetadata(v2);
         assertEquals(
                 "Version should have been 2",
                 v2.getVersion(),
-                mEncoderLogicDao.getEncoder(BUYER_1).getVersion());
+                mEncoderLogicMetadataDao.getMetadata(BUYER_1).getVersion());
     }
 
     @Test
     public void testGetAllBuyersWithRegisteredEncoders() {
-        assertNull("Initial state should have been empty", mEncoderLogicDao.getEncoder(BUYER_1));
-        assertNull("Initial state should have been empty", mEncoderLogicDao.getEncoder(BUYER_2));
+        assertNull(
+                "Initial state should have been empty",
+                mEncoderLogicMetadataDao.getMetadata(BUYER_1));
+        assertNull(
+                "Initial state should have been empty",
+                mEncoderLogicMetadataDao.getMetadata(BUYER_2));
 
-        DBEncoderLogic logic1 =
+        DBEncoderLogicMetadata logic1 =
                 DBEncoderLogicFixture.anEncoderLogicBuilder(BUYER_1).setVersion(1).build();
-        DBEncoderLogic logic2 =
+        DBEncoderLogicMetadata logic2 =
                 DBEncoderLogicFixture.anEncoderLogicBuilder(BUYER_2).setVersion(1).build();
 
         assertEquals(
                 "First entry should have been inserted",
                 1,
-                mEncoderLogicDao.persistEncoder(logic1));
+                mEncoderLogicMetadataDao.persistEncoderLogicMetadata(logic1));
         assertEquals(
                 "Second entry should have been inserted",
                 2,
-                mEncoderLogicDao.persistEncoder(logic2));
+                mEncoderLogicMetadataDao.persistEncoderLogicMetadata(logic2));
 
         Set<AdTechIdentifier> actualRegisteredBuyers =
-                mEncoderLogicDao.getAllBuyersWithRegisteredEncoders().stream()
+                mEncoderLogicMetadataDao.getAllBuyersWithRegisteredEncoders().stream()
                         .collect(Collectors.toSet());
         Set<AdTechIdentifier> expectedRegisteredBuyers = Set.of(BUYER_1, BUYER_2);
         assertEquals(expectedRegisteredBuyers, actualRegisteredBuyers);
@@ -126,11 +145,11 @@ public class EncoderLogicDaoTest {
 
     @Test
     public void testGetAllBuyersWithRegisteredBeforeTime() {
-        DBEncoderLogic logic1 =
+        DBEncoderLogicMetadata logic1 =
                 DBEncoderLogicFixture.anEncoderLogicBuilder(BUYER_1).setVersion(1).build();
-        DBEncoderLogic logic2 =
+        DBEncoderLogicMetadata logic2 =
                 DBEncoderLogicFixture.anEncoderLogicBuilder(BUYER_2).setVersion(1).build();
-        DBEncoderLogic logic3 =
+        DBEncoderLogicMetadata logic3 =
                 DBEncoderLogicFixture.anEncoderLogicBuilder(AdTechIdentifier.fromString("buyer3"))
                         .setCreationTime(Instant.now().plus(10, ChronoUnit.DAYS))
                         .setVersion(1)
@@ -138,18 +157,18 @@ public class EncoderLogicDaoTest {
         assertEquals(
                 "First entry should have been inserted",
                 1,
-                mEncoderLogicDao.persistEncoder(logic1));
+                mEncoderLogicMetadataDao.persistEncoderLogicMetadata(logic1));
         assertEquals(
                 "Second entry should have been inserted",
                 2,
-                mEncoderLogicDao.persistEncoder(logic2));
+                mEncoderLogicMetadataDao.persistEncoderLogicMetadata(logic2));
         assertEquals(
                 "Second entry should have been inserted",
                 3,
-                mEncoderLogicDao.persistEncoder(logic3));
+                mEncoderLogicMetadataDao.persistEncoderLogicMetadata(logic3));
 
         Set<AdTechIdentifier> actualRegisteredBuyers =
-                mEncoderLogicDao
+                mEncoderLogicMetadataDao
                         .getBuyersWithEncodersBeforeTime(Instant.now().plus(1, ChronoUnit.DAYS))
                         .stream()
                         .collect(Collectors.toSet());
@@ -159,55 +178,61 @@ public class EncoderLogicDaoTest {
 
     @Test
     public void testDeleteEncoder() {
-        assertNull("Initial state should have been empty", mEncoderLogicDao.getEncoder(BUYER_1));
+        assertNull(
+                "Initial state should have been empty",
+                mEncoderLogicMetadataDao.getMetadata(BUYER_1));
 
-        DBEncoderLogic logic = DBEncoderLogicFixture.anEncoderLogic();
+        DBEncoderLogicMetadata logic = DBEncoderLogicFixture.anEncoderLogic();
         assertEquals(
-                "One entry should have been inserted", 1, mEncoderLogicDao.persistEncoder(logic));
+                "One entry should have been inserted",
+                1,
+                mEncoderLogicMetadataDao.persistEncoderLogicMetadata(logic));
 
-        mEncoderLogicDao.persistEncoder(
+        mEncoderLogicMetadataDao.persistEncoderLogicMetadata(
                 DBEncoderLogicFixture.anEncoderLogicBuilder(BUYER_2).build());
 
         assertTrue(
                 "Encoder for the buyer should have existed",
-                mEncoderLogicDao.doesEncoderExist(BUYER_1));
+                mEncoderLogicMetadataDao.doesEncoderExist(BUYER_1));
         assertTrue(
                 "Encoder for the buyer should have existed",
-                mEncoderLogicDao.doesEncoderExist(BUYER_2));
+                mEncoderLogicMetadataDao.doesEncoderExist(BUYER_2));
 
-        mEncoderLogicDao.deleteEncoder(BUYER_1);
+        mEncoderLogicMetadataDao.deleteEncoder(BUYER_1);
 
         assertFalse(
                 "Encoder for the buyer should have been deleted",
-                mEncoderLogicDao.doesEncoderExist(BUYER_1));
+                mEncoderLogicMetadataDao.doesEncoderExist(BUYER_1));
         assertTrue(
                 "Encoder for the buyer should have remain untouched",
-                mEncoderLogicDao.doesEncoderExist(BUYER_2));
+                mEncoderLogicMetadataDao.doesEncoderExist(BUYER_2));
     }
 
     @Test
     public void testDeleteAllEncoders() {
-        assertNull("Initial state should have been empty", mEncoderLogicDao.getEncoder(BUYER_1));
+        assertNull(
+                "Initial state should have been empty",
+                mEncoderLogicMetadataDao.getMetadata(BUYER_1));
 
-        DBEncoderLogic logic = DBEncoderLogicFixture.anEncoderLogic();
-        mEncoderLogicDao.persistEncoder(logic);
-        mEncoderLogicDao.persistEncoder(
+        DBEncoderLogicMetadata logic = DBEncoderLogicFixture.anEncoderLogic();
+        mEncoderLogicMetadataDao.persistEncoderLogicMetadata(logic);
+        mEncoderLogicMetadataDao.persistEncoderLogicMetadata(
                 DBEncoderLogicFixture.anEncoderLogicBuilder(BUYER_2).build());
 
         assertTrue(
                 "Encoder for the buyer should have existed",
-                mEncoderLogicDao.doesEncoderExist(BUYER_1));
+                mEncoderLogicMetadataDao.doesEncoderExist(BUYER_1));
         assertTrue(
                 "Encoder for the buyer should have existed",
-                mEncoderLogicDao.doesEncoderExist(BUYER_2));
+                mEncoderLogicMetadataDao.doesEncoderExist(BUYER_2));
 
-        mEncoderLogicDao.deleteAllEncoders();
+        mEncoderLogicMetadataDao.deleteAllEncoders();
 
         assertFalse(
                 "Encoder for all the buyers should have been deleted",
-                mEncoderLogicDao.doesEncoderExist(BUYER_1));
+                mEncoderLogicMetadataDao.doesEncoderExist(BUYER_1));
         assertFalse(
                 "Encoder for all the buyers should have been deleted",
-                mEncoderLogicDao.doesEncoderExist(BUYER_2));
+                mEncoderLogicMetadataDao.doesEncoderExist(BUYER_2));
     }
 }

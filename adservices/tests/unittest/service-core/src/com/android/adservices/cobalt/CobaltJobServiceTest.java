@@ -47,6 +47,7 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.ProcessLifeguardRule;
 import com.android.adservices.common.SyncCallback;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
@@ -64,6 +65,8 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public final class CobaltJobServiceTest {
     private static final int JOB_SCHEDULED_WAIT_TIME_MS = 5_000;
@@ -72,7 +75,6 @@ public final class CobaltJobServiceTest {
     private static final int COBALT_LOGGING_JOB_ID = COBALT_LOGGING_JOB.getJobId();
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final JobScheduler sJobScheduler = sContext.getSystemService(JobScheduler.class);
-
     @Spy private CobaltJobService mSpyCobaltJobService;
 
     @Mock Flags mMockFlags;
@@ -80,9 +82,10 @@ public final class CobaltJobServiceTest {
     @Mock CobaltPeriodicJob mMockCobaltPeriodicJob;
     @Mock JobParameters mMockJobParameters;
 
+    private final ExecutorService mExecutorService = Executors.newSingleThreadExecutor();
     private AdservicesJobServiceLogger mLogger;
 
-    @Rule
+    @Rule(order = 0)
     public final AdServicesExtendedMockitoRule mAdServicesExtendedMockitoRule =
             new AdServicesExtendedMockitoRule.Builder(this)
                     .spyStatic(CobaltJobService.class)
@@ -91,6 +94,9 @@ public final class CobaltJobServiceTest {
                     .spyStatic(AdservicesJobServiceLogger.class)
                     .mockStatic(ServiceCompatUtils.class)
                     .build();
+
+    @Rule(order = 1)
+    public final ProcessLifeguardRule processLifeguard = new ProcessLifeguardRule();
 
     @Before
     public void setup() {
@@ -112,7 +118,7 @@ public final class CobaltJobServiceTest {
     }
 
     @Test
-    public void testOnStartJob_featureDisabled_withoutLogging() throws InterruptedException {
+    public void testOnStartJob_featureDisabled_withoutLogging() throws Exception {
         // Logging killswitch is on.
         mockBackgroundJobsLoggingKillSwitch(/* overrideValue= */ true);
 
@@ -122,7 +128,7 @@ public final class CobaltJobServiceTest {
     }
 
     @Test
-    public void testOnStartJob_featureEnabled_withoutLogging() throws InterruptedException {
+    public void testOnStartJob_featureEnabled_withoutLogging() throws Exception {
         // Logging killswitch is on.
         mockBackgroundJobsLoggingKillSwitch(/* overrideValue= */ true);
 
@@ -133,7 +139,7 @@ public final class CobaltJobServiceTest {
     }
 
     @Test
-    public void testOnStartJob_featureDisabled_withLogging() throws InterruptedException {
+    public void testOnStartJob_featureDisabled_withLogging() throws Exception {
         // Logging killswitch is off.
         mockBackgroundJobsLoggingKillSwitch(/* overrideValue= */ false);
 
@@ -144,7 +150,7 @@ public final class CobaltJobServiceTest {
     }
 
     @Test
-    public void testOnStartJob_featureEnabled_withLogging() throws InterruptedException {
+    public void testOnStartJob_featureEnabled_withLogging() throws Exception {
         // Logging killswitch is off.
         mockBackgroundJobsLoggingKillSwitch(/* overrideValue= */ false);
 
@@ -155,7 +161,7 @@ public final class CobaltJobServiceTest {
     }
 
     @Test
-    public void testOnStopJob_withoutLogging() throws InterruptedException {
+    public void testOnStopJob_withoutLogging() throws Exception {
         // Logging killswitch is on.
         mockBackgroundJobsLoggingKillSwitch(/* overrideValue= */ true);
 
@@ -166,7 +172,7 @@ public final class CobaltJobServiceTest {
     }
 
     @Test
-    public void testOnStopJob_withLogging() throws InterruptedException {
+    public void testOnStopJob_withLogging() throws Exception {
         // Logging killswitch is off.
         mockBackgroundJobsLoggingKillSwitch(/* overrideValue= */ false);
 
@@ -177,39 +183,43 @@ public final class CobaltJobServiceTest {
     }
 
     @Test
-    public void testSchedule_featureEnabled() throws InterruptedException {
+    public void testSchedule_featureEnabled() throws Exception {
         // Feature is Enabled.
         mockCobaltLoggingEnabled(/* overrideValue= */ true);
 
-        assertThat(CobaltJobService.scheduleIfNeeded(sContext, /* forceSchedule */ false)).isTrue();
+        JobScheduledCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
+
+        assertJobScheduled(callBack, /* shouldSchedule */ true, /* checkPendingJob */ true);
 
         waitForJobFinished(JOB_SCHEDULED_WAIT_TIME_MS);
     }
 
     @Test
-    public void testSchedule_featureDisabled() {
+    public void testSchedule_featureDisabled() throws Exception {
         // Feature is disabled.
         mockCobaltLoggingEnabled(false);
 
-        assertThat(CobaltJobService.scheduleIfNeeded(sContext, /* forceSchedule */ false))
-                .isFalse();
+        JobScheduledCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
+
+        assertJobScheduled(callBack, /* shouldSchedule */ false, /* checkPendingJob */ false);
         verifyNoMoreInteractions(staticMockMarker(CobaltFactory.class));
     }
 
     @Test
-    public void testScheduleIfNeeded_success() throws InterruptedException {
+    public void testScheduleIfNeeded_success() throws Exception {
         // Feature is enabled.
         mockCobaltLoggingEnabled(/* overrideValue= */ true);
         mockBackgroundJobsLoggingKillSwitch(/* overrideValue= */ true);
 
-        assertThat(CobaltJobService.scheduleIfNeeded(sContext, false)).isTrue();
-        assertThat(sJobScheduler.getPendingJob(COBALT_LOGGING_JOB_ID)).isNotNull();
+        JobScheduledCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
+
+        assertJobScheduled(callBack, /* shouldSchedule */ true, /* checkPendingJob */ true);
 
         waitForJobFinished(JOB_SCHEDULED_WAIT_TIME_MS);
     }
 
     @Test
-    public void testScheduleIfNeeded_scheduleWithSameParameters() throws InterruptedException {
+    public void testScheduleIfNeeded_scheduleWithSameParameters() throws Exception {
         // Feature is enabled.
         mockCobaltLoggingEnabled(/* overrideValue= */ true);
         mockBackgroundJobsLoggingKillSwitch(/* overrideValue= */ true);
@@ -219,42 +229,48 @@ public final class CobaltJobServiceTest {
                 .getCobaltLoggingJobPeriodMs();
 
         // The first invocation of scheduleIfNeeded() schedules the job.
-        assertThat(CobaltJobService.scheduleIfNeeded(sContext, /* forceSchedule */ false)).isTrue();
-        assertThat(sJobScheduler.getPendingJob(COBALT_LOGGING_JOB_ID)).isNotNull();
+        JobScheduledCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
 
-        // The second invocation of scheduleIfNeeded() with same parameters skips the scheduling.
-        assertThat(CobaltJobService.scheduleIfNeeded(sContext, /* forceSchedule */ false))
-                .isFalse();
+        assertJobScheduled(callBack, /* shouldSchedule */ true, /* checkPendingJob */ true);
 
-        waitForJobFinished(JOB_SCHEDULED_WAIT_TIME_MS);
-    }
-
-    @Test
-    public void testScheduleIfNeeded_scheduleWithDifferentParameters() throws InterruptedException {
-        // Feature is enabled.
-        mockCobaltLoggingEnabled(/* overrideValue= */ true);
-        mockBackgroundJobsLoggingKillSwitch(/* overrideValue= */ true);
-
-        doReturn(/* COBALT_LOGGING_JOB_PERIOD_MS */ JOB_INTERVAL_MS)
-                .when(mMockFlags)
-                .getCobaltLoggingJobPeriodMs();
-
-        // The first invocation of scheduleIfNeeded() schedules the job.
-        assertThat(CobaltJobService.scheduleIfNeeded(sContext, /* forceSchedule */ false)).isTrue();
-        assertThat(sJobScheduler.getPendingJob(COBALT_LOGGING_JOB_ID)).isNotNull();
-
-        // The second invocation of scheduleIfNeeded() with different parameters skips the
+        // The second invocation of scheduleIfNeeded() with the same parameters should skip
         // scheduling.
+        callBack = scheduleJobInBackground(/* forceSchedule */ false);
+
+        assertJobScheduled(callBack, /* shouldSchedule */ false, /* checkPendingJob */ false);
+
+        waitForJobFinished(JOB_SCHEDULED_WAIT_TIME_MS);
+    }
+
+    @Test
+    public void testScheduleIfNeeded_scheduleWithDifferentParameters() throws Exception {
+        // Feature is enabled.
+        mockCobaltLoggingEnabled(/* overrideValue= */ true);
+        mockBackgroundJobsLoggingKillSwitch(/* overrideValue= */ true);
+
+        doReturn(/* COBALT_LOGGING_JOB_PERIOD_MS */ JOB_INTERVAL_MS)
+                .when(mMockFlags)
+                .getCobaltLoggingJobPeriodMs();
+
+        JobScheduledCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
+
+        assertJobScheduled(callBack, /* shouldSchedule */ true, /* checkPendingJob */ true);
+
+        // The second invocation of scheduleIfNeeded() with different parameters should schedule a
+        // new job.
         doReturn(/* COBALT_LOGGING_JOB_PERIOD_MS */ JOB_INTERVAL_MS + 1)
                 .when(mMockFlags)
                 .getCobaltLoggingJobPeriodMs();
-        assertThat(CobaltJobService.scheduleIfNeeded(sContext, /* forceSchedule */ false)).isTrue();
+
+        callBack = scheduleJobInBackground(/* forceSchedule */ true);
+
+        assertJobScheduled(callBack, /* shouldSchedule */ true, /* checkPendingJob */ true);
 
         waitForJobFinished(JOB_SCHEDULED_WAIT_TIME_MS);
     }
 
     @Test
-    public void testScheduleIfNeeded_forceRun() throws InterruptedException {
+    public void testScheduleIfNeeded_forceRun() throws Exception {
         // Feature is enabled.
         mockCobaltLoggingEnabled(/* overrideValue= */ true);
         mockBackgroundJobsLoggingKillSwitch(/* overrideValue= */ true);
@@ -264,13 +280,15 @@ public final class CobaltJobServiceTest {
                 .getCobaltLoggingJobPeriodMs();
 
         // The first invocation of scheduleIfNeeded() schedules the job.
-        assertThat(CobaltJobService.scheduleIfNeeded(sContext, /* forceSchedule */ false)).isTrue();
-        assertThat(sJobScheduler.getPendingJob(COBALT_LOGGING_JOB_ID)).isNotNull();
+        JobScheduledCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
 
-        // The second invocation of scheduleIfNeeded() schedules the job with same parameter and
-        // force to schedule the job.
-        assertThat(CobaltJobService.scheduleIfNeeded(sContext, /* forceSchedule */ true)).isTrue();
-        assertThat(sJobScheduler.getPendingJob(COBALT_LOGGING_JOB_ID)).isNotNull();
+        assertJobScheduled(callBack, /* shouldSchedule */ true, /* checkPendingJob */ true);
+
+        // The second invocation of scheduleIfNeeded() schedules the job with same
+        // parameter and force to schedule the job.
+        callBack = scheduleJobInBackground(/* forceSchedule */ true);
+
+        assertJobScheduled(callBack, /* shouldSchedule */ true, /* checkPendingJob */ true);
 
         waitForJobFinished(JOB_SCHEDULED_WAIT_TIME_MS);
     }
@@ -489,6 +507,31 @@ public final class CobaltJobServiceTest {
 
         public void assertFinished() throws InterruptedException {
             assertResultReceived();
+        }
+    }
+
+    private JobScheduledCallback scheduleJobInBackground(boolean forceSchedule) {
+        JobScheduledCallback callback = new JobScheduledCallback();
+        mExecutorService.execute(
+                () ->
+                        callback.insertJobScheduledResult(
+                                CobaltJobService.scheduleIfNeeded(sContext, forceSchedule)));
+        return callback;
+    }
+
+    private static final class JobScheduledCallback extends SyncCallback<Boolean, Void> {
+        public void insertJobScheduledResult(Boolean result) {
+            super.injectResult(result);
+        }
+    }
+
+    private void assertJobScheduled(
+            JobScheduledCallback callback, boolean shouldSchedule, boolean checkPendingJob)
+            throws InterruptedException {
+        assertThat(callback.assertResultReceived()).isEqualTo(shouldSchedule);
+
+        if (checkPendingJob) {
+            assertThat(sJobScheduler.getPendingJob(COBALT_LOGGING_JOB_ID)).isNotNull();
         }
     }
 }

@@ -90,7 +90,7 @@ public class MainActivity extends Activity {
         mRenderedView.setZOrderOnTop(true);
         mRenderedView.setVisibility(View.INVISIBLE);
 
-        mLoadButton = findViewById(R.id.load_code_button);
+        mLoadButton = findViewById(R.id.load_sdk_button);
         mRenderButton = findViewById(R.id.request_surface_button);
         mCreateFileButton = findViewById(R.id.create_file_button);
         mPlayVideoButton = findViewById(R.id.play_video_button);

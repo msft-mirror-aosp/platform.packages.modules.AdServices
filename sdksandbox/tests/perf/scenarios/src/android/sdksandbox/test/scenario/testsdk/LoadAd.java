@@ -55,7 +55,8 @@ public class LoadAd {
 
     @Before
     public void setup() throws Exception {
-        boolean mediationEnabled = sArgsBundle.getBoolean(MEDIATION_ENABLED_KEY);
+        boolean mediationEnabled =
+                Boolean.parseBoolean(sArgsBundle.getString(MEDIATION_ENABLED_KEY));
         sUiDevice.executeShellCommand(sClientAppUtils.getStartAppCommand(mediationEnabled));
     }
 
