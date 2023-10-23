@@ -43,6 +43,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
@@ -53,17 +54,15 @@ public final class BooleanFileDatastoreTest {
     private static final String TAG = BooleanFileDatastoreTest.class.getSimpleName();
 
     private static final Context APPLICATION_CONTEXT = ApplicationProvider.getApplicationContext();
+
+    private static final String VALID_DIR = APPLICATION_CONTEXT.getFilesDir().getAbsolutePath();
     private static final String FILENAME = "BooleanFileDatastoreTest.xml";
     private static final int DATASTORE_VERSION = 1;
     private static final String TEST_KEY = "key";
     private static final String TEST_VERSION_KEY = "version_key";
 
     private final BooleanFileDatastore mDatastore =
-            new BooleanFileDatastore(
-                    APPLICATION_CONTEXT.getFilesDir().getAbsolutePath(),
-                    FILENAME,
-                    DATASTORE_VERSION,
-                    TEST_VERSION_KEY);
+            new BooleanFileDatastore(VALID_DIR, FILENAME, DATASTORE_VERSION, TEST_VERSION_KEY);
 
     @Rule
     public final AdServicesExtendedMockitoRule extendedMockitoRule =
@@ -82,6 +81,82 @@ public final class BooleanFileDatastoreTest {
     @After
     public void cleanupDatastore() {
         mDatastore.tearDownForTesting();
+    }
+
+    @Test
+    public void testConstructor_emptyOrNullArgs() {
+        // String dir + name constructor
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new BooleanFileDatastore(
+                                /* parentPath= */ null,
+                                FILENAME,
+                                DATASTORE_VERSION,
+                                TEST_VERSION_KEY));
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new BooleanFileDatastore(
+                                /* parentPath= */ "",
+                                FILENAME,
+                                DATASTORE_VERSION,
+                                TEST_VERSION_KEY));
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new BooleanFileDatastore(
+                                VALID_DIR,
+                                /* filename= */ null,
+                                DATASTORE_VERSION,
+                                TEST_VERSION_KEY));
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new BooleanFileDatastore(
+                                VALID_DIR,
+                                /* filename= */ "",
+                                DATASTORE_VERSION,
+                                TEST_VERSION_KEY));
+
+        // File constructor
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new BooleanFileDatastore(
+                                /* file= */ null, DATASTORE_VERSION, TEST_VERSION_KEY));
+    }
+
+    @Test
+    public void testConstructor_parentPathDirectoryDoesNotExist() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new BooleanFileDatastore(
+                                "I can't believe this is a valid dir",
+                                FILENAME,
+                                DATASTORE_VERSION,
+                                TEST_VERSION_KEY));
+    }
+
+    @Test
+    public void testConstructor_parentPathDirectoryIsNotAFile() throws Exception {
+        File file = new File(VALID_DIR, "file.IAm");
+        String path = file.getAbsolutePath();
+        Log.d(TAG, "path: " + path);
+        assertWithMessage("Could not create file %s", path).that(file.createNewFile()).isTrue();
+
+        try {
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () ->
+                            new BooleanFileDatastore(
+                                    path, FILENAME, DATASTORE_VERSION, TEST_VERSION_KEY));
+        } finally {
+            if (!file.delete()) {
+                Log.e(TAG, "Could not delete file " + path + " at the end");
+            }
+        }
     }
 
     @Test
@@ -110,6 +185,13 @@ public final class BooleanFileDatastoreTest {
         assertThrows(NullPointerException.class, () -> mDatastore.removeByPrefix(null));
 
         assertThrows(IllegalArgumentException.class, () -> mDatastore.removeByPrefix(""));
+    }
+
+    @Test
+    public void testGetVersionKey() {
+        assertWithMessage("getVersionKey()")
+                .that(mDatastore.getVersionKey())
+                .isEqualTo(TEST_VERSION_KEY);
     }
 
     @Test
