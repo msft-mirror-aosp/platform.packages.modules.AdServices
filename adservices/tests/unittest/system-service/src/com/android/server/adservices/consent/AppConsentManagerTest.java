@@ -31,7 +31,7 @@ import android.content.pm.PackageManager;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.server.adservices.common.BooleanFileDatastore;
+import com.android.adservices.shared.storage.BooleanFileDatastore;
 
 import org.junit.After;
 import org.junit.Before;

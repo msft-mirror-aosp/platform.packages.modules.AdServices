@@ -30,7 +30,7 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.server.adservices.common.BooleanFileDatastore;
+import com.android.adservices.shared.storage.BooleanFileDatastore;
 import com.android.server.adservices.feature.PrivacySandboxEnrollmentChannelCollection;
 import com.android.server.adservices.feature.PrivacySandboxFeatureType;
 import com.android.server.adservices.feature.PrivacySandboxUxCollection;
