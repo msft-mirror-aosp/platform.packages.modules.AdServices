@@ -730,6 +730,43 @@
         "attributions": []
       },
       "uri": "android-app://remove.me"
+    },
+    {
+      "name": "Remove a Debug Report",
+      "input": {
+        "debug_reports": [
+          {
+            "id": "DR-Remove",
+            "type": "source-success",
+            "body": "{\"test\":\"body\"}",
+            "registrant": "android-app://remove.me"
+          },
+          {
+            "id": "DR-Keep",
+            "type": "source-success",
+            "body": "{\"test\":\"body\"}",
+            "registrant": "android-app://keep.me"
+          }
+        ]
+      },
+      "output": {
+        "sources": [],
+        "source_destinations": [],
+        "triggers": [],
+        "event_reports": [],
+        "attributions": [],
+        "async_registrations": [],
+        "debug_reports": [
+          {
+            "id": "DR-Keep",
+            "type": "source-success",
+            "body": "{\"test\":\"body\"}",
+            "registrant": "android-app://keep.me"
+          }
+        ],
+        "key_values": []
+      },
+      "uri": "android-app://remove.me"
     }
   ]
 }

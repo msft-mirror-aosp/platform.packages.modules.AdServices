@@ -1502,6 +1502,13 @@ class MeasurementDao implements IMeasurementDao {
                         MeasurementTables.AsyncRegistrationContract.REGISTRANT + " = ? ",
                         new String[] {uriStr});
 
+        // Debug Report table
+        numDeletions +=
+                db.delete(
+                        MeasurementTables.DebugReportContract.TABLE,
+                        MeasurementTables.DebugReportContract.REGISTRANT + " = ? ",
+                        new String[] {uriStr});
+
         return numDeletions != 0;
     }
 
@@ -1600,6 +1607,15 @@ class MeasurementDao implements IMeasurementDao {
                 db.delete(
                         MeasurementTables.AsyncRegistrationContract.TABLE,
                         MeasurementTables.AsyncRegistrationContract.REGISTRANT
+                                + " NOT IN "
+                                + valueList.toString(),
+                        /* whereArgs */ null);
+
+        // Debug Report table
+        numDeletions +=
+                db.delete(
+                        MeasurementTables.DebugReportContract.TABLE,
+                        MeasurementTables.DebugReportContract.REGISTRANT
                                 + " NOT IN "
                                 + valueList.toString(),
                         /* whereArgs */ null);
@@ -2351,9 +2367,7 @@ class MeasurementDao implements IMeasurementDao {
                 debugReport.getInsertionTime());
         values.put(
                 MeasurementTables.DebugReportContract.REGISTRANT,
-                debugReport.getRegistrant() == null
-                        ? null
-                        : debugReport.getRegistrant().toString());
+                getNullableUriString(debugReport.getRegistrant()));
         long rowId =
                 mSQLTransaction
                         .getDatabase()
