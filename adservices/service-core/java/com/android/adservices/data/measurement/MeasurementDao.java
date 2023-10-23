@@ -37,7 +37,6 @@ import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.KeyValueData.DataType;
-import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
@@ -1132,7 +1131,8 @@ class MeasurementDao implements IMeasurementDao {
                     trigger.getEnrollmentId(),
                     String.valueOf(
                             trigger.getTriggerTime()
-                                    - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS),
+                                    - FlagsFactory.getFlags()
+                                            .getMeasurementRateLimitWindowMilliseconds()),
                     String.valueOf(trigger.getTriggerTime())
                 });
     }
