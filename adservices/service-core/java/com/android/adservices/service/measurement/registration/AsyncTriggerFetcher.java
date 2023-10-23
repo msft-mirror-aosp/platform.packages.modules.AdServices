@@ -15,8 +15,6 @@
  */
 package com.android.adservices.service.measurement.registration;
 
-import static com.android.adservices.service.measurement.PrivacyParams.MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE;
-
 import android.annotation.NonNull;
 import android.content.Context;
 import android.net.Uri;
@@ -611,8 +609,10 @@ public class AsyncTriggerFetcher {
             }
             if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
                 Object maybeInt = aggregateValues.get(id);
-                if (!(maybeInt instanceof Integer) || ((Integer) maybeInt) < 1
-                        || ((Integer) maybeInt) > MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE) {
+                if (!(maybeInt instanceof Integer)
+                        || ((Integer) maybeInt) < 1
+                        || ((Integer) maybeInt)
+                                > mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()) {
                     LoggerFactory.getMeasurementLogger()
                             .d("Aggregate values '" + id + "' is invalid. %s", maybeInt);
                     return false;

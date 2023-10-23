@@ -3820,6 +3820,33 @@ public interface Flags {
         return MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW;
     }
 
+    int MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE = 65536;
+
+    /**
+     * L1, the maximum sum of the contributions (values) across all buckets for a given source
+     * event.
+     */
+    default int getMeasurementMaxSumOfAggregateValuesPerSource() {
+        return MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE;
+    }
+
+    long MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS = TimeUnit.DAYS.toMillis(30);
+
+    /**
+     * Rate limit window for (Source Site, Destination Site, Reporting Site, Window) privacy unit.
+     * 30 days.
+     */
+    default long getMeasurementRateLimitWindowMilliseconds() {
+        return MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS;
+    }
+
+    long MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW = TimeUnit.DAYS.toMillis(1);
+
+    /** Minimum time window after which reporting origin can be migrated */
+    default long getMeasurementMinReportingOriginUpdateWindow() {
+        return MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW;
+    }
+
     /** Default value of flag for logging consent migration metrics when OTA from S to T+. */
     boolean DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED = true;
 
