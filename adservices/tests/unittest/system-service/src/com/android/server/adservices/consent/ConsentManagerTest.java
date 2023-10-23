@@ -16,12 +16,15 @@
 
 package com.android.server.adservices.consent;
 
+import static com.android.adservices.common.DumpHelper.assertDumpHasPrefix;
+import static com.android.adservices.common.DumpHelper.dump;
 import static com.android.server.adservices.consent.ConsentManager.NOTIFICATION_DISPLAYED_ONCE;
 import static com.android.server.adservices.consent.ConsentManager.STORAGE_VERSION;
 import static com.android.server.adservices.consent.ConsentManager.STORAGE_XML_IDENTIFIER;
 import static com.android.server.adservices.consent.ConsentManager.VERSION_KEY;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
 
@@ -506,5 +509,19 @@ public class ConsentManagerTest {
                             assertThat(consentManager.getEnrollmentChannel())
                                     .isEqualTo(channel.toString());
                         });
+    }
+
+    @Test
+    public void testDump() throws Exception {
+        String prefix = "_";
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier= */ 0);
+
+        String dump = dump(pw -> consentManager.dump(pw, prefix));
+
+        assertWithMessage("content of dump()").that(dump).startsWith(prefix + "ConsentManager:");
+        assertDumpHasPrefix(dump, prefix);
+        // ConsentManager only dumps the datastore, which is not accessible, so there's nothing else
+        // to check
     }
 }

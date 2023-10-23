@@ -28,6 +28,7 @@ import com.android.server.adservices.feature.PrivacySandboxUxCollection;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Objects;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -591,5 +592,13 @@ public final class ConsentManager {
         } finally {
             mReadWriteLock.writeLock().unlock();
         }
+    }
+
+    /** Dumps its internal state. */
+    public void dump(PrintWriter writer, String prefix) {
+        writer.printf("%sConsentManager:\n", prefix);
+        String prefix2 = prefix + "  ";
+
+        mDatastore.dump(writer, prefix2);
     }
 }

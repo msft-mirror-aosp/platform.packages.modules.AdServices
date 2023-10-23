@@ -20,10 +20,13 @@ android_test {
     srcs: [
         "java/**/*.java",
     ],
+    defaults: ["adservices-extended-mockito-defaults"],
     static_libs: [
+        "adservices-shared-storage",
+        "adservices-test-utility",
         "androidx.test.core",
         "androidx.test.runner",
-        "adservices-shared-storage",
+        "truth-prebuilt",
     ],
     min_sdk_version: "30",
     test_suites: [
