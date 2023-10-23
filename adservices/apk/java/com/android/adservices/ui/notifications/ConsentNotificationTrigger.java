@@ -178,9 +178,13 @@ public class ConsentNotificationTrigger {
                     consentManager.enable(context, AdServicesApiType.MEASUREMENTS);
                     break;
                 case RVC_UX:
-                    // TODO(297413394) Eu user needs defaults to opt out before receiving R notif
-                    consentManager.recordMeasurementDefaultConsent(true);
-                    consentManager.enable(context, AdServicesApiType.MEASUREMENTS);
+                    if (isEuDevice) {
+                        consentManager.recordMeasurementDefaultConsent(false);
+                        consentManager.disable(context, AdServicesApiType.MEASUREMENTS);
+                    } else {
+                        consentManager.recordMeasurementDefaultConsent(true);
+                        consentManager.enable(context, AdServicesApiType.MEASUREMENTS);
+                    }
                     break;
                 case BETA_UX:
                     if (!isEuDevice) {
