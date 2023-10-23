@@ -110,7 +110,7 @@ public class SelectAdsFlagRule implements TestRule {
         ShellUtils.runShellCommand(
                 "device_config put adservices fledge_custom_audience_service_kill_switch false");
         ShellUtils.runShellCommand(
-                "device_config put adservices fledge_custom_audience_service_kill_switch false");
+                "device_config put adservices fledge_select_ads_kill_switch false");
         ShellUtils.runShellCommand(
                 "device_config put adservices adservice_system_service_enabled true");
     }
