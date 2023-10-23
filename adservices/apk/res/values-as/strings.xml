@@ -42,10 +42,8 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"কোনো এপ্লিকেশ্বনক AdService সক্ষমকৰণৰ স্থিতিৰ API এক্সেছ কৰিবলৈ অনুমতি দিয়ে।"</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManager’s APIsলৈ এক্সেছ"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"এটা এপ্লিকেশ্বনক AdServicesManager’s APIs এক্সেছ কৰিবলৈ অনুমতি দিয়ে।"</string>
-    <!-- no translation found for permlab_accessUpdateAdIdCache (6912755067998635886) -->
-    <skip />
-    <!-- no translation found for permdesc_accessUpdateAdIdCache (2907546830224186022) -->
-    <skip />
+    <string name="permlab_updateAdservicesAdId" msgid="1817012692601139702">"AdServiceৰ আপডে’ট AdID APIৰ এক্সেছ।"</string>
+    <string name="permdesc_updateAdservicesAdId" msgid="1594321436876709737">"কোনো এপ্লিকেশ্বনক AdServiceৰ আপডে’ট AdID API এক্সেছ কৰিবলৈ অনুমতি দিয়ে।"</string>
     <string name="app_label" msgid="5844694701336604490">"বিজ্ঞাপনৰ গোপনীয়তা"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Androidৰ বিজ্ঞাপনৰ গোপনীয়তা বিটাত যোগদান কৰক"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Androidএ আপোনাক বিজ্ঞাপন দেখুৱাবলৈ এপৰ বাবে অধিক গোপনীয় উপায়সমূহ অন্বেষণ কৰি আছে"</string>
