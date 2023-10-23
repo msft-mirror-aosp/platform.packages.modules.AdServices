@@ -424,7 +424,6 @@ public class BackgroundFetchWorkerTest {
     }
 
     @Test
-    @FlakyTest(bugId = 298714561)
     public void testRunBackgroundFetchChecksWorkInProgress()
             throws InterruptedException, ExecutionException {
         int numEligibleCustomAudiences = 16;
