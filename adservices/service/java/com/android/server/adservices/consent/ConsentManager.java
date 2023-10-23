@@ -19,9 +19,9 @@ package com.android.server.adservices.consent;
 import android.annotation.NonNull;
 import android.app.adservices.consent.ConsentParcel;
 
+import com.android.adservices.shared.storage.BooleanFileDatastore;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.adservices.LogUtil;
-import com.android.server.adservices.common.BooleanFileDatastore;
 import com.android.server.adservices.feature.PrivacySandboxEnrollmentChannelCollection;
 import com.android.server.adservices.feature.PrivacySandboxFeatureType;
 import com.android.server.adservices.feature.PrivacySandboxUxCollection;

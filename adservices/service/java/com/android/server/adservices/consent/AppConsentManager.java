@@ -18,9 +18,9 @@ package com.android.server.adservices.consent;
 
 import android.annotation.NonNull;
 
+import com.android.adservices.shared.storage.BooleanFileDatastore;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
-import com.android.server.adservices.common.BooleanFileDatastore;
 
 import java.io.IOException;
 import java.util.ArrayList;
