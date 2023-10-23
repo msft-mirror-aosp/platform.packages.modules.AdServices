@@ -82,6 +82,32 @@ public class SharedDbSchemaTrail {
                     + " TEXT "
                     + ")";
 
+    private static final String CREATE_TABLE_ENCRYPTION_KEY_V3 =
+            "CREATE TABLE "
+                    + EncryptionKeyTables.EncryptionKeyContract.TABLE
+                    + " ("
+                    + EncryptionKeyTables.EncryptionKeyContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + EncryptionKeyTables.EncryptionKeyContract.KEY_TYPE
+                    + " TEXT, "
+                    + EncryptionKeyTables.EncryptionKeyContract.ENROLLMENT_ID
+                    + " TEXT, "
+                    + EncryptionKeyTables.EncryptionKeyContract.REPORTING_ORIGIN
+                    + " TEXT, "
+                    + EncryptionKeyTables.EncryptionKeyContract.ENCRYPTION_KEY_URL
+                    + " TEXT, "
+                    + EncryptionKeyTables.EncryptionKeyContract.PROTOCOL_TYPE
+                    + " TEXT, "
+                    + EncryptionKeyTables.EncryptionKeyContract.KEY_COMMITMENT_ID
+                    + " TEXT, "
+                    + EncryptionKeyTables.EncryptionKeyContract.BODY
+                    + " TEXT, "
+                    + EncryptionKeyTables.EncryptionKeyContract.EXPIRATION
+                    + " TEXT, "
+                    + EncryptionKeyTables.EncryptionKeyContract.LAST_FETCH_TIME
+                    + " INTEGER "
+                    + ")";
+
     private static Map<String, String> getCreateStatementByTableV1() {
         return ImmutableMap.of(EnrollmentDataContract.TABLE, CREATE_TABLE_ENROLLMENT_V1);
     }
@@ -92,10 +118,17 @@ public class SharedDbSchemaTrail {
         return createStatements;
     }
 
+    private static Map<String, String> getCreateStatementByTableV3() {
+        Map<String, String> createStatements = new HashMap<>(getCreateStatementByTableV2());
+        createStatements.put(EncryptionKeyContract.TABLE, CREATE_TABLE_ENCRYPTION_KEY_V3);
+        return createStatements;
+    }
+
     private static final Map<Integer, Collection<String>> CREATE_TABLES_STATEMENTS_BY_VERSION =
             new ImmutableMap.Builder<Integer, Collection<String>>()
                     .put(1, getCreateStatementByTableV1().values())
                     .put(2, getCreateStatementByTableV2().values())
+                    .put(3, getCreateStatementByTableV3().values())
                     .build();
 
     /**

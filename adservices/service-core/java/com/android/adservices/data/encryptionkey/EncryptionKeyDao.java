@@ -241,6 +241,9 @@ public class EncryptionKeyDao implements IEncryptionKeyDao {
         values.put(
                 EncryptionKeyTables.EncryptionKeyContract.EXPIRATION,
                 encryptionKey.getExpiration());
+        values.put(
+                EncryptionKeyTables.EncryptionKeyContract.LAST_FETCH_TIME,
+                encryptionKey.getLastFetchTime());
         try {
             db.insertWithOnConflict(
                     EncryptionKeyTables.EncryptionKeyContract.TABLE,

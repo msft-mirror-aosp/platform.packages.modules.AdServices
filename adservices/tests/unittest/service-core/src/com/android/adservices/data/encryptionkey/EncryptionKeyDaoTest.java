@@ -49,6 +49,7 @@ public class EncryptionKeyDaoTest {
                     .setKeyCommitmentId(11)
                     .setBody("AVZBTFVF")
                     .setExpiration(100001L)
+                    .setLastFetchTime(100001L)
                     .build();
 
     private static final EncryptionKey SIGNING_KEY1 =
@@ -62,6 +63,7 @@ public class EncryptionKeyDaoTest {
                     .setKeyCommitmentId(12)
                     .setBody("BVZBTFVF")
                     .setExpiration(100002L)
+                    .setLastFetchTime(100002L)
                     .build();
 
     private static final EncryptionKey SIGNING_KEY2 =
@@ -75,6 +77,7 @@ public class EncryptionKeyDaoTest {
                     .setKeyCommitmentId(13)
                     .setBody("CVZBTFVF")
                     .setExpiration(100003L)
+                    .setLastFetchTime(100003L)
                     .build();
 
     private static final EncryptionKey ENCRYPTION_KEY2 =
@@ -88,6 +91,7 @@ public class EncryptionKeyDaoTest {
                     .setKeyCommitmentId(14)
                     .setBody("DVZBTFVF")
                     .setExpiration(100004L)
+                    .setLastFetchTime(100004L)
                     .build();
 
     /** Unit test set up. */
@@ -127,6 +131,7 @@ public class EncryptionKeyDaoTest {
             assertEquals(encryptionKey.getKeyCommitmentId(), ENCRYPTION_KEY1.getKeyCommitmentId());
             assertEquals(encryptionKey.getBody(), ENCRYPTION_KEY1.getBody());
             assertEquals(encryptionKey.getExpiration(), ENCRYPTION_KEY1.getExpiration());
+            assertEquals(encryptionKey.getLastFetchTime(), ENCRYPTION_KEY1.getLastFetchTime());
         }
     }
 
@@ -172,6 +177,7 @@ public class EncryptionKeyDaoTest {
         assertEquals(11, encryptionKey.getKeyCommitmentId());
         assertEquals("AVZBTFVF", encryptionKey.getBody());
         assertEquals(100001L, encryptionKey.getExpiration());
+        assertEquals(100001L, encryptionKey.getLastFetchTime());
 
         List<EncryptionKey> signingKeyList =
                 mEncryptionKeyDao.getEncryptionKeyFromEnrollmentId(
@@ -193,6 +199,7 @@ public class EncryptionKeyDaoTest {
         assertEquals(12, encryptionKey.getKeyCommitmentId());
         assertEquals("BVZBTFVF", encryptionKey.getBody());
         assertEquals(100002L, encryptionKey.getExpiration());
+        assertEquals(100002L, encryptionKey.getLastFetchTime());
     }
 
     /** Unit test for EncryptionKeyDao getEncryptionKeyFromReportingOrigin() method. */
@@ -219,6 +226,7 @@ public class EncryptionKeyDaoTest {
         assertEquals(14, encryptionKey.getKeyCommitmentId());
         assertEquals("DVZBTFVF", encryptionKey.getBody());
         assertEquals(100004L, encryptionKey.getExpiration());
+        assertEquals(100004L, encryptionKey.getLastFetchTime());
     }
 
     /** Unit test cleanup. */
@@ -234,12 +242,14 @@ public class EncryptionKeyDaoTest {
         assertEquals(12, signingKey1.getKeyCommitmentId());
         assertEquals("BVZBTFVF", signingKey1.getBody());
         assertEquals(100002L, signingKey1.getExpiration());
+        assertEquals(100002L, signingKey1.getLastFetchTime());
 
         EncryptionKey signingKey2 = signingKeyList.get(1);
         assertEquals(EncryptionKey.ProtocolType.ECDSA, signingKey2.getProtocolType());
         assertEquals(13, signingKey2.getKeyCommitmentId());
         assertEquals("CVZBTFVF", signingKey2.getBody());
         assertEquals(100003L, signingKey2.getExpiration());
+        assertEquals(100003L, signingKey2.getLastFetchTime());
     }
 
     private void clearAllTables() {

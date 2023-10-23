@@ -38,6 +38,7 @@ import com.android.adservices.data.enrollment.EnrollmentTables;
 import com.android.adservices.data.enrollment.SqliteObjectMapper;
 import com.android.adservices.data.shared.migration.ISharedDbMigrator;
 import com.android.adservices.data.shared.migration.SharedDbMigratorV2;
+import com.android.adservices.data.shared.migration.SharedDbMigratorV3;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.common.compat.FileCompatUtils;
@@ -64,7 +65,7 @@ public class SharedDbHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME =
             FileCompatUtils.getAdservicesFilename("adservices_shared.db");
-    public static final int CURRENT_DATABASE_VERSION = 2;
+    public static final int CURRENT_DATABASE_VERSION = 3;
     private static SharedDbHelper sSingleton = null;
     private final File mDbFile;
     private final int mDbVersion;
@@ -103,8 +104,8 @@ public class SharedDbHelper extends SQLiteOpenHelper {
         // Only need to check enrollment table, as that one was the only table living previously in
         // adservices.db
         if (hasAllTables(oldDb, EnrollmentTables.ENROLLMENT_TABLES)) {
-            // Create encryption key table V1 schema so migration works as expected
-            createEncryptionKeyV1Schema(db);
+            // Create encryption key table V2 schema so migration works as expected
+            createEncryptionKeyV2Schema(db);
             // Copy enrollment data from old db to new db.
             migrateEnrollmentTables(db, oldDb);
             // Update new db from version 1 to latest
@@ -138,7 +139,7 @@ public class SharedDbHelper extends SQLiteOpenHelper {
     }
 
     private List<ISharedDbMigrator> getOrderedDbMigrators() {
-        return ImmutableList.of(new SharedDbMigratorV2());
+        return ImmutableList.of(new SharedDbMigratorV2(), new SharedDbMigratorV3());
     }
 
     /** Check whether db has all tables. */
@@ -192,15 +193,15 @@ public class SharedDbHelper extends SQLiteOpenHelper {
 
     private void createSchema(SQLiteDatabase db) {
         EnrollmentTables.CREATE_STATEMENTS_V1.forEach(db::execSQL);
-        EncryptionKeyTables.CREATE_STATEMENTS_V1.forEach(db::execSQL);
+        EncryptionKeyTables.CREATE_STATEMENTS_V3.forEach(db::execSQL);
     }
 
     private void createEnrollmentV1Schema(SQLiteDatabase db) {
         EnrollmentTables.CREATE_STATEMENTS_V1.forEach(db::execSQL);
     }
 
-    private void createEncryptionKeyV1Schema(SQLiteDatabase db) {
-        EncryptionKeyTables.CREATE_STATEMENTS_V1.forEach(db::execSQL);
+    private void createEncryptionKeyV2Schema(SQLiteDatabase db) {
+        EncryptionKeyTables.CREATE_STATEMENTS_V2.forEach(db::execSQL);
     }
 
     private void migrateOldDataToNewDatabase(
