@@ -82,6 +82,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
@@ -227,7 +228,14 @@ public class AuctionServerE2ETest {
     private ScheduledThreadPoolExecutor mScheduledExecutor;
     private AdServicesHttpsClient mAdServicesHttpsClientSpy;
     private AdServicesLogger mAdServicesLoggerMock;
-    @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
+
+    @Rule(order = 0)
+    public final AdServicesDeviceSupportedRule deviceSupportRule =
+            new AdServicesDeviceSupportedRule();
+
+    @Rule(order = 1)
+    public final MockWebServerRule mockWebServerRule = MockWebServerRuleFactory.createForHttps();
+
     // This object access some system APIs
     @Mock public DevContextFilter mDevContextFilterMock;
     @Mock public AppImportanceFilter mAppImportanceFilterMock;
@@ -695,7 +703,7 @@ public class AuctionServerE2ETest {
                         return new MockResponse().setResponseCode(404);
                     }
                 };
-        mMockWebServerRule.startMockWebServer(dispatcher);
+        mockWebServerRule.startMockWebServer(dispatcher);
         final String selectionLogicPath = SELECTION_WATERFALL_LOGIC_JS_PATH;
 
         when(mObliviousHttpEncryptorMock.encryptBytes(any(byte[].class), anyLong(), anyLong()))
@@ -758,7 +766,7 @@ public class AuctionServerE2ETest {
                                         .anAdSelectionFromOutcomesConfig(
                                                 Collections.singletonList(adSelectionId),
                                                 bidFloorSignalsBelowBid,
-                                                mMockWebServerRule.uriForPath(selectionLogicPath)))
+                                                mockWebServerRule.uriForPath(selectionLogicPath)))
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
         AdSelectionFromOutcomesTestCallback waterfallReturnsAdSelectionIdCallback =
@@ -780,7 +788,7 @@ public class AuctionServerE2ETest {
                                         .anAdSelectionFromOutcomesConfig(
                                                 Collections.singletonList(adSelectionId),
                                                 bidFloorSignalsAboveBid,
-                                                mMockWebServerRule.uriForPath(selectionLogicPath)))
+                                                mockWebServerRule.uriForPath(selectionLogicPath)))
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
         AdSelectionFromOutcomesTestCallback waterfallReturnsNullCallback =
