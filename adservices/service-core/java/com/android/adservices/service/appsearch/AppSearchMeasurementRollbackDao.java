@@ -166,7 +166,8 @@ class AppSearchMeasurementRollbackDao extends AppSearchDao {
     static AppSearchMeasurementRollbackDao readDocument(
             @NonNull ListenableFuture<AppSearchSession> searchSession,
             @NonNull Executor executor,
-            @NonNull String userId) {
+            @NonNull String userId,
+            @NonNull String adServicesPackageName) {
         Objects.requireNonNull(searchSession);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(userId);
@@ -177,7 +178,12 @@ class AppSearchMeasurementRollbackDao extends AppSearchDao {
 
         String query = getQuery(userId);
         return AppSearchDao.readAppSearchSessionData(
-                AppSearchMeasurementRollbackDao.class, searchSession, executor, NAMESPACE, query);
+                AppSearchMeasurementRollbackDao.class,
+                searchSession,
+                executor,
+                NAMESPACE,
+                query,
+                adServicesPackageName);
     }
 
     // Get the search query for AppSearch. Format specified at http://shortn/_RwVKmB74f3.

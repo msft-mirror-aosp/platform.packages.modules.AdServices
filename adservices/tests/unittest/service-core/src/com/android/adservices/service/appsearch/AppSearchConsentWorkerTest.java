@@ -114,6 +114,7 @@ public class AppSearchConsentWorkerTest {
         ExtendedMockito.doReturn(mMockFlags).when(() -> FlagsFactory.getFlags());
         when(mMockFlags.getAdservicesApkShaCertificate())
                 .thenReturn(Flags.ADSERVICES_APK_SHA_CERTIFICATE);
+       when(mMockFlags.getAppsearchWriterAllowListOverride()).thenReturn("");
     }
 
     @After
@@ -140,7 +141,8 @@ public class AppSearchConsentWorkerTest {
                                             /* globalSearchSession= */ any(ListenableFuture.class),
                                             /* executor= */ any(),
                                             /* userId= */ any(),
-                                            eq(API_TYPE)));
+                                            eq(API_TYPE),
+                                            any()));
             boolean result = AppSearchConsentWorker.getInstance(mContext).getConsent(API_TYPE);
             assertThat(result).isFalse();
 
@@ -152,7 +154,8 @@ public class AppSearchConsentWorkerTest {
                                             /* globalSearchSession= */ any(ListenableFuture.class),
                                             /* executor= */ any(),
                                             /* userId= */ any(),
-                                            eq(API_TYPE)));
+                                            eq(API_TYPE),
+                                            any()));
             boolean result2 = AppSearchConsentWorker.getInstance(mContext).getConsent(API_TYPE);
             assertThat(result2).isTrue();
         } finally {
@@ -300,7 +303,10 @@ public class AppSearchConsentWorkerTest {
                             .startMocking();
             // Null dao is returned.
             ExtendedMockito.doReturn(null)
-                    .when(() -> AppSearchAppConsentDao.readConsentData(any(), any(), any(), any()));
+                    .when(
+                            () ->
+                                    AppSearchAppConsentDao.readConsentData(
+                                            any(), any(), any(), any(), any()));
             AppSearchConsentWorker appSearchConsentWorker =
                     AppSearchConsentWorker.getInstance(mContext);
             assertThat(appSearchConsentWorker.getAppsWithConsent(TEST)).isNotNull();
@@ -309,7 +315,10 @@ public class AppSearchConsentWorkerTest {
             // Dao is returned, but list is null.
             AppSearchAppConsentDao mockDao = Mockito.mock(AppSearchAppConsentDao.class);
             ExtendedMockito.doReturn(mockDao)
-                    .when(() -> AppSearchAppConsentDao.readConsentData(any(), any(), any(), any()));
+                    .when(
+                            () ->
+                                    AppSearchAppConsentDao.readConsentData(
+                                            any(), any(), any(), any(), any()));
             assertThat(appSearchConsentWorker.getAppsWithConsent(TEST)).isNotNull();
             assertThat(appSearchConsentWorker.getAppsWithConsent(TEST)).isEmpty();
         } finally {
@@ -331,7 +340,10 @@ public class AppSearchConsentWorkerTest {
                             .startMocking();
             // Null dao is returned.
             ExtendedMockito.doReturn(null)
-                    .when(() -> AppSearchAppConsentDao.readConsentData(any(), any(), any(), any()));
+                    .when(
+                            () ->
+                                    AppSearchAppConsentDao.readConsentData(
+                                            any(), any(), any(), any(), any()));
             AppSearchConsentWorker appSearchConsentWorker =
                     AppSearchConsentWorker.getInstance(mContext);
             assertThat(appSearchConsentWorker.getAppsWithConsent(TEST)).isNotNull();
@@ -342,7 +354,10 @@ public class AppSearchConsentWorkerTest {
             List<String> apps = ImmutableList.of(TEST);
             when(mockDao.getApps()).thenReturn(apps);
             ExtendedMockito.doReturn(mockDao)
-                    .when(() -> AppSearchAppConsentDao.readConsentData(any(), any(), any(), any()));
+                    .when(
+                            () ->
+                                    AppSearchAppConsentDao.readConsentData(
+                                            any(), any(), any(), any(), any()));
             assertThat(appSearchConsentWorker.getAppsWithConsent(TEST)).isNotNull();
             assertThat(appSearchConsentWorker.getAppsWithConsent(TEST)).isEqualTo(apps);
         } finally {
@@ -418,7 +433,10 @@ public class AppSearchConsentWorkerTest {
                             .initMocks(this)
                             .startMocking();
             ExtendedMockito.doReturn(null)
-                    .when(() -> AppSearchAppConsentDao.readConsentData(any(), any(), any(), any()));
+                    .when(
+                            () ->
+                                    AppSearchAppConsentDao.readConsentData(
+                                            any(), any(), any(), any(), any()));
             AppSearchConsentWorker appSearchConsentWorker =
                     AppSearchConsentWorker.getInstance(mContext);
             // No exceptions are thrown.
@@ -448,7 +466,7 @@ public class AppSearchConsentWorkerTest {
                     .when(
                             () ->
                                     AppSearchAppConsentDao.readConsentData(
-                                            any(), any(), any(), eq(consentType)));
+                                            any(), any(), any(), eq(consentType), any()));
             when(dao.getApps()).thenReturn(List.of());
             FluentFuture future =
                     FluentFuture.from(
@@ -481,7 +499,7 @@ public class AppSearchConsentWorkerTest {
                     .when(
                             () ->
                                     AppSearchAppConsentDao.readConsentData(
-                                            any(), any(), any(), eq(consentType)));
+                                            any(), any(), any(), eq(consentType), any()));
             when(dao.getApps()).thenReturn(List.of());
             AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
             FluentFuture future = FluentFuture.from(Futures.immediateFuture(result));
@@ -512,7 +530,10 @@ public class AppSearchConsentWorkerTest {
                             .initMocks(this)
                             .startMocking();
             ExtendedMockito.doReturn(null)
-                    .when(() -> AppSearchAppConsentDao.readConsentData(any(), any(), any(), any()));
+                    .when(
+                            () ->
+                                    AppSearchAppConsentDao.readConsentData(
+                                            any(), any(), any(), any(), any()));
             AppSearchConsentWorker appSearchConsentWorker =
                     AppSearchConsentWorker.getInstance(mContext);
             // No exceptions are thrown.
@@ -542,7 +563,7 @@ public class AppSearchConsentWorkerTest {
                     .when(
                             () ->
                                     AppSearchAppConsentDao.readConsentData(
-                                            any(), any(), any(), eq(consentType)));
+                                            any(), any(), any(), eq(consentType), any()));
             when(dao.getApps()).thenReturn(List.of(TEST));
             FluentFuture future =
                     FluentFuture.from(
@@ -579,7 +600,7 @@ public class AppSearchConsentWorkerTest {
                     .when(
                             () ->
                                     AppSearchAppConsentDao.readConsentData(
-                                            any(), any(), any(), eq(consentType)));
+                                            any(), any(), any(), eq(consentType), any()));
 
             when(dao.getApps()).thenReturn(List.of(TEST));
             AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
@@ -622,7 +643,7 @@ public class AppSearchConsentWorkerTest {
                     .when(
                             () ->
                                     AppSearchNotificationDao.wasNotificationDisplayed(
-                                            any(), any(), any()));
+                                            any(), any(), any(), any()));
 
             AppSearchConsentWorker appSearchConsentWorker =
                     AppSearchConsentWorker.getInstance(mContext);
@@ -657,7 +678,7 @@ public class AppSearchConsentWorkerTest {
                     .when(
                             () ->
                                     AppSearchNotificationDao.wasGaUxNotificationDisplayed(
-                                            any(), any(), any()));
+                                            any(), any(), any(), any()));
 
             AppSearchConsentWorker appSearchConsentWorker =
                     AppSearchConsentWorker.getInstance(mContext);
@@ -737,11 +758,12 @@ public class AppSearchConsentWorkerTest {
             when(AppSearchNotificationDao.getRowId(eq("" + UID))).thenReturn("" + UID);
             // Verify that no exception is thrown.
             if (isBetaUx) {
-                when(AppSearchNotificationDao.wasGaUxNotificationDisplayed(any(), any(), any()))
+                when(AppSearchNotificationDao.wasGaUxNotificationDisplayed(
+                                any(), any(), any(), any()))
                         .thenReturn(false);
                 AppSearchConsentWorker.getInstance(mContext).recordNotificationDisplayed(true);
             } else {
-                when(AppSearchNotificationDao.wasNotificationDisplayed(any(), any(), any()))
+                when(AppSearchNotificationDao.wasNotificationDisplayed(any(), any(), any(), any()))
                         .thenReturn(false);
                 AppSearchConsentWorker.getInstance(mContext).recordGaUxNotificationDisplayed(true);
             }
@@ -767,7 +789,7 @@ public class AppSearchConsentWorkerTest {
                     .when(
                             () ->
                                     AppSearchInteractionsDao.getPrivacySandboxFeatureType(
-                                            any(), any(), any()));
+                                            any(), any(), any(), any()));
 
             AppSearchConsentWorker appSearchConsentWorker =
                     AppSearchConsentWorker.getInstance(mContext);
@@ -843,7 +865,7 @@ public class AppSearchConsentWorkerTest {
                     .when(
                             () ->
                                     AppSearchInteractionsDao.getManualInteractions(
-                                            any(), any(), any()));
+                                            any(), any(), any(), any()));
 
             AppSearchConsentWorker appSearchConsentWorker =
                     AppSearchConsentWorker.getInstance(mContext);
@@ -916,7 +938,10 @@ public class AppSearchConsentWorkerTest {
                             .initMocks(this)
                             .startMocking();
             ExtendedMockito.doReturn(mTopics)
-                    .when(() -> AppSearchTopicsConsentDao.getBlockedTopics(any(), any(), any()));
+                    .when(
+                            () ->
+                                    AppSearchTopicsConsentDao.getBlockedTopics(
+                                            any(), any(), any(), any()));
 
             AppSearchConsentWorker appSearchConsentWorker =
                     AppSearchConsentWorker.getInstance(mContext);
@@ -966,7 +991,10 @@ public class AppSearchConsentWorkerTest {
             String query = "" + UID;
             ExtendedMockito.doReturn(query).when(() -> AppSearchTopicsConsentDao.getQuery(any()));
             ExtendedMockito.doReturn(null)
-                    .when(() -> AppSearchTopicsConsentDao.readConsentData(any(), any(), any()));
+                    .when(
+                            () ->
+                                    AppSearchTopicsConsentDao.readConsentData(
+                                            any(), any(), any(), any()));
 
             AppSearchConsentWorker appSearchConsentWorker =
                     AppSearchConsentWorker.getInstance(mContext);
@@ -994,7 +1022,10 @@ public class AppSearchConsentWorkerTest {
             ExtendedMockito.doReturn(query).when(() -> AppSearchTopicsConsentDao.getQuery(any()));
             AppSearchTopicsConsentDao dao = Mockito.mock(AppSearchTopicsConsentDao.class);
             ExtendedMockito.doReturn(dao)
-                    .when(() -> AppSearchTopicsConsentDao.readConsentData(any(), any(), any()));
+                    .when(
+                            () ->
+                                    AppSearchTopicsConsentDao.readConsentData(
+                                            any(), any(), any(), any()));
             AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
             when(dao.writeData(any(), any(), any()))
                     .thenReturn(FluentFuture.from(Futures.immediateFuture(result)));
@@ -1024,7 +1055,10 @@ public class AppSearchConsentWorkerTest {
                             .startMocking();
             AppSearchTopicsConsentDao dao = Mockito.mock(AppSearchTopicsConsentDao.class);
             ExtendedMockito.doReturn(dao)
-                    .when(() -> AppSearchTopicsConsentDao.readConsentData(any(), any(), any()));
+                    .when(
+                            () ->
+                                    AppSearchTopicsConsentDao.readConsentData(
+                                            any(), any(), any(), any()));
             AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance(mContext);
             when(dao.writeData(any(), any(), any()))
                     .thenReturn(
@@ -1058,7 +1092,10 @@ public class AppSearchConsentWorkerTest {
             String query = "" + UID;
             ExtendedMockito.doReturn(query).when(() -> AppSearchTopicsConsentDao.getQuery(any()));
             ExtendedMockito.doReturn(null)
-                    .when(() -> AppSearchTopicsConsentDao.readConsentData(any(), any(), any()));
+                    .when(
+                            () ->
+                                    AppSearchTopicsConsentDao.readConsentData(
+                                            any(), any(), any(), any()));
 
             AppSearchConsentWorker appSearchConsentWorker =
                     AppSearchConsentWorker.getInstance(mContext);
@@ -1086,7 +1123,10 @@ public class AppSearchConsentWorkerTest {
             ExtendedMockito.doReturn(query).when(() -> AppSearchTopicsConsentDao.getQuery(any()));
             AppSearchTopicsConsentDao dao = Mockito.mock(AppSearchTopicsConsentDao.class);
             ExtendedMockito.doReturn(dao)
-                    .when(() -> AppSearchTopicsConsentDao.readConsentData(any(), any(), any()));
+                    .when(
+                            () ->
+                                    AppSearchTopicsConsentDao.readConsentData(
+                                            any(), any(), any(), any()));
             AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
             when(dao.writeData(any(), any(), any()))
                     .thenReturn(FluentFuture.from(Futures.immediateFuture(result)));
@@ -1207,7 +1247,7 @@ public class AppSearchConsentWorkerTest {
                             .initMocks(this)
                             .startMocking();
             ExtendedMockito.doReturn(isAdIdEnabled)
-                    .when(() -> AppSearchUxStatesDao.readIsAdIdEnabled(any(), any(), any()));
+                    .when(() -> AppSearchUxStatesDao.readIsAdIdEnabled(any(), any(), any(), any()));
             AppSearchConsentWorker appSearchConsentWorker =
                     AppSearchConsentWorker.getInstance(mContext);
             assertThat(appSearchConsentWorker.isAdIdEnabled()).isEqualTo(isAdIdEnabled);
@@ -1236,7 +1276,7 @@ public class AppSearchConsentWorkerTest {
             ExtendedMockito.doReturn(query).when(() -> AppSearchUxStatesDao.getQuery(any()));
             AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
             ExtendedMockito.doReturn(dao)
-                    .when(() -> AppSearchUxStatesDao.readData(any(), any(), any()));
+                    .when(() -> AppSearchUxStatesDao.readData(any(), any(), any(), any()));
             AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
             when(dao.writeData(any(), any(), any()))
                     .thenReturn(FluentFuture.from(Futures.immediateFuture(result)));
@@ -1305,7 +1345,7 @@ public class AppSearchConsentWorkerTest {
                             .initMocks(this)
                             .startMocking();
             ExtendedMockito.doReturn(isU18Account)
-                    .when(() -> AppSearchUxStatesDao.readIsU18Account(any(), any(), any()));
+                    .when(() -> AppSearchUxStatesDao.readIsU18Account(any(), any(), any(), any()));
             AppSearchConsentWorker appSearchConsentWorker =
                     AppSearchConsentWorker.getInstance(mContext);
             assertThat(appSearchConsentWorker.isU18Account()).isEqualTo(isU18Account);
@@ -1334,7 +1374,7 @@ public class AppSearchConsentWorkerTest {
             ExtendedMockito.doReturn(query).when(() -> AppSearchUxStatesDao.getQuery(any()));
             AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
             ExtendedMockito.doReturn(dao)
-                    .when(() -> AppSearchUxStatesDao.readData(any(), any(), any()));
+                    .when(() -> AppSearchUxStatesDao.readData(any(), any(), any(), any()));
             AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
             when(dao.writeData(any(), any(), any()))
                     .thenReturn(FluentFuture.from(Futures.immediateFuture(result)));
@@ -1402,7 +1442,10 @@ public class AppSearchConsentWorkerTest {
                             .initMocks(this)
                             .startMocking();
             ExtendedMockito.doReturn(isEntryPointEnabled)
-                    .when(() -> AppSearchUxStatesDao.readIsEntryPointEnabled(any(), any(), any()));
+                    .when(
+                            () ->
+                                    AppSearchUxStatesDao.readIsEntryPointEnabled(
+                                            any(), any(), any(), any()));
             AppSearchConsentWorker appSearchConsentWorker =
                     AppSearchConsentWorker.getInstance(mContext);
             assertThat(appSearchConsentWorker.isEntryPointEnabled()).isEqualTo(isEntryPointEnabled);
@@ -1431,7 +1474,7 @@ public class AppSearchConsentWorkerTest {
             ExtendedMockito.doReturn(query).when(() -> AppSearchUxStatesDao.getQuery(any()));
             AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
             ExtendedMockito.doReturn(dao)
-                    .when(() -> AppSearchUxStatesDao.readData(any(), any(), any()));
+                    .when(() -> AppSearchUxStatesDao.readData(any(), any(), any(), any()));
             AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
             when(dao.writeData(any(), any(), any()))
                     .thenReturn(FluentFuture.from(Futures.immediateFuture(result)));
@@ -1501,7 +1544,10 @@ public class AppSearchConsentWorkerTest {
                             .initMocks(this)
                             .startMocking();
             ExtendedMockito.doReturn(isAdultAccount)
-                    .when(() -> AppSearchUxStatesDao.readIsAdultAccount(any(), any(), any()));
+                    .when(
+                            () ->
+                                    AppSearchUxStatesDao.readIsAdultAccount(
+                                            any(), any(), any(), any()));
             AppSearchConsentWorker appSearchConsentWorker =
                     AppSearchConsentWorker.getInstance(mContext);
             assertThat(appSearchConsentWorker.isAdultAccount()).isEqualTo(isAdultAccount);
@@ -1562,7 +1608,7 @@ public class AppSearchConsentWorkerTest {
             ExtendedMockito.doReturn(query).when(() -> AppSearchUxStatesDao.getQuery(any()));
             AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
             ExtendedMockito.doReturn(dao)
-                    .when(() -> AppSearchUxStatesDao.readData(any(), any(), any()));
+                    .when(() -> AppSearchUxStatesDao.readData(any(), any(), any(), any()));
             AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
             when(dao.writeData(any(), any(), any()))
                     .thenReturn(FluentFuture.from(Futures.immediateFuture(result)));
@@ -1602,7 +1648,7 @@ public class AppSearchConsentWorkerTest {
                     .when(
                             () ->
                                     AppSearchUxStatesDao.readIsU18NotificationDisplayed(
-                                            any(), any(), any()));
+                                            any(), any(), any(), any()));
             AppSearchConsentWorker appSearchConsentWorker =
                     AppSearchConsentWorker.getInstance(mContext);
             assertThat(appSearchConsentWorker.wasU18NotificationDisplayed())
@@ -1665,7 +1711,7 @@ public class AppSearchConsentWorkerTest {
             ExtendedMockito.doReturn(query).when(() -> AppSearchUxStatesDao.getQuery(any()));
             AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
             ExtendedMockito.doReturn(dao)
-                    .when(() -> AppSearchUxStatesDao.readData(any(), any(), any()));
+                    .when(() -> AppSearchUxStatesDao.readData(any(), any(), any(), any()));
             AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
             when(dao.writeData(any(), any(), any()))
                     .thenReturn(FluentFuture.from(Futures.immediateFuture(result)));
@@ -1695,7 +1741,7 @@ public class AppSearchConsentWorkerTest {
 
             for (PrivacySandboxUxCollection ux : PrivacySandboxUxCollection.values()) {
                 ExtendedMockito.doReturn(ux)
-                        .when(() -> AppSearchUxStatesDao.readUx(any(), any(), any()));
+                        .when(() -> AppSearchUxStatesDao.readUx(any(), any(), any(), any()));
                 AppSearchConsentWorker appSearchConsentWorker =
                         AppSearchConsentWorker.getInstance(mContext);
                 assertThat(appSearchConsentWorker.getUx()).isEqualTo(ux);
@@ -1751,7 +1797,7 @@ public class AppSearchConsentWorkerTest {
                 ExtendedMockito.doReturn(query).when(() -> AppSearchUxStatesDao.getQuery(any()));
                 AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
                 ExtendedMockito.doReturn(dao)
-                        .when(() -> AppSearchUxStatesDao.readData(any(), any(), any()));
+                        .when(() -> AppSearchUxStatesDao.readData(any(), any(), any(), any()));
                 AppSearchBatchResult<String, Void> result =
                         Mockito.mock(AppSearchBatchResult.class);
                 when(dao.writeData(any(), any(), any()))
@@ -1788,7 +1834,7 @@ public class AppSearchConsentWorkerTest {
                             .when(
                                     () ->
                                             AppSearchUxStatesDao.readEnrollmentChannel(
-                                                    any(), any(), any(), any()));
+                                                    any(), any(), any(), any(), any()));
                     AppSearchConsentWorker appSearchConsentWorker =
                             AppSearchConsentWorker.getInstance(mContext);
                     assertThat(appSearchConsentWorker.getEnrollmentChannel(ux)).isEqualTo(channel);
@@ -1854,7 +1900,7 @@ public class AppSearchConsentWorkerTest {
                             .when(() -> AppSearchUxStatesDao.getQuery(any()));
                     AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
                     ExtendedMockito.doReturn(dao)
-                            .when(() -> AppSearchUxStatesDao.readData(any(), any(), any()));
+                            .when(() -> AppSearchUxStatesDao.readData(any(), any(), any(), any()));
                     AppSearchBatchResult<String, Void> result =
                             Mockito.mock(AppSearchBatchResult.class);
                     when(dao.writeData(any(), any(), any()))
