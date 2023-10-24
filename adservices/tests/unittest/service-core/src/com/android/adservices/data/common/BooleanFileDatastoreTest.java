@@ -38,7 +38,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class BooleanFileDatastoreTest {
+// TODO(b/25131972): remove and/or only test specific characteristics of BooleanFileDatastore that
+// are not tested by super-class (like hard-coded version key) - for now it's testing the same,
+// redundant stuff, but that's "by design" (i.e., to make sure the refactoring into the superclass
+// didn't break the previous behavior)
+public final class BooleanFileDatastoreTest {
     private static final Context PPAPI_CONTEXT = ApplicationProvider.getApplicationContext();
     private static final String FILENAME = "BooleanFileDatastoreTest.xml";
     private static final int DATASTORE_VERSION = 1;
