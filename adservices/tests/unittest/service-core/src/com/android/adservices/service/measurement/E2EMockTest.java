@@ -405,7 +405,8 @@ public abstract class E2EMockTest extends E2ETest {
                                 - Flags.DEFAULT_MEASUREMENT_MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
                         reportTime,
                         true,
-                        mFlags);
+                        mFlags,
+                        ApplicationProvider.getApplicationContext());
 
         processActualDebugEventReports(
                 timestamp,
@@ -432,7 +433,7 @@ public abstract class E2EMockTest extends E2ETest {
     protected void processActualDebugReportApiJob() throws IOException, JSONException {
         Object[] reportCaptures =
                 DebugReportingJobHandlerWrapper.spyPerformScheduledPendingReports(
-                        mEnrollmentDao, mDatastoreManager);
+                        mEnrollmentDao, mDatastoreManager, sContext);
 
         processActualDebugReports(
                 (List<Uri>) reportCaptures[1], (List<JSONObject>) reportCaptures[2]);
@@ -473,7 +474,8 @@ public abstract class E2EMockTest extends E2ETest {
                                 - Flags.DEFAULT_MEASUREMENT_MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
                         reportingJob.mTimestamp,
                         false,
-                        mFlags);
+                        mFlags,
+                        ApplicationProvider.getApplicationContext());
 
         processActualEventReports(
                 (List<EventReport>) eventCaptures[0],
