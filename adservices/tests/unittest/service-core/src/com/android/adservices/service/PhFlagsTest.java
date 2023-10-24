@@ -90,6 +90,7 @@ import static com.android.adservices.service.Flags.DOWNLOADER_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.ENABLE_ADEXT_SERVICE_CONSENT_DATA;
 import static com.android.adservices.service.Flags.ENABLE_APPSEARCH_CONSENT_DATA;
 import static com.android.adservices.service.Flags.ENABLE_DATABASE_SCHEMA_VERSION_8;
+import static com.android.adservices.service.Flags.ENABLE_DATABASE_SCHEMA_VERSION_9;
 import static com.android.adservices.service.Flags.ENABLE_ENROLLMENT_TEST_SEED;
 import static com.android.adservices.service.Flags.ENABLE_LOGGED_TOPIC;
 import static com.android.adservices.service.Flags.ENCRYPTION_KEY_JOB_PERIOD_MS;
@@ -473,6 +474,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_APPSEARCH
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_BACK_COMPAT;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_COMPUTE_VERSION_FROM_MAPPINGS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_DATABASE_SCHEMA_VERSION_8;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_DATABASE_SCHEMA_VERSION_9;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_LOGGED_TOPIC;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS;
@@ -9312,6 +9314,21 @@ public class PhFlagsTest {
                 /* makeDefault */ false);
 
         assertThat(mPhFlags.getEnableDatabaseSchemaVersion8()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetEnableDatabaseSchemaVersion9() {
+        assertThat(mPhFlags.getEnableDatabaseSchemaVersion9())
+                .isEqualTo(ENABLE_DATABASE_SCHEMA_VERSION_9);
+
+        boolean phOverridingValue = !ENABLE_DATABASE_SCHEMA_VERSION_9;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENABLE_DATABASE_SCHEMA_VERSION_9,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getEnableDatabaseSchemaVersion9()).isEqualTo(phOverridingValue);
     }
 
     @Test

@@ -4142,6 +4142,16 @@ public interface Flags {
         return ENABLE_DATABASE_SCHEMA_VERSION_8;
     }
 
+    /** Whether to enable database schema version 9. */
+    boolean ENABLE_DATABASE_SCHEMA_VERSION_9 = false;
+
+    /**
+     * @return if to enable database schema version 9.
+     */
+    default boolean getEnableDatabaseSchemaVersion9() {
+        return ENABLE_DATABASE_SCHEMA_VERSION_9;
+    }
+
     /** Flag to control which allow list in getMeasurementApiStatus. */
     boolean MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK = false;
 

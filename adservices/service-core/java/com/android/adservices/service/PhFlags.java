@@ -3434,6 +3434,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getEnableDatabaseSchemaVersion9() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_ENABLE_DATABASE_SCHEMA_VERSION_9,
+                /* defaultValue */ ENABLE_DATABASE_SCHEMA_VERSION_9);
+    }
+
+    @Override
     public boolean getMsmtEnableApiStatusAllowListCheck() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
