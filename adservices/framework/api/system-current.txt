@@ -94,6 +94,7 @@ package android.adservices.common {
     method public int describeContents();
     method public boolean isApiEnabled();
     method public boolean isSuccess();
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
     field @NonNull public static final android.os.Parcelable.Creator<android.adservices.common.EnableAdServicesResponse> CREATOR;
   }
 
@@ -101,6 +102,7 @@ package android.adservices.common {
     method @FlaggedApi(android.adservices.FlagsConstants.KEY_AD_ID_CACHE_ENABLED) public int describeContents();
     method @FlaggedApi(android.adservices.FlagsConstants.KEY_AD_ID_CACHE_ENABLED) @NonNull public String getAdId();
     method @FlaggedApi(android.adservices.FlagsConstants.KEY_AD_ID_CACHE_ENABLED) public boolean isLimitAdTrackingEnabled();
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
     field @FlaggedApi(android.adservices.FlagsConstants.KEY_AD_ID_CACHE_ENABLED) @NonNull public static final android.os.Parcelable.Creator<android.adservices.common.UpdateAdIdRequest> CREATOR;
   }
 
