@@ -33,7 +33,11 @@ import androidx.appsearch.app.SearchSpec;
 import androidx.appsearch.app.SetSchemaRequest;
 import androidx.appsearch.exceptions.AppSearchException;
 
+import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.consent.ConsentConstants;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -41,6 +45,7 @@ import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
@@ -92,6 +97,24 @@ class AppSearchDao {
                 executor);
     }
 
+    @VisibleForTesting
+    static List<String> getAllowedPackages(String adServicesPackageName) {
+        Flags flags = FlagsFactory.getFlags();
+        String overrideAllowList = flags.getAppsearchWriterAllowListOverride();
+
+        if (!overrideAllowList.isEmpty()) {
+            return AllowLists.splitAllowList(overrideAllowList);
+        }
+
+        /* We want the extservices package name, not the adservices package name, so replace the
+         * suffix from adservices with the extservices suffix.
+         */
+        return Collections.singletonList(
+                adServicesPackageName.replace(
+                        AdServicesCommon.ADSERVICES_APK_PACKAGE_NAME_SUFFIX,
+                        AdServicesCommon.ADEXTSERVICES_PACKAGE_NAME_SUFFIX));
+    }
+
     /**
      * Read the consent data from the provided GlobalSearchSession. This requires a query to be
      * specified. If the query is not specified, we do not perform a search since multiple rows will
@@ -105,14 +128,16 @@ class AppSearchDao {
             @NonNull ListenableFuture<GlobalSearchSession> searchSession,
             @NonNull Executor executor,
             @NonNull String namespace,
-            @NonNull String query) {
+            @NonNull String query,
+            @NonNull String adServicesPackageName) {
         return readData(
                 cls,
                 searchSession,
                 executor,
                 namespace,
                 query,
-                (session, spec) -> session.search(query, spec));
+                (session, spec) -> session.search(query, spec),
+                adServicesPackageName);
     }
 
     /**
@@ -128,14 +153,16 @@ class AppSearchDao {
             @NonNull ListenableFuture<AppSearchSession> searchSession,
             @NonNull Executor executor,
             @NonNull String namespace,
-            @NonNull String query) {
+            @NonNull String query,
+            @NonNull String adServicesPackageName) {
         return readData(
                 cls,
                 searchSession,
                 executor,
                 namespace,
                 query,
-                (session, spec) -> session.search(query, spec));
+                (session, spec) -> session.search(query, spec),
+                adServicesPackageName);
     }
 
     @Nullable
@@ -145,7 +172,8 @@ class AppSearchDao {
             @NonNull Executor executor,
             @NonNull String namespace,
             @NonNull String query,
-            @NonNull BiFunction<S, SearchSpec, SearchResults> sessionQuery) {
+            @NonNull BiFunction<S, SearchSpec, SearchResults> sessionQuery,
+            @NonNull String adServicesPackageName) {
         Objects.requireNonNull(cls);
         Objects.requireNonNull(searchSession);
         Objects.requireNonNull(executor);
@@ -158,7 +186,12 @@ class AppSearchDao {
         }
 
         try {
-            SearchSpec searchSpec = new SearchSpec.Builder().addFilterNamespaces(namespace).build();
+            List<String> allowedPackages = getAllowedPackages(adServicesPackageName);
+            SearchSpec searchSpec =
+                    new SearchSpec.Builder()
+                            .addFilterNamespaces(namespace)
+                            .addFilterPackageNames(allowedPackages)
+                            .build();
             ListenableFuture<SearchResults> searchFuture =
                     Futures.transform(
                             searchSession,
