@@ -26,6 +26,7 @@ android_test {
     manifest: "AndroidManifest.xml",
     test_config: "AndroidTest.xml",
     static_libs: [
+        "adservices-shared-storage",
         "androidx.test.runner",
         "androidx.test.core",
         "truth",

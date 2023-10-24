@@ -26,6 +26,7 @@ filegroup {
     ],
     path: "java",
     visibility: [
+        "//packages/modules/AdServices/shared/device-side/tests:__subpackages__",
         "//packages/modules/AdServices/adservices/tests:__subpackages__",
     ],
 }
@@ -49,6 +50,7 @@ filegroup {
     ],
     path: "java",
     visibility: [
+        "//packages/modules/AdServices/shared/device-side/tests:__subpackages__",
         "//packages/modules/AdServices/adservices/tests:__subpackages__",
     ],
 }
@@ -103,6 +105,7 @@ java_defaults {
         "services.core.unboosted", // For LocalManagerRegistry on ExtendedMockitoExpectations
     ],
     visibility: [
+        "//packages/modules/AdServices/shared/device-side/tests:__subpackages__",
         "//packages/modules/AdServices/adservices/tests:__subpackages__",
     ],
 }
