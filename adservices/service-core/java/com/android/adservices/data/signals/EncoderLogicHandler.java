@@ -223,6 +223,26 @@ public class EncoderLogicHandler {
         return mEncoderLogicMetadataDao.getAllBuyersWithRegisteredEncoders();
     }
 
+    /** Returns all registered encoding logic metadata. */
+    public List<DBEncoderLogicMetadata> getAllRegisteredEncoders() {
+        return mEncoderLogicMetadataDao.getAllRegisteredEncoders();
+    }
+
+    /** Returns the encoding logic for the given buyer. */
+    public String getEncoder(AdTechIdentifier buyer) {
+        return mEncoderPersistenceDao.getEncoder(buyer);
+    }
+
+    /** Returns the encoder metadata for the given buyer. */
+    public DBEncoderLogicMetadata getEncoderLogicMetadata(AdTechIdentifier adTechIdentifier) {
+        return mEncoderLogicMetadataDao.getMetadata(adTechIdentifier);
+    }
+
+    /** Update the failed count for a buyer */
+    public void updateEncoderFailedCount(AdTechIdentifier adTechIdentifier, int count) {
+        mEncoderLogicMetadataDao.updateEncoderFailedCount(adTechIdentifier, count);
+    }
+
     /**
      * @param expiry time before which the encoders are considered stale
      * @return the list of buyers that have stale encoders

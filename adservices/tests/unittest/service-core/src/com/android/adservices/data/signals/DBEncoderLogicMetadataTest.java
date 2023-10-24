@@ -34,11 +34,14 @@ public class DBEncoderLogicMetadataTest {
         AdTechIdentifier buyer = CommonFixture.VALID_BUYER_1;
         int version = 1;
         Instant time = CommonFixture.FIXED_NOW;
+        int failCount = 2;
 
-        DBEncoderLogicMetadata logicEntry = DBEncoderLogicMetadata.create(buyer, version, time);
+        DBEncoderLogicMetadata logicEntry =
+                DBEncoderLogicMetadata.create(buyer, version, time, failCount);
         assertEquals(buyer, logicEntry.getBuyer());
         assertEquals(version, (int) logicEntry.getVersion());
         assertEquals(time, logicEntry.getCreationTime());
+        assertEquals(failCount, logicEntry.getFailedEncodingCount());
     }
 
     @Test
@@ -46,16 +49,19 @@ public class DBEncoderLogicMetadataTest {
         AdTechIdentifier buyer = CommonFixture.VALID_BUYER_1;
         int version = 1;
         Instant time = CommonFixture.FIXED_NOW;
+        int failCount = 2;
 
         DBEncoderLogicMetadata logicEntry =
                 DBEncoderLogicMetadata.builder()
                         .setBuyer(buyer)
                         .setVersion(version)
                         .setCreationTime(time)
+                        .setFailedEncodingCount(failCount)
                         .build();
         assertEquals(buyer, logicEntry.getBuyer());
         assertEquals(version, (int) logicEntry.getVersion());
         assertEquals(time, logicEntry.getCreationTime());
+        assertEquals(failCount, logicEntry.getFailedEncodingCount());
     }
 
     @Test
@@ -72,18 +78,21 @@ public class DBEncoderLogicMetadataTest {
         AdTechIdentifier buyer = CommonFixture.VALID_BUYER_1;
         int version = 1;
         Instant time = CommonFixture.FIXED_NOW;
+        int failedCount = 2;
 
         DBEncoderLogicMetadata logicEntry1 =
                 DBEncoderLogicMetadata.builder()
                         .setBuyer(buyer)
                         .setVersion(version)
                         .setCreationTime(time)
+                        .setFailedEncodingCount(failedCount)
                         .build();
         DBEncoderLogicMetadata logicEntry2 =
                 DBEncoderLogicMetadata.builder()
                         .setBuyer(buyer)
                         .setVersion(version)
                         .setCreationTime(time)
+                        .setFailedEncodingCount(failedCount)
                         .build();
 
         assertEquals(logicEntry1, logicEntry2);
@@ -94,18 +103,21 @@ public class DBEncoderLogicMetadataTest {
         AdTechIdentifier buyer = CommonFixture.VALID_BUYER_1;
         int version = 1;
         Instant time = CommonFixture.FIXED_NOW;
+        int failedCount = 2;
 
         DBEncoderLogicMetadata logicEntry1 =
                 DBEncoderLogicMetadata.builder()
                         .setBuyer(buyer)
                         .setVersion(version)
                         .setCreationTime(time)
+                        .setFailedEncodingCount(failedCount)
                         .build();
         DBEncoderLogicMetadata logicEntry2 =
                 DBEncoderLogicMetadata.builder()
                         .setBuyer(buyer)
                         .setVersion(version + 1)
                         .setCreationTime(time)
+                        .setFailedEncodingCount(failedCount)
                         .build();
 
         assertNotEquals(logicEntry1, logicEntry2);
@@ -116,18 +128,21 @@ public class DBEncoderLogicMetadataTest {
         AdTechIdentifier buyer = CommonFixture.VALID_BUYER_1;
         int version = 1;
         Instant time = CommonFixture.FIXED_NOW;
+        int failedCount = 2;
 
         DBEncoderLogicMetadata logicEntry1 =
                 DBEncoderLogicMetadata.builder()
                         .setBuyer(buyer)
                         .setVersion(version)
                         .setCreationTime(time)
+                        .setFailedEncodingCount(failedCount)
                         .build();
         DBEncoderLogicMetadata logicEntry2 =
                 DBEncoderLogicMetadata.builder()
                         .setBuyer(buyer)
                         .setVersion(version)
                         .setCreationTime(time)
+                        .setFailedEncodingCount(failedCount)
                         .build();
 
         assertEquals(logicEntry1.hashCode(), logicEntry2.hashCode());
