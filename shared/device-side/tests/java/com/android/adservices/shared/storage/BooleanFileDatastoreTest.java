@@ -14,7 +14,12 @@
  * limitations under the License.
  */
 
-package com.android.server.adservices.common;
+package com.android.adservices.shared.storage;
+
+import static com.android.adservices.common.DumpHelper.assertDumpHasPrefix;
+import static com.android.adservices.common.DumpHelper.dump;
+
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -24,11 +29,15 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import android.content.Context;
+import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -42,6 +51,10 @@ public class BooleanFileDatastoreTest {
     private static final String TEST_VERSION_KEY = "version_key";
 
     private BooleanFileDatastore mDatastore;
+
+    @Rule
+    public final AdServicesExtendedMockitoRule extendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder().spyStatic(Build.class).build();
 
     @Before
     public void setup() throws IOException {
@@ -279,5 +292,42 @@ public class BooleanFileDatastoreTest {
         for (int i = 0; i < numEntries; i++) {
             assertEquals((i & 1) == 0, trueKeys.contains(TEST_KEY + i));
         }
+    }
+
+    @Test
+    public void testDump_noEntries() throws Exception {
+        String prefix = "_";
+
+        String dump = dump(pw -> mDatastore.dump(pw, prefix));
+
+        assertCommonDumpContents(dump, prefix);
+
+        assertWithMessage("content of dump() (# keys)").that(dump).containsMatch("0 entries\n");
+    }
+
+    @Test
+    public void testDump() throws Exception {
+        String keyUnlikelyToBeOnDump = "I can't believe it's dumper!";
+        mDatastore.put(keyUnlikelyToBeOnDump, true);
+
+        String prefix = "_";
+        String dump = dump(pw -> mDatastore.dump(pw, prefix));
+
+        assertCommonDumpContents(dump, prefix);
+
+        assertWithMessage("content of dump() (# keys)").that(dump).containsMatch("1 entries\n");
+        // Make sure content of datastore itself is not dumped, as it could contain PII
+        assertWithMessage("content of dump()").that(dump).doesNotContain(keyUnlikelyToBeOnDump);
+    }
+
+    private void assertCommonDumpContents(String dump, String prefix) {
+        assertDumpHasPrefix(dump, prefix);
+        assertWithMessage("content of dump() (DATASTORE_VERSION)")
+                .that(dump)
+                .contains(Integer.toString(DATASTORE_VERSION));
+        assertWithMessage("content of dump() (FILENAME)").that(dump).contains(FILENAME);
+        assertWithMessage("content of dump() (TEST_VERSION_KEY)")
+                .that(dump)
+                .contains(TEST_VERSION_KEY);
     }
 }
