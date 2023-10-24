@@ -3200,12 +3200,37 @@ public interface Flags {
         return DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_BLOCKLIST;
     }
 
+    /** Default computation of adservices version */
+    boolean DEFAULT_COMPUTE_VERSION_FROM_MAPPINGS_ENABLED = true;
+
+    /** Get Compute adservices Version from mappings */
+    default boolean getEnableComputeVersionFromMappings() {
+        return DEFAULT_COMPUTE_VERSION_FROM_MAPPINGS_ENABLED;
+    }
+
     /** Get mainline train version */
     String DEFAULT_MAINLINE_TRAIN_VERSION = "000000";
 
     /** Get mainline train version */
     default String getMainlineTrainVersion() {
         return DEFAULT_MAINLINE_TRAIN_VERSION;
+    }
+
+    /**
+     * Default adservices version mappings Format -
+     * start_range1,end_range1,header_version1|start_range2,end_range2,header_version2
+     */
+    String DEFAULT_ADSERVICES_VERSION_MAPPINGS =
+            "341300000,341400000,202401|341400000,341500000,202402"
+                    + "|341500000,341600000,202403|341600000,341700000,202404"
+                    + "|341700000,341800000,202405|341800000,341900000,202406"
+                    + "|341900000,342000000,202407|342000000,342100000,202408"
+                    + "|342100000,342200000,202409|342200000,342300000,202410"
+                    + "|342300000,342400000,202411|342400000,342500000,202412";
+
+    /** Get adservices version mappings */
+    default String getAdservicesVersionMappings() {
+        return DEFAULT_ADSERVICES_VERSION_MAPPINGS;
     }
 
     /** Default Determines whether EU notification flow change is enabled. */
