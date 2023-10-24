@@ -25,6 +25,7 @@ import android.util.Log;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
+import com.android.modules.utils.build.SdkLevel;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -54,7 +55,6 @@ import java.util.stream.Collectors;
  * <p>Keys must be non-null, non-empty strings, and values must be booleans.
  *
  * @threadsafe
- * @hide
  */
 public class BooleanFileDatastore {
 
@@ -78,18 +78,23 @@ public class BooleanFileDatastore {
     private int mPreviousStoredVersion;
 
     public BooleanFileDatastore(
-            @NonNull String parentPath,
-            @NonNull String filename,
-            int datastoreVersion,
-            String versionKey) {
-        Objects.requireNonNull(parentPath);
-        Objects.requireNonNull(filename);
-        Preconditions.checkStringNotEmpty(filename, "Filename must not be empty");
-        Preconditions.checkArgumentNonnegative(datastoreVersion, "Version must not be negative");
+            String parentPath, String filename, int datastoreVersion, String versionKey) {
+        this(
+                new File(
+                        Objects.requireNonNull(parentPath),
+                        Preconditions.checkStringNotEmpty(filename, "Filename must not be empty")),
+                datastoreVersion,
+                versionKey);
+    }
 
-        mAtomicFile = new AtomicFile(new File(parentPath, filename));
-        mDatastoreVersion = datastoreVersion;
-        mVersionKey = versionKey;
+    // TODO(b/25131972): add new test for File constructor (and invalid args)
+    public BooleanFileDatastore(File file, int datastoreVersion, String versionKey) {
+        mAtomicFile = new AtomicFile(Objects.requireNonNull(file));
+        mDatastoreVersion =
+                Preconditions.checkArgumentNonnegative(
+                        datastoreVersion, "Version must not be negative");
+
+        mVersionKey = Objects.requireNonNull(versionKey);
     }
 
     /**
@@ -408,18 +413,43 @@ public class BooleanFileDatastore {
         }
     }
 
+    /**
+     * Removes all entries that begin with the specified prefix from the datastore file.
+     *
+     * <p>This change is committed immediately to file.
+     *
+     * @param prefix A non-null, non-empty string that all keys are matched against
+     * @throws NullPointerException if {@code prefix} is null
+     * @throws IllegalArgumentException if {@code prefix} is an empty string
+     * @throws IOException if file write fails
+     */
+    public void removeByPrefix(String prefix) throws IOException {
+        Objects.requireNonNull(prefix);
+        Preconditions.checkStringNotEmpty(prefix, "Prefix must not be empty");
+
+        mWriteLock.lock();
+        try {
+            Set<String> allKeys = mLocalMap.keySet();
+            Set<String> keysToDelete =
+                    allKeys.stream().filter(s -> s.startsWith(prefix)).collect(Collectors.toSet());
+            allKeys.removeAll(keysToDelete); // Modifying the keySet updates the underlying map
+            writeToFile();
+        } finally {
+            mWriteLock.unlock();
+        }
+    }
+
     /** Dumps its internal state. */
     public void dump(PrintWriter writer, String prefix) {
         writer.printf("%smDatastoreVersion: %d\n", prefix, mDatastoreVersion);
         writer.printf("%smPreviousStoredVersion: %d\n", prefix, mPreviousStoredVersion);
         writer.printf("%smVersionKey: %s\n", prefix, mVersionKey);
-        writer.printf(
-                "%smAtomicFile: %s (last modified at %d):\n",
-                prefix,
-                mAtomicFile.getBaseFile().getAbsolutePath(),
-                mAtomicFile.getLastModifiedTime());
+        writer.printf("%smAtomicFile: %s", prefix, mAtomicFile.getBaseFile().getAbsolutePath());
+        if (SdkLevel.isAtLeastS()) {
+            writer.printf(" (last modified at %d)", mAtomicFile.getLastModifiedTime());
+        }
         int size = mLocalMap.size();
-        writer.printf("%s%d entries\n", prefix, size);
+        writer.printf(":\n%s%d entries\n", prefix, size);
 
         // TODO(b/299942046): decide whether it's ok to dump the entries themselves (perhaps passing
         // an argument).
