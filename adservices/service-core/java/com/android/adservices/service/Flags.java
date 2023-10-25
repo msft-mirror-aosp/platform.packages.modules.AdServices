@@ -874,19 +874,10 @@ public interface Flags {
     long FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS = 2 * 24 * 60 * 60; // 2 days
     long FLEDGE_HTTP_CACHE_MAX_ENTRIES = 100;
     boolean FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES = false;
-    boolean FLEDGE_AUCTION_SERVER_PAYLOAD_SIZE_SHOULD_EXCEED_LIMIT = false;
 
     /** Returns {@code true} if the on device auction should use the unified flow tables */
     default boolean getFledgeOnDeviceAuctionShouldUseUnifiedTables() {
         return FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES;
-    }
-
-    /**
-     * Returns {@code true} if the response of the {@code getAdSelectionData} API can exceed the
-     * 64Kb maximum
-     */
-    default boolean getFledgeAuctionServerPayloadSizeShouldExceedLimit() {
-        return FLEDGE_AUCTION_SERVER_PAYLOAD_SIZE_SHOULD_EXCEED_LIMIT;
     }
 
     /** Returns {@code true} if the FLEDGE Background Fetch is enabled. */
