@@ -1805,6 +1805,11 @@ class MeasurementDao implements IMeasurementDao {
                         mReportingRetryLimitSupplier.get().toString(),
                         DataType.DEBUG_REPORT_RETRY_COUNT.toString()
                     });
+        } else {
+            db.delete(
+                    MeasurementTables.DebugReportContract.TABLE,
+                    MeasurementTables.DebugReportContract.INSERTION_TIME + " < ?",
+                    new String[] {earliestValidInsertionStr});
         }
 
         // Cleanup unnecessary AggregateReport Retry Counts
