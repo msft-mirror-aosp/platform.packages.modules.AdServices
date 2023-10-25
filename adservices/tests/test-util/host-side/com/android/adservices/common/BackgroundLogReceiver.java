@@ -61,6 +61,7 @@ public final class BackgroundLogReceiver extends MultiLineReceiver {
         Arrays.stream(lines).filter(s -> !s.trim().isEmpty()).forEach(mLines::add);
 
         if (mEarlyStopCondition != null && mEarlyStopCondition.test(lines)) {
+            stopBackgroundCollection();
             mCountDownLatch.countDown();
         }
     }
@@ -71,7 +72,8 @@ public final class BackgroundLogReceiver extends MultiLineReceiver {
     }
 
     /**
-     * Begins log collection. This method needs to be only used once per instance.
+     * Collects logs until timeout or stop condition is reached. This method needs to be only used
+     * once per instance.
      *
      * @param timeoutMilliseconds the maximum time after which log collection should stop, if the
      *     early stop condition was not encountered previously.
@@ -80,6 +82,12 @@ public final class BackgroundLogReceiver extends MultiLineReceiver {
      * @throws InterruptedException if the current thread is interrupted
      */
     public boolean collectLogs(long timeoutMilliseconds) throws InterruptedException {
+        startBackgroundCollection();
+        return waitForLogs(timeoutMilliseconds);
+    }
+
+    /** Begins log collection. This method needs to be only used once per instance. */
+    public void startBackgroundCollection() {
         if (mBackgroundDeviceAction != null) {
             throw new IllegalStateException("This method should only be called once per instance");
         }
@@ -87,14 +95,31 @@ public final class BackgroundLogReceiver extends MultiLineReceiver {
         mBackgroundDeviceAction =
                 new BackgroundDeviceAction(mLogcatCmd, mName, mTestDevice, this, 0);
         mBackgroundDeviceAction.start();
+    }
+
+    /**
+     * Wait until timeout or stop condition is reached. This method can only be used once per
+     * instance.
+     *
+     * @param timeoutMilliseconds the maximum time after which log collection should stop, if the
+     *     early stop condition was not encountered previously.
+     * @return true if log collection stopped because the early stop condition was encountered,
+     *     false if log collection stopped due to timeout
+     * @throws InterruptedException if the current thread is interrupted
+     */
+    public boolean waitForLogs(long timeoutMilliseconds) throws InterruptedException {
+        if (mBackgroundDeviceAction == null) {
+            throw new IllegalStateException(
+                    "Log collection not started. Call startBackgroundCollection first");
+        }
 
         boolean earlyStop = mCountDownLatch.await(timeoutMilliseconds, TimeUnit.MILLISECONDS);
-        stop();
-
+        stopBackgroundCollection();
         return earlyStop;
     }
 
-    private void stop() {
+    /** Ends log collection. This method needs to be only used once per instance. */
+    private void stopBackgroundCollection() {
         if (mBackgroundDeviceAction != null) mBackgroundDeviceAction.cancel();
         if (isCancelled()) return;
         mCancelled = true;
