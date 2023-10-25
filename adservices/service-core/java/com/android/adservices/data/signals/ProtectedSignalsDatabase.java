@@ -19,6 +19,7 @@ package com.android.adservices.data.signals;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.room.AutoMigration;
 import androidx.room.Database;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
@@ -35,6 +36,9 @@ import java.util.Objects;
             DBEncoderEndpoint.class,
             DBEncoderLogicMetadata.class,
             DBEncodedPayload.class
+        },
+        autoMigrations = {
+            @AutoMigration(from = 1, to = 2),
         },
         version = ProtectedSignalsDatabase.DATABASE_VERSION)
 @TypeConverters({FledgeRoomConverters.class})
