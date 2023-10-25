@@ -29,18 +29,23 @@ import androidx.appsearch.platformstorage.PlatformStorage;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.cts.dao.AppSearchConsentDao;
 import com.android.adservices.cts.dao.AppSearchNotificationDao;
+import com.android.adservices.cts.dao.AppSearchTopicsConsentDao;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 public class AppSearchWriterActivity extends AppCompatActivity {
     private static final String TAG = "AppSearchWriterActivity";
     private static final String NOTIFICATION_DATABASE_NAME = "adservices_notification";
     private static final String CONSENT_DATABASE_NAME = "adservices_consent";
-
+    private static final String TOPICS_DATABASE_NAME = "adservices-topics";
     private static final Executor EXECUTOR = Executors.newCachedThreadPool();
 
     private AppSearchDaoWriter mSearchDaoWriter;
@@ -67,11 +72,19 @@ public class AppSearchWriterActivity extends AppCompatActivity {
         boolean fledgeConsent = intent.getBooleanExtra("fledge-consent", false);
         boolean triggerApis = intent.getBooleanExtra("call-api", true);
 
+        int[] temp = intent.getIntArrayExtra("blocked-topics");
+        // Add "Cartoons (10004)" and "Golf (10410)" as two blocked topics by default
+        List<Integer> blockedTopics =
+                (temp == null || temp.length == 0)
+                        ? List.of(10004, 10410)
+                        : Arrays.stream(temp).boxed().collect(Collectors.toList());
+
         // Write data to AppSearch
         recordGaUxNotificationDisplayed(userId, notification);
         setConsent(userId, "CONSENT-TOPICS", topicsConsent);
         setConsent(userId, "CONSENT-MEASUREMENT", msmtConsent);
         setConsent(userId, "CONSENT-FLEDGE", fledgeConsent);
+        setBlockedTopics(userId, blockedTopics);
 
         // Trigger consent migration by calling the apis if specified.
         if (triggerApis) {
@@ -111,6 +124,23 @@ public class AppSearchWriterActivity extends AppCompatActivity {
                         apiType,
                         Boolean.toString(consented));
         mSearchDaoWriter.writeToAppSearch(dao, session, "consent");
+    }
+
+    private void setBlockedTopics(String userId, List<Integer> blockedTopics) {
+        ListenableFuture<AppSearchSession> session =
+                PlatformStorage.createSearchSessionAsync(
+                        new PlatformStorage.SearchContext.Builder(this, TOPICS_DATABASE_NAME)
+                                .build());
+
+        AppSearchTopicsConsentDao dao =
+                new AppSearchTopicsConsentDao(
+                        userId,
+                        userId,
+                        AppSearchTopicsConsentDao.NAMESPACE,
+                        blockedTopics,
+                        Collections.nCopies(blockedTopics.size(), 2L),
+                        Collections.nCopies(blockedTopics.size(), 1L));
+        mSearchDaoWriter.writeToAppSearch(dao, session, "blocked-topics");
     }
 
     private void callMeasurementApi() {
