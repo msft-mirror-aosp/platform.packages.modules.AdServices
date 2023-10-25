@@ -16,6 +16,7 @@
 
 package android.app.sdksandbox.sandboxactivity;
 
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.SystemApi;
 import android.app.sdksandbox.sdkprovider.SdkSandboxActivityRegistry;
@@ -25,12 +26,14 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.android.internal.annotations.GuardedBy;
+import com.android.sdksandbox.flags.Flags;
 
 /**
  * A singleton class to provide instances of {@link ActivityContextInfo} to the callers.
  *
  * @hide
  */
+@FlaggedApi(Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
 @SystemApi(client = SystemApi.Client.MODULE_LIBRARIES)
 public abstract class ActivityContextInfoProvider {
     private static final Object sLock = new Object();
