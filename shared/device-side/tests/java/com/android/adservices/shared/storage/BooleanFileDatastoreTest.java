@@ -22,12 +22,7 @@ import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsA
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 
 import android.content.Context;
 import android.os.Build;
@@ -39,6 +34,8 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.modules.utils.build.SdkLevel;
 
+import com.google.common.truth.Expect;
+import com.google.common.truth.IterableSubject;
 import com.google.common.truth.StringSubject;
 
 import org.junit.After;
@@ -52,7 +49,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class BooleanFileDatastoreTest {
+public final class BooleanFileDatastoreTest {
     private static final String TAG = BooleanFileDatastoreTest.class.getSimpleName();
 
     private static final Context APPLICATION_CONTEXT = ApplicationProvider.getApplicationContext();
@@ -61,7 +58,12 @@ public class BooleanFileDatastoreTest {
     private static final String TEST_KEY = "key";
     private static final String TEST_VERSION_KEY = "version_key";
 
-    private BooleanFileDatastore mDatastore;
+    private final BooleanFileDatastore mDatastore =
+            new BooleanFileDatastore(
+                    APPLICATION_CONTEXT.getFilesDir().getAbsolutePath(),
+                    FILENAME,
+                    DATASTORE_VERSION,
+                    TEST_VERSION_KEY);
 
     @Rule
     public final AdServicesExtendedMockitoRule extendedMockitoRule =
@@ -70,88 +72,44 @@ public class BooleanFileDatastoreTest {
                     .spyStatic(SdkLevel.class)
                     .build();
 
+    @Rule public final Expect expect = Expect.create();
+
     @Before
-    public void setup() throws IOException {
-        mDatastore =
-                new BooleanFileDatastore(
-                        APPLICATION_CONTEXT.getFilesDir().getAbsolutePath(),
-                        FILENAME,
-                        DATASTORE_VERSION,
-                        TEST_VERSION_KEY);
+    public void initializeDatastore() throws IOException {
         mDatastore.initialize();
     }
 
     @After
-    public void cleanup() {
+    public void cleanupDatastore() {
         mDatastore.tearDownForTesting();
     }
 
     @Test
     public void testInitializeEmptyBooleanFileDatastore() {
-        assertTrue(mDatastore.keySet().isEmpty());
+        expect.withMessage("keys").that(mDatastore.keySet()).isEmpty();
     }
 
     @Test
     public void testNullOrEmptyKeyFails() {
-        assertThrows(
-                NullPointerException.class,
-                () -> {
-                    mDatastore.put(null, true);
-                });
+        assertThrows(NullPointerException.class, () -> mDatastore.put(null, true));
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> {
-                    mDatastore.put("", true);
-                });
+        assertThrows(IllegalArgumentException.class, () -> mDatastore.put("", true));
 
-        assertThrows(
-                NullPointerException.class,
-                () -> {
-                    mDatastore.putIfNew(null, true);
-                });
+        assertThrows(NullPointerException.class, () -> mDatastore.putIfNew(null, true));
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> {
-                    mDatastore.putIfNew("", true);
-                });
+        assertThrows(IllegalArgumentException.class, () -> mDatastore.putIfNew("", true));
 
-        assertThrows(
-                NullPointerException.class,
-                () -> {
-                    mDatastore.get(null);
-                });
+        assertThrows(NullPointerException.class, () -> mDatastore.get(null));
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> {
-                    mDatastore.get("");
-                });
+        assertThrows(IllegalArgumentException.class, () -> mDatastore.get(""));
 
-        assertThrows(
-                NullPointerException.class,
-                () -> {
-                    mDatastore.remove(null);
-                });
+        assertThrows(NullPointerException.class, () -> mDatastore.remove(null));
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> {
-                    mDatastore.remove("");
-                });
+        assertThrows(IllegalArgumentException.class, () -> mDatastore.remove(""));
 
-        assertThrows(
-                NullPointerException.class,
-                () -> {
-                    mDatastore.removeByPrefix(null);
-                });
+        assertThrows(NullPointerException.class, () -> mDatastore.removeByPrefix(null));
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> {
-                    mDatastore.removeByPrefix("");
-                });
+        assertThrows(IllegalArgumentException.class, () -> mDatastore.removeByPrefix(""));
     }
 
     @Test
@@ -163,22 +121,22 @@ public class BooleanFileDatastoreTest {
         // Re-initialize datastore (reads from the file again)
         mDatastore.initialize();
 
-        int readValue = mDatastore.getPreviousStoredVersion();
-        assertNotNull(readValue);
-        assertEquals(DATASTORE_VERSION, readValue);
+        assertWithMessage("getPreviousStoredVersion()")
+                .that(mDatastore.getPreviousStoredVersion())
+                .isEqualTo(DATASTORE_VERSION);
     }
 
     @Test
     public void testGetVersionWithNoPreviousWrite() {
-        int readValue = mDatastore.getPreviousStoredVersion();
-        assertNotNull(readValue);
-        assertEquals(BooleanFileDatastore.NO_PREVIOUS_VERSION, readValue);
+        assertWithMessage("getPreviousStoredVersion()")
+                .that(mDatastore.getPreviousStoredVersion())
+                .isEqualTo(BooleanFileDatastore.NO_PREVIOUS_VERSION);
     }
 
     @Test
     public void testPutGetUpdateRemove() throws IOException {
         // Should not exist yet
-        assertNull(mDatastore.get(TEST_KEY));
+        assertWithMessage("get(%s)", TEST_KEY).that(mDatastore.get(TEST_KEY)).isNull();
 
         // Create
         boolean insertedValue = false;
@@ -186,24 +144,23 @@ public class BooleanFileDatastoreTest {
 
         // Read
         Boolean readValue = mDatastore.get(TEST_KEY);
-        assertNotNull(readValue);
-        assertEquals(readValue, insertedValue);
+        assertWithMessage("get(%s)", TEST_KEY).that(readValue).isNotNull();
+        assertWithMessage("get(%s)", TEST_KEY).that(readValue).isEqualTo(insertedValue);
 
         // Update
         insertedValue = true;
         mDatastore.put(TEST_KEY, insertedValue);
         readValue = mDatastore.get(TEST_KEY);
-        assertNotNull(readValue);
-        assertEquals(readValue, insertedValue);
+        assertWithMessage("get(%s)", TEST_KEY).that(readValue).isNotNull();
+        assertWithMessage("get(%s)", TEST_KEY).that(readValue).isEqualTo(insertedValue);
 
         Set<String> keys = mDatastore.keySet();
-        assertEquals(keys.size(), 1);
-        assertTrue(keys.contains(TEST_KEY));
+        assertWithMessage("keys").that(mDatastore.keySet()).containsExactly(TEST_KEY);
 
         // Delete
         mDatastore.remove(TEST_KEY);
-        assertNull(mDatastore.get(TEST_KEY));
-        assertTrue(mDatastore.keySet().isEmpty());
+        assertWithMessage("get(%s)", TEST_KEY).that(mDatastore.get(TEST_KEY)).isNull();
+        assertWithMessage("keys").that(mDatastore.keySet()).isEmpty();
 
         // Should not throw when removing a nonexistent key
         mDatastore.remove(TEST_KEY);
@@ -212,25 +169,29 @@ public class BooleanFileDatastoreTest {
     @Test
     public void testPutIfNew() throws IOException {
         // Should not exist yet
-        assertNull(mDatastore.get(TEST_KEY));
+        assertWithMessage("get(%s)", TEST_KEY).that(mDatastore.get(TEST_KEY)).isNull();
 
         // Create because it's new
-        assertFalse(mDatastore.putIfNew(TEST_KEY, false));
+        assertWithMessage("putIfNew(%s, false)", TEST_KEY)
+                .that(mDatastore.putIfNew(TEST_KEY, false))
+                .isFalse();
         Boolean readValue = mDatastore.get(TEST_KEY);
-        assertNotNull(readValue);
-        assertFalse(readValue);
+        assertWithMessage("get(%s)", TEST_KEY).that(readValue).isNotNull();
+        assertWithMessage("get(%s)", TEST_KEY).that(readValue).isFalse();
 
         // Force overwrite
         mDatastore.put(TEST_KEY, true);
         readValue = mDatastore.get(TEST_KEY);
-        assertNotNull(readValue);
-        assertTrue(readValue);
+        assertWithMessage("get(%s)", TEST_KEY).that(readValue).isNotNull();
+        assertWithMessage("get(%s)", TEST_KEY).that(readValue).isTrue();
 
         // Put should read the existing value
-        assertTrue(mDatastore.putIfNew(TEST_KEY, false));
+        assertWithMessage("putIfNew(%s, false)", TEST_KEY)
+                .that(mDatastore.putIfNew(TEST_KEY, false))
+                .isTrue();
         readValue = mDatastore.get(TEST_KEY);
-        assertNotNull(readValue);
-        assertTrue(readValue);
+        assertWithMessage("get(%s)", TEST_KEY).that(readValue).isNotNull();
+        assertWithMessage("get(%s)", TEST_KEY).that(readValue).isTrue();
     }
 
     @Test
@@ -244,16 +205,31 @@ public class BooleanFileDatastoreTest {
         Set<String> trueKeys = mDatastore.keySetTrue();
         Set<String> falseKeys = mDatastore.keySetFalse();
 
-        assertEquals(trueKeys.size(), numEntries / 2);
-        assertEquals(falseKeys.size(), numEntries / 2);
+        expect.withMessage("keySetTrue()").that(mDatastore.keySetTrue()).hasSize(numEntries / 2);
+        expect.withMessage("keySetFalse()").that(mDatastore.keySetFalse()).hasSize(numEntries / 2);
 
         for (int i = 0; i < numEntries; i++) {
-            assertEquals(trueKeys.contains(TEST_KEY + i), (i & 1) == 0);
-            assertEquals(falseKeys.contains(TEST_KEY + i), (i & 1) != 0);
+            String expectedKey = TEST_KEY + i;
+            if ((i & 1) == 0) {
+                expect.withMessage("keySetTrue() / index %s", i)
+                        .that(trueKeys)
+                        .contains(expectedKey);
+                expect.withMessage("keySetFalse() / index %s", i)
+                        .that(falseKeys)
+                        .doesNotContain(expectedKey);
+
+            } else {
+                expect.withMessage("keySetTrue() / index %s", i)
+                        .that(trueKeys)
+                        .doesNotContain(expectedKey);
+                expect.withMessage("keySetFalse() / index %s", i)
+                        .that(falseKeys)
+                        .contains(expectedKey);
+            }
         }
 
         mDatastore.clear();
-        assertTrue(mDatastore.keySet().isEmpty());
+        expect.withMessage("keys").that(mDatastore.keySet()).isEmpty();
     }
 
     @Test
@@ -267,12 +243,27 @@ public class BooleanFileDatastoreTest {
         Set<String> trueKeys = mDatastore.keySetTrue();
         Set<String> falseKeys = mDatastore.keySetFalse();
 
-        assertEquals(trueKeys.size(), numEntries / 2);
-        assertEquals(falseKeys.size(), numEntries / 2);
+        expect.withMessage("keySetTrue()").that(mDatastore.keySetTrue()).hasSize(numEntries / 2);
+        expect.withMessage("keySetFalse()").that(mDatastore.keySetFalse()).hasSize(numEntries / 2);
 
         for (int i = 0; i < numEntries; i++) {
-            assertEquals(trueKeys.contains(TEST_KEY + i), (i & 1) == 0);
-            assertEquals(falseKeys.contains(TEST_KEY + i), (i & 1) != 0);
+            String expectedKey = TEST_KEY + i;
+            if ((i & 1) == 0) {
+                expect.withMessage("keySetTrue() / index %s", i)
+                        .that(trueKeys)
+                        .contains(expectedKey);
+                expect.withMessage("keySetFalse() / index %s", i)
+                        .that(falseKeys)
+                        .doesNotContain(expectedKey);
+
+            } else {
+                expect.withMessage("keySetTrue() / index %s", i)
+                        .that(trueKeys)
+                        .doesNotContain(expectedKey);
+                expect.withMessage("keySetFalse() / index %s", i)
+                        .that(falseKeys)
+                        .contains(expectedKey);
+            }
         }
 
         mDatastore.clearAllTrue();
@@ -280,11 +271,18 @@ public class BooleanFileDatastoreTest {
         trueKeys = mDatastore.keySetTrue();
         falseKeys = mDatastore.keySetFalse();
 
-        assertTrue(trueKeys.isEmpty());
-        assertEquals(numEntries / 2, falseKeys.size());
+        expect.withMessage("keySetTrue()").that(trueKeys).isEmpty();
+        expect.withMessage("keySetFalse()").that(falseKeys).hasSize(numEntries / 2);
 
         for (int i = 0; i < numEntries; i++) {
-            assertEquals((i & 1) != 0, falseKeys.contains(TEST_KEY + i));
+            IterableSubject subject =
+                    expect.withMessage("keySetFalse() at index %s", i).that(falseKeys);
+            String expectedKey = TEST_KEY + i;
+            if ((i & 1) != 0) {
+                subject.contains(expectedKey);
+            } else {
+                subject.doesNotContain(expectedKey);
+            }
         }
     }
 
@@ -299,12 +297,27 @@ public class BooleanFileDatastoreTest {
         Set<String> trueKeys = mDatastore.keySetTrue();
         Set<String> falseKeys = mDatastore.keySetFalse();
 
-        assertEquals(trueKeys.size(), numEntries / 2);
-        assertEquals(falseKeys.size(), numEntries / 2);
+        expect.withMessage("keySetTrue()").that(mDatastore.keySetTrue()).hasSize(numEntries / 2);
+        expect.withMessage("keySetFalse()").that(mDatastore.keySetFalse()).hasSize(numEntries / 2);
 
         for (int i = 0; i < numEntries; i++) {
-            assertEquals(trueKeys.contains(TEST_KEY + i), (i & 1) == 0);
-            assertEquals(falseKeys.contains(TEST_KEY + i), (i & 1) != 0);
+            String expectedKey = TEST_KEY + i;
+            if ((i & 1) == 0) {
+                expect.withMessage("keySetTrue() / index %s", i)
+                        .that(trueKeys)
+                        .contains(expectedKey);
+                expect.withMessage("keySetFalse() / index %s", i)
+                        .that(falseKeys)
+                        .doesNotContain(expectedKey);
+
+            } else {
+                expect.withMessage("keySetTrue() / index %s", i)
+                        .that(trueKeys)
+                        .doesNotContain(expectedKey);
+                expect.withMessage("keySetFalse() / index %s", i)
+                        .that(falseKeys)
+                        .contains(expectedKey);
+            }
         }
 
         mDatastore.clearAllFalse();
@@ -312,11 +325,19 @@ public class BooleanFileDatastoreTest {
         trueKeys = mDatastore.keySetTrue();
         falseKeys = mDatastore.keySetFalse();
 
-        assertEquals(numEntries / 2, trueKeys.size());
-        assertTrue(falseKeys.isEmpty());
+        expect.withMessage("keySetTrue()").that(trueKeys).hasSize(numEntries / 2);
+        expect.withMessage("keySetFalse()").that(falseKeys).isEmpty();
 
         for (int i = 0; i < numEntries; i++) {
-            assertEquals((i & 1) == 0, trueKeys.contains(TEST_KEY + i));
+            String expectedKey = TEST_KEY + i;
+            if ((i & 1) == 0) {
+                expect.withMessage("keySetTrue() / index %s", i)
+                        .that(trueKeys)
+                        .contains(expectedKey);
+                expect.withMessage("keySetFalse() / index %s", i)
+                        .that(falseKeys)
+                        .doesNotContain(expectedKey);
+            }
         }
     }
 
@@ -327,8 +348,7 @@ public class BooleanFileDatastoreTest {
         String dump = dump(pw -> mDatastore.dump(pw, prefix));
 
         assertCommonDumpContents(dump, prefix);
-
-        assertWithMessage("content of dump() (# keys)").that(dump).containsMatch("0 entries\n");
+        expect.withMessage("contents of dump() (# keys)").that(dump).containsMatch("0 entries\n");
     }
 
     @Test
@@ -353,12 +373,12 @@ public class BooleanFileDatastoreTest {
 
         assertCommonDumpContents(dump, prefix);
 
-        assertWithMessage("content of dump() (# keys)").that(dump).containsMatch("1 entries\n");
+        expect.withMessage("contents of dump() (# keys)").that(dump).containsMatch("1 entries\n");
         // Make sure content of datastore itself is not dumped, as it could contain PII
-        assertWithMessage("content of dump()").that(dump).doesNotContain(keyUnlikelyToBeOnDump);
+        expect.withMessage("contents of dump()").that(dump).doesNotContain(keyUnlikelyToBeOnDump);
 
         StringSubject atomicFileSubject =
-                assertWithMessage("content of dump() - atomic file").that(dump);
+                expect.withMessage("contents of dump() - atomic file").that(dump);
         if (isAtleastS) {
             atomicFileSubject.contains("last modified");
         } else {
@@ -371,14 +391,16 @@ public class BooleanFileDatastoreTest {
         // Create
         int numEntries = 10;
         // Keys begin with either TEST_KEY+0 or TEST_KEY+1. Even entries are true, odd are false.
-        final List<Pair<String, Boolean>> entriesToAdd =
+        List<Pair<String, Boolean>> entriesToAdd =
                 IntStream.range(0, numEntries)
                         .mapToObj(i -> new Pair<>(TEST_KEY + (i & 1) + i, (i & 1) == 0))
                         .collect(Collectors.toList());
 
         // Add to data store
         for (Pair<String, Boolean> entry : entriesToAdd) {
-            assertNull(mDatastore.get(entry.first)); // Should not exist yet
+            expect.withMessage("get(%s)", entry.first)
+                    .that(mDatastore.get(entry.first))
+                    .isNull(); // Should not exist yet
             mDatastore.put(entry.first, entry.second);
         }
 
@@ -387,25 +409,29 @@ public class BooleanFileDatastoreTest {
         mDatastore.removeByPrefix(TEST_KEY + 0);
 
         // Compute the expected set of entries that should remain.
-        final Set<Pair<String, Boolean>> entriesThatShouldRemain =
+        Set<Pair<String, Boolean>> entriesThatShouldRemain =
                 entriesToAdd.stream()
                         .filter(s -> s.first.startsWith(TEST_KEY + 1))
                         .collect(Collectors.toSet());
 
         // Verify that all the expected keys remain in the data store, with the right values.
-        assertEquals(entriesThatShouldRemain.size(), mDatastore.keySet().size());
+        assertWithMessage("keys that remain")
+                .that(mDatastore.keySet())
+                .hasSize(entriesThatShouldRemain.size());
         for (Pair<String, Boolean> item : entriesThatShouldRemain) {
-            assertEquals(item.second, mDatastore.get(item.first));
+            expect.withMessage("entry that should remain (key %s)", item.first)
+                    .that(mDatastore.get(item.first))
+                    .isEqualTo(item.second);
         }
     }
 
     private void assertCommonDumpContents(String dump, String prefix) {
         assertDumpHasPrefix(dump, prefix);
-        assertWithMessage("content of dump() (DATASTORE_VERSION)")
+        expect.withMessage("contents of dump() (DATASTORE_VERSION)")
                 .that(dump)
                 .contains(Integer.toString(DATASTORE_VERSION));
-        assertWithMessage("content of dump() (FILENAME)").that(dump).contains(FILENAME);
-        assertWithMessage("content of dump() (TEST_VERSION_KEY)")
+        expect.withMessage("contents of dump() (FILENAME)").that(dump).contains(FILENAME);
+        expect.withMessage("contents of dump() (TEST_VERSION_KEY)")
                 .that(dump)
                 .contains(TEST_VERSION_KEY);
     }
