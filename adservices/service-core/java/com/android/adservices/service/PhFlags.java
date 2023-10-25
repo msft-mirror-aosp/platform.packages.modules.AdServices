@@ -5127,6 +5127,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getEnableAdExtServiceConsentData());
         writer.println(
                 "\t"
+                        + FlagsConstants.KEY_ENABLE_ADEXT_SERVICE_TO_APPSEARCH_MIGRATION
+                        + " = "
+                        + getEnableAdExtServiceToAppSearchMigration());
+        writer.println(
+                "\t"
                         + FlagsConstants.ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED
                         + " = "
                         + getAdservicesConsentMigrationLoggingEnabled());
@@ -5409,6 +5414,14 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_ENABLE_ADEXT_SERVICE_CONSENT_DATA,
                 /* defaultValue */ ENABLE_ADEXT_SERVICE_CONSENT_DATA);
+    }
+
+    @Override
+    public boolean getEnableAdExtServiceToAppSearchMigration() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_ENABLE_ADEXT_SERVICE_TO_APPSEARCH_MIGRATION,
+                /* defaultValue */ ENABLE_ADEXT_SERVICE_TO_APPSEARCH_MIGRATION);
     }
 
     @Override
