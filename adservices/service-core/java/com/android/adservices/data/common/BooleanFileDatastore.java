@@ -19,30 +19,30 @@ package com.android.adservices.data.common;
 import android.content.Context;
 
 import com.android.adservices.service.common.compat.FileCompatUtils;
+import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 
 import java.util.Objects;
 
 /**
- * A simple datastore utilizing {@link android.util.AtomicFile} and {@link
- * android.os.PersistableBundle} to read/write a simple key/value map to file.
+ * {@inheritDoc}
  *
- * <p>The datastore is loaded from file only when initialized and written to file on every write.
- * When using this datastore, it is up to the caller to ensure that each datastore file is accessed
- * by exactly one datastore object. If multiple writing threads or processes attempt to use
- * different instances pointing to the same file, transactions may be lost.
- *
- * <p>Keys must be non-null, non-empty strings, and values must be booleans.
+ * <p>This service-side version of {@link
+ * com.android.adservices.shared.storage.BooleanFileDatastore} uses a hardcoded version key ({@link
+ * #VERSION_KEY}}.
  */
 public final class BooleanFileDatastore
         extends com.android.adservices.shared.storage.BooleanFileDatastore {
-    private static final String VERSION_KEY = "com.android.adservices.data.common.VERSION";
+
+    @VisibleForTesting
+    static final String VERSION_KEY = "com.android.adservices.data.common.VERSION";
 
     public BooleanFileDatastore(Context adServicesContext, String filename, int datastoreVersion) {
         super(
                 FileCompatUtils.newFileHelper(
                         Objects.requireNonNull(adServicesContext).getFilesDir(),
-                        Preconditions.checkStringNotEmpty(filename, "Filename must not be empty")),
+                        Preconditions.checkStringNotEmpty(
+                                filename, "Filename must not be empty or null")),
                 datastoreVersion,
                 VERSION_KEY);
     }
