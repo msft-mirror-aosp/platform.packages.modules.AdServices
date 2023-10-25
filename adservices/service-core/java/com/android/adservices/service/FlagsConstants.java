@@ -475,6 +475,8 @@ public final class FlagsConstants {
             "protected_signals_periodic_encoding_job_flex_ms";
     public static final String KEY_PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES =
             "protected_signals_encoded_payload_max_size_bytes";
+    public static final String KEY_PROTECTED_SIGNALS_ENCODER_REFRESH_WINDOW_SECONDS =
+            "protected_signals_encoder_refresh_window_seconds";
     public static final String KEY_PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES =
             "key_protected_signals_fetch_signal_updates_max_size_bytes";
 
