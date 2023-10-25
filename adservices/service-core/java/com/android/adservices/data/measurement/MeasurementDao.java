@@ -1816,14 +1816,18 @@ class MeasurementDao implements IMeasurementDao {
         db.delete(
                 MeasurementTables.KeyValueDataContract.TABLE,
                 MeasurementTables.KeyValueDataContract.DATA_TYPE
-                        + " = ? "
+                        + " IN (\""
+                        + DataType.AGGREGATE_REPORT_RETRY_COUNT
+                        + "\", \""
+                        + DataType.DEBUG_AGGREGATE_REPORT_RETRY_COUNT
+                        + "\")"
                         + " AND "
                         + MeasurementTables.KeyValueDataContract.KEY
                         + " NOT IN "
                         + "("
                         + subQuery
                         + ")",
-                new String[] {DataType.AGGREGATE_REPORT_RETRY_COUNT.toString()});
+                new String[] {});
         // Cleanup unnecessary DebugReport Retry Counts
         subQuery =
                 "SELECT "
@@ -1850,14 +1854,18 @@ class MeasurementDao implements IMeasurementDao {
         db.delete(
                 MeasurementTables.KeyValueDataContract.TABLE,
                 MeasurementTables.KeyValueDataContract.DATA_TYPE
-                        + " = ? "
+                        + " IN (\""
+                        + DataType.EVENT_REPORT_RETRY_COUNT
+                        + "\", \""
+                        + DataType.DEBUG_EVENT_REPORT_RETRY_COUNT
+                        + "\")"
                         + " AND "
                         + MeasurementTables.KeyValueDataContract.KEY
                         + " NOT IN "
                         + "("
                         + subQuery
                         + ")",
-                new String[] {DataType.EVENT_REPORT_RETRY_COUNT.toString()});
+                new String[] {});
     }
 
     @Override
@@ -3322,7 +3330,7 @@ class MeasurementDao implements IMeasurementDao {
                         new String[] {
                             String.valueOf(EventReport.DebugReportStatus.PENDING),
                             String.valueOf(mReportingRetryLimitSupplier.get()),
-                            String.valueOf(DataType.EVENT_REPORT_RETRY_COUNT),
+                            String.valueOf(DataType.DEBUG_EVENT_REPORT_RETRY_COUNT),
                         });
     }
 
@@ -3509,7 +3517,7 @@ class MeasurementDao implements IMeasurementDao {
                         new String[] {
                             String.valueOf(AggregateReport.DebugReportStatus.PENDING),
                             String.valueOf(mReportingRetryLimitSupplier.get()),
-                            String.valueOf(DataType.AGGREGATE_REPORT_RETRY_COUNT),
+                            String.valueOf(DataType.DEBUG_AGGREGATE_REPORT_RETRY_COUNT),
                         });
     }
 }
