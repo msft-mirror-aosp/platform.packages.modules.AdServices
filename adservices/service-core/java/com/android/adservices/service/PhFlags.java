@@ -1868,11 +1868,27 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getEnableComputeVersionFromMappings() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_ENABLE_COMPUTE_VERSION_FROM_MAPPINGS,
+                /* defaultValue */ DEFAULT_COMPUTE_VERSION_FROM_MAPPINGS_ENABLED);
+    }
+
+    @Override
     public String getMainlineTrainVersion() {
         return DeviceConfig.getString(
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_MAINLINE_TRAIN_VERSION,
                 /* defaultValue */ DEFAULT_MAINLINE_TRAIN_VERSION);
+    }
+
+    @Override
+    public String getAdservicesVersionMappings() {
+        return DeviceConfig.getString(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_ADSERVICES_VERSION_MAPPINGS,
+                /* defaultValue */ DEFAULT_ADSERVICES_VERSION_MAPPINGS);
     }
 
     // ADID Killswitches
@@ -3773,9 +3789,21 @@ public final class PhFlags implements Flags {
                         + getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist());
         writer.println(
                 "\t"
+                        + FlagsConstants.KEY_ENABLE_COMPUTE_VERSION_FROM_MAPPINGS
+                        + " = "
+                        + getEnableComputeVersionFromMappings());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_MAINLINE_TRAIN_VERSION
                         + " = "
                         + getMainlineTrainVersion());
+
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_ADSERVICES_VERSION_MAPPINGS
+                        + " = "
+                        + getAdservicesVersionMappings());
+
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED
@@ -3953,6 +3981,21 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW
                         + " = "
                         + getMeasurementMinPostInstallExclusivityWindow());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE
+                        + " = "
+                        + getMeasurementMaxSumOfAggregateValuesPerSource());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS
+                        + " = "
+                        + getMeasurementRateLimitWindowMilliseconds());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW
+                        + " = "
+                        + getMeasurementMinReportingOriginUpdateWindow());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH
@@ -5375,6 +5418,33 @@ public final class PhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW,
                 /* defaultValue */ MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW);
+    }
+
+    @Override
+    public int getMeasurementMaxSumOfAggregateValuesPerSource() {
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE,
+                /* defaultValue */ MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE);
+    }
+
+    @Override
+    public long getMeasurementRateLimitWindowMilliseconds() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS,
+                /* defaultValue */ MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS);
+    }
+
+    @Override
+    public long getMeasurementMinReportingOriginUpdateWindow() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW,
+                /* defaultValue */ MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW);
     }
 
     @Override

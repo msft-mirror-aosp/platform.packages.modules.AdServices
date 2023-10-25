@@ -148,12 +148,17 @@ public class EventReportingJobHandlerTest {
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         mEventReportingJobHandler =
-                new EventReportingJobHandler(mEnrollmentDao, mDatastoreManager, mFlags, mLogger);
+                new EventReportingJobHandler(
+                        mEnrollmentDao, mDatastoreManager, mFlags, mLogger, sContext);
         mSpyEventReportingJobHandler = Mockito.spy(mEventReportingJobHandler);
         mSpyDebugEventReportingJobHandler =
                 Mockito.spy(
                         new EventReportingJobHandler(
-                                        mEnrollmentDao, mDatastoreManager, mFlags, mLogger)
+                                        mEnrollmentDao,
+                                        mDatastoreManager,
+                                        mFlags,
+                                        mLogger,
+                                        sContext)
                                 .setIsDebugInstance(true));
     }
 

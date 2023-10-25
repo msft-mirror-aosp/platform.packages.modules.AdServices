@@ -151,7 +151,8 @@ public class AggregateReportingJobHandlerTest {
                         mDatastoreManager,
                         mockKeyManager,
                         mMockFlags,
-                        mLogger);
+                        mLogger,
+                        sContext);
         mSpyAggregateReportingJobHandler = Mockito.spy(mAggregateReportingJobHandler);
         mSpyDebugAggregateReportingJobHandler =
                 Mockito.spy(
@@ -160,7 +161,8 @@ public class AggregateReportingJobHandlerTest {
                                         mDatastoreManager,
                                         mockKeyManager,
                                         mMockFlags,
-                                        mLogger)
+                                        mLogger,
+                                        sContext)
                                 .setIsDebugInstance(true));
 
         mMockitoSession =
@@ -560,7 +562,8 @@ public class AggregateReportingJobHandlerTest {
                         new FakeDatasoreManager(),
                         mockKeyManager,
                         mMockFlags,
-                        mLogger);
+                        mLogger,
+                        sContext);
         mSpyAggregateReportingJobHandler = Mockito.spy(mAggregateReportingJobHandler);
 
         assertTrue(

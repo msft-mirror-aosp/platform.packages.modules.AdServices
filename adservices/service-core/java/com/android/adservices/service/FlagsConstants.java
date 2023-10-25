@@ -62,7 +62,10 @@ public final class FlagsConstants {
 
     public static final String KEY_ERROR_CODE_LOGGING_DENY_LIST = "error_code_logging_deny_list";
 
+    public static final String KEY_ENABLE_COMPUTE_VERSION_FROM_MAPPINGS =
+            "enable_compute_version_from_mappings";
     public static final String KEY_MAINLINE_TRAIN_VERSION = "mainline_train_version";
+    public static final String KEY_ADSERVICES_VERSION_MAPPINGS = "adservices_version_mappings";
 
     // Topics keys
     public static final String KEY_TOPICS_EPOCH_JOB_PERIOD_MS = "topics_epoch_job_period_ms";
@@ -1038,6 +1041,15 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW =
             "measurement_min_post_install_exclusivity_window";
+
+    public static final String KEY_MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE =
+            "measurement_max_sum_of_aggregate_values_per_source";
+
+    public static final String KEY_MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS =
+            "measurement_rate_limit_window_milliseconds";
+
+    public static final String KEY_MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW =
+            "measurement_min_reporting_origin_update_window";
 
     public static final String KEY_MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK =
             "measurement_enable_api_status_allow_list_check";
