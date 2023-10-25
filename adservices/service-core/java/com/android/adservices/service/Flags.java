@@ -3200,12 +3200,37 @@ public interface Flags {
         return DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_BLOCKLIST;
     }
 
+    /** Default computation of adservices version */
+    boolean DEFAULT_COMPUTE_VERSION_FROM_MAPPINGS_ENABLED = true;
+
+    /** Get Compute adservices Version from mappings */
+    default boolean getEnableComputeVersionFromMappings() {
+        return DEFAULT_COMPUTE_VERSION_FROM_MAPPINGS_ENABLED;
+    }
+
     /** Get mainline train version */
     String DEFAULT_MAINLINE_TRAIN_VERSION = "000000";
 
     /** Get mainline train version */
     default String getMainlineTrainVersion() {
         return DEFAULT_MAINLINE_TRAIN_VERSION;
+    }
+
+    /**
+     * Default adservices version mappings Format -
+     * start_range1,end_range1,header_version1|start_range2,end_range2,header_version2
+     */
+    String DEFAULT_ADSERVICES_VERSION_MAPPINGS =
+            "341300000,341400000,202401|341400000,341500000,202402"
+                    + "|341500000,341600000,202403|341600000,341700000,202404"
+                    + "|341700000,341800000,202405|341800000,341900000,202406"
+                    + "|341900000,342000000,202407|342000000,342100000,202408"
+                    + "|342100000,342200000,202409|342200000,342300000,202410"
+                    + "|342300000,342400000,202411|342400000,342500000,202412";
+
+    /** Get adservices version mappings */
+    default String getAdservicesVersionMappings() {
+        return DEFAULT_ADSERVICES_VERSION_MAPPINGS;
     }
 
     /** Default Determines whether EU notification flow change is enabled. */
@@ -3818,6 +3843,33 @@ public interface Flags {
     /** Default and minimum value for cooldown period of source which led to installation. */
     default long getMeasurementMinPostInstallExclusivityWindow() {
         return MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW;
+    }
+
+    int MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE = 65536;
+
+    /**
+     * L1, the maximum sum of the contributions (values) across all buckets for a given source
+     * event.
+     */
+    default int getMeasurementMaxSumOfAggregateValuesPerSource() {
+        return MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE;
+    }
+
+    long MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS = TimeUnit.DAYS.toMillis(30);
+
+    /**
+     * Rate limit window for (Source Site, Destination Site, Reporting Site, Window) privacy unit.
+     * 30 days.
+     */
+    default long getMeasurementRateLimitWindowMilliseconds() {
+        return MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS;
+    }
+
+    long MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW = TimeUnit.DAYS.toMillis(1);
+
+    /** Minimum time window after which reporting origin can be migrated */
+    default long getMeasurementMinReportingOriginUpdateWindow() {
+        return MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW;
     }
 
     /** Default value of flag for logging consent migration metrics when OTA from S to T+. */

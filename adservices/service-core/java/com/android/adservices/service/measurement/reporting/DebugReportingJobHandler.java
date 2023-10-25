@@ -21,6 +21,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MESUREMENT_REPORTS_UPLOADED;
 
 import android.adservices.common.AdServicesStatusUtils;
+import android.content.Context;
 import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
@@ -52,13 +53,22 @@ public class DebugReportingJobHandler {
     private ReportingStatus.UploadMethod mUploadMethod;
     private AdServicesLogger mLogger;
 
+    private Context mContext;
+
     @VisibleForTesting
     DebugReportingJobHandler(
             EnrollmentDao enrollmentDao,
             DatastoreManager datastoreManager,
             Flags flags,
-            AdServicesLogger logger) {
-        this(enrollmentDao, datastoreManager, flags, logger, ReportingStatus.UploadMethod.UNKNOWN);
+            AdServicesLogger logger,
+            Context context) {
+        this(
+                enrollmentDao,
+                datastoreManager,
+                flags,
+                logger,
+                ReportingStatus.UploadMethod.UNKNOWN,
+                context);
     }
 
     DebugReportingJobHandler(
@@ -66,12 +76,14 @@ public class DebugReportingJobHandler {
             DatastoreManager datastoreManager,
             Flags flags,
             AdServicesLogger logger,
-            ReportingStatus.UploadMethod uploadMethod) {
+            ReportingStatus.UploadMethod uploadMethod,
+            Context context) {
         mEnrollmentDao = enrollmentDao;
         mDatastoreManager = datastoreManager;
         mFlags = flags;
         mLogger = logger;
         mUploadMethod = uploadMethod;
+        mContext = context;
     }
 
     /** Finds all debug reports and attempts to upload them individually. */
@@ -225,7 +237,7 @@ public class DebugReportingJobHandler {
     @VisibleForTesting
     public int makeHttpPostRequest(Uri adTechDomain, JSONArray debugReportPayload)
             throws IOException {
-        DebugReportSender debugReportSender = new DebugReportSender();
+        DebugReportSender debugReportSender = new DebugReportSender(mContext);
         return debugReportSender.sendReport(adTechDomain, debugReportPayload);
     }
 

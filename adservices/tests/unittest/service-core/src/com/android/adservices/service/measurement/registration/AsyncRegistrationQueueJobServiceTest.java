@@ -530,6 +530,9 @@ public class AsyncRegistrationQueueJobServiceTest {
                         .strictness(Strictness.LENIENT)
                         .startMocking();
         try {
+            Context context = Mockito.mock(Context.class);
+            doReturn(CONTEXT.getPackageName()).when(context).getPackageName();
+            doReturn(CONTEXT.getPackageManager()).when(context).getPackageManager();
             // Setup mock everything in job
             mMockDatastoreManager = mock(DatastoreManager.class);
             doReturn(Optional.empty())
@@ -537,7 +540,7 @@ public class AsyncRegistrationQueueJobServiceTest {
                     .runInTransactionWithResult(any());
             doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
             doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
-            doReturn(Mockito.mock(Context.class)).when(mSpyService).getApplicationContext();
+            doReturn(context).when(mSpyService).getApplicationContext();
             ExtendedMockito.doReturn(mock(EnrollmentDao.class))
                     .when(() -> EnrollmentDao.getInstance(any()));
             ExtendedMockito.doReturn(mock(AdServicesLoggerImpl.class))

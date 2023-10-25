@@ -107,7 +107,8 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
                                 datastoreManager,
                                 mockKeyManager,
                                 FlagsFactory.getFlagsForTest(),
-                                mLogger));
+                                mLogger,
+                                sContext));
         try {
             Mockito.doReturn(returnCode)
                     .when(spyReportingService)

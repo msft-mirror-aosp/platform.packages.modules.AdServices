@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import android.content.Context;
 import android.net.Uri;
 
 import com.android.internal.annotations.VisibleForTesting;
@@ -38,7 +39,8 @@ public class EventReportSender extends MeasurementReportSender {
 
     private String mReportUriPath;
 
-    public EventReportSender(boolean isDebugReport) {
+    public EventReportSender(boolean isDebugReport, Context context) {
+        super(context);
         this.mReportUriPath = EVENT_ATTRIBUTION_REPORT_URI_PATH;
         if (isDebugReport) {
             this.mReportUriPath = DEBUG_EVENT_ATTRIBUTION_REPORT_URI_PATH;
