@@ -16,7 +16,6 @@
 
 package com.android.adservices.shared.storage;
 
-import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.os.PersistableBundle;
 import android.util.AtomicFile;
@@ -52,7 +51,7 @@ import java.util.stream.Collectors;
  * by exactly one datastore object. If multiple writing threads or processes attempt to use
  * different instances pointing to the same file, transactions may be lost.
  *
- * <p>Keys must be non-null, non-empty strings, and values must be booleans.
+ * <p>Keys must be non-{@code null}, non-empty strings, and values must be booleans.
  *
  * @threadsafe
  */
@@ -79,15 +78,9 @@ public class BooleanFileDatastore {
 
     public BooleanFileDatastore(
             String parentPath, String filename, int datastoreVersion, String versionKey) {
-        this(
-                new File(
-                        Objects.requireNonNull(parentPath),
-                        Preconditions.checkStringNotEmpty(filename, "Filename must not be empty")),
-                datastoreVersion,
-                versionKey);
+        this(newFile(parentPath, filename), datastoreVersion, versionKey);
     }
 
-    // TODO(b/25131972): add new test for File constructor (and invalid args)
     public BooleanFileDatastore(File file, int datastoreVersion, String versionKey) {
         mAtomicFile = new AtomicFile(Objects.requireNonNull(file));
         mDatastoreVersion =
@@ -102,7 +95,7 @@ public class BooleanFileDatastore {
      *
      * @throws IOException if file read fails
      */
-    public void initialize() throws IOException {
+    public final void initialize() throws IOException {
         if (DEBUG) {
             Log.d(TAG, "Reading from store file: " + mAtomicFile.getBaseFile());
         }
@@ -182,7 +175,7 @@ public class BooleanFileDatastore {
      * @throws IOException if file write fails
      * @throws NullPointerException if {@code key} is null
      */
-    public void put(@NonNull String key, boolean value) throws IOException {
+    public final void put(String key, boolean value) throws IOException {
         Objects.requireNonNull(key);
         Preconditions.checkStringNotEmpty(key, "Key must not be empty");
 
@@ -207,7 +200,7 @@ public class BooleanFileDatastore {
      * @throws IOException if file write fails
      * @throws NullPointerException if {@code key} is null
      */
-    public boolean putIfNew(@NonNull String key, boolean value) throws IOException {
+    public final boolean putIfNew(String key, boolean value) throws IOException {
         Objects.requireNonNull(key);
         Preconditions.checkStringNotEmpty(key, "Key must not be empty");
 
@@ -247,7 +240,7 @@ public class BooleanFileDatastore {
      * @throws NullPointerException if {@code key} is null
      */
     @Nullable
-    public Boolean get(@NonNull String key) {
+    public final Boolean get(String key) {
         Objects.requireNonNull(key);
         Preconditions.checkStringNotEmpty(key, "Key must not be empty");
 
@@ -268,7 +261,7 @@ public class BooleanFileDatastore {
      * @throws NullPointerException if {@code key} is null
      */
     @Nullable
-    public Boolean get(@NonNull String key, boolean defaultValue) {
+    public final Boolean get(String key, boolean defaultValue) {
         Objects.requireNonNull(key);
         Preconditions.checkStringNotEmpty(key, "Key must not be empty");
 
@@ -281,8 +274,7 @@ public class BooleanFileDatastore {
     }
 
     /** Returns the version that was written prior to the device starting. */
-    @NonNull
-    public int getPreviousStoredVersion() {
+    public final int getPreviousStoredVersion() {
         return mPreviousStoredVersion;
     }
 
@@ -291,8 +283,7 @@ public class BooleanFileDatastore {
      *
      * @return A {@link Set} of {@link String} keys currently in the loaded datastore
      */
-    @NonNull
-    public Set<String> keySet() {
+    public final Set<String> keySet() {
         mReadLock.lock();
         try {
             return Set.copyOf(mLocalMap.keySet());
@@ -301,7 +292,6 @@ public class BooleanFileDatastore {
         }
     }
 
-    @NonNull
     private Set<String> keySetFilter(boolean filter) {
         mReadLock.lock();
         try {
@@ -320,8 +310,7 @@ public class BooleanFileDatastore {
      *
      * @return A Set of String keys currently in the loaded datastore that have value {@code true}
      */
-    @NonNull
-    public Set<String> keySetTrue() {
+    public final Set<String> keySetTrue() {
         return keySetFilter(true);
     }
 
@@ -330,9 +319,13 @@ public class BooleanFileDatastore {
      *
      * @return A Set of String keys currently in the loaded datastore that have value {@code false}
      */
-    @NonNull
-    public Set<String> keySetFalse() {
+    public final Set<String> keySetFalse() {
         return keySetFilter(false);
+    }
+
+    /** Gets the version key. */
+    public final String getVersionKey() {
+        return mVersionKey;
     }
 
     /**
@@ -342,7 +335,7 @@ public class BooleanFileDatastore {
      *
      * @throws IOException if file write fails
      */
-    public void clear() throws IOException {
+    public final void clear() throws IOException {
         if (DEBUG) {
             Log.d(TAG, "Clearing all entries from datastore");
         }
@@ -400,7 +393,7 @@ public class BooleanFileDatastore {
      * @throws IOException if file write fails
      * @throws NullPointerException if {@code key} is null
      */
-    public void remove(@NonNull String key) throws IOException {
+    public void remove(String key) throws IOException {
         Objects.requireNonNull(key);
         Preconditions.checkStringNotEmpty(key, "Key must not be empty");
 
@@ -465,5 +458,20 @@ public class BooleanFileDatastore {
         } finally {
             mWriteLock.unlock();
         }
+    }
+
+    private static File newFile(String parentPath, String filename) {
+        Preconditions.checkStringNotEmpty(parentPath, "parentPath must not be empty or null");
+        Preconditions.checkStringNotEmpty(filename, "filename must not be empty or null");
+        File parent = new File(parentPath);
+        if (!parent.exists()) {
+            throw new IllegalArgumentException(
+                    "parentPath doesn't exist: " + parent.getAbsolutePath());
+        }
+        if (!parent.isDirectory()) {
+            throw new IllegalArgumentException(
+                    "parentPath is not a directory: " + parent.getAbsolutePath());
+        }
+        return new File(parent, filename);
     }
 }
