@@ -1075,6 +1075,8 @@ public final class FlagsConstants {
 
     public static final String KEY_AD_ID_CACHE_ENABLED = "ad_id_cache_enabled";
 
+    public static final String KEY_AD_ID_FETCHER_TIMEOUT_MS = "ad_id_fetcher_timeout_ms";
+
     public static final String KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT =
             "app_config_returns_enabled_by_detault";
 

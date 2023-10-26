@@ -4082,6 +4082,20 @@ public interface Flags {
         return DEFAULT_ADID_CACHE_ENABLED;
     }
 
+    long DEFAULT_AD_ID_FETCHER_TIMEOUT_MS = 50;
+
+    /**
+     * Returns configured timeout value for {@link
+     * com.android.adservices.service.adselection.AdIdFetcher} logic.
+     *
+     * <p>The intended goal is to override this value for tests.
+     *
+     * @return Timeout in mills.
+     */
+    default long getAdIdFetcherTimeoutMs() {
+        return DEFAULT_AD_ID_FETCHER_TIMEOUT_MS;
+    }
+
     boolean APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT = false;
 
     /**
