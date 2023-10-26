@@ -21,7 +21,6 @@ android_test {
         "src/**/*.java",
     ],
     defaults: ["modules-utils-testable-device-config-defaults"],
-    min_sdk_version: "30",
     manifest: "AndroidManifest.xml",
     test_config: "AndroidTest.xml",
     static_libs: [
@@ -43,9 +42,44 @@ android_test {
         "mockito",
     ],
     sdk_version: "test_current",
+    min_sdk_version: "Tiramisu",
     test_suites: [
         "general-tests",
         "mts-adservices"
     ],
-    test_mainline_modules: ["com.google.android.adservices.apex"],
+}
+
+android_test {
+    name: "AdExtServicesCobaltUnitTests",
+    srcs: [
+        "src/**/*.java",
+    ],
+    defaults: ["modules-utils-testable-device-config-defaults"],
+    manifest: "AndroidManifest.xml",
+    test_config: "AndroidTest.ExtServices.xml",
+    static_libs: [
+        "adservices-service-core",
+        "androidx.test.core",
+        "androidx.test.runner",
+        "androidx.room_room-runtime",
+        "androidx.room_room-testing",
+        "adservices-cobalt",
+        "apache-commons-math",
+        "truth-prebuilt",
+    ],
+    jni_libs: [
+        "libhpke_jni",
+    ],
+    libs: [
+        "android.test.base",
+        "android.test.runner",
+        "mockito",
+    ],
+    sdk_version: "test_current",
+    min_sdk_version: "30",
+    max_sdk_version: "32",
+    test_suites: [
+        "general-tests",
+        "mts-extservices"
+    ],
 }
