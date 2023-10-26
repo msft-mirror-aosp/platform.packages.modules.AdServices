@@ -264,8 +264,6 @@ public class SdkSandboxTest {
         SdkSandboxStorageCallback sdkSandboxStorageCallback = new SdkSandboxStorageCallback();
         mService.computeSdkStorage(sharedPaths, sdkPaths, sdkSandboxStorageCallback);
 
-        Thread.sleep(5000);
-
         assertThat(sdkSandboxStorageCallback.getSdkStorage()).isEqualTo(1024F);
         assertThat(sdkSandboxStorageCallback.getSharedStorage()).isEqualTo(1024F);
     }

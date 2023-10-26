@@ -5902,25 +5902,81 @@ public class MeasurementDaoTest {
         ExtendedMockito.doReturn(1).when(mockFlags).getMeasurementReportingRetryLimit();
         ExtendedMockito.doReturn(false).when(mockFlags).getMeasurementReportingRetryLimitEnabled();
 
-        DebugReport debugReport = createDebugReport();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).getReadableDatabase();
+
+        DebugReport debugReport1 =
+                new DebugReport.Builder()
+                        .setId("reportId1")
+                        .setType("trigger-event-deduplicated")
+                        .setBody(
+                                " {\n"
+                                        + "      \"attribution_destination\":"
+                                        + " \"https://destination.example\",\n"
+                                        + "      \"source_event_id\": \"45623\"\n"
+                                        + "    }")
+                        .setEnrollmentId("1")
+                        .setRegistrationOrigin(REGISTRATION_ORIGIN)
+                        .setInsertionTime(System.currentTimeMillis() + 60000L)
+                        .build();
+
+        DebugReport debugReport2 =
+                new DebugReport.Builder()
+                        .setId("reportId2")
+                        .setType("trigger-event-deduplicated")
+                        .setBody(
+                                " {\n"
+                                        + "      \"attribution_destination\":"
+                                        + " \"https://destination.example\",\n"
+                                        + "      \"source_event_id\": \"45623\"\n"
+                                        + "    }")
+                        .setEnrollmentId("1")
+                        .setRegistrationOrigin(REGISTRATION_ORIGIN)
+                        .setInsertionTime(System.currentTimeMillis() - 60000L)
+                        .build();
         // Insert
-        mDatastoreManager.runInTransaction((dao) -> dao.insertDebugReport(debugReport));
+        mDatastoreManager.runInTransaction((dao) -> dao.insertDebugReport(debugReport1));
+        mDatastoreManager.runInTransaction((dao) -> dao.insertDebugReport(debugReport2));
+
         // Increment Attempt
         mDatastoreManager.runInTransaction(
                 (dao) ->
                         dao.incrementAndGetReportingRetryCount(
-                                debugReport.getId(), DataType.DEBUG_REPORT_RETRY_COUNT));
+                                debugReport1.getId(), DataType.DEBUG_REPORT_RETRY_COUNT));
         // Delete Expired
-        mDatastoreManager.runInTransaction(dao -> dao.deleteExpiredRecords(0, 0));
-        try (Cursor cursor =
-                MeasurementDbHelper.getInstance(sContext)
-                        .getReadableDatabase()
-                        .query(DebugReportContract.TABLE, null, null, null, null, null, null)) {
-            // Assert Record not removed while Limiting Disabled
-            assertTrue(cursor.moveToNext());
-            DebugReport report = SqliteObjectMapper.constructDebugReportFromCursor(cursor);
-            assertNotNull(report);
-        }
+        long earliestValidInsertion = System.currentTimeMillis();
+
+        assertTrue(
+                mDatastoreManager.runInTransaction(
+                        measurementDao ->
+                                measurementDao.deleteExpiredRecords(earliestValidInsertion, 0)));
+
+        // Assert Record 1 remains because not expired and Retry Limiting Off.
+        assertEquals(
+                1,
+                DatabaseUtils.longForQuery(
+                        db,
+                        "SELECT COUNT("
+                                + MeasurementTables.DebugReportContract.ID
+                                + ") FROM "
+                                + MeasurementTables.DebugReportContract.TABLE
+                                + " WHERE "
+                                + MeasurementTables.DebugReportContract.ID
+                                + " = ?",
+                        new String[] {debugReport1.getId()}));
+
+        // Assert Record 2 Removed because expired.
+        assertEquals(
+                0,
+                DatabaseUtils.longForQuery(
+                        db,
+                        "SELECT COUNT("
+                                + MeasurementTables.DebugReportContract.ID
+                                + ") FROM "
+                                + MeasurementTables.DebugReportContract.TABLE
+                                + " WHERE "
+                                + MeasurementTables.DebugReportContract.ID
+                                + " = ?",
+                        new String[] {debugReport2.getId()}));
     }
 
     @Test

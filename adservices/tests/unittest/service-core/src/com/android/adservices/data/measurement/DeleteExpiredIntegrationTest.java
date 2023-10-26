@@ -19,6 +19,8 @@ package com.android.adservices.data.measurement;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.json.JSONException;
 import org.junit.runner.RunWith;
@@ -34,24 +36,39 @@ import java.util.Collection;
  */
 @RunWith(Parameterized.class)
 public class DeleteExpiredIntegrationTest extends AbstractDbIntegrationTest {
+    private final boolean mRetryLimitingEnabled;
 
-    @Parameterized.Parameters(name = "{2}")
+    @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> data() throws IOException, JSONException {
         InputStream inputStream = sContext.getAssets().open(
                 "measurement_delete_expired_test.json");
-        return AbstractDbIntegrationTest.getTestCasesFrom(inputStream, null);
+        return AbstractDbIntegrationTest.getTestCasesFrom(
+                inputStream, (testObj) -> testObj.getBoolean("retry-limit"));
     }
 
     // The 'name' parameter is needed for the JUnit parameterized
     // test, although it's ostensibly unused by this constructor.
-    public DeleteExpiredIntegrationTest(DbState input, DbState output, String name) {
+    public DeleteExpiredIntegrationTest(
+            DbState input, DbState output, boolean retryLimitingEnabled, String name) {
         super(input, output);
+
+        this.mRetryLimitingEnabled = retryLimitingEnabled;
     }
 
     public void runActionToTest() {
+        Flags mockFlags = Mockito.mock(Flags.class);
+        ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(Flags.MEASUREMENT_REPORT_RETRY_LIMIT)
+                .when(mockFlags)
+                .getMeasurementReportingRetryLimit();
+        ExtendedMockito.doReturn(mRetryLimitingEnabled)
+                .when(mockFlags)
+                .getMeasurementReportingRetryLimitEnabled();
+
         long earliestValidInsertion =
                 System.currentTimeMillis() - Flags.MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
         int retryLimit = Flags.MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
+
         AdServicesErrorLogger errorLogger = Mockito.mock(AdServicesErrorLogger.class);
         new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), errorLogger)
                 .runInTransaction(

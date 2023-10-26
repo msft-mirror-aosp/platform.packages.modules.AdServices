@@ -150,7 +150,10 @@ public class TopicsConnectionTest {
     // If enabled = false, the AdServices is enabled.
     private void enableGlobalKillSwitch(boolean enabled) {
         if (SdkLevel.isAtLeastT()) {
-            flags.setGlobalKillSwitch(enabled);
+            // TODO (b/307748265): update to use FlagSetterRule
+            String overrideString = enabled ? "true" : "false";
+            ShellUtils.runShellCommand(
+                    "setprop debug.adservices.global_kill_switch " + overrideString);
         } else {
             flags.setEnableBackCompat(!enabled);
         }
