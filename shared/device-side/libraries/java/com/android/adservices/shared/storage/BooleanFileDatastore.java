@@ -16,7 +16,6 @@
 
 package com.android.adservices.shared.storage;
 
-import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.os.PersistableBundle;
 import android.util.AtomicFile;
@@ -25,6 +24,7 @@ import android.util.Log;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
+import com.android.modules.utils.build.SdkLevel;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -51,10 +51,9 @@ import java.util.stream.Collectors;
  * by exactly one datastore object. If multiple writing threads or processes attempt to use
  * different instances pointing to the same file, transactions may be lost.
  *
- * <p>Keys must be non-null, non-empty strings, and values must be booleans.
+ * <p>Keys must be non-{@code null}, non-empty strings, and values must be booleans.
  *
  * @threadsafe
- * @hide
  */
 public class BooleanFileDatastore {
 
@@ -78,18 +77,17 @@ public class BooleanFileDatastore {
     private int mPreviousStoredVersion;
 
     public BooleanFileDatastore(
-            @NonNull String parentPath,
-            @NonNull String filename,
-            int datastoreVersion,
-            String versionKey) {
-        Objects.requireNonNull(parentPath);
-        Objects.requireNonNull(filename);
-        Preconditions.checkStringNotEmpty(filename, "Filename must not be empty");
-        Preconditions.checkArgumentNonnegative(datastoreVersion, "Version must not be negative");
+            String parentPath, String filename, int datastoreVersion, String versionKey) {
+        this(newFile(parentPath, filename), datastoreVersion, versionKey);
+    }
 
-        mAtomicFile = new AtomicFile(new File(parentPath, filename));
-        mDatastoreVersion = datastoreVersion;
-        mVersionKey = versionKey;
+    public BooleanFileDatastore(File file, int datastoreVersion, String versionKey) {
+        mAtomicFile = new AtomicFile(Objects.requireNonNull(file));
+        mDatastoreVersion =
+                Preconditions.checkArgumentNonnegative(
+                        datastoreVersion, "Version must not be negative");
+
+        mVersionKey = Objects.requireNonNull(versionKey);
     }
 
     /**
@@ -97,7 +95,7 @@ public class BooleanFileDatastore {
      *
      * @throws IOException if file read fails
      */
-    public void initialize() throws IOException {
+    public final void initialize() throws IOException {
         if (DEBUG) {
             Log.d(TAG, "Reading from store file: " + mAtomicFile.getBaseFile());
         }
@@ -177,7 +175,7 @@ public class BooleanFileDatastore {
      * @throws IOException if file write fails
      * @throws NullPointerException if {@code key} is null
      */
-    public void put(@NonNull String key, boolean value) throws IOException {
+    public final void put(String key, boolean value) throws IOException {
         Objects.requireNonNull(key);
         Preconditions.checkStringNotEmpty(key, "Key must not be empty");
 
@@ -202,7 +200,7 @@ public class BooleanFileDatastore {
      * @throws IOException if file write fails
      * @throws NullPointerException if {@code key} is null
      */
-    public boolean putIfNew(@NonNull String key, boolean value) throws IOException {
+    public final boolean putIfNew(String key, boolean value) throws IOException {
         Objects.requireNonNull(key);
         Preconditions.checkStringNotEmpty(key, "Key must not be empty");
 
@@ -242,7 +240,7 @@ public class BooleanFileDatastore {
      * @throws NullPointerException if {@code key} is null
      */
     @Nullable
-    public Boolean get(@NonNull String key) {
+    public final Boolean get(String key) {
         Objects.requireNonNull(key);
         Preconditions.checkStringNotEmpty(key, "Key must not be empty");
 
@@ -263,7 +261,7 @@ public class BooleanFileDatastore {
      * @throws NullPointerException if {@code key} is null
      */
     @Nullable
-    public Boolean get(@NonNull String key, boolean defaultValue) {
+    public final Boolean get(String key, boolean defaultValue) {
         Objects.requireNonNull(key);
         Preconditions.checkStringNotEmpty(key, "Key must not be empty");
 
@@ -276,8 +274,7 @@ public class BooleanFileDatastore {
     }
 
     /** Returns the version that was written prior to the device starting. */
-    @NonNull
-    public int getPreviousStoredVersion() {
+    public final int getPreviousStoredVersion() {
         return mPreviousStoredVersion;
     }
 
@@ -286,8 +283,7 @@ public class BooleanFileDatastore {
      *
      * @return A {@link Set} of {@link String} keys currently in the loaded datastore
      */
-    @NonNull
-    public Set<String> keySet() {
+    public final Set<String> keySet() {
         mReadLock.lock();
         try {
             return Set.copyOf(mLocalMap.keySet());
@@ -296,7 +292,6 @@ public class BooleanFileDatastore {
         }
     }
 
-    @NonNull
     private Set<String> keySetFilter(boolean filter) {
         mReadLock.lock();
         try {
@@ -315,8 +310,7 @@ public class BooleanFileDatastore {
      *
      * @return A Set of String keys currently in the loaded datastore that have value {@code true}
      */
-    @NonNull
-    public Set<String> keySetTrue() {
+    public final Set<String> keySetTrue() {
         return keySetFilter(true);
     }
 
@@ -325,9 +319,13 @@ public class BooleanFileDatastore {
      *
      * @return A Set of String keys currently in the loaded datastore that have value {@code false}
      */
-    @NonNull
-    public Set<String> keySetFalse() {
+    public final Set<String> keySetFalse() {
         return keySetFilter(false);
+    }
+
+    /** Gets the version key. */
+    public final String getVersionKey() {
+        return mVersionKey;
     }
 
     /**
@@ -337,7 +335,7 @@ public class BooleanFileDatastore {
      *
      * @throws IOException if file write fails
      */
-    public void clear() throws IOException {
+    public final void clear() throws IOException {
         if (DEBUG) {
             Log.d(TAG, "Clearing all entries from datastore");
         }
@@ -395,7 +393,7 @@ public class BooleanFileDatastore {
      * @throws IOException if file write fails
      * @throws NullPointerException if {@code key} is null
      */
-    public void remove(@NonNull String key) throws IOException {
+    public void remove(String key) throws IOException {
         Objects.requireNonNull(key);
         Preconditions.checkStringNotEmpty(key, "Key must not be empty");
 
@@ -408,18 +406,43 @@ public class BooleanFileDatastore {
         }
     }
 
+    /**
+     * Removes all entries that begin with the specified prefix from the datastore file.
+     *
+     * <p>This change is committed immediately to file.
+     *
+     * @param prefix A non-null, non-empty string that all keys are matched against
+     * @throws NullPointerException if {@code prefix} is null
+     * @throws IllegalArgumentException if {@code prefix} is an empty string
+     * @throws IOException if file write fails
+     */
+    public void removeByPrefix(String prefix) throws IOException {
+        Objects.requireNonNull(prefix);
+        Preconditions.checkStringNotEmpty(prefix, "Prefix must not be empty");
+
+        mWriteLock.lock();
+        try {
+            Set<String> allKeys = mLocalMap.keySet();
+            Set<String> keysToDelete =
+                    allKeys.stream().filter(s -> s.startsWith(prefix)).collect(Collectors.toSet());
+            allKeys.removeAll(keysToDelete); // Modifying the keySet updates the underlying map
+            writeToFile();
+        } finally {
+            mWriteLock.unlock();
+        }
+    }
+
     /** Dumps its internal state. */
     public void dump(PrintWriter writer, String prefix) {
         writer.printf("%smDatastoreVersion: %d\n", prefix, mDatastoreVersion);
         writer.printf("%smPreviousStoredVersion: %d\n", prefix, mPreviousStoredVersion);
         writer.printf("%smVersionKey: %s\n", prefix, mVersionKey);
-        writer.printf(
-                "%smAtomicFile: %s (last modified at %d):\n",
-                prefix,
-                mAtomicFile.getBaseFile().getAbsolutePath(),
-                mAtomicFile.getLastModifiedTime());
+        writer.printf("%smAtomicFile: %s", prefix, mAtomicFile.getBaseFile().getAbsolutePath());
+        if (SdkLevel.isAtLeastS()) {
+            writer.printf(" (last modified at %d)", mAtomicFile.getLastModifiedTime());
+        }
         int size = mLocalMap.size();
-        writer.printf("%s%d entries\n", prefix, size);
+        writer.printf(":\n%s%d entries\n", prefix, size);
 
         // TODO(b/299942046): decide whether it's ok to dump the entries themselves (perhaps passing
         // an argument).
@@ -435,5 +458,20 @@ public class BooleanFileDatastore {
         } finally {
             mWriteLock.unlock();
         }
+    }
+
+    private static File newFile(String parentPath, String filename) {
+        Preconditions.checkStringNotEmpty(parentPath, "parentPath must not be empty or null");
+        Preconditions.checkStringNotEmpty(filename, "filename must not be empty or null");
+        File parent = new File(parentPath);
+        if (!parent.exists()) {
+            throw new IllegalArgumentException(
+                    "parentPath doesn't exist: " + parent.getAbsolutePath());
+        }
+        if (!parent.isDirectory()) {
+            throw new IllegalArgumentException(
+                    "parentPath is not a directory: " + parent.getAbsolutePath());
+        }
+        return new File(parent, filename);
     }
 }

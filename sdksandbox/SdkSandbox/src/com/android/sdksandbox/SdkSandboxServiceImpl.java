@@ -51,7 +51,6 @@ import androidx.annotation.RequiresApi;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
-import com.android.modules.utils.BackgroundThread;
 import com.android.modules.utils.build.SdkLevel;
 
 import dalvik.system.PathClassLoader;
@@ -161,23 +160,14 @@ public class SdkSandboxServiceImpl extends Service {
     /** Computes the storage of the shared and SDK storage for an app */
     public void computeSdkStorage(
             List<String> sharedPaths, List<String> sdkPaths, IComputeSdkStorageCallback callback) {
-        // Start the handler thread.
-        BackgroundThread.getExecutor()
-                .execute(
-                        () -> {
-                            final int sharedStorageKb =
-                                    FileUtil.getStorageInKbForPaths(sharedPaths);
-                            final int sdkStorageKb = FileUtil.getStorageInKbForPaths(sdkPaths);
+        int sharedStorageKb = FileUtil.getStorageInKbForPaths(sharedPaths);
+        int sdkStorageKb = FileUtil.getStorageInKbForPaths(sdkPaths);
 
-                            try {
-                                callback.onStorageInfoComputed(sharedStorageKb, sdkStorageKb);
-                            } catch (RemoteException e) {
-                                LogUtil.d(
-                                        TAG,
-                                        "Error while calling computeSdkStorage in sandbox: "
-                                                + e.getMessage());
-                            }
-                        });
+        try {
+            callback.onStorageInfoComputed(sharedStorageKb, sdkStorageKb);
+        } catch (RemoteException e) {
+            LogUtil.d(TAG, "Error while calling computeSdkStorage in sandbox: " + e.getMessage());
+        }
     }
 
     /** Loads SDK. */
