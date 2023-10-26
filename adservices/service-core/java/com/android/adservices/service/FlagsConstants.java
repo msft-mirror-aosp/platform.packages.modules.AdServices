@@ -67,6 +67,12 @@ public final class FlagsConstants {
     public static final String KEY_MAINLINE_TRAIN_VERSION = "mainline_train_version";
     public static final String KEY_ADSERVICES_VERSION_MAPPINGS = "adservices_version_mappings";
 
+    // Encryption keys
+    public static final String KEY_ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS =
+            "encryption_key_network_connect_timeout_ms";
+    public static final String KEY_ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS =
+            "encryption_key_network_read_timeout_ms";
+
     // Topics keys
     public static final String KEY_TOPICS_EPOCH_JOB_PERIOD_MS = "topics_epoch_job_period_ms";
     public static final String KEY_TOPICS_EPOCH_JOB_FLEX_MS = "topics_epoch_job_flex_ms";

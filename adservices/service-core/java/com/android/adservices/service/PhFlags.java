@@ -400,6 +400,24 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public int getEncryptionKeyNetworkConnectTimeoutMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS,
+                /* defaultValue */ ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS);
+    }
+
+    @Override
+    public int getEncryptionKeyNetworkReadTimeoutMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS,
+                /* defaultValue */ ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS);
+    }
+
+    @Override
     public long getMeasurementEventMainReportingJobPeriodMs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
@@ -3428,7 +3446,17 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_ENROLLMENT_ENABLE_LIMITED_LOGGING
                         + " = "
                         + getEnrollmentEnableLimitedLogging());
-
+        writer.println("==== AdServices PH Flags Dump EncryptionKeys ====");
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS
+                        + " = "
+                        + getEncryptionKeyNetworkConnectTimeoutMs());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS
+                        + " = "
+                        + getEncryptionKeyNetworkReadTimeoutMs());
         writer.println("==== AdServices PH Flags Dump killswitches ====");
         writer.println(
                 "\t" + FlagsConstants.KEY_GLOBAL_KILL_SWITCH + " = " + getGlobalKillSwitch());
