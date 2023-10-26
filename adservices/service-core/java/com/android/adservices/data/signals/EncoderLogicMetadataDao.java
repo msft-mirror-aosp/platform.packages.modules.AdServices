@@ -74,10 +74,10 @@ public interface EncoderLogicMetadataDao {
     List<AdTechIdentifier> getAllBuyersWithRegisteredEncoders();
 
     /**
-     * @return list of buyers which registered encoders before the expiryTime
+     * @return list of buyers which registered encoders before the time instant
      */
-    @Query("SELECT DISTINCT buyer FROM encoder_logics WHERE creation_time < :expiryTime") // NOTYPO
-    List<AdTechIdentifier> getBuyersWithEncodersBeforeTime(@NonNull Instant expiryTime);
+    @Query("SELECT DISTINCT buyer FROM encoder_logics WHERE creation_time < :time") // NOTYPO
+    List<AdTechIdentifier> getBuyersWithEncodersBeforeTime(@NonNull Instant time);
 
     /**
      * @param buyer Ad-tech identifier whose encoding logic we delete
