@@ -29,7 +29,6 @@ import android.annotation.NonNull;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adid.AdIdWorker;
-import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
@@ -47,7 +46,6 @@ import java.util.concurrent.TimeoutException;
 
 /** Class to fetch Ad Id related data required to run ad selection. */
 public class AdIdFetcher {
-    @VisibleForTesting public static final int AD_ID_TIMEOUT_IN_MS = 50;
     private static final boolean DEFAULT_IS_LAT_ENABLED = true;
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final AdIdWorker mAdIdWorker;
@@ -89,6 +87,7 @@ public class AdIdFetcher {
      */
     public ListenableFuture<Boolean> isLimitedAdTrackingEnabled(
             @NonNull String packageName, int callingUid) {
+        long adIdTimeoutInMs = mFlags.getAdIdFetcherTimeoutMs();
         if (mFlags.getAdIdKillSwitch()) {
             sLogger.v(
                     "AdIdService kill switch is enabled, returning isLimitedAdTrackingEnabled as"
@@ -99,7 +98,7 @@ public class AdIdFetcher {
         return FluentFuture.from(
                         getFutureWithTimeout(
                                 convertToCallback(packageName, callingUid),
-                                AD_ID_TIMEOUT_IN_MS,
+                                adIdTimeoutInMs,
                                 MILLISECONDS,
                                 mScheduledExecutor))
                 .catching(
@@ -108,7 +107,7 @@ public class AdIdFetcher {
                             sLogger.v(
                                     "Timeout after %d ms while calling getAdId api. Returning"
                                             + " isLimitedAdTrackingEnabled %b",
-                                    AD_ID_TIMEOUT_IN_MS, DEFAULT_IS_LAT_ENABLED);
+                                    adIdTimeoutInMs, DEFAULT_IS_LAT_ENABLED);
                             return DEFAULT_IS_LAT_ENABLED;
                         },
                         mLightweightExecutorService)
