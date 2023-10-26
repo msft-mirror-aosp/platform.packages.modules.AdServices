@@ -22,9 +22,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.CommonFixture;
+import android.content.res.AssetFileDescriptor;
 import android.os.Parcel;
+import android.os.ParcelFileDescriptor;
 
 import org.junit.Test;
+
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class GetAdSelectionDataResponseTest {
     private static final byte[] AD_SELECTION_RESULT = new byte[] {1, 2, 3, 4};
@@ -41,6 +47,28 @@ public class GetAdSelectionDataResponseTest {
 
         assertThat(getAdSelectionDataResponse.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
         assertThat(getAdSelectionDataResponse.getAdSelectionData()).isEqualTo(AD_SELECTION_RESULT);
+        assertThat(getAdSelectionDataResponse.getAssetFileDescriptor()).isNull();
+    }
+
+    @Test
+    public void testBuildGetAdSelectionDataResponseWithAssetFileDescriptor() throws Exception {
+        AssetFileDescriptor assetFileDescriptor =
+                setupAssetFileDescriptorResponse(AD_SELECTION_RESULT);
+        byte[] result = new byte[AD_SELECTION_RESULT.length];
+
+        GetAdSelectionDataResponse getAdSelectionDataResponse =
+                new GetAdSelectionDataResponse.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setAssetFileDescriptor(assetFileDescriptor)
+                        .build();
+
+        assertThat(getAdSelectionDataResponse.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
+        assertThat(getAdSelectionDataResponse.getAdSelectionData()).isNull();
+        try (InputStream inputStream =
+                getAdSelectionDataResponse.getAssetFileDescriptor().createInputStream()) {
+            int ignored = inputStream.read(result);
+        }
+        assertThat(result).isEqualTo(AD_SELECTION_RESULT);
     }
 
     @Test
@@ -59,6 +87,33 @@ public class GetAdSelectionDataResponseTest {
 
         assertThat(fromParcel.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
         assertThat(fromParcel.getAdSelectionData()).isEqualTo(AD_SELECTION_RESULT);
+        assertThat(getAdSelectionDataResponse.getAssetFileDescriptor()).isNull();
+    }
+
+    @Test
+    public void testParcelGetAdSelectionDataResponseWithAssetFileDescriptor() throws Exception {
+        AssetFileDescriptor assetFileDescriptor =
+                setupAssetFileDescriptorResponse(AD_SELECTION_RESULT);
+        byte[] result = new byte[AD_SELECTION_RESULT.length];
+
+        GetAdSelectionDataResponse getAdSelectionDataResponse =
+                new GetAdSelectionDataResponse.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setAssetFileDescriptor(assetFileDescriptor)
+                        .build();
+
+        Parcel p = Parcel.obtain();
+        getAdSelectionDataResponse.writeToParcel(p, 0);
+        p.setDataPosition(0);
+        GetAdSelectionDataResponse fromParcel =
+                GetAdSelectionDataResponse.CREATOR.createFromParcel(p);
+
+        assertThat(fromParcel.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
+        assertThat(fromParcel.getAdSelectionData()).isNull();
+        try (InputStream inputStream = fromParcel.getAssetFileDescriptor().createInputStream()) {
+            int ignored = inputStream.read(result);
+        }
+        assertThat(result).isEqualTo(AD_SELECTION_RESULT);
     }
 
     @Test
@@ -77,6 +132,7 @@ public class GetAdSelectionDataResponseTest {
 
         assertThat(fromParcel.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
         assertThat(fromParcel.getAdSelectionData()).isNull();
+        assertThat(getAdSelectionDataResponse.getAssetFileDescriptor()).isNull();
     }
 
     @Test
@@ -188,5 +244,15 @@ public class GetAdSelectionDataResponseTest {
         adSelectionData[0] = newValue;
         assertThat(getAdSelectionDataResponse.getAdSelectionData()).isNotNull();
         assertThat(getAdSelectionDataResponse.getAdSelectionData()[0]).isEqualTo(originalValue);
+    }
+
+    private AssetFileDescriptor setupAssetFileDescriptorResponse(byte[] result) throws IOException {
+        ParcelFileDescriptor[] descriptors = ParcelFileDescriptor.createPipe();
+        ParcelFileDescriptor writeDescriptor = descriptors[1];
+        try (FileOutputStream outputStream =
+                new FileOutputStream(writeDescriptor.getFileDescriptor())) {
+            outputStream.write(result);
+        }
+        return new AssetFileDescriptor(descriptors[0], 0, result.length);
     }
 }
