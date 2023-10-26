@@ -3780,6 +3780,11 @@ public final class PhFlags implements Flags {
                         + getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist());
         writer.println(
                 "\t"
+                        + FlagsConstants.KEY_AD_ID_FETCHER_TIMEOUT_MS
+                        + " = "
+                        + getAdIdFetcherTimeoutMs());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_ENABLE_COMPUTE_VERSION_FROM_MAPPINGS
                         + " = "
                         + getEnableComputeVersionFromMappings());
@@ -5917,6 +5922,14 @@ public final class PhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_AD_ID_CACHE_ENABLED,
                 /* defaultValue */ DEFAULT_ADID_CACHE_ENABLED);
+    }
+
+    @Override
+    public long getAdIdFetcherTimeoutMs() {
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_AD_ID_FETCHER_TIMEOUT_MS,
+                /* defaultValue */ DEFAULT_AD_ID_FETCHER_TIMEOUT_MS);
     }
 
     @Override
