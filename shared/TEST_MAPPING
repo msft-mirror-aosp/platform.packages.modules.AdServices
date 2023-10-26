@@ -1,5 +1,5 @@
 {
-  "mainline-presubmit": [
+  "postsubmit": [
     {
       "name": "AdServicesSharedLibrariesUnitTests",
       "options": [
