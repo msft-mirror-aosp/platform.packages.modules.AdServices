@@ -239,6 +239,13 @@ public class SdkSandboxScenarioRule implements TestRule {
         sdkSandboxManager.loadSdk(mSdkName, loadParams, Runnable::run, callback);
         try {
             callback.assertLoadSdkIsSuccessful();
+        } catch (IllegalStateException e) {
+            // The underlying {@link WaitableCountDownLatch} used by the
+            // {@link FakeLoadSdkCallback} will throw this exception if we timeout waiting for a
+            // response. In which case, we should _not_ attempt to retrieve the error code because
+            // the getLoadSdkErrorCode call will likely fail as the callback would not have
+            // resolved yet.
+            throw e;
         } catch (Exception e) {
             Assume.assumeTrue(
                     "Skipping test because Sdk Sandbox is disabled",
