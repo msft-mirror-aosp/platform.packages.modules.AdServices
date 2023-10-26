@@ -289,8 +289,7 @@ public class SignalsEncodingE2ETest {
 
         mPeriodicEncodingJobWorker =
                 new PeriodicEncodingJobWorker(
-                        mEncoderLogicMetadataDao,
-                        mEncoderPersistenceDao,
+                        mEncoderLogicHandler,
                         mEncodedPayloadDao,
                         mSignalStorageManager,
                         mAdSelectionScriptEngine,
