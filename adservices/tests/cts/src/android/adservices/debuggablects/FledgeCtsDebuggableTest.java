@@ -1960,7 +1960,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
         long longerBiddingScoringTimeoutMs = 8_000L;
-        long shortOverallAdSelectionTimeoutMs = 10_000L;
+        long shortOverallAdSelectionTimeoutMs = 2_000L;
         PhFlagsFixture.overrideFledgeOnDeviceAdSelectionTimeouts(
                 longerBiddingScoringTimeoutMs,
                 longerBiddingScoringTimeoutMs,
