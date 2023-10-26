@@ -21,22 +21,22 @@ import android.database.sqlite.SQLiteDatabase;
 import androidx.annotation.NonNull;
 
 import com.android.adservices.data.encryptionkey.EncryptionKeyTables;
-import com.android.adservices.data.shared.SharedDbHelper;
 
-/** Migrates Shared DB from user version 1 to 2, create EncryptionKey table if not have it. */
-public class SharedDbMigratorV2 extends AbstractSharedDbMigrator {
+/**
+ * Migrates Shared DB from user version 2 to 3. This upgrade adds 'last_fetch_time' column to the
+ * EncryptionKey table.
+ */
+public class SharedDbMigratorV3 extends AbstractSharedDbMigrator {
 
-    public SharedDbMigratorV2() {
-        super(2);
+    public SharedDbMigratorV3() {
+        super(3);
     }
 
-    /**
-     * @param db shared db to migrate
-     */
     @Override
     protected void performMigration(@NonNull SQLiteDatabase db) {
-        if (!SharedDbHelper.hasAllTables(db, EncryptionKeyTables.ENCRYPTION_KEY_TABLES)) {
-            EncryptionKeyTables.CREATE_STATEMENTS_V2.forEach(db::execSQL);
-        }
+        MigrationHelpers.addIntColumnsIfAbsent(
+                db,
+                EncryptionKeyTables.EncryptionKeyContract.TABLE,
+                new String[] {EncryptionKeyTables.EncryptionKeyContract.LAST_FETCH_TIME});
     }
 }
