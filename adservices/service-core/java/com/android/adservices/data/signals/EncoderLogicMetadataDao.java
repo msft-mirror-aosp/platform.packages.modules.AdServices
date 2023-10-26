@@ -40,6 +40,15 @@ public interface EncoderLogicMetadataDao {
 
     /**
      * @param buyer Ad-tech owner for the encoding logic
+     * @param failedCount times of continues failure of the encoding logic
+     */
+    // common_typos_disable
+    @Query("UPDATE encoder_logics SET failed_encoding_count = :failedCount WHERE buyer = :buyer")
+    // common_typos_enable
+    int updateEncoderFailedCount(AdTechIdentifier buyer, int failedCount);
+
+    /**
+     * @param buyer Ad-tech owner for the encoding logic
      * @return an instance of {@link DBEncoderLogicMetadata} if present
      */
     @Query("SELECT * FROM encoder_logics WHERE buyer = :buyer") // NOTYPO
@@ -51,6 +60,12 @@ public interface EncoderLogicMetadataDao {
      */
     @Query("SELECT EXISTS(SELECT 1 FROM encoder_logics WHERE buyer = :buyer)") // NOTYPO
     boolean doesEncoderExist(AdTechIdentifier buyer);
+
+    /**
+     * @return list of all registered encoder logic
+     */
+    @Query("SELECT * FROM encoder_logics") // NOTYPO
+    List<DBEncoderLogicMetadata> getAllRegisteredEncoders();
 
     /**
      * @return list of all the buyers which have their encoder logic registered
