@@ -23,6 +23,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 import static android.adservices.measurement.MeasurementManager.MEASUREMENT_API_STATE_DISABLED;
 import static android.adservices.measurement.MeasurementManager.MEASUREMENT_API_STATE_ENABLED;
@@ -81,6 +82,8 @@ import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.Clock;
+import com.android.adservices.service.ui.data.UxStatesManager;
+import com.android.adservices.service.ui.enrollment.collection.GaUxEnrollmentChannelCollection;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -116,6 +119,7 @@ public final class MeasurementServiceImplTest {
     @Mock private AdServicesLogger mMockAdServicesLogger;
     @Mock private AppImportanceFilter mMockAppImportanceFilter;
     @Mock private ConsentManager mMockConsentManager;
+    @Mock private UxStatesManager mMockUxStatesManager;
     @Mock private Flags mMockFlags;
     @Mock private MeasurementImpl mMockMeasurementImpl;
     @Mock private Throttler mMockThrottler;
@@ -223,6 +227,16 @@ public final class MeasurementServiceImplTest {
                 Api.REGISTER_SOURCE,
                 new AccessDenier().deniedByConsent(),
                 () -> registerSourceAndAssertFailure(STATUS_USER_CONSENT_REVOKED));
+    }
+
+    @Test
+    public void testRegisterSource_failureByConsentNotifiedResolver() throws Exception {
+        runRunMocks(
+                Api.REGISTER_SOURCE,
+                new AccessDenier().deniedByConsentNotificationNotDisplayed(),
+                () ->
+                        registerSourceAndAssertFailure(
+                                STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET));
     }
 
     @Test
@@ -342,6 +356,16 @@ public final class MeasurementServiceImplTest {
                 Api.REGISTER_TRIGGER,
                 new AccessDenier().deniedByConsent(),
                 () -> registerTriggerAndAssertFailure(STATUS_USER_CONSENT_REVOKED));
+    }
+
+    @Test
+    public void testRegisterTrigger_failureByConsentNotifiedResolver() throws Exception {
+        runRunMocks(
+                Api.REGISTER_TRIGGER,
+                new AccessDenier().deniedByConsentNotificationNotDisplayed(),
+                () ->
+                        registerTriggerAndAssertFailure(
+                                STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET));
     }
 
     @Test
@@ -712,6 +736,15 @@ public final class MeasurementServiceImplTest {
     }
 
     @Test
+    public void testGetMeasurementApiStatus_failureByConsentNotifiedAccessResolver()
+            throws Exception {
+        runRunMocks(
+                Api.STATUS,
+                new AccessDenier().deniedByConsentNotificationNotDisplayed(),
+                this::getMeasurementApiStatusAndAssertFailure);
+    }
+
+    @Test
     public void testGetMeasurementApiStatus_invalidRequest_throwException() {
         assertThrows(
                 NullPointerException.class,
@@ -881,6 +914,16 @@ public final class MeasurementServiceImplTest {
     }
 
     @Test
+    public void testRegisterSources_failureByConsentNotifiedResolver() throws Exception {
+        runRunMocks(
+                Api.REGISTER_SOURCES,
+                new AccessDenier().deniedByConsentNotificationNotDisplayed(),
+                () ->
+                        registerSourcesAndAssertFailure(
+                                STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET));
+    }
+
+    @Test
     public void testRegisterSources_failureByForegroundEnforcementAccessResolver()
             throws Exception {
         runRunMocks(
@@ -978,6 +1021,16 @@ public final class MeasurementServiceImplTest {
                 Api.REGISTER_WEB_SOURCE,
                 new AccessDenier().deniedByConsent(),
                 () -> registerWebSourceAndAssertFailure(STATUS_USER_CONSENT_REVOKED));
+    }
+
+    @Test
+    public void testRegisterWebSource_failureByConsentNotifiedResolver() throws Exception {
+        runRunMocks(
+                Api.REGISTER_WEB_SOURCE,
+                new AccessDenier().deniedByConsentNotificationNotDisplayed(),
+                () ->
+                        registerWebSourceAndAssertFailure(
+                                STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET));
     }
 
     @Test
@@ -1133,6 +1186,16 @@ public final class MeasurementServiceImplTest {
                 Api.REGISTER_WEB_TRIGGER,
                 new AccessDenier().deniedByConsent(),
                 () -> registerWebTriggerAndAssertFailure(STATUS_USER_CONSENT_REVOKED));
+    }
+
+    @Test
+    public void testRegisterWebTrigger_failureByConsentNotifiedResolver() throws Exception {
+        runRunMocks(
+                Api.REGISTER_WEB_TRIGGER,
+                new AccessDenier().deniedByConsentNotificationNotDisplayed(),
+                () ->
+                        registerWebTriggerAndAssertFailure(
+                                STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET));
     }
 
     @Test
@@ -1376,6 +1439,7 @@ public final class MeasurementServiceImplTest {
                 mMockContext,
                 Clock.SYSTEM_CLOCK,
                 mMockConsentManager,
+                mMockUxStatesManager,
                 mMockThrottler,
                 mMockFlags,
                 mMockAdServicesLogger,
@@ -1517,6 +1581,9 @@ public final class MeasurementServiceImplTest {
         // App Package Resolver Measurement Api
         updateAppPackageAccessResolverDenied(accessDenier.mByAppPackageMsmtApiApp);
 
+        // Consent notification displayed Resolver
+        updateConsentNotificationNotDisplayedDenied(accessDenier.mByConsentNotificationDisplayed);
+
         // Consent Resolver
         updateConsentDenied(accessDenier.mByConsent);
 
@@ -1559,6 +1626,9 @@ public final class MeasurementServiceImplTest {
 
         // App Package Resolver Measurement Api
         updateAppPackageAccessResolverDenied(accessDenier.mByAppPackageMsmtApiApp);
+
+        // Consent notification displayed Resolver
+        updateConsentNotificationNotDisplayedDenied(accessDenier.mByConsentNotificationDisplayed);
 
         // Consent Resolver
         updateConsentDenied(accessDenier.mByConsent);
@@ -1603,6 +1673,9 @@ public final class MeasurementServiceImplTest {
 
         // App Package Resolver Measurement Api
         updateAppPackageAccessResolverDenied(accessDenier.mByAppPackageMsmtApiApp);
+
+        // Consent notification displayed Resolver
+        updateConsentNotificationNotDisplayedDenied(accessDenier.mByConsentNotificationDisplayed);
 
         // Consent Resolver
         updateConsentDenied(accessDenier.mByConsent);
@@ -1651,6 +1724,9 @@ public final class MeasurementServiceImplTest {
         // App Package Resolver Web Context Client App
         updateAppPackageResolverWebAppDenied(accessDenier.mByAppPackageWebContextClientApp);
 
+        // Consent notification displayed Resolver
+        updateConsentNotificationNotDisplayedDenied(accessDenier.mByConsentNotificationDisplayed);
+
         // Consent Resolver
         updateConsentDenied(accessDenier.mByConsent);
 
@@ -1696,6 +1772,9 @@ public final class MeasurementServiceImplTest {
         // App Package Resolver Measurement Api
         updateAppPackageAccessResolverDenied(accessDenier.mByAppPackageMsmtApiApp);
 
+        // Consent notification displayed Resolver
+        updateConsentNotificationNotDisplayedDenied(accessDenier.mByConsentNotificationDisplayed);
+
         // Consent Resolver
         updateConsentDenied(accessDenier.mByConsent);
 
@@ -1733,6 +1812,9 @@ public final class MeasurementServiceImplTest {
         updateAppPackageAccessResolverDeniedEnableApiStatusAllowListCheck(
                 accessDenier.mByAppPackageMsmtApiApp);
         updateAppPackageAccessResolverDenied(accessDenier.mByAppPackageMsmtApiApp);
+
+        // Consent notification displayed Resolver
+        updateConsentNotificationNotDisplayedDenied(accessDenier.mByConsentNotificationDisplayed);
 
         // Consent Resolver
         updateConsentDenied(accessDenier.mByConsent);
@@ -1777,6 +1859,12 @@ public final class MeasurementServiceImplTest {
                                         any(Context.class), anyString()));
     }
 
+    private void updateConsentNotificationNotDisplayedDenied(boolean denied) {
+        when(mMockUxStatesManager.getEnrollmentChannel())
+                .thenReturn(
+                        denied ? null : GaUxEnrollmentChannelCollection.ALREADY_ENROLLED_CHANNEL);
+    }
+
     private void updateConsentDenied(boolean denied) {
         final AdServicesApiConsent apiConsent =
                 denied ? AdServicesApiConsent.REVOKED : AdServicesApiConsent.GIVEN;
@@ -1792,6 +1880,7 @@ public final class MeasurementServiceImplTest {
         private boolean mByAppPackageMsmtApiApp;
         private boolean mByAppPackageWebContextClientApp;
         private boolean mByAttributionPermission;
+        private boolean mByConsentNotificationDisplayed;
         private boolean mByConsent;
         private boolean mByForegroundEnforcement;
         private boolean mByKillSwitch;
@@ -1815,6 +1904,11 @@ public final class MeasurementServiceImplTest {
 
         private AccessDenier deniedByAttributionPermission() {
             mByAttributionPermission = true;
+            return this;
+        }
+
+        private AccessDenier deniedByConsentNotificationNotDisplayed() {
+            mByConsentNotificationDisplayed = true;
             return this;
         }
 

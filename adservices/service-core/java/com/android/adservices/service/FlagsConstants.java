@@ -855,6 +855,8 @@ public final class FlagsConstants {
     public static final String KEY_CONSENT_MANAGER_LAZY_ENABLE_MODE =
             "consent_manager_lazy_enable_mode";
 
+    public static final String KEY_CONSENT_NOTIFIED_DEBUG_MODE = "consent_notified_debug_mode";
+
     // Consent Manager debug mode keys.
     public static final String KEY_CONSENT_MANAGER_DEBUG_MODE = "consent_manager_debug_mode";
 
