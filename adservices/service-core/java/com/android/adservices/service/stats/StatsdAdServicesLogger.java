@@ -32,6 +32,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_GET_TOPICS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_AD_ID_MATCH_FOR_DEBUG_KEYS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_CLICK_VERIFICATION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.BACKGROUND_FETCH_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PER_CA_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PROCESS_REPORTED;
@@ -417,6 +418,21 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 measurementDelayedSourceRegistrationStats.getRegistrationDelay(),
                 getAllowlistedAppPackageName(
                         measurementDelayedSourceRegistrationStats.getRegistrant()));
+    }
+
+    /** Log method for measurement click verification. */
+    public void logMeasurementClickVerificationStats(
+            MeasurementClickVerificationStats measurementClickVerificationStats) {
+        AdServicesStatsLog.write(
+                AD_SERVICES_MEASUREMENT_CLICK_VERIFICATION,
+                measurementClickVerificationStats.getSourceType(),
+                measurementClickVerificationStats.isInputEventPresent(),
+                measurementClickVerificationStats.isSystemClickVerificationSuccessful(),
+                measurementClickVerificationStats.isSystemClickVerificationEnabled(),
+                measurementClickVerificationStats.getInputEventDelayMillis(),
+                measurementClickVerificationStats.getValidDelayWindowMillis(),
+                getAllowlistedAppPackageName(
+                        measurementClickVerificationStats.getSourceRegistrant()));
     }
 
     /** log method for consent migrations. */

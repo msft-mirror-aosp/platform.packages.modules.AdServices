@@ -102,6 +102,10 @@ public interface AdServicesLogger {
     void logMeasurementDelayedSourceRegistrationStats(
             MeasurementDelayedSourceRegistrationStats measurementDelayedSourceRegistrationStats);
 
+    /** Logs measurement click verification stats. */
+    void logMeasurementClickVerificationStats(
+            MeasurementClickVerificationStats measurementClickVerificationStats);
+
     /** Logs enrollment data stats. */
     void logEnrollmentDataStats(int mType, boolean mIsSuccessful, int mBuildId);
 
