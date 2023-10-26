@@ -226,6 +226,15 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getTopicsEnableEncryption() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_TOPICS_ENABLE_ENCRYPTION,
+                /* defaultValue */ TOPICS_ENABLE_ENCRYPTION);
+    }
+
+    @Override
     public int getClassifierType() {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
