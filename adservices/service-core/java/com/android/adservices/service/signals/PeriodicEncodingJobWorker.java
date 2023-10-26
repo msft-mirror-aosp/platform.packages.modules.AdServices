@@ -26,6 +26,8 @@ import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.data.signals.DBEncoderLogicMetadata;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
+import com.android.adservices.data.signals.EncoderLogicMetadataDao;
+import com.android.adservices.data.signals.EncoderPersistenceDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -33,6 +35,7 @@ import com.android.adservices.service.adselection.AdCounterKeyCopierNoOpImpl;
 import com.android.adservices.service.adselection.AdSelectionScriptEngine;
 import com.android.adservices.service.adselection.DebugReportingScriptDisabledStrategy;
 import com.android.adservices.service.common.SingletonRunner;
+import com.android.adservices.service.devapi.DevContextFilter;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FluentFuture;
@@ -41,6 +44,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -71,11 +75,14 @@ public class PeriodicEncodingJobWorker {
     private static volatile PeriodicEncodingJobWorker sPeriodicEncodingJobWorker;
 
     private final EncoderLogicHandler mEncoderLogicHandler;
+    private final EncoderLogicMetadataDao mEncoderLogicMetadataDao;
+    private final EncoderPersistenceDao mEncoderPersistenceDao;
     private final EncodedPayloadDao mEncodedPayloadDao;
     private final SignalsProvider mSignalsProvider;
     private final AdSelectionScriptEngine mScriptEngine;
     private final ListeningExecutorService mBackgroundExecutor;
     private final ListeningExecutorService mLightWeightExecutor;
+    private final DevContextFilter mDevContextFilter;
 
     private final SingletonRunner<Void> mSingletonRunner =
             new SingletonRunner<>(JOB_DESCRIPTION, this::doRun);
@@ -85,18 +92,24 @@ public class PeriodicEncodingJobWorker {
     @VisibleForTesting
     protected PeriodicEncodingJobWorker(
             @NonNull EncoderLogicHandler encoderLogicHandler,
+            @NonNull EncoderLogicMetadataDao encoderLogicMetadataDao,
+            @NonNull EncoderPersistenceDao encoderPersistenceDao,
             @NonNull EncodedPayloadDao encodedPayloadDao,
             @NonNull SignalsProviderImpl signalStorageManager,
             @NonNull AdSelectionScriptEngine scriptEngine,
             @NonNull ListeningExecutorService backgroundExecutor,
             @NonNull ListeningExecutorService lightWeightExecutor,
+            @NonNull DevContextFilter devContextFilter,
             @NonNull Flags flags) {
         mEncoderLogicHandler = encoderLogicHandler;
+        mEncoderLogicMetadataDao = encoderLogicMetadataDao;
+        mEncoderPersistenceDao = encoderPersistenceDao;
         mEncodedPayloadDao = encodedPayloadDao;
         mSignalsProvider = signalStorageManager;
         mScriptEngine = scriptEngine;
         mBackgroundExecutor = backgroundExecutor;
         mLightWeightExecutor = lightWeightExecutor;
+        mDevContextFilter = devContextFilter;
         mFlags = flags;
         mEncodedPayLoadMaxSizeBytes = mFlags.getProtectedSignalsEncodedPayloadMaxSizeBytes();
         mEncoderLogicMaximumFailure =
@@ -122,6 +135,8 @@ public class PeriodicEncodingJobWorker {
                 sPeriodicEncodingJobWorker =
                         new PeriodicEncodingJobWorker(
                                 new EncoderLogicHandler(context),
+                                signalsDatabase.getEncoderLogicMetadataDao(),
+                                EncoderPersistenceDao.getInstance(context),
                                 signalsDatabase.getEncodedPayloadDao(),
                                 new SignalsProviderImpl(signalsDatabase.protectedSignalsDao()),
                                 new AdSelectionScriptEngine(
@@ -135,6 +150,7 @@ public class PeriodicEncodingJobWorker {
                                         false), // not used in encoding
                                 AdServicesExecutors.getBackgroundExecutor(),
                                 AdServicesExecutors.getLightWeightExecutor(),
+                                DevContextFilter.create(context),
                                 FlagsFactory.getFlags());
             }
         }
@@ -152,12 +168,41 @@ public class PeriodicEncodingJobWorker {
         mSingletonRunner.stopWork();
     }
 
+    /**
+     * Runs encoding for the buyers that have registered their encoding logic. Also updates the
+     * encoders for buyers that have the previous encoders downloaded outside the refresh window
+     */
     private FluentFuture<Void> doRun(@NonNull Supplier<Boolean> shouldStop) {
-        FluentFuture<List<DBEncoderLogicMetadata>> buyers =
+
+        FluentFuture<List<DBEncoderLogicMetadata>> buyersWithRegisteredEncoders =
                 FluentFuture.from(
                         mBackgroundExecutor.submit(mEncoderLogicHandler::getAllRegisteredEncoders));
 
-        return buyers.transformAsync(this::doEncodingForRegisteredBuyers, mBackgroundExecutor);
+        FluentFuture<Void> encodeSignalsFuture =
+                buyersWithRegisteredEncoders.transformAsync(
+                        b -> doEncodingForRegisteredBuyers(b), mBackgroundExecutor);
+
+        // TODO(b/294900119) We should do the update of encoding logic in a separate job
+        // Once the encodings are done, we update the encoder logic asynchronously
+        final Instant timeForRefresh =
+                Instant.now()
+                        .minus(
+                                mFlags.getProtectedSignalsEncoderRefreshWindowSeconds(),
+                                ChronoUnit.SECONDS);
+        return encodeSignalsFuture.transformAsync(
+                unused -> {
+                    FluentFuture<List<AdTechIdentifier>> buyersWithEncodersReadyForRefresh =
+                            FluentFuture.from(
+                                    mBackgroundExecutor.submit(
+                                            () ->
+                                                    mEncoderLogicMetadataDao
+                                                            .getBuyersWithEncodersBeforeTime(
+                                                                    timeForRefresh)));
+
+                    return buyersWithEncodersReadyForRefresh.transformAsync(
+                            b -> doUpdateEncodersForBuyers(b), mBackgroundExecutor);
+                },
+                mLightWeightExecutor);
     }
 
     private FluentFuture<Void> doEncodingForRegisteredBuyers(
@@ -178,6 +223,19 @@ public class PeriodicEncodingJobWorker {
                                                         mLightWeightExecutor))
                         .collect(Collectors.toList());
         return FluentFuture.from(Futures.successfulAsList(buyerEncodings))
+                .transform(ignored -> null, mLightWeightExecutor);
+    }
+
+    // TODO(b/294900119) We should do the update of encoding logic in a separate job, & remove this
+    private FluentFuture<Void> doUpdateEncodersForBuyers(List<AdTechIdentifier> buyers) {
+        List<ListenableFuture<Boolean>> encoderUpdates =
+                buyers.stream()
+                        .map(
+                                buyer ->
+                                        mEncoderLogicHandler.downloadAndUpdate(
+                                                buyer, mDevContextFilter.createDevContext()))
+                        .collect(Collectors.toList());
+        return FluentFuture.from(Futures.successfulAsList(encoderUpdates))
                 .transform(ignored -> null, mLightWeightExecutor);
     }
 
