@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.errorlogging;
+package com.android.adservices.shared.errorlogging;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION;
@@ -22,25 +22,24 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import android.database.sqlite.SQLiteException;
 
-import com.android.adservices.service.Flags;
-import com.android.adservices.shared.errorlogging.AdServicesErrorStats;
-import com.android.adservices.shared.errorlogging.StatsdAdServicesErrorLogger;
-
-import com.google.common.collect.ImmutableList;
-
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
-public class AdServicesErrorLoggerImplTest {
-    private AdServicesErrorLoggerImpl mErrorLogger;
+public final class AbstractAdServicesErrorLoggerTest {
+
+    @Rule public final MockitoRule mRule = MockitoJUnit.rule();
+
+    @Mock private StatsdAdServicesErrorLogger mStatsdLoggerMock;
 
     // Constants used for tests
     private static final String CLASS_NAME = "TopicsService";
@@ -49,34 +48,31 @@ public class AdServicesErrorLoggerImplTest {
     private static final int LINE_NUMBER = 11;
     private static final String SQ_LITE_EXCEPTION = "SQLiteException";
 
-    @Mock private Flags mFlags;
-    @Mock StatsdAdServicesErrorLogger mStatsdLoggerMock;
+    private AbstractAdServicesErrorLogger mErrorLoggerEnabled;
+    private AbstractAdServicesErrorLogger mErrorLoggerDisabled;
 
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        mErrorLogger = new AdServicesErrorLoggerImpl(mFlags, mStatsdLoggerMock);
-        doReturn(ImmutableList.of()).when(mFlags).getErrorCodeLoggingDenyList();
+        mErrorLoggerEnabled =
+                new AbstractAdServicesErrorLogger(mStatsdLoggerMock) {
+                    @Override
+                    protected boolean isEnabled(int errorCode) {
+                        return true;
+                    }
+                };
+        mErrorLoggerDisabled =
+                new AbstractAdServicesErrorLogger(mStatsdLoggerMock) {
+                    @Override
+                    protected boolean isEnabled(int errorCode) {
+                        return false;
+                    }
+                };
     }
 
     @Test
-    public void testLogError_errorLoggingFlagDisabled() {
-        doReturn(false).when(mFlags).getAdServicesErrorLoggingEnabled();
-
-        mErrorLogger.logError(
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR, PPAPI_NAME);
-
-        verify(mStatsdLoggerMock, never()).logAdServicesError(any());
-    }
-
-    @Test
-    public void testLogError_errorLoggingFlagEnabled_errorCodeLoggingDenied() {
-        doReturn(true).when(mFlags).getAdServicesErrorLoggingEnabled();
-        doReturn(ImmutableList.of(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR))
-                .when(mFlags)
-                .getErrorCodeLoggingDenyList();
-
-        mErrorLogger.logError(
+    public void testLogError_errorLoggingDisabled() {
+        mErrorLoggerDisabled.logError(
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR, PPAPI_NAME);
 
         verify(mStatsdLoggerMock, never()).logAdServicesError(any());
@@ -84,33 +80,35 @@ public class AdServicesErrorLoggerImplTest {
 
     @Test
     public void testLogError_errorLoggingFlagEnabled() {
-        doReturn(true).when(mFlags).getAdServicesErrorLoggingEnabled();
-        mErrorLogger.logError(
+        mErrorLoggerEnabled.logError(
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR, PPAPI_NAME);
 
         verify(mStatsdLoggerMock).logAdServicesError(any());
     }
 
     @Test
-    public void testLogErrorWithExceptionInfo_errorLoggingFlagDisabled() {
-        doReturn(false).when(mFlags).getAdServicesErrorLoggingEnabled();
+    public void testLogErrorInternal() {
+        Exception exception =
+                createSQLiteExceptionWith3StackTraceElements(CLASS_NAME, METHOD_NAME, LINE_NUMBER);
+        mErrorLoggerEnabled.logErrorInternal(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR,
+                PPAPI_NAME,
+                exception);
 
-        mErrorLogger.logErrorWithExceptionInfo(
-                new Exception(),
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION,
-                PPAPI_NAME);
-
-        verify(mStatsdLoggerMock, never()).logAdServicesError(any());
+        AdServicesErrorStats stats =
+                AdServicesErrorStats.builder()
+                        .setErrorCode(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR)
+                        .setPpapiName(PPAPI_NAME)
+                        .setClassName(CLASS_NAME)
+                        .setMethodName(METHOD_NAME)
+                        .setLineNumber(LINE_NUMBER)
+                        .build();
+        verify(mStatsdLoggerMock).logAdServicesError(eq(stats));
     }
 
     @Test
-    public void testLogErrorWithExceptionInfo_errorLoggingFlagEnabled_errorCodeLoggingDenied() {
-        doReturn(true).when(mFlags).getAdServicesErrorLoggingEnabled();
-        doReturn(ImmutableList.of(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION))
-                .when(mFlags)
-                .getErrorCodeLoggingDenyList();
-
-        mErrorLogger.logErrorWithExceptionInfo(
+    public void testLogErrorWithExceptionInfo_errorLoggingFlagDisabled() {
+        mErrorLoggerDisabled.logErrorWithExceptionInfo(
                 new Exception(),
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION,
                 PPAPI_NAME);
@@ -120,11 +118,9 @@ public class AdServicesErrorLoggerImplTest {
 
     @Test
     public void testLogErrorWithExceptionInfo_errorLoggingFlagEnabled() {
-        doReturn(true).when(mFlags).getAdServicesErrorLoggingEnabled();
-
         Exception exception = createSQLiteException(CLASS_NAME, METHOD_NAME, LINE_NUMBER);
 
-        mErrorLogger.logErrorWithExceptionInfo(
+        mErrorLoggerEnabled.logErrorWithExceptionInfo(
                 exception,
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION,
                 PPAPI_NAME);
@@ -144,12 +140,10 @@ public class AdServicesErrorLoggerImplTest {
 
     @Test
     public void testLogErrorWithExceptionInfo_fullyQualifiedClassName_errorLoggingFlagEnabled() {
-        doReturn(true).when(mFlags).getAdServicesErrorLoggingEnabled();
-
         String fullClassName = "com.android.adservices.topics.TopicsService";
         Exception exception = createSQLiteException(fullClassName, METHOD_NAME, LINE_NUMBER);
 
-        mErrorLogger.logErrorWithExceptionInfo(
+        mErrorLoggerEnabled.logErrorWithExceptionInfo(
                 exception,
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION,
                 PPAPI_NAME);
@@ -169,11 +163,9 @@ public class AdServicesErrorLoggerImplTest {
 
     @Test
     public void testLogErrorWithExceptionInfo_emptyClassName_errorLoggingFlagEnabled() {
-        doReturn(true).when(mFlags).getAdServicesErrorLoggingEnabled();
-
         Exception exception = createSQLiteException(/* className = */ "", METHOD_NAME, LINE_NUMBER);
 
-        mErrorLogger.logErrorWithExceptionInfo(
+        mErrorLoggerEnabled.logErrorWithExceptionInfo(
                 exception,
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION,
                 PPAPI_NAME);
@@ -201,7 +193,7 @@ public class AdServicesErrorLoggerImplTest {
         return exception;
     }
 
-    Exception createSQLiteExceptionwith3StackTraceElements(
+    Exception createSQLiteExceptionWith3StackTraceElements(
             String className, String methodName, int lineNumber) {
         StackTraceElement[] stackTraceElements =
                 new StackTraceElement[] {

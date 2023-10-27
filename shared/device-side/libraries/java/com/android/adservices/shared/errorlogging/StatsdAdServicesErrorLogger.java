@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.errorlogging;
+package com.android.adservices.shared.errorlogging;
 
 /** Interface for Statsd Adservices logger to implement error logging in statsd. */
 public interface StatsdAdServicesErrorLogger {
