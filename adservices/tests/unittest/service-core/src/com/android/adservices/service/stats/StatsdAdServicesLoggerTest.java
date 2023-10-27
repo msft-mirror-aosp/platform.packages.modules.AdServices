@@ -16,11 +16,6 @@
 
 package com.android.adservices.service.stats;
 
-import static com.android.adservices.ResultCode.RESULT_OK;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__FLEDGE;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__MEASUREMENT;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REGISTER_SOURCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_CONSENT_MIGRATED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_DATA_STORED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_FAILED;
@@ -83,9 +78,6 @@ public class StatsdAdServicesLoggerTest {
     private static final int DUPLICATE_TOPIC_COUNT = 0;
     private static final int TOPIC_IDS_COUNT = 1;
     private static final String SOURCE_REGISTRANT = "android-app://com.registrant";
-    private static final String APP_PACKAGE_NAME = "com.registrant";
-    private static final String SDK_NAME = "com.android.container";
-    private static final int LATENCY = 100;
 
     private static final GetTopicsReportedStats TOPICS_REPORTED_STATS_DATA =
             GetTopicsReportedStats.builder()
@@ -992,141 +984,6 @@ public class StatsdAdServicesLoggerTest {
 
         ExtendedMockito.verify(writeInvocation);
 
-        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
-    }
-
-    @Test
-    public void logApiCallStats_appNotAllowlisted_emptyString() {
-        when(mFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
-        when(mFlags.getMeasurementAppPackageNameLoggingAllowlist()).thenReturn("");
-        ApiCallStats stats =
-                new ApiCallStats.Builder()
-                        .setCode(AD_SERVICES_API_CALLED)
-                        .setApiClass(AD_SERVICES_API_CALLED__API_CLASS__MEASUREMENT)
-                        .setApiName(AD_SERVICES_API_CALLED__API_NAME__REGISTER_SOURCE)
-                        .setAppPackageName(APP_PACKAGE_NAME)
-                        .setSdkPackageName(SDK_NAME)
-                        .setLatencyMillisecond(LATENCY)
-                        .setResultCode(RESULT_OK)
-                        .build();
-        ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyString(),
-                                        anyString(),
-                                        anyInt(),
-                                        anyInt()));
-
-        // Invoke logging call
-        mLogger.logApiCallStats(stats);
-
-        // Verify only compat logging took place
-        MockedVoidMethod writeInvocation =
-                () ->
-                        AdServicesStatsLog.write(
-                                eq(AD_SERVICES_API_CALLED),
-                                eq(AD_SERVICES_API_CALLED__API_CLASS__MEASUREMENT),
-                                eq(AD_SERVICES_API_CALLED__API_NAME__REGISTER_SOURCE),
-                                eq(""),
-                                eq(SDK_NAME),
-                                eq(LATENCY),
-                                eq(RESULT_OK));
-
-        ExtendedMockito.verify(writeInvocation);
-        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
-    }
-
-    @Test
-    public void logApiCallStats_appAllowlisted_nonEmpty() {
-        when(mFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
-        when(mFlags.getMeasurementAppPackageNameLoggingAllowlist()).thenReturn(SOURCE_REGISTRANT);
-        ApiCallStats stats =
-                new ApiCallStats.Builder()
-                        .setCode(AD_SERVICES_API_CALLED)
-                        .setApiClass(AD_SERVICES_API_CALLED__API_CLASS__MEASUREMENT)
-                        .setApiName(AD_SERVICES_API_CALLED__API_NAME__REGISTER_SOURCE)
-                        .setAppPackageName(APP_PACKAGE_NAME)
-                        .setSdkPackageName(SDK_NAME)
-                        .setLatencyMillisecond(LATENCY)
-                        .setResultCode(RESULT_OK)
-                        .build();
-        ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyString(),
-                                        anyString(),
-                                        anyInt(),
-                                        anyInt()));
-
-        // Invoke logging call
-        mLogger.logApiCallStats(stats);
-
-        // Verify only compat logging took place
-        MockedVoidMethod writeInvocation =
-                () ->
-                        AdServicesStatsLog.write(
-                                eq(AD_SERVICES_API_CALLED),
-                                eq(AD_SERVICES_API_CALLED__API_CLASS__MEASUREMENT),
-                                eq(AD_SERVICES_API_CALLED__API_NAME__REGISTER_SOURCE),
-                                eq(APP_PACKAGE_NAME),
-                                eq(SDK_NAME),
-                                eq(LATENCY),
-                                eq(RESULT_OK));
-
-        ExtendedMockito.verify(writeInvocation);
-        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
-    }
-
-    @Test
-    public void logApiCallStats_notMeasurementApi_emptyString() {
-        when(mFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
-        when(mFlags.getMeasurementAppPackageNameLoggingAllowlist()).thenReturn(SOURCE_REGISTRANT);
-        ApiCallStats stats =
-                new ApiCallStats.Builder()
-                        .setCode(AD_SERVICES_API_CALLED)
-                        .setApiClass(AD_SERVICES_API_CALLED__API_CLASS__FLEDGE)
-                        .setApiName(AD_SERVICES_API_CALLED__API_NAME__REGISTER_SOURCE)
-                        .setAppPackageName(APP_PACKAGE_NAME)
-                        .setSdkPackageName(SDK_NAME)
-                        .setLatencyMillisecond(LATENCY)
-                        .setResultCode(RESULT_OK)
-                        .build();
-        ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyString(),
-                                        anyString(),
-                                        anyInt(),
-                                        anyInt()));
-
-        // Invoke logging call
-        mLogger.logApiCallStats(stats);
-
-        // Verify only compat logging took place
-        MockedVoidMethod writeInvocation =
-                () ->
-                        AdServicesStatsLog.write(
-                                eq(AD_SERVICES_API_CALLED),
-                                eq(AD_SERVICES_API_CALLED__API_CLASS__FLEDGE),
-                                eq(AD_SERVICES_API_CALLED__API_NAME__REGISTER_SOURCE),
-                                eq(""),
-                                eq(SDK_NAME),
-                                eq(LATENCY),
-                                eq(RESULT_OK));
-
-        ExtendedMockito.verify(writeInvocation);
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
     }
 }
