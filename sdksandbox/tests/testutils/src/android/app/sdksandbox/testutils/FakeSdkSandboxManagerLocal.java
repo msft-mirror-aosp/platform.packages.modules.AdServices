@@ -54,7 +54,7 @@ public class FakeSdkSandboxManagerLocal implements SdkSandboxManagerLocal {
     @NonNull
     @Override
     public ApplicationInfo getSdkSandboxApplicationInfoForInstrumentation(
-            @NonNull ApplicationInfo clientAppInfo, boolean isSdkInSandbox) {
+            @NonNull ApplicationInfo clientAppInfo, int userId, boolean isSdkInSandbox) {
         clientAppInfo.processName = getSdkSandboxProcessNameForInstrumentation(clientAppInfo);
         return clientAppInfo;
     }
