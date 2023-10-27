@@ -24,7 +24,7 @@ android_test {
     static_libs: [
         "androidx.test.runner",
         "compatibility-device-util-axt",
-        "truth-prebuilt",
+        "truth",
     ],
     libs: [
         "android.test.base",
@@ -51,7 +51,7 @@ android_test {
     static_libs: [
         "androidx.test.runner",
         "compatibility-device-util-axt",
-        "truth-prebuilt",
+        "truth",
     ],
     libs: [
         "android.ext.adservices",
