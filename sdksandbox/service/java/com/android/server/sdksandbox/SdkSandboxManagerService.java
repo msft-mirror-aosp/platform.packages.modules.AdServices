@@ -2148,7 +2148,16 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         // For T, we kill the sandbox by uid. For U, we kill a specific sandbox process.
         if (SdkLevel.isAtLeastU()) {
-            mServiceProvider.stopSandboxService(currentCallingInfo);
+            try {
+                mServiceProvider.stopSandboxService(currentCallingInfo);
+            } catch (PackageManager.NameNotFoundException e) {
+                // Just log the exception for the CallingUid for which package is not found to
+                // ensure other sandbox services are stopped
+                Log.e(
+                        TAG,
+                        "Failed to stop sandbox service for: " + currentCallingInfo.toString(),
+                        e);
+            }
         } else {
             // For apps with shared uid, unbind the sandboxes for all the remaining apps since we
             // kill the sandbox by uid.
@@ -2616,19 +2625,39 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     // Update process name and uid to match sandbox process for the calling app.
                     activityInfo.applicationInfo.uid =
                             Process.toSdkSandboxUid(info.getCallingUid());
-                    activityInfo.processName =
-                            mInjector
-                                    .getSdkSandboxServiceProvider()
-                                    .toSandboxProcessName(info.getCallingPackage());
+                    CallingInfo callingInfo =
+                            new CallingInfo(info.getCallingUid(), info.getCallingPackage());
+                    try {
+                        activityInfo.processName =
+                                mInjector
+                                        .getSdkSandboxServiceProvider()
+                                        .toSandboxProcessName(callingInfo);
+                    } catch (PackageManager.NameNotFoundException e) {
+                        Log.e(
+                                TAG,
+                                "onInterceptActivityLaunch failed for: " + callingInfo.toString(),
+                                e);
+                        throw new SecurityException(e.toString());
+                    }
                     break;
                 case INSTRUMENTATION_ACTIVITY:
                     // Tests instrumented to run in the Sandbox already use a sandbox Uid.
                     activityInfo.applicationInfo.uid = info.getCallingUid();
-                    activityInfo.processName =
-                            mInjector
-                                    .getSdkSandboxServiceProvider()
-                                    .toSandboxProcessNameForInstrumentation(
-                                            activityInfo.applicationInfo.packageName);
+                    callingInfo =
+                            new CallingInfo(
+                                    info.getCallingUid(), activityInfo.applicationInfo.packageName);
+                    try {
+                        activityInfo.processName =
+                                mInjector
+                                        .getSdkSandboxServiceProvider()
+                                        .toSandboxProcessNameForInstrumentation(callingInfo);
+                    } catch (PackageManager.NameNotFoundException e) {
+                        Log.e(
+                                TAG,
+                                "onInterceptActivityLaunch failed for: " + callingInfo.toString(),
+                                e);
+                        throw new SecurityException(e.toString());
+                    }
                     break;
                 default: // NO_INTERCEPT
                     return null;
@@ -2840,8 +2869,17 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         @Override
         public String getSdkSandboxProcessNameForInstrumentation(
                 @NonNull ApplicationInfo clientAppInfo) {
-            return mServiceProvider.toSandboxProcessNameForInstrumentation(
-                    clientAppInfo.packageName);
+            CallingInfo callingInfo = new CallingInfo(clientAppInfo.uid, clientAppInfo.packageName);
+            try {
+                return mServiceProvider.toSandboxProcessNameForInstrumentation(callingInfo);
+            } catch (PackageManager.NameNotFoundException e) {
+                Log.e(
+                        TAG,
+                        "getSdkSandboxProcessNameForInstrumentation failed for: "
+                                + callingInfo.toString(),
+                        e);
+                throw new SecurityException(e.toString());
+            }
         }
 
         @NonNull

@@ -409,6 +409,20 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
         }
     }
 
+    @Test
+    public void testSdkSandboxProcessNameForSecondaryUser() throws Exception {
+        assumeTrue(getDevice().isMultiUserSupported());
+        String appApk2 = "SdkSandboxTestApp2.apk";
+
+        int secondaryUserId = mUserUtils.createAndStartSecondaryUser();
+        mUserUtils.switchToSecondaryUser();
+        installPackageAsUser(appApk2, false, secondaryUserId);
+        startActivityAsUser(APP_2_PACKAGE, APP_2_ACTIVITY, secondaryUserId);
+        String processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
+        assertThat(processDump).contains(APP_2_PROCESS_NAME + '\n');
+        assertThat(processDump).contains(SANDBOX_2_PROCESS_NAME);
+    }
+
     private void startActivity(String pkg, String activity) throws Exception {
         getDevice().executeShellCommand(String.format("am start -W -n %s/.%s", pkg, activity));
     }
