@@ -16,20 +16,19 @@
 
 package com.android.adservices.errorlogging;
 
-import android.annotation.NonNull;
 
 /** Interface for Adservices error logger. */
 public interface AdServicesErrorLogger {
 
     /**
-     * Creates value {@link AdServicesErrorStats} object and logs AdServices error/exceptions if
+     * Creates a {@link AdServicesErrorStats} value object and logs AdServices error/exceptions if
      * flag enabled.
      */
     void logError(int errorCode, int ppapiName);
 
     /**
-     * Creates value {@link AdServicesErrorStats} object that contains exception information and
+     * Creates a {@link AdServicesErrorStats} value object that contains exception information and
      * logs AdServices error/exceptions if flag enabled.
      */
-    void logErrorWithExceptionInfo(@NonNull Throwable tr, int errorCode, int ppapiName);
+    void logErrorWithExceptionInfo(Throwable tr, int errorCode, int ppapiName);
 }

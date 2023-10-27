@@ -67,6 +67,12 @@ public final class FlagsConstants {
     public static final String KEY_MAINLINE_TRAIN_VERSION = "mainline_train_version";
     public static final String KEY_ADSERVICES_VERSION_MAPPINGS = "adservices_version_mappings";
 
+    // Encryption keys
+    public static final String KEY_ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS =
+            "encryption_key_network_connect_timeout_ms";
+    public static final String KEY_ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS =
+            "encryption_key_network_read_timeout_ms";
+
     // Topics keys
     public static final String KEY_TOPICS_EPOCH_JOB_PERIOD_MS = "topics_epoch_job_period_ms";
     public static final String KEY_TOPICS_EPOCH_JOB_FLEX_MS = "topics_epoch_job_flex_ms";
@@ -475,6 +481,8 @@ public final class FlagsConstants {
             "protected_signals_periodic_encoding_job_flex_ms";
     public static final String KEY_PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES =
             "protected_signals_encoded_payload_max_size_bytes";
+    public static final String KEY_PROTECTED_SIGNALS_ENCODER_REFRESH_WINDOW_SECONDS =
+            "protected_signals_encoder_refresh_window_seconds";
     public static final String KEY_PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES =
             "key_protected_signals_fetch_signal_updates_max_size_bytes";
 
@@ -519,8 +527,6 @@ public final class FlagsConstants {
     public static final String KEY_FLEDGE_HTTP_CACHE_MAX_ENTRIES = "fledge_http_cache_max_entries";
     public static final String KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES =
             "fledge_on_device_auction_should_use_unified_tables";
-    public static final String KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_SIZE_SHOULD_EXCEED_LIMIT =
-            "fledge_auction_server_payload_size_should_exceed_limit";
 
     // FLEDGE Ad Counter Histogram keys
     public static final String KEY_FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT =
@@ -1076,6 +1082,8 @@ public final class FlagsConstants {
             "is_u18_supervised_account_enabled";
 
     public static final String KEY_AD_ID_CACHE_ENABLED = "ad_id_cache_enabled";
+
+    public static final String KEY_AD_ID_FETCHER_TIMEOUT_MS = "ad_id_fetcher_timeout_ms";
 
     public static final String KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT =
             "app_config_returns_enabled_by_detault";

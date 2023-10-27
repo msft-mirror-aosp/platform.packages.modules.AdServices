@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
-
+import android.adservices.adselection.AssetFileDescriptorUtil;
 import android.adservices.adselection.GetAdSelectionDataCallback;
 import android.adservices.adselection.GetAdSelectionDataInput;
 import android.adservices.adselection.GetAdSelectionDataResponse;
@@ -25,6 +25,7 @@ import android.adservices.common.FledgeErrorResponse;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.content.res.AssetFileDescriptor;
 import android.os.Build;
 import android.os.RemoteException;
 
@@ -57,6 +58,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.protobuf.ByteString;
 
+import java.io.IOException;
 import java.security.SecureRandom;
 import java.time.Clock;
 import java.util.Map;
@@ -97,6 +99,7 @@ public class GetAdSelectionDataRunner {
     @NonNull private final AdIdFetcher mAdIdFetcher;
     @NonNull private final DevContext mDevContext;
     @NonNull private final Clock mClock;
+    private final int mPayloadFormatterVersion;
 
     public GetAdSelectionDataRunner(
             @NonNull final ObliviousHttpEncryptor obliviousHttpEncryptor,
@@ -154,9 +157,10 @@ public class GetAdSelectionDataRunner {
         mDataCompressor =
                 AuctionServerDataCompressorFactory.getDataCompressor(
                         mFlags.getFledgeAuctionServerCompressionAlgorithmVersion());
+        mPayloadFormatterVersion = mFlags.getFledgeAuctionServerPayloadFormatVersion();
         mPayloadFormatter =
                 AuctionServerPayloadFormatterFactory.createPayloadFormatter(
-                        mFlags.getFledgeAuctionServerPayloadFormatVersion(),
+                        mPayloadFormatterVersion,
                         mFlags.getFledgeAuctionServerPayloadBucketSizes());
         mAdIdFetcher = adIdFetcher;
     }
@@ -220,9 +224,10 @@ public class GetAdSelectionDataRunner {
         mDataCompressor =
                 AuctionServerDataCompressorFactory.getDataCompressor(
                         mFlags.getFledgeAuctionServerCompressionAlgorithmVersion());
+        mPayloadFormatterVersion = mFlags.getFledgeAuctionServerPayloadFormatVersion();
         mPayloadFormatter =
                 AuctionServerPayloadFormatterFactory.createPayloadFormatter(
-                        mFlags.getFledgeAuctionServerPayloadFormatVersion(),
+                        mPayloadFormatterVersion,
                         mFlags.getFledgeAuctionServerPayloadBucketSizes());
         mAdIdFetcher = adIdFetcher;
     }
@@ -425,11 +430,29 @@ public class GetAdSelectionDataRunner {
         Objects.requireNonNull(result);
 
         try {
-            callback.onSuccess(
-                    new GetAdSelectionDataResponse.Builder()
-                            .setAdSelectionId(adSelectionId)
-                            .setAdSelectionData(result)
-                            .build());
+            if (mPayloadFormatterVersion == AuctionServerPayloadFormatterExcessiveMaxSize.VERSION) {
+                sLogger.d("Creating response with AssetFileDescriptor");
+                AssetFileDescriptor assetFileDescriptor;
+                try {
+                    assetFileDescriptor =
+                            AssetFileDescriptorUtil.setupAssetFileDescriptorResponse(result);
+                } catch (IOException e) {
+                    sLogger.e(e, "Encountered error creating response with AssetFileDescriptor");
+                    notifyFailureToCaller(e, callback);
+                    return;
+                }
+                callback.onSuccess(
+                        new GetAdSelectionDataResponse.Builder()
+                                .setAdSelectionId(adSelectionId)
+                                .setAssetFileDescriptor(assetFileDescriptor)
+                                .build());
+            } else {
+                callback.onSuccess(
+                        new GetAdSelectionDataResponse.Builder()
+                                .setAdSelectionId(adSelectionId)
+                                .setAdSelectionData(result)
+                                .build());
+            }
         } catch (RemoteException e) {
             sLogger.e(e, "Encountered exception during notifying GetAdSelectionDataCallback");
         } finally {

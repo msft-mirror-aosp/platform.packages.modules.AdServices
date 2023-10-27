@@ -212,6 +212,18 @@ public interface Flags {
         return MAINTENANCE_JOB_FLEX_MS;
     }
 
+    default int getEncryptionKeyNetworkConnectTimeoutMs() {
+        return ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS;
+    }
+
+    int ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(5);
+
+    default int getEncryptionKeyNetworkReadTimeoutMs() {
+        return ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS;
+    }
+
+    int ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(30);
+
     /* The default min time period (in millis) between each event main reporting job run. */
     long MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS = 4 * 60 * 60 * 1000; // 4 hours.
 
@@ -874,19 +886,10 @@ public interface Flags {
     long FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS = 2 * 24 * 60 * 60; // 2 days
     long FLEDGE_HTTP_CACHE_MAX_ENTRIES = 100;
     boolean FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES = false;
-    boolean FLEDGE_AUCTION_SERVER_PAYLOAD_SIZE_SHOULD_EXCEED_LIMIT = false;
 
     /** Returns {@code true} if the on device auction should use the unified flow tables */
     default boolean getFledgeOnDeviceAuctionShouldUseUnifiedTables() {
         return FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES;
-    }
-
-    /**
-     * Returns {@code true} if the response of the {@code getAdSelectionData} API can exceed the
-     * 64Kb maximum
-     */
-    default boolean getFledgeAuctionServerPayloadSizeShouldExceedLimit() {
-        return FLEDGE_AUCTION_SERVER_PAYLOAD_SIZE_SHOULD_EXCEED_LIMIT;
     }
 
     /** Returns {@code true} if the FLEDGE Background Fetch is enabled. */
@@ -994,6 +997,8 @@ public interface Flags {
     long PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS = 5L * 60L * 1000L; // 5 minutes
     int PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES = (int) (1.5 * 1024); // 1.5 KB
     int PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES = (int) (10 * 1024);
+    int PROTECTED_SIGNALS_MAX_JS_FAILURE_EXECUTION_ON_CERTAIN_VERSION_BEFORE_STOP = 3;
+    long PROTECTED_SIGNALS_ENCODER_REFRESH_WINDOW_SECONDS = 24L * 60L * 60L; // 1 day
 
     /** Returns {@code true} feature flag if Periodic encoding of Protected Signals is enabled. */
     default boolean getProtectedSignalsPeriodicEncodingEnabled() {
@@ -1024,6 +1029,16 @@ public interface Flags {
     /** Returns the maximum size of the signal update payload. */
     default int getProtectedSignalsFetchSignalUpdatesMaxSizeBytes() {
         return PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES;
+    }
+
+    /** Returns the maximum number of continues JS failure before we stop executing the JS. */
+    default int getProtectedSignalsMaxJsFailureExecutionOnCertainVersionBeforeStop() {
+        return PROTECTED_SIGNALS_MAX_JS_FAILURE_EXECUTION_ON_CERTAIN_VERSION_BEFORE_STOP;
+    }
+
+    /** Returns the maximum time window beyond which encoder logic should be refreshed */
+    default long getProtectedSignalsEncoderRefreshWindowSeconds() {
+        return PROTECTED_SIGNALS_ENCODER_REFRESH_WINDOW_SECONDS;
     }
 
     int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT = 10_000;
@@ -4083,6 +4098,20 @@ public interface Flags {
      */
     default boolean getAdIdCacheEnabled() {
         return DEFAULT_ADID_CACHE_ENABLED;
+    }
+
+    long DEFAULT_AD_ID_FETCHER_TIMEOUT_MS = 50;
+
+    /**
+     * Returns configured timeout value for {@link
+     * com.android.adservices.service.adselection.AdIdFetcher} logic.
+     *
+     * <p>The intended goal is to override this value for tests.
+     *
+     * @return Timeout in mills.
+     */
+    default long getAdIdFetcherTimeoutMs() {
+        return DEFAULT_AD_ID_FETCHER_TIMEOUT_MS;
     }
 
     boolean APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT = false;

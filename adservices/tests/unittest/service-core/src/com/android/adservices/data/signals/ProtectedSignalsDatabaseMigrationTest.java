@@ -16,10 +16,15 @@
 
 package com.android.adservices.data.signals;
 
+import static android.database.sqlite.SQLiteDatabase.CONFLICT_FAIL;
+
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import android.adservices.common.CommonFixture;
 import android.app.Instrumentation;
+import android.content.ContentValues;
 import android.database.Cursor;
 
 import androidx.room.testing.MigrationTestHelper;
@@ -70,5 +75,48 @@ public class ProtectedSignalsDatabaseMigrationTest {
             tables.add(c.getString(0));
         } while (c.moveToNext());
         return tables.build();
+    }
+
+    @Test
+    public void testMigrate2To3() throws IOException {
+        final String encoderLogicMetadataTable = "encoder_logics";
+        final int version = 2;
+        final int failedEncodingCount = 3;
+        try (SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 2)) {
+            ContentValues contentValuesV2 = new ContentValues();
+
+            contentValuesV2.put("buyer", CommonFixture.VALID_BUYER_1.toString());
+            contentValuesV2.put("version", version);
+            contentValuesV2.put("creation_time", CommonFixture.FIXED_NOW.toEpochMilli());
+            db.insert(encoderLogicMetadataTable, CONFLICT_FAIL, contentValuesV2);
+        }
+        // Re-open the database with version 3.
+        try (SupportSQLiteDatabase db = helper.runMigrationsAndValidate(TEST_DB, 3, true)) {
+            Cursor c = db.query("SELECT * FROM " + encoderLogicMetadataTable);
+            assertEquals(1, c.getCount());
+            c.moveToFirst();
+
+            int failedEncodingCountIndex = c.getColumnIndex("failed_encoding_count");
+            assertEquals(0, c.getInt(failedEncodingCountIndex));
+
+            ContentValues contentValuesV3 = new ContentValues();
+            contentValuesV3.put("buyer", CommonFixture.VALID_BUYER_2.toString());
+            contentValuesV3.put("version", version);
+            contentValuesV3.put("creation_time", CommonFixture.FIXED_NOW.toEpochMilli());
+            contentValuesV3.put("failed_encoding_count", failedEncodingCount);
+            db.insert(encoderLogicMetadataTable, CONFLICT_FAIL, contentValuesV3);
+            c =
+                    db.query(
+                            "SELECT * FROM "
+                                    + encoderLogicMetadataTable
+                                    + " WHERE buyer = '"
+                                    + CommonFixture.VALID_BUYER_2
+                                    + "'");
+            assertEquals(1, c.getCount());
+            c.moveToFirst();
+            assertEquals(3, c.getInt(c.getColumnIndex("failed_encoding_count")));
+            assertEquals(
+                    CommonFixture.VALID_BUYER_2.toString(), c.getString(c.getColumnIndex("buyer")));
+        }
     }
 }

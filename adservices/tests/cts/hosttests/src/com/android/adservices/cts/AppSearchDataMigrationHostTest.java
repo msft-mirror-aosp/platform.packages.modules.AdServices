@@ -51,6 +51,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * Test to check that consent is migrated correctly from AppSearch
@@ -201,6 +202,10 @@ public class AppSearchDataMigrationHostTest extends AdServicesHostSideTestCase {
         subj.contains(getXmlString("CONSENT_API_TYPE_2", true)); // Topics consent
         subj.contains(getXmlString("CONSENT_API_TYPE_3", false)); // Fledge consent
         subj.contains(getXmlString("CONSENT_API_TYPE_4", true)); // Measurement consent
+
+        // Validate the blocked topics
+        List<Integer> blockedTopics = getBlockedTopics();
+        expect.withMessage("Blocked topics").that(blockedTopics).containsExactly(10004, 10410);
     }
 
     private void deletePreExistingData() {
@@ -208,14 +213,24 @@ public class AppSearchDataMigrationHostTest extends AdServicesHostSideTestCase {
             return;
         }
 
+        // Stop the adservices process to remove any locks on the files
         runShellCommand("am force-stop %s", mAdServicesPackageName);
+
+        // Delete the files marking that consent has already migrated
         runShellCommand(
                 "rm -f /data/user/%d/%s/shared_prefs/PPAPI_*",
                 mCurrentUser, mAdServicesPackageName);
+
+        // Delete the files storing the consent in the PPAPI data directory
         runShellCommand(
                 "rm -f /data/user/%d/%s/files/ConsentManagerStorageIdentifier.xml",
                 mCurrentUser, mAdServicesPackageName);
+
+        // Delete the files storing the consent in system server
         runShellCommand("rm -f /data/system/adservices/%d/consent/*", mCurrentUser);
+
+        // Delete the database storing the blocked topics in system server
+        runShellCommand("rm -f /data/system/adservices_topics.db*");
     }
 
     private String getAdServicesPackageName() throws DeviceNotAvailableException {
@@ -233,5 +248,19 @@ public class AppSearchDataMigrationHostTest extends AdServicesHostSideTestCase {
         return String.format(
                 "/data/system/adservices/%d/consent/ConsentManagerStorageIdentifier.xml",
                 mCurrentUser);
+    }
+
+    private List<Integer> getBlockedTopics() {
+        String query =
+                String.format("Select topic from blocked_topics where user=%s", mCurrentUser);
+        String result = runShellCommand("sqlite3 /data/system/adservices_topics.db \"%s\"", query);
+        if (result == null || result.isBlank()) {
+            return List.of();
+        }
+
+        return Arrays.stream(result.split("\n"))
+                .map(String::trim)
+                .map(Integer::valueOf)
+                .collect(Collectors.toList());
     }
 }
