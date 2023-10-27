@@ -89,8 +89,11 @@ import static com.android.adservices.service.Flags.ENABLE_DATABASE_SCHEMA_VERSIO
 import static com.android.adservices.service.Flags.ENABLE_ENROLLMENT_TEST_SEED;
 import static com.android.adservices.service.Flags.ENABLE_LOGGED_TOPIC;
 import static com.android.adservices.service.Flags.ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH;
+import static com.android.adservices.service.Flags.ENCRYPTION_KEY_JOB_PERIOD_MS;
+import static com.android.adservices.service.Flags.ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.Flags.ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION;
@@ -456,10 +459,13 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_DATABASE_
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_LOGGED_TOPIC;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS;
-import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS;
+import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_TOPICS;
+import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE;
 import static com.android.adservices.service.FlagsConstants.KEY_ENROLLMENT_BLOCKLIST_IDS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENROLLMENT_ENABLE_LIMITED_LOGGING;
@@ -5698,7 +5704,7 @@ public class PhFlagsTest {
     }
 
     @Test
-    public void testGetEncryptionKeyFetchKillSwitch() {
+    public void testGetEncryptionKeyNewEnrollmentFetchKillSwitch() {
         // Disable global_kill_switch so that this flag can be tested.
         disableGlobalKillSwitch();
 
@@ -5716,6 +5722,26 @@ public class PhFlagsTest {
 
         assertThat(mPhFlags.getEncryptionKeyNewEnrollmentFetchKillSwitch())
                 .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetEncryptionKeyPeriodicFetchKillSwitch() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
+        // without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getEncryptionKeyPeriodicFetchKillSwitch())
+                .isEqualTo(ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH);
+
+        // Now overriding with the value from PH.
+        boolean phOverridingValue = !ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getEncryptionKeyPeriodicFetchKillSwitch()).isEqualTo(phOverridingValue);
     }
 
     @Test
@@ -5820,6 +5846,39 @@ public class PhFlagsTest {
         overrideGlobalKillSwitch(phOverridingValue);
 
         assertThat(mPhFlags.getProtectedSignalsServiceKillSwitch()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetEncryptionKeyJobRequiredNetworkType() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getEncryptionKeyJobRequiredNetworkType())
+                .isEqualTo(ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE);
+
+        // Now overriding with the value from PH.
+        int phOverridingValue = ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE + 1;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE,
+                Integer.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getEncryptionKeyJobRequiredNetworkType()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetEncryptionKeyJobPeriodMs() {
+        // Assert the value before override.
+        assertThat(mPhFlags.getEncryptionKeyJobPeriodMs()).isEqualTo(ENCRYPTION_KEY_JOB_PERIOD_MS);
+
+        // Now overriding with the value from PH.
+        long phOverridingValue = ENCRYPTION_KEY_JOB_PERIOD_MS + 1;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENCRYPTION_KEY_JOB_PERIOD_MS,
+                Long.toString(phOverridingValue),
+                false);
+
+        assertThat(mPhFlags.getEncryptionKeyJobPeriodMs()).isEqualTo(phOverridingValue);
     }
 
     @Test

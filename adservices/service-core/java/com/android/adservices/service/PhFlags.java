@@ -16,6 +16,8 @@
 
 package com.android.adservices.service;
 
+import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED;
@@ -2096,6 +2098,40 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getEncryptionKeyPeriodicFetchKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return getGlobalKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(
+                                FlagsConstants.KEY_ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                FlagsConstants.NAMESPACE_ADSERVICES,
+                                /* flagName */ FlagsConstants
+                                        .KEY_ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH,
+                                /* defaultValue */ ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH));
+    }
+
+    // Encryption key related flags.
+    @Override
+    public int getEncryptionKeyJobRequiredNetworkType() {
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE,
+                /* defaultValue */ ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE);
+    }
+
+    @Override
+    public long getEncryptionKeyJobPeriodMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENCRYPTION_KEY_JOB_PERIOD_MS,
+                /* defaultValue */ ENCRYPTION_KEY_JOB_PERIOD_MS);
+    }
+
+    @Override
     public String getPpapiAppAllowList() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getString(
@@ -3593,6 +3629,21 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH
                         + " = "
                         + getEncryptionKeyNewEnrollmentFetchKillSwitch());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH
+                        + " = "
+                        + getEncryptionKeyPeriodicFetchKillSwitch());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE
+                        + " = "
+                        + getEncryptionKeyJobRequiredNetworkType());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS
+                        + " = "
+                        + getEncryptionKeyJobPeriodMs());
         writer.println("==== AdServices PH Flags Dump Topics related flags ====");
         writer.println(
                 "\t"

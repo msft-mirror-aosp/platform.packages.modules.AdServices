@@ -82,7 +82,7 @@ public class EncryptionKey {
                 mLastFetchTime);
     }
 
-    /** Returns id for this key commitment. */
+    /** Returns id for this encryption key, this is the UUID for each key in db table. */
     public String getId() {
         return mId;
     }
@@ -115,7 +115,7 @@ public class EncryptionKey {
         return mProtocolType;
     }
 
-    /** Returns id for this key commitment. */
+    /** Returns id for this key commitment, this id is unique per adtech. */
     public int getKeyCommitmentId() {
         return mKeyCommitmentId;
     }
@@ -125,7 +125,7 @@ public class EncryptionKey {
         return mBody;
     }
 
-    /** Returns expiration time of this public key. */
+    /** Returns expiration time of this public key in milliseconds. */
     public long getExpiration() {
         return mExpiration;
     }

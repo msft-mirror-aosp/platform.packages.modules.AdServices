@@ -65,6 +65,7 @@ import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 public class EnrollmentDaoTest {
@@ -380,6 +381,15 @@ public class EnrollmentDaoTest {
                         eq(1));
         EnrollmentData e = mEnrollmentDao.getEnrollmentData("1");
         assertEquals(e, ENROLLMENT_DATA1);
+    }
+
+    @Test
+    public void testGetAllEnrollmentData() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA1);
+        mEnrollmentDao.insert(ENROLLMENT_DATA2);
+
+        List<EnrollmentData> enrollmentDataList = mEnrollmentDao.getAllEnrollmentData();
+        assertEquals(2, enrollmentDataList.size());
     }
 
     @Test
