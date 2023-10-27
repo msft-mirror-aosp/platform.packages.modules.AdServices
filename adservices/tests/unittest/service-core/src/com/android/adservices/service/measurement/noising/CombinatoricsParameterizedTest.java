@@ -69,7 +69,7 @@ public class CombinatoricsParameterizedTest {
                         Integer.MAX_VALUE
                     }
                 },
-                {5, new int[] {3, 3, 3, 3, 3, 3, 3, 3}, new int[] {3, 3, 3, 3, 3, 3, 3, 3}}
+                {4, new int[] {3, 3, 3, 3, 3, 3, 3, 3}, new int[] {3, 3, 3, 3, 3, 3, 3, 3}}
         });
     }
 
