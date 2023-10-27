@@ -1494,7 +1494,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
 
         @NonNull
         @Override
-        public String toSandboxProcessName(@NonNull String packageName) {
+        public String toSandboxProcessName(@NonNull CallingInfo callingInfo) {
             return TEST_PACKAGE + SANDBOX_PROCESS_NAME_SUFFIX;
         }
     }

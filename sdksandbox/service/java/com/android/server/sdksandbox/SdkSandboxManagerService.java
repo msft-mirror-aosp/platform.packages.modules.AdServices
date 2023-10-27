@@ -505,11 +505,22 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                             return null;
                         }
                     }
-
-                    final String sandboxProcessName =
-                            this.mInjector
-                                    .getSdkSandboxServiceProvider()
-                                    .toSandboxProcessName(info.getCallingPackage());
+                    CallingInfo callingInfo =
+                            new CallingInfo(info.getCallingUid(), info.getCallingPackage());
+                    String sandboxProcessName = null;
+                    try {
+                        sandboxProcessName =
+                                this.mInjector
+                                        .getSdkSandboxServiceProvider()
+                                        .toSandboxProcessName(callingInfo);
+                    } catch (PackageManager.NameNotFoundException e) {
+                        Log.e(
+                                TAG,
+                                "registerSandboxActivityInterceptor failed for: "
+                                        + callingInfo.toString(),
+                                e);
+                        throw new SecurityException(e);
+                    }
                     final int sandboxUid = Process.toSdkSandboxUid(info.getCallingUid());
 
                     // Update process name and uid to match sandbox process for the calling app.
@@ -2161,7 +2172,16 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         // For T, we kill the sandbox by uid. For U, we kill a specific sandbox process.
         if (SdkLevel.isAtLeastU()) {
-            mServiceProvider.stopSandboxService(currentCallingInfo);
+            try {
+                mServiceProvider.stopSandboxService(currentCallingInfo);
+            } catch (PackageManager.NameNotFoundException e) {
+                // Just log the exception for the CallingUid for which package is not found to
+                // ensure other sandbox services are stopped
+                Log.e(
+                        TAG,
+                        "Failed to stop sandbox service for: " + currentCallingInfo.toString(),
+                        e);
+            }
         } else {
             // For apps with shared uid, unbind the sandboxes for all the remaining apps since we
             // kill the sandbox by uid.
