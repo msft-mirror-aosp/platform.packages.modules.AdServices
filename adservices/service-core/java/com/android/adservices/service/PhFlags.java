@@ -400,6 +400,24 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public int getEncryptionKeyNetworkConnectTimeoutMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS,
+                /* defaultValue */ ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS);
+    }
+
+    @Override
+    public int getEncryptionKeyNetworkReadTimeoutMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS,
+                /* defaultValue */ ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS);
+    }
+
+    @Override
     public long getMeasurementEventMainReportingJobPeriodMs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
@@ -1153,6 +1171,15 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getProtectedSignalsEncoderRefreshWindowSeconds() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_PROTECTED_SIGNALS_ENCODER_REFRESH_WINDOW_SECONDS,
+                /* defaultValue */ PROTECTED_SIGNALS_ENCODER_REFRESH_WINDOW_SECONDS);
+    }
+
+    @Override
     public long getProtectedSignalsPeriodicEncodingJobFlexMs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
@@ -1361,15 +1388,6 @@ public final class PhFlags implements Flags {
                 /* flagName */ FlagsConstants
                         .KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES,
                 /* defaultValue */ FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES);
-    }
-
-    @Override
-    public boolean getFledgeAuctionServerPayloadSizeShouldExceedLimit() {
-        return DeviceConfig.getBoolean(
-                FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants
-                        .KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_SIZE_SHOULD_EXCEED_LIMIT,
-                /* defaultValue */ FLEDGE_AUCTION_SERVER_PAYLOAD_SIZE_SHOULD_EXCEED_LIMIT);
     }
 
     @Override
@@ -3437,7 +3455,17 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_ENROLLMENT_ENABLE_LIMITED_LOGGING
                         + " = "
                         + getEnrollmentEnableLimitedLogging());
-
+        writer.println("==== AdServices PH Flags Dump EncryptionKeys ====");
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS
+                        + " = "
+                        + getEncryptionKeyNetworkConnectTimeoutMs());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS
+                        + " = "
+                        + getEncryptionKeyNetworkReadTimeoutMs());
         writer.println("==== AdServices PH Flags Dump killswitches ====");
         writer.println(
                 "\t" + FlagsConstants.KEY_GLOBAL_KILL_SWITCH + " = " + getGlobalKillSwitch());
@@ -3787,6 +3815,11 @@ public final class PhFlags implements Flags {
                                 .KEY_MEASUREMENT_DEBUG_KEY_AD_ID_MATCHING_ENROLLMENT_BLOCKLIST
                         + " = "
                         + getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_AD_ID_FETCHER_TIMEOUT_MS
+                        + " = "
+                        + getAdIdFetcherTimeoutMs());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_ENABLE_COMPUTE_VERSION_FROM_MAPPINGS
@@ -4325,11 +4358,6 @@ public final class PhFlags implements Flags {
                         + getFledgeOnDeviceAuctionShouldUseUnifiedTables());
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_SIZE_SHOULD_EXCEED_LIMIT
-                        + " = "
-                        + getFledgeAuctionServerPayloadSizeShouldExceedLimit());
-        writer.println(
-                "\t"
                         + FlagsConstants.KEY_FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS
                         + " = "
                         + getFledgeHttpCacheMaxAgeSeconds());
@@ -4416,6 +4444,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS
                         + " = "
                         + getProtectedSignalsPeriodicEncodingJobFlexMs());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_PROTECTED_SIGNALS_ENCODER_REFRESH_WINDOW_SECONDS
+                        + " = "
+                        + getProtectedSignalsEncoderRefreshWindowSeconds());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES
@@ -5931,6 +5964,14 @@ public final class PhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_AD_ID_CACHE_ENABLED,
                 /* defaultValue */ DEFAULT_ADID_CACHE_ENABLED);
+    }
+
+    @Override
+    public long getAdIdFetcherTimeoutMs() {
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_AD_ID_FETCHER_TIMEOUT_MS,
+                /* defaultValue */ DEFAULT_AD_ID_FETCHER_TIMEOUT_MS);
     }
 
     @Override

@@ -34,6 +34,7 @@ public class EncryptionKey {
     private int mKeyCommitmentId;
     private String mBody;
     private long mExpiration;
+    private long mLastFetchTime;
 
     private EncryptionKey() {
         mId = null;
@@ -45,6 +46,7 @@ public class EncryptionKey {
         mKeyCommitmentId = 0;
         mBody = null;
         mExpiration = 0L;
+        mLastFetchTime = 0L;
     }
 
     @Override
@@ -61,7 +63,8 @@ public class EncryptionKey {
                 && Objects.equals(mProtocolType, encryptionKey.mProtocolType)
                 && (mKeyCommitmentId == encryptionKey.mKeyCommitmentId)
                 && Objects.equals(mBody, encryptionKey.mBody)
-                && (mExpiration == encryptionKey.mExpiration);
+                && (mExpiration == encryptionKey.mExpiration)
+                && (mLastFetchTime == encryptionKey.mLastFetchTime);
     }
 
     @Override
@@ -75,7 +78,8 @@ public class EncryptionKey {
                 mProtocolType,
                 mKeyCommitmentId,
                 mBody,
-                mExpiration);
+                mExpiration,
+                mLastFetchTime);
     }
 
     /** Returns id for this key commitment. */
@@ -124,6 +128,11 @@ public class EncryptionKey {
     /** Returns expiration time of this public key. */
     public long getExpiration() {
         return mExpiration;
+    }
+
+    /** Returns the last fetch time for this encryption key. */
+    public long getLastFetchTime() {
+        return mLastFetchTime;
     }
 
     /** Builder for {@link EncryptionKey}. */
@@ -185,6 +194,12 @@ public class EncryptionKey {
         /** See {@link EncryptionKey#getExpiration()}. */
         public Builder setExpiration(long expiration) {
             mBuilding.mExpiration = expiration;
+            return this;
+        }
+
+        /** See {@link EncryptionKey#getLastFetchTime()}. */
+        public Builder setLastFetchTime(long lastFetchTime) {
+            mBuilding.mLastFetchTime = lastFetchTime;
             return this;
         }
 

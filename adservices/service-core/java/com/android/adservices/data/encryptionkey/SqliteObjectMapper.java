@@ -60,6 +60,10 @@ public class SqliteObjectMapper {
                 cursor,
                 EncryptionKeyTables.EncryptionKeyContract.EXPIRATION,
                 builder::setExpiration);
+        setLongColumn(
+                cursor,
+                EncryptionKeyTables.EncryptionKeyContract.LAST_FETCH_TIME,
+                builder::setLastFetchTime);
 
         return builder.build();
     }

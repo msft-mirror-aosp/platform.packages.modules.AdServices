@@ -40,6 +40,15 @@ public interface EncoderLogicMetadataDao {
 
     /**
      * @param buyer Ad-tech owner for the encoding logic
+     * @param failedCount times of continues failure of the encoding logic
+     */
+    // common_typos_disable
+    @Query("UPDATE encoder_logics SET failed_encoding_count = :failedCount WHERE buyer = :buyer")
+    // common_typos_enable
+    int updateEncoderFailedCount(AdTechIdentifier buyer, int failedCount);
+
+    /**
+     * @param buyer Ad-tech owner for the encoding logic
      * @return an instance of {@link DBEncoderLogicMetadata} if present
      */
     @Query("SELECT * FROM encoder_logics WHERE buyer = :buyer") // NOTYPO
@@ -53,16 +62,22 @@ public interface EncoderLogicMetadataDao {
     boolean doesEncoderExist(AdTechIdentifier buyer);
 
     /**
+     * @return list of all registered encoder logic
+     */
+    @Query("SELECT * FROM encoder_logics") // NOTYPO
+    List<DBEncoderLogicMetadata> getAllRegisteredEncoders();
+
+    /**
      * @return list of all the buyers which have their encoder logic registered
      */
     @Query("SELECT DISTINCT buyer FROM encoder_logics") // NOTYPO
     List<AdTechIdentifier> getAllBuyersWithRegisteredEncoders();
 
     /**
-     * @return list of buyers which registered encoders before the expiryTime
+     * @return list of buyers which registered encoders before the time instant
      */
-    @Query("SELECT DISTINCT buyer FROM encoder_logics WHERE creation_time < :expiryTime") // NOTYPO
-    List<AdTechIdentifier> getBuyersWithEncodersBeforeTime(@NonNull Instant expiryTime);
+    @Query("SELECT DISTINCT buyer FROM encoder_logics WHERE creation_time < :time") // NOTYPO
+    List<AdTechIdentifier> getBuyersWithEncodersBeforeTime(@NonNull Instant time);
 
     /**
      * @param buyer Ad-tech identifier whose encoding logic we delete

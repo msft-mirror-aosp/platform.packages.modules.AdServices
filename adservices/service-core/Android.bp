@@ -27,13 +27,16 @@ genrule {
 // Converts the text proto Cobalt registry into a binary proto.
 genrule {
     name: "cobalt-registry-binarypb-gen",
-    srcs: ["resources/cobalt_registry.textpb"],
+    srcs: [
+        "resources/cobalt_registry.textpb",
+        ":adservices-cobalt-proto",
+    ],
     out: ["cobalt_registry.binarypb"],
     tools: ["aprotoc"],
     cmd: "$(location aprotoc) --encode=cobalt.CobaltRegistry " +
         "--proto_path=packages/modules/AdServices/adservices/libraries/cobalt/proto " +
         "packages/modules/AdServices/adservices/libraries/cobalt/proto/cobalt_registry.proto " +
-        "< $(in) > $(out)",
+        "< $(location resources/cobalt_registry.textpb) > $(out)",
 }
 
 // Outputs a class confirming the Cobalt registry asset is validated, conditioned on
@@ -41,6 +44,7 @@ genrule {
 genrule {
     name: "cobalt-registry-validated-java",
     srcs: [
+        ":checked_in_cobalt_registry_binarypb",
         ":cobalt-registry-binarypb-gen",
         "resources/CobaltRegistryValidated.java",
     ],
@@ -48,7 +52,7 @@ genrule {
     // are different. Additionally, print a message with instructions on how to update
     // the asset binary proto.
     cmd: "cp $(location resources/CobaltRegistryValidated.java) $(out) && " +
-        "cmp -s $(location :cobalt-registry-binarypb-gen) packages/modules/AdServices/adservices/apk/assets/cobalt/cobalt_registry.binarypb " +
+        "cmp -s $(location :cobalt-registry-binarypb-gen) $(location :checked_in_cobalt_registry_binarypb) " +
         "|| (echo -e '\\n\\n################################################################\\n#\\n" +
         "#  ERROR: Binary registry is out of date.  To update it, run:\\n#\\n" +
         "#  cp $(location :cobalt-registry-binarypb-gen) " +

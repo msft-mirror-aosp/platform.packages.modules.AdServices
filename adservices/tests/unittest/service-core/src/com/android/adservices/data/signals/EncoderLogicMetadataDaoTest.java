@@ -33,6 +33,7 @@ import org.junit.Test;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -137,8 +138,7 @@ public class EncoderLogicMetadataDaoTest {
                 mEncoderLogicMetadataDao.persistEncoderLogicMetadata(logic2));
 
         Set<AdTechIdentifier> actualRegisteredBuyers =
-                mEncoderLogicMetadataDao.getAllBuyersWithRegisteredEncoders().stream()
-                        .collect(Collectors.toSet());
+                new HashSet<>(mEncoderLogicMetadataDao.getAllBuyersWithRegisteredEncoders());
         Set<AdTechIdentifier> expectedRegisteredBuyers = Set.of(BUYER_1, BUYER_2);
         assertEquals(expectedRegisteredBuyers, actualRegisteredBuyers);
     }
@@ -206,6 +206,28 @@ public class EncoderLogicMetadataDaoTest {
         assertTrue(
                 "Encoder for the buyer should have remain untouched",
                 mEncoderLogicMetadataDao.doesEncoderExist(BUYER_2));
+    }
+
+    @Test
+    public void testUpdateFailedCount() {
+        assertNull(
+                "Initial state should have been empty",
+                mEncoderLogicMetadataDao.getMetadata(BUYER_1));
+
+        mEncoderLogicMetadataDao.updateEncoderFailedCount(BUYER_1, 2);
+
+        assertNull(
+                "Initial state should have been empty",
+                mEncoderLogicMetadataDao.getMetadata(BUYER_1));
+
+        DBEncoderLogicMetadata logic = DBEncoderLogicFixture.anEncoderLogic();
+        mEncoderLogicMetadataDao.persistEncoderLogicMetadata(logic);
+        assertEquals(logic, mEncoderLogicMetadataDao.getMetadata(BUYER_1));
+
+        mEncoderLogicMetadataDao.updateEncoderFailedCount(BUYER_1, 2);
+        assertEquals(
+                DBEncoderLogicFixture.anEncoderLogicBuilder().setFailedEncodingCount(2).build(),
+                mEncoderLogicMetadataDao.getMetadata(BUYER_1));
     }
 
     @Test
