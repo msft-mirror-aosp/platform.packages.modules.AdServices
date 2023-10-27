@@ -48,6 +48,7 @@ import androidx.annotation.RequiresApi;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.compatibility.common.util.DeviceConfigStateManager;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 
 import dalvik.system.PathClassLoader;
@@ -60,6 +61,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
+import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -116,6 +119,7 @@ public class SdkSandboxTest {
     private InjectorForTest mInjector;
 
     private PackageManager mSpyPackageManager;
+    private MockitoSession mStaticMockSession;
 
     static class InjectorForTest extends SdkSandboxServiceImpl.Injector {
 
@@ -162,6 +166,13 @@ public class SdkSandboxTest {
 
     @Before
     public void setup() throws Exception {
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .strictness(Strictness.LENIENT)
+                        .mockStatic(Process.class)
+                        .startMocking();
+        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandbox());
+
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
         mContext = Mockito.spy(context);
         mSpyPackageManager = Mockito.spy(mContext.getPackageManager());
@@ -175,6 +186,7 @@ public class SdkSandboxTest {
     @After
     public void teardown() throws Exception {
         mService.getClientSharedPreferences().edit().clear().commit();
+        mStaticMockSession.finishMocking();
     }
 
     @Test
