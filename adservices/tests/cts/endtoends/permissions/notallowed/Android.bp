@@ -23,6 +23,7 @@ android_test {
     ],
     static_libs: [
         "adservices-clients",
+        "adservices-test-fixtures",
         "adservices-test-utility",
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt",
@@ -50,6 +51,7 @@ android_test {
     ],
     static_libs: [
         "adservices-clients",
+        "adservices-test-fixtures",
         "adservices-test-utility",
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt",
@@ -58,6 +60,7 @@ android_test {
     libs: [
         "android.ext.adservices",
         "android.test.base",
+        "framework-adservices",
         "framework-sdksandbox.impl",
     ],
     test_suites: [
