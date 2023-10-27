@@ -82,6 +82,14 @@ public interface IEncryptionKeyDao {
     boolean insert(EncryptionKey encryptionKey);
 
     /**
+     * Inserts a list of {@link EncryptionKey} into DB table.
+     *
+     * @param encryptionKeys a list of EncryptionKeys to insert.
+     * @return true if the operation was successful, false, otherwise.
+     */
+    boolean insert(List<EncryptionKey> encryptionKeys);
+
+    /**
      * Deletes {@link EncryptionKey} from DB table.
      *
      * @param id id of the EncryptionKey.
