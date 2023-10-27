@@ -34,7 +34,6 @@ import android.app.sdksandbox.testutils.StubSdkToServiceLink;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.Build;
@@ -392,30 +391,6 @@ public class SdkSandboxTest {
         final StringWriter stringWriter = new StringWriter();
         mService.dump(new FileDescriptor(), new PrintWriter(stringWriter), new String[0]);
         assertThat(stringWriter.toString()).contains("mHeldSdk size:");
-    }
-
-    @Test
-    public void testDisabledWhenWebviewNotResolvable() throws Exception {
-        // WebView provider cannot be resolved, therefore sandbox should be disabled.
-        Mockito.doReturn(null)
-                .when(mSpyPackageManager)
-                .getPackageInfo(
-                        Mockito.anyString(), Mockito.any(PackageManager.PackageInfoFlags.class));
-        SdkSandboxDisabledCallback callback = new SdkSandboxDisabledCallback();
-        mService.isDisabled(callback);
-        assertThat(callback.mIsDisabled).isTrue();
-    }
-
-    @Test
-    public void testNotDisabledWhenWebviewResolvable() throws Exception {
-        // WebView provider can be resolved, therefore sandbox should not be disabled.
-        Mockito.doReturn(new PackageInfo())
-                .when(mSpyPackageManager)
-                .getPackageInfo(
-                        Mockito.anyString(), Mockito.any(PackageManager.PackageInfoFlags.class));
-        SdkSandboxDisabledCallback callback = new SdkSandboxDisabledCallback();
-        mService.isDisabled(callback);
-        assertThat(callback.isDisabled()).isFalse();
     }
 
     @Test
@@ -825,26 +800,6 @@ public class SdkSandboxTest {
             mErrorCode = errorCode;
             mSuccessful = false;
             mLatch.countDown();
-        }
-    }
-
-    private static class SdkSandboxDisabledCallback extends ISdkSandboxDisabledCallback.Stub {
-        private final CountDownLatch mLatch;
-        private boolean mIsDisabled;
-
-        SdkSandboxDisabledCallback() {
-            mLatch = new CountDownLatch(1);
-        }
-
-        @Override
-        public void onResult(boolean isDisabled) {
-            mIsDisabled = isDisabled;
-            mLatch.countDown();
-        }
-
-        boolean isDisabled() throws Exception {
-            assertThat(mLatch.await(1, TimeUnit.SECONDS)).isTrue();
-            return mIsDisabled;
         }
     }
 

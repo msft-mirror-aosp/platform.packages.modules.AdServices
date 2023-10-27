@@ -34,7 +34,6 @@ import androidx.annotation.Nullable;
 import com.android.sdksandbox.IComputeSdkStorageCallback;
 import com.android.sdksandbox.ILoadSdkInSandboxCallback;
 import com.android.sdksandbox.IRequestSurfacePackageFromSdkCallback;
-import com.android.sdksandbox.ISdkSandboxDisabledCallback;
 import com.android.sdksandbox.ISdkSandboxManagerToSdkSandboxCallback;
 import com.android.sdksandbox.ISdkSandboxService;
 import com.android.sdksandbox.IUnloadSdkCallback;
@@ -62,8 +61,6 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
     private boolean mSurfacePackageRequested = false;
     private int mInitializationCount = 0;
 
-    boolean mIsDisabledResponse = false;
-    boolean mWasVisibilityPatchChecked = false;
     public boolean dieOnLoad = false;
 
     public boolean failInitialization = false;
@@ -126,16 +123,6 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
     @Override
     public void syncDataFromClient(SharedPreferencesUpdate update) {
         mLastSyncUpdate = update;
-    }
-
-    @Override
-    public void isDisabled(ISdkSandboxDisabledCallback callback) {
-        try {
-            mWasVisibilityPatchChecked = true;
-            callback.onResult(mIsDisabledResponse);
-        } catch (RemoteException e) {
-            e.rethrowAsRuntimeException();
-        }
     }
 
     @Override
@@ -219,14 +206,6 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
             int errorCode, String errorMsg, FakeRequestSurfacePackageCallbackBinder callback)
             throws RemoteException {
         callback.onSurfacePackageError(errorCode, errorMsg, new SandboxLatencyInfo());
-    }
-
-    public boolean wasVisibilityPatchChecked() {
-        return mWasVisibilityPatchChecked;
-    }
-
-    public void setIsDisabledResponse(boolean response) {
-        mIsDisabledResponse = response;
     }
 
     public ApplicationInfo getCustomizedInfo() {

@@ -33,7 +33,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.Build;
@@ -45,7 +44,6 @@ import android.text.TextUtils;
 import android.util.ArrayMap;
 import android.util.ArraySet;
 import android.util.Log;
-import android.webkit.WebView;
 
 import androidx.annotation.RequiresApi;
 
@@ -301,36 +299,6 @@ public class SdkSandboxServiceImpl extends Service {
         }
     }
 
-    /**
-     * Checks if the SDK sandbox is disabled. This will be {@code true} iff the WebView provider is
-     * not visible to the sandbox.
-     */
-    public void isDisabled(ISdkSandboxDisabledCallback callback) {
-        enforceCallerIsSystemServer();
-        PackageInfo info = WebView.getCurrentWebViewPackage();
-        PackageInfo webViewProviderInfo = null;
-        boolean isDisabled = false;
-        try {
-            if (info != null) {
-                webViewProviderInfo =
-                        mInjector
-                                .getContext()
-                                .getPackageManager()
-                                .getPackageInfo(
-                                        info.packageName, PackageManager.PackageInfoFlags.of(0));
-            }
-        } catch (PackageManager.NameNotFoundException e) {
-            Log.w(TAG, "Could not verify if the SDK sandbox should be disabled", e);
-            isDisabled = true;
-        }
-        isDisabled |= webViewProviderInfo == null;
-        try {
-            callback.onResult(isDisabled);
-        } catch (RemoteException e) {
-            Log.e(TAG, "Could not call back into ISdkSandboxDisabledCallback", e);
-        }
-    }
-
     @Override
     protected void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
         synchronized (mLock) {
@@ -561,12 +529,6 @@ public class SdkSandboxServiceImpl extends Service {
         public void syncDataFromClient(@NonNull SharedPreferencesUpdate update) {
             Objects.requireNonNull(update, "update should not be null");
             SdkSandboxServiceImpl.this.syncDataFromClient(update);
-        }
-
-        @Override
-        public void isDisabled(@NonNull ISdkSandboxDisabledCallback callback) {
-            Objects.requireNonNull(callback, "callback should not be null");
-            SdkSandboxServiceImpl.this.isDisabled(callback);
         }
     }
 
