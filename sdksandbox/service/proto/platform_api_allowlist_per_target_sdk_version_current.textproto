@@ -17,6 +17,10 @@ allowlist_per_target_sdk {
             },
             {
                 allow : true
+                class_name : "Lcom/google/android/*"
+            },
+            {
+                allow : true
                 class_name : "Ljava/*"
             },
             {
@@ -41,6 +45,10 @@ allowlist_per_target_sdk {
             {
                 allow : true
                 class_name : "Lcom/android/*"
+            },
+            {
+                allow : true
+                class_name : "Lcom/google/android/*"
             },
             {
                 allow : true
