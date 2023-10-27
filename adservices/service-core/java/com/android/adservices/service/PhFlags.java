@@ -2081,6 +2081,21 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getEncryptionKeyNewEnrollmentFetchKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return getGlobalKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(
+                                FlagsConstants.KEY_ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH),
+                        DeviceConfig.getBoolean(
+                                FlagsConstants.NAMESPACE_ADSERVICES,
+                                FlagsConstants.KEY_ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH,
+                                ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH));
+    }
+
+    @Override
     public String getPpapiAppAllowList() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getString(
@@ -3572,6 +3587,12 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL
                         + " = "
                         + getMddTopicsClassifierManifestFileUrl());
+        writer.println("==== AdServices PH Flags Dump Encryption key related flags ====");
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH
+                        + " = "
+                        + getEncryptionKeyNewEnrollmentFetchKillSwitch());
         writer.println("==== AdServices PH Flags Dump Topics related flags ====");
         writer.println(
                 "\t"

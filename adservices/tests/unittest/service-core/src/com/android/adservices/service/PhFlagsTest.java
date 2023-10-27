@@ -88,6 +88,7 @@ import static com.android.adservices.service.Flags.ENABLE_APPSEARCH_CONSENT_DATA
 import static com.android.adservices.service.Flags.ENABLE_DATABASE_SCHEMA_VERSION_8;
 import static com.android.adservices.service.Flags.ENABLE_ENROLLMENT_TEST_SEED;
 import static com.android.adservices.service.Flags.ENABLE_LOGGED_TOPIC;
+import static com.android.adservices.service.Flags.ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH;
 import static com.android.adservices.service.Flags.ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE;
@@ -454,6 +455,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_BACK_COMP
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_DATABASE_SCHEMA_VERSION_8;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_LOGGED_TOPIC;
+import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS;
@@ -5693,6 +5695,27 @@ public class PhFlagsTest {
                 /* makeDefault */ false);
 
         assertThat(mPhFlags.getProtectedSignalsServiceKillSwitch()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetEncryptionKeyFetchKillSwitch() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
+        // without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getEncryptionKeyNewEnrollmentFetchKillSwitch())
+                .isEqualTo(ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH);
+
+        // Now overriding with the value from PH.
+        boolean phOverridingValue = !ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getEncryptionKeyNewEnrollmentFetchKillSwitch())
+                .isEqualTo(phOverridingValue);
     }
 
     @Test

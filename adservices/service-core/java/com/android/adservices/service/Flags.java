@@ -2394,6 +2394,23 @@ public interface Flags {
         return getGlobalKillSwitch() || PROTECTED_SIGNALS_SERVICE_KILL_SWITCH;
     }
 
+    // Encryption key Kill switches
+
+    /**
+     * Encryption key new enrollment fetch kill switch. The default value is false which means
+     * fetching encryption keys for new enrollments is enabled by default. This flag is used for
+     * emergency turning off fetching encryption keys for new enrollments.
+     */
+    boolean ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH = true;
+
+    /**
+     * @return value of encryption key fetch job kill switch
+     */
+    default boolean getEncryptionKeyNewEnrollmentFetchKillSwitch() {
+        // We check the Global kill switch first. As a result, it overrides all other kill switches.
+        return getGlobalKillSwitch() || ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH;
+    }
+
     /**
      * Enable Back Compat feature flag. The default value is false which means that all back compat
      * related features are disabled by default. This flag would be enabled for R/S during rollout.

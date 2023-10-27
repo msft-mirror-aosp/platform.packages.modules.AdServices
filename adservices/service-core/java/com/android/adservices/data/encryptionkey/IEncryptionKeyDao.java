@@ -29,26 +29,39 @@ public interface IEncryptionKeyDao {
      * Returns the {@link EncryptionKey}.
      *
      * @param enrollmentId enrollment id provided to the adtech during the enrollment process.
-     * @param keyType the key type of this key, can be either encryption key or signing key.
-     * @return a list of EncryptionKey; Null in case of SQL failure
+     * @return a list of EncryptionKey objects for both encryption key type and signing key type for
+     *     given enrollment id; Empty list if not found or SQL failure.
      */
-    List<EncryptionKey> getEncryptionKeyFromEnrollmentId(
+    List<EncryptionKey> getEncryptionKeyFromEnrollmentId(String enrollmentId);
+
+    /**
+     * Returns the {@link EncryptionKey}.
+     *
+     * @param enrollmentId enrollment id provided to the adtech during the enrollment process.
+     * @param keyType the key type of this key, can be either encryption key or signing key.
+     * @return a list of EncryptionKey objects for given key type; Empty list if not found or SQL
+     *     failure.
+     */
+    List<EncryptionKey> getEncryptionKeyFromEnrollmentIdAndKeyType(
             String enrollmentId, EncryptionKey.KeyType keyType);
 
     /**
      * Returns the {@link EncryptionKey}.
      *
-     * @param keyCommitmentId key commitment id provided by adtech.
-     * @return the EncryptionKey; Null in case of SQL failure
+     * @param enrollmentId enrollment id for the adtech during enrollment.
+     * @param keyCommitmentId key commitment id provided by adtech in encryption JSON response.
+     * @return the EncryptionKey. Encryption key commitment id is unique per adtech. Null if not
+     *     found or SQL failure.
      */
-    EncryptionKey getEncryptionKeyFromKeyCommitmentId(int keyCommitmentId);
+    EncryptionKey getEncryptionKeyFromEnrollmentIdAndKeyCommitmentId(
+            String enrollmentId, int keyCommitmentId);
 
     /**
      * Returns the {@link EncryptionKey}.
      *
      * @param reportingOrigin provided as triggerRegistrationUrl during trigger attestation.
      * @param keyType the key type of this key, can be either encryption key or signing key.
-     * @return a list of EncryptionKey; Null in case of SQL failure
+     * @return a list of EncryptionKey; Empty list if not found or SQL failure.
      */
     List<EncryptionKey> getEncryptionKeyFromReportingOrigin(
             Uri reportingOrigin, EncryptionKey.KeyType keyType);
@@ -56,7 +69,7 @@ public interface IEncryptionKeyDao {
     /**
      * Returns all the {@link EncryptionKey} in the table.
      *
-     * @return all the encryption keys in the table.
+     * @return all the encryption keys in the table; Empty list if not found or SQL failure.
      */
     List<EncryptionKey> getAllEncryptionKeys();
 
