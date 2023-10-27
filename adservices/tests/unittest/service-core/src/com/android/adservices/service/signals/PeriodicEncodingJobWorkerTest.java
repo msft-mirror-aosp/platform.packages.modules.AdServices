@@ -37,11 +37,18 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.data.signals.DBEncoderLogic;
 import com.android.adservices.data.signals.EncodedPayloadDao;
-import com.android.adservices.data.signals.EncoderLogicDao;
+import com.android.adservices.data.signals.EncoderLogicHandler;
+import com.android.adservices.data.signals.EncoderLogicMetadataDao;
+
 import com.android.adservices.data.signals.EncoderPersistenceDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.AdSelectionScriptEngine;
+import com.android.adservices.service.devapi.DevContextFilter;
 
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -58,6 +65,8 @@ import org.mockito.junit.MockitoRule;
 
 import java.time.Instant;
 import java.util.Base64;
+
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -78,11 +87,13 @@ public class PeriodicEncodingJobWorkerTest {
 
     @Rule public MockitoRule rule = MockitoJUnit.rule();
 
-    @Mock private EncoderLogicDao mEncoderLogicDao;
+    @Mock private EncoderLogicHandler mEncoderLogicHandler;
+    @Mock private EncoderLogicMetadataDao mEncoderLogicMetadataDao;
     @Mock private EncoderPersistenceDao mEncoderPersistenceDao;
     @Mock private EncodedPayloadDao mEncodedPayloadDao;
     @Mock private SignalsProviderImpl mSignalStorageManager;
     @Mock private AdSelectionScriptEngine mScriptEngine;
+    @Mock private DevContextFilter mDevContextFilter;
     @Mock Flags mFlags;
 
     @Captor private ArgumentCaptor<DBEncodedPayload> mEncodedPayloadCaptor;
@@ -99,13 +110,15 @@ public class PeriodicEncodingJobWorkerTest {
         when(mFlags.getProtectedSignalsEncodedPayloadMaxSizeBytes()).thenReturn(MAX_SIZE_BYTES);
         mJobWorker =
                 new PeriodicEncodingJobWorker(
-                        mEncoderLogicDao,
+                        mEncoderLogicHandler,
+                        mEncoderLogicMetadataDao,
                         mEncoderPersistenceDao,
                         mEncodedPayloadDao,
                         mSignalStorageManager,
                         mScriptEngine,
                         mBackgroundExecutor,
                         mLightWeightExecutor,
+                        mDevContextFilter,
                         mFlags);
     }
 
@@ -139,13 +152,15 @@ public class PeriodicEncodingJobWorkerTest {
                 .thenReturn(reallySmallMaxSizeLimit);
         mJobWorker =
                 new PeriodicEncodingJobWorker(
-                        mEncoderLogicDao,
+                        mEncoderLogicHandler,
+                        mEncoderLogicMetadataDao,
                         mEncoderPersistenceDao,
                         mEncodedPayloadDao,
                         mSignalStorageManager,
                         mScriptEngine,
                         mBackgroundExecutor,
                         mLightWeightExecutor,
+                        mDevContextFilter,
                         mFlags);
         String encodedPayload = getBase64String("Valid, but really large payload");
         int version = 1;
@@ -357,6 +372,62 @@ public class PeriodicEncodingJobWorkerTest {
         assertEquals(
                 getSetFromBytes(getBytesFromBase64(validBase64Response)),
                 getSetFromBytes(mEncodedPayloadCaptor.getValue().getEncodedPayload()));
+    }
+
+    @Test
+    public void testUpdatesEncodersAllUpdatedEncodersDoNotDownloadAgain() {
+        when(mEncoderLogicMetadataDao.getBuyersWithEncodersBeforeTime(any()))
+                .thenReturn(Collections.emptyList());
+        verifyZeroInteractions(mEncoderLogicHandler);
+    }
+
+    @Test
+    public void testEncodeProtectedSignalsAlsoUpdatesEncoders()
+            throws ExecutionException, InterruptedException, TimeoutException {
+
+        when(mEncoderLogicMetadataDao.getBuyersWithEncodersBeforeTime(any()))
+                .thenReturn(List.of(BUYER, BUYER_2));
+        when(mEncoderLogicHandler.downloadAndUpdate(any(), any()))
+                .thenReturn(FluentFuture.from(Futures.immediateFuture(true)));
+
+        Void unused = mJobWorker.encodeProtectedSignals().get(5, TimeUnit.SECONDS);
+        verify(mEncoderLogicHandler).downloadAndUpdate(eq(BUYER), any());
+        verify(mEncoderLogicHandler).downloadAndUpdate(eq(BUYER_2), any());
+    }
+
+    @Test
+    public void testEncodeProtectedSignalsAlsoUpdatesEncodersIsNotAffectedByEncodingFailures()
+            throws ExecutionException, InterruptedException, TimeoutException {
+
+        when(mEncoderLogicMetadataDao.getAllBuyersWithRegisteredEncoders())
+                .thenReturn(List.of(BUYER, BUYER_2));
+
+        String encoderLogic = "function buyer1_EncodeJs() {\" correct result \"}";
+        int version1 = 1;
+        DBEncoderLogicMetadata fakeEncoderLogicEntry =
+                DBEncoderLogicMetadata.builder()
+                        .setBuyer(BUYER)
+                        .setVersion(version1)
+                        .setCreationTime(Instant.now())
+                        .build();
+        Map<String, List<ProtectedSignal>> fakeSignals = new HashMap<>();
+        when(mEncoderLogicMetadataDao.getMetadata(any())).thenReturn(fakeEncoderLogicEntry);
+        when(mEncoderPersistenceDao.getEncoder(any())).thenReturn(encoderLogic);
+        when(mSignalStorageManager.getSignals(any())).thenReturn(fakeSignals);
+
+        // All the encodings are wired to fail with exceptions
+        ListenableFuture<String> failureResponse =
+                Futures.immediateFailedFuture(new RuntimeException("Random exception"));
+        when(mScriptEngine.encodeSignals(any(), any(), anyInt())).thenReturn(failureResponse);
+
+        when(mEncoderLogicMetadataDao.getBuyersWithEncodersBeforeTime(any()))
+                .thenReturn(List.of(BUYER, BUYER_2));
+        when(mEncoderLogicHandler.downloadAndUpdate(any(), any()))
+                .thenReturn(FluentFuture.from(Futures.immediateFuture(true)));
+
+        Void unused = mJobWorker.encodeProtectedSignals().get(5, TimeUnit.SECONDS);
+        verify(mEncoderLogicHandler).downloadAndUpdate(eq(BUYER), any());
+        verify(mEncoderLogicHandler).downloadAndUpdate(eq(BUYER_2), any());
     }
 
     private String getBase64String(String str) {
