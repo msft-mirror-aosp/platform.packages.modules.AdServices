@@ -2361,40 +2361,7 @@ public class SdkSandboxManagerServiceUnitTest {
     @Test
     public void testIsDisabled() {
         mService.forceEnableSandbox();
-        mSdkSandboxService.setIsDisabledResponse(false);
-        assertThat(mService.isSdkSandboxDisabled(mSdkSandboxService)).isFalse();
-
-        mService.clearSdkSandboxState();
-        mSdkSandboxService.setIsDisabledResponse(true);
-        assertThat(mService.isSdkSandboxDisabled(mSdkSandboxService)).isTrue();
-
-        mService.forceEnableSandbox();
-    }
-
-    @Test
-    public void testSdkSandboxDisabledCallback() {
-        SdkSandboxManagerService.SdkSandboxDisabledCallback callback =
-                new SdkSandboxManagerService.SdkSandboxDisabledCallback();
-        // In this case the callback has not been called, so a timeout will occur and sandbox
-        // will be disabled.
-        assertThat(callback.getIsDisabled()).isTrue();
-
-        callback.onResult(false);
-        assertThat(callback.getIsDisabled()).isFalse();
-
-        callback = new SdkSandboxManagerService.SdkSandboxDisabledCallback();
-        callback.onResult(true);
-        assertThat(callback.getIsDisabled()).isTrue();
-    }
-
-    @Test
-    public void testVisibilityPatchChecked() {
-        mService.clearSdkSandboxState();
-        // We should only check for the visibility patch on T devices.
-        boolean visibilityPatchCheckExpected = !SdkLevel.isAtLeastU();
-        mService.isSdkSandboxDisabled(mSdkSandboxService);
-        assertThat(mSdkSandboxService.wasVisibilityPatchChecked())
-                .isEqualTo(visibilityPatchCheckExpected);
+        assertThat(mService.isSdkSandboxDisabled()).isFalse();
     }
 
     @Test
@@ -2403,13 +2370,13 @@ public class SdkSandboxManagerServiceUnitTest {
         // AdServices APK is present.
         Mockito.when(mInjector.isEmulator()).thenReturn(true);
         sSdkSandboxSettingsListener.setKillSwitchState(true);
-        assertThat(mService.isSdkSandboxDisabled(mSdkSandboxService)).isFalse();
+        assertThat(mService.isSdkSandboxDisabled()).isFalse();
 
         // SDK sandbox is disabled when the killswitch is enabled if the device is not an emulator.
         mService.clearSdkSandboxState();
         Mockito.when(mInjector.isEmulator()).thenReturn(false);
         sSdkSandboxSettingsListener.setKillSwitchState(true);
-        assertThat(mService.isSdkSandboxDisabled(mSdkSandboxService)).isTrue();
+        assertThat(mService.isSdkSandboxDisabled()).isTrue();
     }
 
     @Test
@@ -2418,18 +2385,18 @@ public class SdkSandboxManagerServiceUnitTest {
         Mockito.doReturn(false).when(mInjector).isAdServiceApkPresent();
         Mockito.when(mInjector.isEmulator()).thenReturn(true);
         sSdkSandboxSettingsListener.setKillSwitchState(true);
-        assertThat(mService.isSdkSandboxDisabled(mSdkSandboxService)).isTrue();
+        assertThat(mService.isSdkSandboxDisabled()).isTrue();
     }
 
     @Test
     public void testSdkSandboxDisabledForAdServiceApkMissing() {
         Mockito.doReturn(true).when(mInjector).isAdServiceApkPresent();
         sSdkSandboxSettingsListener.setKillSwitchState(false);
-        assertThat(mService.isSdkSandboxDisabled(mSdkSandboxService)).isFalse();
+        assertThat(mService.isSdkSandboxDisabled()).isFalse();
 
         Mockito.doReturn(false).when(mInjector).isAdServiceApkPresent();
         sSdkSandboxSettingsListener.setKillSwitchState(false);
-        assertThat(mService.isSdkSandboxDisabled(mSdkSandboxService)).isTrue();
+        assertThat(mService.isSdkSandboxDisabled()).isTrue();
     }
 
     @Test
