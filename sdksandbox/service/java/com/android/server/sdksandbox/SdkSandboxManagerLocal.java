@@ -18,6 +18,7 @@ package com.android.server.sdksandbox;
 
 import android.annotation.NonNull;
 import android.annotation.SdkConstant;
+import android.annotation.SuppressLint;
 import android.annotation.SystemApi;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -149,6 +150,7 @@ public interface SdkSandboxManagerLocal {
      * @return {@link ApplicationInfo} of the sdk sandbox process to be instrumented
      * @throws NameNotFoundException if the sandbox package name cannot be found.
      */
+    @SuppressLint("UnflaggedApi") // The API is only used for tests.
     @NonNull
     ApplicationInfo getSdkSandboxApplicationInfoForInstrumentation(
             @NonNull ApplicationInfo clientAppInfo, int userId, boolean isSdkInSandbox)
