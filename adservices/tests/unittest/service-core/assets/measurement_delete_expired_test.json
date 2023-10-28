@@ -414,7 +414,7 @@
       "retry-limit": true
     },
     {
-      "name": "1 each Expired DebugRetry, EventRetry, AggregateRetry",
+      "name": "1 each Expired DebugRetry, EventRetry, DebugEventRetry, AggregateRetry, DebugAggregateRetry",
       "input": {
         "key_values": [
           {
@@ -430,6 +430,16 @@
           {
             "key":"AR-Expired",
             "dataType": "AGGREGATE_REPORT_RETRY_COUNT",
+            "value": "1000"
+          },
+          {
+            "key":"ER-Expired",
+            "dataType": "DEBUG_EVENT_REPORT_RETRY_COUNT",
+            "value": "1000"
+          },
+          {
+            "key":"AR-Expired",
+            "dataType": "DEBUG_AGGREGATE_REPORT_RETRY_COUNT",
             "value": "1000"
           }
         ]
@@ -447,7 +457,7 @@
       "retry-limit": true
     },
     {
-      "name": "1 each non-Expired DebugRetry, EventRetry, AggregateRetry",
+      "name": "1 each non-Expired DebugRetry, EventRetry, DebugEventRetry, AggregateRetry, DebugAggregateRetry",
       "input": {
         "aggregate_reports": [
           {
@@ -497,6 +507,16 @@
           {
             "key":"AR-non-Expired",
             "dataType": "AGGREGATE_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"ER-non-Expired",
+            "dataType": "DEBUG_EVENT_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"AR-non-Expired",
+            "dataType": "DEBUG_AGGREGATE_REPORT_RETRY_COUNT",
             "value": "1"
           }
         ]
@@ -550,6 +570,16 @@
           {
             "key":"AR-non-Expired",
             "dataType": "AGGREGATE_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"ER-non-Expired",
+            "dataType": "DEBUG_EVENT_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"AR-non-Expired",
+            "dataType": "DEBUG_AGGREGATE_REPORT_RETRY_COUNT",
             "value": "1"
           }
         ]
@@ -610,6 +640,16 @@
             "value": "1"
           },
           {
+            "key":"ER-non-Expired",
+            "dataType": "DEBUG_EVENT_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"AR-non-Expired",
+            "dataType": "DEBUG_AGGREGATE_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
             "key":"DR-Expired",
             "dataType": "AGGREGATE_REPORT_RETRY_COUNT",
             "value": "1"
@@ -622,6 +662,16 @@
           {
             "key":"AR-Expired",
             "dataType": "AGGREGATE_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"ER-Expired",
+            "dataType": "DEBUG_EVENT_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"AR-Expired",
+            "dataType": "DEBUG_AGGREGATE_REPORT_RETRY_COUNT",
             "value": "1"
           }
         ]
@@ -675,6 +725,16 @@
           {
             "key":"AR-non-Expired",
             "dataType": "AGGREGATE_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"ER-non-Expired",
+            "dataType": "DEBUG_EVENT_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"AR-non-Expired",
+            "dataType": "DEBUG_AGGREGATE_REPORT_RETRY_COUNT",
             "value": "1"
           }
         ]
