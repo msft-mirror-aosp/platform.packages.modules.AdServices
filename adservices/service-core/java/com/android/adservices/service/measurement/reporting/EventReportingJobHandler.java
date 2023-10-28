@@ -167,15 +167,19 @@ public class EventReportingJobHandler {
                 reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.SUCCESS);
             } else {
                 reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.FAILURE);
+                mDatastoreManager.runInTransaction(
+                        (dao) -> {
+                            int retryCount =
+                                    dao.incrementAndGetReportingRetryCount(
+                                            eventReportId,
+                                            mIsDebugInstance
+                                                    ? KeyValueData.DataType
+                                                            .DEBUG_EVENT_REPORT_RETRY_COUNT
+                                                    : KeyValueData.DataType
+                                                            .EVENT_REPORT_RETRY_COUNT);
+                            reportingStatus.setRetryCount(retryCount);
+                        });
             }
-            mDatastoreManager.runInTransaction(
-                    (dao) -> {
-                        int retryCount =
-                                dao.incrementAndGetReportingRetryCount(
-                                        eventReportId,
-                                        KeyValueData.DataType.EVENT_REPORT_RETRY_COUNT);
-                        reportingStatus.setRetryCount(retryCount);
-                    });
             logReportingStats(reportingStatus);
         }
         return true;
