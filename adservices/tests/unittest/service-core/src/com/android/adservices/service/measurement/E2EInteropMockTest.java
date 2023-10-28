@@ -178,7 +178,7 @@ public class E2EInteropMockTest extends E2EMockTest {
         // redirects, partly due to differences in redirect handling across attribution APIs.
         for (String uri : sourceRegistration.mUriToResponseHeadersMap.keySet()) {
             updateEnrollment(uri);
-            insertSource(
+            insertSourceOrRecordUnparsable(
                     sourceRegistration.getPublisher(),
                     sourceRegistration.mTimestamp,
                     uri,
@@ -199,7 +199,7 @@ public class E2EInteropMockTest extends E2EMockTest {
         // redirects, partly due to differences in redirect handling across attribution APIs.
         for (String uri : triggerRegistration.mUriToResponseHeadersMap.keySet()) {
             updateEnrollment(uri);
-            insertTrigger(
+            insertTriggerOrRecordUnparsable(
                     triggerRegistration.getDestination(),
                     triggerRegistration.mTimestamp,
                     uri,
@@ -218,13 +218,13 @@ public class E2EInteropMockTest extends E2EMockTest {
         }
     }
 
-    private void insertSource(
+    private void insertSourceOrRecordUnparsable(
             String publisher,
             long timestamp,
             String uri,
             boolean arDebugPermission,
             RegistrationRequest request,
-            Map<String, List<String>> headers) {
+            Map<String, List<String>> headers) throws JSONException {
         String enrollmentId =
                 Enrollment.getValidEnrollmentId(
                                 Uri.parse(uri),
@@ -261,16 +261,17 @@ public class E2EInteropMockTest extends E2EMockTest {
                                             maybeSource.get(), asyncRegistration, measurementDao)));
         } else {
             Assert.assertTrue(sParsingErrors.contains(status.getEntityStatus()));
+            addUnparsableRegistration(timestamp, UnparsableRegistrationTypes.SOURCE);
         }
     }
 
-    private void insertTrigger(
+    private void insertTriggerOrRecordUnparsable(
             String destination,
             long timestamp,
             String uri,
             boolean arDebugPermission,
             RegistrationRequest request,
-            Map<String, List<String>> headers) {
+            Map<String, List<String>> headers) throws JSONException {
         String enrollmentId =
                 Enrollment.getValidEnrollmentId(
                                 Uri.parse(uri),
@@ -304,7 +305,15 @@ public class E2EInteropMockTest extends E2EMockTest {
                                             maybeTrigger.get(), measurementDao)));
         } else {
             Assert.assertTrue(sParsingErrors.contains(status.getEntityStatus()));
+            addUnparsableRegistration(timestamp, UnparsableRegistrationTypes.TRIGGER);
         }
+    }
+
+    private void addUnparsableRegistration(long time, String type) throws JSONException {
+        mActualOutput.mUnparsableRegistrationObjects.add(
+                new JSONObject()
+                        .put(UnparsableRegistrationKeys.TIME, String.valueOf(time))
+                        .put(UnparsableRegistrationKeys.TYPE, type));
     }
 
     private static Source.SourceType getSourceType(RegistrationRequest request) {
@@ -344,7 +353,8 @@ public class E2EInteropMockTest extends E2EMockTest {
             Set<String> keys = jsonObj.keySet();
             for (String key : keys) {
                 if (key.equals(TestFormatJsonMapping.TIMESTAMP_KEY)
-                        || key.equals(TestFormatJsonMapping.REPORT_TIME_KEY)) {
+                        || key.equals(TestFormatJsonMapping.REPORT_TIME_KEY)
+                        || key.equals(UnparsableRegistrationKeys.TIME)) {
                     long time = jsonObj.getLong(key);
                     newJson.put(key, String.valueOf(time - t0 + anchor));
                 } else if (key.equals("scheduled_report_time")) {

@@ -37,6 +37,7 @@ public class EncryptionKeyTest {
     private static final int KEY_COMMITMENT_ID = 1;
     private static final String BODY = "WVZBTFVF";
     private static final long EXPIRATION = 100000L;
+    private static final long LAST_FETCH_TIME = 12345L;
 
     private static EncryptionKey createKeyCommitment(String enrollmentId) {
         return new EncryptionKey.Builder()
@@ -49,6 +50,7 @@ public class EncryptionKeyTest {
                 .setKeyCommitmentId(KEY_COMMITMENT_ID)
                 .setBody(BODY)
                 .setExpiration(EXPIRATION)
+                .setLastFetchTime(LAST_FETCH_TIME)
                 .build();
     }
 
@@ -66,6 +68,7 @@ public class EncryptionKeyTest {
         assertEquals(KEY_COMMITMENT_ID, result.getKeyCommitmentId());
         assertEquals(BODY, result.getBody());
         assertEquals(EXPIRATION, result.getExpiration());
+        assertEquals(LAST_FETCH_TIME, result.getLastFetchTime());
     }
 
     /** Unit test for encryption key default creation. */
@@ -82,6 +85,7 @@ public class EncryptionKeyTest {
         assertEquals(0, result.getKeyCommitmentId());
         assertNull(result.getBody());
         assertEquals(0L, result.getExpiration());
+        assertEquals(0L, result.getLastFetchTime());
     }
 
     /** Unit test for encryption key hashcode equals. */

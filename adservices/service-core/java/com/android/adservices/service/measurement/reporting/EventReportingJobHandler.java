@@ -21,6 +21,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MESUREMENT_REPORTS_UPLOADED;
 
 import android.adservices.common.AdServicesStatusUtils;
+import android.content.Context;
 import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
@@ -58,10 +59,15 @@ public class EventReportingJobHandler {
     private ReportingStatus.ReportType mReportType;
     private ReportingStatus.UploadMethod mUploadMethod;
 
+    private Context mContext;
+
     @VisibleForTesting
     EventReportingJobHandler(
-            EnrollmentDao enrollmentDao, DatastoreManager datastoreManager, Flags flags) {
-        this(enrollmentDao, datastoreManager, flags, AdServicesLoggerImpl.getInstance());
+            EnrollmentDao enrollmentDao,
+            DatastoreManager datastoreManager,
+            Flags flags,
+            Context context) {
+        this(enrollmentDao, datastoreManager, flags, AdServicesLoggerImpl.getInstance(), context);
     }
 
     EventReportingJobHandler(
@@ -70,13 +76,15 @@ public class EventReportingJobHandler {
             Flags flags,
             AdServicesLogger logger,
             ReportingStatus.ReportType reportType,
-            ReportingStatus.UploadMethod uploadMethod) {
+            ReportingStatus.UploadMethod uploadMethod,
+            Context context) {
         mEnrollmentDao = enrollmentDao;
         mDatastoreManager = datastoreManager;
         mFlags = flags;
         mLogger = logger;
         mReportType = reportType;
         mUploadMethod = uploadMethod;
+        mContext = context;
     }
 
     @VisibleForTesting
@@ -84,11 +92,13 @@ public class EventReportingJobHandler {
             EnrollmentDao enrollmentDao,
             DatastoreManager datastoreManager,
             Flags flags,
-            AdServicesLogger logger) {
+            AdServicesLogger logger,
+            Context context) {
         mEnrollmentDao = enrollmentDao;
         mDatastoreManager = datastoreManager;
         mFlags = flags;
         mLogger = logger;
+        mContext = context;
     }
 
     /**
@@ -157,15 +167,19 @@ public class EventReportingJobHandler {
                 reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.SUCCESS);
             } else {
                 reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.FAILURE);
+                mDatastoreManager.runInTransaction(
+                        (dao) -> {
+                            int retryCount =
+                                    dao.incrementAndGetReportingRetryCount(
+                                            eventReportId,
+                                            mIsDebugInstance
+                                                    ? KeyValueData.DataType
+                                                            .DEBUG_EVENT_REPORT_RETRY_COUNT
+                                                    : KeyValueData.DataType
+                                                            .EVENT_REPORT_RETRY_COUNT);
+                            reportingStatus.setRetryCount(retryCount);
+                        });
             }
-            mDatastoreManager.runInTransaction(
-                    (dao) -> {
-                        int retryCount =
-                                dao.incrementAndGetReportingRetryCount(
-                                        eventReportId,
-                                        KeyValueData.DataType.EVENT_REPORT_RETRY_COUNT);
-                        reportingStatus.setRetryCount(retryCount);
-                    });
             logReportingStats(reportingStatus);
         }
         return true;
@@ -329,7 +343,7 @@ public class EventReportingJobHandler {
     @VisibleForTesting
     public int makeHttpPostRequest(Uri adTechDomain, JSONObject eventReportPayload)
             throws IOException {
-        EventReportSender eventReportSender = new EventReportSender(mIsDebugInstance);
+        EventReportSender eventReportSender = new EventReportSender(mIsDebugInstance, mContext);
         return eventReportSender.sendReport(adTechDomain, eventReportPayload);
     }
 

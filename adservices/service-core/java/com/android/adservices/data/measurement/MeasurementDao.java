@@ -1502,6 +1502,13 @@ class MeasurementDao implements IMeasurementDao {
                         MeasurementTables.AsyncRegistrationContract.REGISTRANT + " = ? ",
                         new String[] {uriStr});
 
+        // Debug Report table
+        numDeletions +=
+                db.delete(
+                        MeasurementTables.DebugReportContract.TABLE,
+                        MeasurementTables.DebugReportContract.REGISTRANT + " = ? ",
+                        new String[] {uriStr});
+
         return numDeletions != 0;
     }
 
@@ -1600,6 +1607,15 @@ class MeasurementDao implements IMeasurementDao {
                 db.delete(
                         MeasurementTables.AsyncRegistrationContract.TABLE,
                         MeasurementTables.AsyncRegistrationContract.REGISTRANT
+                                + " NOT IN "
+                                + valueList.toString(),
+                        /* whereArgs */ null);
+
+        // Debug Report table
+        numDeletions +=
+                db.delete(
+                        MeasurementTables.DebugReportContract.TABLE,
+                        MeasurementTables.DebugReportContract.REGISTRANT
                                 + " NOT IN "
                                 + valueList.toString(),
                         /* whereArgs */ null);
@@ -1789,6 +1805,11 @@ class MeasurementDao implements IMeasurementDao {
                         mReportingRetryLimitSupplier.get().toString(),
                         DataType.DEBUG_REPORT_RETRY_COUNT.toString()
                     });
+        } else {
+            db.delete(
+                    MeasurementTables.DebugReportContract.TABLE,
+                    MeasurementTables.DebugReportContract.INSERTION_TIME + " < ?",
+                    new String[] {earliestValidInsertionStr});
         }
 
         // Cleanup unnecessary AggregateReport Retry Counts
@@ -1800,14 +1821,18 @@ class MeasurementDao implements IMeasurementDao {
         db.delete(
                 MeasurementTables.KeyValueDataContract.TABLE,
                 MeasurementTables.KeyValueDataContract.DATA_TYPE
-                        + " = ? "
+                        + " IN (\""
+                        + DataType.AGGREGATE_REPORT_RETRY_COUNT
+                        + "\", \""
+                        + DataType.DEBUG_AGGREGATE_REPORT_RETRY_COUNT
+                        + "\")"
                         + " AND "
                         + MeasurementTables.KeyValueDataContract.KEY
                         + " NOT IN "
                         + "("
                         + subQuery
                         + ")",
-                new String[] {DataType.AGGREGATE_REPORT_RETRY_COUNT.toString()});
+                new String[] {});
         // Cleanup unnecessary DebugReport Retry Counts
         subQuery =
                 "SELECT "
@@ -1834,14 +1859,18 @@ class MeasurementDao implements IMeasurementDao {
         db.delete(
                 MeasurementTables.KeyValueDataContract.TABLE,
                 MeasurementTables.KeyValueDataContract.DATA_TYPE
-                        + " = ? "
+                        + " IN (\""
+                        + DataType.EVENT_REPORT_RETRY_COUNT
+                        + "\", \""
+                        + DataType.DEBUG_EVENT_REPORT_RETRY_COUNT
+                        + "\")"
                         + " AND "
                         + MeasurementTables.KeyValueDataContract.KEY
                         + " NOT IN "
                         + "("
                         + subQuery
                         + ")",
-                new String[] {DataType.EVENT_REPORT_RETRY_COUNT.toString()});
+                new String[] {});
     }
 
     @Override
@@ -2351,9 +2380,7 @@ class MeasurementDao implements IMeasurementDao {
                 debugReport.getInsertionTime());
         values.put(
                 MeasurementTables.DebugReportContract.REGISTRANT,
-                debugReport.getRegistrant() == null
-                        ? null
-                        : debugReport.getRegistrant().toString());
+                getNullableUriString(debugReport.getRegistrant()));
         long rowId =
                 mSQLTransaction
                         .getDatabase()
@@ -3308,7 +3335,7 @@ class MeasurementDao implements IMeasurementDao {
                         new String[] {
                             String.valueOf(EventReport.DebugReportStatus.PENDING),
                             String.valueOf(mReportingRetryLimitSupplier.get()),
-                            String.valueOf(DataType.EVENT_REPORT_RETRY_COUNT),
+                            String.valueOf(DataType.DEBUG_EVENT_REPORT_RETRY_COUNT),
                         });
     }
 
@@ -3495,7 +3522,7 @@ class MeasurementDao implements IMeasurementDao {
                         new String[] {
                             String.valueOf(AggregateReport.DebugReportStatus.PENDING),
                             String.valueOf(mReportingRetryLimitSupplier.get()),
-                            String.valueOf(DataType.AGGREGATE_REPORT_RETRY_COUNT),
+                            String.valueOf(DataType.DEBUG_AGGREGATE_REPORT_RETRY_COUNT),
                         });
     }
 }

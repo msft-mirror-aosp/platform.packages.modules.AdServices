@@ -16,6 +16,8 @@
 
 package com.android.adservices.service;
 
+import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED;
@@ -397,6 +399,24 @@ public final class PhFlags implements Flags {
 
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return maintenanceJobFlexMs;
+    }
+
+    @Override
+    public int getEncryptionKeyNetworkConnectTimeoutMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS,
+                /* defaultValue */ ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS);
+    }
+
+    @Override
+    public int getEncryptionKeyNetworkReadTimeoutMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS,
+                /* defaultValue */ ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS);
     }
 
     @Override
@@ -1153,6 +1173,15 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getProtectedSignalsEncoderRefreshWindowSeconds() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_PROTECTED_SIGNALS_ENCODER_REFRESH_WINDOW_SECONDS,
+                /* defaultValue */ PROTECTED_SIGNALS_ENCODER_REFRESH_WINDOW_SECONDS);
+    }
+
+    @Override
     public long getProtectedSignalsPeriodicEncodingJobFlexMs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
@@ -1361,15 +1390,6 @@ public final class PhFlags implements Flags {
                 /* flagName */ FlagsConstants
                         .KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES,
                 /* defaultValue */ FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES);
-    }
-
-    @Override
-    public boolean getFledgeAuctionServerPayloadSizeShouldExceedLimit() {
-        return DeviceConfig.getBoolean(
-                FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants
-                        .KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_SIZE_SHOULD_EXCEED_LIMIT,
-                /* defaultValue */ FLEDGE_AUCTION_SERVER_PAYLOAD_SIZE_SHOULD_EXCEED_LIMIT);
     }
 
     @Override
@@ -1868,11 +1888,27 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getEnableComputeVersionFromMappings() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_ENABLE_COMPUTE_VERSION_FROM_MAPPINGS,
+                /* defaultValue */ DEFAULT_COMPUTE_VERSION_FROM_MAPPINGS_ENABLED);
+    }
+
+    @Override
     public String getMainlineTrainVersion() {
         return DeviceConfig.getString(
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_MAINLINE_TRAIN_VERSION,
                 /* defaultValue */ DEFAULT_MAINLINE_TRAIN_VERSION);
+    }
+
+    @Override
+    public String getAdservicesVersionMappings() {
+        return DeviceConfig.getString(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_ADSERVICES_VERSION_MAPPINGS,
+                /* defaultValue */ DEFAULT_ADSERVICES_VERSION_MAPPINGS);
     }
 
     // ADID Killswitches
@@ -2044,6 +2080,55 @@ public final class PhFlags implements Flags {
                                 /* flagName */ FlagsConstants
                                         .KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH,
                                 /* defaultValue */ FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH));
+    }
+
+    @Override
+    public boolean getEncryptionKeyNewEnrollmentFetchKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return getGlobalKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(
+                                FlagsConstants.KEY_ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH),
+                        DeviceConfig.getBoolean(
+                                FlagsConstants.NAMESPACE_ADSERVICES,
+                                FlagsConstants.KEY_ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH,
+                                ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH));
+    }
+
+    @Override
+    public boolean getEncryptionKeyPeriodicFetchKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return getGlobalKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(
+                                FlagsConstants.KEY_ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                FlagsConstants.NAMESPACE_ADSERVICES,
+                                /* flagName */ FlagsConstants
+                                        .KEY_ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH,
+                                /* defaultValue */ ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH));
+    }
+
+    // Encryption key related flags.
+    @Override
+    public int getEncryptionKeyJobRequiredNetworkType() {
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE,
+                /* defaultValue */ ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE);
+    }
+
+    @Override
+    public long getEncryptionKeyJobPeriodMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENCRYPTION_KEY_JOB_PERIOD_MS,
+                /* defaultValue */ ENCRYPTION_KEY_JOB_PERIOD_MS);
     }
 
     @Override
@@ -3421,7 +3506,17 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_ENROLLMENT_ENABLE_LIMITED_LOGGING
                         + " = "
                         + getEnrollmentEnableLimitedLogging());
-
+        writer.println("==== AdServices PH Flags Dump EncryptionKeys ====");
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS
+                        + " = "
+                        + getEncryptionKeyNetworkConnectTimeoutMs());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS
+                        + " = "
+                        + getEncryptionKeyNetworkReadTimeoutMs());
         writer.println("==== AdServices PH Flags Dump killswitches ====");
         writer.println(
                 "\t" + FlagsConstants.KEY_GLOBAL_KILL_SWITCH + " = " + getGlobalKillSwitch());
@@ -3528,6 +3623,27 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL
                         + " = "
                         + getMddTopicsClassifierManifestFileUrl());
+        writer.println("==== AdServices PH Flags Dump Encryption key related flags ====");
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH
+                        + " = "
+                        + getEncryptionKeyNewEnrollmentFetchKillSwitch());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH
+                        + " = "
+                        + getEncryptionKeyPeriodicFetchKillSwitch());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE
+                        + " = "
+                        + getEncryptionKeyJobRequiredNetworkType());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS
+                        + " = "
+                        + getEncryptionKeyJobPeriodMs());
         writer.println("==== AdServices PH Flags Dump Topics related flags ====");
         writer.println(
                 "\t"
@@ -3773,9 +3889,26 @@ public final class PhFlags implements Flags {
                         + getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist());
         writer.println(
                 "\t"
+                        + FlagsConstants.KEY_AD_ID_FETCHER_TIMEOUT_MS
+                        + " = "
+                        + getAdIdFetcherTimeoutMs());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_ENABLE_COMPUTE_VERSION_FROM_MAPPINGS
+                        + " = "
+                        + getEnableComputeVersionFromMappings());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_MAINLINE_TRAIN_VERSION
                         + " = "
                         + getMainlineTrainVersion());
+
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_ADSERVICES_VERSION_MAPPINGS
+                        + " = "
+                        + getAdservicesVersionMappings());
+
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED
@@ -3953,6 +4086,21 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW
                         + " = "
                         + getMeasurementMinPostInstallExclusivityWindow());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE
+                        + " = "
+                        + getMeasurementMaxSumOfAggregateValuesPerSource());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS
+                        + " = "
+                        + getMeasurementRateLimitWindowMilliseconds());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW
+                        + " = "
+                        + getMeasurementMinReportingOriginUpdateWindow());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH
@@ -4282,11 +4430,6 @@ public final class PhFlags implements Flags {
                         + getFledgeOnDeviceAuctionShouldUseUnifiedTables());
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_SIZE_SHOULD_EXCEED_LIMIT
-                        + " = "
-                        + getFledgeAuctionServerPayloadSizeShouldExceedLimit());
-        writer.println(
-                "\t"
                         + FlagsConstants.KEY_FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS
                         + " = "
                         + getFledgeHttpCacheMaxAgeSeconds());
@@ -4373,6 +4516,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS
                         + " = "
                         + getProtectedSignalsPeriodicEncodingJobFlexMs());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_PROTECTED_SIGNALS_ENCODER_REFRESH_WINDOW_SECONDS
+                        + " = "
+                        + getProtectedSignalsEncoderRefreshWindowSeconds());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES
@@ -5378,6 +5526,33 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public int getMeasurementMaxSumOfAggregateValuesPerSource() {
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE,
+                /* defaultValue */ MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE);
+    }
+
+    @Override
+    public long getMeasurementRateLimitWindowMilliseconds() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS,
+                /* defaultValue */ MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS);
+    }
+
+    @Override
+    public long getMeasurementMinReportingOriginUpdateWindow() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW,
+                /* defaultValue */ MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW);
+    }
+
+    @Override
     public boolean getMeasurementEnableVtcConfigurableMaxEventReports() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -5861,6 +6036,14 @@ public final class PhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_AD_ID_CACHE_ENABLED,
                 /* defaultValue */ DEFAULT_ADID_CACHE_ENABLED);
+    }
+
+    @Override
+    public long getAdIdFetcherTimeoutMs() {
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_AD_ID_FETCHER_TIMEOUT_MS,
+                /* defaultValue */ DEFAULT_AD_ID_FETCHER_TIMEOUT_MS);
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,10 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <jni.h>
+/* Header for class com_android_adservices_ActJni */
 
-package com.android.sdksandbox;
+#ifndef ADSERVICES_SERVICE_CORE_JNI_INCLUDE_ACT_JNI_H_
+#define ADSERVICES_SERVICE_CORE_JNI_INCLUDE_ACT_JNI_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
+/*
+ * Class:     com_android_adservices_ActJni
+ * Method:    generateClientParameters
+ * Signature: ([B[B)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_com_android_adservices_ActJni_generateClientParameters
+  (JNIEnv *, jclass, jbyteArray, jbyteArray);
 
-/** @hide */
-oneway interface ISdkSandboxDisabledCallback {
-    void onResult(boolean isDisabled);
+#ifdef __cplusplus
 }
+#endif
+#endif
