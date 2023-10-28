@@ -18,6 +18,7 @@ package com.android.adservices.data.encryptionkey;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import android.database.Cursor;
 import android.net.Uri;
@@ -31,6 +32,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class EncryptionKeyDaoTest {
@@ -38,7 +40,7 @@ public class EncryptionKeyDaoTest {
     private SharedDbHelper mDbHelper;
     private EncryptionKeyDao mEncryptionKeyDao;
 
-    private static final EncryptionKey ENCRYPTION_KEY1 =
+    public static final EncryptionKey ENCRYPTION_KEY1 =
             new EncryptionKey.Builder()
                     .setId("1")
                     .setKeyType(EncryptionKey.KeyType.ENCRYPTION)
@@ -52,7 +54,21 @@ public class EncryptionKeyDaoTest {
                     .setLastFetchTime(100001L)
                     .build();
 
-    private static final EncryptionKey SIGNING_KEY1 =
+    private static final EncryptionKey DUPLICATE_ENCRYPTION_KEY1 =
+            new EncryptionKey.Builder()
+                    .setId("1111")
+                    .setKeyType(EncryptionKey.KeyType.ENCRYPTION)
+                    .setEnrollmentId("100")
+                    .setReportingOrigin(Uri.parse("https://test1.com"))
+                    .setEncryptionKeyUrl("https://test1.com/.well-known/encryption-keys")
+                    .setProtocolType(EncryptionKey.ProtocolType.HPKE)
+                    .setKeyCommitmentId(11)
+                    .setBody("AVZBTFVF")
+                    .setExpiration(100001L)
+                    .setLastFetchTime(100001L)
+                    .build();
+
+    public static final EncryptionKey SIGNING_KEY1 =
             new EncryptionKey.Builder()
                     .setId("2")
                     .setKeyType(EncryptionKey.KeyType.SIGNING)
@@ -94,6 +110,31 @@ public class EncryptionKeyDaoTest {
                     .setLastFetchTime(100004L)
                     .build();
 
+    private static final EncryptionKey INVALID_KEY =
+            new EncryptionKey.Builder()
+                    .setId("5")
+                    .setKeyType(EncryptionKey.KeyType.ENCRYPTION)
+                    .setEnrollmentId("102")
+                    .setReportingOrigin(Uri.parse("https://test2.com"))
+                    .setEncryptionKeyUrl("https://test2.com/.well-known/encryption-keys")
+                    .setProtocolType(EncryptionKey.ProtocolType.HPKE)
+                    .setKeyCommitmentId(15)
+                    .setExpiration(100000L)
+                    .build();
+
+    private static final EncryptionKey ENCRYPTION_KEY1_SAME_KEY_COMMITMENT_ID_FOR_DIFFERENT_ADTECH =
+            new EncryptionKey.Builder()
+                    .setId("6")
+                    .setKeyType(EncryptionKey.KeyType.ENCRYPTION)
+                    .setEnrollmentId("103")
+                    .setReportingOrigin(Uri.parse("https://test3.com"))
+                    .setEncryptionKeyUrl("https://test1.com/.well-known/encryption-keys")
+                    .setProtocolType(EncryptionKey.ProtocolType.HPKE)
+                    .setKeyCommitmentId(11)
+                    .setBody("FVZBTFVF")
+                    .setExpiration(100006L)
+                    .build();
+
     /** Unit test set up. */
     @Before
     public void setup() {
@@ -103,7 +144,7 @@ public class EncryptionKeyDaoTest {
 
     /** Unit test for EncryptionKeyDao insert() method. */
     @Test
-    public void testInsert() {
+    public void testInsertNewEncryptionKey() {
         mEncryptionKeyDao.insert(ENCRYPTION_KEY1);
 
         try (Cursor cursor =
@@ -133,6 +174,34 @@ public class EncryptionKeyDaoTest {
             assertEquals(encryptionKey.getExpiration(), ENCRYPTION_KEY1.getExpiration());
             assertEquals(encryptionKey.getLastFetchTime(), ENCRYPTION_KEY1.getLastFetchTime());
         }
+    }
+
+    @Test
+    public void testInsertExistingEncryptionKey() {
+        assertTrue(mEncryptionKeyDao.insert(ENCRYPTION_KEY1));
+        assertTrue(mEncryptionKeyDao.insert(DUPLICATE_ENCRYPTION_KEY1));
+        assertEquals(1, mEncryptionKeyDao.getAllEncryptionKeys().size());
+        EncryptionKey encryptionKey =
+                mEncryptionKeyDao.getEncryptionKeyFromEnrollmentIdAndKeyCommitmentId(
+                        DUPLICATE_ENCRYPTION_KEY1.getEnrollmentId(),
+                        DUPLICATE_ENCRYPTION_KEY1.getKeyCommitmentId());
+        assertNotNull(encryptionKey);
+        assertEquals("1111", encryptionKey.getId());
+    }
+
+    @Test
+    public void testInsertInvalidEncryptionKey() {
+        mEncryptionKeyDao.insert(INVALID_KEY);
+        List<EncryptionKey> encryptionKeyList = mEncryptionKeyDao.getAllEncryptionKeys();
+        assertEquals(0, encryptionKeyList.size());
+    }
+
+    @Test
+    public void testInsertEncryptionKeyList() {
+        List<EncryptionKey> encryptionKeyList = Arrays.asList(ENCRYPTION_KEY1, SIGNING_KEY1);
+        mEncryptionKeyDao.insert(encryptionKeyList);
+
+        assertEquals(2, mEncryptionKeyDao.getAllEncryptionKeys().size());
     }
 
     /** Unit test for EncryptionKeyDao getAllEncryptionKeys() method. */
@@ -167,7 +236,20 @@ public class EncryptionKeyDaoTest {
         mEncryptionKeyDao.insert(SIGNING_KEY2);
 
         List<EncryptionKey> encryptionKeyList =
-                mEncryptionKeyDao.getEncryptionKeyFromEnrollmentId(
+                mEncryptionKeyDao.getEncryptionKeyFromEnrollmentId("100");
+        assertNotNull(encryptionKeyList);
+        assertEquals(3, encryptionKeyList.size());
+    }
+
+    /** Unit test for EncryptionKeyDao getEncryptionKeyFromEnrollmentIdAndKeyType() method. */
+    @Test
+    public void testGetEncryptionKeyFromEnrollmentIdAndKeyType() {
+        mEncryptionKeyDao.insert(ENCRYPTION_KEY1);
+        mEncryptionKeyDao.insert(SIGNING_KEY1);
+        mEncryptionKeyDao.insert(SIGNING_KEY2);
+
+        List<EncryptionKey> encryptionKeyList =
+                mEncryptionKeyDao.getEncryptionKeyFromEnrollmentIdAndKeyType(
                         "100", EncryptionKey.KeyType.ENCRYPTION);
         assertNotNull(encryptionKeyList);
         assertEquals(1, encryptionKeyList.size());
@@ -180,7 +262,7 @@ public class EncryptionKeyDaoTest {
         assertEquals(100001L, encryptionKey.getLastFetchTime());
 
         List<EncryptionKey> signingKeyList =
-                mEncryptionKeyDao.getEncryptionKeyFromEnrollmentId(
+                mEncryptionKeyDao.getEncryptionKeyFromEnrollmentIdAndKeyType(
                         "100", EncryptionKey.KeyType.SIGNING);
         assertNotNull(signingKeyList);
         assertSigningKeyListResult(signingKeyList);
@@ -190,16 +272,18 @@ public class EncryptionKeyDaoTest {
     @Test
     public void testGetEncryptionKeyFromKeyCommitmentId() {
         mEncryptionKeyDao.insert(ENCRYPTION_KEY1);
-        mEncryptionKeyDao.insert(SIGNING_KEY1);
-        EncryptionKey encryptionKey = mEncryptionKeyDao.getEncryptionKeyFromKeyCommitmentId(12);
+        mEncryptionKeyDao.insert(ENCRYPTION_KEY1_SAME_KEY_COMMITMENT_ID_FOR_DIFFERENT_ADTECH);
+        EncryptionKey encryptionKey =
+                mEncryptionKeyDao.getEncryptionKeyFromEnrollmentIdAndKeyCommitmentId(
+                        ENCRYPTION_KEY1.getEnrollmentId(), ENCRYPTION_KEY1.getKeyCommitmentId());
 
         assertNotNull(encryptionKey);
-        assertEquals("2", encryptionKey.getId());
-        assertEquals(EncryptionKey.ProtocolType.ECDSA, encryptionKey.getProtocolType());
-        assertEquals(12, encryptionKey.getKeyCommitmentId());
-        assertEquals("BVZBTFVF", encryptionKey.getBody());
-        assertEquals(100002L, encryptionKey.getExpiration());
-        assertEquals(100002L, encryptionKey.getLastFetchTime());
+        assertEquals("1", encryptionKey.getId());
+        assertEquals(EncryptionKey.ProtocolType.HPKE, encryptionKey.getProtocolType());
+        assertEquals(11, encryptionKey.getKeyCommitmentId());
+        assertEquals("AVZBTFVF", encryptionKey.getBody());
+        assertEquals(100001L, encryptionKey.getExpiration());
+        assertEquals(100001L, encryptionKey.getLastFetchTime());
     }
 
     /** Unit test for EncryptionKeyDao getEncryptionKeyFromReportingOrigin() method. */

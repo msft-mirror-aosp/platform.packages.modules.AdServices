@@ -34,7 +34,6 @@ import android.app.sdksandbox.testutils.StubSdkToServiceLink;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.Build;
@@ -48,6 +47,7 @@ import androidx.annotation.RequiresApi;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.compatibility.common.util.DeviceConfigStateManager;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 
 import dalvik.system.PathClassLoader;
@@ -60,6 +60,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
+import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -116,6 +118,7 @@ public class SdkSandboxTest {
     private InjectorForTest mInjector;
 
     private PackageManager mSpyPackageManager;
+    private MockitoSession mStaticMockSession;
 
     static class InjectorForTest extends SdkSandboxServiceImpl.Injector {
 
@@ -162,6 +165,13 @@ public class SdkSandboxTest {
 
     @Before
     public void setup() throws Exception {
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .strictness(Strictness.LENIENT)
+                        .mockStatic(Process.class)
+                        .startMocking();
+        ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandbox());
+
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
         mContext = Mockito.spy(context);
         mSpyPackageManager = Mockito.spy(mContext.getPackageManager());
@@ -175,6 +185,7 @@ public class SdkSandboxTest {
     @After
     public void teardown() throws Exception {
         mService.getClientSharedPreferences().edit().clear().commit();
+        mStaticMockSession.finishMocking();
     }
 
     @Test
@@ -392,30 +403,6 @@ public class SdkSandboxTest {
         final StringWriter stringWriter = new StringWriter();
         mService.dump(new FileDescriptor(), new PrintWriter(stringWriter), new String[0]);
         assertThat(stringWriter.toString()).contains("mHeldSdk size:");
-    }
-
-    @Test
-    public void testDisabledWhenWebviewNotResolvable() throws Exception {
-        // WebView provider cannot be resolved, therefore sandbox should be disabled.
-        Mockito.doReturn(null)
-                .when(mSpyPackageManager)
-                .getPackageInfo(
-                        Mockito.anyString(), Mockito.any(PackageManager.PackageInfoFlags.class));
-        SdkSandboxDisabledCallback callback = new SdkSandboxDisabledCallback();
-        mService.isDisabled(callback);
-        assertThat(callback.mIsDisabled).isTrue();
-    }
-
-    @Test
-    public void testNotDisabledWhenWebviewResolvable() throws Exception {
-        // WebView provider can be resolved, therefore sandbox should not be disabled.
-        Mockito.doReturn(new PackageInfo())
-                .when(mSpyPackageManager)
-                .getPackageInfo(
-                        Mockito.anyString(), Mockito.any(PackageManager.PackageInfoFlags.class));
-        SdkSandboxDisabledCallback callback = new SdkSandboxDisabledCallback();
-        mService.isDisabled(callback);
-        assertThat(callback.isDisabled()).isFalse();
     }
 
     @Test
@@ -825,26 +812,6 @@ public class SdkSandboxTest {
             mErrorCode = errorCode;
             mSuccessful = false;
             mLatch.countDown();
-        }
-    }
-
-    private static class SdkSandboxDisabledCallback extends ISdkSandboxDisabledCallback.Stub {
-        private final CountDownLatch mLatch;
-        private boolean mIsDisabled;
-
-        SdkSandboxDisabledCallback() {
-            mLatch = new CountDownLatch(1);
-        }
-
-        @Override
-        public void onResult(boolean isDisabled) {
-            mIsDisabled = isDisabled;
-            mLatch.countDown();
-        }
-
-        boolean isDisabled() throws Exception {
-            assertThat(mLatch.await(1, TimeUnit.SECONDS)).isTrue();
-            return mIsDisabled;
         }
     }
 

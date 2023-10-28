@@ -40,6 +40,7 @@ import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.encryptionkey.EncryptionKeyJobService;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.topics.EpochJobService;
 import com.android.adservices.service.topics.TopicsWorker;
@@ -80,6 +81,7 @@ public class TopicsServiceTest {
                         .spyStatic(ConsentManager.class)
                         .spyStatic(AdServicesLoggerImpl.class)
                         .spyStatic(MaintenanceJobService.class)
+                        .spyStatic(EncryptionKeyJobService.class)
                         .spyStatic(EpochJobService.class)
                         .spyStatic(MddJobService.class)
                         .spyStatic(EnrollmentDao.class)
@@ -109,6 +111,11 @@ public class TopicsServiceTest {
                     .when(
                             () ->
                                     MaintenanceJobService.scheduleIfNeeded(
+                                            any(Context.class), eq(false)));
+            ExtendedMockito.doReturn(true)
+                    .when(
+                            () ->
+                                    EncryptionKeyJobService.scheduleIfNeeded(
                                             any(Context.class), eq(false)));
             ExtendedMockito.doReturn(true)
                     .when(() -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)));
@@ -168,6 +175,7 @@ public class TopicsServiceTest {
                         .spyStatic(ConsentManager.class)
                         .spyStatic(AdServicesLoggerImpl.class)
                         .spyStatic(MaintenanceJobService.class)
+                        .spyStatic(EncryptionKeyJobService.class)
                         .spyStatic(EpochJobService.class)
                         .spyStatic(MddJobService.class)
                         .spyStatic(EnrollmentDao.class)
@@ -202,6 +210,11 @@ public class TopicsServiceTest {
                                     MaintenanceJobService.scheduleIfNeeded(
                                             any(Context.class), eq(false)));
             ExtendedMockito.doReturn(true)
+                    .when(
+                            () ->
+                                    EncryptionKeyJobService.scheduleIfNeeded(
+                                            any(Context.class), eq(false)));
+            ExtendedMockito.doReturn(true)
                     .when(() -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)));
             ExtendedMockito.doReturn(true)
                     .when(() -> MddJobService.scheduleIfNeeded(any(Context.class), eq(false)));
@@ -232,6 +245,8 @@ public class TopicsServiceTest {
                 () -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
         ExtendedMockito.verify(
                 () -> MaintenanceJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        ExtendedMockito.verify(
+                () -> EncryptionKeyJobService.scheduleIfNeeded(any(Context.class), eq(false)));
         ExtendedMockito.verify(
                 () -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)));
         ExtendedMockito.verify(() -> MddJobService.scheduleIfNeeded(any(Context.class), eq(false)));

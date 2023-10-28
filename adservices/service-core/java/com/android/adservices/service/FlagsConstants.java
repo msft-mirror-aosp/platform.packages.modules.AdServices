@@ -763,6 +763,15 @@ public final class FlagsConstants {
 
     public static final String KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH =
             "protected_signals_service_kill_switch";
+    public static final String KEY_ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH =
+            "encryption_key_new_enrollment_fetch_kill_switch";
+    public static final String KEY_ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH =
+            "encryption_key_periodic_fetch_kill_switch";
+
+    public static final String KEY_ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE =
+            "encryption_key_job_required_network_type";
+
+    public static final String KEY_ENCRYPTION_KEY_JOB_PERIOD_MS = "encryption_key_job_period_ms";
 
     // App/SDK AllowList/DenyList keys
     public static final String KEY_PPAPI_APP_ALLOW_LIST = "ppapi_app_allow_list";
