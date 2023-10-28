@@ -175,16 +175,21 @@ public class AggregateReportingJobHandler {
                         reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.SUCCESS);
                     } else {
                         reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.FAILURE);
+                        mDatastoreManager.runInTransaction(
+                                (dao) -> {
+                                    int retryCount =
+                                            dao.incrementAndGetReportingRetryCount(
+                                                    aggregateReportId,
+                                                    mIsDebugInstance
+                                                            ? KeyValueData.DataType
+                                                                .DEBUG_AGGREGATE_REPORT_RETRY_COUNT
+                                                            : KeyValueData.DataType
+                                                                .AGGREGATE_REPORT_RETRY_COUNT);
+                                    reportingStatus.setRetryCount(retryCount);
+                                });
                     }
-                    mDatastoreManager.runInTransaction(
-                            (dao) -> {
-                                int retryCount =
-                                        dao.incrementAndGetReportingRetryCount(
-                                                aggregateReportId,
-                                                KeyValueData.DataType.AGGREGATE_REPORT_RETRY_COUNT);
-                                reportingStatus.setRetryCount(retryCount);
-                            });
                     logReportingStats(reportingStatus);
+
                 }
             } else {
                 LoggerFactory.getMeasurementLogger()
