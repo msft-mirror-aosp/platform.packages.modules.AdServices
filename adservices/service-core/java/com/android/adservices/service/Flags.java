@@ -2394,6 +2394,57 @@ public interface Flags {
         return getGlobalKillSwitch() || PROTECTED_SIGNALS_SERVICE_KILL_SWITCH;
     }
 
+    // Encryption key Kill switches
+
+    /**
+     * Encryption key new enrollment fetch kill switch. The default value is false which means
+     * fetching encryption keys for new enrollments is enabled by default. This flag is used for
+     * emergency turning off fetching encryption keys for new enrollments.
+     *
+     * <p>Set true to disable the function since no adtech actually provide encryption endpoint now.
+     */
+    boolean ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH = true;
+
+    /**
+     * @return value of encryption key new enrollment fetch job kill switch
+     */
+    default boolean getEncryptionKeyNewEnrollmentFetchKillSwitch() {
+        // We check the Global kill switch first. As a result, it overrides all other kill switches.
+        return getGlobalKillSwitch() || ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH;
+    }
+
+    /**
+     * Encryption key periodic fetch job kill switch. The default value is false which means
+     * periodically fetching encryption keys is enabled by default. This flag is used for emergency
+     * turning off periodically fetching encryption keys.
+     *
+     * <p>Set true to disable the function since no adtech actually provide encryption endpoint now.
+     */
+    boolean ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH = true;
+
+    /**
+     * @return value of encryption key new enrollment fetch job kill switch
+     */
+    default boolean getEncryptionKeyPeriodicFetchKillSwitch() {
+        // We check the Global kill switch first. As a result, it overrides all other kill switches.
+        return getGlobalKillSwitch() || ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH;
+    }
+
+    int ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE = JobInfo.NETWORK_TYPE_UNMETERED;
+
+    /** Returns the required network type (Wifi) for encryption key fetch job. */
+    default int getEncryptionKeyJobRequiredNetworkType() {
+        return ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE;
+    }
+
+    /* The default time period (in millisecond) between each encryption key job to run. */
+    long ENCRYPTION_KEY_JOB_PERIOD_MS = 24 * 60 * 60 * 1000L; // 24 hours.
+
+    /** Returns min time period (in millis) between each event fallback reporting job run. */
+    default long getEncryptionKeyJobPeriodMs() {
+        return ENCRYPTION_KEY_JOB_PERIOD_MS;
+    }
+
     /**
      * Enable Back Compat feature flag. The default value is false which means that all back compat
      * related features are disabled by default. This flag would be enabled for R/S during rollout.

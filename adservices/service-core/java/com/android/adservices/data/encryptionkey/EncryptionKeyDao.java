@@ -60,8 +60,39 @@ public class EncryptionKeyDao implements IEncryptionKeyDao {
     }
 
     @Override
-    @Nullable
-    public List<EncryptionKey> getEncryptionKeyFromEnrollmentId(
+    public List<EncryptionKey> getEncryptionKeyFromEnrollmentId(String enrollmentId)
+            throws SQLException {
+        List<EncryptionKey> encryptionKeyList = new ArrayList<>();
+        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        try (Cursor cursor =
+                db.query(
+                        EncryptionKeyTables.EncryptionKeyContract.TABLE,
+                        null,
+                        EncryptionKeyTables.EncryptionKeyContract.ENROLLMENT_ID
+                                + " = ? ", // The columns for the WHERE clause
+                        new String[] {enrollmentId}, // The values for the WHERE clause
+                        null, // don't group the rows
+                        null, // don't filter by row groups
+                        null, // The sort order
+                        null)) {
+            if (cursor == null || cursor.getCount() <= 0) {
+                sLogger.i("No EncryptionKey in DB with enrollment id: %s.", enrollmentId);
+                return encryptionKeyList;
+            }
+
+            sLogger.i("Found %s keys for enrollment id %s.", cursor.getCount(), enrollmentId);
+            while (cursor.moveToNext()) {
+                encryptionKeyList.add(SqliteObjectMapper.constructEncryptionKeyFromCursor(cursor));
+            }
+            return encryptionKeyList;
+        } catch (SQLException e) {
+            sLogger.e(e, "Failed to find EncryptionKey in DB with enrollment id: " + enrollmentId);
+        }
+        return encryptionKeyList;
+    }
+
+    @Override
+    public List<EncryptionKey> getEncryptionKeyFromEnrollmentIdAndKeyType(
             String enrollmentId, EncryptionKey.KeyType keyType) throws SQLException {
         List<EncryptionKey> encryptionKeyList = new ArrayList<>();
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
@@ -80,10 +111,8 @@ public class EncryptionKeyDao implements IEncryptionKeyDao {
                         null,
                         null)) {
             if (cursor == null || cursor.getCount() <= 0) {
-                sLogger.i(
-                        "Failed to find any EncryptionKey in DB with enrollment id: %s.",
-                        enrollmentId);
-                return null;
+                sLogger.i("No EncryptionKey in DB with enrollment id: %s.", enrollmentId);
+                return encryptionKeyList;
             }
 
             sLogger.i(
@@ -94,45 +123,47 @@ public class EncryptionKeyDao implements IEncryptionKeyDao {
             }
             return encryptionKeyList;
         } catch (SQLException e) {
-            sLogger.e(
-                    "Failed to find EncryptionKey in DB with enrollment id: %s, error: %s",
-                    enrollmentId, e.getMessage());
+            sLogger.e(e, "Failed to find EncryptionKey in DB with enrollment id:" + enrollmentId);
         }
-        return null;
+        return encryptionKeyList;
     }
 
     @Override
     @Nullable
-    public EncryptionKey getEncryptionKeyFromKeyCommitmentId(int keyCommitmentId) {
+    public EncryptionKey getEncryptionKeyFromEnrollmentIdAndKeyCommitmentId(
+            String enrollmentId, int keyCommitmentId) {
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         try (Cursor cursor =
                 db.query(
                         EncryptionKeyTables.EncryptionKeyContract.TABLE,
                         null,
-                        EncryptionKeyTables.EncryptionKeyContract.KEY_COMMITMENT_ID + " = ? ",
-                        new String[] {String.valueOf(keyCommitmentId)},
+                        EncryptionKeyTables.EncryptionKeyContract.ENROLLMENT_ID
+                                + " = ? "
+                                + " AND "
+                                + EncryptionKeyTables.EncryptionKeyContract.KEY_COMMITMENT_ID
+                                + " = ?",
+                        new String[] {enrollmentId, String.valueOf(keyCommitmentId)},
                         null,
                         null,
                         null,
                         null)) {
             if (cursor == null || cursor.getCount() <= 0) {
-                sLogger.e(
-                        "Failed to find EncryptionKey in DB with keyCommitmentId: %s.",
-                        String.valueOf(keyCommitmentId));
+                sLogger.i(
+                        "No EncryptionKey in DB with enrollmentId: %s, keyCommitmentId: %s.",
+                        enrollmentId, String.valueOf(keyCommitmentId));
                 return null;
             }
             cursor.moveToNext();
             return SqliteObjectMapper.constructEncryptionKeyFromCursor(cursor);
         } catch (SQLException e) {
             sLogger.e(
-                    "Failed to find EncryptionKey in DB with keyCommitmentId: %s, error: %s",
-                    String.valueOf(keyCommitmentId), e.getMessage());
+                    e,
+                    "Failed to find EncryptionKey in DB with keyCommitmentId: " + keyCommitmentId);
         }
         return null;
     }
 
     @Override
-    @Nullable
     public List<EncryptionKey> getEncryptionKeyFromReportingOrigin(
             Uri reportingOrigin, EncryptionKey.KeyType keyType) {
         List<EncryptionKey> encryptionKeyList = new ArrayList<>();
@@ -153,9 +184,9 @@ public class EncryptionKeyDao implements IEncryptionKeyDao {
                         null)) {
             if (cursor == null || cursor.getCount() <= 0) {
                 sLogger.i(
-                        "Failed to find EncryptionKey in DB with reportingOrigin: %s.",
-                        reportingOrigin.toString());
-                return null;
+                        "No EncryptionKey in DB with reportingOrigin: %s, keyType: %s",
+                        reportingOrigin.toString(), keyType.toString());
+                return encryptionKeyList;
             }
 
             sLogger.i(
@@ -167,10 +198,10 @@ public class EncryptionKeyDao implements IEncryptionKeyDao {
             return encryptionKeyList;
         } catch (SQLException e) {
             sLogger.e(
-                    "Failed to find EncryptionKey in DB with reportingOrigin: %s, error: %s",
-                    reportingOrigin.toString(), e.getMessage());
+                    e,
+                    "Failed to find EncryptionKey in DB with reportingOrigin: " + reportingOrigin);
         }
-        return null;
+        return encryptionKeyList;
     }
 
     @Override
@@ -188,7 +219,7 @@ public class EncryptionKeyDao implements IEncryptionKeyDao {
                         null,
                         null)) {
             if (cursor == null || cursor.getCount() <= 0) {
-                sLogger.i("Can't get all encryption keys from DB.");
+                sLogger.i("No Encryption keys in DB.");
                 return encryptionKeys;
             }
             while (cursor.moveToNext()) {
@@ -196,7 +227,7 @@ public class EncryptionKeyDao implements IEncryptionKeyDao {
             }
             return encryptionKeys;
         } catch (SQLException e) {
-            sLogger.e("Failed to get all encryption keys from DB, error %s", e.getMessage());
+            sLogger.e(e, "Failed to get all encryption keys from DB.");
         }
         return encryptionKeys;
     }
@@ -207,16 +238,66 @@ public class EncryptionKeyDao implements IEncryptionKeyDao {
         if (db == null) {
             return false;
         }
+        if (!isEncryptionKeyValid(encryptionKey)) {
+            sLogger.e("Encryption key is invalid, can't insert into DB.");
+            return false;
+        }
+        EncryptionKey existKey =
+                getEncryptionKeyFromEnrollmentIdAndKeyCommitmentId(
+                        encryptionKey.getEnrollmentId(), encryptionKey.getKeyCommitmentId());
+        if (existKey != null) {
+            delete(existKey.getId());
+        }
         try {
             insertToDb(encryptionKey, db);
         } catch (SQLException e) {
-            sLogger.e("Failed to insert EncryptionKey into DB. Exception : " + e.getMessage());
+            sLogger.e(e, "Failed to insert EncryptionKey into DB.");
             return false;
         }
         return true;
     }
 
-    private void insertToDb(EncryptionKey encryptionKey, SQLiteDatabase db) throws SQLException {
+    @Override
+    public boolean insert(List<EncryptionKey> encryptionKeys) {
+        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
+        if (db == null) {
+            return false;
+        }
+        for (EncryptionKey encryptionKey : encryptionKeys) {
+            if (!isEncryptionKeyValid(encryptionKey)) {
+                sLogger.e("Encryption key is invalid, can't insert into DB.");
+                return false;
+            }
+            EncryptionKey existKey =
+                    getEncryptionKeyFromEnrollmentIdAndKeyCommitmentId(
+                            encryptionKey.getEnrollmentId(), encryptionKey.getKeyCommitmentId());
+            if (existKey != null) {
+                // If a key with same enrollment id and key id is saved previously, update the key
+                // to the new one.
+                delete(existKey.getId());
+            }
+            try {
+                insertToDb(encryptionKey, db);
+            } catch (SQLException e) {
+                sLogger.e(e, "Failed to insert EncryptionKey into DB.");
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean isEncryptionKeyValid(EncryptionKey encryptionKey) {
+        return encryptionKey.getEnrollmentId() != null
+                && encryptionKey.getKeyType() != null
+                && encryptionKey.getEncryptionKeyUrl() != null
+                && encryptionKey.getProtocolType() != null
+                && encryptionKey.getBody() != null
+                && encryptionKey.getExpiration() != 0L
+                && encryptionKey.getLastFetchTime() != 0L;
+    }
+
+    private static void insertToDb(EncryptionKey encryptionKey, SQLiteDatabase db)
+            throws SQLException {
         ContentValues values = new ContentValues();
         values.put(EncryptionKeyTables.EncryptionKeyContract.ID, encryptionKey.getId());
         values.put(

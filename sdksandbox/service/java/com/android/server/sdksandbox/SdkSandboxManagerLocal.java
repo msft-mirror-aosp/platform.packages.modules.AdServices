@@ -144,6 +144,7 @@ public interface SdkSandboxManagerLocal {
      * app.
      *
      * @param clientAppInfo {@link ApplicationInfo} of the client app
+     * @param userId the target user ID
      * @param isSdkInSandbox specifies whether to create an application info for the sandbox or for
      *     an Sdk running inside the sandbox.
      * @return {@link ApplicationInfo} of the sdk sandbox process to be instrumented
@@ -152,7 +153,7 @@ public interface SdkSandboxManagerLocal {
     @SuppressLint("UnflaggedApi") // The API is only used for tests.
     @NonNull
     ApplicationInfo getSdkSandboxApplicationInfoForInstrumentation(
-            @NonNull ApplicationInfo clientAppInfo, boolean isSdkInSandbox)
+            @NonNull ApplicationInfo clientAppInfo, int userId, boolean isSdkInSandbox)
             throws NameNotFoundException;
 
     /**
