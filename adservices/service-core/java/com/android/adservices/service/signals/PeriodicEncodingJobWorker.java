@@ -24,8 +24,8 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.data.signals.EncodedPayloadDao;
+import com.android.adservices.data.signals.EncoderLogicDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
-import com.android.adservices.data.signals.EncoderLogicMetadataDao;
 import com.android.adservices.data.signals.EncoderPersistenceDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.Flags;
@@ -73,7 +73,7 @@ public class PeriodicEncodingJobWorker {
     private static volatile PeriodicEncodingJobWorker sPeriodicEncodingJobWorker;
 
     private final EncoderLogicHandler mEncoderLogicHandler;
-    private final EncoderLogicMetadataDao mEncoderLogicMetadataDao;
+    private final EncoderLogicDao mEncoderLogicMetadataDao;
     private final EncoderPersistenceDao mEncoderPersistenceDao;
     private final EncodedPayloadDao mEncodedPayloadDao;
     private final SignalsProvider mSignalsProvider;
@@ -90,7 +90,7 @@ public class PeriodicEncodingJobWorker {
     @VisibleForTesting
     protected PeriodicEncodingJobWorker(
             @NonNull EncoderLogicHandler encoderLogicHandler,
-            @NonNull EncoderLogicMetadataDao encoderLogicMetadataDao,
+            @NonNull EncoderLogicDao encoderLogicMetadataDao,
             @NonNull EncoderPersistenceDao encoderPersistenceDao,
             @NonNull EncodedPayloadDao encodedPayloadDao,
             @NonNull SignalsProviderImpl signalStorageManager,
@@ -131,7 +131,7 @@ public class PeriodicEncodingJobWorker {
                 sPeriodicEncodingJobWorker =
                         new PeriodicEncodingJobWorker(
                                 new EncoderLogicHandler(context),
-                                signalsDatabase.getEncoderLogicMetadataDao(),
+                                signalsDatabase.getEncoderLogicDao(),
                                 EncoderPersistenceDao.getInstance(context),
                                 signalsDatabase.getEncodedPayloadDao(),
                                 new SignalsProviderImpl(signalsDatabase.protectedSignalsDao()),
