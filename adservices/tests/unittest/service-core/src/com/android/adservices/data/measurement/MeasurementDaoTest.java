@@ -8963,7 +8963,7 @@ public class MeasurementDaoTest {
                         (dao) -> {
                             // Adds records to KeyValueData table for Retry Count.
                             dao.incrementAndGetReportingRetryCount(
-                                    "1", DataType.EVENT_REPORT_RETRY_COUNT);
+                                    "1", DataType.DEBUG_EVENT_REPORT_RETRY_COUNT);
                             return dao.getPendingDebugEventReportIds();
                         });
         res = resOpt.get();
@@ -9041,7 +9041,7 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void incrementReportRetry() {
+    public void incrementReportRetryIncrements() {
         final String eventId = "TestIdEvent";
         final String aggregateId = "TestIdAggregate";
         final String debugId = "TestIdDebug";
@@ -9051,26 +9051,44 @@ public class MeasurementDaoTest {
                     dao.incrementAndGetReportingRetryCount(
                             eventId, DataType.EVENT_REPORT_RETRY_COUNT);
                     dao.incrementAndGetReportingRetryCount(
+                            eventId, DataType.DEBUG_EVENT_REPORT_RETRY_COUNT);
+                    dao.incrementAndGetReportingRetryCount(
                             aggregateId, DataType.AGGREGATE_REPORT_RETRY_COUNT);
+                    dao.incrementAndGetReportingRetryCount(
+                            aggregateId, DataType.DEBUG_AGGREGATE_REPORT_RETRY_COUNT);
                     dao.incrementAndGetReportingRetryCount(
                             debugId, DataType.DEBUG_REPORT_RETRY_COUNT);
                 });
         Optional<KeyValueData> eventCount =
                 mDatastoreManager.runInTransactionWithResult(
                         (dao) -> dao.getKeyValueData(eventId, DataType.EVENT_REPORT_RETRY_COUNT));
+        Optional<KeyValueData> debugEventCount =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) ->
+                                dao.getKeyValueData(
+                                        eventId, DataType.DEBUG_EVENT_REPORT_RETRY_COUNT));
         Optional<KeyValueData> aggregateCount =
                 mDatastoreManager.runInTransactionWithResult(
                         (dao) ->
                                 dao.getKeyValueData(
                                         aggregateId, DataType.AGGREGATE_REPORT_RETRY_COUNT));
+        Optional<KeyValueData> debugAggregateCount =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) ->
+                                dao.getKeyValueData(
+                                        aggregateId, DataType.DEBUG_AGGREGATE_REPORT_RETRY_COUNT));
         Optional<KeyValueData> debugCount =
                 mDatastoreManager.runInTransactionWithResult(
                         (dao) -> dao.getKeyValueData(debugId, DataType.DEBUG_REPORT_RETRY_COUNT));
 
         assertTrue(eventCount.isPresent());
         assertEquals(1, (eventCount.get().getReportRetryCount()));
+        assertTrue(debugEventCount.isPresent());
+        assertEquals(1, (debugEventCount.get().getReportRetryCount()));
         assertTrue(aggregateCount.isPresent());
         assertEquals(1, (aggregateCount.get().getReportRetryCount()));
+        assertTrue(debugAggregateCount.isPresent());
+        assertEquals(1, (debugAggregateCount.get().getReportRetryCount()));
         assertTrue(debugCount.isPresent());
         assertEquals(1, (debugCount.get().getReportRetryCount()));
 
@@ -9089,17 +9107,74 @@ public class MeasurementDaoTest {
                         (dao) ->
                                 dao.getKeyValueData(
                                         aggregateId, DataType.AGGREGATE_REPORT_RETRY_COUNT));
+        debugEventCount =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) ->
+                                dao.getKeyValueData(
+                                        eventId, DataType.DEBUG_EVENT_REPORT_RETRY_COUNT));
+        debugAggregateCount =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) ->
+                                dao.getKeyValueData(
+                                        aggregateId, DataType.DEBUG_AGGREGATE_REPORT_RETRY_COUNT));
         debugCount =
                 mDatastoreManager.runInTransactionWithResult(
                         (dao) -> dao.getKeyValueData(debugId, DataType.DEBUG_REPORT_RETRY_COUNT));
 
         assertTrue(eventCount.isPresent());
         assertEquals(2, (eventCount.get().getReportRetryCount()));
+        assertTrue(debugEventCount.isPresent());
+        assertEquals(1, (debugEventCount.get().getReportRetryCount()));
         assertTrue(aggregateCount.isPresent());
         assertEquals(2, (aggregateCount.get().getReportRetryCount()));
+        assertTrue(debugAggregateCount.isPresent());
+        assertEquals(1, (debugAggregateCount.get().getReportRetryCount()));
         assertTrue(debugCount.isPresent());
         assertEquals(1, (debugCount.get().getReportRetryCount()));
+
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    dao.incrementAndGetReportingRetryCount(
+                            eventId, DataType.DEBUG_EVENT_REPORT_RETRY_COUNT);
+                    dao.incrementAndGetReportingRetryCount(
+                            aggregateId, DataType.DEBUG_AGGREGATE_REPORT_RETRY_COUNT);
+                    dao.incrementAndGetReportingRetryCount(
+                            debugId, DataType.DEBUG_REPORT_RETRY_COUNT);
+                });
+        eventCount =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) -> dao.getKeyValueData(eventId, DataType.EVENT_REPORT_RETRY_COUNT));
+        aggregateCount =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) ->
+                                dao.getKeyValueData(
+                                        aggregateId, DataType.AGGREGATE_REPORT_RETRY_COUNT));
+        debugEventCount =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) ->
+                                dao.getKeyValueData(
+                                        eventId, DataType.DEBUG_EVENT_REPORT_RETRY_COUNT));
+        debugAggregateCount =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) ->
+                                dao.getKeyValueData(
+                                        aggregateId, DataType.DEBUG_AGGREGATE_REPORT_RETRY_COUNT));
+        debugCount =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) -> dao.getKeyValueData(debugId, DataType.DEBUG_REPORT_RETRY_COUNT));
+
+        assertTrue(eventCount.isPresent());
+        assertEquals(2, (eventCount.get().getReportRetryCount()));
+        assertTrue(debugEventCount.isPresent());
+        assertEquals(2, (debugEventCount.get().getReportRetryCount()));
+        assertTrue(aggregateCount.isPresent());
+        assertEquals(2, (aggregateCount.get().getReportRetryCount()));
+        assertTrue(debugAggregateCount.isPresent());
+        assertEquals(2, (debugAggregateCount.get().getReportRetryCount()));
+        assertTrue(debugCount.isPresent());
+        assertEquals(2, (debugCount.get().getReportRetryCount()));
     }
+
 
     private void queryAndAssertSourceEntries(
             SQLiteDatabase db, String enrollmentId, List<String> expectedSourceIds) {
