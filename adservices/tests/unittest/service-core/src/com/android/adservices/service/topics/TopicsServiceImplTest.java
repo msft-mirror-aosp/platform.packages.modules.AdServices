@@ -140,6 +140,7 @@ public final class TopicsServiceImplTest {
     private static final String HEX_STRING =
             "0000000000000000000000000000000000000000000000000000000000000000";
     private static final byte[] BYTE_ARRAY = new byte[32];
+    private static final int MY_UID = Process.myUid();
 
     private final Context mSpyContext = spy(ApplicationProvider.getApplicationContext());
     private final AdServicesLogger mAdServicesLogger =
@@ -164,10 +165,10 @@ public final class TopicsServiceImplTest {
     @Mock private Throttler mMockThrottler;
     @Mock private EnrollmentDao mEnrollmentDao;
     @Mock private AppImportanceFilter mMockAppImportanceFilter;
-    @Mock AdServicesLogger mLogger;
-    @Mock AdServicesManager mMockAdServicesManager;
-    @Mock AppSearchConsentManager mAppSearchConsentManager;
-    @Mock TopicsCobaltLogger mTopicsCobaltLogger;
+    @Mock private AdServicesLogger mLogger;
+    @Mock private AdServicesManager mMockAdServicesManager;
+    @Mock private AppSearchConsentManager mAppSearchConsentManager;
+    @Mock private TopicsCobaltLogger mTopicsCobaltLogger;
 
     // We are not expecting to launch Topics API on Android R. Hence, skipping this test on
     // Android R since some tests require handling of unsupported PackageManager APIs.
@@ -237,12 +238,11 @@ public final class TopicsServiceImplTest {
         when(mConsentManager.getConsent(AdServicesApiType.TOPICS))
                 .thenReturn(AdServicesApiConsent.GIVEN);
         when(mMockSdkContext.getPackageManager()).thenReturn(mPackageManager);
-        when(mPackageManager.getPackageUid(TEST_APP_PACKAGE_NAME, 0)).thenReturn(Process.myUid());
+        when(mPackageManager.getPackageUid(TEST_APP_PACKAGE_NAME, 0)).thenReturn(MY_UID);
 
         // Grant Permission to access Topics API
         PackageManager mPackageManagerWithPerm = spy(mSpyContext.getPackageManager());
-        when(mPackageManagerWithPerm.getPackageUid(TEST_APP_PACKAGE_NAME, 0))
-                .thenReturn(Process.myUid());
+        when(mPackageManagerWithPerm.getPackageUid(TEST_APP_PACKAGE_NAME, 0)).thenReturn(MY_UID);
         PackageInfo packageInfoGrant = new PackageInfo();
         packageInfoGrant.requestedPermissions = new String[] {ACCESS_ADSERVICES_TOPICS};
         doReturn(packageInfoGrant)
@@ -323,7 +323,7 @@ public final class TopicsServiceImplTest {
     @Test
     public void checkNoUserConsent() throws InterruptedException {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(false);
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        mockGetCallingUidOrThrow(MY_UID);
         when(mConsentManager.getConsent()).thenReturn(AdServicesApiConsent.REVOKED);
         invokeGetTopicsAndVerifyError(
                 mSpyContext, STATUS_USER_CONSENT_REVOKED, /* checkLoggingStatus */ true);
@@ -332,7 +332,7 @@ public final class TopicsServiceImplTest {
     @Test
     public void checkNoUserConsent_gaUxFeatureEnabled() throws InterruptedException {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        mockGetCallingUidOrThrow(MY_UID);
         when(mConsentManager.getConsent(AdServicesApiType.TOPICS))
                 .thenReturn(AdServicesApiConsent.REVOKED);
         invokeGetTopicsAndVerifyError(
@@ -341,7 +341,7 @@ public final class TopicsServiceImplTest {
 
     @Test
     public void checkSignatureAllowList_successAllowList() throws Exception {
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        mockGetCallingUidOrThrow(MY_UID);
         mTopicsServiceImpl = createTestTopicsServiceImplInstance();
 
         // Add test app into allow list
@@ -354,7 +354,7 @@ public final class TopicsServiceImplTest {
 
     @Test
     public void checkSignatureAllowList_emptyAllowList() throws InterruptedException {
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        mockGetCallingUidOrThrow(MY_UID);
         // Empty allow list and bypass list.
         when(mMockFlags.getPpapiAppSignatureAllowList()).thenReturn("");
         invokeGetTopicsAndVerifyError(
@@ -394,14 +394,14 @@ public final class TopicsServiceImplTest {
     public void testEnforceForeground_backgroundCaller() throws InterruptedException {
         Assume.assumeTrue(SdkLevel.isAtLeastT()); // R/S can't enforce foreground checks.
 
-        final int uid = Process.myUid();
+        final int uid = MY_UID;
         // Mock AppImportanceFilter to throw WrongCallingApplicationStateException
         doThrow(new WrongCallingApplicationStateException())
                 .when(mMockAppImportanceFilter)
                 .assertCallerIsInForeground(
                         uid, AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS, SOME_SDK_NAME);
         // Mock UID with Non-SDK UID
-        when(Binder.getCallingUidOrThrow()).thenReturn(uid);
+        mockGetCallingUidOrThrow(uid);
 
         // Mock Flags to true to enable enforcing foreground check.
         doReturn(true).when(mMockFlags).getEnforceForegroundStatusForTopics();
@@ -422,7 +422,7 @@ public final class TopicsServiceImplTest {
                         SANDBOX_UID, AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS, SOME_SDK_NAME);
 
         // Mock UID with SDK UID
-        when(Binder.getCallingUidOrThrow()).thenReturn(SANDBOX_UID);
+        mockGetCallingUidOrThrow(SANDBOX_UID);
 
         // Mock Flags with true to enable enforcing foreground check.
         doReturn(true).when(mMockFlags).getEnforceForegroundStatusForTopics();
@@ -446,7 +446,7 @@ public final class TopicsServiceImplTest {
 
     @Test
     public void testEnforceForeground_disableEnforcing() throws Exception {
-        final int uid = Process.myUid();
+        final int uid = MY_UID;
         // Mock AppImportanceFilter to throw Exception when invoked. This is to verify getTopics()
         // doesn't throw if enforcing foreground is disabled
         doThrow(new WrongCallingApplicationStateException())
@@ -455,7 +455,7 @@ public final class TopicsServiceImplTest {
                         uid, AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS, SOME_SDK_NAME);
 
         // Mock UID with Non-SDK UI
-        when(Binder.getCallingUidOrThrow()).thenReturn(uid);
+        mockGetCallingUidOrThrow(uid);
 
         // Mock Flags with false to disable enforcing foreground check.
         doReturn(false).when(mMockFlags).getEnforceForegroundStatusForTopics();
@@ -475,7 +475,7 @@ public final class TopicsServiceImplTest {
     @Test
     public void checkNoPermission()
             throws InterruptedException, PackageManager.NameNotFoundException {
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        mockGetCallingUidOrThrow(MY_UID);
 
         // No Permission for Topics API
         PackageInfo packageInfoGrant = new PackageInfo();
@@ -494,14 +494,14 @@ public final class TopicsServiceImplTest {
         Assume.assumeTrue(SdkLevel.isAtLeastT()); // Sdk Sandbox only exists in T+
         when(mPackageManager.checkPermission(eq(ACCESS_ADSERVICES_TOPICS), any()))
                 .thenReturn(PackageManager.PERMISSION_DENIED);
-        when(Binder.getCallingUidOrThrow()).thenReturn(SANDBOX_UID);
+        mockGetCallingUidOrThrow(SANDBOX_UID);
         invokeGetTopicsAndVerifyError(
                 mMockSdkContext, STATUS_PERMISSION_NOT_REQUESTED, /* checkLoggingStatus */ true);
     }
 
     @Test
     public void checkSdkHasEnrollmentIdNull() throws Exception {
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        mockGetCallingUidOrThrow(MY_UID);
         EnrollmentData fakeEnrollmentData =
                 new EnrollmentData.Builder().setEnrollmentId(null).build();
         when(mEnrollmentDao.getEnrollmentDataFromSdkName(SOME_SDK_NAME))
@@ -519,7 +519,7 @@ public final class TopicsServiceImplTest {
 
     @Test
     public void checkSdkEnrollmentInBlocklist_blocked() throws Exception {
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        mockGetCallingUidOrThrow(MY_UID);
         EnrollmentData fakeEnrollmentData =
                 new EnrollmentData.Builder().setEnrollmentId(ALLOWED_SDK_ID).build();
         when(mEnrollmentDao.getEnrollmentDataFromSdkName(SOME_SDK_NAME))
@@ -541,7 +541,7 @@ public final class TopicsServiceImplTest {
 
     @Test
     public void checkSdkEnrollmentIdIsDisallowed() throws Exception {
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        mockGetCallingUidOrThrow(MY_UID);
         EnrollmentData fakeEnrollmentData =
                 new EnrollmentData.Builder().setEnrollmentId(DISALLOWED_SDK_ID).build();
         when(mEnrollmentDao.getEnrollmentDataFromSdkName(SOME_SDK_NAME))
@@ -560,7 +560,7 @@ public final class TopicsServiceImplTest {
 
     @Test
     public void getTopicsFromApp_SdkNotIncluded() throws Exception {
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        mockGetCallingUidOrThrow(MY_UID);
         PackageManager.Property property =
                 mSpyContext
                         .getPackageManager()
@@ -582,7 +582,7 @@ public final class TopicsServiceImplTest {
 
     @Test
     public void getTopicsFromApp_SdkTagMissing() throws Exception {
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        mockGetCallingUidOrThrow(MY_UID);
         PackageManager.Property property =
                 mSpyContext
                         .getPackageManager()
@@ -604,20 +604,20 @@ public final class TopicsServiceImplTest {
 
     @Test
     public void getTopics() throws Exception {
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        mockGetCallingUidOrThrow(MY_UID);
         runGetTopics(createTestTopicsServiceImplInstance());
     }
 
     @Test
     public void getTopicsGaUx() throws Exception {
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        mockGetCallingUidOrThrow(MY_UID);
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         runGetTopics(createTestTopicsServiceImplInstance());
     }
 
     @Test
     public void getTopicsSdk() throws Exception {
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        mockGetCallingUidOrThrow(MY_UID);
         PackageManager.Property property =
                 mSpyContext
                         .getPackageManager()
@@ -636,7 +636,7 @@ public final class TopicsServiceImplTest {
 
     @Test
     public void getTopics_oneTopicBlocked() throws InterruptedException {
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        mockGetCallingUidOrThrow(MY_UID);
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
         List<Topic> topics = prepareAndPersistTopics(numberOfLookBackEpochs);
@@ -690,7 +690,7 @@ public final class TopicsServiceImplTest {
 
     @Test
     public void getTopics_allTopicsBlocked() throws InterruptedException {
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        mockGetCallingUidOrThrow(MY_UID);
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
         List<Topic> topics = prepareAndPersistTopics(numberOfLookBackEpochs);
@@ -738,7 +738,7 @@ public final class TopicsServiceImplTest {
 
     @Test
     public void testGetTopics_emptyTopicsReturned() throws InterruptedException {
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        mockGetCallingUidOrThrow(MY_UID);
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
 
@@ -780,7 +780,7 @@ public final class TopicsServiceImplTest {
 
     @Test
     public void testGetTopics_LatencyCalculateVerify() throws InterruptedException {
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        mockGetCallingUidOrThrow(MY_UID);
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
 
@@ -865,7 +865,7 @@ public final class TopicsServiceImplTest {
     @Test
     public void testGetTopics_enforceCallingPackage_invalidPackage() throws InterruptedException {
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        mockGetCallingUidOrThrow(MY_UID);
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
 
@@ -898,7 +898,7 @@ public final class TopicsServiceImplTest {
 
     @Test
     public void testGetTopics_recordObservation() throws InterruptedException {
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        mockGetCallingUidOrThrow(MY_UID);
 
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
@@ -961,7 +961,7 @@ public final class TopicsServiceImplTest {
 
     @Test
     public void testGetTopics_notRecordObservation() throws InterruptedException {
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        mockGetCallingUidOrThrow(MY_UID);
 
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
@@ -1016,6 +1016,10 @@ public final class TopicsServiceImplTest {
 
     private void mockGetTopicsDisableDirectAppCalls(boolean value) {
         when(mMockFlags.getTopicsDisableDirectAppCalls()).thenReturn(value);
+    }
+
+    private void mockGetCallingUidOrThrow(int uid) {
+        when(Binder.getCallingUidOrThrow()).thenReturn(uid);
     }
 
     private void invokeGetTopicsAndVerifyError(

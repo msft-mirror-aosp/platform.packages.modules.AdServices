@@ -19,6 +19,7 @@ package com.android.adservices.data.signals;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.room.AutoMigration;
 import androidx.room.Database;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
@@ -36,12 +37,16 @@ import java.util.Objects;
             DBEncoderLogicMetadata.class,
             DBEncodedPayload.class
         },
+        autoMigrations = {
+            @AutoMigration(from = 1, to = 2),
+            @AutoMigration(from = 2, to = 3),
+        },
         version = ProtectedSignalsDatabase.DATABASE_VERSION)
 @TypeConverters({FledgeRoomConverters.class})
 public abstract class ProtectedSignalsDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();
 
-    public static final int DATABASE_VERSION = 2;
+    public static final int DATABASE_VERSION = 3;
     public static final String DATABASE_NAME =
             FileCompatUtils.getAdservicesFilename("protectedsignals.db");
 

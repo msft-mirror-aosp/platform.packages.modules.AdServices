@@ -42,9 +42,9 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Ermöglicht einer App den Zugriff auf die Enablement State API von Adservice."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Zugriff auf die APIs von AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Erlaubt einer App den Zugriff auf die APIs von AdServicesManager."</string>
-    <!-- no translation found for permlab_accessUpdateAdIdCache (6912755067998635886) -->
+    <!-- no translation found for permlab_updateAdservicesAdId (1817012692601139702) -->
     <skip />
-    <!-- no translation found for permdesc_accessUpdateAdIdCache (2907546830224186022) -->
+    <!-- no translation found for permdesc_updateAdservicesAdId (1594321436876709737) -->
     <skip />
     <string name="app_label" msgid="5844694701336604490">"Datenschutz bei Anzeigen"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Am Betaprogramm für Android-Datenschutz bei Anzeigen teilnehmen"</string>

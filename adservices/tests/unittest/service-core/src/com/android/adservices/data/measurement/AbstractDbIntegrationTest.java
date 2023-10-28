@@ -657,6 +657,9 @@ public abstract class AbstractDbIntegrationTest {
         values.put(MeasurementTables.DebugReportContract.ID, debugReport.getId());
         values.put(MeasurementTables.DebugReportContract.BODY, debugReport.getBody().toString());
         values.put(MeasurementTables.DebugReportContract.TYPE, debugReport.getType());
+        values.put(
+                MeasurementTables.DebugReportContract.REGISTRANT,
+                getNullableUriString(debugReport.getRegistrant()));
         long rowId =
                 db.insert(
                         MeasurementTables.DebugReportContract.TABLE,
