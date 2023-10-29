@@ -42,10 +42,8 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"AdService-ന്റെ പ്രവർത്തനക്ഷമമാക്കൽ നില API ആക്‌സസ് ചെയ്യാൻ ആപ്പിനെ അനുവദിക്കുന്നു."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManager-ന്റെ API-കളിലേക്കുള്ള ആക്‌സസ്"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"AdServicesManager-ന്റെ API-കൾ ആക്‌സസ് ചെയ്യാൻ ആപ്പിനെ അനുവദിക്കുന്നു."</string>
-    <!-- no translation found for permlab_accessUpdateAdIdCache (6912755067998635886) -->
-    <skip />
-    <!-- no translation found for permdesc_accessUpdateAdIdCache (2907546830224186022) -->
-    <skip />
+    <string name="permlab_updateAdservicesAdId" msgid="1817012692601139702">"AdService-ന്റെ അപ്‌ഡേറ്റ് പരസ്യ ID API-യിലേക്കുള്ള ആക്‌സസ്."</string>
+    <string name="permdesc_updateAdservicesAdId" msgid="1594321436876709737">"AdService-ന്റെ അപ്‌ഡേറ്റ് പരസ്യ ID API ആക്‌സസ് ചെയ്യാൻ ഒരു ആപ്പിനെ അനുവദിക്കുന്നു."</string>
     <string name="app_label" msgid="5844694701336604490">"പരസ്യവുമായി ബന്ധപ്പെട്ട സ്വകാര്യത"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Android-ന്റെ പരസ്യവുമായി ബന്ധപ്പെട്ട സ്വകാര്യത ബീറ്റയിൽ ചേരൂ"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"നിങ്ങളെ പരസ്യങ്ങൾ കാണിക്കുന്നതിന് ആപ്പുകളെ സഹായിക്കുന്ന കൂടുതൽ സ്വകാര്യമായ വഴികൾ കണ്ടെത്താൻ Android ശ്രമിക്കുന്നു"</string>

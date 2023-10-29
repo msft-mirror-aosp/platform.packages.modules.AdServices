@@ -36,7 +36,7 @@ public class SharedDbMigratorV2 extends AbstractSharedDbMigrator {
     @Override
     protected void performMigration(@NonNull SQLiteDatabase db) {
         if (!SharedDbHelper.hasAllTables(db, EncryptionKeyTables.ENCRYPTION_KEY_TABLES)) {
-            EncryptionKeyTables.CREATE_STATEMENTS_V1.forEach(db::execSQL);
+            EncryptionKeyTables.CREATE_STATEMENTS_V2.forEach(db::execSQL);
         }
     }
 }

@@ -58,19 +58,32 @@ public abstract class DBEncoderLogicMetadata {
     @NonNull
     public abstract Instant getCreationTime();
 
+    /** The number of time the JS failed to execute in a row. */
+    @AutoValue.CopyAnnotations
+    @ColumnInfo(name = "failed_encoding_count", defaultValue = "0")
+    public abstract int getFailedEncodingCount();
+
     /**
      * @return an instance of {@link DBEncoderLogicMetadata}
      */
     public static DBEncoderLogicMetadata create(
-            @NonNull AdTechIdentifier buyer, int version, @NonNull Instant creationTime) {
-        return builder().setBuyer(buyer).setVersion(version).setCreationTime(creationTime).build();
+            @NonNull AdTechIdentifier buyer,
+            int version,
+            @NonNull Instant creationTime,
+            int failedEncodingCount) {
+        return builder()
+                .setBuyer(buyer)
+                .setVersion(version)
+                .setCreationTime(creationTime)
+                .setFailedEncodingCount(failedEncodingCount)
+                .build();
     }
 
     /**
      * @return a builder for creating a {@link DBEncoderLogicMetadata}
      */
     public static DBEncoderLogicMetadata.Builder builder() {
-        return new AutoValue_DBEncoderLogicMetadata.Builder();
+        return new AutoValue_DBEncoderLogicMetadata.Builder().setFailedEncodingCount(0);
     }
 
     /** Provides a builder to create an instance of {@link DBEncoderLogicMetadata} */
@@ -85,6 +98,9 @@ public abstract class DBEncoderLogicMetadata {
 
         /** For more details see {@link #getCreationTime()} */
         public abstract Builder setCreationTime(@NonNull Instant value);
+
+        /** For more details see {@link #getFailedEncodingCount()} */
+        public abstract Builder setFailedEncodingCount(int failedEncodingCount);
 
         /**
          * @return an instance of {@link DBEncoderLogicMetadata}

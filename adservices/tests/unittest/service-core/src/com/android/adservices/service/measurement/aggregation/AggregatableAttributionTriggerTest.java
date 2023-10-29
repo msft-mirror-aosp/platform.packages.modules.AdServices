@@ -19,6 +19,7 @@ package com.android.adservices.service.measurement.aggregation;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
 
 import androidx.test.filters.SmallTest;
 
@@ -429,6 +430,47 @@ public final class AggregatableAttributionTriggerTest {
         sourceFilterMap.put("product", Arrays.asList("1234", "234"));
         FilterMap sourceFilter =
                 new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
+
+        Optional<AggregateDeduplicationKey> aggregateDeduplicationKey =
+                createExample(Arrays.asList(aggregateDeduplicationKey1, aggregateDeduplicationKey2))
+                        .maybeExtractDedupKey(sourceFilter, mFlags);
+        assertTrue(aggregateDeduplicationKey.isEmpty());
+    }
+
+    @Test
+    public void testExtractDedupKey_lookbackWindowEnabledAndEmptyDedupKeys_returnsEmpty() {
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        AggregateDeduplicationKey aggregateDeduplicationKey1 =
+                new AggregateDeduplicationKey.Builder()
+                        .setFilterSet(
+                                Collections.singletonList(
+                                        new FilterMap.Builder()
+                                                .addStringListValue(
+                                                        "conversion_subdomain",
+                                                        List.of("electronics.megastore"))
+                                                .addStringListValue(
+                                                        "product", List.of("1234", "234"))
+                                                .build()))
+                        .build();
+        AggregateDeduplicationKey aggregateDeduplicationKey2 =
+                new AggregateDeduplicationKey.Builder()
+                        .setFilterSet(
+                                Collections.singletonList(
+                                        new FilterMap.Builder()
+                                                .addStringListValue(
+                                                        "conversion_subdomain",
+                                                        List.of("electronics.store"))
+                                                .addStringListValue(
+                                                        "product", List.of("9876", "654"))
+                                                .build()))
+                        .build();
+
+        FilterMap sourceFilter =
+                new FilterMap.Builder()
+                        .addStringListValue(
+                                "conversion_subdomain", List.of("electronics.megastore"))
+                        .addStringListValue("product", List.of("1234", "234"))
+                        .build();
 
         Optional<AggregateDeduplicationKey> aggregateDeduplicationKey =
                 createExample(Arrays.asList(aggregateDeduplicationKey1, aggregateDeduplicationKey2))

@@ -21,6 +21,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MESUREMENT_REPORTS_UPLOADED;
 
 import android.adservices.common.AdServicesStatusUtils;
+import android.content.Context;
 import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
@@ -63,6 +64,8 @@ public class AggregateReportingJobHandler {
     private ReportingStatus.UploadMethod mUploadMethod;
     private final AdServicesLogger mLogger;
 
+    private final Context mContext;
+
     AggregateReportingJobHandler(
             EnrollmentDao enrollmentDao,
             DatastoreManager datastoreManager,
@@ -70,7 +73,8 @@ public class AggregateReportingJobHandler {
             Flags flags,
             AdServicesLogger logger,
             ReportingStatus.ReportType reportType,
-            ReportingStatus.UploadMethod uploadMethod) {
+            ReportingStatus.UploadMethod uploadMethod,
+            Context context) {
         mEnrollmentDao = enrollmentDao;
         mDatastoreManager = datastoreManager;
         mAggregateEncryptionKeyManager = aggregateEncryptionKeyManager;
@@ -78,6 +82,7 @@ public class AggregateReportingJobHandler {
         mLogger = logger;
         mReportType = reportType;
         mUploadMethod = uploadMethod;
+        mContext = context;
     }
 
     @VisibleForTesting
@@ -86,7 +91,8 @@ public class AggregateReportingJobHandler {
             DatastoreManager datastoreManager,
             AggregateEncryptionKeyManager aggregateEncryptionKeyManager,
             Flags flags,
-            AdServicesLogger logger) {
+            AdServicesLogger logger,
+            Context context) {
         this(
                 enrollmentDao,
                 datastoreManager,
@@ -94,7 +100,8 @@ public class AggregateReportingJobHandler {
                 flags,
                 logger,
                 ReportingStatus.ReportType.UNKNOWN,
-                ReportingStatus.UploadMethod.UNKNOWN);
+                ReportingStatus.UploadMethod.UNKNOWN,
+                context);
     }
 
     /**
@@ -168,16 +175,21 @@ public class AggregateReportingJobHandler {
                         reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.SUCCESS);
                     } else {
                         reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.FAILURE);
+                        mDatastoreManager.runInTransaction(
+                                (dao) -> {
+                                    int retryCount =
+                                            dao.incrementAndGetReportingRetryCount(
+                                                    aggregateReportId,
+                                                    mIsDebugInstance
+                                                            ? KeyValueData.DataType
+                                                                .DEBUG_AGGREGATE_REPORT_RETRY_COUNT
+                                                            : KeyValueData.DataType
+                                                                .AGGREGATE_REPORT_RETRY_COUNT);
+                                    reportingStatus.setRetryCount(retryCount);
+                                });
                     }
-                    mDatastoreManager.runInTransaction(
-                            (dao) -> {
-                                int retryCount =
-                                        dao.incrementAndGetReportingRetryCount(
-                                                aggregateReportId,
-                                                KeyValueData.DataType.AGGREGATE_REPORT_RETRY_COUNT);
-                                reportingStatus.setRetryCount(retryCount);
-                            });
                     logReportingStats(reportingStatus);
+
                 }
             } else {
                 LoggerFactory.getMeasurementLogger()
@@ -373,7 +385,8 @@ public class AggregateReportingJobHandler {
     @VisibleForTesting
     public int makeHttpPostRequest(Uri adTechDomain, JSONObject aggregateReportBody)
             throws IOException {
-        AggregateReportSender aggregateReportSender = new AggregateReportSender(mIsDebugInstance);
+        AggregateReportSender aggregateReportSender =
+                new AggregateReportSender(mIsDebugInstance, mContext);
         return aggregateReportSender.sendReport(adTechDomain, aggregateReportBody);
     }
 

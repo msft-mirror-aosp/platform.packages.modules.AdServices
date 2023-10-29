@@ -537,11 +537,15 @@ public class DbState {
     }
 
     private DebugReport getDebugReportFrom(JSONObject rJSON) throws JSONException {
-        return new DebugReport.Builder()
-                .setId(rJSON.getString("id"))
-                .setType(rJSON.getString("type"))
-                .setBody(rJSON.getString("body"))
-                .build();
+        DebugReport.Builder builder =
+                new DebugReport.Builder()
+                        .setId(rJSON.getString("id"))
+                        .setType(rJSON.getString("type"))
+                        .setBody(rJSON.getString("body"));
+        if (rJSON.has("registrant")) {
+            builder.setRegistrant(Uri.parse(rJSON.getString("registrant")));
+        }
+        return builder.build();
     }
 
     private AsyncRegistration getAsyncRegistrationFrom(JSONObject aJSON) throws JSONException {

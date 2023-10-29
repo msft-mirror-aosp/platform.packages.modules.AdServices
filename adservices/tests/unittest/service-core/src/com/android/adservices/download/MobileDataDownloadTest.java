@@ -36,6 +36,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.enrollment.EnrollmentTables;
 import com.android.adservices.data.shared.SharedDbHelper;
@@ -133,7 +134,7 @@ public class MobileDataDownloadTest {
     public static final String ENROLLMENT_FILE_GROUP_NAME = "adtech_enrollment_data";
     public static final String UI_OTA_STRINGS_FILE_GROUP_NAME = "ui-ota-strings";
 
-    private StaticMockitoSession mStaticMockSession = null;
+    private StaticMockitoSession mStaticMockSession;
     private SynchronousFileStorage mFileStorage;
     private FileDownloader mFileDownloader;
     private SharedDbHelper mDbHelper;
@@ -144,7 +145,7 @@ public class MobileDataDownloadTest {
     @Mock UxStatesManager mUxStatesManager;
 
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
         // Add latency to fix the boot up WIFI connection delay. We only need to wait once during
         // the whole test suite run.
         // Checking wifi connection using WifiManager isn't working on low-performance devices.
@@ -163,14 +164,21 @@ public class MobileDataDownloadTest {
                         .spyStatic(MobileDataDownloadFactory.class)
                         .spyStatic(UxStatesManager.class)
                         .spyStatic(EnrollmentDao.class)
+                        .spyStatic(EncryptionKeyDao.class)
                         .spyStatic(ConsentManager.class)
                         .spyStatic(CommonClassifierHelper.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
+        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
 
         doReturn(/* Download max download threads */ 2)
                 .when(mMockFlags)
                 .getDownloaderMaxDownloadThreads();
+        when(mMockFlags.getEncryptionKeyNewEnrollmentFetchKillSwitch()).thenReturn(false);
+        when(mMockFlags.getEncryptionKeyNetworkConnectTimeoutMs())
+                .thenReturn(Flags.ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS);
+        when(mMockFlags.getEncryptionKeyNetworkReadTimeoutMs())
+                .thenReturn(Flags.ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS);
 
         mFileStorage = MobileDataDownloadFactory.getFileStorage(mContext);
         mFileDownloader =
@@ -190,9 +198,7 @@ public class MobileDataDownloadTest {
 
     @After
     public void teardown() throws ExecutionException, InterruptedException {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
+        mStaticMockSession.finishMocking();
         if (mMdd != null) {
             mMdd.clear().get();
         }
@@ -737,9 +743,12 @@ public class MobileDataDownloadTest {
         EnrollmentDataDownloadManager enrollmentDataDownloadManager =
                 new EnrollmentDataDownloadManager(mContext, mMockFlags);
         EnrollmentDao enrollmentDao = new EnrollmentDao(mContext, mDbHelper, mMockFlags);
-
         ExtendedMockito.doReturn(enrollmentDao)
                 .when(() -> EnrollmentDao.getInstance(any(Context.class)));
+
+        EncryptionKeyDao encryptionKeyDao = new EncryptionKeyDao(mDbHelper);
+        ExtendedMockito.doReturn(encryptionKeyDao)
+                .when(() -> EncryptionKeyDao.getInstance(any(Context.class)));
 
         assertThat(enrollmentDao.deleteAll()).isTrue();
         // Verify no enrollment data after table cleared.

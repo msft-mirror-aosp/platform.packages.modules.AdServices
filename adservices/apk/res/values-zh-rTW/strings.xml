@@ -42,10 +42,8 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"允許應用程式存取 AdService 的啟用狀態 API。"</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"存取 AdServicesManager 的 API"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"允許應用程式存取 AdServicesManager 的 API。"</string>
-    <!-- no translation found for permlab_accessUpdateAdIdCache (6912755067998635886) -->
-    <skip />
-    <!-- no translation found for permdesc_accessUpdateAdIdCache (2907546830224186022) -->
-    <skip />
+    <string name="permlab_updateAdservicesAdId" msgid="1817012692601139702">"存取 AdService’s update AdId API。"</string>
+    <string name="permdesc_updateAdservicesAdId" msgid="1594321436876709737">"允許應用程式存取 AdService’s update AdId API。"</string>
     <string name="app_label" msgid="5844694701336604490">"廣告隱私權"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"加入 Android 廣告隱私權 Beta 版測試計畫"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android 正在探索如何透過更能保護隱私權的方式，讓應用程式向你顯示廣告"</string>
@@ -288,7 +286,7 @@
     <string name="topic10049" msgid="8061992014977840818">"原聲音樂"</string>
     <string name="topic10050" msgid="3540229495848506229">"世界音樂"</string>
     <string name="topic10051" msgid="6132468331924347995">"雷鬼樂與加勒比海音樂"</string>
-    <string name="topic10052" msgid="8213269199807045473">"線上圖片庫"</string>
+    <string name="topic10052" msgid="8213269199807045473">"線上相片庫"</string>
     <string name="topic10053" msgid="1378192203082454197">"線上影片"</string>
     <string name="topic10054" msgid="3727401645405134505">"即時影片串流"</string>
     <string name="topic10055" msgid="4943174831732192854">"電影和電視串流"</string>

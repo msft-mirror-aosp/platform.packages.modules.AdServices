@@ -37,7 +37,6 @@ import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.KeyValueData.DataType;
-import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.attribution.TriggerContentProvider;
@@ -293,14 +292,15 @@ public class AsyncRegistrationQueueRunner {
             IMeasurementDao dao,
             DebugReportApi debugReportApi)
             throws DatastoreException {
-        long windowStartTime = source.getEventTime() - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS;
+        Flags flags = FlagsFactory.getFlags();
+        long windowStartTime =
+                source.getEventTime() - flags.getMeasurementRateLimitWindowMilliseconds();
         Optional<Uri> publisher = getTopLevelPublisher(topOrigin, publisherType);
         if (!publisher.isPresent()) {
             LoggerFactory.getMeasurementLogger()
                     .d("insertSources: getTopLevelPublisher failed", topOrigin);
             return false;
         }
-        Flags flags = FlagsFactory.getFlags();
         if (flags.getMeasurementEnableDestinationRateLimit()) {
             if (source.getAppDestinations() != null
                     && !sourceIsWithinTimeBasedDestinationLimits(
@@ -377,7 +377,7 @@ public class AsyncRegistrationQueueRunner {
                         publisherType,
                         source.getEnrollmentId(),
                         source.getEventTime(),
-                        PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW);
+                        flags.getMeasurementMinReportingOriginUpdateWindow());
         if (numOfOriginExcludingRegistrationOrigin
                 >= flags.getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow()) {
             debugReportApi.scheduleSourceSuccessDebugReport(source, dao);

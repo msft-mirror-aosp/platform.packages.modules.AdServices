@@ -22,9 +22,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.CommonFixture;
+import android.content.res.AssetFileDescriptor;
 import android.os.Parcel;
 
 import org.junit.Test;
+
 
 public class GetAdSelectionDataResponseTest {
     private static final byte[] AD_SELECTION_RESULT = new byte[] {1, 2, 3, 4};
@@ -41,6 +43,25 @@ public class GetAdSelectionDataResponseTest {
 
         assertThat(getAdSelectionDataResponse.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
         assertThat(getAdSelectionDataResponse.getAdSelectionData()).isEqualTo(AD_SELECTION_RESULT);
+        assertThat(getAdSelectionDataResponse.getAssetFileDescriptor()).isNull();
+    }
+
+    @Test
+    public void testBuildGetAdSelectionDataResponseWithAssetFileDescriptor() throws Exception {
+        AssetFileDescriptor assetFileDescriptor =
+                AssetFileDescriptorUtil.setupAssetFileDescriptorResponse(AD_SELECTION_RESULT);
+        byte[] result = new byte[AD_SELECTION_RESULT.length];
+
+        GetAdSelectionDataResponse getAdSelectionDataResponse =
+                new GetAdSelectionDataResponse.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setAssetFileDescriptor(assetFileDescriptor)
+                        .build();
+
+        assertThat(getAdSelectionDataResponse.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
+        assertThat(getAdSelectionDataResponse.getAdSelectionData()).isNull();
+        AssetFileDescriptorUtil.readAssetFileDescriptorIntoBuffer(result, assetFileDescriptor);
+        assertThat(result).isEqualTo(AD_SELECTION_RESULT);
     }
 
     @Test
@@ -59,6 +80,32 @@ public class GetAdSelectionDataResponseTest {
 
         assertThat(fromParcel.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
         assertThat(fromParcel.getAdSelectionData()).isEqualTo(AD_SELECTION_RESULT);
+        assertThat(getAdSelectionDataResponse.getAssetFileDescriptor()).isNull();
+    }
+
+    @Test
+    public void testParcelGetAdSelectionDataResponseWithAssetFileDescriptor() throws Exception {
+        AssetFileDescriptor assetFileDescriptor =
+                AssetFileDescriptorUtil.setupAssetFileDescriptorResponse(AD_SELECTION_RESULT);
+        byte[] result = new byte[AD_SELECTION_RESULT.length];
+
+        GetAdSelectionDataResponse getAdSelectionDataResponse =
+                new GetAdSelectionDataResponse.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setAssetFileDescriptor(assetFileDescriptor)
+                        .build();
+
+        Parcel p = Parcel.obtain();
+        getAdSelectionDataResponse.writeToParcel(p, 0);
+        p.setDataPosition(0);
+        GetAdSelectionDataResponse fromParcel =
+                GetAdSelectionDataResponse.CREATOR.createFromParcel(p);
+
+        assertThat(fromParcel.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
+        assertThat(fromParcel.getAdSelectionData()).isNull();
+        AssetFileDescriptorUtil.readAssetFileDescriptorIntoBuffer(
+                result, fromParcel.getAssetFileDescriptor());
+        assertThat(result).isEqualTo(AD_SELECTION_RESULT);
     }
 
     @Test
@@ -77,6 +124,7 @@ public class GetAdSelectionDataResponseTest {
 
         assertThat(fromParcel.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
         assertThat(fromParcel.getAdSelectionData()).isNull();
+        assertThat(getAdSelectionDataResponse.getAssetFileDescriptor()).isNull();
     }
 
     @Test
