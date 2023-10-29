@@ -21,10 +21,11 @@ import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.android.adservices.data.measurement.MeasurementTables;
+import com.android.adservices.service.measurement.KeyValueData;
 
 /**
  * Migrates Measurement DB to version 26. This upgrade adds two columns in the Debug Report table to
- * record Insertion Time and App Registrant
+ * record Insertion Time and App Registrant and Clears Retry Counts for Event and Aggregate Reports
  */
 public class MeasurementDbMigratorV26 extends AbstractMeasurementDbMigrator {
 
@@ -52,6 +53,18 @@ public class MeasurementDbMigratorV26 extends AbstractMeasurementDbMigrator {
                 null);
     }
 
+    private void clearReportRetryCounts(SQLiteDatabase db) {
+        db.delete(
+                MeasurementTables.KeyValueDataContract.TABLE,
+                MeasurementTables.KeyValueDataContract.DATA_TYPE
+                        + " IN (\""
+                        + KeyValueData.DataType.AGGREGATE_REPORT_RETRY_COUNT
+                        + "\", \""
+                        + KeyValueData.DataType.EVENT_REPORT_RETRY_COUNT
+                        + "\")",
+                new String[] {});
+    }
+
     public MeasurementDbMigratorV26() {
         super(26);
     }
@@ -61,5 +74,6 @@ public class MeasurementDbMigratorV26 extends AbstractMeasurementDbMigrator {
         addInsertionTimeColumn(db);
         addRegistrantColumn(db);
         insertInsertionTime(db);
+        clearReportRetryCounts(db);
     }
 }

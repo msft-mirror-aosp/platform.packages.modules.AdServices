@@ -290,6 +290,11 @@
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
+        <!-- Encryption key fetch job. -->
+        <service android:name="com.android.adservices.service.encryptionkey.EncryptionKeyJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
         <!-- Enable Notification Job. -->
         <service android:name="com.android.adservices.service.common.ConsentNotificationJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">

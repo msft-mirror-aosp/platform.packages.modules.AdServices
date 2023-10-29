@@ -88,6 +88,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
 import com.android.adservices.service.enrollment.EnrollmentStatus;
+import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.WipeoutStatus;
 import com.android.adservices.service.measurement.attribution.AttributionStatus;
 
@@ -643,5 +644,34 @@ public class AdServicesLoggerImplTest {
                         eq(10),
                         eq("SomeSdkName"),
                         eq(errorCauseEnumValue));
+    }
+
+    @Test
+    public void testLogMsmtClickVerificationStats() {
+        int sourceType = Source.SourceType.NAVIGATION.getIntValue();
+        boolean inputEventPresent = true;
+        boolean systemClickVerificationSuccessful = true;
+        boolean systemClickVerificationEnabled = true;
+        long inputEventDelayMs = 200L;
+        long validDelayWindowMs = 1000L;
+        String sourceRegistrant = "test_source_registrant";
+
+        MeasurementClickVerificationStats stats =
+                MeasurementClickVerificationStats.builder()
+                        .setSourceType(sourceType)
+                        .setInputEventPresent(inputEventPresent)
+                        .setSystemClickVerificationSuccessful(systemClickVerificationSuccessful)
+                        .setSystemClickVerificationEnabled(systemClickVerificationEnabled)
+                        .setInputEventDelayMillis(inputEventDelayMs)
+                        .setValidDelayWindowMillis(validDelayWindowMs)
+                        .setSourceRegistrant(sourceRegistrant)
+                        .build();
+
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logMeasurementClickVerificationStats(stats);
+        ArgumentCaptor<MeasurementClickVerificationStats> argumentCaptor =
+                ArgumentCaptor.forClass(MeasurementClickVerificationStats.class);
+        verify(mStatsdLoggerMock).logMeasurementClickVerificationStats(argumentCaptor.capture());
+        assertEquals(stats, argumentCaptor.getValue());
     }
 }

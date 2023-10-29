@@ -24,6 +24,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
@@ -46,6 +47,7 @@ import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.EncoderEndpointsDao;
@@ -118,38 +120,8 @@ public class SignalsEncodingE2ETest {
     @Mock private Throttler mMockThrottler;
     @Mock private DevContextFilter mDevContextFilterMock;
 
-    private Flags mFlagsWithProtectedSignalsAndEncodingEnabled =
-            new Flags() {
-                @Override
-                public boolean getGaUxFeatureEnabled() {
-                    return true;
-                }
-
-                @Override
-                public boolean getProtectedSignalsPeriodicEncodingEnabled() {
-                    return true;
-                }
-
-                @Override
-                public boolean getBackgroundJobsLoggingKillSwitch() {
-                    return false;
-                }
-
-                @Override
-                public boolean getProtectedSignalsServiceKillSwitch() {
-                    return false;
-                }
-
-                @Override
-                public boolean getGlobalKillSwitch() {
-                    return false;
-                }
-
-                @Override
-                public boolean getDisableFledgeEnrollmentCheck() {
-                    return true;
-                }
-            };
+    private FlagsWithEnabledPeriodicEncoding mFlagsWithProtectedSignalsAndEncodingEnabled =
+            new FlagsWithEnabledPeriodicEncoding();
 
     @Spy
     FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
@@ -289,6 +261,7 @@ public class SignalsEncodingE2ETest {
 
         mPeriodicEncodingJobWorker =
                 new PeriodicEncodingJobWorker(
+                        mEncoderLogicHandler,
                         mEncoderLogicMetadataDao,
                         mEncoderPersistenceDao,
                         mEncodedPayloadDao,
@@ -296,6 +269,7 @@ public class SignalsEncodingE2ETest {
                         mAdSelectionScriptEngine,
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
+                        mDevContextFilterMock,
                         mFlagsWithProtectedSignalsAndEncodingEnabled);
 
         doNothing()
@@ -576,6 +550,178 @@ public class SignalsEncodingE2ETest {
         assertEquals("I am second encoder", new String(payload2));
     }
 
+    @Test
+    @FlakyTest(bugId = 302689885)
+    public void testPeriodicEncodingUpdatesEncoders_Success() throws Exception {
+        String encodeSignalsJS =
+                "\nfunction encodeSignals(signals, maxSize) {\n"
+                        // Numbers to their base 64 strings
+                        + "var base64Array = ["
+                        + "'MA==','MQ==','Mg==','Mw==','NA==','NQ==','Ng==',"
+                        + "'Nw==','OA==','OQ==',"
+                        + "'Og==','Ow==','PA==','PQ==','Pg==','Pw==','QA==',"
+                        + "'QQ==','Qg==','Qw=='];"
+                        + "\n"
+                        + "    return {'status' : 0, 'results' : base64Array[signals.length]};\n"
+                        + "}\n";
+        Uri encoderUri = mMockWebServerRule.uriForPath(ENCODER_PATH);
+        String json =
+                "{"
+                        // Put two signals
+                        + "\"put\":{\""
+                        + intToBase64(1)
+                        + "\":\""
+                        + intToBase64(101)
+                        + "\",\""
+                        + intToBase64(2)
+                        + "\":\""
+                        + intToBase64(102)
+                        + "\""
+                        + "},"
+                        // Add an encoder registration event
+                        + "\"update_encoder\" : {\n"
+                        + "\t\"action\" : \"REGISTER\",\n"
+                        + "\t\"endpoint\" : \""
+                        + encoderUri.toString()
+                        + "\"\n"
+                        + "  }"
+                        + "}";
+        MockResponse signalsResponse = new MockResponse().setBody(json);
+        MockResponse encoderResponse = new MockResponse().setBody(encodeSignalsJS);
+
+        CountDownLatch encoderLogicDownloadedLatch = new CountDownLatch(2);
+
+        // Wire signals and encoder endpoint to respective responses
+        mMockWebServerRule.startMockWebServer(
+                new Dispatcher() {
+                    @Override
+                    public MockResponse dispatch(RecordedRequest request)
+                            throws InterruptedException {
+                        switch (request.getPath()) {
+                            case SIGNALS_PATH:
+                                return signalsResponse;
+                            case ENCODER_PATH: {
+                                    encoderLogicDownloadedLatch.countDown();
+                                    return encoderResponse;
+                                }
+                            default:
+                                return new MockResponse().setResponseCode(404);
+                        }
+                    }
+                });
+        Uri uri = mMockWebServerRule.uriForPath(SIGNALS_PATH);
+
+        CountDownLatch updateEventLatch = new CountDownLatch(1);
+        SignalsEncodingE2ETest.EncoderUpdateEventTestObserver observer =
+                new EncoderUpdateEventTestObserver(updateEventLatch, BUYER, true);
+        mUpdateEncoderEventHandler.addObserver(observer);
+
+        callForUri(uri);
+        List<DBProtectedSignal> expected =
+                Arrays.asList(generateSignal(1, 101), generateSignal(2, 102));
+        List<DBProtectedSignal> actual = mSignalsDao.getSignalsByBuyer(BUYER);
+        assertSignalsUnorderedListEqualsExceptIdAndTime(expected, actual);
+
+        // Verify that encoder gets registered, downloaded and persisted
+        assertEquals(
+                "Encoder endpoint should have been registered",
+                encoderUri,
+                mEncoderEndpointsDao.getEndpoint(BUYER).getDownloadUri());
+
+        // Wait for the update event to be completed
+        updateEventLatch.await(WAIT_TIME_SECONDS, TimeUnit.SECONDS);
+        assertEquals(
+                "Download Encoder should have been counted down once",
+                1,
+                encoderLogicDownloadedLatch.getCount());
+        assertEquals("Latch timed out but did not countdown", 0, updateEventLatch.getCount());
+
+        assertEquals(
+                "Downloaded encoder logic should have been same as one wired with encoder uri",
+                encodeSignalsJS,
+                mEncoderPersistenceDao.getEncoder(BUYER));
+
+        // Validate that the periodic job for encoding would have been scheduled
+        verify(
+                () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
+                times(1));
+
+        FlagsWithEnabledPeriodicEncoding flagsWithLargeUpdateWindow =
+                new FlagsWithEnabledPeriodicEncoding() {
+                    @Override
+                    public long getProtectedSignalsEncoderRefreshWindowSeconds() {
+                        return 20L * 24L * 60L * 60L; // 20 days
+                    }
+                };
+
+        PeriodicEncodingJobWorker jobWorkerWithLargeTimeWindow =
+                new PeriodicEncodingJobWorker(
+                        mEncoderLogicHandler,
+                        mEncoderLogicMetadataDao,
+                        mEncoderPersistenceDao,
+                        mEncodedPayloadDao,
+                        mSignalStorageManager,
+                        mAdSelectionScriptEngine,
+                        mBackgroundExecutorService,
+                        mLightweightExecutorService,
+                        mDevContextFilterMock,
+                        flagsWithLargeUpdateWindow);
+
+        // Manually trigger encoding job worker to validate encoding gets done
+        jobWorkerWithLargeTimeWindow.encodeProtectedSignals().get(5, TimeUnit.SECONDS);
+
+        // Validate that the encoded results are correctly persisted
+        DBEncodedPayload firstEncodingRun = mEncodedPayloadDao.getEncodedPayload(BUYER);
+        byte[] payload = firstEncodingRun.getEncodedPayload();
+        assertEquals(
+                "Encoding JS should have returned size of signals as result",
+                String.valueOf(expected.size()),
+                new String(payload));
+        assertEquals(
+                "Encoder should not have been downloaded again",
+                1,
+                encoderLogicDownloadedLatch.getCount());
+
+        // We trigger the periodic job worker with flags set to tiny update window
+        FlagsWithEnabledPeriodicEncoding flagsWithTinyUpdateWindow =
+                new FlagsWithEnabledPeriodicEncoding() {
+                    @Override
+                    public long getProtectedSignalsEncoderRefreshWindowSeconds() {
+                        return 0L;
+                    }
+                };
+        PeriodicEncodingJobWorker jobWorkerWithTinyTimeWindow =
+                new PeriodicEncodingJobWorker(
+                        mEncoderLogicHandler,
+                        mEncoderLogicMetadataDao,
+                        mEncoderPersistenceDao,
+                        mEncodedPayloadDao,
+                        mSignalStorageManager,
+                        mAdSelectionScriptEngine,
+                        mBackgroundExecutorService,
+                        mLightweightExecutorService,
+                        mDevContextFilterMock,
+                        flagsWithTinyUpdateWindow);
+
+        // Manually trigger encoding job worker to validate encoding gets done
+        jobWorkerWithTinyTimeWindow.encodeProtectedSignals().get(5, TimeUnit.SECONDS);
+
+        // Validate that the encoded results are correctly persisted
+        DBEncodedPayload secondEncodingRun = mEncodedPayloadDao.getEncodedPayload(BUYER);
+        byte[] payload2 = secondEncodingRun.getEncodedPayload();
+        assertEquals(
+                "Encoding JS should have returned size of signals as result",
+                String.valueOf(expected.size()),
+                new String(payload2));
+        assertTrue(secondEncodingRun.getCreationTime().isAfter(firstEncodingRun.getCreationTime()));
+
+        encoderLogicDownloadedLatch.await(5, TimeUnit.SECONDS);
+        assertEquals(
+                "Encoder should have been downloaded second time",
+                0,
+                encoderLogicDownloadedLatch.getCount());
+    }
+
     private void callForUri(Uri uri) throws Exception {
         UpdateSignalsInput input =
                 new UpdateSignalsInput.Builder(uri, CommonFixture.TEST_PACKAGE_NAME).build();
@@ -619,6 +765,38 @@ public class SignalsEncodingE2ETest {
             } catch (Exception e) {
                 throw new IllegalStateException("Encoder update event failed");
             }
+        }
+    }
+
+    private static class FlagsWithEnabledPeriodicEncoding implements Flags {
+        @Override
+        public boolean getGaUxFeatureEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getProtectedSignalsPeriodicEncodingEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getBackgroundJobsLoggingKillSwitch() {
+            return false;
+        }
+
+        @Override
+        public boolean getProtectedSignalsServiceKillSwitch() {
+            return false;
+        }
+
+        @Override
+        public boolean getGlobalKillSwitch() {
+            return false;
+        }
+
+        @Override
+        public boolean getDisableFledgeEnrollmentCheck() {
+            return true;
         }
     }
 }

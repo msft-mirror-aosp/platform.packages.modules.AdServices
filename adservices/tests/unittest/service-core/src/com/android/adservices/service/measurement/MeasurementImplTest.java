@@ -28,6 +28,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
@@ -221,7 +222,7 @@ public final class MeasurementImplTest {
                                 mClickVerifier,
                                 mMeasurementDataDeleter,
                                 mContentResolver));
-        doReturn(true).when(mClickVerifier).isInputEventVerifiable(any(), anyLong());
+        doReturn(true).when(mClickVerifier).isInputEventVerifiable(any(), anyLong(), anyString());
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(any()))
                 .thenReturn(getEnrollment(DEFAULT_ENROLLMENT));
     }
@@ -369,7 +370,7 @@ public final class MeasurementImplTest {
 
     @Test
     public void testRegisterEvent_optionalParameters_success() {
-        doReturn(true).when(mClickVerifier).isInputEventVerifiable(any(), anyLong());
+        doReturn(true).when(mClickVerifier).isInputEventVerifiable(any(), anyLong(), anyString());
         final int result =
                 mMeasurementImpl.registerEvent(
                         REGISTRATION_URI_1,
@@ -384,29 +385,33 @@ public final class MeasurementImplTest {
 
     @Test
     public void testGetSourceType_verifiedInputEvent_returnsNavigationSourceType() {
-        doReturn(true).when(mClickVerifier).isInputEventVerifiable(any(), anyLong());
+        doReturn(true).when(mClickVerifier).isInputEventVerifiable(any(), anyLong(), anyString());
         assertEquals(
                 Source.SourceType.NAVIGATION,
-                mMeasurementImpl.getSourceType(getInputEvent(), 1000L));
+                mMeasurementImpl.getSourceType(getInputEvent(), 1000L, "app_name"));
     }
 
     @Test
     public void testGetSourceType_noInputEventGiven() {
-        assertEquals(Source.SourceType.EVENT, mMeasurementImpl.getSourceType(null, 1000L));
+        assertEquals(
+                Source.SourceType.EVENT, mMeasurementImpl.getSourceType(null, 1000L, "app_name"));
     }
 
     @Test
     public void testGetSourceType_inputEventNotVerifiable_returnsEventSourceType() {
-        doReturn(false).when(mClickVerifier).isInputEventVerifiable(any(), anyLong());
+        doReturn(false).when(mClickVerifier).isInputEventVerifiable(any(), anyLong(), anyString());
         assertEquals(
-                Source.SourceType.EVENT, mMeasurementImpl.getSourceType(getInputEvent(), 1000L));
+                Source.SourceType.EVENT,
+                mMeasurementImpl.getSourceType(getInputEvent(), 1000L, "app_name"));
     }
 
     @Test
     public void testGetSourceType_clickVerificationDisabled_returnsNavigationSourceType() {
         Flags mockFlags = Mockito.mock(Flags.class);
         ClickVerifier mockClickVerifier = Mockito.mock(ClickVerifier.class);
-        doReturn(false).when(mockClickVerifier).isInputEventVerifiable(any(), anyLong());
+        doReturn(false)
+                .when(mockClickVerifier)
+                .isInputEventVerifiable(any(), anyLong(), anyString());
         doReturn(false).when(mockFlags).getMeasurementIsClickVerificationEnabled();
         ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlagsForTest);
         MeasurementImpl measurementImpl =
@@ -421,7 +426,7 @@ public final class MeasurementImplTest {
         // input event is not verifiable.
         assertEquals(
                 Source.SourceType.NAVIGATION,
-                measurementImpl.getSourceType(getInputEvent(), 1000L));
+                measurementImpl.getSourceType(getInputEvent(), 1000L, "app_name"));
     }
 
     @Test

@@ -18,22 +18,22 @@ package android.adservices.adselection;
 
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
 import java.util.Collections;
 import java.util.List;
 
 public class AdSelectionFromOutcomesConfigFixture {
-    public static final AdTechIdentifier SAMPLE_SELLER =
-            AdTechIdentifier.fromString("developer.android.com");
+    public static final AdTechIdentifier SAMPLE_SELLER = AdSelectionConfigFixture.SELLER;
     public static final long SAMPLE_AD_SELECTION_ID_1 = 12345L;
     public static final long SAMPLE_AD_SELECTION_ID_2 = 123456L;
     public static final AdSelectionSignals SAMPLE_SELECTION_SIGNALS =
             AdSelectionSignals.fromString("{bidFloor: 10}");
     public static final Uri SAMPLE_SELECTION_LOGIC_URI_1 =
-            Uri.parse("https://developer.android.com/finalWinnerSelectionLogic");
+            CommonFixture.getUri(SAMPLE_SELLER, "/finalWinnerSelectionLogic");
     public static final Uri SAMPLE_SELECTION_LOGIC_URI_2 =
-            Uri.parse("https://developer.android.com/openBiddingLogic");
+            CommonFixture.getUri(SAMPLE_SELLER, "/openBiddingLogic");
 
     public static AdSelectionFromOutcomesConfig anAdSelectionFromOutcomesConfig() {
         return new AdSelectionFromOutcomesConfig.Builder()
