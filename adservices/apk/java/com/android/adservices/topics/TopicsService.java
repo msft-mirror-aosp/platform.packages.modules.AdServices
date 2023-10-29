@@ -39,6 +39,7 @@ import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.compat.BuildCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.encryptionkey.EncryptionKeyJobService;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.topics.CacheManager;
@@ -100,8 +101,9 @@ public class TopicsService extends Service {
 
     private void schedulePeriodicJobs() {
         MaintenanceJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
-        EpochJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
+        EncryptionKeyJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
         MddJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
+        EpochJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
     }
 
     private boolean hasUserConsent() {

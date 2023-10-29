@@ -126,7 +126,7 @@ public class AdIdFetcherTest {
     public void testIsLimitedTrackingEnabled_TimeoutException_ReturnsTrue()
             throws ExecutionException, InterruptedException {
         mMockAdIdWorker.setResult(MockAdIdWorker.MOCK_AD_ID, false);
-        mMockAdIdWorker.setDelay(AdIdFetcher.AD_ID_TIMEOUT_IN_MS * 2);
+        mMockAdIdWorker.setDelay(mFlags.getAdIdFetcherTimeoutMs() * 2);
         mAdIdFetcher =
                 new AdIdFetcher(
                         mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor, mFlags);

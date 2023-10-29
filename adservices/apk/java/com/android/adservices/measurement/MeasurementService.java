@@ -32,6 +32,7 @@ import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.encryptionkey.EncryptionKeyJobService;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.DeleteUninstalledJobService;
 import com.android.adservices.service.measurement.MeasurementServiceImpl;
@@ -120,5 +121,6 @@ public class MeasurementService extends Service {
         AsyncRegistrationFallbackJobService.scheduleIfNeeded(this, false);
         DebugReportingFallbackJobService.scheduleIfNeeded(this, false);
         VerboseDebugReportingFallbackJobService.scheduleIfNeeded(this, false);
+        EncryptionKeyJobService.scheduleIfNeeded(this, false);
     }
 }

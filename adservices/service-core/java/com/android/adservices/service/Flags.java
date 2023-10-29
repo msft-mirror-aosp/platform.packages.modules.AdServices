@@ -212,6 +212,18 @@ public interface Flags {
         return MAINTENANCE_JOB_FLEX_MS;
     }
 
+    default int getEncryptionKeyNetworkConnectTimeoutMs() {
+        return ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS;
+    }
+
+    int ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(5);
+
+    default int getEncryptionKeyNetworkReadTimeoutMs() {
+        return ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS;
+    }
+
+    int ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(30);
+
     /* The default min time period (in millis) between each event main reporting job run. */
     long MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS = 4 * 60 * 60 * 1000; // 4 hours.
 
@@ -874,19 +886,10 @@ public interface Flags {
     long FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS = 2 * 24 * 60 * 60; // 2 days
     long FLEDGE_HTTP_CACHE_MAX_ENTRIES = 100;
     boolean FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES = false;
-    boolean FLEDGE_AUCTION_SERVER_PAYLOAD_SIZE_SHOULD_EXCEED_LIMIT = false;
 
     /** Returns {@code true} if the on device auction should use the unified flow tables */
     default boolean getFledgeOnDeviceAuctionShouldUseUnifiedTables() {
         return FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES;
-    }
-
-    /**
-     * Returns {@code true} if the response of the {@code getAdSelectionData} API can exceed the
-     * 64Kb maximum
-     */
-    default boolean getFledgeAuctionServerPayloadSizeShouldExceedLimit() {
-        return FLEDGE_AUCTION_SERVER_PAYLOAD_SIZE_SHOULD_EXCEED_LIMIT;
     }
 
     /** Returns {@code true} if the FLEDGE Background Fetch is enabled. */
@@ -994,6 +997,8 @@ public interface Flags {
     long PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS = 5L * 60L * 1000L; // 5 minutes
     int PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES = (int) (1.5 * 1024); // 1.5 KB
     int PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES = (int) (10 * 1024);
+    int PROTECTED_SIGNALS_MAX_JS_FAILURE_EXECUTION_ON_CERTAIN_VERSION_BEFORE_STOP = 3;
+    long PROTECTED_SIGNALS_ENCODER_REFRESH_WINDOW_SECONDS = 24L * 60L * 60L; // 1 day
 
     /** Returns {@code true} feature flag if Periodic encoding of Protected Signals is enabled. */
     default boolean getProtectedSignalsPeriodicEncodingEnabled() {
@@ -1024,6 +1029,16 @@ public interface Flags {
     /** Returns the maximum size of the signal update payload. */
     default int getProtectedSignalsFetchSignalUpdatesMaxSizeBytes() {
         return PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES;
+    }
+
+    /** Returns the maximum number of continues JS failure before we stop executing the JS. */
+    default int getProtectedSignalsMaxJsFailureExecutionOnCertainVersionBeforeStop() {
+        return PROTECTED_SIGNALS_MAX_JS_FAILURE_EXECUTION_ON_CERTAIN_VERSION_BEFORE_STOP;
+    }
+
+    /** Returns the maximum time window beyond which encoder logic should be refreshed */
+    default long getProtectedSignalsEncoderRefreshWindowSeconds() {
+        return PROTECTED_SIGNALS_ENCODER_REFRESH_WINDOW_SECONDS;
     }
 
     int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT = 10_000;
@@ -2379,6 +2394,57 @@ public interface Flags {
         return getGlobalKillSwitch() || PROTECTED_SIGNALS_SERVICE_KILL_SWITCH;
     }
 
+    // Encryption key Kill switches
+
+    /**
+     * Encryption key new enrollment fetch kill switch. The default value is false which means
+     * fetching encryption keys for new enrollments is enabled by default. This flag is used for
+     * emergency turning off fetching encryption keys for new enrollments.
+     *
+     * <p>Set true to disable the function since no adtech actually provide encryption endpoint now.
+     */
+    boolean ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH = true;
+
+    /**
+     * @return value of encryption key new enrollment fetch job kill switch
+     */
+    default boolean getEncryptionKeyNewEnrollmentFetchKillSwitch() {
+        // We check the Global kill switch first. As a result, it overrides all other kill switches.
+        return getGlobalKillSwitch() || ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH;
+    }
+
+    /**
+     * Encryption key periodic fetch job kill switch. The default value is false which means
+     * periodically fetching encryption keys is enabled by default. This flag is used for emergency
+     * turning off periodically fetching encryption keys.
+     *
+     * <p>Set true to disable the function since no adtech actually provide encryption endpoint now.
+     */
+    boolean ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH = true;
+
+    /**
+     * @return value of encryption key new enrollment fetch job kill switch
+     */
+    default boolean getEncryptionKeyPeriodicFetchKillSwitch() {
+        // We check the Global kill switch first. As a result, it overrides all other kill switches.
+        return getGlobalKillSwitch() || ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH;
+    }
+
+    int ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE = JobInfo.NETWORK_TYPE_UNMETERED;
+
+    /** Returns the required network type (Wifi) for encryption key fetch job. */
+    default int getEncryptionKeyJobRequiredNetworkType() {
+        return ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE;
+    }
+
+    /* The default time period (in millisecond) between each encryption key job to run. */
+    long ENCRYPTION_KEY_JOB_PERIOD_MS = 24 * 60 * 60 * 1000L; // 24 hours.
+
+    /** Returns min time period (in millis) between each event fallback reporting job run. */
+    default long getEncryptionKeyJobPeriodMs() {
+        return ENCRYPTION_KEY_JOB_PERIOD_MS;
+    }
+
     /**
      * Enable Back Compat feature flag. The default value is false which means that all back compat
      * related features are disabled by default. This flag would be enabled for R/S during rollout.
@@ -3200,12 +3266,37 @@ public interface Flags {
         return DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_BLOCKLIST;
     }
 
+    /** Default computation of adservices version */
+    boolean DEFAULT_COMPUTE_VERSION_FROM_MAPPINGS_ENABLED = true;
+
+    /** Get Compute adservices Version from mappings */
+    default boolean getEnableComputeVersionFromMappings() {
+        return DEFAULT_COMPUTE_VERSION_FROM_MAPPINGS_ENABLED;
+    }
+
     /** Get mainline train version */
     String DEFAULT_MAINLINE_TRAIN_VERSION = "000000";
 
     /** Get mainline train version */
     default String getMainlineTrainVersion() {
         return DEFAULT_MAINLINE_TRAIN_VERSION;
+    }
+
+    /**
+     * Default adservices version mappings Format -
+     * start_range1,end_range1,header_version1|start_range2,end_range2,header_version2
+     */
+    String DEFAULT_ADSERVICES_VERSION_MAPPINGS =
+            "341300000,341400000,202401|341400000,341500000,202402"
+                    + "|341500000,341600000,202403|341600000,341700000,202404"
+                    + "|341700000,341800000,202405|341800000,341900000,202406"
+                    + "|341900000,342000000,202407|342000000,342100000,202408"
+                    + "|342100000,342200000,202409|342200000,342300000,202410"
+                    + "|342300000,342400000,202411|342400000,342500000,202412";
+
+    /** Get adservices version mappings */
+    default String getAdservicesVersionMappings() {
+        return DEFAULT_ADSERVICES_VERSION_MAPPINGS;
     }
 
     /** Default Determines whether EU notification flow change is enabled. */
@@ -3820,6 +3911,33 @@ public interface Flags {
         return MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW;
     }
 
+    int MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE = 65536;
+
+    /**
+     * L1, the maximum sum of the contributions (values) across all buckets for a given source
+     * event.
+     */
+    default int getMeasurementMaxSumOfAggregateValuesPerSource() {
+        return MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE;
+    }
+
+    long MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS = TimeUnit.DAYS.toMillis(30);
+
+    /**
+     * Rate limit window for (Source Site, Destination Site, Reporting Site, Window) privacy unit.
+     * 30 days.
+     */
+    default long getMeasurementRateLimitWindowMilliseconds() {
+        return MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS;
+    }
+
+    long MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW = TimeUnit.DAYS.toMillis(1);
+
+    /** Minimum time window after which reporting origin can be migrated */
+    default long getMeasurementMinReportingOriginUpdateWindow() {
+        return MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW;
+    }
+
     /** Default value of flag for logging consent migration metrics when OTA from S to T+. */
     boolean DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED = true;
 
@@ -4031,6 +4149,20 @@ public interface Flags {
      */
     default boolean getAdIdCacheEnabled() {
         return DEFAULT_ADID_CACHE_ENABLED;
+    }
+
+    long DEFAULT_AD_ID_FETCHER_TIMEOUT_MS = 50;
+
+    /**
+     * Returns configured timeout value for {@link
+     * com.android.adservices.service.adselection.AdIdFetcher} logic.
+     *
+     * <p>The intended goal is to override this value for tests.
+     *
+     * @return Timeout in mills.
+     */
+    default long getAdIdFetcherTimeoutMs() {
+        return DEFAULT_AD_ID_FETCHER_TIMEOUT_MS;
     }
 
     boolean APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT = false;

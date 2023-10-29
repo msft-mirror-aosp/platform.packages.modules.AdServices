@@ -151,7 +151,8 @@ public class AggregateReportingJobHandlerTest {
                         mDatastoreManager,
                         mockKeyManager,
                         mMockFlags,
-                        mLogger);
+                        mLogger,
+                        sContext);
         mSpyAggregateReportingJobHandler = Mockito.spy(mAggregateReportingJobHandler);
         mSpyDebugAggregateReportingJobHandler =
                 Mockito.spy(
@@ -160,7 +161,8 @@ public class AggregateReportingJobHandlerTest {
                                         mDatastoreManager,
                                         mockKeyManager,
                                         mMockFlags,
-                                        mLogger)
+                                        mLogger,
+                                        sContext)
                                 .setIsDebugInstance(true));
 
         mMockitoSession =
@@ -528,8 +530,8 @@ public class AggregateReportingJobHandlerTest {
                         1000, 1100));
 
         verify(mMeasurementDao, times(2)).markAggregateReportStatus(any(), anyInt());
-        verify(mTransaction, times(7)).begin();
-        verify(mTransaction, times(7)).end();
+        verify(mTransaction, times(5)).begin();
+        verify(mTransaction, times(5)).end();
     }
 
     @Test
@@ -560,7 +562,8 @@ public class AggregateReportingJobHandlerTest {
                         new FakeDatasoreManager(),
                         mockKeyManager,
                         mMockFlags,
-                        mLogger);
+                        mLogger,
+                        sContext);
         mSpyAggregateReportingJobHandler = Mockito.spy(mAggregateReportingJobHandler);
 
         assertTrue(
