@@ -34,6 +34,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX;
 import static com.android.adservices.spe.AdservicesJobInfo.COBALT_LOGGING_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.CONSENT_NOTIFICATION_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.ENCRYPTION_KEY_PERIODIC_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.FLEDGE_AD_SELECTION_DEBUG_REPORT_SENDER_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MAINTENANCE_JOB;
@@ -122,6 +123,7 @@ import com.android.adservices.service.common.BackgroundJobsManager;
 import com.android.adservices.service.common.UserProfileIdManager;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
+import com.android.adservices.service.encryptionkey.EncryptionKeyJobService;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.DeleteUninstalledJobService;
 import com.android.adservices.service.measurement.MeasurementImpl;
@@ -252,6 +254,7 @@ public class ConsentManagerTest {
                         .spyStatic(FlagsFactory.class)
                         .spyStatic(MaintenanceJobService.class)
                         .spyStatic(MddJobService.class)
+                        .spyStatic(EncryptionKeyJobService.class)
                         .spyStatic(CobaltJobService.class)
                         .spyStatic(UiStatsLogger.class)
                         .spyStatic(StatsdAdServicesLogger.class)
@@ -287,6 +290,11 @@ public class ConsentManagerTest {
         doReturn(true)
                 .when(() -> MaintenanceJobService.scheduleIfNeeded(any(Context.class), eq(false)));
         doReturn(true).when(() -> MddJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        doReturn(true)
+                .when(
+                        () ->
+                                EncryptionKeyJobService.scheduleIfNeeded(
+                                        any(Context.class), eq(false)));
         doNothing().when(() -> AggregateReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
         doNothing()
                 .when(
@@ -628,6 +636,9 @@ public class ConsentManagerTest {
         verify(() -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)));
         verify(() -> MddJobService.scheduleIfNeeded(any(Context.class), eq(false)), times(3));
         verify(
+                () -> EncryptionKeyJobService.scheduleIfNeeded(any(Context.class), eq(false)),
+                times(2));
+        verify(
                 () -> MaintenanceJobService.scheduleIfNeeded(any(Context.class), eq(false)),
                 times(2));
         verify(() -> AggregateReportingJobService.scheduleIfNeeded(any(Context.class), eq(false)));
@@ -679,6 +690,9 @@ public class ConsentManagerTest {
                 () -> MaintenanceJobService.scheduleIfNeeded(any(Context.class), eq(false)),
                 never());
         verify(() -> MddJobService.scheduleIfNeeded(any(Context.class), eq(false)), never());
+        verify(
+                () -> EncryptionKeyJobService.scheduleIfNeeded(any(Context.class), eq(false)),
+                never());
         verify(
                 () -> AggregateReportingJobService.scheduleIfNeeded(any(Context.class), eq(false)),
                 never());
@@ -760,6 +774,7 @@ public class ConsentManagerTest {
         verify(mJobSchedulerMock).cancel(MDD_CHARGING_PERIODIC_TASK_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId());
+        verify(mJobSchedulerMock).cancel(ENCRYPTION_KEY_PERIODIC_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(COBALT_LOGGING_JOB.getJobId());
 
         verifyNoMoreInteractions(mJobSchedulerMock);

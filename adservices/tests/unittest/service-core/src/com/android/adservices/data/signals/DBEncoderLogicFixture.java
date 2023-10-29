@@ -32,7 +32,7 @@ public class DBEncoderLogicFixture {
     public static DBEncoderLogicMetadata.Builder anEncoderLogicBuilder(AdTechIdentifier buyer) {
         return DBEncoderLogicMetadata.builder()
                 .setBuyer(buyer)
-                .setCreationTime(CommonFixture.FIXED_NOW)
+                .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                 .setVersion(1);
     }
 }

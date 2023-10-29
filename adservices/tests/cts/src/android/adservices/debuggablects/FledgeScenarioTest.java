@@ -83,6 +83,8 @@ public abstract class FledgeScenarioTest extends ForegroundDebuggableCtsTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final int NUM_ADS_PER_AUDIENCE = 4;
     private static final String PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
+    private static final long AD_ID_FETCHER_TIMEOUT = 1000;
+    private static final long AD_ID_FETCHER_TIMEOUT_DEFAULT = 50;
 
     protected AdvertisingCustomAudienceClient mCustomAudienceClient;
     protected AdSelectionClient mAdSelectionClient;
@@ -241,6 +243,8 @@ public abstract class FledgeScenarioTest extends ForegroundDebuggableCtsTest {
 
     protected void setDebugReportingEnabledForTesting(boolean enabled) {
         FledgeScenarioTest.overrideBiddingLogicVersionToV3(enabled);
+        PhFlagsFixture.overrideAdIdFetcherTimeoutMs(
+                enabled ? AD_ID_FETCHER_TIMEOUT : AD_ID_FETCHER_TIMEOUT_DEFAULT);
         ShellUtils.runShellCommand(
                 String.format(
                         "device_config put adservices fledge_event_level_debug_reporting_enabled"

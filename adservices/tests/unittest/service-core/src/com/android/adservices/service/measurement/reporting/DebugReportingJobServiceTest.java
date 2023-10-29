@@ -19,8 +19,6 @@ package com.android.adservices.service.measurement.reporting;
 import static com.android.adservices.service.measurement.reporting.DebugReportingJobService.DEBUG_REPORT_JOB_ID;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DEBUG_REPORT_JOB;
 
-import androidx.test.core.app.ApplicationProvider;
-
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -43,6 +41,8 @@ import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
+
+import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
@@ -384,6 +384,9 @@ public class DebugReportingJobServiceTest {
                         .strictness(Strictness.LENIENT)
                         .startMocking();
         try {
+            Context context = Mockito.mock(Context.class);
+            doReturn(CONTEXT.getPackageName()).when(context).getPackageName();
+            doReturn(CONTEXT.getPackageManager()).when(context).getPackageManager();
             // Setup mock everything in job
             mMockDatastoreManager = mock(DatastoreManager.class);
             doReturn(Optional.empty())
@@ -391,7 +394,7 @@ public class DebugReportingJobServiceTest {
                     .runInTransactionWithResult(any());
             doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
             doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
-            doReturn(Mockito.mock(Context.class)).when(mSpyService).getApplicationContext();
+            doReturn(context).when(mSpyService).getApplicationContext();
             ExtendedMockito.doReturn(mock(EnrollmentDao.class))
                     .when(() -> EnrollmentDao.getInstance(any()));
             ExtendedMockito.doReturn(mMockDatastoreManager)

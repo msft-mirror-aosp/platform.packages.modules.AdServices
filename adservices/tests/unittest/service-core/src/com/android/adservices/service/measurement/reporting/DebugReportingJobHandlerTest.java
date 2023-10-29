@@ -123,7 +123,8 @@ public class DebugReportingJobHandlerTest {
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
 
         mDebugReportingJobHandler =
-                new DebugReportingJobHandler(mEnrollmentDao, mDatastoreManager, mFlags, mLogger);
+                new DebugReportingJobHandler(
+                        mEnrollmentDao, mDatastoreManager, mFlags, mLogger, sContext);
         mSpyDebugReportingJobHandler = Mockito.spy(mDebugReportingJobHandler);
     }
 

@@ -18,30 +18,49 @@ package com.android.adservices.service.adselection;
 
 import static com.android.adservices.service.adselection.AuctionServerPayloadFormatterFactory.NO_IMPLEMENTATION_FOUND;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import com.android.adservices.service.Flags;
 
+
 import org.junit.Test;
 
 public class AuctionServerPayloadFormatterFactoryTest {
-    private static final int VALID_VERSION = AuctionServerPayloadFormatterV0.VERSION;
+    private static final int V0_VERSION = AuctionServerPayloadFormatterV0.VERSION;
+    private static final int V1_VERSION = AuctionServerPayloadFormatterExcessiveMaxSize.VERSION;
     private static final int INVALID_VERSION = Integer.MAX_VALUE;
 
     @Test
     public void testCreateFormatter_validVersion_returnImplementationSuccess() {
         AuctionServerPayloadFormatter formatter =
                 AuctionServerPayloadFormatterFactory.createPayloadFormatter(
-                        VALID_VERSION, Flags.FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES);
+                        V0_VERSION, Flags.FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES);
         assertTrue(formatter instanceof AuctionServerPayloadFormatterV0);
     }
 
     @Test
     public void testCreateExtractor_validVersion_returnImplementationSuccess() {
         AuctionServerPayloadExtractor extractor =
-                AuctionServerPayloadFormatterFactory.createPayloadExtractor(VALID_VERSION);
+                AuctionServerPayloadFormatterFactory.createPayloadExtractor(V0_VERSION);
         assertTrue(extractor instanceof AuctionServerPayloadFormatterV0);
+    }
+
+    @Test
+    public void testCreateFormatter_excessiveMaxSizeVersion_returnImplementationSuccess() {
+        AuctionServerPayloadFormatter formatter =
+                AuctionServerPayloadFormatterFactory.createPayloadFormatter(
+                        V1_VERSION, Flags.FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES);
+        assertThat(formatter instanceof AuctionServerPayloadFormatterExcessiveMaxSize).isTrue();
+    }
+
+    @Test
+    public void testCreateExtractor_excessiveMaxSizeVersion_returnImplementationSuccess() {
+        AuctionServerPayloadExtractor extractor =
+                AuctionServerPayloadFormatterFactory.createPayloadExtractor(V1_VERSION);
+        assertTrue(extractor instanceof AuctionServerPayloadFormatterExcessiveMaxSize);
     }
 
     @Test

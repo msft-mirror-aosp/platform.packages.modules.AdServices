@@ -36,9 +36,10 @@ public final class EncryptionKeyTables {
         String KEY_COMMITMENT_ID = "key_commitment_id";
         String BODY = "body";
         String EXPIRATION = "expiration";
+        String LAST_FETCH_TIME = "last_fetch_time";
     }
 
-    public static final String CREATE_TABLE_ENCRYPTION_KEY_DATA_V1 =
+    public static final String CREATE_TABLE_ENCRYPTION_KEY_DATA_V2 =
             "CREATE TABLE "
                     + EncryptionKeyContract.TABLE
                     + " ("
@@ -61,10 +62,39 @@ public final class EncryptionKeyTables {
                     + EncryptionKeyContract.EXPIRATION
                     + " TEXT "
                     + ")";
+    public static final String CREATE_TABLE_ENCRYPTION_KEY_DATA_V3 =
+            "CREATE TABLE "
+                    + EncryptionKeyContract.TABLE
+                    + " ("
+                    + EncryptionKeyContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + EncryptionKeyContract.KEY_TYPE
+                    + " TEXT, "
+                    + EncryptionKeyContract.ENROLLMENT_ID
+                    + " TEXT, "
+                    + EncryptionKeyContract.REPORTING_ORIGIN
+                    + " TEXT, "
+                    + EncryptionKeyContract.ENCRYPTION_KEY_URL
+                    + " TEXT, "
+                    + EncryptionKeyContract.PROTOCOL_TYPE
+                    + " TEXT, "
+                    + EncryptionKeyContract.KEY_COMMITMENT_ID
+                    + " TEXT, "
+                    + EncryptionKeyContract.BODY
+                    + " TEXT, "
+                    + EncryptionKeyContract.EXPIRATION
+                    + " TEXT, "
+                    + EncryptionKeyContract.LAST_FETCH_TIME
+                    + " INTEGER "
+                    + ")";
 
-    // Consolidated list of create statements for all tables.
-    public static final List<String> CREATE_STATEMENTS_V1 =
-            List.of(CREATE_TABLE_ENCRYPTION_KEY_DATA_V1);
+    // Consolidated list of create statements for all tables in v3.
+    public static final List<String> CREATE_STATEMENTS_V3 =
+            List.of(CREATE_TABLE_ENCRYPTION_KEY_DATA_V3);
+
+    // Consolidated list of create statements for all tables in v2.
+    public static final List<String> CREATE_STATEMENTS_V2 =
+            List.of(CREATE_TABLE_ENCRYPTION_KEY_DATA_V2);
 
     // Private constructor to prevent instantiation.
     private EncryptionKeyTables() {}
