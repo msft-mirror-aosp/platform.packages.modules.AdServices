@@ -28,6 +28,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdTechIdentifier;
@@ -37,17 +38,13 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.data.signals.DBEncoderLogic;
 import com.android.adservices.data.signals.EncodedPayloadDao;
+import com.android.adservices.data.signals.EncoderLogicDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
-import com.android.adservices.data.signals.EncoderLogicMetadataDao;
-
 import com.android.adservices.data.signals.EncoderPersistenceDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.AdSelectionScriptEngine;
 import com.android.adservices.service.devapi.DevContextFilter;
 
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -59,13 +56,11 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 import java.time.Instant;
 import java.util.Base64;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -88,7 +83,7 @@ public class PeriodicEncodingJobWorkerTest {
     @Rule public MockitoRule rule = MockitoJUnit.rule();
 
     @Mock private EncoderLogicHandler mEncoderLogicHandler;
-    @Mock private EncoderLogicMetadataDao mEncoderLogicMetadataDao;
+    @Mock private EncoderLogicDao mEncoderLogicMetadataDao;
     @Mock private EncoderPersistenceDao mEncoderPersistenceDao;
     @Mock private EncodedPayloadDao mEncodedPayloadDao;
     @Mock private SignalsProviderImpl mSignalStorageManager;
@@ -142,7 +137,7 @@ public class PeriodicEncodingJobWorkerTest {
         String encodedPayload = "Invalid, non base64 payload";
         int version = 1;
         assertFalse(mJobWorker.validateAndPersistPayload(BUYER, encodedPayload, version));
-        Mockito.verifyZeroInteractions(mEncodedPayloadDao);
+        verifyZeroInteractions(mEncodedPayloadDao);
     }
 
     @Test
@@ -166,7 +161,7 @@ public class PeriodicEncodingJobWorkerTest {
         int version = 1;
         assertFalse(mJobWorker.validateAndPersistPayload(BUYER, encodedPayload, version));
 
-        Mockito.verifyZeroInteractions(mEncodedPayloadDao);
+        verifyZeroInteractions(mEncodedPayloadDao);
     }
 
     @Test
@@ -182,7 +177,7 @@ public class PeriodicEncodingJobWorkerTest {
                         .build();
         Map<String, List<ProtectedSignal>> fakeSignals = new HashMap<>();
 
-        when(mEncoderLogicDao.getEncoder(BUYER)).thenReturn(fakeEncoderLogicEntry);
+        when(mEncoderLogicMetadataDao.getEncoder(BUYER)).thenReturn(fakeEncoderLogicEntry);
         when(mEncoderPersistenceDao.getEncoder(BUYER)).thenReturn(encoderLogic);
         when(mSignalStorageManager.getSignals(BUYER)).thenReturn(fakeSignals);
 
@@ -214,7 +209,7 @@ public class PeriodicEncodingJobWorkerTest {
                         .setVersion(version)
                         .setCreationTime(Instant.now())
                         .build();
-        when(mEncoderLogicDao.getEncoder(BUYER)).thenReturn(fakeEncoderLogicEntry);
+        when(mEncoderLogicMetadataDao.getEncoder(BUYER)).thenReturn(fakeEncoderLogicEntry);
         when(mEncoderPersistenceDao.getEncoder(BUYER)).thenReturn(encoderLogic);
 
         Map<String, List<ProtectedSignal>> fakeSignals = new HashMap<>();
@@ -227,7 +222,7 @@ public class PeriodicEncodingJobWorkerTest {
         // Run encoding for the buyer where jsEngine returns invalid payload
         assertFalse(
                 mJobWorker.runEncodingPerBuyer(BUYER, TIMEOUT_SECONDS).get(5, TimeUnit.SECONDS));
-        Mockito.verifyZeroInteractions(mEncodedPayloadDao);
+        verifyZeroInteractions(mEncodedPayloadDao);
     }
 
     @Test
@@ -240,7 +235,7 @@ public class PeriodicEncodingJobWorkerTest {
                         .setVersion(version)
                         .setCreationTime(Instant.now())
                         .build();
-        when(mEncoderLogicDao.getEncoder(BUYER)).thenReturn(fakeEncoderLogicEntry);
+        when(mEncoderLogicMetadataDao.getEncoder(BUYER)).thenReturn(fakeEncoderLogicEntry);
         when(mEncoderPersistenceDao.getEncoder(BUYER)).thenReturn(encoderLogic);
 
         Map<String, List<ProtectedSignal>> fakeSignals = new HashMap<>();
@@ -261,7 +256,7 @@ public class PeriodicEncodingJobWorkerTest {
                         });
         assertEquals(IllegalStateException.class, e.getCause().getClass());
         assertEquals(PAYLOAD_PERSISTENCE_ERROR_MSG, e.getCause().getMessage());
-        Mockito.verifyZeroInteractions(mEncodedPayloadDao);
+        verifyZeroInteractions(mEncodedPayloadDao);
     }
 
     @Test
@@ -274,7 +269,7 @@ public class PeriodicEncodingJobWorkerTest {
                         .setVersion(version)
                         .setCreationTime(Instant.now())
                         .build();
-        when(mEncoderLogicDao.getEncoder(BUYER)).thenReturn(fakeEncoderLogicEntry);
+        when(mEncoderLogicMetadataDao.getEncoder(BUYER)).thenReturn(fakeEncoderLogicEntry);
         when(mEncoderPersistenceDao.getEncoder(BUYER)).thenReturn(encoderLogic);
 
         Map<String, List<ProtectedSignal>> fakeSignals = new HashMap<>();
@@ -318,7 +313,7 @@ public class PeriodicEncodingJobWorkerTest {
                 stallEncodingLatch.getCount());
         // e is TimeoutFuture$TimeoutFutureException which extends TimeoutException
         assertTrue(TimeoutException.class.isAssignableFrom(e.getCause().getClass()));
-        Mockito.verifyZeroInteractions(mEncodedPayloadDao);
+        verifyZeroInteractions(mEncodedPayloadDao);
     }
 
     @Test
@@ -335,7 +330,7 @@ public class PeriodicEncodingJobWorkerTest {
                         .setCreationTime(Instant.now())
                         .build();
         Map<String, List<ProtectedSignal>> fakeSignals = new HashMap<>();
-        when(mEncoderLogicDao.getEncoder(BUYER)).thenReturn(fakeEncoderLogicEntry);
+        when(mEncoderLogicMetadataDao.getEncoder(BUYER)).thenReturn(fakeEncoderLogicEntry);
         when(mEncoderPersistenceDao.getEncoder(BUYER)).thenReturn(encoderLogic1);
         when(mSignalStorageManager.getSignals(BUYER)).thenReturn(fakeSignals);
         String validBase64Response = getBase64String("Valid payload");
@@ -352,7 +347,7 @@ public class PeriodicEncodingJobWorkerTest {
                         .setVersion(version2)
                         .setCreationTime(Instant.now())
                         .build();
-        when(mEncoderLogicDao.getEncoder(BUYER_2)).thenReturn(fakeEncoderLogicEntry2);
+        when(mEncoderLogicMetadataDao.getEncoder(BUYER_2)).thenReturn(fakeEncoderLogicEntry2);
         when(mEncoderPersistenceDao.getEncoder(BUYER_2)).thenReturn(encoderLogic2);
         when(mSignalStorageManager.getSignals(BUYER_2)).thenReturn(fakeSignals);
         ListenableFuture<String> failureResponse =
@@ -360,7 +355,7 @@ public class PeriodicEncodingJobWorkerTest {
         when(mScriptEngine.encodeSignals(eq(encoderLogic2), any(), anyInt()))
                 .thenReturn(failureResponse);
 
-        when(mEncoderLogicDao.getAllBuyersWithRegisteredEncoders())
+        when(mEncoderLogicMetadataDao.getAllBuyersWithRegisteredEncoders())
                 .thenReturn(List.of(BUYER, BUYER_2));
 
         // This should gracefully handle Buyer_2 failure and not impact Buyer_1's encoding
@@ -404,14 +399,14 @@ public class PeriodicEncodingJobWorkerTest {
 
         String encoderLogic = "function buyer1_EncodeJs() {\" correct result \"}";
         int version1 = 1;
-        DBEncoderLogicMetadata fakeEncoderLogicEntry =
-                DBEncoderLogicMetadata.builder()
+        DBEncoderLogic fakeEncoderLogicEntry =
+                DBEncoderLogic.builder()
                         .setBuyer(BUYER)
                         .setVersion(version1)
                         .setCreationTime(Instant.now())
                         .build();
         Map<String, List<ProtectedSignal>> fakeSignals = new HashMap<>();
-        when(mEncoderLogicMetadataDao.getMetadata(any())).thenReturn(fakeEncoderLogicEntry);
+        when(mEncoderLogicMetadataDao.getEncoder(any())).thenReturn(fakeEncoderLogicEntry);
         when(mEncoderPersistenceDao.getEncoder(any())).thenReturn(encoderLogic);
         when(mSignalStorageManager.getSignals(any())).thenReturn(fakeSignals);
 

@@ -51,7 +51,7 @@ import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.EncoderEndpointsDao;
-import com.android.adservices.data.signals.EncoderLogicMetadataDao;
+import com.android.adservices.data.signals.EncoderLogicDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
 import com.android.adservices.data.signals.EncoderPersistenceDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
@@ -130,7 +130,7 @@ public class SignalsEncodingE2ETest {
 
     private ProtectedSignalsDao mSignalsDao;
     private EncoderEndpointsDao mEncoderEndpointsDao;
-    private EncoderLogicMetadataDao mEncoderLogicMetadataDao;
+    private EncoderLogicDao mEncoderLogicMetadataDao;
     private ProtectedSignalsServiceImpl mService;
     private UpdateSignalsOrchestrator mUpdateSignalsOrchestrator;
     private UpdatesDownloader mUpdatesDownloader;
