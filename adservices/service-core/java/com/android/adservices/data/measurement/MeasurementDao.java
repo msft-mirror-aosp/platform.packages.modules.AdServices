@@ -426,7 +426,7 @@ class MeasurementDao implements IMeasurementDao {
                 MeasurementTables.SourceContract.AGGREGATABLE_REPORT_WINDOW,
                 source.getAggregatableReportWindow());
         values.put(MeasurementTables.SourceContract.PRIORITY, source.getPriority());
-        values.put(MeasurementTables.SourceContract.STATUS, Source.Status.ACTIVE);
+        values.put(MeasurementTables.SourceContract.STATUS, source.getStatus());
         values.put(MeasurementTables.SourceContract.SOURCE_TYPE, source.getSourceType().name());
         values.put(MeasurementTables.SourceContract.REGISTRANT, source.getRegistrant().toString());
         values.put(
