@@ -86,6 +86,7 @@ public final class AdServicesFlagsSetterRule
     /** Factory method for Measurement E2E CTS tests */
     public static AdServicesFlagsSetterRule forMeasurementE2ETests(String packageName) {
         return forGlobalKillSwitchDisabledTests()
+                .setLogcatTag(LOGCAT_TAG_MEASUREMENT, LOGCAT_LEVEL_VERBOSE)
                 .setCompatModeFlags()
                 .setMsmtApiAppAllowList(packageName)
                 .setMsmtWebContextClientAllowList(packageName)
