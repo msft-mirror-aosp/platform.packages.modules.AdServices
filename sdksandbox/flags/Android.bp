@@ -24,6 +24,7 @@ java_aconfig_library {
     defaults: ["framework-minus-apex-aconfig-java-defaults"],
     visibility: [
         "//frameworks/base",
+        "//frameworks/base/services/core",
         "//packages/modules/AdServices:__subpackages__",
     ],
     min_sdk_version: "33",

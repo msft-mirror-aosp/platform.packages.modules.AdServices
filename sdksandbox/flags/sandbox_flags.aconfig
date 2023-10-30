@@ -13,3 +13,10 @@ flag {
     bug: "267760787"
     description: "Enables SDKs in the sandbox to know about specific changes in the client's importance"
 }
+
+flag {
+    name: "selinux_sdk_sandbox_audit"
+    namespace: "sdk_sandbox"
+    bug: "295861450"
+    description: "Enables the SELinux domain sdk_sandbox_audit"
+}
