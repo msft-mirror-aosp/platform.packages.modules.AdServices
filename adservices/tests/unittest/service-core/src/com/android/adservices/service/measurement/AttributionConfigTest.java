@@ -188,7 +188,6 @@ public final class AttributionConfigTest {
     public void serializeAsJson_success() throws JSONException {
         // Setup
         AttributionConfig attributionConfig = createExample();
-        
         // Assertion
         assertEquals(
                 attributionConfig,
