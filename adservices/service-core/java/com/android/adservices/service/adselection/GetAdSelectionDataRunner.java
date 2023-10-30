@@ -16,11 +16,11 @@
 
 package com.android.adservices.service.adselection;
 
-import android.adservices.adselection.AssetFileDescriptorUtil;
 import android.adservices.adselection.GetAdSelectionDataCallback;
 import android.adservices.adselection.GetAdSelectionDataInput;
 import android.adservices.adselection.GetAdSelectionDataResponse;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.AssetFileDescriptorUtil;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
@@ -88,6 +88,7 @@ public class GetAdSelectionDataRunner {
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
+    @NonNull private final ListeningExecutorService mBlockingExecutorService;
     @NonNull private final ScheduledThreadPoolExecutor mScheduledExecutor;
     @NonNull private final Flags mFlags;
     private final int mCallerUid;
@@ -110,6 +111,7 @@ public class GetAdSelectionDataRunner {
             @NonNull final AdFilterer adFilterer,
             @NonNull final ExecutorService backgroundExecutorService,
             @NonNull final ExecutorService lightweightExecutorService,
+            @NonNull final ExecutorService blockingExecutorService,
             @NonNull final ScheduledThreadPoolExecutor scheduledExecutor,
             @NonNull final Flags flags,
             final int callerUid,
@@ -135,6 +137,7 @@ public class GetAdSelectionDataRunner {
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
+        mBlockingExecutorService = MoreExecutors.listeningDecorator(blockingExecutorService);
         mScheduledExecutor = scheduledExecutor;
         mFlags = flags;
         mCallerUid = callerUid;
@@ -175,6 +178,7 @@ public class GetAdSelectionDataRunner {
             @NonNull final AdFilterer adFilterer,
             @NonNull final ExecutorService backgroundExecutorService,
             @NonNull final ExecutorService lightweightExecutorService,
+            @NonNull final ExecutorService blockingExecutorService,
             @NonNull final ScheduledThreadPoolExecutor scheduledExecutor,
             @NonNull final Flags flags,
             final int callerUid,
@@ -202,6 +206,7 @@ public class GetAdSelectionDataRunner {
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
+        mBlockingExecutorService = MoreExecutors.listeningDecorator(blockingExecutorService);
         mScheduledExecutor = scheduledExecutor;
         mFlags = flags;
         mCallerUid = callerUid;
@@ -434,8 +439,11 @@ public class GetAdSelectionDataRunner {
                 sLogger.d("Creating response with AssetFileDescriptor");
                 AssetFileDescriptor assetFileDescriptor;
                 try {
+                    // Need to use the blocking executor here because the reader is depending on the
+                    // data being written
                     assetFileDescriptor =
-                            AssetFileDescriptorUtil.setupAssetFileDescriptorResponse(result);
+                            AssetFileDescriptorUtil.setupAssetFileDescriptorResponse(
+                                    result, mBlockingExecutorService);
                 } catch (IOException e) {
                     sLogger.e(e, "Encountered error creating response with AssetFileDescriptor");
                     notifyFailureToCaller(e, callback);
