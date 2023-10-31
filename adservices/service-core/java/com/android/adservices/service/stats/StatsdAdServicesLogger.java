@@ -31,8 +31,8 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_GET_TOPICS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_AD_ID_MATCH_FOR_DEBUG_KEYS;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_CLICK_VERIFICATION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.BACKGROUND_FETCH_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PER_CA_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PROCESS_REPORTED;
@@ -53,6 +53,8 @@ import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
 
+import java.util.Objects;
+
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
@@ -71,8 +73,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
     @NonNull private final Flags mFlags;
 
     @VisibleForTesting
-    protected StatsdAdServicesLogger(@NonNull Flags mFlags) {
-        this.mFlags = mFlags;
+    protected StatsdAdServicesLogger(@NonNull Flags flags) {
+        this.mFlags = Objects.requireNonNull(flags);
     }
 
     /** Returns an instance of {@link StatsdAdServicesLogger}. */
