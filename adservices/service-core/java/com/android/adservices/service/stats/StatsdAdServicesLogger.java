@@ -28,7 +28,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_MATCHED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_GET_TOP_TOPICS_REPORTED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_GET_TOPICS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_AD_ID_MATCH_FOR_DEBUG_KEYS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_CLICK_VERIFICATION;
@@ -43,8 +42,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.UPDATE_CUS
 import android.annotation.NonNull;
 import android.util.proto.ProtoOutputStream;
 
-import com.android.adservices.errorlogging.AdServicesErrorStats;
-import com.android.adservices.errorlogging.StatsdAdServicesErrorLogger;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AllowLists;
@@ -57,12 +54,9 @@ import java.util.Objects;
 
 import javax.annotation.concurrent.ThreadSafe;
 
-/**
- * {@link AdServicesLogger} that log stats to StatsD and {@link StatsdAdServicesErrorLogger} that
- * logs error stats to Statsd.
- */
+/** {@link AdServicesLogger} that log stats to StatsD. */
 @ThreadSafe
-public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdServicesErrorLogger {
+public class StatsdAdServicesLogger implements AdServicesLogger {
     private static final int AD_SERVICES_TOPIC_IDS_FIELD_ID = 1;
 
     @GuardedBy("SINGLETON_LOCK")
@@ -358,18 +352,6 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 stats.getNumUniqueAdIds(),
                 stats.getNumUniqueAdIdsLimit(),
                 getAllowlistedAppPackageName(stats.getSourceRegistrant()));
-    }
-
-    @Override
-    public void logAdServicesError(AdServicesErrorStats stats) {
-        AdServicesStatsLog.write(
-                AD_SERVICES_ERROR_REPORTED,
-                stats.getErrorCode(),
-                stats.getPpapiName(),
-                stats.getClassName(),
-                stats.getMethodName(),
-                stats.getLineNumber(),
-                stats.getLastObservedExceptionName());
     }
 
     /** Logging method for AdServices background job execution stats. */

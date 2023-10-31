@@ -16,6 +16,8 @@
 
 package com.android.adservices.errorlogging;
 
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
+
 /** Util class which logs errors/exception to the Statsd */
 public class ErrorLogUtil {
     private static final AdServicesErrorLogger ERROR_LOGGER =
