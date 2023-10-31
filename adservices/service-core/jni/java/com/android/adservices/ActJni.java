@@ -19,6 +19,10 @@ package com.android.adservices;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import private_join_and_compute.anonymous_counting_tokens.ClientParameters;
+import private_join_and_compute.anonymous_counting_tokens.ClientPrivateParameters;
+import private_join_and_compute.anonymous_counting_tokens.ClientPublicParameters;
+import private_join_and_compute.anonymous_counting_tokens.GeneratedTokensRequestProto;
+import private_join_and_compute.anonymous_counting_tokens.MessagesSet;
 import private_join_and_compute.anonymous_counting_tokens.SchemeParameters;
 import private_join_and_compute.anonymous_counting_tokens.ServerPublicParameters;
 
@@ -31,6 +35,13 @@ public class ActJni {
 
     private static native byte[] generateClientParameters(
             byte[] schemeParameters, byte[] serverPublicParameters);
+
+    private static native byte[] generateTokensRequest(
+            byte[] messages,
+            byte[] schemeParameters,
+            byte[] clientPublicParameters,
+            byte[] clientPrivateParameters,
+            byte[] serverPublicParameters);
 
     /**
      * Returns a fresh set of Client parameters corresponding to these SchemeParameters and
@@ -45,5 +56,32 @@ public class ActJni {
         byte[] clientParametersInBytes =
                 generateClientParameters(schemeParametersInBytes, serverPublicParametersInBytes);
         return ClientParameters.parseFrom(clientParametersInBytes);
+    }
+
+    /**
+     * Returns a tuple of client_fingerprints, TokensRequest and TokensRequestPrivateState for the
+     * given set of messages.
+     */
+    public static GeneratedTokensRequestProto generateTokensRequest(
+            MessagesSet messagesProto,
+            SchemeParameters schemeParametersProto,
+            ClientPublicParameters clientPublicParametersProto,
+            ClientPrivateParameters clientPrivateParametersProto,
+            ServerPublicParameters serverPublicParameters)
+            throws InvalidProtocolBufferException {
+        byte[] messagesInBytes = messagesProto.toByteArray();
+        byte[] schemeParametersInBytes = schemeParametersProto.toByteArray();
+        byte[] clientPublicParametersInBytes = clientPublicParametersProto.toByteArray();
+        byte[] clientPrivateParametersInBytes = clientPrivateParametersProto.toByteArray();
+        byte[] serverPublicParametersInBytes = serverPublicParameters.toByteArray();
+
+        byte[] generateTokensRequestInBytes =
+                generateTokensRequest(
+                        messagesInBytes,
+                        schemeParametersInBytes,
+                        clientPublicParametersInBytes,
+                        clientPrivateParametersInBytes,
+                        serverPublicParametersInBytes);
+        return GeneratedTokensRequestProto.parseFrom(generateTokensRequestInBytes);
     }
 }
