@@ -5231,6 +5231,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS
                         + " = "
                         + getEnforceForegroundStatusForSignals());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_PREINSTALL_CHECK
+                        + " = "
+                        + getMeasurementEnablePreinstallCheck());
     }
 
     @VisibleForTesting
@@ -5550,6 +5555,15 @@ public final class PhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW,
                 /* defaultValue */ MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW);
+    }
+
+    @Override
+    public boolean getMeasurementEnablePreinstallCheck() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MEASUREMENT_ENABLE_PREINSTALL_CHECK,
+                /* defaultValue */ MEASUREMENT_ENABLE_PREINSTALL_CHECK);
     }
 
     @Override

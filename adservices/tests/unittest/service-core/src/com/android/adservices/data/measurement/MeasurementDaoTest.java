@@ -203,6 +203,7 @@ public class MeasurementDaoTest {
         Source validSource =
                 SourceFixture.getValidSourceBuilder()
                         .setEventReportWindows("{'start_time': 1, 'end_times': ['3600', '7200']}")
+                        .setStatus(Source.Status.MARKED_TO_DELETE)
                         .build();
         mDatastoreManager.runInTransaction((dao) -> dao.insertSource(validSource));
 
@@ -221,6 +222,7 @@ public class MeasurementDaoTest {
         assertEquals(validSource.getRegistrant(), source.getRegistrant());
         assertEquals(validSource.getEventTime(), source.getEventTime());
         assertEquals(validSource.getExpiryTime(), source.getExpiryTime());
+        assertEquals(validSource.getStatus(), source.getStatus());
         assertEquals(validSource.getEventReportWindow(), source.getEventReportWindow());
         assertEquals(
                 validSource.getAggregatableReportWindow(), source.getAggregatableReportWindow());

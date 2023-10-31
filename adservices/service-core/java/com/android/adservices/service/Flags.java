@@ -3938,6 +3938,13 @@ public interface Flags {
         return MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW;
     }
 
+    boolean MEASUREMENT_ENABLE_PREINSTALL_CHECK = false;
+
+    /** Returns true when pre-install check is enabled. */
+    default boolean getMeasurementEnablePreinstallCheck() {
+        return MEASUREMENT_ENABLE_PREINSTALL_CHECK;
+    }
+
     /** Default value of flag for logging consent migration metrics when OTA from S to T+. */
     boolean DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED = true;
 
