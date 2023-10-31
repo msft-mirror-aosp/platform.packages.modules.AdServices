@@ -20,6 +20,7 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.verify;
 
+import android.content.Context;
 import android.net.Uri;
 
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -44,12 +45,14 @@ public class EventReportingJobHandlerWrapper {
             long windowStartTime,
             long windowEndTime,
             boolean isDebugInstance,
-            Flags flags)
+            Flags flags,
+            Context context)
             throws IOException, JSONException {
         // Set up event reporting job handler spy
         EventReportingJobHandler eventReportingJobHandler =
                 Mockito.spy(
-                        new EventReportingJobHandler(enrollmentDao, datastoreManager, flags)
+                        new EventReportingJobHandler(
+                                        enrollmentDao, datastoreManager, flags, context)
                                 .setIsDebugInstance(isDebugInstance));
         Mockito.doReturn(200).when(eventReportingJobHandler)
                 .makeHttpPostRequest(any(), any());

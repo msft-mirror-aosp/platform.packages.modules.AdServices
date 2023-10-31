@@ -17,10 +17,8 @@
 package com.android.adservices.service.adselection.encryption;
 
 import static com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION;
-
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
-
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.when;
 
@@ -105,6 +103,20 @@ public class ObliviousHttpEncryptorImplTest {
     public void test_decryptBytes_invalidEncryptedBytes() {
         assertThrows(
                 NullPointerException.class, () -> mObliviousHttpEncryptor.decryptBytes(null, 1L));
+    }
+
+    /** Test that an exception is thrown if encryption context is absent. */
+    @Test
+    public void test_decryptBytes_noEncryptionContext_throwsException() {
+        String responseCipherText =
+                "6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6cf623"
+                        + "a32dba30cdf1a011543bdd7e95ace60be30b029574dc3be9abee478df9";
+        byte[] responseCipherTextBytes =
+                BaseEncoding.base16().lowerCase().decode(responseCipherText);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> mObliviousHttpEncryptor.decryptBytes(responseCipherTextBytes, 1L));
     }
 
     @Test

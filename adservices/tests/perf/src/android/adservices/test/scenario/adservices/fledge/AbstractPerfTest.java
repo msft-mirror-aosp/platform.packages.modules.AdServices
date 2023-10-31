@@ -38,15 +38,13 @@ import android.provider.DeviceConfig;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
-import com.android.modules.utils.build.SdkLevel;
 
 import com.google.mockwebserver.Dispatcher;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.RecordedRequest;
 
-import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -179,6 +177,10 @@ public class AbstractPerfTest {
                                     /* clearOnFinished = */ false))
                     .around(new SelectAdsFlagRule());
 
+    @Rule
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests().setCompatModeFlags();
+
     @BeforeClass
     public static void setupBeforeClass() {
         InstrumentationRegistry.getInstrumentation()
@@ -190,13 +192,6 @@ public class AbstractPerfTest {
                 "fledge_js_isolate_enforce_max_heap_size",
                 "false",
                 true);
-    }
-
-    @AfterClass
-    public static void tearDownAfterClass() {
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
     }
 
     public static Uri getUri(String name, String path) {

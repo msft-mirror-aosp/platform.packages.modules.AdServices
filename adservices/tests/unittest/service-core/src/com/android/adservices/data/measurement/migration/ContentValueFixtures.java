@@ -19,15 +19,19 @@ package com.android.adservices.data.measurement.migration;
 import android.content.ContentValues;
 import android.net.Uri;
 
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
+import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
-import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ContentValueFixtures {
 
@@ -315,6 +319,32 @@ public class ContentValueFixtures {
         // Added in V6.
         public static final String SOURCE_ID = "source_id";
         public static final String ENROLLMENT_ID = "enrollment_id";
+    }
+
+    public static class KeyValueDataValues {
+        // REGISTRATION_REDIRECT_COUNT - RR
+        public static final String RR_KEY = "reg_key";
+        public static final KeyValueData.DataType RR_DATATYPE =
+                KeyValueData.DataType.REGISTRATION_REDIRECT_COUNT;
+        public static final String RR_VALUE = "value";
+
+        // AGGREGATE_REPORT_RETRY_COUNT - AR
+        public static final String AR_KEY = "agg_key";
+        public static final KeyValueData.DataType AR_DATATYPE =
+                KeyValueData.DataType.AGGREGATE_REPORT_RETRY_COUNT;
+        public static final String AR_VALUE = "1";
+
+        // EVENT_REPORT_RETRY_COUNT - ER
+        public static final String ER_KEY = "event_key";
+        public static final KeyValueData.DataType ER_DATATYPE =
+                KeyValueData.DataType.EVENT_REPORT_RETRY_COUNT;
+        public static final String ER_VALUE = "1";
+
+        // DEBUG_REPORT_RETRY_COUNT - DR
+        public static final String DEBUG_KEY = "debug_key";
+        public static final KeyValueData.DataType DR_DATATYPE =
+                KeyValueData.DataType.DEBUG_REPORT_RETRY_COUNT;
+        public static final String DR_VALUE = "1";
     }
 
     public static ContentValues generateAsyncRegistrationContentValuesV1() {
@@ -1460,6 +1490,13 @@ public class ContentValueFixtures {
         return generateDebugReportContentValuesV16();
     }
 
+    /**
+     * @return DebugReport for V25
+     */
+    public static ContentValues generateDebugReportContentValuesV25() {
+        return generateDebugReportContentValuesV17();
+    }
+
     public static ContentValues generateXnaIgnoredSourcesContentValuesV6() {
         ContentValues values = new ContentValues();
         values.put(
@@ -1514,5 +1551,38 @@ public class ContentValueFixtures {
 
     public static ContentValues generateXnaIgnoredSourcesContentValuesV17() {
         return generateXnaIgnoredSourcesContentValuesV16();
+    }
+
+    /**
+     * @return List of KeyValeData CV for each Type in V25
+     */
+    public static List<ContentValues> generateKeyValueDataContentValuesV25() {
+        List<ContentValues> list = new ArrayList<>();
+        ContentValues rrValues = new ContentValues();
+
+        rrValues.put(MeasurementTables.KeyValueDataContract.KEY, KeyValueDataValues.RR_KEY);
+        rrValues.put(
+                MeasurementTables.KeyValueDataContract.DATA_TYPE,
+                KeyValueDataValues.RR_DATATYPE.toString());
+        rrValues.put(MeasurementTables.KeyValueDataContract.VALUE, KeyValueDataValues.RR_VALUE);
+        list.add(rrValues);
+
+        ContentValues arValues = new ContentValues();
+        arValues.put(MeasurementTables.KeyValueDataContract.KEY, KeyValueDataValues.AR_KEY);
+        arValues.put(
+                MeasurementTables.KeyValueDataContract.DATA_TYPE,
+                KeyValueDataValues.AR_DATATYPE.toString());
+        arValues.put(MeasurementTables.KeyValueDataContract.VALUE, KeyValueDataValues.AR_VALUE);
+        list.add(arValues);
+
+        ContentValues erValues = new ContentValues();
+        erValues.put(MeasurementTables.KeyValueDataContract.KEY, KeyValueDataValues.ER_KEY);
+        erValues.put(
+                MeasurementTables.KeyValueDataContract.DATA_TYPE,
+                KeyValueDataValues.ER_DATATYPE.toString());
+        erValues.put(MeasurementTables.KeyValueDataContract.VALUE, KeyValueDataValues.ER_VALUE);
+        list.add(erValues);
+
+        return list;
     }
 }

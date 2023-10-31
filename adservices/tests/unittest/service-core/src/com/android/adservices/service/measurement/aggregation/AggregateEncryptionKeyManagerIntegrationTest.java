@@ -21,12 +21,15 @@ import static org.mockito.Mockito.when;
 
 import android.net.Uri;
 
+import androidx.test.core.app.ApplicationProvider;
+
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.measurement.AbstractDbIntegrationTest;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DbState;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
-import com.android.adservices.service.measurement.WebUtil;
+import com.android.adservices.errorlogging.AdServicesErrorLogger;
 
 import org.json.JSONException;
 import org.junit.Assert;
@@ -56,8 +59,13 @@ public class AggregateEncryptionKeyManagerIntegrationTest extends AbstractDbInte
     private static final String MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_PATH = "test/path";
 
     @Mock Clock mClock;
-    @Spy AggregateEncryptionKeyFetcher mFetcher;
+
+    @Spy
+    AggregateEncryptionKeyFetcher mFetcher =
+            new AggregateEncryptionKeyFetcher(ApplicationProvider.getApplicationContext());
+
     @Mock HttpsURLConnection mUrlConnection;
+    @Mock AdServicesErrorLogger mErrorLogger;
 
     @Parameterized.Parameters(name = "{2}")
     public static Collection<Object[]> data() throws IOException, JSONException {
@@ -80,7 +88,7 @@ public class AggregateEncryptionKeyManagerIntegrationTest extends AbstractDbInte
     @Override
     public void runActionToTest() {
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
         AggregateEncryptionKeyManager aggregateEncryptionKeyManager =
                 new AggregateEncryptionKeyManager(
                         datastoreManager,

@@ -20,47 +20,58 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
+import android.adservices.adid.AdId;
 import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesOutcomeReceiver;
+import android.adservices.common.UpdateAdIdRequest;
 import android.content.Context;
 import android.os.OutcomeReceiver;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.runner.AndroidJUnit4;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.compatibility.common.util.ShellUtils;
-import com.android.modules.utils.build.SdkLevel;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.common.OutcomeReceiverForTests;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
+import com.android.adservices.common.SdkLevelSupportRule;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
-import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-@RunWith(AndroidJUnit4.class)
+// TODO(b/302610220): Migrate the test to use a test helper class for AdservicesOutcomeReceiver.
+@RunWith(JUnit4.class)
 public class AdServicesCommonManagerTest {
-    private static final String TAG = "AdservicesStatusManagerTest";
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
+    private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
-    private AdServicesCommonManager mCommonManager = AdServicesCommonManager.get(sContext);
+    private final AdServicesCommonManager mCommonManager = AdServicesCommonManager.get(sContext);
 
-    @Rule
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAnyLevel();
+
+    // Skip the test if it runs on unsupported platforms.
+    @Rule(order = 1)
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
             new AdServicesDeviceSupportedRule();
 
-    @Test
-    public void testStatusManagerNotAuthorizedOnSPlus() {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
+    // Sets flags used in the test (and automatically reset them at the end)
+    @Rule(order = 2)
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forCommonManagerE2ETests(sContext.getPackageName());
 
-        overrideAdserviceEnableStatus(false);
+    @Test
+    @RequiresSdkLevelAtLeastS(reason = "uses OutcomeReceiver, which is only available on S+.")
+    public void testStatusManagerNotAuthorizedOnSPlus() {
+        flags.setAdserviceEnableStatus(false);
 
         // At beginning, Sdk1 receives a false status.
         ListenableFuture<Boolean> adServicesStatusResponse = getAdservicesStatus();
@@ -68,16 +79,14 @@ public class AdServicesCommonManagerTest {
         Exception adServicesStatusResponseException =
                 assertThrows(
                         ExecutionException.class,
-                        () -> {
-                            adServicesStatusResponse.get(1, TimeUnit.SECONDS);
-                        });
+                        () -> adServicesStatusResponse.get(1, TimeUnit.SECONDS));
         assertThat(adServicesStatusResponseException.getCause())
                 .isInstanceOf(SecurityException.class);
     }
 
     @Test
-    public void testSetStatusEnabledNotExecutedOnSPlus() throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
+    @RequiresSdkLevelAtLeastS
+    public void testSetStatusEnabledNotExecutedOnSPlus() {
         mCommonManager.setAdServicesEnabled(true, true);
 
         ListenableFuture<Boolean> adServicesStatusResponse = getAdservicesStatus();
@@ -85,16 +94,14 @@ public class AdServicesCommonManagerTest {
         Exception adServicesStatusResponseException =
                 assertThrows(
                         ExecutionException.class,
-                        () -> {
-                            adServicesStatusResponse.get(1, TimeUnit.SECONDS);
-                        });
+                        () -> adServicesStatusResponse.get(1, TimeUnit.SECONDS));
         assertThat(adServicesStatusResponseException.getCause())
                 .isInstanceOf(SecurityException.class);
     }
 
     @Test
     public void testStatusManagerNotAuthorizedCompat() {
-        overrideAdserviceEnableStatus(false);
+        flags.setAdserviceEnableStatus(false);
 
         // At beginning, Sdk1 receives a false status.
         ListenableFuture<Boolean> adServicesStatusResponse = getAdservicesStatusCompat();
@@ -102,15 +109,13 @@ public class AdServicesCommonManagerTest {
         Exception adServicesStatusResponseException =
                 assertThrows(
                         ExecutionException.class,
-                        () -> {
-                            adServicesStatusResponse.get(1, TimeUnit.SECONDS);
-                        });
+                        () -> adServicesStatusResponse.get(1, TimeUnit.SECONDS));
         assertThat(adServicesStatusResponseException.getCause())
                 .isInstanceOf(SecurityException.class);
     }
 
     @Test
-    public void testSetStatusEnabledNotExecutedCompat() throws Exception {
+    public void testSetStatusEnabledNotExecutedCompat() {
         mCommonManager.setAdServicesEnabled(true, true);
 
         ListenableFuture<Boolean> adServicesStatusResponse = getAdservicesStatusCompat();
@@ -118,17 +123,65 @@ public class AdServicesCommonManagerTest {
         Exception adServicesStatusResponseException =
                 assertThrows(
                         ExecutionException.class,
-                        () -> {
-                            adServicesStatusResponse.get(1, TimeUnit.SECONDS);
-                        });
+                        () -> adServicesStatusResponse.get(1, TimeUnit.SECONDS));
         assertThat(adServicesStatusResponseException.getCause())
                 .isInstanceOf(SecurityException.class);
     }
 
-    // Override the Adservice enable status in the test.
-    private void overrideAdserviceEnableStatus(boolean overrideStatus) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices adservice_enabled " + overrideStatus);
+    @Test
+    @RequiresSdkLevelAtLeastS(reason = "uses OutcomeReceiver, which is only available on T")
+    public void tesUpdateAdIdCache_notAuthorized_sPlus() throws Exception {
+        flags.setUpdateAdIdCacheEnabled(true);
+
+        UpdateAdIdRequest request = new UpdateAdIdRequest.Builder(AdId.ZERO_OUT).build();
+
+        OutcomeReceiverForTests<Boolean> updateAdIdCallback = new OutcomeReceiverForTests<>();
+        mCommonManager.updateAdId(request, CALLBACK_EXECUTOR, updateAdIdCallback);
+
+        updateAdIdCallback.assertFailure(SecurityException.class);
+    }
+
+    @Test
+    @RequiresSdkLevelAtLeastS(reason = "uses OutcomeReceiver, which is only available on T")
+    public void tesUpdateAdIdCache_notEnabled_sPlus() throws Exception {
+        flags.setUpdateAdIdCacheEnabled(false);
+
+        UpdateAdIdRequest request = new UpdateAdIdRequest.Builder(AdId.ZERO_OUT).build();
+
+        OutcomeReceiverForTests<Boolean> updateAdIdCallback = new OutcomeReceiverForTests<>();
+        mCommonManager.updateAdId(request, CALLBACK_EXECUTOR, updateAdIdCallback);
+
+        updateAdIdCallback.assertFailure(IllegalStateException.class);
+    }
+
+    @Test
+    public void tesUpdateAdIdCache_notAuthorized_rPlus() {
+        flags.setUpdateAdIdCacheEnabled(true);
+
+        ListenableFuture<Boolean> updateAdIdCacheResponse = updateAdIdCacheRMinus();
+
+        Exception updateAdIdResponseException =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> updateAdIdCacheResponse.get(1, TimeUnit.SECONDS));
+        assertThat(updateAdIdResponseException)
+                .hasCauseThat()
+                .isInstanceOf(SecurityException.class);
+    }
+
+    @Test
+    public void tesUpdateAdIdCache_notEnabled_rPlus() {
+        flags.setUpdateAdIdCacheEnabled(false);
+
+        ListenableFuture<Boolean> updateAdIdCacheResponse = updateAdIdCacheRMinus();
+
+        Exception updateAdIdResponseException =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> updateAdIdCacheResponse.get(1, TimeUnit.SECONDS));
+        assertThat(updateAdIdResponseException)
+                .hasCauseThat()
+                .isInstanceOf(IllegalStateException.class);
     }
 
     private ListenableFuture<Boolean> getAdservicesStatus() {
@@ -136,7 +189,7 @@ public class AdServicesCommonManagerTest {
                 completer -> {
                     mCommonManager.isAdServicesEnabled(
                             CALLBACK_EXECUTOR,
-                            new OutcomeReceiver<Boolean, Exception>() {
+                            new OutcomeReceiver<>() {
                                 @Override
                                 public void onResult(Boolean result) {
                                     completer.set(result);
@@ -158,7 +211,30 @@ public class AdServicesCommonManagerTest {
                 completer -> {
                     mCommonManager.isAdServicesEnabled(
                             CALLBACK_EXECUTOR,
-                            new AdServicesOutcomeReceiver<Boolean, Exception>() {
+                            new AdServicesOutcomeReceiver<>() {
+                                @Override
+                                public void onResult(Boolean result) {
+                                    completer.set(result);
+                                }
+
+                                @Override
+                                public void onError(Exception error) {
+                                    completer.setException(error);
+                                }
+                            });
+                    // This value is used only for debug purposes: it will be used in toString()
+                    // of returned future or error cases.
+                    return "getStatus";
+                });
+    }
+
+    private ListenableFuture<Boolean> updateAdIdCacheRMinus() {
+        return CallbackToFutureAdapter.getFuture(
+                completer -> {
+                    mCommonManager.updateAdId(
+                            new UpdateAdIdRequest.Builder(AdId.ZERO_OUT).build(),
+                            CALLBACK_EXECUTOR,
+                            new AdServicesOutcomeReceiver<>() {
                                 @Override
                                 public void onResult(Boolean result) {
                                     completer.set(result);

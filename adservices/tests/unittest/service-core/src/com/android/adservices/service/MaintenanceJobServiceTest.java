@@ -38,7 +38,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.spy;
@@ -52,10 +51,12 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.common.FledgeMaintenanceTasksWorker;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.service.signals.SignalsMaintenanceTasksWorker;
 import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.service.topics.AppUpdateManager;
@@ -107,6 +108,7 @@ public class MaintenanceJobServiceTest {
     @Mock StatsdAdServicesLogger mMockStatsdLogger;
     private AdservicesJobServiceLogger mSpyLogger;
     @Mock private FledgeMaintenanceTasksWorker mFledgeMaintenanceTasksWorkerMock;
+    @Mock private SignalsMaintenanceTasksWorker mSignalsMaintenanceTasksWorkerMock;
 
     @Before
     public void setup() {
@@ -172,6 +174,7 @@ public class MaintenanceJobServiceTest {
         // Killswitch is off.
         doReturn(true).when(mMockFlags).getTopicsKillSwitch();
         doReturn(false).when(mMockFlags).getFledgeSelectAdsKillSwitch();
+        doReturn(true).when(mMockFlags).getProtectedSignalsCleanupEnabled();
         doReturn(CURRENT_EPOCH_ID).when(mMockEpochManager).getCurrentEpochId();
 
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
@@ -184,6 +187,8 @@ public class MaintenanceJobServiceTest {
         doReturn(mPackageManagerMock).when(mSpyMaintenanceJobService).getPackageManager();
         mSpyMaintenanceJobService.injectFledgeMaintenanceTasksWorker(
                 mFledgeMaintenanceTasksWorkerMock);
+        mSpyMaintenanceJobService.injectSignalsMaintenanceTasksWorker(
+                mSignalsMaintenanceTasksWorkerMock);
         CountDownLatch jobCompletionLatch = new CountDownLatch(1);
         doAnswer(
                         unusedInvocation -> {
@@ -225,6 +230,8 @@ public class MaintenanceJobServiceTest {
         verify(mFledgeMaintenanceTasksWorkerMock).clearExpiredAdSelectionData();
         verify(mFledgeMaintenanceTasksWorkerMock)
                 .clearInvalidFrequencyCapHistogramData(any(PackageManager.class));
+
+        verify(mSignalsMaintenanceTasksWorkerMock).clearInvalidProtectedSignalsData();
     }
 
     @Test
@@ -289,6 +296,74 @@ public class MaintenanceJobServiceTest {
     }
 
     @Test
+    public void testOnStartJob_SignalsDisabled() throws InterruptedException {
+        final TopicsWorker topicsWorker =
+                new TopicsWorker(
+                        mMockEpochManager,
+                        mMockCacheManager,
+                        mBlockedTopicsManager,
+                        mMockAppUpdateManager,
+                        TEST_FLAGS);
+        // Killswitch is off.
+        doReturn(false).when(mMockFlags).getTopicsKillSwitch();
+        doReturn(false).when(mMockFlags).getFledgeSelectAdsKillSwitch();
+        doReturn(false).when(mMockFlags).getProtectedSignalsCleanupEnabled();
+        doReturn(CURRENT_EPOCH_ID).when(mMockEpochManager).getCurrentEpochId();
+
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        doReturn(mMockFlags).when(FlagsFactory::getFlags);
+
+        // Mock static method AppUpdateWorker.getInstance, let it return the local
+        // appUpdateWorker in order to get a test instance.
+        doReturn(topicsWorker).when(() -> TopicsWorker.getInstance(any(Context.class)));
+        doReturn(mPackageManagerMock).when(mSpyMaintenanceJobService).getPackageManager();
+        mSpyMaintenanceJobService.injectFledgeMaintenanceTasksWorker(
+                mFledgeMaintenanceTasksWorkerMock);
+        mSpyMaintenanceJobService.injectSignalsMaintenanceTasksWorker(
+                mSignalsMaintenanceTasksWorkerMock);
+
+        CountDownLatch jobCompletionLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            jobCompletionLatch.countDown();
+                            return null;
+                        })
+                .when(mSpyMaintenanceJobService)
+                .jobFinished(mMockJobParameters, false);
+
+        // Schedule the job to assert after starting that the scheduled job has been started
+        JobInfo existingJobInfo =
+                new JobInfo.Builder(
+                                MAINTENANCE_JOB_ID,
+                                new ComponentName(CONTEXT, EpochJobService.class))
+                        .setRequiresCharging(true)
+                        .setPeriodic(MAINTENANCE_JOB_PERIOD_MS, MAINTENANCE_JOB_FLEX_MS)
+                        .setPersisted(true)
+                        .build();
+        JOB_SCHEDULER.schedule(existingJobInfo);
+        assertThat(JOB_SCHEDULER.getPendingJob(MAINTENANCE_JOB_ID)).isNotNull();
+
+        // Now verify that when the Job starts, it will schedule itself.
+        assertThat(mSpyMaintenanceJobService.onStartJob(mMockJobParameters)).isTrue();
+
+        assertThat(JOB_SCHEDULER.getPendingJob(MAINTENANCE_JOB_ID)).isNotNull();
+
+        assertWithMessage("Job completed within timeout")
+                .that(jobCompletionLatch.await(1, TimeUnit.SECONDS))
+                .isTrue();
+
+        verify(() -> TopicsWorker.getInstance(any(Context.class)));
+        verify(mMockAppUpdateManager)
+                .reconcileUninstalledApps(any(Context.class), eq(CURRENT_EPOCH_ID));
+        verify(mMockAppUpdateManager)
+                .reconcileInstalledApps(any(Context.class), /* currentEpochId */ anyLong());
+        verify(mFledgeMaintenanceTasksWorkerMock).clearExpiredAdSelectionData();
+        verify(mFledgeMaintenanceTasksWorkerMock)
+                .clearInvalidFrequencyCapHistogramData(any(PackageManager.class));
+        verify(mSignalsMaintenanceTasksWorkerMock, never()).clearInvalidProtectedSignalsData();
+    }
+
+    @Test
     public void testOnStartJob_killSwitchOn_withoutLogging() throws Exception {
         // Logging killswitch is on.
         doReturn(true).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
@@ -331,6 +406,7 @@ public class MaintenanceJobServiceTest {
         // Killswitch is off.
         doReturn(false).when(mMockFlags).getTopicsKillSwitch();
         doReturn(false).when(mMockFlags).getFledgeSelectAdsKillSwitch();
+        doReturn(true).when(mMockFlags).getProtectedSignalsCleanupEnabled();
         doReturn(CURRENT_EPOCH_ID).when(mMockEpochManager).getCurrentEpochId();
         doReturn(TEST_FLAGS.getAdSelectionExpirationWindowS())
                 .when(mMockFlags)
@@ -347,6 +423,8 @@ public class MaintenanceJobServiceTest {
         doReturn(mPackageManagerMock).when(mSpyMaintenanceJobService).getPackageManager();
         mSpyMaintenanceJobService.injectFledgeMaintenanceTasksWorker(
                 mFledgeMaintenanceTasksWorkerMock);
+        mSpyMaintenanceJobService.injectSignalsMaintenanceTasksWorker(
+                mSignalsMaintenanceTasksWorkerMock);
 
         // Simulating a failure in Topics job
         doThrow(new IllegalStateException())
@@ -391,9 +469,12 @@ public class MaintenanceJobServiceTest {
         verify(mFledgeMaintenanceTasksWorkerMock).clearExpiredAdSelectionData();
         verify(mFledgeMaintenanceTasksWorkerMock)
                 .clearInvalidFrequencyCapHistogramData(any(PackageManager.class));
+
+        verify(mSignalsMaintenanceTasksWorkerMock).clearInvalidProtectedSignalsData();
     }
 
     @Test
+    @FlakyTest(bugId = 302683283)
     public void testOnStartJob_killSwitchOnDoesTopicsJobWhenFledgeThrowsException()
             throws Exception {
         final TopicsWorker topicsWorker =
@@ -406,6 +487,7 @@ public class MaintenanceJobServiceTest {
         // Killswitch is off.
         doReturn(false).when(mMockFlags).getTopicsKillSwitch();
         doReturn(false).when(mMockFlags).getFledgeSelectAdsKillSwitch();
+        doReturn(true).when(mMockFlags).getProtectedSignalsCleanupEnabled();
         doReturn(CURRENT_EPOCH_ID).when(mMockEpochManager).getCurrentEpochId();
 
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
@@ -418,6 +500,8 @@ public class MaintenanceJobServiceTest {
         // Inject FledgeMaintenanceTasksWorker since the test can't get it the standard way
         mSpyMaintenanceJobService.injectFledgeMaintenanceTasksWorker(
                 mFledgeMaintenanceTasksWorkerMock);
+        mSpyMaintenanceJobService.injectSignalsMaintenanceTasksWorker(
+                mSignalsMaintenanceTasksWorkerMock);
 
         // Simulating a failure in Fledge job
         doThrow(new IllegalStateException())
@@ -461,6 +545,8 @@ public class MaintenanceJobServiceTest {
                 .reconcileInstalledApps(any(Context.class), /* currentEpochId */ anyLong());
 
         verify(mFledgeMaintenanceTasksWorkerMock).clearExpiredAdSelectionData();
+
+        verify(mSignalsMaintenanceTasksWorkerMock).clearInvalidProtectedSignalsData();
     }
 
     @Test
@@ -481,9 +567,14 @@ public class MaintenanceJobServiceTest {
                 .when(mMockFlags)
                 .getFledgeSelectAdsKillSwitch();
         doReturn(CURRENT_EPOCH_ID).when(mMockEpochManager).getCurrentEpochId();
+        doReturn(true).when(mMockFlags).getProtectedSignalsCleanupEnabled();
+        doReturn(true).when(mMockFlags).getGlobalKillSwitch();
 
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
         doReturn(mMockFlags).when(FlagsFactory::getFlags);
+
+        mSpyMaintenanceJobService.injectSignalsMaintenanceTasksWorker(
+                mSignalsMaintenanceTasksWorkerMock);
 
         CountDownLatch jobCompletionLatch = new CountDownLatch(1);
         doAnswer(
@@ -528,6 +619,8 @@ public class MaintenanceJobServiceTest {
         verify(mFledgeMaintenanceTasksWorkerMock, never()).clearExpiredAdSelectionData();
         verify(mFledgeMaintenanceTasksWorkerMock, never())
                 .clearInvalidFrequencyCapHistogramData(any(PackageManager.class));
+
+        verify(mSignalsMaintenanceTasksWorkerMock, never()).clearInvalidProtectedSignalsData();
     }
 
     @Test
@@ -642,7 +735,7 @@ public class MaintenanceJobServiceTest {
 
     @Test
     public void testScheduleIfNeeded_scheduledWithKillSwitchOn() {
-        doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt(), anyString(), anyString()));
+        doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
         // Killswitch is on.
         doReturn(true).when(mMockFlags).getTopicsKillSwitch();
 
@@ -656,9 +749,7 @@ public class MaintenanceJobServiceTest {
                 () -> {
                     ErrorLogUtil.e(
                             eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED),
-                            eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS),
-                            anyString(),
-                            anyString());
+                            eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS));
                 });
     }
 
@@ -703,6 +794,7 @@ public class MaintenanceJobServiceTest {
         // Killswitch on.
         doReturn(true).when(mMockFlags).getTopicsKillSwitch();
         doReturn(true).when(mMockFlags).getFledgeSelectAdsKillSwitch();
+        doReturn(false).when(mMockFlags).getProtectedSignalsCleanupEnabled();
 
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
         doReturn(mMockFlags).when(FlagsFactory::getFlags);
@@ -720,6 +812,8 @@ public class MaintenanceJobServiceTest {
         doReturn(mPackageManagerMock).when(mSpyMaintenanceJobService).getPackageManager();
         mSpyMaintenanceJobService.injectFledgeMaintenanceTasksWorker(
                 mFledgeMaintenanceTasksWorkerMock);
+        mSpyMaintenanceJobService.injectSignalsMaintenanceTasksWorker(
+                mSignalsMaintenanceTasksWorkerMock);
 
         // Schedule the job to assert after starting that the scheduled job has been cancelled
         JobInfo existingJobInfo =
@@ -747,6 +841,7 @@ public class MaintenanceJobServiceTest {
         verify(mFledgeMaintenanceTasksWorkerMock, never()).clearExpiredAdSelectionData();
         verify(mFledgeMaintenanceTasksWorkerMock, never())
                 .clearInvalidFrequencyCapHistogramData(any(PackageManager.class));
+        verify(mSignalsMaintenanceTasksWorkerMock, never()).clearInvalidProtectedSignalsData();
     }
 
     private void testOnStartJob_killSwitchOff() throws InterruptedException {
@@ -760,6 +855,7 @@ public class MaintenanceJobServiceTest {
         // Killswitch is off.
         doReturn(false).when(mMockFlags).getTopicsKillSwitch();
         doReturn(false).when(mMockFlags).getFledgeSelectAdsKillSwitch();
+        doReturn(true).when(mMockFlags).getProtectedSignalsCleanupEnabled();
         doReturn(CURRENT_EPOCH_ID).when(mMockEpochManager).getCurrentEpochId();
         doReturn(TEST_FLAGS.getAdSelectionExpirationWindowS())
                 .when(mMockFlags)
@@ -784,6 +880,8 @@ public class MaintenanceJobServiceTest {
         doReturn(mPackageManagerMock).when(mSpyMaintenanceJobService).getPackageManager();
         mSpyMaintenanceJobService.injectFledgeMaintenanceTasksWorker(
                 mFledgeMaintenanceTasksWorkerMock);
+        mSpyMaintenanceJobService.injectSignalsMaintenanceTasksWorker(
+                mSignalsMaintenanceTasksWorkerMock);
 
         // Schedule the job to assert after starting that the scheduled job has been started
         JobInfo existingJobInfo =
@@ -816,6 +914,8 @@ public class MaintenanceJobServiceTest {
         verify(mFledgeMaintenanceTasksWorkerMock).clearExpiredAdSelectionData();
         verify(mFledgeMaintenanceTasksWorkerMock)
                 .clearInvalidFrequencyCapHistogramData(any(PackageManager.class));
+
+        verify(mSignalsMaintenanceTasksWorkerMock).clearInvalidProtectedSignalsData();
     }
 
     private void testOnStopJob() {
@@ -824,6 +924,7 @@ public class MaintenanceJobServiceTest {
     }
 
     private void testOnStartJob_shouldDisableJobTrue() throws Exception {
+        doReturn(true).when(mMockFlags).getProtectedSignalsCleanupEnabled();
         doReturn(true)
                 .when(
                         () ->
@@ -843,6 +944,8 @@ public class MaintenanceJobServiceTest {
         doReturn(mPackageManagerMock).when(mSpyMaintenanceJobService).getPackageManager();
         mSpyMaintenanceJobService.injectFledgeMaintenanceTasksWorker(
                 mFledgeMaintenanceTasksWorkerMock);
+        mSpyMaintenanceJobService.injectSignalsMaintenanceTasksWorker(
+                mSignalsMaintenanceTasksWorkerMock);
 
         // Schedule the job to assert after starting that the scheduled job has been cancelled
         JobInfo existingJobInfo =
@@ -870,5 +973,7 @@ public class MaintenanceJobServiceTest {
         verify(mFledgeMaintenanceTasksWorkerMock, never()).clearExpiredAdSelectionData();
         verify(mFledgeMaintenanceTasksWorkerMock, never())
                 .clearInvalidFrequencyCapHistogramData(any(PackageManager.class));
+
+        verify(mSignalsMaintenanceTasksWorkerMock, never()).clearInvalidProtectedSignalsData();
     }
 }

@@ -22,7 +22,7 @@ import android.net.Uri;
 
 import androidx.annotation.Nullable;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONArray;
@@ -295,7 +295,8 @@ public class AggregateReport {
             }
             return aggregateHistogramContributions;
         } catch (JSONException e) {
-            LogUtil.e(e, "Failed to parse contributions on Aggregate report.");
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "Failed to parse contributions on Aggregate report.");
             return Collections.emptyList();
         }
     }

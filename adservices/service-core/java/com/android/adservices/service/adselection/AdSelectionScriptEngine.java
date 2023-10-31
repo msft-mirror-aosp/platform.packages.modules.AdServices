@@ -53,6 +53,7 @@ import com.android.internal.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FluentFuture;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -538,6 +539,10 @@ public class AdSelectionScriptEngine {
             @NonNull int maxSize)
             throws IllegalStateException {
 
+        if (rawSignals.isEmpty()) {
+            return Futures.immediateFuture("");
+        }
+
         String combinedDriverAndEncodingLogic = ENCODE_SIGNALS_DRIVER_JS + encodingLogic;
         ImmutableList<JSScriptArgument> args = null;
         try {
@@ -743,7 +748,7 @@ public class AdSelectionScriptEngine {
     @VisibleForTesting
     String handleEncodingOutput(String encodingScriptResult) throws IllegalStateException {
 
-        if (encodingScriptResult.isEmpty()) {
+        if (encodingScriptResult == null || encodingScriptResult.isEmpty()) {
             throw new IllegalStateException(
                     "The encoding script either doesn't contain the required function or the"
                             + " function returned null");

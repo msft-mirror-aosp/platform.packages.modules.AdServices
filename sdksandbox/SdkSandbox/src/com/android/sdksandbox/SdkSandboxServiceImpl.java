@@ -33,7 +33,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.Build;
@@ -45,13 +44,11 @@ import android.text.TextUtils;
 import android.util.ArrayMap;
 import android.util.ArraySet;
 import android.util.Log;
-import android.webkit.WebView;
 
 import androidx.annotation.RequiresApi;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
-import com.android.modules.utils.BackgroundThread;
 import com.android.modules.utils.build.SdkLevel;
 
 import dalvik.system.PathClassLoader;
@@ -161,23 +158,14 @@ public class SdkSandboxServiceImpl extends Service {
     /** Computes the storage of the shared and SDK storage for an app */
     public void computeSdkStorage(
             List<String> sharedPaths, List<String> sdkPaths, IComputeSdkStorageCallback callback) {
-        // Start the handler thread.
-        BackgroundThread.getExecutor()
-                .execute(
-                        () -> {
-                            final int sharedStorageKb =
-                                    FileUtil.getStorageInKbForPaths(sharedPaths);
-                            final int sdkStorageKb = FileUtil.getStorageInKbForPaths(sdkPaths);
+        int sharedStorageKb = FileUtil.getStorageInKbForPaths(sharedPaths);
+        int sdkStorageKb = FileUtil.getStorageInKbForPaths(sdkPaths);
 
-                            try {
-                                callback.onStorageInfoComputed(sharedStorageKb, sdkStorageKb);
-                            } catch (RemoteException e) {
-                                LogUtil.d(
-                                        TAG,
-                                        "Error while calling computeSdkStorage in sandbox: "
-                                                + e.getMessage());
-                            }
-                        });
+        try {
+            callback.onStorageInfoComputed(sharedStorageKb, sdkStorageKb);
+        } catch (RemoteException e) {
+            LogUtil.d(TAG, "Error while calling computeSdkStorage in sandbox: " + e.getMessage());
+        }
     }
 
     /** Loads SDK. */
@@ -308,36 +296,6 @@ public class SdkSandboxServiceImpl extends Service {
                             + key
                             + " Type: "
                             + type);
-        }
-    }
-
-    /**
-     * Checks if the SDK sandbox is disabled. This will be {@code true} iff the WebView provider is
-     * not visible to the sandbox.
-     */
-    public void isDisabled(ISdkSandboxDisabledCallback callback) {
-        enforceCallerIsSystemServer();
-        PackageInfo info = WebView.getCurrentWebViewPackage();
-        PackageInfo webViewProviderInfo = null;
-        boolean isDisabled = false;
-        try {
-            if (info != null) {
-                webViewProviderInfo =
-                        mInjector
-                                .getContext()
-                                .getPackageManager()
-                                .getPackageInfo(
-                                        info.packageName, PackageManager.PackageInfoFlags.of(0));
-            }
-        } catch (PackageManager.NameNotFoundException e) {
-            Log.w(TAG, "Could not verify if the SDK sandbox should be disabled", e);
-            isDisabled = true;
-        }
-        isDisabled |= webViewProviderInfo == null;
-        try {
-            callback.onResult(isDisabled);
-        } catch (RemoteException e) {
-            Log.e(TAG, "Could not call back into ISdkSandboxDisabledCallback", e);
         }
     }
 
@@ -571,12 +529,6 @@ public class SdkSandboxServiceImpl extends Service {
         public void syncDataFromClient(@NonNull SharedPreferencesUpdate update) {
             Objects.requireNonNull(update, "update should not be null");
             SdkSandboxServiceImpl.this.syncDataFromClient(update);
-        }
-
-        @Override
-        public void isDisabled(@NonNull ISdkSandboxDisabledCallback callback) {
-            Objects.requireNonNull(callback, "callback should not be null");
-            SdkSandboxServiceImpl.this.isDisabled(callback);
         }
     }
 

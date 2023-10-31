@@ -71,9 +71,11 @@ public class UxStatesManager {
     /** Returns an instance of the UxStatesManager. */
     @NonNull
     public static UxStatesManager getInstance(Context context) {
+        LogUtil.d("UxStates getInstance() called.");
         if (sUxStatesManager == null) {
             synchronized (LOCK) {
                 if (sUxStatesManager == null) {
+                    LogUtil.d("Creaeting new UxStatesManager.");
                     sUxStatesManager =
                             new UxStatesManager(
                                     context,
@@ -90,7 +92,7 @@ public class UxStatesManager {
         // Only a subset of states should be persisted.
         mConsentManager.setAdIdEnabled(adServicesStates.isAdIdEnabled());
         // TO-DO (b/285005057): Remove the if statement when users can graduate.
-        if (!mConsentManager.isU18Account()) {
+        if (mConsentManager.isU18Account() == null || !mConsentManager.isU18Account()) {
             mConsentManager.setU18Account(adServicesStates.isU18Account());
         }
         mConsentManager.setAdultAccount(adServicesStates.isAdultAccount());

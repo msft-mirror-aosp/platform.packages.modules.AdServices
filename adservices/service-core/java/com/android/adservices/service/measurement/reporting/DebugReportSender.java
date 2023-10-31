@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import android.content.Context;
 import android.net.Uri;
 
 import com.android.internal.annotations.VisibleForTesting;
@@ -29,6 +30,10 @@ public class DebugReportSender extends MeasurementReportSender {
     @VisibleForTesting
     public static final String DEBUG_REPORT_URI_PATH =
             ".well-known/attribution-reporting/debug/verbose";
+
+    public DebugReportSender(Context context) {
+        super(context);
+    }
 
     /** Creates URL to send the POST request to. */
     URL createReportingFullUrl(Uri adTechDomain) throws MalformedURLException {

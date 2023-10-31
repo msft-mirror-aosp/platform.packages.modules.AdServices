@@ -35,6 +35,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -433,6 +434,8 @@ public class VerboseDebugReportingJobServiceTest {
         ExtendedMockito.doReturn(value)
                 .when(mockFlags)
                 .getMeasurementJobVerboseDebugReportingKillSwitch();
+        when(mockFlags.getMeasurementVerboseDebugReportingJobRequiredNetworkType())
+                .thenReturn(JobInfo.NETWORK_TYPE_ANY);
     }
 
     private CountDownLatch createCountDownLatch() {

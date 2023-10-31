@@ -25,7 +25,7 @@ android_test {
         "androidx.test.runner",
         "androidx.test.core",
         "mockito-target-extended-minus-junit4",
-        "truth-prebuilt",
+        "truth",
         "adservices-test-fixtures",
         "adservices-test-utility",
     ],
@@ -59,7 +59,7 @@ android_test {
         "androidx.test.core",
         "androidx.test.runner",
         "mockito-target-extended-minus-junit4",
-        "truth-prebuilt",
+        "truth",
     ],
     libs: [
         "android.ext.adservices",
