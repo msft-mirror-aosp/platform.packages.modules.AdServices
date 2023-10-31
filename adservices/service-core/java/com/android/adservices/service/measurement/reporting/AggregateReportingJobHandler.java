@@ -205,7 +205,7 @@ public class AggregateReportingJobHandler {
             return "";
         }
         if (report.getSourceId() == null) {
-            LoggerFactory.getMeasurementLogger().d("SourceId is null on event report.");
+            LoggerFactory.getMeasurementLogger().d("SourceId is null on aggregate report.");
             return "";
         }
         Optional<String> sourceRegistrant =
@@ -234,6 +234,7 @@ public class AggregateReportingJobHandler {
                         -> dao.getAggregateReport(aggregateReportId));
         if (!aggregateReportOpt.isPresent()) {
             LoggerFactory.getMeasurementLogger().d("Aggregate report not found");
+            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.REPORT_NOT_FOUND);
             return AdServicesStatusUtils.STATUS_IO_ERROR;
         }
         AggregateReport aggregateReport = aggregateReportOpt.get();
