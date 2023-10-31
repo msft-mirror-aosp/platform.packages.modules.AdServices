@@ -37,6 +37,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.SurfaceControlViewHost.SurfacePackage;
 
@@ -648,6 +649,9 @@ public final class SdkSandboxManager {
         if (!SdkLevel.isAtLeastU()) {
             throw new UnsupportedOperationException();
         }
+
+        long timeEventStarted = SystemClock.elapsedRealtime();
+
         Intent intent = new Intent();
         intent.setAction(ACTION_START_SANDBOXED_ACTIVITY);
         intent.setPackage(mContext.getPackageManager().getSdkSandboxPackageName());
@@ -657,6 +661,22 @@ public final class SdkSandboxManager {
         intent.putExtras(params);
 
         fromActivity.startActivity(intent);
+
+        logStartSdkSandboxActivityEvent(timeEventStarted);
+    }
+
+    // TODO(b/304459399): move Sandbox Activity latency logging to its own class
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+    private void logStartSdkSandboxActivityEvent(long timeEventStarted) {
+        try {
+            // TODO(b/305240130): retrieve SDK info from sandbox process
+            mService.logSandboxActivityEvent(
+                    StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__START_SDK_SANDBOX_ACTIVITY,
+                    StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__SUCCESS,
+                    (int) (SystemClock.elapsedRealtime() - timeEventStarted));
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
     }
 
     /**
