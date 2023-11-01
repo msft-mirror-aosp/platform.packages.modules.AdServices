@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package android.adservices.adselection;
+package android.adservices.common;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -22,22 +22,26 @@ import static org.junit.Assert.assertThrows;
 
 import android.content.res.AssetFileDescriptor;
 
+import com.android.adservices.concurrency.AdServicesExecutors;
+
 import org.junit.Test;
+
+import java.util.concurrent.ExecutorService;
 
 public class AssetFileDescriptorUtilTests {
     private static final byte[] EXPECTED = new byte[] {1, 2, 3, 4};
+    private static final ExecutorService BLOCKING_EXECUTOR =
+            AdServicesExecutors.getBlockingExecutor();
 
     @Test
     public void testSetupAssetFileDescriptorResponseReturnsCorrectResult() throws Exception {
         AssetFileDescriptor assetFileDescriptor =
-                AssetFileDescriptorUtil.setupAssetFileDescriptorResponse(EXPECTED);
-        byte[] result = new byte[EXPECTED.length];
-
-        int length =
-                AssetFileDescriptorUtil.readAssetFileDescriptorIntoBuffer(
-                        result, assetFileDescriptor);
+                AssetFileDescriptorUtil.setupAssetFileDescriptorResponse(
+                        EXPECTED, BLOCKING_EXECUTOR);
+        byte[] result =
+                AssetFileDescriptorUtil.readAssetFileDescriptorIntoBuffer(assetFileDescriptor);
         assertThat(result).isEqualTo(EXPECTED);
-        assertThat(length).isEqualTo(EXPECTED.length);
+        assertThat(result.length).isEqualTo(EXPECTED.length);
     }
 
     @Test
@@ -46,32 +50,28 @@ public class AssetFileDescriptorUtilTests {
         assertThrows(
                 NullPointerException.class,
                 () -> {
-                    AssetFileDescriptorUtil.setupAssetFileDescriptorResponse(null);
+                    AssetFileDescriptorUtil.setupAssetFileDescriptorResponse(
+                            null, BLOCKING_EXECUTOR);
                 });
     }
 
     @Test
-    public void testReadAssetFileDescriptorIntoBufferThrowsExceptionWhenBufferIsNull()
+    public void testSetupAssetFileDescriptorResponseThrowsExceptionWhenExecutorServiceIsNull()
             throws Exception {
-        AssetFileDescriptor assetFileDescriptor =
-                AssetFileDescriptorUtil.setupAssetFileDescriptorResponse(EXPECTED);
         assertThrows(
                 NullPointerException.class,
                 () -> {
-                    AssetFileDescriptorUtil.readAssetFileDescriptorIntoBuffer(
-                            null, assetFileDescriptor);
+                    AssetFileDescriptorUtil.setupAssetFileDescriptorResponse(EXPECTED, null);
                 });
     }
 
     @Test
     public void testReadAssetFileDescriptorIntoBufferThrowsExceptionWhenAssetFileDescriptorIsNull()
             throws Exception {
-        byte[] result = new byte[EXPECTED.length];
-
         assertThrows(
                 NullPointerException.class,
                 () -> {
-                    AssetFileDescriptorUtil.readAssetFileDescriptorIntoBuffer(result, null);
+                    AssetFileDescriptorUtil.readAssetFileDescriptorIntoBuffer(null);
                 });
     }
 }

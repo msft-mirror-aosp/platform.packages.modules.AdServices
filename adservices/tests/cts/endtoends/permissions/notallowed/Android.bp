@@ -27,7 +27,7 @@ android_test {
         "adservices-test-utility",
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt",
-        "truth-prebuilt",
+        "truth",
     ],
     libs: [
         "android.test.base",
@@ -56,7 +56,7 @@ android_test {
         "adservices-test-utility",
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt",
-        "truth-prebuilt",
+        "truth",
     ],
     libs: [
         "android.ext.adservices",

@@ -14,16 +14,19 @@
  * limitations under the License.
  */
 
-package android.adservices.adselection;
+package android.adservices.common;
 
 import android.annotation.NonNull;
 import android.content.res.AssetFileDescriptor;
 import android.os.ParcelFileDescriptor;
 
+import com.android.adservices.LoggerFactory;
+
+import java.io.DataInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Utility class used to set up the read and write pipes for the usage of reading pointers from
@@ -32,6 +35,7 @@ import java.util.Objects;
  * @hide
  */
 public class AssetFileDescriptorUtil {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     private AssetFileDescriptorUtil() {}
 
@@ -41,16 +45,24 @@ public class AssetFileDescriptorUtil {
      *
      * @throws IOException if an exception is encountered while creating or writing to the pipe
      */
-    public static AssetFileDescriptor setupAssetFileDescriptorResponse(@NonNull byte[] buffer)
-            throws IOException {
+    public static AssetFileDescriptor setupAssetFileDescriptorResponse(
+            @NonNull byte[] buffer, @NonNull ExecutorService executorService) throws IOException {
         Objects.requireNonNull(buffer);
+        Objects.requireNonNull(executorService);
 
         ParcelFileDescriptor[] descriptors = ParcelFileDescriptor.createPipe();
         ParcelFileDescriptor writeDescriptor = descriptors[1];
-        try (FileOutputStream outputStream =
-                new FileOutputStream(writeDescriptor.getFileDescriptor())) {
-            outputStream.write(buffer);
-        }
+
+        executorService.execute(
+                () -> {
+                    try (FileOutputStream outputStream =
+                            new FileOutputStream(writeDescriptor.getFileDescriptor())) {
+                        outputStream.write(buffer);
+                    } catch (IOException e) {
+                        sLogger.e(
+                                e, "Encountered IO Exception while writing byte array to stream.");
+                    }
+                });
         return new AssetFileDescriptor(descriptors[0], 0, buffer.length);
     }
 
@@ -60,14 +72,17 @@ public class AssetFileDescriptorUtil {
      *
      * @throws IOException if an exception is encountered while reading the content.
      */
-    public static int readAssetFileDescriptorIntoBuffer(
-            @NonNull byte[] buffer, @NonNull AssetFileDescriptor assetFileDescriptor)
-            throws IOException {
-        Objects.requireNonNull(buffer);
+    public static byte[] readAssetFileDescriptorIntoBuffer(
+            @NonNull AssetFileDescriptor assetFileDescriptor) throws IOException {
         Objects.requireNonNull(assetFileDescriptor);
 
-        try (InputStream inputStream = assetFileDescriptor.createInputStream()) {
-            return inputStream.read(buffer);
+        byte[] result = new byte[(int) assetFileDescriptor.getLength()];
+
+        try (DataInputStream inputStream =
+                new DataInputStream(assetFileDescriptor.createInputStream())) {
+            inputStream.readFully(result);
         }
+
+        return result;
     }
 }
