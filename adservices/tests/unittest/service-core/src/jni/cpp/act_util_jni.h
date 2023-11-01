@@ -16,26 +16,18 @@
 #include <jni.h>
 /* Header for class com_android_adservices_ActJni */
 
-#ifndef ADSERVICES_SERVICE_CORE_JNI_INCLUDE_ACT_JNI_H_
-#define ADSERVICES_SERVICE_CORE_JNI_INCLUDE_ACT_JNI_H_
+#ifndef ADSERVICES_UNIT_TEST_SERVICE_CORE_JNI_INCLUDE_ACT_UTIL_JNI_H_
+#define ADSERVICES_UNIT_TEST_SERVICE_CORE_JNI_INCLUDE_ACT_UTIL_JNI_H_
 #ifdef __cplusplus
 extern "C" {
 #endif
 /*
- * Class:     com_android_adservices_ActJni
- * Method:    generateClientParameters
- * Signature: ([B[B)[B
+ * Class:     com_android_adservices_ActJniUtils
+ * Method:    checkClientParameters
+ * Signature: ([B[B[B[B)Z
  */
-JNIEXPORT jbyteArray JNICALL Java_com_android_adservices_ActJni_generateClientParameters
-  (JNIEnv *, jclass, jbyteArray, jbyteArray);
-
-/*
-* Class:     com_android_adservices_ActJni
-* Method:    generateTokensRequest
-* Signature: ([B[B[B[B)[B
-*/
-JNIEXPORT jbyteArray JNICALL Java_com_android_adservices_ActJni_generateTokensRequest
-(JNIEnv *, jclass, jbyteArray, jbyteArray, jbyteArray, jbyteArray, jbyteArray);
+JNIEXPORT jboolean JNICALL Java_com_android_adservices_ActJniUtility_checkClientParameters
+  (JNIEnv *, jclass, jbyteArray, jbyteArray, jbyteArray, jbyteArray);
 
 #ifdef __cplusplus
 }
