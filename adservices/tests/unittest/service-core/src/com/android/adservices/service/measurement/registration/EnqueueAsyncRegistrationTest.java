@@ -47,9 +47,9 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.data.measurement.SqliteObjectMapper;
-import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.Source;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
