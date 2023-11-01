@@ -733,6 +733,11 @@ public class AsyncSourceFetcher {
                         json.getJSONArray(SourceHeaderContract.SHARED_FILTER_DATA_KEYS);
                 builder.setSharedFilterDataKeys(sharedFilterDataKeys.toString());
             }
+            if (mFlags.getMeasurementEnablePreinstallCheck()
+                    && !json.isNull(SourceHeaderContract.DROP_SOURCE_IF_INSTALLED)) {
+                builder.setDropSourceIfInstalled(
+                        json.getBoolean(SourceHeaderContract.DROP_SOURCE_IF_INSTALLED));
+            }
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.SUCCESS);
             return Optional.of(builder.build());
         } catch (JSONException e) {
@@ -909,6 +914,7 @@ public class AsyncSourceFetcher {
         String EVENT_REPORT_WINDOWS = "event_report_windows";
         String SHARED_DEBUG_KEY = "shared_debug_key";
         String SHARED_FILTER_DATA_KEYS = "shared_filter_data_keys";
+        String DROP_SOURCE_IF_INSTALLED = "drop_source_if_installed";
     }
 
     private interface SourceRequestContract {

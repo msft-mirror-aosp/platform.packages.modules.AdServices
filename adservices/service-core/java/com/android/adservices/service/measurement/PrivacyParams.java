@@ -135,21 +135,6 @@ public final class PrivacyParams {
         return NAVIGATION_TRIGGER_DATA_CARDINALITY;
     }
 
-    /** Min expiration value in seconds for attribution reporting register source. */
-    public static final long MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS =
-            TimeUnit.DAYS.toSeconds(1);
-
-    /**
-     * Max expiration value in seconds for attribution reporting register source. This value is also
-     * the default no expiration was specified.
-     */
-    public static final long MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS =
-            TimeUnit.DAYS.toSeconds(30);
-
-
-    /** Minimum time window after which reporting origin can be migrated */
-    public static final long MIN_REPORTING_ORIGIN_UPDATE_WINDOW = TimeUnit.DAYS.toMillis(1);
-
     /**
      * L1, the maximum sum of the contributions (values) across all buckets for a given source
      * event.

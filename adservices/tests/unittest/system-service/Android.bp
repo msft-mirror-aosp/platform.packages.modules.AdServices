@@ -29,7 +29,7 @@ android_test {
         "adservices-shared-storage",
         "androidx.test.runner",
         "androidx.test.core",
-        "truth-prebuilt",
+        "truth",
         "services.core",
         "framework-adservices.impl",
         "adservices-test-utility",

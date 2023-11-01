@@ -42,6 +42,7 @@ import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.attribution.TriggerContentProvider;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
+import com.android.adservices.service.measurement.util.Applications;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -67,8 +68,10 @@ public class AsyncRegistrationQueueRunner {
     private final SourceNoiseHandler mSourceNoiseHandler;
     private final Flags mFlags;
     private final AdServicesLogger mLogger;
+    private final Context mContext;
 
     private AsyncRegistrationQueueRunner(Context context) {
+        mContext = context;
         mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
         mAsyncSourceFetcher = new AsyncSourceFetcher(context);
         mAsyncTriggerFetcher = new AsyncTriggerFetcher(context);
@@ -81,6 +84,7 @@ public class AsyncRegistrationQueueRunner {
 
     @VisibleForTesting
     public AsyncRegistrationQueueRunner(
+            Context context,
             ContentResolver contentResolver,
             AsyncSourceFetcher asyncSourceFetcher,
             AsyncTriggerFetcher asyncTriggerFetcher,
@@ -89,6 +93,7 @@ public class AsyncRegistrationQueueRunner {
             SourceNoiseHandler sourceNoiseHandler,
             Flags flags) {
         this(
+                context,
                 contentResolver,
                 asyncSourceFetcher,
                 asyncTriggerFetcher,
@@ -101,6 +106,7 @@ public class AsyncRegistrationQueueRunner {
 
     @VisibleForTesting
     public AsyncRegistrationQueueRunner(
+            Context context,
             ContentResolver contentResolver,
             AsyncSourceFetcher asyncSourceFetcher,
             AsyncTriggerFetcher asyncTriggerFetcher,
@@ -109,6 +115,7 @@ public class AsyncRegistrationQueueRunner {
             SourceNoiseHandler sourceNoiseHandler,
             Flags flags,
             AdServicesLogger logger) {
+        mContext = context;
         mAsyncSourceFetcher = asyncSourceFetcher;
         mAsyncTriggerFetcher = asyncTriggerFetcher;
         mDatastoreManager = datastoreManager;
@@ -226,6 +233,15 @@ public class AsyncRegistrationQueueRunner {
                         ? EventSurfaceType.WEB
                         : EventSurfaceType.APP;
         if (isSourceAllowedToInsert(source, topOrigin, publisherType, dao, mDebugReportApi)) {
+            // If preinstall check is enabled and any app destinations are already installed,
+            // mark the source for deletion. Note the source is persisted so that the fake event
+            // report generated can be cleaned up after the source is deleted by
+            // DeleteExpiredJobService.
+            if (mFlags.getMeasurementEnablePreinstallCheck()
+                    && source.shouldDropSourceIfInstalled()
+                    && Applications.anyAppsInstalled(mContext, source.getAppDestinations())) {
+                source.setStatus(Source.Status.MARKED_TO_DELETE);
+            }
             insertSourceFromTransaction(source, dao);
             mDebugReportApi.scheduleSourceSuccessDebugReport(source, dao);
         }
