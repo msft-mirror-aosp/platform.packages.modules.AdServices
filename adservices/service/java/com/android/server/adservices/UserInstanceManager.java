@@ -17,6 +17,7 @@
 package com.android.server.adservices;
 
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.util.ArrayMap;
 
 import com.android.internal.annotations.GuardedBy;
@@ -32,7 +33,6 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 
 /**
  * Manager to handle User Instance. This is to ensure that each user profile is isolated.
@@ -45,20 +45,20 @@ public class UserInstanceManager {
 
     // We have 1 ConsentManager per user/user profile. This is to isolate user's data.
     @GuardedBy("mLock")
-    private final Map<Integer, ConsentManager> mConsentManagerMapLocked = new ArrayMap<>();
+    private final ArrayMap<Integer, ConsentManager> mConsentManagerMapLocked = new ArrayMap<>(0);
 
     @GuardedBy("mLock")
-    private final Map<Integer, AppConsentManager> mAppConsentManagerMapLocked = new ArrayMap<>();
-
+    private final ArrayMap<Integer, AppConsentManager> mAppConsentManagerMapLocked =
+            new ArrayMap<>(0);
 
     @GuardedBy("UserInstanceManager.class")
-    private final Map<Integer, BlockedTopicsManager> mBlockedTopicsManagerMapLocked =
-            new ArrayMap<>();
+    private final ArrayMap<Integer, BlockedTopicsManager> mBlockedTopicsManagerMapLocked =
+            new ArrayMap<>(0);
 
     // We have 1 RollbackManager per user/user profile, to isolate each user's data.
     @GuardedBy("mLock")
-    private final Map<Integer, RollbackHandlingManager> mRollbackHandlingManagerMapLocked =
-            new ArrayMap<>();
+    private final ArrayMap<Integer, RollbackHandlingManager> mRollbackHandlingManagerMapLocked =
+            new ArrayMap<>(0);
 
     private final String mAdServicesBaseDir;
 
@@ -158,21 +158,53 @@ public class UserInstanceManager {
         writer.println("UserInstanceManager");
         String prefix = "  ";
         writer.printf("%smAdServicesBaseDir: %s\n", prefix, mAdServicesBaseDir);
+        dumpPerUserManagers(writer, prefix);
+        mTopicsDao.dump(writer, prefix, args);
+    }
+
+    private void dumpPerUserManagers(PrintWriter writer, String prefix) {
+        ArrayMap<Integer, PerUserDumpHelper> perUserDumpHelpers;
+
         synchronized (mLock) {
-            writer.printf("%smConsentManagerMapLocked: %s\n", prefix, mConsentManagerMapLocked);
-            writer.printf(
-                    "%smAppConsentManagerMapLocked: %s\n", prefix, mAppConsentManagerMapLocked);
-            writer.printf(
-                    "%smRollbackHandlingManagerMapLocked: %s\n",
-                    prefix, mRollbackHandlingManagerMapLocked);
+            perUserDumpHelpers = new ArrayMap<>(mConsentManagerMapLocked.size());
+            for (int i = 0; i < mConsentManagerMapLocked.size(); i++) {
+                getPerUserDumpHelperForUser(perUserDumpHelpers, mConsentManagerMapLocked.keyAt(0))
+                                .consentMgr =
+                        mConsentManagerMapLocked.valueAt(i);
+            }
+            for (int i = 0; i < mAppConsentManagerMapLocked.size(); i++) {
+                getPerUserDumpHelperForUser(
+                                        perUserDumpHelpers, mAppConsentManagerMapLocked.keyAt(0))
+                                .appConsentMgr =
+                        mAppConsentManagerMapLocked.valueAt(i);
+            }
+            for (int i = 0; i < mRollbackHandlingManagerMapLocked.size(); i++) {
+                getPerUserDumpHelperForUser(
+                                        perUserDumpHelpers,
+                                        mRollbackHandlingManagerMapLocked.keyAt(0))
+                                .rollbackHandlingMgr =
+                        mRollbackHandlingManagerMapLocked.valueAt(i);
+            }
         }
         synchronized (UserInstanceManager.class) {
-            writer.printf(
-                    "%smBlockedTopicsManagerMapLocked=%s\n",
-                    prefix, mBlockedTopicsManagerMapLocked);
+            for (int i = 0; i < mBlockedTopicsManagerMapLocked.size(); i++) {
+                getPerUserDumpHelperForUser(
+                                        perUserDumpHelpers, mBlockedTopicsManagerMapLocked.keyAt(0))
+                                .blockedTopicsMgr =
+                        mBlockedTopicsManagerMapLocked.valueAt(i);
+            }
         }
 
-        mTopicsDao.dump(writer, prefix, args);
+        int numberUsers = perUserDumpHelpers.size();
+        if (numberUsers == 0) {
+            writer.printf("%sno per-user data yet\n", prefix);
+        } else {
+            writer.printf("%s%d users:\n", prefix, numberUsers);
+            String prefix2 = prefix + "  ";
+            for (int i = 0; i < numberUsers; i++) {
+                perUserDumpHelpers.valueAt(i).dump(writer, prefix2, perUserDumpHelpers.keyAt(i));
+            }
+        }
     }
 
     @VisibleForTesting
@@ -187,6 +219,52 @@ public class UserInstanceManager {
             for (RollbackHandlingManager rollbackHandlingManager :
                     mRollbackHandlingManagerMapLocked.values()) {
                 rollbackHandlingManager.tearDownForTesting();
+            }
+        }
+    }
+
+    private PerUserDumpHelper getPerUserDumpHelperForUser(
+            ArrayMap<Integer, PerUserDumpHelper> map, Integer userId) {
+        PerUserDumpHelper dumper = map.get(userId);
+        if (dumper == null) {
+            dumper = new PerUserDumpHelper();
+            map.put(userId, dumper);
+        }
+        return dumper;
+    }
+
+    /**
+     * Helper class used to group all managers per-user during dump(), as there is no guarantee that
+     * each map of managers will have all managers for a given user.
+     */
+    private static final class PerUserDumpHelper {
+        public @Nullable ConsentManager consentMgr;
+        public @Nullable AppConsentManager appConsentMgr;
+        public @Nullable BlockedTopicsManager blockedTopicsMgr;
+        public @Nullable RollbackHandlingManager rollbackHandlingMgr;
+
+        public void dump(PrintWriter writer, String prefix, Integer userId) {
+            writer.printf("%sUser %d:\n", prefix, userId);
+            String prefix2 = prefix + "  ";
+            if (consentMgr == null) {
+                writer.printf("%sno consent manager\n", prefix2);
+            } else {
+                consentMgr.dump(writer, prefix2);
+            }
+            if (appConsentMgr == null) {
+                writer.printf("%sno app consent manager\n", prefix2);
+            } else {
+                appConsentMgr.dump(writer, prefix2);
+            }
+            if (blockedTopicsMgr == null) {
+                writer.printf("%sno blocked topics manager\n", prefix2);
+            } else {
+                blockedTopicsMgr.dump(writer, prefix2);
+            }
+            if (rollbackHandlingMgr == null) {
+                writer.printf("%sno rollback handling manager\n", prefix2);
+            } else {
+                rollbackHandlingMgr.dump(writer, prefix2);
             }
         }
     }

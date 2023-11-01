@@ -84,6 +84,8 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
+import com.android.adservices.data.signals.EncodedPayloadDao;
+import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -156,6 +158,7 @@ public class ReportAndRegisterEventE2ETest {
     private MockitoSession mStaticMockSession = null;
     @Mock private ConsentManager mConsentManagerMock;
     private CustomAudienceDao mCustomAudienceDao;
+    private EncodedPayloadDao mEncodedPayloadDao;
     private AdSelectionEntryDao mAdSelectionEntryDao;
     private AppInstallDao mAppInstallDao;
     private FrequencyCapDao mFrequencyCapDao;
@@ -166,7 +169,6 @@ public class ReportAndRegisterEventE2ETest {
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptorMock;
     @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDaoMock;
     @Mock private AdIdFetcher mAdIdFetcher;
-    @Mock private AdServicesErrorLogger mAdServicesErrorLogger;
 
     private static final Instant ACTIVATION_TIME = Instant.now();
     private static final String CALLER_SDK_NAME = "sdk.package.name";
@@ -210,10 +212,11 @@ public class ReportAndRegisterEventE2ETest {
     private static final EnrollmentData ENROLLMENT_DATA =
             new EnrollmentData.Builder().setEnrollmentId(DEFAULT_ENROLLMENT).build();
 
+    @Mock private AdServicesErrorLogger mErrorLoggerMock;
+
     @Spy
     private DatastoreManager mDatastoreManagerSpy =
-            new SQLDatastoreManager(
-                    DbTestUtil.getMeasurementDbHelperForTest(), mAdServicesErrorLogger);
+            new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLoggerMock);
 
     @Mock private ContentResolver mContentResolverMock;
     @Mock private ClickVerifier mClickVerifierMock;
@@ -262,6 +265,11 @@ public class ReportAndRegisterEventE2ETest {
                         .build()
                         .customAudienceDao();
 
+        mEncodedPayloadDao =
+                Room.inMemoryDatabaseBuilder(CONTEXT, ProtectedSignalsDatabase.class)
+                        .build()
+                        .getEncodedPayloadDao();
+
         mAdSelectionEntryDao =
                 Room.inMemoryDatabaseBuilder(
                                 ApplicationProvider.getApplicationContext(),
@@ -295,7 +303,9 @@ public class ReportAndRegisterEventE2ETest {
                                 mMeasurementDataDeleterMock,
                                 mContentResolverMock));
         doReturn(mMeasurementImplSpy).when(() -> MeasurementImpl.getInstance(CONTEXT));
-        doReturn(true).when(mClickVerifierMock).isInputEventVerifiable(any(), anyLong());
+        doReturn(true)
+                .when(mClickVerifierMock)
+                .isInputEventVerifiable(any(), anyLong(), anyString());
         when(mEnrollmentDaoMock.getEnrollmentDataFromMeasurementUrl(any()))
                 .thenReturn(ENROLLMENT_DATA);
 
@@ -313,6 +323,7 @@ public class ReportAndRegisterEventE2ETest {
         mAsyncRegistrationQueueRunnerSpy =
                 spy(
                         new AsyncRegistrationQueueRunner(
+                                CONTEXT,
                                 mContentResolverMock,
                                 mAsyncSourceFetcherSpy,
                                 mAsyncTriggerFetcherSpy,
@@ -973,6 +984,7 @@ public class ReportAndRegisterEventE2ETest {
                 mAdSelectionEntryDao,
                 mAppInstallDao,
                 mCustomAudienceDao,
+                mEncodedPayloadDao,
                 mFrequencyCapDao,
                 mEncryptionContextDao,
                 mEncryptionKeyDao,

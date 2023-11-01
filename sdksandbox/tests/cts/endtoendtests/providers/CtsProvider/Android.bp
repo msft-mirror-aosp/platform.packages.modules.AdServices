@@ -26,7 +26,7 @@ android_test_helper_app {
     static_libs: [
         "SdkSandbox-java-lib",
         "CtsSdkProviderApi",
-        "truth-prebuilt",
+        "truth",
         "androidx.room_room-runtime",
     ],
     plugins: ["androidx.room_room-compiler-plugin"],

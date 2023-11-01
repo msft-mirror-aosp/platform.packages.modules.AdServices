@@ -25,7 +25,7 @@ import android.annotation.NonNull;
 import android.net.Uri;
 import android.util.Pair;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
@@ -224,6 +224,13 @@ class AttributionJobHandler {
                         return;
                     }
 
+                    if (mFlags.getMeasurementEnableSourceDeactivationAfterFiltering()) {
+                        ignoreCompetingSources(
+                                measurementDao,
+                                remainingMatchingSources,
+                                trigger.getEnrollmentId());
+                    }
+
                     if (shouldAttributionBeBlockedByRateLimits(source, trigger, measurementDao)) {
                         attributionStatus.setAttributionResult(
                                 AttributionStatus.AttributionResult.NOT_ATTRIBUTED);
@@ -247,10 +254,12 @@ class AttributionJobHandler {
                             aggregateTriggeringStatus == TriggeringStatus.ATTRIBUTED;
                     if (isEventTriggeringStatusAttributed
                             || isAggregateTriggeringStatusAttributed) {
-                        ignoreCompetingSources(
-                                measurementDao,
-                                remainingMatchingSources,
-                                trigger.getEnrollmentId());
+                        if (!mFlags.getMeasurementEnableSourceDeactivationAfterFiltering()) {
+                            ignoreCompetingSources(
+                                    measurementDao,
+                                    remainingMatchingSources,
+                                    trigger.getEnrollmentId());
+                        }
                         attributeTriggerAndInsertAttribution(trigger, source, measurementDao);
                         attributionStatus.setAttributionResult(
                                 isAggregateTriggeringStatusAttributed,
@@ -269,9 +278,11 @@ class AttributionJobHandler {
             Source source, Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
         if (!hasAttributionQuota(source, trigger, measurementDao)
-                || !isEnrollmentWithinPrivacyBounds(source, trigger, measurementDao)) {
-            LogUtil.d("Attribution blocked by rate limits. Source ID: %s ; Trigger ID: %s ",
-                    source.getId(), trigger.getId());
+                || !isReportingOriginWithinPrivacyBounds(source, trigger, measurementDao)) {
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "Attribution blocked by rate limits. Source ID: %s ; Trigger ID: %s ",
+                            source.getId(), trigger.getId());
             return true;
         }
         return false;
@@ -299,13 +310,14 @@ class AttributionJobHandler {
                         trigger.getAttributionDestination(), trigger.getDestinationType());
 
         if (numReportsPerDestination >= mFlags.getMeasurementMaxAggregateReportsPerDestination()) {
-            LogUtil.d(
-                    String.format(
-                            Locale.ENGLISH,
-                            "Aggregate reports for destination %1$s exceeds system health limit of"
-                                    + " %2$d.",
-                            trigger.getAttributionDestination(),
-                            mFlags.getMeasurementMaxAggregateReportsPerDestination()));
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            String.format(
+                                    Locale.ENGLISH,
+                                    "Aggregate reports for destination %1$s exceeds system health"
+                                            + " limit of %2$d.",
+                                    trigger.getAttributionDestination(),
+                                    mFlags.getMeasurementMaxAggregateReportsPerDestination()));
             mDebugReportApi.scheduleTriggerDebugReport(
                     source,
                     trigger,
@@ -315,24 +327,26 @@ class AttributionJobHandler {
             return TriggeringStatus.DROPPED;
         }
 
-        int numReportsPerSource = measurementDao.getNumAggregateReportsPerSource(source.getId());
-
-        if (mFlags.getMeasurementEnableMaxAggregateReportsPerSource()
-                && numReportsPerSource >= mFlags.getMeasurementMaxAggregateReportsPerSource()) {
-            LogUtil.d(
-                    String.format(
-                            Locale.ENGLISH,
-                            "Aggregate reports for source %1$s exceeds system health limit of"
-                                    + " %2$d.",
-                            source.getId(),
-                            mFlags.getMeasurementMaxAggregateReportsPerSource()));
-            mDebugReportApi.scheduleTriggerDebugReport(
-                    source,
-                    trigger,
-                    String.valueOf(numReportsPerSource),
-                    measurementDao,
-                    Type.TRIGGER_AGGREGATE_EXCESSIVE_REPORTS);
-            return TriggeringStatus.DROPPED;
+        if (mFlags.getMeasurementEnableMaxAggregateReportsPerSource()) {
+            int numReportsPerSource =
+                    measurementDao.getNumAggregateReportsPerSource(source.getId());
+            if (numReportsPerSource >= mFlags.getMeasurementMaxAggregateReportsPerSource()) {
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                String.format(
+                                        Locale.ENGLISH,
+                                        "Aggregate reports for source %1$s exceeds system"
+                                                + " health limit of %2$d.",
+                                        source.getId(),
+                                        mFlags.getMeasurementMaxAggregateReportsPerSource()));
+                mDebugReportApi.scheduleTriggerDebugReport(
+                        source,
+                        trigger,
+                        String.valueOf(numReportsPerSource),
+                        measurementDao,
+                        Type.TRIGGER_AGGREGATE_EXCESSIVE_REPORTS);
+                return TriggeringStatus.DROPPED;
+            }
         }
 
         try {
@@ -372,10 +386,11 @@ class AttributionJobHandler {
                     validateAndGetUpdatedAggregateContributions(
                             contributions.get(), source, trigger, measurementDao);
             if (!newAggregateContributions.isPresent()) {
-                LogUtil.d(
-                        "Aggregate contributions exceeded bound. Source ID: %s ; "
-                                + "Trigger ID: %s ",
-                        source.getId(), trigger.getId());
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "Aggregate contributions exceeded bound. Source ID: %s ; "
+                                        + "Trigger ID: %s ",
+                                source.getId(), trigger.getId());
                 return TriggeringStatus.DROPPED;
             }
 
@@ -438,10 +453,11 @@ class AttributionJobHandler {
             // TODO (b/230618328): read from DB and upload unencrypted aggregate report.
             return TriggeringStatus.ATTRIBUTED;
         } catch (JSONException e) {
-            LogUtil.e(
-                    e,
-                    "AttributionJobHandler::maybeGenerateAggregateReport JSONException when parse"
-                            + " aggregate fields.");
+            LoggerFactory.getMeasurementLogger()
+                    .e(
+                            e,
+                            "AttributionJobHandler::maybeGenerateAggregateReport JSONException when"
+                                    + " parse aggregate fields.");
             return TriggeringStatus.DROPPED;
         }
     }
@@ -509,7 +525,7 @@ class AttributionJobHandler {
                                 AttributionConfig.AttributionConfigContract.SOURCE_NETWORK));
             }
         } catch (JSONException e) {
-            LogUtil.d(e, "Failed to parse attribution configs.");
+            LoggerFactory.getMeasurementLogger().d(e, "Failed to parse attribution configs.");
         }
         return enrollmentIds;
     }
@@ -535,10 +551,12 @@ class AttributionJobHandler {
                             aggregateAttributionSource.getFilterMap(), mFlags);
             return dedupKey;
         } catch (JSONException e) {
-            LogUtil.e(
-                    e,
-                    "AttributionJobHandler::maybeGetAggregateDeduplicationKey JSONException when "
-                            + "parse aggregate dedup key fields in AttributionJobHandler.");
+            LoggerFactory.getMeasurementLogger()
+                    .e(
+                            e,
+                            "AttributionJobHandler::maybeGetAggregateDeduplicationKey JSONException"
+                                    + " when parse aggregate dedup key fields in"
+                                    + " AttributionJobHandler.");
             return Optional.empty();
         }
     }
@@ -574,7 +592,8 @@ class AttributionJobHandler {
             throws DatastoreException {
 
         if (source.getParentId() != null) {
-            LogUtil.d("Event report generation skipped because it's a derived source.");
+            LoggerFactory.getMeasurementLogger()
+                    .d("Event report generation skipped because it's a derived source.");
             return TriggeringStatus.DROPPED;
         }
 
@@ -609,7 +628,8 @@ class AttributionJobHandler {
                     source.buildAttributedTriggers();
                     alreadyAttributed = hasDeduplicationKey(source, eventTrigger.getDedupKey());
                 } catch (JSONException e) {
-                    LogUtil.e(e, "maybeGenerateEventReport: failed to build attributed triggers.");
+                    LoggerFactory.getMeasurementLogger()
+                            .e(e, "maybeGenerateEventReport: failed to build attributed triggers.");
                     return TriggeringStatus.DROPPED;
                 }
             } else {
@@ -632,13 +652,14 @@ class AttributionJobHandler {
                         trigger.getAttributionDestination(), trigger.getDestinationType());
 
         if (numReports >= mFlags.getMeasurementMaxEventReportsPerDestination()) {
-            LogUtil.d(
-                    String.format(
-                            Locale.ENGLISH,
-                            "Event reports for destination %1$s exceeds system health limit of"
-                                    + " %2$d.",
-                            trigger.getAttributionDestination(),
-                            mFlags.getMeasurementMaxEventReportsPerDestination()));
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            String.format(
+                                    Locale.ENGLISH,
+                                    "Event reports for destination %1$s exceeds system health limit"
+                                            + " of %2$d.",
+                                    trigger.getAttributionDestination(),
+                                    mFlags.getMeasurementMaxEventReportsPerDestination()));
             mDebugReportApi.scheduleTriggerDebugReport(
                     source,
                     trigger,
@@ -996,7 +1017,8 @@ class AttributionJobHandler {
             return isFilterMatch;
         } catch (JSONException e) {
             // If JSON is malformed, we shall consider as not matched.
-            LogUtil.e(e, "AttributionJobHandler::doTopLevelFiltersMatch: JSON parse failed.");
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "AttributionJobHandler::doTopLevelFiltersMatch: JSON parse failed.");
             return false;
         }
     }
@@ -1028,9 +1050,11 @@ class AttributionJobHandler {
             return matchingEventTrigger;
         } catch (JSONException e) {
             // If JSON is malformed, we shall consider as not matched.
-            LogUtil.e(
-                    e,
-                    "AttributionJobHandler::findFirstMatchingEventTrigger: Malformed JSON string.");
+            LoggerFactory.getMeasurementLogger()
+                    .e(
+                            e,
+                            "AttributionJobHandler::findFirstMatchingEventTrigger: Malformed JSON"
+                                    + " string.");
             return Optional.empty();
         }
     }
@@ -1105,10 +1129,11 @@ class AttributionJobHandler {
                     return OptionalInt.empty();
                 }
             } catch (ArithmeticException e) {
-                LogUtil.e(
-                        e,
-                        "AttributionJobHandler::validateAndGetUpdatedAggregateContributions Error"
-                                + " adding aggregate contribution values.");
+                LoggerFactory.getMeasurementLogger()
+                        .e(
+                                e,
+                                "AttributionJobHandler::validateAndGetUpdatedAggregateContributions"
+                                        + " Error adding aggregate contribution values.");
                 return OptionalInt.empty();
             }
         }
@@ -1119,19 +1144,18 @@ class AttributionJobHandler {
         return Math.floorDiv(timestamp, TimeUnit.DAYS.toMillis(1)) * TimeUnit.DAYS.toMillis(1);
     }
 
-    private boolean isEnrollmentWithinPrivacyBounds(
+    private boolean isReportingOriginWithinPrivacyBounds(
             Source source, Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
         Optional<Pair<Uri, Uri>> publisherAndDestination =
                 getPublisherAndDestinationTopPrivateDomains(source, trigger);
         if (publisherAndDestination.isPresent()) {
             Integer count =
-                    measurementDao.countDistinctEnrollmentsPerPublisherXDestinationInAttribution(
+                    measurementDao.countDistinctReportingOriginsPerPublisherXDestInAttribution(
                             publisherAndDestination.get().first,
                             publisherAndDestination.get().second,
-                            trigger.getEnrollmentId(),
-                            trigger.getTriggerTime()
-                                    - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS,
+                            trigger.getRegistrationOrigin(),
+                            trigger.getTriggerTime() - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS,
                             trigger.getTriggerTime());
             if (count >= mFlags.getMeasurementMaxDistinctEnrollmentsInAttribution()) {
                 mDebugReportApi.scheduleTriggerDebugReport(
@@ -1144,8 +1168,11 @@ class AttributionJobHandler {
 
             return count < mFlags.getMeasurementMaxDistinctEnrollmentsInAttribution();
         } else {
-            LogUtil.d("isEnrollmentWithinPrivacyBounds: getPublisherAndDestinationTopPrivateDomains"
-                    + " failed. %s %s", source.getPublisher(), trigger.getAttributionDestination());
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "isEnrollmentWithinPrivacyBounds:"
+                                    + " getPublisherAndDestinationTopPrivateDomains failed. %s %s",
+                            source.getPublisher(), trigger.getAttributionDestination());
             return true;
         }
     }
@@ -1200,6 +1227,7 @@ class AttributionJobHandler {
                 .setRegistrant(trigger.getRegistrant().toString())
                 .setSourceId(source.getId())
                 .setTriggerId(trigger.getId())
+                .setRegistrationOrigin(trigger.getRegistrationOrigin())
                 .build();
     }
 
@@ -1262,14 +1290,16 @@ class AttributionJobHandler {
         String aggregateReportDelayString = mFlags.getMeasurementAggregateReportDelayConfig();
 
         if (aggregateReportDelayString == null) {
-            LogUtil.d("Invalid configurable aggregate report delay: null");
+            LoggerFactory.getMeasurementLogger()
+                    .d("Invalid configurable aggregate report delay: null");
             return reportDelayFromDefaults;
         }
 
         String[] split = aggregateReportDelayString.split(AGGREGATE_REPORT_DELAY_DELIMITER);
 
         if (split.length != 2) {
-            LogUtil.d("Invalid configurable aggregate report delay: length is not two");
+            LoggerFactory.getMeasurementLogger()
+                    .d("Invalid configurable aggregate report delay: length is not two");
             return reportDelayFromDefaults;
         }
 
@@ -1278,7 +1308,8 @@ class AttributionJobHandler {
             final long delaySpan = Long.parseLong(split[1].trim());
             return (long) (Math.random() * delaySpan + minDelay);
         } catch (NumberFormatException e) {
-            LogUtil.e(e, "Configurable aggregate report delay parsing failed.");
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "Configurable aggregate report delay parsing failed.");
             return reportDelayFromDefaults;
         }
     }

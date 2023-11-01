@@ -16,13 +16,11 @@
 
 package com.android.adservices.data.adselection;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
 import androidx.room.AutoMigration;
 import androidx.room.Database;
-import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
@@ -42,7 +40,8 @@ import java.util.Objects;
             DBBuyerDecisionOverride.class,
             DBReportingData.class,
             DBAdSelectionInitialization.class,
-            DBAdSelectionResult.class
+            DBAdSelectionResult.class,
+            DBReportingComputationInfo.class
         },
         version = AdSelectionDatabase.DATABASE_VERSION,
         autoMigrations = {
@@ -52,12 +51,13 @@ import java.util.Objects;
             @AutoMigration(from = 4, to = 5),
             @AutoMigration(from = 5, to = 6),
             @AutoMigration(from = 6, to = 7),
+            @AutoMigration(from = 7, to = 8)
         })
 @TypeConverters({FledgeRoomConverters.class})
 public abstract class AdSelectionDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();
 
-    public static final int DATABASE_VERSION = 7;
+    public static final int DATABASE_VERSION = 8;
     // TODO(b/230653780): Should we separate the DB.
     public static final String DATABASE_NAME =
             FileCompatUtils.getAdservicesFilename("adselection.db");
@@ -65,7 +65,6 @@ public abstract class AdSelectionDatabase extends RoomDatabase {
     private static volatile AdSelectionDatabase sSingleton = null;
 
     /** Returns an instance of the AdSelectionDatabase given a context. */
-    @SuppressLint("NewAdServicesFile")
     public static AdSelectionDatabase getInstance(@NonNull Context context) {
         Objects.requireNonNull(context, "Context must be provided.");
         // Initialization pattern recommended on page 334 of "Effective Java" 3rd edition
@@ -76,7 +75,8 @@ public abstract class AdSelectionDatabase extends RoomDatabase {
         synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
                 sSingleton =
-                        Room.databaseBuilder(context, AdSelectionDatabase.class, DATABASE_NAME)
+                        FileCompatUtils.roomDatabaseBuilderHelper(
+                                        context, AdSelectionDatabase.class, DATABASE_NAME)
                                 .fallbackToDestructiveMigration()
                                 .build();
             }

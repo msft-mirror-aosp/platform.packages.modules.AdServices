@@ -53,10 +53,11 @@ import android.os.RemoteException;
 
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.PermissionHelper;
 import com.android.adservices.service.common.Throttler;
@@ -466,27 +467,48 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                     try {
                         final Supplier<Boolean> enforceForeground =
                                 mFlags::getEnforceForegroundStatusForMeasurementStatus;
-                        List<IAccessResolver> accessResolvers =
-                                List.of(
-                                        new KillSwitchAccessResolver(
-                                                mFlags::getMeasurementApiStatusKillSwitch),
-                                        new UserConsentAccessResolver(mConsentManager),
-                                        new ForegroundEnforcementAccessResolver(
-                                                apiNameId,
-                                                callerUid,
-                                                mAppImportanceFilter,
-                                                enforceForeground),
-                                        new AppPackageAccessResolver(
-                                                mFlags.getMsmtApiAppAllowList(),
-                                                mFlags.getMsmtApiAppBlockList(),
-                                                statusParam.getAppPackageName()));
+                        List<IAccessResolver> accessResolvers;
+                        if (mFlags.getMsmtEnableApiStatusAllowListCheck()) {
+                            if (!AllowLists.isPackageAllowListed(
+                                    mFlags.getWebContextClientAppAllowList(),
+                                    statusParam.getAppPackageName())) {
+                                callback.onResult(MeasurementManager.MEASUREMENT_API_STATE_ENABLED);
+                                statusCode = STATUS_SUCCESS;
+                                return;
+                            }
+                            accessResolvers =
+                                    List.of(
+                                            new KillSwitchAccessResolver(
+                                                    mFlags::getMeasurementApiStatusKillSwitch),
+                                            new UserConsentAccessResolver(mConsentManager),
+                                            new ForegroundEnforcementAccessResolver(
+                                                    apiNameId,
+                                                    callerUid,
+                                                    mAppImportanceFilter,
+                                                    enforceForeground));
+                        } else {
+                            accessResolvers =
+                                    List.of(
+                                            new KillSwitchAccessResolver(
+                                                    mFlags::getMeasurementApiStatusKillSwitch),
+                                            new UserConsentAccessResolver(mConsentManager),
+                                            new ForegroundEnforcementAccessResolver(
+                                                    apiNameId,
+                                                    callerUid,
+                                                    mAppImportanceFilter,
+                                                    enforceForeground),
+                                            new AppPackageAccessResolver(
+                                                    mFlags.getMsmtApiAppAllowList(),
+                                                    mFlags.getMsmtApiAppBlockList(),
+                                                    statusParam.getAppPackageName()));
+                        }
 
                         final Optional<IAccessResolver> optionalResolver =
                                 getAccessDenied(accessResolvers);
 
                         if (optionalResolver.isPresent()) {
                             final IAccessResolver resolver = optionalResolver.get();
-                            LogUtil.e(resolver.getErrorMessage());
+                            LoggerFactory.getMeasurementLogger().e(resolver.getErrorMessage());
                             callback.onResult(MeasurementManager.MEASUREMENT_API_STATE_DISABLED);
                             statusCode = resolver.getErrorStatusCode();
                             return;
@@ -495,7 +517,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                         callback.onResult(MeasurementManager.MEASUREMENT_API_STATE_ENABLED);
                         statusCode = STATUS_SUCCESS;
                     } catch (RemoteException e) {
-                        LogUtil.e(e, CALLBACK_ERROR);
+                        LoggerFactory.getMeasurementLogger().e(e, CALLBACK_ERROR);
                         statusCode = STATUS_INTERNAL_ERROR;
                     } finally {
                         logApiStats(
@@ -513,7 +535,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             String appPackageName, Throttler.ApiKey apiKey, IMeasurementCallback callback) {
         final boolean throttled = !mThrottler.tryAcquire(apiKey, appPackageName);
         if (throttled) {
-            LogUtil.e("Rate Limit Reached for Measurement API");
+            LoggerFactory.getMeasurementLogger().e("Rate Limit Reached for Measurement API");
             try {
                 callback.onFailure(
                         new MeasurementErrorResponse.Builder()
@@ -521,7 +543,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                 .setErrorMessage(RATE_LIMIT_REACHED)
                                 .build());
             } catch (RemoteException e) {
-                LogUtil.e(e, "Failed to call the callback while performing rate limits.");
+                LoggerFactory.getMeasurementLogger()
+                        .e(e, "Failed to call the callback while performing rate limits.");
             }
             return true;
         }
@@ -533,10 +556,10 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                 request.getRegistrationType() == RegistrationRequest.REGISTER_SOURCE;
 
         if (isRegistrationSource && mFlags.getMeasurementApiRegisterSourceKillSwitch()) {
-            LogUtil.e("Measurement Register Source API is disabled");
+            LoggerFactory.getMeasurementLogger().e("Measurement Register Source API is disabled");
             return true;
         } else if (!isRegistrationSource && mFlags.getMeasurementApiRegisterTriggerKillSwitch()) {
-            LogUtil.e("Measurement Register Trigger API is disabled");
+            LoggerFactory.getMeasurementLogger().e("Measurement Register Trigger API is disabled");
             return true;
         }
         return false;
@@ -576,7 +599,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             final Optional<IAccessResolver> optionalResolver = getAccessDenied(accessResolvers);
             if (optionalResolver.isPresent()) {
                 final IAccessResolver resolver = optionalResolver.get();
-                LogUtil.e(resolver.getErrorMessage());
+                LoggerFactory.getMeasurementLogger().e(resolver.getErrorMessage());
                 statusCode = resolver.getErrorStatusCode();
                 callback.onFailure(
                         new MeasurementErrorResponse.Builder()
@@ -591,7 +614,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             statusCode = STATUS_SUCCESS;
 
         } catch (RemoteException e) {
-            LogUtil.e(e, CALLBACK_ERROR);
+            LoggerFactory.getMeasurementLogger().e(e, CALLBACK_ERROR);
             statusCode = STATUS_INTERNAL_ERROR;
         } finally {
             logApiStats(
@@ -619,7 +642,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             final Optional<IAccessResolver> optionalResolver = getAccessDenied(accessResolvers);
             if (optionalResolver.isPresent()) {
                 final IAccessResolver resolver = optionalResolver.get();
-                LogUtil.e(resolver.getErrorMessage());
+                LoggerFactory.getMeasurementLogger().e(resolver.getErrorMessage());
                 statusCode = resolver.getErrorStatusCode();
                 callback.onFailure(
                         new MeasurementErrorResponse.Builder()
@@ -641,7 +664,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             }
 
         } catch (RemoteException e) {
-            LogUtil.e(e, CALLBACK_ERROR);
+            LoggerFactory.getMeasurementLogger().e(e, CALLBACK_ERROR);
             statusCode = STATUS_INTERNAL_ERROR;
         } finally {
             logApiStats(

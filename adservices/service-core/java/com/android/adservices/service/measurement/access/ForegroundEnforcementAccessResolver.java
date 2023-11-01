@@ -23,7 +23,7 @@ import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 import android.content.Context;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.compat.ProcessCompatUtils;
@@ -52,12 +52,13 @@ public class ForegroundEnforcementAccessResolver implements IAccessResolver {
     @Override
     public boolean isAllowed(@NonNull Context context) {
         if (!mEnforceForegroundStatus) {
-            LogUtil.d("Enforcement foreground flag has been disabled");
+            LoggerFactory.getMeasurementLogger().d("Enforcement foreground flag has been disabled");
             return true;
         }
 
         if (ProcessCompatUtils.isSdkSandboxUid(mCallingUid)) {
-            LogUtil.d("Foreground check skipped, app running on Sandbox");
+            LoggerFactory.getMeasurementLogger()
+                    .d("Foreground check skipped, app running on Sandbox");
             return true;
         }
 
@@ -65,10 +66,11 @@ public class ForegroundEnforcementAccessResolver implements IAccessResolver {
         try {
             mAppImportanceFilter.assertCallerIsInForeground(mCallingUid, mAppNameId, null);
         } catch (AppImportanceFilter.WrongCallingApplicationStateException e) {
-            LogUtil.e("App not running in foreground");
+            LoggerFactory.getMeasurementLogger().e("App not running in foreground");
             return false;
         } catch (Exception e) {
-            LogUtil.e(e, "Unexpected error occurred when asserting caller in foreground");
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "Unexpected error occurred when asserting caller in foreground");
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_FOREGROUND_UNKNOWN_FAILURE,

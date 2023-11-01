@@ -21,13 +21,15 @@ import static org.mockito.Mockito.when;
 
 import android.net.Uri;
 
+import androidx.test.core.app.ApplicationProvider;
+
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.measurement.AbstractDbIntegrationTest;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DbState;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.errorlogging.AdServicesErrorLogger;
-import com.android.adservices.service.measurement.WebUtil;
 
 import org.json.JSONException;
 import org.junit.Assert;
@@ -57,7 +59,11 @@ public class AggregateEncryptionKeyManagerIntegrationTest extends AbstractDbInte
     private static final String MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_PATH = "test/path";
 
     @Mock Clock mClock;
-    @Spy AggregateEncryptionKeyFetcher mFetcher;
+
+    @Spy
+    AggregateEncryptionKeyFetcher mFetcher =
+            new AggregateEncryptionKeyFetcher(ApplicationProvider.getApplicationContext());
+
     @Mock HttpsURLConnection mUrlConnection;
     @Mock AdServicesErrorLogger mErrorLogger;
 

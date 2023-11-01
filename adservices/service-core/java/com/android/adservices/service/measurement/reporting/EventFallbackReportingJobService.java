@@ -28,6 +28,7 @@ import android.content.ComponentName;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
@@ -73,14 +74,15 @@ public final class EventFallbackReportingJobService extends JobService {
                 .recordOnStartJob(MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementJobEventFallbackReportingKillSwitch()) {
-            LogUtil.e("EventFallbackReportingJobService Job is disabled");
+            LoggerFactory.getMeasurementLogger()
+                    .e("EventFallbackReportingJobService Job is disabled");
             return skipAndCancelBackgroundJob(
                     params,
                     AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON,
                     /* doRecord=*/ true);
         }
 
-        LogUtil.d("EventFallbackReportingJobService.onStartJob");
+        LoggerFactory.getMeasurementLogger().d("EventFallbackReportingJobService.onStartJob");
         mExecutorFuture =
                 sBlockingExecutor.submit(
                         () -> {
@@ -114,7 +116,8 @@ public final class EventFallbackReportingJobService extends JobService {
                                 FlagsFactory.getFlags(),
                                 AdServicesLoggerImpl.getInstance(),
                                 ReportingStatus.ReportType.EVENT,
-                                ReportingStatus.UploadMethod.FALLBACK)
+                                ReportingStatus.UploadMethod.FALLBACK,
+                                getApplicationContext())
                         .performScheduledPendingReportsInWindow(
                                 System.currentTimeMillis() - maxEventReportUploadRetryWindowMs,
                                 System.currentTimeMillis() - eventMainReportingJobPeriodMs);
@@ -123,12 +126,13 @@ public final class EventFallbackReportingJobService extends JobService {
                 lock.unlock();
             }
         }
-        LogUtil.d("EventFallbackReportingJobService did not acquire the lock");
+        LoggerFactory.getMeasurementLogger()
+                .d("EventFallbackReportingJobService did not acquire the lock");
     }
 
     @Override
     public boolean onStopJob(JobParameters params) {
-        LogUtil.d("EventFallbackReportingJobService.onStopJob");
+        LoggerFactory.getMeasurementLogger().d("EventFallbackReportingJobService.onStopJob");
         boolean shouldRetry = true;
         if (mExecutorFuture != null) {
             shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
@@ -153,13 +157,14 @@ public final class EventFallbackReportingJobService extends JobService {
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
         Flags flags = FlagsFactory.getFlags();
         if (flags.getMeasurementJobEventFallbackReportingKillSwitch()) {
-            LogUtil.d("EventFallbackReportingJobService is disabled, skip scheduling");
+            LoggerFactory.getMeasurementLogger()
+                    .d("EventFallbackReportingJobService is disabled, skip scheduling");
             return;
         }
 
         final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
         if (jobScheduler == null) {
-            LogUtil.e("JobScheduler not found");
+            LoggerFactory.getMeasurementLogger().e("JobScheduler not found");
             return;
         }
 
@@ -169,9 +174,10 @@ public final class EventFallbackReportingJobService extends JobService {
         JobInfo jobInfo = buildJobInfo(context, flags);
         if (forceSchedule || !jobInfo.equals(scheduledJob)) {
             schedule(jobScheduler, jobInfo);
-            LogUtil.d("Scheduled EventFallbackReportingJobService");
+            LoggerFactory.getMeasurementLogger().d("Scheduled EventFallbackReportingJobService");
         } else {
-            LogUtil.d("EventFallbackReportingJobService already scheduled, skipping reschedule");
+            LoggerFactory.getMeasurementLogger()
+                    .d("EventFallbackReportingJobService already scheduled, skipping reschedule");
         }
     }
 

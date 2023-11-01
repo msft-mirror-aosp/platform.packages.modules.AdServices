@@ -17,19 +17,17 @@
 package android.adservices.cts;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
+import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
 import android.adservices.common.AdData;
 import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
-import android.adservices.customaudience.CustomAudienceManager;
-import android.adservices.customaudience.JoinCustomAudienceRequest;
 import android.adservices.customaudience.TrustedBiddingData;
 import android.adservices.customaudience.TrustedBiddingDataFixture;
 import android.content.Context;
@@ -39,8 +37,8 @@ import android.os.Parcel;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.OutcomeReceiverForTests;
 import com.android.adservices.common.RequiresLowRamDevice;
+import com.android.adservices.common.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableList;
 
@@ -52,6 +50,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -61,7 +60,12 @@ public final class CustomAudienceTest {
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Executor sCallbackExecutor = Executors.newCachedThreadPool();
 
-    @Rule
+    // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    // Skip the test if it runs on unsupported platforms.
+    @Rule(order = 1)
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
             new AdServicesDeviceSupportedRule();
 
@@ -271,32 +275,35 @@ public final class CustomAudienceTest {
     @Test
     @RequiresLowRamDevice
     public void testGetCustomAudienceService_lowRamDevice_throwsIllegalStateException() {
-        CustomAudienceManager manager = CustomAudienceManager.get(sContext);
-        assertWithMessage("manager").that(manager).isNotNull();
-        OutcomeReceiverForTests<Object> receiver = new OutcomeReceiverForTests<>();
-        JoinCustomAudienceRequest request =
-                new JoinCustomAudienceRequest.Builder()
-                        .setCustomAudience(
-                                new CustomAudience.Builder()
-                                        .setName(CustomAudienceFixture.VALID_NAME)
-                                        .setDailyUpdateUri(Uri.parse("http://example.com"))
-                                        .setTrustedBiddingData(
-                                                new TrustedBiddingData.Builder()
-                                                        .setTrustedBiddingKeys(ImmutableList.of())
-                                                        .setTrustedBiddingUri(
-                                                                Uri.parse("http://example.com"))
-                                                        .build())
-                                        .setUserBiddingSignals(AdSelectionSignals.fromString("{}"))
-                                        .setAds(List.of())
-                                        .setBiddingLogicUri(Uri.parse("http://example.com"))
-                                        .setBuyer(CommonFixture.VALID_BUYER_1)
-                                        .setActivationTime(Instant.now())
-                                        .setExpirationTime(Instant.now().plus(5, ChronoUnit.DAYS))
-                                        .build())
+        AdvertisingCustomAudienceClient client =
+                new AdvertisingCustomAudienceClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(sCallbackExecutor)
+                        .setUseGetMethodToCreateManagerInstance(true)
                         .build();
 
-        assertThrows(
-                IllegalStateException.class,
-                () -> manager.joinCustomAudience(request, sCallbackExecutor, receiver));
+        CustomAudience customAudience =
+                new CustomAudience.Builder()
+                        .setName(CustomAudienceFixture.VALID_NAME)
+                        .setDailyUpdateUri(Uri.parse("http://example.com"))
+                        .setTrustedBiddingData(
+                                new TrustedBiddingData.Builder()
+                                        .setTrustedBiddingKeys(ImmutableList.of())
+                                        .setTrustedBiddingUri(Uri.parse("http://example.com"))
+                                        .build())
+                        .setUserBiddingSignals(AdSelectionSignals.fromString("{}"))
+                        .setAds(List.of())
+                        .setBiddingLogicUri(Uri.parse("http://example.com"))
+                        .setBuyer(CommonFixture.VALID_BUYER_1)
+                        .setActivationTime(Instant.now())
+                        .setExpirationTime(Instant.now().plus(5, ChronoUnit.DAYS))
+                        .build();
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> client.joinCustomAudience(customAudience).get());
+        assertThat(exception).hasCauseThat().isInstanceOf(IllegalStateException.class);
+        assertThat(exception).hasMessageThat().contains("service is not available");
     }
 }

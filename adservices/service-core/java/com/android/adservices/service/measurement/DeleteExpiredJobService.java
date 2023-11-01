@@ -27,6 +27,7 @@ import android.content.ComponentName;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.Flags;
@@ -59,14 +60,14 @@ public final class DeleteExpiredJobService extends JobService {
                 .recordOnStartJob(MEASUREMENT_DELETE_EXPIRED_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementJobDeleteExpiredKillSwitch()) {
-            LogUtil.e("DeleteExpiredJobService is disabled");
+            LoggerFactory.getMeasurementLogger().e("DeleteExpiredJobService is disabled");
             return skipAndCancelBackgroundJob(
                     params,
                     AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON,
                     /* doRecord=*/ true);
         }
 
-        LogUtil.d("DeleteExpiredJobService.onStartJob");
+        LoggerFactory.getMeasurementLogger().d("DeleteExpiredJobService.onStartJob");
         sBackgroundExecutor.execute(
                 () -> {
                     long earliestValidInsertion =
@@ -93,7 +94,7 @@ public final class DeleteExpiredJobService extends JobService {
 
     @Override
     public boolean onStopJob(JobParameters params) {
-        LogUtil.d("DeleteExpiredJobService.onStopJob");
+        LoggerFactory.getMeasurementLogger().d("DeleteExpiredJobService.onStopJob");
         boolean shouldRetry = false;
 
         AdservicesJobServiceLogger.getInstance(this)
@@ -116,13 +117,14 @@ public final class DeleteExpiredJobService extends JobService {
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
         Flags flags = FlagsFactory.getFlags();
         if (flags.getMeasurementJobDeleteExpiredKillSwitch()) {
-            LogUtil.e("DeleteExpiredJobService is disabled, skip scheduling");
+            LoggerFactory.getMeasurementLogger()
+                    .e("DeleteExpiredJobService is disabled, skip scheduling");
             return;
         }
 
         final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
         if (jobScheduler == null) {
-            LogUtil.e("JobScheduler not found");
+            LoggerFactory.getMeasurementLogger().e("JobScheduler not found");
             return;
         }
 
@@ -131,9 +133,10 @@ public final class DeleteExpiredJobService extends JobService {
         JobInfo jobInfo = buildJobInfo(context, flags);
         if (forceSchedule || !jobInfo.equals(scheduledJob)) {
             schedule(jobScheduler, jobInfo);
-            LogUtil.d("Scheduled DeleteExpiredJobService");
+            LoggerFactory.getMeasurementLogger().d("Scheduled DeleteExpiredJobService");
         } else {
-            LogUtil.d("DeleteExpiredJobService already scheduled, skipping reschedule");
+            LoggerFactory.getMeasurementLogger()
+                    .d("DeleteExpiredJobService already scheduled, skipping reschedule");
         }
     }
 

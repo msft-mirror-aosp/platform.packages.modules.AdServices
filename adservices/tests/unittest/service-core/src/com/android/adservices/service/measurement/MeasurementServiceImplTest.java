@@ -25,6 +25,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 import static android.adservices.measurement.MeasurementManager.MEASUREMENT_API_STATE_DISABLED;
+import static android.adservices.measurement.MeasurementManager.MEASUREMENT_API_STATE_ENABLED;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -66,6 +67,7 @@ import android.test.mock.MockContext;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AllowLists;
@@ -565,6 +567,35 @@ public final class MeasurementServiceImplTest {
                 });
     }
 
+    @Test
+    public void testGetMeasurementApiStatus_EnableApiStatusAllowListCheck_success()
+            throws Exception {
+        when(mMockFlags.getMsmtEnableApiStatusAllowListCheck()).thenReturn(true);
+        runRunMocks(
+                Api.STATUS,
+                new AccessDenier(),
+                () -> {
+                    CountDownLatch countDownLatch = new CountDownLatch(1);
+                    final AtomicInteger resultWrapper = new AtomicInteger();
+
+                    createServiceWithMocks()
+                            .getMeasurementApiStatus(
+                                    createStatusParam(),
+                                    createCallerMetadata(),
+                                    new IMeasurementApiStatusCallback.Stub() {
+                                        @Override
+                                        public void onResult(int result) {
+                                            resultWrapper.set(result);
+                                            countDownLatch.countDown();
+                                        }
+                                    });
+                    assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+                    assertThat(resultWrapper.get())
+                            .isEqualTo(MeasurementManager.MEASUREMENT_API_STATE_ENABLED);
+                    assertPackageNameLogged();
+                });
+    }
+
     private void getMeasurementApiStatusAndAssertFailure() throws InterruptedException {
         final CountDownLatch countDownLatchAny = new CountDownLatch(1);
         final AtomicInteger resultWrapper = new AtomicInteger();
@@ -585,6 +616,26 @@ public final class MeasurementServiceImplTest {
         assertThat(resultWrapper.get()).isEqualTo(MEASUREMENT_API_STATE_DISABLED);
     }
 
+    private void getMeasurementApiStatusAndAssertEnabled() throws InterruptedException {
+        final CountDownLatch countDownLatchAny = new CountDownLatch(1);
+        final AtomicInteger resultWrapper = new AtomicInteger();
+
+        createServiceWithMocks()
+                .getMeasurementApiStatus(
+                        createStatusParam(),
+                        createCallerMetadata(),
+                        new IMeasurementApiStatusCallback.Stub() {
+                            @Override
+                            public void onResult(int result) {
+                                resultWrapper.set(result);
+                                countDownLatchAny.countDown();
+                            }
+                        });
+
+        assertThat(countDownLatchAny.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        assertThat(resultWrapper.get()).isEqualTo(MEASUREMENT_API_STATE_ENABLED);
+    }
+
     @Test
     public void testGetMeasurementApiStatus_failureByAppPackageMsmtApiAccessResolver()
             throws Exception {
@@ -595,8 +646,29 @@ public final class MeasurementServiceImplTest {
     }
 
     @Test
+    public void testGetMeasurementApiStatus_enabledAppPackageMsmtApiAccessResolver_flagAllowList()
+            throws Exception {
+        when(mMockFlags.getMsmtEnableApiStatusAllowListCheck()).thenReturn(true);
+        runRunMocks(
+                Api.STATUS,
+                new AccessDenier().deniedByAppPackageMsmtApiApp(),
+                this::getMeasurementApiStatusAndAssertEnabled);
+    }
+
+    @Test
     public void testGetMeasurementApiStatus_failureByForegroundEnforcementAccessResolver()
             throws Exception {
+        runRunMocks(
+                Api.STATUS,
+                new AccessDenier().deniedByForegroundEnforcement(),
+                this::getMeasurementApiStatusAndAssertFailure);
+    }
+
+    @Test
+    public void
+            testGetMeasurementApiStatus_failureByForegroundEnforcementAccessResolver_flagAllowList()
+                    throws Exception {
+        when(mMockFlags.getMsmtEnableApiStatusAllowListCheck()).thenReturn(true);
         runRunMocks(
                 Api.STATUS,
                 new AccessDenier().deniedByForegroundEnforcement(),
@@ -612,10 +684,30 @@ public final class MeasurementServiceImplTest {
     }
 
     @Test
+    public void testGetMeasurementApiStatus_failureByKillSwitchAccessResolver_flagAllowList()
+            throws Exception {
+        when(mMockFlags.getMsmtEnableApiStatusAllowListCheck()).thenReturn(true);
+        runRunMocks(
+                Api.STATUS,
+                new AccessDenier().deniedByKillSwitch(),
+                this::getMeasurementApiStatusAndAssertFailure);
+    }
+
+    @Test
     public void testGetMeasurementApiStatus_failureByConsentAccessResolver() throws Exception {
         runRunMocks(
                 Api.STATUS,
                 new AccessDenier().deniedByConsent(),
+                this::getMeasurementApiStatusAndAssertFailure);
+    }
+
+    @Test
+    public void testGetMeasurementApiStatus_failureByConsentAccessResolver_flagAllowList()
+            throws Exception {
+        when(mMockFlags.getMsmtEnableApiStatusAllowListCheck()).thenReturn(true);
+        runRunMocks(
+                Api.STATUS,
+                new AccessDenier().deniedByKillSwitch(),
                 this::getMeasurementApiStatusAndAssertFailure);
     }
 
@@ -626,6 +718,18 @@ public final class MeasurementServiceImplTest {
                 () ->
                         mMeasurementServiceImpl.getMeasurementApiStatus(
                                 /* request = */ null,
+                                createCallerMetadata(),
+                                new IMeasurementApiStatusCallback.Default()));
+    }
+
+    @Test
+    public void testGetMeasurementApiStatus_invalidRequest_throwException_flagAllowList() {
+        when(mMockFlags.getMsmtEnableApiStatusAllowListCheck()).thenReturn(true);
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        mMeasurementServiceImpl.getMeasurementApiStatus(
+                                /* request */ null,
                                 createCallerMetadata(),
                                 new IMeasurementApiStatusCallback.Default()));
     }
@@ -642,7 +746,31 @@ public final class MeasurementServiceImplTest {
     }
 
     @Test
+    public void testGetMeasurementApiStatus_invalidCallerMetadata_throwException_flagAllowList() {
+        when(mMockFlags.getMsmtEnableApiStatusAllowListCheck()).thenReturn(true);
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        mMeasurementServiceImpl.getMeasurementApiStatus(
+                                createStatusParam(),
+                                /* callerMetadata = */ null,
+                                new IMeasurementApiStatusCallback.Default()));
+    }
+
+    @Test
     public void testGetMeasurementApiStatus_invalidCallback_throwException() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        mMeasurementServiceImpl.getMeasurementApiStatus(
+                                createStatusParam(),
+                                createCallerMetadata(),
+                                /* callback = */ null));
+    }
+
+    @Test
+    public void testGetMeasurementApiStatus_invalidCallback_throwException_flagAllowList() {
+        when(mMockFlags.getMsmtEnableApiStatusAllowListCheck()).thenReturn(true);
         assertThrows(
                 NullPointerException.class,
                 () ->
@@ -1602,6 +1730,8 @@ public final class MeasurementServiceImplTest {
         }
 
         // App Package Resolver Measurement Api
+        updateAppPackageAccessResolverDeniedEnableApiStatusAllowListCheck(
+                accessDenier.mByAppPackageMsmtApiApp);
         updateAppPackageAccessResolverDenied(accessDenier.mByAppPackageMsmtApiApp);
 
         // Consent Resolver
@@ -1626,6 +1756,11 @@ public final class MeasurementServiceImplTest {
         String blockList = AllowLists.ALLOW_NONE;
         when(mMockFlags.getMsmtApiAppAllowList()).thenReturn(allowList);
         when(mMockFlags.getMsmtApiAppBlockList()).thenReturn(blockList);
+    }
+
+    private void updateAppPackageAccessResolverDeniedEnableApiStatusAllowListCheck(boolean denied) {
+        String allowList = denied ? AllowLists.ALLOW_NONE : AllowLists.ALLOW_ALL;
+        when(mMockFlags.getWebContextClientAppAllowList()).thenReturn(allowList);
     }
 
     private void updateAppPackageResolverWebAppDenied(boolean denied) {

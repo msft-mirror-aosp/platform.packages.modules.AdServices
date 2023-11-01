@@ -23,6 +23,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdCompatibleManager;
 import android.adservices.common.AdServicesStatusUtils;
+import android.adservices.common.AssetFileDescriptorUtil;
 import android.adservices.common.CallerMetadata;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.common.SandboxedSdkContextUtils;
@@ -33,6 +34,7 @@ import android.annotation.RequiresPermission;
 import android.annotation.SuppressLint;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
+import android.content.res.AssetFileDescriptor;
 import android.os.Build;
 import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
@@ -47,6 +49,7 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.ServiceBinder;
 import com.android.internal.annotations.VisibleForTesting;
 
+import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
@@ -179,11 +182,7 @@ public class AdSelectionManager {
 
     @NonNull
     AdSelectionService doGetService() {
-        AdSelectionService service = mServiceBinder.getService();
-        if (service == null) {
-            throw new IllegalStateException("ad selection service is not available.");
-        }
-        return service;
+        return mServiceBinder.getService();
     }
 
     /**
@@ -240,12 +239,21 @@ public class AdSelectionManager {
                         public void onSuccess(GetAdSelectionDataResponse resultParcel) {
                             executor.execute(
                                     () -> {
+                                        byte[] adSelectionData;
+                                        try {
+                                            adSelectionData = getAdSelectionData(resultParcel);
+                                        } catch (IOException e) {
+                                            receiver.onError(
+                                                    new IllegalStateException(
+                                                            "Unable to return the AdSelectionData",
+                                                            e));
+                                            return;
+                                        }
                                         receiver.onResult(
                                                 new GetAdSelectionDataOutcome.Builder()
                                                         .setAdSelectionId(
                                                                 resultParcel.getAdSelectionId())
-                                                        .setAdSelectionData(
-                                                                resultParcel.getAdSelectionData())
+                                                        .setAdSelectionData(adSelectionData)
                                                         .build());
                                     });
                         }
@@ -907,6 +915,15 @@ public class AdSelectionManager {
         return sandboxedSdkContext == null
                 ? mContext.getPackageName()
                 : sandboxedSdkContext.getClientPackageName();
+    }
+
+    private byte[] getAdSelectionData(GetAdSelectionDataResponse response) throws IOException {
+        if (Objects.nonNull(response.getAssetFileDescriptor())) {
+            AssetFileDescriptor assetFileDescriptor = response.getAssetFileDescriptor();
+            return AssetFileDescriptorUtil.readAssetFileDescriptorIntoBuffer(assetFileDescriptor);
+        } else {
+            return response.getAdSelectionData();
+        }
     }
 
     private String getCallerSdkName() {

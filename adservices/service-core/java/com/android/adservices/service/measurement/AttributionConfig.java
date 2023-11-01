@@ -27,14 +27,12 @@ import static com.android.adservices.service.measurement.AttributionConfig.Attri
 import static com.android.adservices.service.measurement.AttributionConfig.AttributionConfigContract.SOURCE_NOT_FILTERS;
 import static com.android.adservices.service.measurement.AttributionConfig.AttributionConfigContract.SOURCE_PRIORITY_RANGE;
 import static com.android.adservices.service.measurement.AttributionConfig.AttributionConfigContract.START;
-import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
-import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.util.Pair;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.MathUtils;
@@ -227,7 +225,7 @@ public class AttributionConfig {
 
             return attributionConfig;
         } catch (JSONException e) {
-            LogUtil.d(e, "Serializing attribution config failed");
+            LoggerFactory.getMeasurementLogger().d(e, "Serializing attribution config failed");
             return null;
         }
     }
@@ -287,8 +285,8 @@ public class AttributionConfig {
                 mSourceExpiryOverride =
                         MathUtils.extractValidNumberInRange(
                                 override,
-                                MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+                                flags.getMeasurementMinReportingRegisterSourceExpirationInSeconds(),
+                                flags.getMeasurementMaxReportingRegisterSourceExpirationInSeconds());
             }
             if (!attributionConfigsJson.isNull(PRIORITY)) {
                 mPriority = attributionConfigsJson.getLong(PRIORITY);
@@ -298,8 +296,9 @@ public class AttributionConfig {
                 mExpiry =
                         MathUtils.extractValidNumberInRange(
                                 expiry,
-                                MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+                                flags.getMeasurementMinReportingRegisterSourceExpirationInSeconds(),
+                                flags
+                                        .getMeasurementMaxReportingRegisterSourceExpirationInSeconds());
             }
             if (!attributionConfigsJson.isNull(FILTER_DATA)) {
                 JSONArray filterSet = Filter.maybeWrapFilters(attributionConfigsJson, FILTER_DATA);

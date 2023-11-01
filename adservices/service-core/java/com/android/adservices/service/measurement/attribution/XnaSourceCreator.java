@@ -20,7 +20,7 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.util.Pair;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.AttributionConfig;
 import com.android.adservices.service.measurement.FilterMap;
@@ -77,7 +77,7 @@ public class XnaSourceCreator {
                                 .build());
             }
         } catch (JSONException e) {
-            LogUtil.d(e, "Failed to parse attribution configs.");
+            LoggerFactory.getMeasurementLogger().d(e, "Failed to parse attribution configs.");
             return Collections.emptyList();
         }
 
@@ -166,7 +166,8 @@ public class XnaSourceCreator {
                                                 filter,
                                                 match);
                                     } catch (JSONException e) {
-                                        LogUtil.d(e, "Failed to parse source filterData.");
+                                        LoggerFactory.getMeasurementLogger()
+                                                .d(e, "Failed to parse source filterData.");
                                         return false;
                                     }
                                 })
@@ -218,7 +219,7 @@ public class XnaSourceCreator {
                                 .serializeAsJson(mFlags)
                                 .toString());
             } catch (JSONException e) {
-                LogUtil.d(e, "Failed to parse shared filter keys.");
+                LoggerFactory.getMeasurementLogger().d(e, "Failed to parse shared filter keys.");
                 return Optional.empty();
             }
             builder.setSharedFilterDataKeys(null);
@@ -251,7 +252,8 @@ public class XnaSourceCreator {
 
             return new JSONObject(derivedAggregatableSource).toString();
         } catch (JSONException e) {
-            LogUtil.d(e, "Failed to set AggregatableAttributionSource for derived source.");
+            LoggerFactory.getMeasurementLogger()
+                    .d(e, "Failed to set AggregatableAttributionSource for derived source.");
             return null;
         }
     }

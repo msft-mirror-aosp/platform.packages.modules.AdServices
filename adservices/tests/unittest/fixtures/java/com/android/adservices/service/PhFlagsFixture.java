@@ -27,6 +27,7 @@ import static com.android.adservices.service.Flags.FLEDGE_BACKGROUND_FETCH_NETWO
 import static com.android.adservices.service.Flags.FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.SDK_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_FETCHER_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE;
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION;
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION;
@@ -45,6 +46,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_DATA_VERS
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_CLEANUP_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
 
 import static org.junit.Assert.assertEquals;
@@ -76,7 +78,7 @@ public final class PhFlagsFixture {
     public static final long EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS =
             FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS + ADDITIONAL_TIMEOUT;
     public static final long EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS =
-            FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS + ADDITIONAL_TIMEOUT;
+            FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS + ADDITIONAL_TIMEOUT * 4;
     public static final long EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS =
             FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS + ADDITIONAL_TIMEOUT;
     public static final long EXTENDED_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS =
@@ -389,6 +391,15 @@ public final class PhFlagsFixture {
                 false);
     }
 
+    /** Overrides whether the protected signals cleanup runs. */
+    public static void overrideProtectedSignalsCleanupEnabled(boolean value) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_PROTECTED_SIGNALS_CLEANUP_ENABLED,
+                Boolean.toString(value),
+                false);
+    }
+
     /** Overrides whether the CPC billing feature is enabled. */
     public static void overrideFledgeDataVersionHeaderEnabled(boolean value) {
         DeviceConfig.setProperty(
@@ -413,6 +424,35 @@ public final class PhFlagsFixture {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH,
                 Boolean.toString(value),
+                false);
+    }
+
+    /** Overrides the timeouts for on-device auctions. */
+    public static void overrideFledgeOnDeviceAdSelectionTimeouts(
+            long biddingTimeoutPerCaMs, long scoringTimeoutMs, long overallTimeoutMs) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS,
+                Long.toString(biddingTimeoutPerCaMs),
+                false);
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS,
+                Long.toString(scoringTimeoutMs),
+                false);
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS,
+                Long.toString(overallTimeoutMs),
+                false);
+    }
+
+    /** Overrides timeout for {@link com.android.adservices.service.adselection.AdIdFetcher}. */
+    public static void overrideAdIdFetcherTimeoutMs(long timeoutMs) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_AD_ID_FETCHER_TIMEOUT_MS,
+                Long.toString(timeoutMs),
                 false);
     }
 }

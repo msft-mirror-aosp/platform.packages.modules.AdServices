@@ -70,7 +70,7 @@ public class MainActivity extends Activity {
         mRenderedView.setZOrderOnTop(true);
         mRenderedView.setVisibility(View.INVISIBLE);
 
-        mLoadButton = findViewById(R.id.load_code_button);
+        mLoadButton = findViewById(R.id.load_sdk_button);
         mRenderButton = findViewById(R.id.request_surface_button);
         mUrlInputTextbox = findViewById(R.id.url_input_textbox);
         mSubmitUrlButton = findViewById(R.id.submit_url_button);

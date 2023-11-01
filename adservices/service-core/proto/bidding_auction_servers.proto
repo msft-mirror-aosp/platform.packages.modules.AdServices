@@ -47,6 +47,16 @@ message ProtectedAudienceInput {
   string generation_id = 4;
 }
 
+// Grouping of data pertaining to protected app signals.
+message ProtectedAppSignals {
+  // Raw and system signals from device that can help generate a relevant app
+  // install ad for user.
+  bytes app_install_signals = 1;
+
+  // Version of the encoding used for the protected app signals.
+  int32 encoding_version = 2;
+}
+
 // A BuyerInput includes data that a buyer (DSP) requires to generate bids.
 message BuyerInput {
   // CustomAudience information passed from the client.
@@ -103,6 +113,10 @@ message BuyerInput {
   }
   // The Custom Audiences owned by the buyer.
   repeated CustomAudience custom_audiences = 1;
+
+  // Signals from device that can help generate a relevant app install ad for
+  // users.
+  ProtectedAppSignals protected_app_signals = 2;
 }
 
 // Information passed by Android.
@@ -182,6 +196,21 @@ message AuctionResult {
   // Error thrown during the SelectAd request. If there is no error and the
   // request completes successfully, this field will be empty.
   Error error = 12;
+
+  // Specifies type of the ad. It can help differentiate between ads when
+  // B&A is supporting multiple ad targeting use cases concurrently.
+  enum AdType {
+    UNKNOWN = 0;
+
+    // Remarketing ad.
+    REMARKETING_AD = 1;
+
+    // An app install ad.
+    APP_INSTALL_AD = 2;
+  }
+
+  // Type of the winning ad.
+  AdType ad_type = 14;
 }
 
 // The reporting urls registered during the execution of reportResult() and

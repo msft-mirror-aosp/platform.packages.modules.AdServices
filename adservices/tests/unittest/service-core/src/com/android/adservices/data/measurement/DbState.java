@@ -20,12 +20,12 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
-import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
@@ -537,11 +537,15 @@ public class DbState {
     }
 
     private DebugReport getDebugReportFrom(JSONObject rJSON) throws JSONException {
-        return new DebugReport.Builder()
-                .setId(rJSON.getString("id"))
-                .setType(rJSON.getString("type"))
-                .setBody(rJSON.getString("body"))
-                .build();
+        DebugReport.Builder builder =
+                new DebugReport.Builder()
+                        .setId(rJSON.getString("id"))
+                        .setType(rJSON.getString("type"))
+                        .setBody(rJSON.getString("body"));
+        if (rJSON.has("registrant")) {
+            builder.setRegistrant(Uri.parse(rJSON.getString("registrant")));
+        }
+        return builder.build();
     }
 
     private AsyncRegistration getAsyncRegistrationFrom(JSONObject aJSON) throws JSONException {

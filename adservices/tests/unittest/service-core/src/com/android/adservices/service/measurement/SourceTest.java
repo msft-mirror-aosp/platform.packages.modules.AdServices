@@ -38,6 +38,7 @@ import android.util.Pair;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -170,6 +171,7 @@ public class SourceTest {
                         .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(null)
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
+                        .setDropSourceIfInstalled(true)
                         .build(),
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -219,6 +221,7 @@ public class SourceTest {
                         .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(null)
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
+                        .setDropSourceIfInstalled(true)
                         .build());
     }
 
@@ -481,6 +484,11 @@ public class SourceTest {
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setPrivacyParameters(
                                 reportSpecCountBased.encodePrivacyParametersToJSONString())
+                        .build());
+        assertNotEquals(
+                SourceFixture.getMinimalValidSourceBuilder().setDropSourceIfInstalled(true).build(),
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setDropSourceIfInstalled(false)
                         .build());
     }
 

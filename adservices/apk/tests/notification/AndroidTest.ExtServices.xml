@@ -21,9 +21,6 @@
     <option name="run-command" value="device_config set_sync_disabled_for_tests persistent"/>
     <option name="run-command" value="device_config put adservices enable_back_compat true"/>
     <option name="teardown-command" value="device_config set_sync_disabled_for_tests none"/>
-    <!-- TODO: b/296943642 Remove command to run AdExtBootCompletedReceiver on R in UI tests - -->
-    <option name="run-command"
-            value="pm enable com.google.android.ext.services/com.android.adservices.service.common.AdExtBootCompletedReceiver"/>
 
     <!-- Prevent test from running on Android T+ -->
     <object type="module_controller"

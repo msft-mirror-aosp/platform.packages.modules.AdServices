@@ -474,7 +474,18 @@ public class JSScriptEngine {
                 .transform(this::isWasmSupported, mExecutorService);
     }
 
-    boolean isConfigurableHeapSizeSupported(JavaScriptSandbox jsSandbox) {
+    /**
+     * @return a future value indicating if the JS Sandbox installed on the device supports
+     *     configurable Heap size.
+     */
+    @VisibleForTesting
+    public ListenableFuture<Boolean> isConfigurableHeapSizeSupported() {
+        return mJsSandboxProvider
+                .getFutureInstance(mContext)
+                .transform(this::isConfigurableHeapSizeSupported, mExecutorService);
+    }
+
+    private boolean isConfigurableHeapSizeSupported(JavaScriptSandbox jsSandbox) {
         boolean isConfigurableHeapSupported =
                 jsSandbox.isFeatureSupported(JavaScriptSandbox.JS_FEATURE_ISOLATE_MAX_HEAP_SIZE);
         mLogger.v("Is configurable max heap size supported? : %b", isConfigurableHeapSupported);
