@@ -46,7 +46,6 @@ import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
-import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.AttributionConfig;
 import com.android.adservices.service.measurement.EventReport;
@@ -67,6 +66,7 @@ import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementAttributionStats;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import org.json.JSONArray;
@@ -153,8 +153,6 @@ public class AttributionJobHandlerTest {
     @Mock AdServicesLogger mLogger;
     @Mock AdServicesErrorLogger mErrorLogger;
     @Mock DebugReportApi mDebugReportApi;
-
-
 
     class FakeDatastoreManager extends DatastoreManager {
 
@@ -4434,8 +4432,9 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}]\n")
                         .setTriggerTime(
-                                baseTime + TimeUnit.DAYS.toMillis(1)
-                                + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                                baseTime
+                                        + TimeUnit.DAYS.toMillis(1)
+                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
                         .setAggregateTriggerData(buildAggregateTriggerData().toString())
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .build();
@@ -4447,8 +4446,9 @@ public class AttributionJobHandlerTest {
                         .setEnrollmentId("another-enrollment-id")
                         .setAttributionDestinations(List.of(Uri.parse("https://bar.test")))
                         .setReportTime(
-                                baseTime + TimeUnit.DAYS.toMillis(3)
-                                + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                                baseTime
+                                        + TimeUnit.DAYS.toMillis(3)
+                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
                         .setStatus(EventReport.Status.PENDING)
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setRegistrationOrigin(WebUtil.validUri("https://adtech2.test"))
@@ -4575,8 +4575,9 @@ public class AttributionJobHandlerTest {
                         .setEnrollmentId("another-enrollment-id")
                         .setAttributionDestinations(List.of(Uri.parse("https://bar.test")))
                         .setReportTime(
-                                baseTime + TimeUnit.DAYS.toMillis(2)
-                                + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                                baseTime
+                                        + TimeUnit.DAYS.toMillis(2)
+                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
                         .setStatus(EventReport.Status.PENDING)
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setRegistrationOrigin(WebUtil.validUri("https://adtech2.test"))
@@ -4728,8 +4729,9 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}]\n")
                         .setTriggerTime(
-                                baseTime + TimeUnit.DAYS.toMillis(1)
-                                + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                                baseTime
+                                        + TimeUnit.DAYS.toMillis(1)
+                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
                         .setAggregateTriggerData(buildAggregateTriggerData().toString())
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .build();
@@ -4741,8 +4743,9 @@ public class AttributionJobHandlerTest {
                         .setEnrollmentId("another-enrollment-id")
                         .setAttributionDestinations(List.of(Uri.parse("https://bar.test")))
                         .setReportTime(
-                                baseTime + TimeUnit.DAYS.toMillis(2)
-                                + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                                baseTime
+                                        + TimeUnit.DAYS.toMillis(2)
+                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
                         .setStatus(EventReport.Status.PENDING)
                         .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
                         .setSourceType(Source.SourceType.NAVIGATION)
@@ -4840,8 +4843,7 @@ public class AttributionJobHandlerTest {
                         .getValue()
                         .longValue());
         assertEquals(
-                TimeUnit.DAYS.toMillis(2)
-                + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 reportArgInsertedReport.getAllValues().get(0).getReportTime() - baseTime);
         verify(mMeasurementDao, times(1)).updateSourceAttributedTriggers(
                 eq(source.getId()), eq(source.attributedTriggersToJsonFlexApi()));
@@ -4880,8 +4882,9 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}]\n")
                         .setTriggerTime(
-                                baseTime + TimeUnit.DAYS.toMillis(1)
-                                + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                                baseTime
+                                        + TimeUnit.DAYS.toMillis(1)
+                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
                         .setAggregateTriggerData(buildAggregateTriggerData().toString())
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .build();
@@ -4894,8 +4897,9 @@ public class AttributionJobHandlerTest {
                         .setEnrollmentId("another-enrollment-id")
                         .setAttributionDestinations(List.of(Uri.parse("https://bar.test")))
                         .setReportTime(
-                                baseTime + TimeUnit.DAYS.toMillis(2)
-                                + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                                baseTime
+                                        + TimeUnit.DAYS.toMillis(2)
+                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
                         .setStatus(EventReport.Status.PENDING)
                         .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
                         .setSourceType(Source.SourceType.NAVIGATION)

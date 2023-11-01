@@ -39,7 +39,6 @@ import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
-import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.EventReport;
@@ -55,6 +54,7 @@ import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.aggregation.AggregateReportFixture;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.json.JSONArray;
@@ -309,8 +309,8 @@ public class MeasurementDataDeleterTest {
                 eq(source1.getId()), attributionStatusArg.capture());
         List<String> attributionStatuses = attributionStatusArg.getAllValues();
         assertEquals(
-                getAttributionStatus(List.of("trigger2", "trigger3"),
-                      List.of("5", "6"), List.of("2", "3")),
+                getAttributionStatus(
+                        List.of("trigger2", "trigger3"), List.of("5", "6"), List.of("2", "3")),
                 attributionStatuses.get(0));
         assertEquals(
                 getAttributionStatus(List.of("trigger2"), List.of("5"), List.of("2")),

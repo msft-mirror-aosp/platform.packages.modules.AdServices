@@ -21,8 +21,8 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Optional;
