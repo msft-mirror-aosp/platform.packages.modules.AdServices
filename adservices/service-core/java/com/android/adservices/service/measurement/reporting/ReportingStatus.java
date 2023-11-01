@@ -88,7 +88,8 @@ public class ReportingStatus {
         JOB_RETRY_LIMIT_REACHED(5),
         SERIALIZATION_ERROR(6),
         ENCRYPTION_ERROR(7),
-        UNSUCCESSFUL_HTTP_RESPONSE_CODE(8);
+        UNSUCCESSFUL_HTTP_RESPONSE_CODE(8),
+        REPORT_NOT_FOUND(9);
         private final int mValue;
 
         FailureStatus(int value) {
@@ -134,6 +135,7 @@ public class ReportingStatus {
         mFailureStatus = FailureStatus.UNKNOWN;
         mUploadMethod = UploadMethod.UNKNOWN;
         mReportingDelay = 0L;
+        mSourceRegistrant = "";
     }
 
     /** Get the type of report that is being uploaded. */

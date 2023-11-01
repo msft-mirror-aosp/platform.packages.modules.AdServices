@@ -101,6 +101,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__BETA_UX;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__RVC_UX;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__GA_UX;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__UNSPECIFIED_UX;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__UNSUPPORTED_UX;
@@ -627,6 +628,8 @@ public class UiStatsLogger {
         switch (UxStatesManager.getInstance(context).getUx()) {
             case U18_UX:
                 return AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__UNSPECIFIED_UX;
+            case RVC_UX:
+                return AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__RVC_UX;
             case GA_UX:
                 return AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__GA_UX;
             case BETA_UX:

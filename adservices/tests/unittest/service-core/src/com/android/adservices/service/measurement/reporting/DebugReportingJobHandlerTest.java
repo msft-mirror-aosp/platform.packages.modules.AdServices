@@ -17,6 +17,7 @@
 package com.android.adservices.service.measurement.reporting;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -45,7 +46,9 @@ import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.MeasurementReportsStats;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSession;
 
@@ -56,6 +59,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -71,6 +75,7 @@ import java.util.List;
 public class DebugReportingJobHandlerTest {
 
     private static final Uri REGISTRATION_URI = WebUtil.validUri("https://subdomain.example.test");
+    private static final Uri SOURCE_REGISTRANT = Uri.parse("android-app://com.example.abc");
 
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     DatastoreManager mDatastoreManager;
@@ -211,8 +216,8 @@ public class DebugReportingJobHandlerTest {
         mSpyDebugReportingJobHandler.performScheduledPendingReports();
 
         verify(mMeasurementDao, times(2)).deleteDebugReport(any());
-        verify(mTransaction, times(7)).begin();
-        verify(mTransaction, times(7)).end();
+        verify(mTransaction, times(5)).begin();
+        verify(mTransaction, times(5)).end();
     }
 
     @Test
@@ -248,6 +253,75 @@ public class DebugReportingJobHandlerTest {
         // 1 transaction for initial retrieval of pending report ids.
         verify(mTransaction, times(1)).begin();
         verify(mTransaction, times(1)).end();
+    }
+
+    @Test
+    public void testPerformScheduledReports_LogZeroRetryCount()
+            throws DatastoreException, IOException, JSONException {
+        DebugReport debugReport1 = createDebugReport1();
+        JSONArray debugReportPayload1 = new JSONArray();
+        debugReportPayload1.put(debugReport1.toPayloadJson());
+
+        doReturn(true).when(mFlags).getMeasurementEnableAppPackageNameLogging();
+        when(mMeasurementDao.getDebugReportIds()).thenReturn(List.of(debugReport1.getId()));
+        when(mMeasurementDao.getDebugReport(debugReport1.getId())).thenReturn(debugReport1);
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyDebugReportingJobHandler)
+                .makeHttpPostRequest(Mockito.eq(REGISTRATION_URI), any());
+        doReturn(debugReportPayload1)
+                .when(mSpyDebugReportingJobHandler)
+                .createReportJsonPayload(debugReport1);
+
+        mSpyDebugReportingJobHandler.performScheduledPendingReports();
+
+        ArgumentCaptor<MeasurementReportsStats> statusArg =
+                ArgumentCaptor.forClass(MeasurementReportsStats.class);
+        verify(mLogger).logMeasurementReports(statusArg.capture());
+        MeasurementReportsStats measurementReportsStats = statusArg.getValue();
+        assertTrue(
+                measurementReportsStats.getType()
+                        >= ReportingStatus.ReportType.VERBOSE_DEBUG_SOURCE_DESTINATION_LIMIT
+                                .getValue());
+        assertEquals(
+                measurementReportsStats.getResultCode(),
+                ReportingStatus.UploadStatus.SUCCESS.getValue());
+        assertEquals(
+                measurementReportsStats.getFailureType(),
+                ReportingStatus.FailureStatus.UNKNOWN.getValue());
+        assertEquals(
+                measurementReportsStats.getSourceRegistrant(),
+                debugReport1.getRegistrant().toString());
+        verify(mMeasurementDao, never()).incrementAndGetReportingRetryCount(any(), any());
+    }
+
+    @Test
+    public void testPerformScheduledReports_LogReportNotFound()
+            throws DatastoreException, JSONException {
+        DebugReport debugReport1 = createDebugReport1();
+        JSONArray debugReportPayload1 = new JSONArray();
+        debugReportPayload1.put(debugReport1.toPayloadJson());
+
+        when(mMeasurementDao.getDebugReportIds()).thenReturn(List.of(debugReport1.getId()));
+        when(mMeasurementDao.getDebugReport(debugReport1.getId())).thenReturn(null);
+
+        mSpyDebugReportingJobHandler.performScheduledPendingReports();
+
+        ArgumentCaptor<MeasurementReportsStats> statusArg =
+                ArgumentCaptor.forClass(MeasurementReportsStats.class);
+        verify(mLogger).logMeasurementReports(statusArg.capture());
+        MeasurementReportsStats measurementReportsStats = statusArg.getValue();
+        assertEquals(
+                measurementReportsStats.getType(), ReportingStatus.ReportType.UNKNOWN.getValue());
+        assertEquals(
+                measurementReportsStats.getResultCode(),
+                ReportingStatus.UploadStatus.FAILURE.getValue());
+        assertEquals(
+                measurementReportsStats.getFailureType(),
+                ReportingStatus.FailureStatus.REPORT_NOT_FOUND.getValue());
+        assertEquals(measurementReportsStats.getSourceRegistrant(), "");
+        verify(mMeasurementDao)
+                .incrementAndGetReportingRetryCount(
+                        debugReport1.getId(), KeyValueData.DataType.DEBUG_REPORT_RETRY_COUNT);
     }
 
     @Test
@@ -438,6 +512,8 @@ public class DebugReportingJobHandlerTest {
                                 + "    }")
                 .setEnrollmentId("1")
                 .setRegistrationOrigin(REGISTRATION_URI)
+                .setInsertionTime(0L)
+                .setRegistrant(SOURCE_REGISTRANT)
                 .build();
     }
 
@@ -453,6 +529,8 @@ public class DebugReportingJobHandlerTest {
                                 + "    }")
                 .setEnrollmentId("1")
                 .setRegistrationOrigin(REGISTRATION_URI)
+                .setInsertionTime(0L)
+                .setRegistrant(SOURCE_REGISTRANT)
                 .build();
     }
 }
