@@ -118,13 +118,12 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
      * run.
      */
     public T setTopicsEpochJobPeriodMsForTests(long value) {
-        return setOrCacheDebugSystemProperty(FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS, value);
+        return setSystemProperty(FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS, value);
     }
 
     /** Overrides the system property that defines the percentage for random topic. */
     public T setTopicsPercentageForRandomTopicForTests(long value) {
-        return setOrCacheDebugSystemProperty(
-                FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC, value);
+        return setSystemProperty(FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC, value);
     }
 
     /** Overrides the system property used to disable topics enrollment check. */
