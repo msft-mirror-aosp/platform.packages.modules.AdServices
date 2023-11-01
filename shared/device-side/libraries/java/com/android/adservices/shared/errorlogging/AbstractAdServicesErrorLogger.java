@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.adservices.errorlogging;
+package com.android.adservices.shared.errorlogging;
 
-import com.android.adservices.LogUtil;
+import android.util.Log;
+
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
@@ -25,7 +26,10 @@ import java.util.Objects;
  * Abstract Class that logs AdServices error/ exception to {@code Statsd}. This class internally
  * calls {@link StatsdAdServicesErrorLogger} to log the error to {@code Statsd}.
  */
-abstract class AbstractAdServicesErrorLogger implements AdServicesErrorLogger {
+public abstract class AbstractAdServicesErrorLogger implements AdServicesErrorLogger {
+    // TODO(b/280460130): use adservice helpers for tag name / logging methods
+    private static final String TAG = AdServicesErrorLogger.class.getSimpleName();
+
     private final StatsdAdServicesErrorLogger mStatsdAdServicesErrorLogger;
 
     protected AbstractAdServicesErrorLogger(
@@ -65,7 +69,7 @@ abstract class AbstractAdServicesErrorLogger implements AdServicesErrorLogger {
         // EpochJobService.onStartJob, ... } and we log stats for EpochJobService.onStartJob.
         int elementIdx = 2;
         if (stackTrace.length < elementIdx + 1) {
-            LogUtil.w("Stack trace length less than 3, skipping client error logging");
+            Log.w(TAG, "Stack trace length less than 3, skipping client error logging");
             return;
         }
         AdServicesErrorStats.Builder builder =

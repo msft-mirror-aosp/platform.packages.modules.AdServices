@@ -1066,6 +1066,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW =
             "measurement_min_reporting_origin_update_window";
 
+    public static final String KEY_MEASUREMENT_ENABLE_PREINSTALL_CHECK =
+            "measurement_enable_preinstall_check";
+
     public static final String KEY_MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK =
             "measurement_enable_api_status_allow_list_check";
 
