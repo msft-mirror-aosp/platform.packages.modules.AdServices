@@ -3831,6 +3831,14 @@ public interface Flags {
         return DEFAULT_RVC_UX_ENABLED;
     }
 
+    /** Default RVC NOTIFICATION feature flag.. */
+    boolean DEFAULT_RVC_NOTIFICATION_ENABLED = false;
+
+    /** RVC Notification feature flag.. */
+    default boolean getEnableRvcNotification() {
+        return DEFAULT_RVC_NOTIFICATION_ENABLED;
+    }
+
     /** Default enableAdServices system API feature flag.. */
     boolean DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API = false;
 
