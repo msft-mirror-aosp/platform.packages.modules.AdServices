@@ -26,6 +26,7 @@ package android.adservices;
 // TODO(b/302041492): Extend FlagsConstants class to framework package.
 public final class FlagsConstants {
     public static final String KEY_AD_ID_CACHE_ENABLED = "ad_id_cache_enabled";
-    public static final String KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH =
-            "protected_signals_service_kill_switch";
+    public static final String KEY_ENABLE_ADSERVICES_API_ENABLED = "enable_adservices_api_enabled";
+    public static final String KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED =
+            "adservices_enablement_check_enabled";
 }

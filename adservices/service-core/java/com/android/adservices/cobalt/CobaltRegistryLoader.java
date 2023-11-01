@@ -20,6 +20,7 @@ import android.annotation.NonNull;
 import android.content.Context;
 import android.content.res.AssetManager;
 
+import com.android.cobalt.domain.Project;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.cobalt.CobaltRegistry;
@@ -38,7 +39,7 @@ public final class CobaltRegistryLoader {
      * @return the CobaltRegistry
      */
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
-    public static CobaltRegistry getRegistry(@NonNull Context context)
+    public static Project getRegistry(@NonNull Context context)
             throws CobaltInitializationException {
         if (!CobaltRegistryValidated.IS_REGISTRY_VALIDATED) {
             throw new AssertionError(
@@ -47,7 +48,9 @@ public final class CobaltRegistryLoader {
 
         AssetManager assetManager = context.getAssets();
         try (InputStream inputStream = assetManager.open(REGISTRY_ASSET_FILE)) {
-            return CobaltRegistry.parseFrom(ByteStreams.toByteArray(inputStream));
+            CobaltRegistry registry =
+                    CobaltRegistry.parseFrom(ByteStreams.toByteArray(inputStream));
+            return Project.create(registry);
         } catch (Exception e) {
             throw new CobaltInitializationException("Exception while reading registry", e);
         }

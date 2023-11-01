@@ -37,12 +37,12 @@ import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.KeyValueData.DataType;
-import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.attribution.TriggerContentProvider;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
+import com.android.adservices.service.measurement.util.Applications;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -68,8 +68,10 @@ public class AsyncRegistrationQueueRunner {
     private final SourceNoiseHandler mSourceNoiseHandler;
     private final Flags mFlags;
     private final AdServicesLogger mLogger;
+    private final Context mContext;
 
     private AsyncRegistrationQueueRunner(Context context) {
+        mContext = context;
         mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
         mAsyncSourceFetcher = new AsyncSourceFetcher(context);
         mAsyncTriggerFetcher = new AsyncTriggerFetcher(context);
@@ -82,6 +84,7 @@ public class AsyncRegistrationQueueRunner {
 
     @VisibleForTesting
     public AsyncRegistrationQueueRunner(
+            Context context,
             ContentResolver contentResolver,
             AsyncSourceFetcher asyncSourceFetcher,
             AsyncTriggerFetcher asyncTriggerFetcher,
@@ -90,6 +93,7 @@ public class AsyncRegistrationQueueRunner {
             SourceNoiseHandler sourceNoiseHandler,
             Flags flags) {
         this(
+                context,
                 contentResolver,
                 asyncSourceFetcher,
                 asyncTriggerFetcher,
@@ -102,6 +106,7 @@ public class AsyncRegistrationQueueRunner {
 
     @VisibleForTesting
     public AsyncRegistrationQueueRunner(
+            Context context,
             ContentResolver contentResolver,
             AsyncSourceFetcher asyncSourceFetcher,
             AsyncTriggerFetcher asyncTriggerFetcher,
@@ -110,6 +115,7 @@ public class AsyncRegistrationQueueRunner {
             SourceNoiseHandler sourceNoiseHandler,
             Flags flags,
             AdServicesLogger logger) {
+        mContext = context;
         mAsyncSourceFetcher = asyncSourceFetcher;
         mAsyncTriggerFetcher = asyncTriggerFetcher;
         mDatastoreManager = datastoreManager;
@@ -227,6 +233,15 @@ public class AsyncRegistrationQueueRunner {
                         ? EventSurfaceType.WEB
                         : EventSurfaceType.APP;
         if (isSourceAllowedToInsert(source, topOrigin, publisherType, dao, mDebugReportApi)) {
+            // If preinstall check is enabled and any app destinations are already installed,
+            // mark the source for deletion. Note the source is persisted so that the fake event
+            // report generated can be cleaned up after the source is deleted by
+            // DeleteExpiredJobService.
+            if (mFlags.getMeasurementEnablePreinstallCheck()
+                    && source.shouldDropSourceIfInstalled()
+                    && Applications.anyAppsInstalled(mContext, source.getAppDestinations())) {
+                source.setStatus(Source.Status.MARKED_TO_DELETE);
+            }
             insertSourceFromTransaction(source, dao);
             mDebugReportApi.scheduleSourceSuccessDebugReport(source, dao);
         }
@@ -293,14 +308,15 @@ public class AsyncRegistrationQueueRunner {
             IMeasurementDao dao,
             DebugReportApi debugReportApi)
             throws DatastoreException {
-        long windowStartTime = source.getEventTime() - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS;
+        Flags flags = FlagsFactory.getFlags();
+        long windowStartTime =
+                source.getEventTime() - flags.getMeasurementRateLimitWindowMilliseconds();
         Optional<Uri> publisher = getTopLevelPublisher(topOrigin, publisherType);
         if (!publisher.isPresent()) {
             LoggerFactory.getMeasurementLogger()
                     .d("insertSources: getTopLevelPublisher failed", topOrigin);
             return false;
         }
-        Flags flags = FlagsFactory.getFlags();
         if (flags.getMeasurementEnableDestinationRateLimit()) {
             if (source.getAppDestinations() != null
                     && !sourceIsWithinTimeBasedDestinationLimits(
@@ -377,7 +393,7 @@ public class AsyncRegistrationQueueRunner {
                         publisherType,
                         source.getEnrollmentId(),
                         source.getEventTime(),
-                        PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW);
+                        flags.getMeasurementMinReportingOriginUpdateWindow());
         if (numOfOriginExcludingRegistrationOrigin
                 >= flags.getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow()) {
             debugReportApi.scheduleSourceSuccessDebugReport(source, dao);

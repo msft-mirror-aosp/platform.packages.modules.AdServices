@@ -15,11 +15,9 @@
  */
 package com.android.adservices;
 
-import android.adservices.FlagsConstants;
 import android.adservices.adid.AdIdProviderService;
 import android.adservices.appsetid.AppSetIdProviderService;
 import android.adservices.cobalt.AdServicesCobaltUploadService;
-import android.annotation.FlaggedApi;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
 
@@ -46,10 +44,13 @@ public class AdServicesCommon {
     public static final String ACTION_AD_SELECTION_SERVICE =
             "android.adservices.adselection.AD_SELECTION_SERVICE";
 
-    /** Intent action to discover the protected signals service in the APK. */
-    @FlaggedApi(FlagsConstants.KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH)
+    /**
+     * Intent action to discover the protected signals service in the APK.
+     *
+     * @hide
+     */
     public static final String ACTION_PROTECTED_SIGNALS_SERVICE =
-            "android.adservices.signals.PROTECTED_SIGNALS_SERVICE";
+            "android.adservices.adselection.PROTECTED_SIGNALS_SERVICE";
 
     /** Intent action to discover the Measurement service in the APK. */
     public static final String ACTION_MEASUREMENT_SERVICE =

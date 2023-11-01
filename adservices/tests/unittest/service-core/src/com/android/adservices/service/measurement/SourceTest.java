@@ -171,6 +171,7 @@ public class SourceTest {
                         .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(null)
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
+                        .setDropSourceIfInstalled(true)
                         .build(),
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -220,6 +221,7 @@ public class SourceTest {
                         .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(null)
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
+                        .setDropSourceIfInstalled(true)
                         .build());
     }
 
@@ -482,6 +484,11 @@ public class SourceTest {
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setPrivacyParameters(
                                 reportSpecCountBased.encodePrivacyParametersToJSONString())
+                        .build());
+        assertNotEquals(
+                SourceFixture.getMinimalValidSourceBuilder().setDropSourceIfInstalled(true).build(),
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setDropSourceIfInstalled(false)
                         .build());
     }
 

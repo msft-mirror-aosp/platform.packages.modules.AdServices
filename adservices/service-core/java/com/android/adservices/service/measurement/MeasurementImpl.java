@@ -38,8 +38,6 @@ import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.SystemClock;
@@ -55,9 +53,9 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.appsearch.AppSearchMeasurementRollbackManager;
 import com.android.adservices.service.common.WebAddresses;
-import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.registration.EnqueueAsyncRegistration;
+import com.android.adservices.service.measurement.util.Applications;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -68,7 +66,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.stream.Collectors;
 
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -172,7 +169,8 @@ public final class MeasurementImpl {
                                             ? null
                                             : getSourceType(
                                                     request.getInputEvent(),
-                                                    request.getRequestTime()),
+                                                    request.getRequestTime(),
+                                                    request.getAppPackageName()),
                                     /* postBody */ null,
                                     mDatastoreManager,
                                     mContentResolver)
@@ -202,7 +200,8 @@ public final class MeasurementImpl {
                             requestTime,
                             getSourceType(
                                     request.getSourceRegistrationRequest().getInputEvent(),
-                                    request.getBootRelativeRequestTime()),
+                                    request.getBootRelativeRequestTime(),
+                                    request.getAppPackageName()),
                             /* postBody*/ null,
                             mDatastoreManager,
                             mContentResolver)
@@ -237,7 +236,8 @@ public final class MeasurementImpl {
                             requestTime,
                             getSourceType(
                                     sourceRegistrationRequest.getInputEvent(),
-                                    request.getRequestTime()),
+                                    request.getRequestTime(),
+                                    request.getAppPackageName()),
                             mDatastoreManager,
                             mContentResolver);
             if (enqueueStatus) {
@@ -319,7 +319,10 @@ public final class MeasurementImpl {
                             request.isAdIdPermissionGranted(),
                             registrationUri,
                             apiRequestTime,
-                            getSourceType(inputEvent, request.getRequestTime()),
+                            getSourceType(
+                                    inputEvent,
+                                    request.getRequestTime(),
+                                    request.getAppPackageName()),
                             postBody,
                             mDatastoreManager,
                             mContentResolver)
@@ -399,7 +402,8 @@ public final class MeasurementImpl {
 
     /** Delete all data generated from apps that are not currently installed. */
     public void deleteAllUninstalledMeasurementData() {
-        List<Uri> installedApplicationsList = getCurrentInstalledApplicationsList(mContext);
+        List<Uri> installedApplicationsList =
+                Applications.getCurrentInstalledApplicationsList(mContext);
         mReadWriteLock.writeLock().lock();
         try {
             Optional<Boolean> didDeletionOccurOpt =
@@ -417,23 +421,15 @@ public final class MeasurementImpl {
         return adIdValue != null && !adIdValue.isEmpty() && !AdId.ZERO_OUT.equals(adIdValue);
     }
 
-    private List<Uri> getCurrentInstalledApplicationsList(Context context) {
-        PackageManager packageManager = context.getPackageManager();
-        List<ApplicationInfo> applicationInfoList =
-                PackageManagerCompatUtils.getInstalledApplications(
-                        packageManager, PackageManager.GET_META_DATA);
-        return applicationInfoList.stream()
-                .map(applicationInfo -> Uri.parse("android-app://" + applicationInfo.packageName))
-                .collect(Collectors.toList());
-    }
-
     @VisibleForTesting
-    Source.SourceType getSourceType(InputEvent inputEvent, long requestTime) {
+    Source.SourceType getSourceType(
+            InputEvent inputEvent, long requestTime, String sourceRegistrant) {
         // If click verification is enabled and the InputEvent is not null, but it cannot be
         // verified, then the SourceType is demoted to EVENT.
         if (mFlags.getMeasurementIsClickVerificationEnabled()
                 && inputEvent != null
-                && !mClickVerifier.isInputEventVerifiable(inputEvent, requestTime)) {
+                && !mClickVerifier.isInputEventVerifiable(
+                        inputEvent, requestTime, sourceRegistrant)) {
             return Source.SourceType.EVENT;
         } else {
             return inputEvent == null ? Source.SourceType.EVENT : Source.SourceType.NAVIGATION;

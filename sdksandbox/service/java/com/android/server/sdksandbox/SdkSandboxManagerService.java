@@ -94,7 +94,6 @@ import com.android.modules.utils.BackgroundThread;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.sdksandbox.IComputeSdkStorageCallback;
 import com.android.sdksandbox.IRequestSurfacePackageFromSdkCallback;
-import com.android.sdksandbox.ISdkSandboxDisabledCallback;
 import com.android.sdksandbox.ISdkSandboxService;
 import com.android.sdksandbox.service.stats.SdkSandboxStatsLog;
 import com.android.server.LocalManagerRegistry;
@@ -123,8 +122,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Implementation of {@link SdkSandboxManager}.
@@ -207,17 +204,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private Injector mInjector;
 
     private final SdkSandboxPulledAtoms mSdkSandboxPulledAtoms;
-
-    // All U devices have the visibility patch, so we can consider it already checked on U+ devices.
-    private static final boolean DEFAULT_VALUE_VISIBILITY_PATCH_CHECKED = SdkLevel.isAtLeastU();
-
-    // The device must have a change that allows the Webview provider to be visible in order for the
-    // sandbox to be enabled. This change is present on all U+ devices, but not all T devices.
-    @GuardedBy("mLock")
-    private boolean mHasVisibilityPatch = DEFAULT_VALUE_VISIBILITY_PATCH_CHECKED;
-
-    @GuardedBy("mLock")
-    private boolean mCheckedVisibilityPatch = DEFAULT_VALUE_VISIBILITY_PATCH_CHECKED;
 
     private SdkSandboxSettingsListener mSdkSandboxSettingsListener;
 
@@ -772,6 +758,15 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 }
             }
 
+            if (isSdkSandboxDisabled()) {
+                Log.i(TAG, "Not loading an SDK as the SDK sandbox is disabled");
+                sandboxLatencyInfo.setTimeSystemServerCalledApp(System.currentTimeMillis());
+                callback.onLoadSdkFailure(
+                        new LoadSdkException(LOAD_SDK_SDK_SANDBOX_DISABLED, SANDBOX_DISABLED_MSG),
+                        sandboxLatencyInfo);
+                return;
+            }
+
             final long token = Binder.clearCallingIdentity();
             try {
                 loadSdkWithClearIdentity(
@@ -791,7 +786,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         new LoadSdkException(LOAD_SDK_INTERNAL_ERROR, e.getMessage(), e),
                         sandboxLatencyInfo);
             } catch (RemoteException ex) {
-                Log.e(TAG, "Failed to send onLoadCodeFailure", e);
+                Log.e(TAG, "Failed to send onLoadSdkFailure", e);
             }
         }
     }
@@ -1141,7 +1136,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         e.getMessage(),
                         sandboxLatencyInfo);
             } catch (RemoteException ex) {
-                Log.e(TAG, "Failed to send onLoadCodeFailure", e);
+                Log.e(TAG, "Failed to send onRequestSurfacePackageError", e);
             }
         }
     }
@@ -1208,10 +1203,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         // TODO(b/211575098): Use IndentingPrintWriter for better formatting
         synchronized (mLock) {
-            writer.println("Checked Webview visibility patch exists: " + mCheckedVisibilityPatch);
-            if (mCheckedVisibilityPatch) {
-                writer.println("Build contains Webview visibility patch: " + mHasVisibilityPatch);
-            }
             writer.println(
                     "Killswitch enabled: " + mSdkSandboxSettingsListener.isKillSwitchEnabled());
             writer.println(
@@ -1319,7 +1310,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         ISharedPreferencesSyncCallback.PREFERENCES_SYNC_INTERNAL_ERROR,
                         e.getMessage());
             } catch (RemoteException ex) {
-                Log.e(TAG, "Failed to send onLoadCodeFailure", e);
+                Log.e(TAG, "Failed to send ISharedPreferencesSyncCallback.onError", e);
             }
         }
     }
@@ -1703,27 +1694,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
     }
 
-    boolean isSdkSandboxDisabled(ISdkSandboxService boundService) {
+    boolean isSdkSandboxDisabled() {
         synchronized (mLock) {
-            if (!mCheckedVisibilityPatch) {
-                SdkSandboxDisabledCallback callback = new SdkSandboxDisabledCallback();
-                try {
-                    boundService.isDisabled(callback);
-                    boolean isDisabled = callback.getIsDisabled();
-                    mCheckedVisibilityPatch = true;
-                    mHasVisibilityPatch = !isDisabled;
-                } catch (Exception e) {
-                    Log.w(TAG, "Could not verify SDK sandbox state", e);
-                    return true;
-                }
-            }
-
             if (!mInjector.isAdServiceApkPresent()) {
-                return true;
-            }
-
-            // Disable immediately if visibility patch is missing
-            if (!mHasVisibilityPatch) {
                 return true;
             }
 
@@ -1742,7 +1715,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
      */
     void clearSdkSandboxState() {
         synchronized (mLock) {
-            mCheckedVisibilityPatch = DEFAULT_VALUE_VISIBILITY_PATCH_CHECKED;
             getSdkSandboxSettingsListener().setKillSwitchState(DEFAULT_VALUE_DISABLE_SDK_SANDBOX);
         }
     }
@@ -1753,8 +1725,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
      */
     void forceEnableSandbox() {
         synchronized (mLock) {
-            mCheckedVisibilityPatch = true;
-            mHasVisibilityPatch = true;
             getSdkSandboxSettingsListener().setKillSwitchState(false);
         }
     }
@@ -2196,33 +2166,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
     }
 
-    static class SdkSandboxDisabledCallback extends ISdkSandboxDisabledCallback.Stub {
-        CountDownLatch mLatch;
-        boolean mIsDisabled = false;
-
-        SdkSandboxDisabledCallback() {
-            mLatch = new CountDownLatch(1);
-        }
-
-        @Override
-        public void onResult(boolean isDisabled) {
-            mIsDisabled = isDisabled;
-            mLatch.countDown();
-        }
-
-        boolean getIsDisabled() {
-            try {
-                if (mLatch.await(1, TimeUnit.SECONDS)) {
-                    return mIsDisabled;
-                }
-                return true;
-            } catch (InterruptedException e) {
-                Log.w(TAG, "Interrupted while waiting for SDK sandbox state", e);
-                return true;
-            }
-        }
-    }
-
     /** Stops all running sandboxes in the case that the killswitch is triggered. */
     @GuardedBy("mLock")
     private void stopAllSandboxesLocked() {
@@ -2319,17 +2262,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             ISdkSandboxService service,
             SandboxLatencyInfo sandboxLatencyInfo) {
         CallingInfo callingInfo = loadSdkSession.mCallingInfo;
-
-        if (isSdkSandboxDisabled(service)) {
-            Log.e(TAG, "SDK cannot be loaded because SDK sandbox is disabled");
-            loadSdkSession.handleLoadFailure(
-                    new LoadSdkException(LOAD_SDK_SDK_SANDBOX_DISABLED, SANDBOX_DISABLED_MSG),
-                    -1,
-                    SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED,
-                    false,
-                    sandboxLatencyInfo);
-            return;
-        }
         // Gather sdk storage information
         final StorageDirInfo sdkDataInfo =
                 mSdkSandboxStorageManager.getSdkStorageDirInfo(

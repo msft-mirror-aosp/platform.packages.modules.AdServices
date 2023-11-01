@@ -28,6 +28,7 @@ import static org.mockito.Mockito.when;
 
 import android.net.Uri;
 
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.data.measurement.DatastoreManager;
@@ -65,7 +66,11 @@ public final class AggregateEncryptionKeyManagerTest {
     private static final String LOCALHOST = "https://localhost";
 
     @Mock DatastoreManager mDatastoreManager;
-    @Spy AggregateEncryptionKeyFetcher mFetcher;
+
+    @Spy
+    AggregateEncryptionKeyFetcher mFetcher =
+            new AggregateEncryptionKeyFetcher(ApplicationProvider.getApplicationContext());
+
     @Mock HttpsURLConnection mUrlConnection;
 
     @Before

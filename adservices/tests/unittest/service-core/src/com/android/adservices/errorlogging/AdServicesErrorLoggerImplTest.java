@@ -29,7 +29,8 @@ import static org.mockito.Mockito.verify;
 import android.database.sqlite.SQLiteException;
 
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.stats.StatsdAdServicesLogger;
+import com.android.adservices.shared.errorlogging.AdServicesErrorStats;
+import com.android.adservices.shared.errorlogging.StatsdAdServicesErrorLogger;
 
 import com.google.common.collect.ImmutableList;
 
@@ -49,7 +50,7 @@ public class AdServicesErrorLoggerImplTest {
     private static final String SQ_LITE_EXCEPTION = "SQLiteException";
 
     @Mock private Flags mFlags;
-    @Mock StatsdAdServicesLogger mStatsdLoggerMock;
+    @Mock StatsdAdServicesErrorLogger mStatsdLoggerMock;
 
     @Before
     public void setUp() {
@@ -88,26 +89,6 @@ public class AdServicesErrorLoggerImplTest {
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR, PPAPI_NAME);
 
         verify(mStatsdLoggerMock).logAdServicesError(any());
-    }
-
-    @Test
-    public void testLogErrorInternal() {
-        Exception exception =
-                createSQLiteExceptionwith3StackTraceElements(CLASS_NAME, METHOD_NAME, LINE_NUMBER);
-        mErrorLogger.logErrorInternal(
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR,
-                PPAPI_NAME,
-                exception);
-
-        AdServicesErrorStats stats =
-                AdServicesErrorStats.builder()
-                        .setErrorCode(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR)
-                        .setPpapiName(PPAPI_NAME)
-                        .setClassName(CLASS_NAME)
-                        .setMethodName(METHOD_NAME)
-                        .setLineNumber(LINE_NUMBER)
-                        .build();
-        verify(mStatsdLoggerMock).logAdServicesError(eq(stats));
     }
 
     @Test

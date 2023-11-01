@@ -77,7 +77,7 @@ public class AsyncSourceFetcher {
     private static final long ONE_DAY_IN_SECONDS = TimeUnit.DAYS.toSeconds(1);
     private static final String DEFAULT_ANDROID_APP_SCHEME = "android-app";
     private static final String DEFAULT_ANDROID_APP_URI_PREFIX = DEFAULT_ANDROID_APP_SCHEME + "://";
-    private final MeasurementHttpClient mNetworkConnection = new MeasurementHttpClient();
+    private final MeasurementHttpClient mNetworkConnection;
     private final EnrollmentDao mEnrollmentDao;
     private final Flags mFlags;
     private final AdServicesLogger mLogger;
@@ -98,6 +98,7 @@ public class AsyncSourceFetcher {
         mEnrollmentDao = enrollmentDao;
         mFlags = flags;
         mLogger = logger;
+        mNetworkConnection = new MeasurementHttpClient(context);
     }
 
     private boolean parseCommonSourceParams(
@@ -732,6 +733,11 @@ public class AsyncSourceFetcher {
                         json.getJSONArray(SourceHeaderContract.SHARED_FILTER_DATA_KEYS);
                 builder.setSharedFilterDataKeys(sharedFilterDataKeys.toString());
             }
+            if (mFlags.getMeasurementEnablePreinstallCheck()
+                    && !json.isNull(SourceHeaderContract.DROP_SOURCE_IF_INSTALLED)) {
+                builder.setDropSourceIfInstalled(
+                        json.getBoolean(SourceHeaderContract.DROP_SOURCE_IF_INSTALLED));
+            }
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.SUCCESS);
             return Optional.of(builder.build());
         } catch (JSONException e) {
@@ -908,6 +914,7 @@ public class AsyncSourceFetcher {
         String EVENT_REPORT_WINDOWS = "event_report_windows";
         String SHARED_DEBUG_KEY = "shared_debug_key";
         String SHARED_FILTER_DATA_KEYS = "shared_filter_data_keys";
+        String DROP_SOURCE_IF_INSTALLED = "drop_source_if_installed";
     }
 
     private interface SourceRequestContract {

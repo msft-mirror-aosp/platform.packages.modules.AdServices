@@ -16,8 +16,6 @@
 
 package android.adservices.signals;
 
-import android.adservices.FlagsConstants;
-import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.net.Uri;
 
@@ -28,12 +26,12 @@ import java.util.Objects;
  *
  * <p>{@code updateUri} is the only parameter. It represents the URI that the service will reach out
  * to retrieve the signals updates.
+ *
+ * @hide
  */
-@FlaggedApi(FlagsConstants.KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH)
 public final class UpdateSignalsRequest {
     @NonNull private final Uri mUpdateUri;
 
-    @FlaggedApi(FlagsConstants.KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH)
     private UpdateSignalsRequest(@NonNull Uri updateUri) {
         Objects.requireNonNull(updateUri, "updateUri must not be null in UpdateSignalsRequest");
 
@@ -43,7 +41,6 @@ public final class UpdateSignalsRequest {
     /**
      * @return the {@link Uri} from which the signal updates will be fetched.
      */
-    @FlaggedApi(FlagsConstants.KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH)
     @NonNull
     public Uri getUpdateUri() {
         return mUpdateUri;
@@ -77,7 +74,6 @@ public final class UpdateSignalsRequest {
     }
 
     /** Builder for {@link UpdateSignalsRequest} objects. */
-    @FlaggedApi(FlagsConstants.KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH)
     public static final class Builder {
         @NonNull private Uri mUpdateUri;
 
@@ -85,7 +81,6 @@ public final class UpdateSignalsRequest {
          * Instantiates a {@link Builder} with the {@link Uri} from which the signal updates will be
          * fetched.
          */
-        @FlaggedApi(FlagsConstants.KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH)
         public Builder(@NonNull Uri updateUri) {
             Objects.requireNonNull(updateUri);
             this.mUpdateUri = updateUri;
@@ -96,7 +91,6 @@ public final class UpdateSignalsRequest {
          *
          * <p>See {@link #getUpdateUri()} ()} for details.
          */
-        @FlaggedApi(FlagsConstants.KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH)
         @NonNull
         public Builder setUpdateUri(@NonNull Uri updateUri) {
             Objects.requireNonNull(updateUri, "updateUri must not be null in UpdateSignalsRequest");
@@ -109,7 +103,6 @@ public final class UpdateSignalsRequest {
          *
          * @throws NullPointerException if any non-null parameter is null.
          */
-        @FlaggedApi(FlagsConstants.KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH)
         @NonNull
         public UpdateSignalsRequest build() {
             return new UpdateSignalsRequest(mUpdateUri);

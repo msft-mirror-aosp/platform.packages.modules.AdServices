@@ -343,6 +343,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     mAdFilteringFeatureFactory.getAdFilterer(),
                                     mBackgroundExecutor,
                                     mLightweightExecutor,
+                                    AdServicesExecutors.getBlockingExecutor(),
                                     mScheduledExecutor,
                                     mFlags,
                                     callingUid,

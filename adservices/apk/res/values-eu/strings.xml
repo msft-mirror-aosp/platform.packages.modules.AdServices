@@ -42,10 +42,8 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"AdService-ren gaitze-egoeraren APIa erabiltzeko baimena ematen die aplikazioei."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Atzitu AdServicesManager-en APIak"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"AdServicesManager-en APIak erabiltzeko baimena ematen die aplikazioei."</string>
-    <!-- no translation found for permlab_accessUpdateAdIdCache (6912755067998635886) -->
-    <skip />
-    <!-- no translation found for permdesc_accessUpdateAdIdCache (2907546830224186022) -->
-    <skip />
+    <string name="permlab_updateAdservicesAdId" msgid="1817012692601139702">"AdService’s update AdId APIa erabiltzeko baimena."</string>
+    <string name="permdesc_updateAdservicesAdId" msgid="1594321436876709737">"Aplikazio bati AdService’s update AdId APIa erabiltzeko baimena ematen dio."</string>
     <string name="app_label" msgid="5844694701336604490">"Iragarkien pribatutasuna"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Probatu Android-eko iragarkien pribatutasunaren beta-bertsioa"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Aplikazioek iragarkiak erakusteko aukera pribatuagoak arakatzen ari da Android"</string>
@@ -579,9 +577,9 @@
     <string name="topic10340" msgid="6538182603360796294">"Haurrentzako segurtasuna Interneten"</string>
     <string name="topic10341" msgid="3586543243312398568">"Erromantikoak"</string>
     <string name="topic10342" msgid="3695176378281477573">"Zientzia-fikzioa eta fantasia"</string>
-    <string name="topic10343" msgid="2318169062960263837">"Maskotak eta animaliak"</string>
-    <string name="topic10344" msgid="2005534117977874327">"Maskotentzako janaria eta maskotak zaintzeko hornigaiak"</string>
-    <string name="topic10345" msgid="2397329020706244200">"Maskotak"</string>
+    <string name="topic10343" msgid="2318169062960263837">"Konpainia-animaliak eta animaliak"</string>
+    <string name="topic10344" msgid="2005534117977874327">"Konpainia-animalientzako janaria eta haiek zaintzeko hornigaiak"</string>
+    <string name="topic10345" msgid="2397329020706244200">"Konpainia-animaliak"</string>
     <string name="topic10346" msgid="1323702748723563694">"Txoriak"</string>
     <string name="topic10347" msgid="3301879823396773413">"Katuak"</string>
     <string name="topic10348" msgid="8066686305498410222">"Txakurrak"</string>

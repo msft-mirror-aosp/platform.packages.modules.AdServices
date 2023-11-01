@@ -51,8 +51,8 @@ import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.EncoderEndpointsDao;
-import com.android.adservices.data.signals.EncoderLogicDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
+import com.android.adservices.data.signals.EncoderLogicMetadataDao;
 import com.android.adservices.data.signals.EncoderPersistenceDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
@@ -130,7 +130,7 @@ public class SignalsEncodingE2ETest {
 
     private ProtectedSignalsDao mSignalsDao;
     private EncoderEndpointsDao mEncoderEndpointsDao;
-    private EncoderLogicDao mEncoderLogicMetadataDao;
+    private EncoderLogicMetadataDao mEncoderLogicMetadataDao;
     private ProtectedSignalsServiceImpl mService;
     private UpdateSignalsOrchestrator mUpdateSignalsOrchestrator;
     private UpdatesDownloader mUpdatesDownloader;
@@ -172,7 +172,7 @@ public class SignalsEncodingE2ETest {
         mEncoderLogicMetadataDao =
                 Room.inMemoryDatabaseBuilder(mContextSpy, ProtectedSignalsDatabase.class)
                         .build()
-                        .getEncoderLogicDao();
+                        .getEncoderLogicMetadataDao();
         mEncodedPayloadDao =
                 Room.inMemoryDatabaseBuilder(mContextSpy, ProtectedSignalsDatabase.class)
                         .build()
@@ -281,7 +281,10 @@ public class SignalsEncodingE2ETest {
 
     @After
     public void teardown() {
-        mEncoderPersistenceDao.deleteAllEncoders();
+        if (mEncoderPersistenceDao != null) {
+            mEncoderPersistenceDao.deleteAllEncoders();
+        }
+
         if (mStaticMockSession != null) {
             mStaticMockSession.finishMocking();
         }

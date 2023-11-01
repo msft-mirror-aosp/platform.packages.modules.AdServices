@@ -1,6 +1,4 @@
 // Signature format: 2.0
-// - add-additional-overrides=no
-// - migrating=Migration in progress see b/299366704
 package android.adservices {
 
   public class AdServicesState {
@@ -578,25 +576,6 @@ package android.adservices.measurement {
   public static final class WebTriggerRegistrationRequest.Builder {
     ctor public WebTriggerRegistrationRequest.Builder(@NonNull java.util.List<android.adservices.measurement.WebTriggerParams>, @NonNull android.net.Uri);
     method @NonNull public android.adservices.measurement.WebTriggerRegistrationRequest build();
-  }
-
-}
-
-package android.adservices.signals {
-
-  @FlaggedApi(android.adservices.FlagsConstants.KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH) public class ProtectedSignalsManager {
-    method @FlaggedApi(android.adservices.FlagsConstants.KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH) @NonNull public static android.adservices.signals.ProtectedSignalsManager get(@NonNull android.content.Context);
-    method @FlaggedApi(android.adservices.FlagsConstants.KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH) @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE) public void updateSignals(@NonNull android.adservices.signals.UpdateSignalsRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
-  }
-
-  @FlaggedApi(android.adservices.FlagsConstants.KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH) public final class UpdateSignalsRequest {
-    method @FlaggedApi(android.adservices.FlagsConstants.KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH) @NonNull public android.net.Uri getUpdateUri();
-  }
-
-  @FlaggedApi(android.adservices.FlagsConstants.KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH) public static final class UpdateSignalsRequest.Builder {
-    ctor @FlaggedApi(android.adservices.FlagsConstants.KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH) public UpdateSignalsRequest.Builder(@NonNull android.net.Uri);
-    method @FlaggedApi(android.adservices.FlagsConstants.KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH) @NonNull public android.adservices.signals.UpdateSignalsRequest build();
-    method @FlaggedApi(android.adservices.FlagsConstants.KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH) @NonNull public android.adservices.signals.UpdateSignalsRequest.Builder setUpdateUri(@NonNull android.net.Uri);
   }
 
 }

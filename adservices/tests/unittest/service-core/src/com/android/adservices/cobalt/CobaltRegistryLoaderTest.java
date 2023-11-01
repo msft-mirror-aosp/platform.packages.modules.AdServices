@@ -25,7 +25,8 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
-import com.google.cobalt.CobaltRegistry;
+import com.android.cobalt.domain.Project;
+
 import com.google.cobalt.IntegerBuckets;
 import com.google.cobalt.MetricDefinition;
 import com.google.cobalt.MetricDefinition.MetricType;
@@ -53,23 +54,21 @@ public class CobaltRegistryLoaderTest {
 
     @Test
     public void getRegistry_registryCanBeLoaded() throws Exception {
-        CobaltRegistry registry = CobaltRegistryLoader.getRegistry(CONTEXT);
-        assertThat(registry).isNotEqualTo(CobaltRegistry.getDefaultInstance());
+        Project registry = CobaltRegistryLoader.getRegistry(CONTEXT);
+        assertThat(registry).isNotNull();
     }
 
     @Test
     public void getRegistry_unsupportedFeaturesNotInRegistry() throws Exception {
-        CobaltRegistry registry = CobaltRegistryLoader.getRegistry(CONTEXT);
-        assertThat(registry.getCustomersCount()).isEqualTo(1);
-        assertThat(registry.getCustomers(0).getProjectsCount()).isEqualTo(1);
-
-        List<MetricDefinition> metrics = registry.getCustomers(0).getProjects(0).getMetricsList();
-        for (MetricDefinition metric : metrics) {
+        Project registry = CobaltRegistryLoader.getRegistry(CONTEXT);
+        for (MetricDefinition metric : registry.getMetrics()) {
             assertThat(metric.getMetricType()).isEqualTo(MetricType.OCCURRENCE);
         }
 
         List<ReportDefinition> reports =
-                metrics.stream().flatMap(m -> m.getReportsList().stream()).collect(toList());
+                registry.getMetrics().stream()
+                        .flatMap(m -> m.getReportsList().stream())
+                        .collect(toList());
         for (ReportDefinition report : reports) {
             assertThat(report.getReportType()).isEqualTo(ReportType.FLEETWIDE_OCCURRENCE_COUNTS);
             assertThat(report.getReportingInterval()).isEqualTo(ReportingInterval.DAYS_1);

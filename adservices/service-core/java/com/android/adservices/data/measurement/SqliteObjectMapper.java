@@ -379,7 +379,12 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.DebugReportContract.REFERENCE_ID,
                 builder::setReferenceId);
-
+        setLongColumn(
+                cursor,
+                MeasurementTables.DebugReportContract.INSERTION_TIME,
+                builder::setInsertionTime);
+        setUriColumn(
+                cursor, MeasurementTables.DebugReportContract.REGISTRANT, builder::setRegistrant);
         return builder.build();
     }
 
