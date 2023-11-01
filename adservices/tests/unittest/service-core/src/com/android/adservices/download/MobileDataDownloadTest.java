@@ -36,6 +36,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.enrollment.EnrollmentTables;
 import com.android.adservices.data.shared.SharedDbHelper;
@@ -111,7 +112,7 @@ public class MobileDataDownloadTest {
     private static final String MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/1986/9e98784bcdb26a3eb2ab3f65ee811f43177c761f";
     private static final String PRODUCTION_ENROLLMENT_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/2483/99f68a201189da021b1f3dd4ebdef7b0fbe75892";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/2532/edab7fde698f1c1fb382a9008901a88dadfa9623";
 
     // Prod Test Bed enrollment manifest URL
     private static final String PTB_ENROLLMENT_MANIFEST_FILE_URL =
@@ -121,7 +122,7 @@ public class MobileDataDownloadTest {
     private static final String UI_OTA_STRINGS_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-ui-ota-strings/1360/d428721d225582922a7fe9d5ad6db7b09cb03209";
 
-    private static final int PRODUCTION_ENROLLMENT_ENTRIES = 42;
+    private static final int PRODUCTION_ENROLLMENT_ENTRIES = 48;
     private static final int PTB_ENROLLMENT_ENTRIES = 1;
     private static final int OEM_ENROLLMENT_ENTRIES = 114;
 
@@ -133,7 +134,7 @@ public class MobileDataDownloadTest {
     public static final String ENROLLMENT_FILE_GROUP_NAME = "adtech_enrollment_data";
     public static final String UI_OTA_STRINGS_FILE_GROUP_NAME = "ui-ota-strings";
 
-    private StaticMockitoSession mStaticMockSession = null;
+    private StaticMockitoSession mStaticMockSession;
     private SynchronousFileStorage mFileStorage;
     private FileDownloader mFileDownloader;
     private SharedDbHelper mDbHelper;
@@ -144,7 +145,7 @@ public class MobileDataDownloadTest {
     @Mock UxStatesManager mUxStatesManager;
 
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
         // Add latency to fix the boot up WIFI connection delay. We only need to wait once during
         // the whole test suite run.
         // Checking wifi connection using WifiManager isn't working on low-performance devices.
@@ -163,14 +164,21 @@ public class MobileDataDownloadTest {
                         .spyStatic(MobileDataDownloadFactory.class)
                         .spyStatic(UxStatesManager.class)
                         .spyStatic(EnrollmentDao.class)
+                        .spyStatic(EncryptionKeyDao.class)
                         .spyStatic(ConsentManager.class)
                         .spyStatic(CommonClassifierHelper.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
+        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
 
         doReturn(/* Download max download threads */ 2)
                 .when(mMockFlags)
                 .getDownloaderMaxDownloadThreads();
+        when(mMockFlags.getEncryptionKeyNewEnrollmentFetchKillSwitch()).thenReturn(false);
+        when(mMockFlags.getEncryptionKeyNetworkConnectTimeoutMs())
+                .thenReturn(Flags.ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS);
+        when(mMockFlags.getEncryptionKeyNetworkReadTimeoutMs())
+                .thenReturn(Flags.ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS);
 
         mFileStorage = MobileDataDownloadFactory.getFileStorage(mContext);
         mFileDownloader =
@@ -190,9 +198,7 @@ public class MobileDataDownloadTest {
 
     @After
     public void teardown() throws ExecutionException, InterruptedException {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
+        mStaticMockSession.finishMocking();
         if (mMdd != null) {
             mMdd.clear().get();
         }
@@ -737,9 +743,12 @@ public class MobileDataDownloadTest {
         EnrollmentDataDownloadManager enrollmentDataDownloadManager =
                 new EnrollmentDataDownloadManager(mContext, mMockFlags);
         EnrollmentDao enrollmentDao = new EnrollmentDao(mContext, mDbHelper, mMockFlags);
-
         ExtendedMockito.doReturn(enrollmentDao)
                 .when(() -> EnrollmentDao.getInstance(any(Context.class)));
+
+        EncryptionKeyDao encryptionKeyDao = new EncryptionKeyDao(mDbHelper);
+        ExtendedMockito.doReturn(encryptionKeyDao)
+                .when(() -> EncryptionKeyDao.getInstance(any(Context.class)));
 
         assertThat(enrollmentDao.deleteAll()).isTrue();
         // Verify no enrollment data after table cleared.

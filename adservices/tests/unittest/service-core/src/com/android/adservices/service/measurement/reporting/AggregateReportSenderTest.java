@@ -18,7 +18,10 @@ package com.android.adservices.service.measurement.reporting;
 
 import static org.junit.Assert.assertEquals;
 
+import android.content.Context;
 import android.net.Uri;
+
+import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
 import com.android.modules.utils.testing.TestableDeviceConfig;
@@ -56,6 +59,8 @@ public class AggregateReportSenderTest {
             + "\"data\":[{\"bucket\":\"1369\",\"value\":32768},{\"bucket\":\"3461\","
             + "\"value\":1664}]}";
 
+    protected static final Context sContext = ApplicationProvider.getApplicationContext();
+
     private AggregateReportBody createAggregateReportBodyExample1() {
         return new AggregateReportBody.Builder()
                 .setAttributionDestination(ATTRIBUTION_DESTINATION)
@@ -85,7 +90,7 @@ public class AggregateReportSenderTest {
                 createAggregateReportBodyExample1().toJson(AggregateCryptoFixture.getKey());
         Uri reportingOrigin = Uri.parse(REPORTING_ORIGIN);
 
-        AggregateReportSender aggregateReportSender = new AggregateReportSender(false);
+        AggregateReportSender aggregateReportSender = new AggregateReportSender(false, sContext);
         AggregateReportSender spyAggregateReportSender = Mockito.spy(aggregateReportSender);
 
         Mockito.doReturn(httpUrlConnection).when(spyAggregateReportSender)
@@ -104,7 +109,7 @@ public class AggregateReportSenderTest {
         URL spyUrl = Mockito.spy(new URL("https://foo"));
         Mockito.doReturn(mockConnection).when(spyUrl).openConnection();
 
-        AggregateReportSender aggregateReportSender = new AggregateReportSender(false);
+        AggregateReportSender aggregateReportSender = new AggregateReportSender(false, sContext);
         HttpsURLConnection connection =
                 (HttpsURLConnection) aggregateReportSender.createHttpUrlConnection(spyUrl);
         assertEquals(mockConnection, connection);
@@ -112,9 +117,9 @@ public class AggregateReportSenderTest {
 
     @Test
     public void testDebugReportUriPath() {
-        Truth.assertThat(new AggregateReportSender(false).getReportUriPath())
+        Truth.assertThat(new AggregateReportSender(false, sContext).getReportUriPath())
                 .isEqualTo(AggregateReportSender.AGGREGATE_ATTRIBUTION_REPORT_URI_PATH);
-        Truth.assertThat(new AggregateReportSender(true).getReportUriPath())
+        Truth.assertThat(new AggregateReportSender(true, sContext).getReportUriPath())
                 .isEqualTo(AggregateReportSender.DEBUG_AGGREGATE_ATTRIBUTION_REPORT_URI_PATH);
     }
 }

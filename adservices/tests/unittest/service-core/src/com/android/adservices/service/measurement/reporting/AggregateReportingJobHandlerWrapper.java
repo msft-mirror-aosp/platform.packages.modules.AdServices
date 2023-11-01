@@ -23,6 +23,8 @@ import static org.mockito.Mockito.when;
 
 import android.net.Uri;
 
+import androidx.test.core.app.ApplicationProvider;
+
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.Flags;
@@ -77,7 +79,8 @@ public class AggregateReportingJobHandlerWrapper {
                                         datastoreManager,
                                         mockEncryptionManager,
                                         mockFlags,
-                                        mockLogger)
+                                        mockLogger,
+                                        ApplicationProvider.getApplicationContext())
                                 .setIsDebugInstance(isDebugInstance));
         Mockito.doReturn(200).when(aggregateReportingJobHandler)
                 .makeHttpPostRequest(any(), any());

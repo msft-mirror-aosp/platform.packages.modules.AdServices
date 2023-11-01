@@ -109,8 +109,8 @@
       ]
     },
     {
-      // Install com.google.android.extservices.apex and run AdServicesCobaltUnitTests.
-      "name": "AdServicesCobaltUnitTests[com.google.android.extservices.apex]",
+      // Install com.google.android.extservices.apex and run AdExtServicesCobaltUnitTests.
+      "name": "AdExtServicesCobaltUnitTests[com.google.android.extservices.apex]",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"
@@ -246,6 +246,15 @@
     {
       // Install com.google.android.adservices.apex and run CtsAdServicesDebuggableDeviceTestCases.
       "name": "CtsAdServicesDebuggableDeviceTestCases[com.google.android.adservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      // Install com.google.android.adservices.apex and run CtsAdServicesRootTestCases.
+      "name": "CtsAdServicesRootTestCases[com.google.android.adservices.apex]",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"
@@ -502,7 +511,8 @@
       "name": "CtsAdServicesHostTests[com.google.android.adservices.apex]",
       "options": [
         {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
+          // NOTE: host-side tests use a different package
+          "exclude-annotation": "android.platform.test.annotations.FlakyTest"
         }
       ]
     },
@@ -511,7 +521,8 @@
       "name": "CtsAdExtServicesHostTests[com.google.android.extservices.apex]",
       "options": [
         {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
+          // NOTE: host-side tests use a different package
+          "exclude-annotation": "android.platform.test.annotations.FlakyTest"
         }
       ]
     },
@@ -566,6 +577,9 @@
       ]
     }
   ],
+
+  // Tests in platform presubmit are running against the git_main branch. This list should only include AdServices tests.
+  // Add ExtServices tests to "mainline-presubmit".
   "presubmit": [
     {
       "name": "AdServicesCobaltUnitTests",
@@ -592,23 +606,7 @@
       ]
     },
     {
-      "name": "AdExtServicesServiceCoreUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
-    },
-    {
       "name": "AdServicesServiceCoreAdIdUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
-    },
-    {
-      "name": "AdExtServicesServiceCoreAdIdUnitTests",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"
@@ -624,23 +622,7 @@
       ]
     },
     {
-      "name": "AdExtServicesServiceCoreAppSearchUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
-    },
-    {
       "name": "AdServicesServiceCoreAppsetIdUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
-    },
-    {
-      "name": "AdExtServicesServiceCoreAppsetIdUnitTests",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"
@@ -792,6 +774,9 @@
       ]
     }
   ],
+
+  // Tests in platform postsubmit are running against the git_main branch. This list should only include AdServices tests.
+  // Add ExtServices tests to "mainline-presubmit".
   "postsubmit": [
     {
       "name": "AdServicesMddIntegrationTests",
@@ -854,14 +839,6 @@
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
-    },
-    {
-      "name": "AdExtServicesUIUnitTests",
-      "options": [
-        {
-        "exclude-annotation": "androidx.test.filters.FlakyTest"
         }
       ]
     }

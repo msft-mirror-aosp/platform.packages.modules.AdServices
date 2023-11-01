@@ -17,6 +17,7 @@ package android.adservices.adid;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_AD_ID;
 
+import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.common.OutcomeReceiverConverter;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
@@ -36,7 +37,6 @@ import java.util.concurrent.Executor;
  * provides developers with a simple, standard system to continue to monetize their apps via
  * personalized ads (formerly known as interest-based ads).
  */
-@RequiresApi(Build.VERSION_CODES.S)
 public class AdIdManager {
     /**
      * Service used for registering AdIdManager in the system service registry.
@@ -97,12 +97,29 @@ public class AdIdManager {
      * @param callback The callback that's called after adid are available or an error occurs.
      * @throws IllegalStateException if this API is not available.
      */
+    @RequiresApi(Build.VERSION_CODES.S)
     @RequiresPermission(ACCESS_ADSERVICES_AD_ID)
     @NonNull
     public void getAdId(
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<AdId, Exception> callback) {
         mImpl.getAdId(executor, OutcomeReceiverConverter.toAdServicesOutcomeReceiver(callback));
+    }
+
+    /**
+     * Return the AdId.
+     *
+     * @param executor The executor to run callback.
+     * @param callback The callback that's called after adid are available or an error occurs.
+     * @throws IllegalStateException if this API is not available.
+     * @hide
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_AD_ID)
+    @NonNull
+    public void getAdId(
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull AdServicesOutcomeReceiver<AdId, Exception> callback) {
+        mImpl.getAdId(executor, callback);
     }
 
     /**

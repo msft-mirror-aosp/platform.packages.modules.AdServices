@@ -212,6 +212,18 @@ public interface Flags {
         return MAINTENANCE_JOB_FLEX_MS;
     }
 
+    default int getEncryptionKeyNetworkConnectTimeoutMs() {
+        return ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS;
+    }
+
+    int ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(5);
+
+    default int getEncryptionKeyNetworkReadTimeoutMs() {
+        return ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS;
+    }
+
+    int ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(30);
+
     /* The default min time period (in millis) between each event main reporting job run. */
     long MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS = 4 * 60 * 60 * 1000; // 4 hours.
 
@@ -353,8 +365,8 @@ public interface Flags {
 
     /** Measurement manifest file url, used for MDD download. */
     String MEASUREMENT_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/2324"
-                    + "/3927729583a9dbfdb9a3eaa84ddcef3d9b46c3c7";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/2483"
+                    + "/99f68a201189da021b1f3dd4ebdef7b0fbe75892";
 
     /** Measurement manifest file url. */
     default String getMeasurementManifestFileUrl() {
@@ -873,6 +885,12 @@ public interface Flags {
     boolean FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING = true;
     long FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS = 2 * 24 * 60 * 60; // 2 days
     long FLEDGE_HTTP_CACHE_MAX_ENTRIES = 100;
+    boolean FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES = false;
+
+    /** Returns {@code true} if the on device auction should use the unified flow tables */
+    default boolean getFledgeOnDeviceAuctionShouldUseUnifiedTables() {
+        return FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES;
+    }
 
     /** Returns {@code true} if the FLEDGE Background Fetch is enabled. */
     default boolean getFledgeBackgroundFetchEnabled() {
@@ -978,6 +996,9 @@ public interface Flags {
     long PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS = 1L * 60L * 60L * 1000L; // 1 hour
     long PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS = 5L * 60L * 1000L; // 5 minutes
     int PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES = (int) (1.5 * 1024); // 1.5 KB
+    int PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES = (int) (10 * 1024);
+    int PROTECTED_SIGNALS_MAX_JS_FAILURE_EXECUTION_ON_CERTAIN_VERSION_BEFORE_STOP = 3;
+    long PROTECTED_SIGNALS_ENCODER_REFRESH_WINDOW_SECONDS = 24L * 60L * 60L; // 1 day
 
     /** Returns {@code true} feature flag if Periodic encoding of Protected Signals is enabled. */
     default boolean getProtectedSignalsPeriodicEncodingEnabled() {
@@ -1003,6 +1024,21 @@ public interface Flags {
      */
     default int getProtectedSignalsEncodedPayloadMaxSizeBytes() {
         return PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES;
+    }
+
+    /** Returns the maximum size of the signal update payload. */
+    default int getProtectedSignalsFetchSignalUpdatesMaxSizeBytes() {
+        return PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES;
+    }
+
+    /** Returns the maximum number of continues JS failure before we stop executing the JS. */
+    default int getProtectedSignalsMaxJsFailureExecutionOnCertainVersionBeforeStop() {
+        return PROTECTED_SIGNALS_MAX_JS_FAILURE_EXECUTION_ON_CERTAIN_VERSION_BEFORE_STOP;
+    }
+
+    /** Returns the maximum time window beyond which encoder logic should be refreshed */
+    default long getProtectedSignalsEncoderRefreshWindowSeconds() {
+        return PROTECTED_SIGNALS_ENCODER_REFRESH_WINDOW_SECONDS;
     }
 
     int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT = 10_000;
@@ -1738,13 +1774,13 @@ public interface Flags {
     }
 
     /**
-     * The SHA certificates of the AdServices and the AdExtServices APKs. This is required when
-     * writing consent data to AppSearch in order to allow reads from T+ APK. This is a comma
-     * searpated list.
+     * The debug and release SHA certificates of the AdServices APK. This is required when writing
+     * consent data to AppSearch in order to allow reads from T+ APK. This is a comma separated
+     * list.
      */
-    // TODO: Add the release key signed cert.
     String ADSERVICES_APK_SHA_CERTIFICATE =
-            "686d5c450e00ebe600f979300a29234644eade42f24ede07a073f2bc6b94a3a2";
+            "686d5c450e00ebe600f979300a29234644eade42f24ede07a073f2bc6b94a3a2," // debug
+                    + "80f8fbb9a026807f58d98dbc28bf70724d8f66bbfcec997c6bdc0102c3230dee"; // release
 
     /** Only App signatures belonging to this Allow List can use PP APIs. */
     default String getAdservicesApkShaCertificate() {
@@ -2358,6 +2394,57 @@ public interface Flags {
         return getGlobalKillSwitch() || PROTECTED_SIGNALS_SERVICE_KILL_SWITCH;
     }
 
+    // Encryption key Kill switches
+
+    /**
+     * Encryption key new enrollment fetch kill switch. The default value is false which means
+     * fetching encryption keys for new enrollments is enabled by default. This flag is used for
+     * emergency turning off fetching encryption keys for new enrollments.
+     *
+     * <p>Set true to disable the function since no adtech actually provide encryption endpoint now.
+     */
+    boolean ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH = true;
+
+    /**
+     * @return value of encryption key new enrollment fetch job kill switch
+     */
+    default boolean getEncryptionKeyNewEnrollmentFetchKillSwitch() {
+        // We check the Global kill switch first. As a result, it overrides all other kill switches.
+        return getGlobalKillSwitch() || ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH;
+    }
+
+    /**
+     * Encryption key periodic fetch job kill switch. The default value is false which means
+     * periodically fetching encryption keys is enabled by default. This flag is used for emergency
+     * turning off periodically fetching encryption keys.
+     *
+     * <p>Set true to disable the function since no adtech actually provide encryption endpoint now.
+     */
+    boolean ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH = true;
+
+    /**
+     * @return value of encryption key new enrollment fetch job kill switch
+     */
+    default boolean getEncryptionKeyPeriodicFetchKillSwitch() {
+        // We check the Global kill switch first. As a result, it overrides all other kill switches.
+        return getGlobalKillSwitch() || ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH;
+    }
+
+    int ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE = JobInfo.NETWORK_TYPE_UNMETERED;
+
+    /** Returns the required network type (Wifi) for encryption key fetch job. */
+    default int getEncryptionKeyJobRequiredNetworkType() {
+        return ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE;
+    }
+
+    /* The default time period (in millisecond) between each encryption key job to run. */
+    long ENCRYPTION_KEY_JOB_PERIOD_MS = 24 * 60 * 60 * 1000L; // 24 hours.
+
+    /** Returns min time period (in millis) between each event fallback reporting job run. */
+    default long getEncryptionKeyJobPeriodMs() {
+        return ENCRYPTION_KEY_JOB_PERIOD_MS;
+    }
+
     /**
      * Enable Back Compat feature flag. The default value is false which means that all back compat
      * related features are disabled by default. This flag would be enabled for R/S during rollout.
@@ -2507,6 +2594,17 @@ public interface Flags {
     /** Only App signatures belonging to this Allow List can use PP APIs. */
     default String getPpapiAppSignatureAllowList() {
         return PPAPI_APP_SIGNATURE_ALLOW_LIST;
+    }
+
+    /**
+     * The allow list for AppSearch writers. If non-empty, only results written by a package on the
+     * allow list will be read for consent migration.
+     */
+    String APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE = "";
+
+    /** Only data written by packages in the allow list will be read from AppSearch. */
+    default String getAppsearchWriterAllowListOverride() {
+        return APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE;
     }
 
     /**
@@ -2860,7 +2958,8 @@ public interface Flags {
     }
 
     /** Ui OTA strings manifest file url, used for MDD download. */
-    String UI_OTA_STRINGS_MANIFEST_FILE_URL = "";
+    String UI_OTA_STRINGS_MANIFEST_FILE_URL =
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-ui-ota-strings/1341/95580b00edbd8cbf62bfa0df9ebd79fba1e5b7ca";
 
     /** UI OTA strings manifest file url. */
     default String getUiOtaStringsManifestFileUrl() {
@@ -3167,12 +3266,37 @@ public interface Flags {
         return DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_BLOCKLIST;
     }
 
+    /** Default computation of adservices version */
+    boolean DEFAULT_COMPUTE_VERSION_FROM_MAPPINGS_ENABLED = true;
+
+    /** Get Compute adservices Version from mappings */
+    default boolean getEnableComputeVersionFromMappings() {
+        return DEFAULT_COMPUTE_VERSION_FROM_MAPPINGS_ENABLED;
+    }
+
     /** Get mainline train version */
     String DEFAULT_MAINLINE_TRAIN_VERSION = "000000";
 
     /** Get mainline train version */
     default String getMainlineTrainVersion() {
         return DEFAULT_MAINLINE_TRAIN_VERSION;
+    }
+
+    /**
+     * Default adservices version mappings Format -
+     * start_range1,end_range1,header_version1|start_range2,end_range2,header_version2
+     */
+    String DEFAULT_ADSERVICES_VERSION_MAPPINGS =
+            "341300000,341400000,202401|341400000,341500000,202402"
+                    + "|341500000,341600000,202403|341600000,341700000,202404"
+                    + "|341700000,341800000,202405|341800000,341900000,202406"
+                    + "|341900000,342000000,202407|342000000,342100000,202408"
+                    + "|342100000,342200000,202409|342200000,342300000,202410"
+                    + "|342300000,342400000,202411|342400000,342500000,202412";
+
+    /** Get adservices version mappings */
+    default String getAdservicesVersionMappings() {
+        return DEFAULT_ADSERVICES_VERSION_MAPPINGS;
     }
 
     /** Default Determines whether EU notification flow change is enabled. */
@@ -3732,6 +3856,95 @@ public interface Flags {
         return DEFAULT_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS;
     }
 
+    /** Privacy Params */
+    int MEASUREMENT_MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION = 3;
+
+    /** Max distinct web destinations in a source registration. */
+    default int getMeasurementMaxDistinctWebDestinationsInSourceRegistration() {
+        return MEASUREMENT_MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION;
+    }
+
+    long MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS =
+            TimeUnit.DAYS.toSeconds(30);
+
+    /**
+     * Max expiration value in seconds for attribution reporting register source. This value is also
+     * the default if no expiration was specified.
+     */
+    default long getMeasurementMaxReportingRegisterSourceExpirationInSeconds() {
+        return MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+    }
+
+    long MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS =
+            TimeUnit.DAYS.toSeconds(1);
+
+    /** Min expiration value in seconds for attribution reporting register source. */
+    default long getMeasurementMinReportingRegisterSourceExpirationInSeconds() {
+        return MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+    }
+
+    long MEASUREMENT_MAX_INSTALL_ATTRIBUTION_WINDOW = TimeUnit.DAYS.toSeconds(30);
+
+    /** Maximum limit of duration to determine attribution for a verified installation. */
+    default long getMeasurementMaxInstallAttributionWindow() {
+        return MEASUREMENT_MAX_INSTALL_ATTRIBUTION_WINDOW;
+    }
+
+    long MEASUREMENT_MIN_INSTALL_ATTRIBUTION_WINDOW = TimeUnit.DAYS.toSeconds(1);
+
+    /** Minimum limit of duration to determine attribution for a verified installation. */
+    default long getMeasurementMinInstallAttributionWindow() {
+        return MEASUREMENT_MIN_INSTALL_ATTRIBUTION_WINDOW;
+    }
+
+    long MEASUREMENT_MAX_POST_INSTALL_EXCLUSIVITY_WINDOW = TimeUnit.DAYS.toSeconds(30);
+
+    /** Maximum acceptable install cooldown period. */
+    default long getMeasurementMaxPostInstallExclusivityWindow() {
+        return MEASUREMENT_MAX_POST_INSTALL_EXCLUSIVITY_WINDOW;
+    }
+
+    long MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW = 0L;
+
+    /** Default and minimum value for cooldown period of source which led to installation. */
+    default long getMeasurementMinPostInstallExclusivityWindow() {
+        return MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW;
+    }
+
+    int MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE = 65536;
+
+    /**
+     * L1, the maximum sum of the contributions (values) across all buckets for a given source
+     * event.
+     */
+    default int getMeasurementMaxSumOfAggregateValuesPerSource() {
+        return MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE;
+    }
+
+    long MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS = TimeUnit.DAYS.toMillis(30);
+
+    /**
+     * Rate limit window for (Source Site, Destination Site, Reporting Site, Window) privacy unit.
+     * 30 days.
+     */
+    default long getMeasurementRateLimitWindowMilliseconds() {
+        return MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS;
+    }
+
+    long MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW = TimeUnit.DAYS.toMillis(1);
+
+    /** Minimum time window after which reporting origin can be migrated */
+    default long getMeasurementMinReportingOriginUpdateWindow() {
+        return MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW;
+    }
+
+    boolean MEASUREMENT_ENABLE_PREINSTALL_CHECK = false;
+
+    /** Returns true when pre-install check is enabled. */
+    default boolean getMeasurementEnablePreinstallCheck() {
+        return MEASUREMENT_ENABLE_PREINSTALL_CHECK;
+    }
+
     /** Default value of flag for logging consent migration metrics when OTA from S to T+. */
     boolean DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED = true;
 
@@ -3809,6 +4022,14 @@ public interface Flags {
     /** @return if to enable database schema version 8. */
     default boolean getEnableDatabaseSchemaVersion8() {
         return ENABLE_DATABASE_SCHEMA_VERSION_8;
+    }
+
+    /** Flag to control which allow list in getMeasurementApiStatus. */
+    boolean MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK = false;
+
+    /** Returns the flag to control which allow list to use in getMeasurementApiStatus. */
+    default boolean getMsmtEnableApiStatusAllowListCheck() {
+        return MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK;
     }
 
     /**
@@ -3937,6 +4158,20 @@ public interface Flags {
         return DEFAULT_ADID_CACHE_ENABLED;
     }
 
+    long DEFAULT_AD_ID_FETCHER_TIMEOUT_MS = 50;
+
+    /**
+     * Returns configured timeout value for {@link
+     * com.android.adservices.service.adselection.AdIdFetcher} logic.
+     *
+     * <p>The intended goal is to override this value for tests.
+     *
+     * @return Timeout in mills.
+     */
+    default long getAdIdFetcherTimeoutMs() {
+        return DEFAULT_AD_ID_FETCHER_TIMEOUT_MS;
+    }
+
     boolean APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT = false;
 
     /**
@@ -3946,5 +4181,33 @@ public interface Flags {
      */
     default boolean getAppConfigReturnsEnabledByDefault() {
         return APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT;
+    }
+
+    /**
+     * Default value to determine whether {@link
+     * android.adservices.common.AdServicesCommonManager#enableAdServices} is enabled.
+     */
+    boolean DEFAULT_ENABLE_ADSERVICES_API_ENABLED = true;
+
+    /**
+     * Returns whether {@link android.adservices.common.AdServicesCommonManager#enableAdServices} is
+     * enabled.
+     */
+    default boolean getEnableAdservicesApiEnabled() {
+        return DEFAULT_ENABLE_ADSERVICES_API_ENABLED;
+    }
+
+    /**
+     * Default value to determine whether {@link
+     * android.adservices.common.AdServicesCommonManager#isAdServicesEnabled} is enabled.
+     */
+    boolean DEFAULT_ADSERVICES_ENABLEMENT_CHECK_ENABLED = true;
+
+    /**
+     * Returns whether {@link android.adservices.common.AdServicesCommonManager#isAdServicesEnabled}
+     * is enabled.
+     */
+    default boolean getAdservicesEnablementCheckEnabled() {
+        return DEFAULT_ADSERVICES_ENABLEMENT_CHECK_ENABLED;
     }
 }

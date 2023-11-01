@@ -19,6 +19,7 @@ package android.adservices.debuggablects;
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
 
+import android.Manifest;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.ReportEventRequest;
@@ -40,12 +41,14 @@ import android.net.Uri;
 import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.SupportedByConditionRule;
 import com.android.adservices.common.WebViewSupportUtil;
+import com.android.adservices.service.PhFlagsFixture;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -80,6 +83,8 @@ public abstract class FledgeScenarioTest extends ForegroundDebuggableCtsTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final int NUM_ADS_PER_AUDIENCE = 4;
     private static final String PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
+    private static final long AD_ID_FETCHER_TIMEOUT = 1000;
+    private static final long AD_ID_FETCHER_TIMEOUT_DEFAULT = 50;
 
     protected AdvertisingCustomAudienceClient mCustomAudienceClient;
     protected AdSelectionClient mAdSelectionClient;
@@ -131,6 +136,15 @@ public abstract class FledgeScenarioTest extends ForegroundDebuggableCtsTest {
         if (SdkLevel.isAtLeastT()) {
             assertForegroundActivityStarted();
         }
+
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+
+        PhFlagsFixture.overrideFledgeOnDeviceAdSelectionTimeouts(
+                /* biddingTimeoutPerCaMs= */ 5_000,
+                /* scoringTimeoutMs= */ 5_000,
+                /* overallTimeoutMs= */ 10_000);
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
         ExecutorService executor = Executors.newCachedThreadPool();
@@ -229,6 +243,8 @@ public abstract class FledgeScenarioTest extends ForegroundDebuggableCtsTest {
 
     protected void setDebugReportingEnabledForTesting(boolean enabled) {
         FledgeScenarioTest.overrideBiddingLogicVersionToV3(enabled);
+        PhFlagsFixture.overrideAdIdFetcherTimeoutMs(
+                enabled ? AD_ID_FETCHER_TIMEOUT : AD_ID_FETCHER_TIMEOUT_DEFAULT);
         ShellUtils.runShellCommand(
                 String.format(
                         "device_config put adservices fledge_event_level_debug_reporting_enabled"

@@ -29,6 +29,7 @@ import com.android.adservices.common.AdServicesHostSideFlagsSetterRule;
 import com.android.adservices.common.AdServicesHostSideTestCase;
 import com.android.adservices.common.BackgroundLogReceiver;
 import com.android.adservices.common.HostSideSdkLevelSupportRule;
+import com.android.adservices.service.FlagsConstants;
 import com.android.internal.os.StatsdConfigProto.StatsdConfig;
 import com.android.os.AtomsProto;
 import com.android.os.AtomsProto.AdServicesSettingsUsageReported;
@@ -81,7 +82,8 @@ public final class UiApiLoggingHostTest extends AdServicesHostSideTestCase {
                     .setAdServicesEnabled(true)
                     .setMddBackgroundTaskKillSwitch(true)
                     .setConsentManagerDebugMode(true)
-                    .setDisableTopicsEnrollmentCheckForTests(true);
+                    .setDisableTopicsEnrollmentCheckForTests(true)
+                    .setFlag(FlagsConstants.KEY_GA_UX_FEATURE_ENABLED, true);
 
     @Rule(order = 3)
     public TestMetrics metricsRule = new TestMetrics();
@@ -96,6 +98,7 @@ public final class UiApiLoggingHostTest extends AdServicesHostSideTestCase {
                 sdkLevel.isAtLeastT() ? TARGET_PACKAGE_SUFFIX_TPLUS : TARGET_PACKAGE_SUFFIX_SMINUS;
         mTargetPackage = findPackageName(suffix);
         assertThat(mTargetPackage).isNotNull();
+        restartAdservices(getDevice());
     }
     @After
     public void tearDown() throws Exception {
@@ -158,7 +161,7 @@ public final class UiApiLoggingHostTest extends AdServicesHostSideTestCase {
         ConfigUtils.uploadConfig(device, config);
         // Start the ui main activity, it will make a ui log call
         startUiMainActivity(device);
-        Thread.sleep(AtomTestUtils.WAIT_TIME_SHORT);
+        Thread.sleep(AtomTestUtils.WAIT_TIME_LONG);
     }
 
     public void startUiMainActivity(ITestDevice device) throws DeviceNotAvailableException {
@@ -170,5 +173,12 @@ public final class UiApiLoggingHostTest extends AdServicesHostSideTestCase {
                 .filter(s -> s.endsWith(suffix))
                 .findFirst()
                 .orElse(null);
+    }
+
+    private void restartAdservices(ITestDevice device) throws DeviceNotAvailableException {
+        device.executeShellCommand("am force-stop com.google.android.adservices.api");
+        device.executeShellCommand("am force-stop com.android.adservices.api");
+        device.executeShellCommand("am force-stop com.google.android.ext.adservices.api");
+        device.executeShellCommand("am force-stop com.android.ext.adservices.api");
     }
 }

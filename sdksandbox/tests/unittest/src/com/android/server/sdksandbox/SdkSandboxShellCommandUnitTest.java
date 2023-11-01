@@ -174,7 +174,6 @@ public class SdkSandboxShellCommandUnitTest {
                         Mockito.eq(
                                 "Shell command `sdk_sandbox start` failed due to sandbox"
                                         + " disabled."));
-        mService.setIsSdkSandboxDisabledResponse(false);
     }
 
     @Test
@@ -413,7 +412,7 @@ public class SdkSandboxShellCommandUnitTest {
         }
 
         @Override
-        boolean isSdkSandboxDisabled(ISdkSandboxService boundService) {
+        boolean isSdkSandboxDisabled() {
             return mIsDisabledResponse;
         }
 

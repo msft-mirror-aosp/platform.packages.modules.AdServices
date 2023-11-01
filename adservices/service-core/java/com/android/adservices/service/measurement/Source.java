@@ -107,6 +107,7 @@ public class Source {
     private boolean mCoarseEventReportDestinations;
     @Nullable private UnsignedLong mSharedDebugKey;
     private List<Pair<Long, Long>> mParsedEventReportWindows;
+    private boolean mDropSourceIfInstalled;
 
     /**
      * Parses and returns the event_report_windows Returns null if parsing fails or if there is no
@@ -291,6 +292,10 @@ public class Source {
         public String getValue() {
             return mValue;
         }
+
+        public int getIntValue() {
+            return this.equals(SourceType.NAVIGATION) ? 1 : 0;
+        }
     }
 
     private Source() {
@@ -446,7 +451,8 @@ public class Source {
                 && Objects.equals(
                         mEventAttributionStatusString, source.mEventAttributionStatusString)
                 && Objects.equals(mPrivacyParametersString, source.mPrivacyParametersString)
-                && Objects.equals(mSharedDebugKey, source.mSharedDebugKey);
+                && Objects.equals(mSharedDebugKey, source.mSharedDebugKey)
+                && mDropSourceIfInstalled == source.mDropSourceIfInstalled;
     }
 
     @Override
@@ -492,7 +498,8 @@ public class Source {
                 mEventAttributionStatusString,
                 mPrivacyParametersString,
                 mCoarseEventReportDestinations,
-                mSharedDebugKey);
+                mSharedDebugKey,
+                mDropSourceIfInstalled);
     }
 
     public void setAttributionMode(@AttributionMode int attributionMode) {
@@ -1026,6 +1033,11 @@ public class Source {
         return mSharedDebugKey;
     }
 
+    /** Returns true if the source should be dropped when the app is already installed. */
+    public boolean shouldDropSourceIfInstalled() {
+        return mDropSourceIfInstalled;
+    }
+
     /** Returns true if the source has app destination(s), false otherwise. */
     public boolean hasAppDestinations() {
         return mAppDestinations != null && mAppDestinations.size() > 0;
@@ -1142,6 +1154,7 @@ public class Source {
             builder.setFlexEventReportSpec(copyFrom.mFlexEventReportSpec);
             builder.setCoarseEventReportDestinations(copyFrom.mCoarseEventReportDestinations);
             builder.setSharedDebugKey(copyFrom.mSharedDebugKey);
+            builder.setDropSourceIfInstalled(copyFrom.mDropSourceIfInstalled);
             return builder;
         }
 
@@ -1496,6 +1509,13 @@ public class Source {
         @NonNull
         public Builder setSharedDebugKey(@Nullable UnsignedLong sharedDebugKey) {
             mBuilding.mSharedDebugKey = sharedDebugKey;
+            return this;
+        }
+
+        /** See {@link Source#shouldDropSourceIfInstalled()}. */
+        @NonNull
+        public Builder setDropSourceIfInstalled(boolean dropSourceIfInstalled) {
+            mBuilding.mDropSourceIfInstalled = dropSourceIfInstalled;
             return this;
         }
 

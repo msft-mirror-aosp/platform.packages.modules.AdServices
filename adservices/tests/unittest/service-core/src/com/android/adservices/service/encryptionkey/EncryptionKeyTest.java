@@ -37,11 +37,12 @@ public class EncryptionKeyTest {
     private static final int KEY_COMMITMENT_ID = 1;
     private static final String BODY = "WVZBTFVF";
     private static final long EXPIRATION = 100000L;
+    private static final long LAST_FETCH_TIME = 12345L;
 
     private static EncryptionKey createKeyCommitment(String enrollmentId) {
         return new EncryptionKey.Builder()
                 .setId(ID)
-                .setKeyType(EncryptionKey.KeyType.ENCRYPTION_KEY)
+                .setKeyType(EncryptionKey.KeyType.ENCRYPTION)
                 .setEnrollmentId(enrollmentId)
                 .setReportingOrigin(REPORTING_ORIGIN)
                 .setEncryptionKeyUrl(ENCRYPTION_KEY_URL)
@@ -49,6 +50,7 @@ public class EncryptionKeyTest {
                 .setKeyCommitmentId(KEY_COMMITMENT_ID)
                 .setBody(BODY)
                 .setExpiration(EXPIRATION)
+                .setLastFetchTime(LAST_FETCH_TIME)
                 .build();
     }
 
@@ -58,7 +60,7 @@ public class EncryptionKeyTest {
         EncryptionKey result = createKeyCommitment(ENROLLMENT_ID1);
 
         assertEquals(ID, result.getId());
-        assertEquals(EncryptionKey.KeyType.ENCRYPTION_KEY, result.getKeyType());
+        assertEquals(EncryptionKey.KeyType.ENCRYPTION, result.getKeyType());
         assertEquals(ENROLLMENT_ID1, result.getEnrollmentId());
         assertEquals(REPORTING_ORIGIN, result.getReportingOrigin());
         assertEquals(ENCRYPTION_KEY_URL, result.getEncryptionKeyUrl());
@@ -66,6 +68,7 @@ public class EncryptionKeyTest {
         assertEquals(KEY_COMMITMENT_ID, result.getKeyCommitmentId());
         assertEquals(BODY, result.getBody());
         assertEquals(EXPIRATION, result.getExpiration());
+        assertEquals(LAST_FETCH_TIME, result.getLastFetchTime());
     }
 
     /** Unit test for encryption key default creation. */
@@ -74,7 +77,7 @@ public class EncryptionKeyTest {
         EncryptionKey result = new EncryptionKey.Builder().build();
 
         assertNull(result.getId());
-        assertEquals(EncryptionKey.KeyType.ENCRYPTION_KEY, result.getKeyType());
+        assertEquals(EncryptionKey.KeyType.ENCRYPTION, result.getKeyType());
         assertNull(result.getEnrollmentId());
         assertNull(result.getReportingOrigin());
         assertNull(result.getEncryptionKeyUrl());
@@ -82,6 +85,7 @@ public class EncryptionKeyTest {
         assertEquals(0, result.getKeyCommitmentId());
         assertNull(result.getBody());
         assertEquals(0L, result.getExpiration());
+        assertEquals(0L, result.getLastFetchTime());
     }
 
     /** Unit test for encryption key hashcode equals. */

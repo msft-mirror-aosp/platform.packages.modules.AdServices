@@ -34,9 +34,8 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
-import com.android.modules.utils.build.SdkLevel;
 
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
@@ -104,9 +103,13 @@ public class MeasurementCtsDebuggableTest {
 
     private MeasurementManager mMeasurementManager;
 
-    @Rule
+    @Rule(order = 0)
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
             new AdServicesDeviceSupportedRule();
+
+    @Rule(order = 1)
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests().setCompatModeFlags();
 
     @BeforeClass
     public static void setupDevicePropertiesAndInitializeClient() throws Exception {
@@ -631,13 +634,19 @@ public class MeasurementCtsDebuggableTest {
         getUiDevice()
                 .executeShellCommand(
                         "device_config put adservices "
-                                + "measurement_default_aggregation_coordinator_origin"
+                                + "measurement_aggregation_coordinator_origin_list "
                                 + AGGREGATE_ENCRYPTION_KEY_COORDINATOR_ORIGIN);
 
         getUiDevice()
                 .executeShellCommand(
                         "device_config put adservices "
-                                + "measurement_aggregation_coordinator_path"
+                                + "measurement_default_aggregation_coordinator_origin "
+                                + AGGREGATE_ENCRYPTION_KEY_COORDINATOR_ORIGIN);
+
+        getUiDevice()
+                .executeShellCommand(
+                        "device_config put adservices "
+                                + "measurement_aggregation_coordinator_path "
                                 + AGGREGATE_ENCRYPTION_KEY_COORDINATOR_PATH);
 
         // Set reporting windows
@@ -661,12 +670,6 @@ public class MeasurementCtsDebuggableTest {
         getUiDevice().executeShellCommand(
                 "device_config put adservices "
                 + "measurement_aggregate_report_delay_config 0,0");
-
-        // Set flags for back-compat AdServices functionality for Android S-.
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setFlags();
-        }
-
         sleep();
     }
 
@@ -674,10 +677,6 @@ public class MeasurementCtsDebuggableTest {
         // Reset device config sync
         getUiDevice().executeShellCommand(
                 "device_config set_sync_disabled_for_tests null");
-
-        // Reset consent
-        getUiDevice().executeShellCommand(
-                "setprop debug.adservices.consent_manager_debug_mode null");
 
         // Reset allowed packages.
         getUiDevice()
@@ -744,10 +743,5 @@ public class MeasurementCtsDebuggableTest {
         getUiDevice().executeShellCommand(
                 "device_config put adservices "
                 + "measurement_aggregate_report_delay_config null");
-
-        // Reset back-compat related flags.
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
     }
 }

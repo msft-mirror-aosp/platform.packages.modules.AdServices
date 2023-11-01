@@ -303,7 +303,9 @@ public class ReportAndRegisterEventE2ETest {
                                 mMeasurementDataDeleterMock,
                                 mContentResolverMock));
         doReturn(mMeasurementImplSpy).when(() -> MeasurementImpl.getInstance(CONTEXT));
-        doReturn(true).when(mClickVerifierMock).isInputEventVerifiable(any(), anyLong());
+        doReturn(true)
+                .when(mClickVerifierMock)
+                .isInputEventVerifiable(any(), anyLong(), anyString());
         when(mEnrollmentDaoMock.getEnrollmentDataFromMeasurementUrl(any()))
                 .thenReturn(ENROLLMENT_DATA);
 
@@ -321,6 +323,7 @@ public class ReportAndRegisterEventE2ETest {
         mAsyncRegistrationQueueRunnerSpy =
                 spy(
                         new AsyncRegistrationQueueRunner(
+                                CONTEXT,
                                 mContentResolverMock,
                                 mAsyncSourceFetcherSpy,
                                 mAsyncTriggerFetcherSpy,

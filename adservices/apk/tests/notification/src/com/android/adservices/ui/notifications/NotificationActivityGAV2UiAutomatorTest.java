@@ -15,6 +15,9 @@
  */
 package com.android.adservices.ui.notifications;
 
+import static com.android.adservices.service.FlagsConstants.KEY_EU_NOTIF_FLOW_CHANGE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import android.content.Context;
@@ -34,8 +37,8 @@ import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
 
@@ -48,6 +51,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Spy;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 @RunWith(AndroidJUnit4.class)
 public class NotificationActivityGAV2UiAutomatorTest {
@@ -59,25 +63,28 @@ public class NotificationActivityGAV2UiAutomatorTest {
     @Spy private Context mContext = InstrumentationRegistry.getInstrumentation().getContext();
     private String mTestName;
 
-    @Rule
+    @Rule(order = 0)
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
             new AdServicesDeviceSupportedRule();
 
+    @Rule(order = 1)
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
+                    .setCompatModeFlags()
+                    .setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
+                    .setFlag(KEY_EU_NOTIF_FLOW_CHANGE_ENABLED, true);
+
     @BeforeClass
-    public static void classSetup() {
+    public static void classSetup() throws InterruptedException {
         AdservicesTestHelper.killAdservicesProcess(ApplicationProvider.getApplicationContext());
+        // sleep for 1 min for bootCompleteReceiver to get invoked on S-
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            TimeUnit.SECONDS.sleep(60);
+        }
     }
 
     @Before
     public void setup() throws UiObjectNotFoundException, IOException {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            CompatAdServicesTestUtils.setFlags();
-        }
-        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
-        ShellUtils.runShellCommand(
-                "device_config put adservices eu_notif_flow_change_enabled true");
-
-        // Skip the test if it runs on unsupported platforms.
         sDevice.pressHome();
         final String launcherPackage = sDevice.getLauncherPackageName();
         assertThat(launcherPackage).isNotNull();
@@ -89,9 +96,6 @@ public class NotificationActivityGAV2UiAutomatorTest {
         ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + mTestName + "_");
 
         AdservicesTestHelper.killAdservicesProcess(ApplicationProvider.getApplicationContext());
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
     }
 
     @Test

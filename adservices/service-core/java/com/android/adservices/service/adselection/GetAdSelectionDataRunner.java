@@ -16,15 +16,16 @@
 
 package com.android.adservices.service.adselection;
 
-
 import android.adservices.adselection.GetAdSelectionDataCallback;
 import android.adservices.adselection.GetAdSelectionDataInput;
 import android.adservices.adselection.GetAdSelectionDataResponse;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.AssetFileDescriptorUtil;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.content.res.AssetFileDescriptor;
 import android.os.Build;
 import android.os.RemoteException;
 
@@ -57,6 +58,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.protobuf.ByteString;
 
+import java.io.IOException;
 import java.security.SecureRandom;
 import java.time.Clock;
 import java.util.Map;
@@ -86,6 +88,7 @@ public class GetAdSelectionDataRunner {
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
+    @NonNull private final ListeningExecutorService mBlockingExecutorService;
     @NonNull private final ScheduledThreadPoolExecutor mScheduledExecutor;
     @NonNull private final Flags mFlags;
     private final int mCallerUid;
@@ -97,6 +100,7 @@ public class GetAdSelectionDataRunner {
     @NonNull private final AdIdFetcher mAdIdFetcher;
     @NonNull private final DevContext mDevContext;
     @NonNull private final Clock mClock;
+    private final int mPayloadFormatterVersion;
 
     public GetAdSelectionDataRunner(
             @NonNull final ObliviousHttpEncryptor obliviousHttpEncryptor,
@@ -107,6 +111,7 @@ public class GetAdSelectionDataRunner {
             @NonNull final AdFilterer adFilterer,
             @NonNull final ExecutorService backgroundExecutorService,
             @NonNull final ExecutorService lightweightExecutorService,
+            @NonNull final ExecutorService blockingExecutorService,
             @NonNull final ScheduledThreadPoolExecutor scheduledExecutor,
             @NonNull final Flags flags,
             final int callerUid,
@@ -132,6 +137,7 @@ public class GetAdSelectionDataRunner {
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
+        mBlockingExecutorService = MoreExecutors.listeningDecorator(blockingExecutorService);
         mScheduledExecutor = scheduledExecutor;
         mFlags = flags;
         mCallerUid = callerUid;
@@ -154,9 +160,10 @@ public class GetAdSelectionDataRunner {
         mDataCompressor =
                 AuctionServerDataCompressorFactory.getDataCompressor(
                         mFlags.getFledgeAuctionServerCompressionAlgorithmVersion());
+        mPayloadFormatterVersion = mFlags.getFledgeAuctionServerPayloadFormatVersion();
         mPayloadFormatter =
                 AuctionServerPayloadFormatterFactory.createPayloadFormatter(
-                        mFlags.getFledgeAuctionServerPayloadFormatVersion(),
+                        mPayloadFormatterVersion,
                         mFlags.getFledgeAuctionServerPayloadBucketSizes());
         mAdIdFetcher = adIdFetcher;
     }
@@ -171,6 +178,7 @@ public class GetAdSelectionDataRunner {
             @NonNull final AdFilterer adFilterer,
             @NonNull final ExecutorService backgroundExecutorService,
             @NonNull final ExecutorService lightweightExecutorService,
+            @NonNull final ExecutorService blockingExecutorService,
             @NonNull final ScheduledThreadPoolExecutor scheduledExecutor,
             @NonNull final Flags flags,
             final int callerUid,
@@ -198,6 +206,7 @@ public class GetAdSelectionDataRunner {
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
+        mBlockingExecutorService = MoreExecutors.listeningDecorator(blockingExecutorService);
         mScheduledExecutor = scheduledExecutor;
         mFlags = flags;
         mCallerUid = callerUid;
@@ -220,9 +229,10 @@ public class GetAdSelectionDataRunner {
         mDataCompressor =
                 AuctionServerDataCompressorFactory.getDataCompressor(
                         mFlags.getFledgeAuctionServerCompressionAlgorithmVersion());
+        mPayloadFormatterVersion = mFlags.getFledgeAuctionServerPayloadFormatVersion();
         mPayloadFormatter =
                 AuctionServerPayloadFormatterFactory.createPayloadFormatter(
-                        mFlags.getFledgeAuctionServerPayloadFormatVersion(),
+                        mPayloadFormatterVersion,
                         mFlags.getFledgeAuctionServerPayloadBucketSizes());
         mAdIdFetcher = adIdFetcher;
     }
@@ -425,11 +435,32 @@ public class GetAdSelectionDataRunner {
         Objects.requireNonNull(result);
 
         try {
-            callback.onSuccess(
-                    new GetAdSelectionDataResponse.Builder()
-                            .setAdSelectionId(adSelectionId)
-                            .setAdSelectionData(result)
-                            .build());
+            if (mPayloadFormatterVersion == AuctionServerPayloadFormatterExcessiveMaxSize.VERSION) {
+                sLogger.d("Creating response with AssetFileDescriptor");
+                AssetFileDescriptor assetFileDescriptor;
+                try {
+                    // Need to use the blocking executor here because the reader is depending on the
+                    // data being written
+                    assetFileDescriptor =
+                            AssetFileDescriptorUtil.setupAssetFileDescriptorResponse(
+                                    result, mBlockingExecutorService);
+                } catch (IOException e) {
+                    sLogger.e(e, "Encountered error creating response with AssetFileDescriptor");
+                    notifyFailureToCaller(e, callback);
+                    return;
+                }
+                callback.onSuccess(
+                        new GetAdSelectionDataResponse.Builder()
+                                .setAdSelectionId(adSelectionId)
+                                .setAssetFileDescriptor(assetFileDescriptor)
+                                .build());
+            } else {
+                callback.onSuccess(
+                        new GetAdSelectionDataResponse.Builder()
+                                .setAdSelectionId(adSelectionId)
+                                .setAdSelectionData(result)
+                                .build());
+            }
         } catch (RemoteException e) {
             sLogger.e(e, "Encountered exception during notifying GetAdSelectionDataCallback");
         } finally {

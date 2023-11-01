@@ -73,7 +73,8 @@
         "triggers": [],
         "event_reports": [],
         "attributions": []
-      }
+      },
+      "retry-limit": true
     },
     {
       "name": "1 expired Trigger and 1 non-expired Trigger",
@@ -151,7 +152,8 @@
         ],
         "event_reports": [],
         "attributions": []
-      }
+      },
+      "retry-limit": true
     },
     {
       "name": "Expired Aggregate Reports by report time & delivery",
@@ -206,7 +208,8 @@
             "aggregation_coordinator_origin": "https://test.test"
           }
         ]
-      }
+      },
+      "retry-limit": true
     },
     {
       "name": "1 expired Attribution and 1 non-expired Attribution",
@@ -257,7 +260,8 @@
             "registrant": "android-app://com.example.xyz"
           }
         ]
-      }
+      },
+      "retry-limit": true
     },
     {
       "name": "1 non-expired AsyncRegistration, 1 expired AsyncRegistration, 1 AsyncRegistration both expired and past retry limit, and 1 AsyncRegistration only past retry limit",
@@ -365,7 +369,8 @@
             "sourceType": 1
           }
         ]
-      }
+      },
+      "retry-limit": true
     },
     {
       "name": "1 non-expired DebugReport, 1 expired DebugReport",
@@ -405,10 +410,11 @@
           }
         ],
         "key_values": []
-      }
+      },
+      "retry-limit": true
     },
     {
-      "name": "1 each Expired DebugRetry, EventRetry, AggregateRetry",
+      "name": "1 each Expired DebugRetry, EventRetry, DebugEventRetry, AggregateRetry, DebugAggregateRetry",
       "input": {
         "key_values": [
           {
@@ -425,6 +431,16 @@
             "key":"AR-Expired",
             "dataType": "AGGREGATE_REPORT_RETRY_COUNT",
             "value": "1000"
+          },
+          {
+            "key":"ER-Expired",
+            "dataType": "DEBUG_EVENT_REPORT_RETRY_COUNT",
+            "value": "1000"
+          },
+          {
+            "key":"AR-Expired",
+            "dataType": "DEBUG_AGGREGATE_REPORT_RETRY_COUNT",
+            "value": "1000"
           }
         ]
       },
@@ -437,10 +453,11 @@
         "async_registrations": [],
         "debug_reports": [],
         "key_values": []
-      }
+      },
+      "retry-limit": true
     },
     {
-      "name": "1 each non-Expired DebugRetry, EventRetry, AggregateRetry",
+      "name": "1 each non-Expired DebugRetry, EventRetry, DebugEventRetry, AggregateRetry, DebugAggregateRetry",
       "input": {
         "aggregate_reports": [
           {
@@ -491,6 +508,16 @@
             "key":"AR-non-Expired",
             "dataType": "AGGREGATE_REPORT_RETRY_COUNT",
             "value": "1"
+          },
+          {
+            "key":"ER-non-Expired",
+            "dataType": "DEBUG_EVENT_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"AR-non-Expired",
+            "dataType": "DEBUG_AGGREGATE_REPORT_RETRY_COUNT",
+            "value": "1"
           }
         ]
       },
@@ -544,9 +571,20 @@
             "key":"AR-non-Expired",
             "dataType": "AGGREGATE_REPORT_RETRY_COUNT",
             "value": "1"
+          },
+          {
+            "key":"ER-non-Expired",
+            "dataType": "DEBUG_EVENT_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"AR-non-Expired",
+            "dataType": "DEBUG_AGGREGATE_REPORT_RETRY_COUNT",
+            "value": "1"
           }
         ]
-      }
+      },
+      "retry-limit": true
     },
     {
       "name": "1 each non-Expired and 1 each Expired DebugRetry, EventRetry, and AggregateRetry",
@@ -602,6 +640,16 @@
             "value": "1"
           },
           {
+            "key":"ER-non-Expired",
+            "dataType": "DEBUG_EVENT_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"AR-non-Expired",
+            "dataType": "DEBUG_AGGREGATE_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
             "key":"DR-Expired",
             "dataType": "AGGREGATE_REPORT_RETRY_COUNT",
             "value": "1"
@@ -614,6 +662,16 @@
           {
             "key":"AR-Expired",
             "dataType": "AGGREGATE_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"ER-Expired",
+            "dataType": "DEBUG_EVENT_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"AR-Expired",
+            "dataType": "DEBUG_AGGREGATE_REPORT_RETRY_COUNT",
             "value": "1"
           }
         ]
@@ -668,9 +726,58 @@
             "key":"AR-non-Expired",
             "dataType": "AGGREGATE_REPORT_RETRY_COUNT",
             "value": "1"
+          },
+          {
+            "key":"ER-non-Expired",
+            "dataType": "DEBUG_EVENT_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"AR-non-Expired",
+            "dataType": "DEBUG_AGGREGATE_REPORT_RETRY_COUNT",
+            "value": "1"
           }
         ]
-      }
+      },
+      "retry-limit": true
+    },
+    {
+      "name": "1 non-expired DebugReport, 1 expired DebugReport. Retry Off",
+      "input": {
+        "key_values": [],
+        "debug_reports": [
+          {
+            "id": "DR-non-Expired",
+            "type": "source-success",
+            "body": "{\"test\":\"body\"}",
+            "insertion_time": 9223372036854775807
+          },
+          {
+            "id": "DR-Expired",
+            "type": "source-success",
+            "body": "{\"test\":\"body\"}",
+            "insertion_time": 1
+          }
+        ]
+      },
+      "output": {
+        "sources": [],
+        "source_destinations": [],
+        "triggers": [],
+        "event_reports": [],
+        "attributions": [],
+        "async_registrations": [],
+        "debug_reports": [
+          {
+            "id": "DR-non-Expired",
+            "type": "source-success",
+            "body": "{\"test\":\"body\"}",
+            "insertion_time": 9223372036854775807
+          }
+        ],
+        "key_values": []
+      },
+      "retry-limit": false
     }
   ]
 }

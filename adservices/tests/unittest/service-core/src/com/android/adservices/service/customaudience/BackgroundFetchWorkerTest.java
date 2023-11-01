@@ -50,6 +50,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceBackgroundFetchDataFixture;
 import com.android.adservices.data.adselection.AppInstallDao;
@@ -97,7 +98,12 @@ public class BackgroundFetchWorkerTest {
     private final Flags mFlags = new BackgroundFetchWorkerTestFlags(true);
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(8);
 
-    @Rule public MockitoRule mMockitoRule = MockitoJUnit.rule();
+    @Rule(order = 0)
+    public final AdServicesDeviceSupportedRule deviceSupportRule =
+            new AdServicesDeviceSupportedRule();
+
+    @Rule(order = 1)
+    public final MockitoRule mockitoRule = MockitoJUnit.rule();
 
     @Mock private PackageManager mPackageManagerMock;
     @Mock private EnrollmentDao mEnrollmentDaoMock;
@@ -424,7 +430,6 @@ public class BackgroundFetchWorkerTest {
     }
 
     @Test
-    @FlakyTest(bugId = 298714561)
     public void testRunBackgroundFetchChecksWorkInProgress()
             throws InterruptedException, ExecutionException {
         int numEligibleCustomAudiences = 16;

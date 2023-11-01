@@ -49,6 +49,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -159,7 +160,8 @@ public class EnrollmentDao implements IEnrollmentDao {
         LogUtil.v("Enrollment database seeding complete");
     }
 
-    private void unSeed() {
+    @VisibleForTesting
+    void unSeed() {
         LogUtil.v("Clearing enrollment database seed status");
 
         SharedPreferences prefs =
@@ -174,6 +176,40 @@ public class EnrollmentDao implements IEnrollmentDao {
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_SHARED_PREFERENCES_SEED_SAVE_FAILURE,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
         }
+    }
+
+    @Override
+    @NonNull
+    public List<EnrollmentData> getAllEnrollmentData() {
+        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        List<EnrollmentData> enrollmentDataList = new ArrayList<>();
+        if (db == null) {
+            return enrollmentDataList;
+        }
+
+        try (Cursor cursor =
+                db.query(
+                        EnrollmentTables.EnrollmentDataContract.TABLE,
+                        /*columns=*/ null,
+                        /*selection=*/ null,
+                        /*selectionArgs=*/ null,
+                        /*groupBy=*/ null,
+                        /*having=*/ null,
+                        /*orderBy=*/ null,
+                        /*limit=*/ null)) {
+            if (cursor == null || cursor.getCount() == 0) {
+                LogUtil.d("Can't get all enrollment data from DB.");
+                return enrollmentDataList;
+            }
+            while (cursor.moveToNext()) {
+                enrollmentDataList.add(
+                        SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor));
+            }
+            return enrollmentDataList;
+        } catch (SQLException e) {
+            LogUtil.e(e, "Failed to get all enrollment data from DB.");
+        }
+        return enrollmentDataList;
     }
 
     @Override

@@ -107,9 +107,9 @@
                 android:protectionLevel="signature"/>
 
     <!-- Permission to allow calling updating AdId Cache API via Common Service. -->
-    <permission android:name="android.permission.UPDATE_AD_ID_CACHE"
-                android:label="@string/permlab_accessUpdateAdIdCache"
-                android:description="@string/permdesc_accessUpdateAdIdCache"
+    <permission android:name="android.permission.UPDATE_PRIVILEGED_AD_ID"
+                android:label="@string/permlab_updateAdservicesAdId"
+                android:description="@string/permdesc_updateAdservicesAdId"
                 android:protectionLevel="signature|configurator"/>
 
     <!-- Allow AdServicesApk (PPAPI) to call AdService's system service. -->
@@ -287,6 +287,11 @@
 
         <!-- Mdd background Job. -->
         <service android:name="com.android.adservices.download.MddJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- Encryption key fetch job. -->
+        <service android:name="com.android.adservices.service.encryptionkey.EncryptionKeyJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
