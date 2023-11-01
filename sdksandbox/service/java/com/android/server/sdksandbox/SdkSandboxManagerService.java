@@ -2306,14 +2306,15 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     private ApplicationInfo getSdkSandboxApplicationInfoForInstrumentation(
-            ApplicationInfo clientAppInfo, int userId, boolean isSdkInSandbox)
+            ApplicationInfo clientAppInfo, boolean isSdkInSandbox)
             throws PackageManager.NameNotFoundException {
+        int uid = clientAppInfo.uid;
         PackageManager pm = mContext.getPackageManager();
         ApplicationInfo sdkSandboxInfo =
                 pm.getApplicationInfoAsUser(
                         pm.getSdkSandboxPackageName(),
                         /* flags= */ 0,
-                        UserHandle.getUserHandleForUid(userId));
+                        UserHandle.getUserHandleForUid(uid));
         ApplicationInfo sdkSandboxInfoForInstrumentation =
                 (isSdkInSandbox)
                         ? createCustomizedApplicationInfo(
@@ -2324,7 +2325,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         : sdkSandboxInfo;
 
         // Required to allow adopt shell permissions in tests.
-        sdkSandboxInfoForInstrumentation.uid = Process.toSdkSandboxUid(clientAppInfo.uid);
+        sdkSandboxInfoForInstrumentation.uid = Process.toSdkSandboxUid(uid);
         // We want to use a predictable process name during testing.
         sdkSandboxInfoForInstrumentation.processName =
                 getLocalManager().getSdkSandboxProcessNameForInstrumentation(clientAppInfo);
@@ -2849,10 +2850,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         @NonNull
         @Override
         public ApplicationInfo getSdkSandboxApplicationInfoForInstrumentation(
-                @NonNull ApplicationInfo clientAppInfo, int userId, boolean isSdkInSandbox)
+                @NonNull ApplicationInfo clientAppInfo, boolean isSdkInSandbox)
                 throws PackageManager.NameNotFoundException {
             return SdkSandboxManagerService.this.getSdkSandboxApplicationInfoForInstrumentation(
-                    clientAppInfo, userId, isSdkInSandbox);
+                    clientAppInfo, isSdkInSandbox);
         }
 
         @Override
