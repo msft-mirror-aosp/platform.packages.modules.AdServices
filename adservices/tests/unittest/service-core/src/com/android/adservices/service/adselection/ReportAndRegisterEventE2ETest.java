@@ -323,6 +323,7 @@ public class ReportAndRegisterEventE2ETest {
         mAsyncRegistrationQueueRunnerSpy =
                 spy(
                         new AsyncRegistrationQueueRunner(
+                                CONTEXT,
                                 mContentResolverMock,
                                 mAsyncSourceFetcherSpy,
                                 mAsyncTriggerFetcherSpy,

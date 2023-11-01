@@ -129,6 +129,7 @@ class TestObjectProvider {
         }
 
         return new AsyncRegistrationQueueRunner(
+                ApplicationProvider.getApplicationContext(),
                 new MockContentResolver(),
                 asyncSourceFetcher,
                 asyncTriggerFetcher,

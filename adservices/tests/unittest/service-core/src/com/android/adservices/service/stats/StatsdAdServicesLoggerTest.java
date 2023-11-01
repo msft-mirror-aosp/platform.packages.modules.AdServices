@@ -21,9 +21,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_FAILED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_FILE_DOWNLOADED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_MATCHED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_AD_ID_MATCH_FOR_DEBUG_KEYS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_ATTRIBUTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS;
@@ -46,7 +43,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
-import com.android.adservices.errorlogging.AdServicesErrorStats;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.measurement.Source;
@@ -561,53 +557,6 @@ public class StatsdAdServicesLoggerTest {
                                 eq(registrationDelay),
                                 eq(SOURCE_REGISTRANT));
 
-        ExtendedMockito.verify(writeInvocation);
-
-        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
-    }
-
-    @Test
-    public void logAdServicesError_success() {
-        String className = "TopicsService";
-        String methodName = "getTopics";
-        int lineNumber = 100;
-        String exceptionName = "SQLiteException";
-        AdServicesErrorStats stats =
-                AdServicesErrorStats.builder()
-                        .setErrorCode(
-                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION)
-                        .setPpapiName(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)
-                        .setClassName(className)
-                        .setMethodName(methodName)
-                        .setLineNumber(lineNumber)
-                        .setLastObservedExceptionName(exceptionName)
-                        .build();
-        ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyString(),
-                                        anyString(),
-                                        anyInt(),
-                                        anyString()));
-
-        // Invoke logging call
-        mLogger.logAdServicesError(stats);
-
-        // Verify only compat logging took place
-        MockedVoidMethod writeInvocation =
-                () ->
-                        AdServicesStatsLog.write(
-                                eq(AD_SERVICES_ERROR_REPORTED),
-                                eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION),
-                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS),
-                                eq(className),
-                                eq(methodName),
-                                eq(lineNumber),
-                                eq(exceptionName));
         ExtendedMockito.verify(writeInvocation);
 
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
