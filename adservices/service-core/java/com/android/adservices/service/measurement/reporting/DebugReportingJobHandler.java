@@ -144,6 +144,7 @@ public class DebugReportingJobHandler {
                         (dao) -> dao.getDebugReport(debugReportId));
         if (!debugReportOpt.isPresent()) {
             LoggerFactory.getMeasurementLogger().d("Reading Scheduled Debug Report failed");
+            reportingStatus.setReportType(ReportingStatus.ReportType.VERBOSE_DEBUG_UNKNOWN);
             reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.REPORT_NOT_FOUND);
             return AdServicesStatusUtils.STATUS_IO_ERROR;
         }
