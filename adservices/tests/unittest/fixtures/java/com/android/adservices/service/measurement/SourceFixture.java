@@ -19,6 +19,7 @@ package com.android.adservices.service.measurement;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 

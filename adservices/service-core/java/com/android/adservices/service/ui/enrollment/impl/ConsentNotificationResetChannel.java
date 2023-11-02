@@ -23,6 +23,7 @@ import android.text.TextUtils;
 
 import androidx.annotation.RequiresApi;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
@@ -74,5 +75,7 @@ public class ConsentNotificationResetChannel implements PrivacySandboxEnrollment
         consentManager.recordNotificationDisplayed(false);
         consentManager.recordGaUxNotificationDisplayed(false);
         consentManager.setU18NotificationDisplayed(false);
+        consentManager.setU18Account(false);
+        LogUtil.d("Consent data has been reset.");
     }
 }

@@ -1,10 +1,8 @@
 {
   "description": "W2W different registrant test for trigger-aggregate-storage-limit debug report",
-  "api_config": {
-    "max_aggregatable_reports_per_destination": "1"
-  },
   "phflags_override": {
-    "measurement_debug_join_key_enrollment_allowlist": "enrollment-id-ad-tech1.test"
+    "measurement_debug_join_key_enrollment_allowlist": "enrollment-id-ad-tech1.test",
+    "measurement_max_aggregate_reports_per_destination": "1"
   },
   "input": {
     "web_sources": [
@@ -200,7 +198,7 @@
           "trigger_debug_key": "8971346781"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
-        "report_time": "1643323359221"
+        "report_time": "1643325573000"
       }
     ],
     "debug_aggregatable_results": [
@@ -217,7 +215,7 @@
           "trigger_debug_key": "8971346781"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
-        "report_time": "1643323359221"
+        "report_time": "1643321973000"
       }
     ],
     "verbose_debug_reports": [

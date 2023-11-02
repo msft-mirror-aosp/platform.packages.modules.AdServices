@@ -36,6 +36,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.common.FledgeMaintenanceTasksWorker;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.service.signals.SignalsMaintenanceTasksWorker;
 import com.android.adservices.service.topics.TopicsWorker;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
@@ -55,11 +56,20 @@ public final class MaintenanceJobService extends JobService {
 
     private FledgeMaintenanceTasksWorker mFledgeMaintenanceTasksWorker;
 
+    private SignalsMaintenanceTasksWorker mSignalsMaintenanceTasksWorker;
+
     /** Injects a {@link FledgeMaintenanceTasksWorker to be used during testing} */
     @VisibleForTesting
     public void injectFledgeMaintenanceTasksWorker(
             @NonNull FledgeMaintenanceTasksWorker fledgeMaintenanceTasksWorker) {
         mFledgeMaintenanceTasksWorker = fledgeMaintenanceTasksWorker;
+    }
+
+    /** Injects a {@link SignalsMaintenanceTasksWorker to be used during testing} */
+    @VisibleForTesting
+    public void injectSignalsMaintenanceTasksWorker(
+            @NonNull SignalsMaintenanceTasksWorker signalsMaintenanceTasksWorker) {
+        mSignalsMaintenanceTasksWorker = signalsMaintenanceTasksWorker;
     }
 
     @Override
@@ -78,9 +88,11 @@ public final class MaintenanceJobService extends JobService {
         LogUtil.d("MaintenanceJobService.onStartJob");
         AdservicesJobServiceLogger.getInstance(this).recordOnStartJob(MAINTENANCE_JOB_ID);
 
-        if (flags.getTopicsKillSwitch() && flags.getFledgeSelectAdsKillSwitch()) {
+        if (flags.getTopicsKillSwitch()
+                && flags.getFledgeSelectAdsKillSwitch()
+                && (!flags.getProtectedSignalsCleanupEnabled() || flags.getGlobalKillSwitch())) {
             LogUtil.e(
-                    "Both Topics and Select Ads are disabled, skipping and cancelling"
+                    "All maintenance jobs are disabled, skipping and cancelling"
                             + " MaintenanceJobService");
             return skipAndCancelBackgroundJob(
                     params,
@@ -110,8 +122,22 @@ public final class MaintenanceJobService extends JobService {
                             AdServicesExecutors.getBackgroundExecutor());
         }
 
+        ListenableFuture<Void> protectedSignalsMaintenanceTasksFuture;
+        if (!flags.getProtectedSignalsCleanupEnabled()) {
+            LogUtil.d("Signals cleanup is disabled, skipping maintenance job");
+            protectedSignalsMaintenanceTasksFuture = Futures.immediateFuture(null);
+        } else {
+            protectedSignalsMaintenanceTasksFuture =
+                    Futures.submit(
+                            this::doProtectedSignalsDataMaintenanceTasks,
+                            AdServicesExecutors.getBackgroundExecutor());
+        }
+
         ListenableFuture<List<Void>> futuresList =
-                Futures.allAsList(fledgeMaintenanceTasksFuture, appReconciliationFuture);
+                Futures.allAsList(
+                        fledgeMaintenanceTasksFuture,
+                        protectedSignalsMaintenanceTasksFuture,
+                        appReconciliationFuture);
 
         Futures.addCallback(
                 futuresList,
@@ -249,10 +275,23 @@ public final class MaintenanceJobService extends JobService {
         return mFledgeMaintenanceTasksWorker;
     }
 
+    private SignalsMaintenanceTasksWorker getSignalsMaintenanceTasksWorker() {
+        if (!Objects.isNull(mSignalsMaintenanceTasksWorker)) {
+            return mSignalsMaintenanceTasksWorker;
+        }
+        mSignalsMaintenanceTasksWorker = SignalsMaintenanceTasksWorker.create(this);
+        return mSignalsMaintenanceTasksWorker;
+    }
+
     private void doAdSelectionDataMaintenanceTasks() {
         LogUtil.v("Performing Ad Selection maintenance tasks");
         getFledgeMaintenanceTasksWorker().clearExpiredAdSelectionData();
         getFledgeMaintenanceTasksWorker()
                 .clearInvalidFrequencyCapHistogramData(this.getPackageManager());
+    }
+
+    private void doProtectedSignalsDataMaintenanceTasks() {
+        LogUtil.v("Performing protected signals maintenance tasks");
+        getSignalsMaintenanceTasksWorker().clearInvalidProtectedSignalsData();
     }
 }

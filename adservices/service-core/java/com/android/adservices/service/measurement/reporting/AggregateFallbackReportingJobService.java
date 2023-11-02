@@ -28,14 +28,15 @@ import android.content.ComponentName;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.AdServicesConfig;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
-import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
 import com.android.adservices.service.measurement.util.JobLockHolder;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -56,7 +57,6 @@ public final class AggregateFallbackReportingJobService extends JobService {
 
     private static final ListeningExecutorService sBlockingExecutor =
             AdServicesExecutors.getBlockingExecutor();
-
     private Future mExecutorFuture;
 
     @Override
@@ -74,14 +74,15 @@ public final class AggregateFallbackReportingJobService extends JobService {
                 .recordOnStartJob(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementJobAggregateFallbackReportingKillSwitch()) {
-            LogUtil.e("AggregateFallbackReportingJobService is disabled");
+            LoggerFactory.getMeasurementLogger()
+                    .e("AggregateFallbackReportingJobService is disabled");
             return skipAndCancelBackgroundJob(
                     params,
                     AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON,
                     /* doRecord=*/ true);
         }
 
-        LogUtil.d("AggregateFallbackReportingJobService.onStartJob");
+        LoggerFactory.getMeasurementLogger().d("AggregateFallbackReportingJobService.onStartJob");
         mExecutorFuture =
                 sBlockingExecutor.submit(
                         () -> {
@@ -106,7 +107,8 @@ public final class AggregateFallbackReportingJobService extends JobService {
             try {
                 final long windowStartTime =
                         System.currentTimeMillis()
-                                - SystemHealthParams.MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS;
+                                - FlagsFactory.getFlags()
+                                        .getMeasurementMaxAggregateReportUploadRetryWindowMs();
                 final long windowEndTime =
                         System.currentTimeMillis()
                                 - AdServicesConfig
@@ -116,23 +118,26 @@ public final class AggregateFallbackReportingJobService extends JobService {
                 new AggregateReportingJobHandler(
                                 EnrollmentDao.getInstance(getApplicationContext()),
                                 datastoreManager,
-                                new AggregateEncryptionKeyManager(datastoreManager),
+                                new AggregateEncryptionKeyManager(
+                                        datastoreManager, getApplicationContext()),
                                 FlagsFactory.getFlags(),
                                 AdServicesLoggerImpl.getInstance(),
                                 ReportingStatus.ReportType.AGGREGATE,
-                                ReportingStatus.UploadMethod.FALLBACK)
+                                ReportingStatus.UploadMethod.FALLBACK,
+                                getApplicationContext())
                         .performScheduledPendingReportsInWindow(windowStartTime, windowEndTime);
                 return;
             } finally {
                 lock.unlock();
             }
         }
-        LogUtil.d("AggregateFallbackReportingJobService did not acquire the lock");
+        LoggerFactory.getMeasurementLogger()
+                .d("AggregateFallbackReportingJobService did not acquire the lock");
     }
 
     @Override
     public boolean onStopJob(JobParameters params) {
-        LogUtil.d("AggregateFallbackReportingJobService.onStopJob");
+        LoggerFactory.getMeasurementLogger().d("AggregateFallbackReportingJobService.onStopJob");
         boolean shouldRetry = true;
         if (mExecutorFuture != null) {
             shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
@@ -149,15 +154,16 @@ public final class AggregateFallbackReportingJobService extends JobService {
         jobScheduler.schedule(jobInfo);
     }
 
-    private static JobInfo buildJobInfo(Context context) {
+    private static JobInfo buildJobInfo(Context context, Flags flags) {
         return new JobInfo.Builder(
                         MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID,
                         new ComponentName(context, AggregateFallbackReportingJobService.class))
-                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                .setRequiresDeviceIdle(true)
-                .setRequiresBatteryNotLow(true)
-                .setPeriodic(AdServicesConfig.getMeasurementAggregateFallbackReportingJobPeriodMs())
-                .setPersisted(true)
+                .setRequiredNetworkType(
+                        flags.getMeasurementAggregateFallbackReportingJobRequiredNetworkType())
+                .setRequiresBatteryNotLow(
+                        flags.getMeasurementAggregateFallbackReportingJobRequiredBatteryNotLow())
+                .setPeriodic(flags.getMeasurementAggregateFallbackReportingJobPeriodMs())
+                .setPersisted(flags.getMeasurementAggregateFallbackReportingJobPersisted())
                 .build();
     }
 
@@ -168,27 +174,32 @@ public final class AggregateFallbackReportingJobService extends JobService {
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
-        if (FlagsFactory.getFlags().getMeasurementJobAggregateFallbackReportingKillSwitch()) {
-            LogUtil.d("AggregateFallbackReportingJobService is disabled, skip scheduling");
+        Flags flags = FlagsFactory.getFlags();
+        if (flags.getMeasurementJobAggregateFallbackReportingKillSwitch()) {
+            LoggerFactory.getMeasurementLogger()
+                    .d("AggregateFallbackReportingJobService is disabled, skip scheduling");
             return;
         }
 
         final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
         if (jobScheduler == null) {
-            LogUtil.e("JobScheduler not found");
+            LoggerFactory.getMeasurementLogger().e("JobScheduler not found");
             return;
         }
 
         final JobInfo scheduledJob =
                 jobScheduler.getPendingJob(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
-        JobInfo jobInfo = buildJobInfo(context);
+        JobInfo jobInfo = buildJobInfo(context, flags);
         if (forceSchedule || !jobInfo.equals(scheduledJob)) {
             schedule(jobScheduler, jobInfo);
-            LogUtil.d("Scheduled AggregateFallbackReportingJobService");
+            LoggerFactory.getMeasurementLogger()
+                    .d("Scheduled AggregateFallbackReportingJobService");
         } else {
-            LogUtil.d(
-                    "AggregateFallbackReportingJobService already scheduled, skipping reschedule");
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "AggregateFallbackReportingJobService already scheduled, skipping"
+                                    + " reschedule");
         }
     }
 

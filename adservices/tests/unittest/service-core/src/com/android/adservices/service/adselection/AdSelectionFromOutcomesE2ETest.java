@@ -80,6 +80,8 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.data.signals.EncodedPayloadDao;
+import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
@@ -193,6 +195,7 @@ public class AdSelectionFromOutcomesE2ETest {
     private ExecutorService mBackgroundExecutorService;
     private ScheduledThreadPoolExecutor mScheduledExecutor;
     private CustomAudienceDao mCustomAudienceDao;
+    private EncodedPayloadDao mEncodedPayloadDao;
     private AppInstallDao mAppInstallDao;
     private FrequencyCapDao mFrequencyCapDao;
     private EncryptionKeyDao mEncryptionKeyDao;
@@ -205,6 +208,7 @@ public class AdSelectionFromOutcomesE2ETest {
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptor;
     @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
+    @Mock private AdIdFetcher mAdIdFetcher;
 
     @Before
     public void setUp() throws Exception {
@@ -235,6 +239,10 @@ public class AdSelectionFromOutcomesE2ETest {
                         .addTypeConverter(new DBCustomAudience.Converters(true, true))
                         .build()
                         .customAudienceDao();
+        mEncodedPayloadDao =
+                Room.inMemoryDatabaseBuilder(mContext, ProtectedSignalsDatabase.class)
+                        .build()
+                        .getEncodedPayloadDao();
         SharedStorageDatabase sharedDb =
                 Room.inMemoryDatabaseBuilder(mContext, SharedStorageDatabase.class).build();
         mAppInstallDao = sharedDb.appInstallDao();
@@ -260,6 +268,7 @@ public class AdSelectionFromOutcomesE2ETest {
                         mAdSelectionEntryDaoSpy,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mEncodedPayloadDao,
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
@@ -277,7 +286,8 @@ public class AdSelectionFromOutcomesE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         // Create a dispatcher that helps map a request -> response in mockWebServer
         mDispatcher =
@@ -388,6 +398,7 @@ public class AdSelectionFromOutcomesE2ETest {
                         mAdSelectionEntryDaoSpy,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mEncodedPayloadDao,
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
@@ -405,7 +416,8 @@ public class AdSelectionFromOutcomesE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback resultsCallback =
                 invokeSelectAdsFromOutcomes(adSelectionService, config, CALLER_PACKAGE_NAME);

@@ -45,6 +45,7 @@ import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
 import org.mockito.stubbing.Answer;
 
@@ -65,7 +66,7 @@ class TestObjectProvider {
     }
 
     static AttributionJobHandlerWrapper getAttributionJobHandler(
-            DatastoreManager datastoreManager, Flags flags) {
+            DatastoreManager datastoreManager, Flags flags, AdServicesErrorLogger errorLogger) {
         return new AttributionJobHandlerWrapper(
                 datastoreManager,
                 flags,
@@ -74,7 +75,8 @@ class TestObjectProvider {
                         flags,
                         new EventReportWindowCalcDelegate(flags),
                         new SourceNoiseHandler(flags),
-                        new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest())),
+                        new SQLDatastoreManager(
+                                DbTestUtil.getMeasurementDbHelperForTest(), errorLogger)),
                 new EventReportWindowCalcDelegate(flags),
                 new SourceNoiseHandler(flags),
                 AdServicesLoggerImpl.getInstance());
@@ -127,6 +129,7 @@ class TestObjectProvider {
         }
 
         return new AsyncRegistrationQueueRunner(
+                ApplicationProvider.getApplicationContext(),
                 new MockContentResolver(),
                 asyncSourceFetcher,
                 asyncTriggerFetcher,

@@ -16,9 +16,7 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import android.annotation.Nullable;
 
-import java.util.Optional;
 
 /** POJO for storing aggregate and event reporting status */
 public class ReportingStatus {
@@ -89,7 +87,9 @@ public class ReportingStatus {
         REPORT_NOT_PENDING(4),
         JOB_RETRY_LIMIT_REACHED(5),
         SERIALIZATION_ERROR(6),
-        ENCRYPTION_ERROR(7);
+        ENCRYPTION_ERROR(7),
+        UNSUCCESSFUL_HTTP_RESPONSE_CODE(8),
+        REPORT_NOT_FOUND(9);
         private final int mValue;
 
         FailureStatus(int value) {
@@ -123,15 +123,19 @@ public class ReportingStatus {
 
     private UploadMethod mUploadMethod;
 
-    @Nullable private Long mReportingDelay;
+    private long mReportingDelay;
 
     private String mSourceRegistrant;
+
+    private int mRetryCount;
 
     public ReportingStatus() {
         mReportType = ReportType.UNKNOWN;
         mUploadStatus = UploadStatus.UNKNOWN;
         mFailureStatus = FailureStatus.UNKNOWN;
         mUploadMethod = UploadMethod.UNKNOWN;
+        mReportingDelay = 0L;
+        mSourceRegistrant = "";
     }
 
     /** Get the type of report that is being uploaded. */
@@ -231,12 +235,12 @@ public class ReportingStatus {
     }
 
     /** Get registration delay. */
-    public Optional<Long> getReportingDelay() {
-        return Optional.ofNullable(mReportingDelay);
+    public long getReportingDelay() {
+        return mReportingDelay;
     }
 
     /** Set registration delay. */
-    public void setReportingDelay(Long reportingDelay) {
+    public void setReportingDelay(long reportingDelay) {
         mReportingDelay = reportingDelay;
     }
 
@@ -248,5 +252,15 @@ public class ReportingStatus {
     /** Set source registrant. */
     public void setSourceRegistrant(String sourceRegistrant) {
         mSourceRegistrant = sourceRegistrant;
+    }
+
+    /** Get retry count. */
+    public int getRetryCount() {
+        return mRetryCount;
+    }
+
+    /** Set retry count. */
+    public void setRetryCount(int retryCount) {
+        mRetryCount = retryCount;
     }
 }

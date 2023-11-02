@@ -59,7 +59,9 @@ class AppSearchMeasurementRollbackWorker {
     // Timeout for AppSearch write query in milliseconds.
     private static final int TIMEOUT_MS = 2000;
 
+    private final Context mContext;
     private final String mUserId;
+    private final String mAdServicesPackageName;
     private final ListenableFuture<AppSearchSession> mSearchSession;
     private final Executor mExecutor = AdServicesExecutors.getBackgroundExecutor();
 
@@ -67,7 +69,9 @@ class AppSearchMeasurementRollbackWorker {
         Objects.requireNonNull(context);
         Objects.requireNonNull(userId);
 
+        mContext = context;
         mUserId = userId;
+        mAdServicesPackageName = AppSearchConsentWorker.getAdServicesPackageName(context);
         mSearchSession =
                 PlatformStorage.createSearchSessionAsync(
                         new PlatformStorage.SearchContext.Builder(context, DATABASE_NAME).build());
@@ -139,7 +143,7 @@ class AppSearchMeasurementRollbackWorker {
         try {
             AppSearchMeasurementRollbackDao dao =
                     AppSearchMeasurementRollbackDao.readDocument(
-                            mSearchSession, mExecutor, mUserId);
+                            mSearchSession, mExecutor, mUserId, mAdServicesPackageName);
             LogUtil.d("Result of query for AppSearchMeasurementRollbackDao: %s", dao);
             return dao;
         } finally {

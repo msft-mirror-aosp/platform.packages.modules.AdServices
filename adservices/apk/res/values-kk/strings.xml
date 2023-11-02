@@ -42,6 +42,8 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Қолданбаға AdService қызметін іске қосу күйіне қатысты API-ды пайдалануға рұқсат береді."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManager-дің API-ларын пайдалану"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Қолданбаға AdServicesManager-дің API-ларын пайдалануға рұқсат береді."</string>
+    <string name="permlab_updateAdservicesAdId" msgid="1817012692601139702">"AdService жаңартуының AdId API-ын пайдалану."</string>
+    <string name="permdesc_updateAdservicesAdId" msgid="1594321436876709737">"Қолданбаға AdService жаңартуының AdId API-ын пайдалануға мүмкіндік береді."</string>
     <string name="app_label" msgid="5844694701336604490">"Жарнамадағы құпиялық"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Android жарнамасындағы құпиялық (бета нұсқасы) бағдарламасына қосылыңыз"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android қолданбалардың жарнаманы барынша жеке көрсету жолдарын зерттеп жатыр."</string>
@@ -141,7 +143,7 @@
     <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"Жарнама көрсеткіштерін өлшеу"</string>
     <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"Қолданбалар өз жарнамаларының тиімділігін анықтау үшін Privacy Sandbox-ты пайдалана алады. Ол үшін жарнама берушілер сіздің олардың жарнамалары мен қолданбаларын пайдалануыңыз туралы деректерді Android-та уақытша сақтай алады. Олар сақтай алатын деректер көлемі шектелген және тұрақты түрде жойылып отырады.\n\nPrivacy Sandbox-ты өшіру арқылы бұл деректерді кез келген уақытта жоя аласыз."</string>
     <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"Android пайдаланатын қолданбаларыңызға қарай мерзімді түрде негізгі қызығушылықтарды талдап отырады. Содан кейін қолданбалар тиісті жарнамаларды сізге көрсету үшін Android жүйесінен сол қызығушылықтарды пайдалануға рұқсат сұрауы мүмкін.\n\nҚызығушылықты бөгесеңіз, бөгеуден алмайынша, ол тізімге қайта қосылмайды. Кейбір сәйкес жарнамалар көрсетіле беруі мүмкін."</string>
-    <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Бөгеу"</string>
+    <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Блоктау"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Блоктан шығару"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Сіз бөгеген қызығушылықтар"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Барлық қызығушылықты қалпына келтіру"</string>
@@ -175,7 +177,7 @@
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Өшіру"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"<xliff:g id="TOPIC">%1$s</xliff:g> бөгелсін бе?"</string>
     <string name="settingsUI_dialog_block_topic_message" msgid="2581824495438333677">"Бұл тақырып бөгеледі және тізімге өзіңіз қоспайынша, қайта пайда болмайды. Кейбір сәйкес жарнамалар көрсетіле беруі мүмкін."</string>
-    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Бөгеу"</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Блоктау"</string>
     <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> бөгеуден шығарылды"</string>
     <string name="settingsUI_dialog_unblock_topic_message" msgid="1090743551997420666">"Android бұл тақырыпты тізімге қайта қосуы мүмкін. Алайда ол тізімде дереу пайда болмайды."</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"Жарайды"</string>

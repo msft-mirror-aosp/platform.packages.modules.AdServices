@@ -16,11 +16,9 @@
 
 package com.android.adservices.cobalt;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
-import androidx.room.Room;
 
 import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.cobalt.data.CobaltDatabase;
@@ -39,14 +37,13 @@ import java.util.concurrent.ExecutorService;
 final class CobaltDataServiceFactory {
     private static final String DB_NAME = FileCompatUtils.getAdservicesFilename("cobalt_db");
 
-    @SuppressLint("NewAdServicesFile")
     static DataService createDataService(
             @NonNull Context context, @NonNull ExecutorService executorService) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(executorService);
 
         CobaltDatabase cobaltDatabase =
-                Room.databaseBuilder(context, CobaltDatabase.class, DB_NAME)
+                FileCompatUtils.roomDatabaseBuilderHelper(context, CobaltDatabase.class, DB_NAME)
                         .fallbackToDestructiveMigration()
                         .build();
         return new DataService(executorService, cobaltDatabase);

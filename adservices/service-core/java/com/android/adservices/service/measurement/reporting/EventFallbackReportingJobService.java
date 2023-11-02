@@ -28,13 +28,14 @@ import android.content.ComponentName;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.AdServicesConfig;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
-import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.measurement.util.JobLockHolder;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
@@ -73,14 +74,15 @@ public final class EventFallbackReportingJobService extends JobService {
                 .recordOnStartJob(MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementJobEventFallbackReportingKillSwitch()) {
-            LogUtil.e("EventFallbackReportingJobService Job is disabled");
+            LoggerFactory.getMeasurementLogger()
+                    .e("EventFallbackReportingJobService Job is disabled");
             return skipAndCancelBackgroundJob(
                     params,
                     AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON,
                     /* doRecord=*/ true);
         }
 
-        LogUtil.d("EventFallbackReportingJobService.onStartJob");
+        LoggerFactory.getMeasurementLogger().d("EventFallbackReportingJobService.onStartJob");
         mExecutorFuture =
                 sBlockingExecutor.submit(
                         () -> {
@@ -104,7 +106,7 @@ public final class EventFallbackReportingJobService extends JobService {
         if (lock.tryLock()) {
             try {
                 long maxEventReportUploadRetryWindowMs =
-                        SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS;
+                        FlagsFactory.getFlags().getMeasurementMaxEventReportUploadRetryWindowMs();
                 long eventMainReportingJobPeriodMs =
                         AdServicesConfig.getMeasurementEventMainReportingJobPeriodMs();
                 new EventReportingJobHandler(
@@ -114,7 +116,8 @@ public final class EventFallbackReportingJobService extends JobService {
                                 FlagsFactory.getFlags(),
                                 AdServicesLoggerImpl.getInstance(),
                                 ReportingStatus.ReportType.EVENT,
-                                ReportingStatus.UploadMethod.FALLBACK)
+                                ReportingStatus.UploadMethod.FALLBACK,
+                                getApplicationContext())
                         .performScheduledPendingReportsInWindow(
                                 System.currentTimeMillis() - maxEventReportUploadRetryWindowMs,
                                 System.currentTimeMillis() - eventMainReportingJobPeriodMs);
@@ -123,12 +126,13 @@ public final class EventFallbackReportingJobService extends JobService {
                 lock.unlock();
             }
         }
-        LogUtil.d("EventFallbackReportingJobService did not acquire the lock");
+        LoggerFactory.getMeasurementLogger()
+                .d("EventFallbackReportingJobService did not acquire the lock");
     }
 
     @Override
     public boolean onStopJob(JobParameters params) {
-        LogUtil.d("EventFallbackReportingJobService.onStopJob");
+        LoggerFactory.getMeasurementLogger().d("EventFallbackReportingJobService.onStopJob");
         boolean shouldRetry = true;
         if (mExecutorFuture != null) {
             shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
@@ -151,38 +155,42 @@ public final class EventFallbackReportingJobService extends JobService {
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
-        if (FlagsFactory.getFlags().getMeasurementJobEventFallbackReportingKillSwitch()) {
-            LogUtil.d("EventFallbackReportingJobService is disabled, skip scheduling");
+        Flags flags = FlagsFactory.getFlags();
+        if (flags.getMeasurementJobEventFallbackReportingKillSwitch()) {
+            LoggerFactory.getMeasurementLogger()
+                    .d("EventFallbackReportingJobService is disabled, skip scheduling");
             return;
         }
 
         final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
         if (jobScheduler == null) {
-            LogUtil.e("JobScheduler not found");
+            LoggerFactory.getMeasurementLogger().e("JobScheduler not found");
             return;
         }
 
         final JobInfo scheduledJob =
                 jobScheduler.getPendingJob(MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
-        JobInfo jobInfo = buildJobInfo(context);
+        JobInfo jobInfo = buildJobInfo(context, flags);
         if (forceSchedule || !jobInfo.equals(scheduledJob)) {
             schedule(jobScheduler, jobInfo);
-            LogUtil.d("Scheduled EventFallbackReportingJobService");
+            LoggerFactory.getMeasurementLogger().d("Scheduled EventFallbackReportingJobService");
         } else {
-            LogUtil.d("EventFallbackReportingJobService already scheduled, skipping reschedule");
+            LoggerFactory.getMeasurementLogger()
+                    .d("EventFallbackReportingJobService already scheduled, skipping reschedule");
         }
     }
 
-    private static JobInfo buildJobInfo(Context context) {
+    private static JobInfo buildJobInfo(Context context, Flags flags) {
         return new JobInfo.Builder(
                         MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID,
                         new ComponentName(context, EventFallbackReportingJobService.class))
-                .setRequiresDeviceIdle(true)
-                .setRequiresBatteryNotLow(true)
-                .setPeriodic(AdServicesConfig.getMeasurementEventFallbackReportingJobPeriodMs())
-                .setPersisted(true)
-                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                .setRequiresBatteryNotLow(
+                        flags.getMeasurementEventFallbackReportingJobRequiredBatteryNotLow())
+                .setRequiredNetworkType(
+                        flags.getMeasurementEventFallbackReportingJobRequiredNetworkType())
+                .setPeriodic(flags.getMeasurementEventFallbackReportingJobPeriodMs())
+                .setPersisted(flags.getMeasurementEventFallbackReportingJobPersisted())
                 .build();
     }
 

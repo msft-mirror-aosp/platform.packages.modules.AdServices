@@ -27,10 +27,12 @@ import android.content.ComponentName;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
@@ -67,11 +69,11 @@ public final class DebugReportingJobService extends JobService {
         AdservicesJobServiceLogger.getInstance(this).recordOnStartJob(DEBUG_REPORT_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementJobDebugReportingKillSwitch()) {
-            LogUtil.e("DebugReportingJobService is disabled");
+            LoggerFactory.getMeasurementLogger().e("DebugReportingJobService is disabled");
             return skipAndCancelBackgroundJob(params);
         }
 
-        LogUtil.d("DebugReportingJobService.onStartJob");
+        LoggerFactory.getMeasurementLogger().d("DebugReportingJobService.onStartJob");
         mExecutorFuture =
                 sBlockingExecutor.submit(
                         () -> {
@@ -88,7 +90,7 @@ public final class DebugReportingJobService extends JobService {
 
     @Override
     public boolean onStopJob(JobParameters params) {
-        LogUtil.d("DebugReportingJobService.onStopJob");
+        LoggerFactory.getMeasurementLogger().d("DebugReportingJobService.onStopJob");
         boolean shouldRetry = true;
         if (mExecutorFuture != null) {
             shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
@@ -111,33 +113,36 @@ public final class DebugReportingJobService extends JobService {
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
-        if (FlagsFactory.getFlags().getMeasurementJobDebugReportingKillSwitch()) {
-            LogUtil.d("DebugReportingJobService is disabled, skip scheduling");
+        Flags flags = FlagsFactory.getFlags();
+        if (flags.getMeasurementJobDebugReportingKillSwitch()) {
+            LoggerFactory.getMeasurementLogger()
+                    .d("DebugReportingJobService is disabled, skip scheduling");
             return;
         }
 
         final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
         if (jobScheduler == null) {
-            LogUtil.e("JobScheduler not found");
+            LoggerFactory.getMeasurementLogger().e("JobScheduler not found");
             return;
         }
 
         final JobInfo scheduledJobInfo = jobScheduler.getPendingJob(DEBUG_REPORT_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
-        JobInfo job = buildJobInfo(context);
+        JobInfo job = buildJobInfo(context, flags);
         if (forceSchedule || !job.equals(scheduledJobInfo)) {
             schedule(jobScheduler, job);
-            LogUtil.d("Scheduled DebugReportingJobService");
+            LoggerFactory.getMeasurementLogger().d("Scheduled DebugReportingJobService");
         } else {
-            LogUtil.d("DebugReportingJobService already scheduled, skipping reschedule");
+            LoggerFactory.getMeasurementLogger()
+                    .d("DebugReportingJobService already scheduled, skipping reschedule");
         }
     }
 
-    private static JobInfo buildJobInfo(Context context) {
+    private static JobInfo buildJobInfo(Context context, Flags flags) {
         return new JobInfo.Builder(
                         DEBUG_REPORT_JOB_ID,
                         new ComponentName(context, DebugReportingJobService.class))
-                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                .setRequiredNetworkType(flags.getMeasurementDebugReportingJobRequiredNetworkType())
                 .build();
     }
 
@@ -168,17 +173,20 @@ public final class DebugReportingJobService extends JobService {
                                 FlagsFactory.getFlags(),
                                 AdServicesLoggerImpl.getInstance(),
                                 ReportingStatus.ReportType.DEBUG_EVENT,
-                                ReportingStatus.UploadMethod.REGULAR)
+                                ReportingStatus.UploadMethod.REGULAR,
+                                getApplicationContext())
                         .setIsDebugInstance(true)
                         .performScheduledPendingReportsInWindow(0, 0);
                 new AggregateReportingJobHandler(
                                 enrollmentDao,
                                 datastoreManager,
-                                new AggregateEncryptionKeyManager(datastoreManager),
+                                new AggregateEncryptionKeyManager(
+                                        datastoreManager, getApplicationContext()),
                                 FlagsFactory.getFlags(),
                                 AdServicesLoggerImpl.getInstance(),
                                 ReportingStatus.ReportType.DEBUG_AGGREGATE,
-                                ReportingStatus.UploadMethod.REGULAR)
+                                ReportingStatus.UploadMethod.REGULAR,
+                                getApplicationContext())
                         .setIsDebugInstance(true)
                         .performScheduledPendingReportsInWindow(0, 0);
                 return;
@@ -186,7 +194,7 @@ public final class DebugReportingJobService extends JobService {
                 lock.unlock();
             }
         }
-        LogUtil.d("DebugReportingJobService did not acquire the lock");
+        LoggerFactory.getMeasurementLogger().d("DebugReportingJobService did not acquire the lock");
     }
 
     @VisibleForTesting

@@ -122,6 +122,33 @@ public class PermissionHelperTest {
     }
 
     @Test
+    public void testUpdateAdIdCache() {
+        Context mockContextGrant =
+                getMockContext(
+                        AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID, mMockPackageManagerGrant);
+        assertThat(PermissionHelper.hasUpdateAdIdCachePermission(mockContextGrant)).isTrue();
+
+        // The mMockPackageManagerDeny is used to deny the other setup, but using it here for better
+        // readability.
+        Context mockContextDeny = getMockContext("not_granted_permission", mMockPackageManagerDeny);
+        assertThat(PermissionHelper.hasUpdateAdIdCachePermission(mockContextDeny)).isFalse();
+    }
+
+    @Test
+    public void testUpdateAdIdCache_compat() {
+        Context mockContextGrant =
+                getMockContext(
+                        AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID_COMPAT,
+                        mMockPackageManagerGrant);
+        assertThat(PermissionHelper.hasUpdateAdIdCachePermission(mockContextGrant)).isTrue();
+
+        // The mMockPackageManagerDeny is used to deny the other setup, but using it here for better
+        // readability.
+        Context mockContextDeny = getMockContext("not_granted_permission", mMockPackageManagerDeny);
+        assertThat(PermissionHelper.hasUpdateAdIdCachePermission(mockContextDeny)).isFalse();
+    }
+
+    @Test
     public void testHasPermission_notUseSandboxCheck() {
         Context mockContext = getMockContext(ACCESS_ADSERVICES_TOPICS, mMockPackageManagerGrant);
         assertThat(

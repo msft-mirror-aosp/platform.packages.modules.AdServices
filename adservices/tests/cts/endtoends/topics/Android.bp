@@ -24,7 +24,7 @@ java_defaults {
     static_libs: [
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt", // Needed for ShellUtils.runShellCommand
-        "truth-prebuilt",
+        "truth",
         "adservices-clients",
         "adservices-test-utility",
     ],

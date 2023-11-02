@@ -16,14 +16,14 @@
 
 package com.android.adservices.service.measurement.noising;
 
-import static com.android.adservices.service.measurement.PrivacyParams.DUAL_DESTINATION_EVENT_NOISE_PROBABILITY;
-import static com.android.adservices.service.measurement.PrivacyParams.DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
-import static com.android.adservices.service.measurement.PrivacyParams.EVENT_NOISE_PROBABILITY;
-import static com.android.adservices.service.measurement.PrivacyParams.INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY;
-import static com.android.adservices.service.measurement.PrivacyParams.INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
-import static com.android.adservices.service.measurement.PrivacyParams.INSTALL_ATTR_EVENT_NOISE_PROBABILITY;
-import static com.android.adservices.service.measurement.PrivacyParams.INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY;
-import static com.android.adservices.service.measurement.PrivacyParams.NAVIGATION_NOISE_PROBABILITY;
+import static com.android.adservices.service.Flags.MEASUREMENT_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY;
+import static com.android.adservices.service.Flags.MEASUREMENT_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
+import static com.android.adservices.service.Flags.MEASUREMENT_EVENT_NOISE_PROBABILITY;
+import static com.android.adservices.service.Flags.MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY;
+import static com.android.adservices.service.Flags.MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
+import static com.android.adservices.service.Flags.MEASUREMENT_INSTALL_ATTR_EVENT_NOISE_PROBABILITY;
+import static com.android.adservices.service.Flags.MEASUREMENT_INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY;
+import static com.android.adservices.service.Flags.MEASUREMENT_NAVIGATION_NOISE_PROBABILITY;
 import static com.android.adservices.service.measurement.SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS;
 import static com.android.adservices.service.measurement.SourceFixture.ValidSourceParams.WEB_DESTINATIONS;
 
@@ -44,6 +44,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -93,7 +95,7 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         false, // coarse destinations
                         false, // enable configured max reports
                         1, // configured max reports
-                        EVENT_NOISE_PROBABILITY, // probability
+                        MEASUREMENT_EVENT_NOISE_PROBABILITY, // probability
                     },
                     {
                         "non-configured reporting windows, EVENT, 2-1-2, app, install "
@@ -109,7 +111,7 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         false, // coarse destinations
                         false, // enable configured max reports
                         1, // configured max reports
-                        INSTALL_ATTR_EVENT_NOISE_PROBABILITY, // probability
+                        MEASUREMENT_INSTALL_ATTR_EVENT_NOISE_PROBABILITY, // probability
                     },
                     {
                         "non-configured reporting windows, EVENT, 1-1-1, web, fine "
@@ -124,7 +126,7 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         false, // coarse destinations
                         false, // enable configured max reports
                         1, // configured max reports
-                        EVENT_NOISE_PROBABILITY, // probability
+                        MEASUREMENT_EVENT_NOISE_PROBABILITY, // probability
                     },
                     {
                         "non-configured reporting windows, EVENT, 1-1-1, app and web, "
@@ -139,7 +141,7 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         false, // coarse destinations
                         false, // enable configured max reports
                         1, // configured max reports
-                        DUAL_DESTINATION_EVENT_NOISE_PROBABILITY, // probability
+                        MEASUREMENT_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY, // probability
                     },
                     {
                         "non-configured reporting windows, EVENT, 2-1-2, app & web, "
@@ -156,7 +158,7 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         false, // coarse destinations
                         false, // enable configured max reports
                         1, // configured max reports
-                        INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY,
+                        MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY,
                     },
                     {
                         "non-configured reporting windows, EVENT, 2-1-2, app & web, "
@@ -173,7 +175,7 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         true, // coarse destinations
                         false, // enable configurable max reports
                         1, // configured max reports
-                        INSTALL_ATTR_EVENT_NOISE_PROBABILITY,
+                        MEASUREMENT_INSTALL_ATTR_EVENT_NOISE_PROBABILITY,
                     },
                     {
                         "non-configured reporting windows, NAVIGATION, 3-3-3, app, fine "
@@ -188,7 +190,7 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         false, // coarse destinations
                         false, // enable configured max reports
                         3, // configured max reports
-                        NAVIGATION_NOISE_PROBABILITY, // probability
+                        MEASUREMENT_NAVIGATION_NOISE_PROBABILITY, // probability
                     },
                     {
                         "non-configured reporting windows, NAVIGATION, 3-3-3, app, install "
@@ -204,7 +206,7 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         false, // coarse destinations
                         false, // enable configured max reports
                         3, // configured max reports
-                        INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY, // probability
+                        MEASUREMENT_INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY, // probability
                     },
                     {
                         "non-configured reporting windows, NAVIGATION, 3-3-3, web, fine "
@@ -219,7 +221,7 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         false, // coarse destinations
                         false, // enable configurable max reports
                         3, // configured max reports
-                        NAVIGATION_NOISE_PROBABILITY, // probability
+                        MEASUREMENT_NAVIGATION_NOISE_PROBABILITY, // probability
                     },
                     {
                         "non-configured reporting windows, NAVIGATION, 3-3-3, app & web, "
@@ -234,7 +236,7 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         false, // coarse destinations
                         false, // enable configurable max reports
                         3, // configured max reports
-                        DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY, // probability
+                        MEASUREMENT_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY, // probability
                     },
                     {
                         "non-configured reporting windows, NAVIGATION, 3-3-3, app & web, "
@@ -249,7 +251,7 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         true, // coarse destinations
                         false, // enable configurable max reports
                         3, // configured max reports
-                        NAVIGATION_NOISE_PROBABILITY, // probability
+                        MEASUREMENT_NAVIGATION_NOISE_PROBABILITY, // probability
                     },
                     {
                         "non-configured reporting windows, NAVIGATION, 3-3-3, app & web, "
@@ -265,7 +267,7 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         false, // coarse destinations
                         false, // enable configurable max reports
                         3, // configured max reports
-                        INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY,
+                        MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY,
                     },
                     {
                         "non-configured reporting windows, NAVIGATION, 3-3-3, app & web, "
@@ -281,7 +283,7 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         true, // coarse destinations
                         false, // enable configurable max reports
                         3, // configured max reports
-                        INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY,
+                        MEASUREMENT_INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY,
                     },
                     {
                         "configured reporting windows, EVENT, 1-1-1, app, fine " + "destinations",
@@ -295,7 +297,7 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         false, // coarse destinations
                         false, // enable configurable max reports
                         1, // configured max reports
-                        EVENT_NOISE_PROBABILITY, // probability
+                        MEASUREMENT_EVENT_NOISE_PROBABILITY, // probability
                     },
                     {
                         "configured reporting windows, EVENT, 1-1-2, app, fine " + "destinations",
@@ -339,7 +341,7 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         false, // coarse destinations
                         false, // enable configurable max reports
                         1, // configured max reports
-                        EVENT_NOISE_PROBABILITY, // probability
+                        MEASUREMENT_EVENT_NOISE_PROBABILITY, // probability
                     },
                     {
                         "configured reporting windows, EVENT, 1-1-3(2 effective window), "
@@ -373,7 +375,7 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         false, // coarse destinations
                         false, // enable configurable max reports
                         1, // configured max reports
-                        INSTALL_ATTR_EVENT_NOISE_PROBABILITY, // probability
+                        MEASUREMENT_INSTALL_ATTR_EVENT_NOISE_PROBABILITY, // probability
                     },
                     {
                         "configured reporting windows, EVENT, 2-1-3, app, install "
@@ -444,7 +446,7 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         false, // coarse destinations
                         false, // enable configurable max reports
                         1, // configured max reports
-                        EVENT_NOISE_PROBABILITY, // probability
+                        MEASUREMENT_EVENT_NOISE_PROBABILITY, // probability
                     },
                     {
                         // It is different from "non-configured reporting windows, 2-1-2,
@@ -503,7 +505,7 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         false, // coarse destinations
                         false, // enable configurable max reports
                         1, // configured max reports
-                        INSTALL_ATTR_EVENT_NOISE_PROBABILITY, // probability
+                        MEASUREMENT_INSTALL_ATTR_EVENT_NOISE_PROBABILITY, // probability
                     },
                     {
                         "configured reporting windows, EVENT, 1-1-1, app & web, fine "
@@ -518,7 +520,7 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         false, // coarse destinations
                         false, // enable configurable max reports
                         1, // configured max reports
-                        DUAL_DESTINATION_EVENT_NOISE_PROBABILITY, // probability
+                        MEASUREMENT_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY, // probability
                     },
                     {
                         "configured reporting windows, EVENT, 1-1-1, app & web, coarse "
@@ -533,7 +535,7 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         true, // coarse destinations
                         false, // enable configurable max reports
                         1, // configured max reports
-                        EVENT_NOISE_PROBABILITY, // probability
+                        MEASUREMENT_EVENT_NOISE_PROBABILITY, // probability
                     },
                     {
                         "configured reporting windows, NAVIGATION, 3-3-1, app, fine "
@@ -578,7 +580,7 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         false, // coarse destinations
                         false, // enable configurable max reports
                         3, // configured max reports
-                        NAVIGATION_NOISE_PROBABILITY, // probability
+                        MEASUREMENT_NAVIGATION_NOISE_PROBABILITY, // probability
                     },
                     {
                         "configured reporting windows, NAVIGATION, 3-3-2 (1 effective "
@@ -724,7 +726,7 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         false, // coarse destinations
                         false, // enable configurable max reports
                         3, // configured max reports
-                        INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY,
+                        MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY,
                     },
                     {
                         "configured reporting windows, NAVIGATION, 3-3-3, app & web, "
@@ -741,7 +743,7 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         true, // coarse destinations
                         false, // enable configurable max reports
                         3, // configured max reports
-                        INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY,
+                        MEASUREMENT_INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY,
                     },
                     {
                         "configured reporting windows, NAVIGATION, 3-3-3, app, install "
@@ -756,7 +758,7 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         false, // coarse destinations
                         false, // enable configurable max reports
                         3, // configured max reports
-                        INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY, // probability
+                        MEASUREMENT_INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY, // probability
                     },
                     {
                         "configured reporting windows, NAVIGATION, 3-3-3, app & web, fine"
@@ -771,7 +773,7 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         false, // coarse destinations
                         false, // enable configurable max reports
                         3, // configured max reports
-                        DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY, // probability
+                        MEASUREMENT_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY, // probability
                     },
                     {
                         "configured reporting windows, NAVIGATION, 3-3-3, app & web, "
@@ -786,7 +788,7 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         true, // coarse destinations
                         false, // enable configurable max reports
                         3, // configured max reports
-                        NAVIGATION_NOISE_PROBABILITY, // probability
+                        MEASUREMENT_NAVIGATION_NOISE_PROBABILITY, // probability
                     },
                     {
                         "non-configured reporting windows, EVENT, 3-1-1, app, fine "
@@ -930,7 +932,10 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         .setCoarseEventReportDestinations(coarseDestination)
                         .build();
         mEarlyReportingWindows = earlyReportingWindows;
-        mExpectedProbability = expectedProbability;
+        mExpectedProbability =
+                BigDecimal.valueOf(expectedProbability)
+                        .setScale(7, RoundingMode.HALF_UP)
+                        .doubleValue();
         mEnableConfiguredMaxEventReports = isEnableConfigurableMaxEventReports;
         mConfiguredMaxEventReportsCount = configuredMaxEventReportsCount;
     }
@@ -955,6 +960,30 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
         doReturn(mConfiguredMaxEventReportsCount)
                 .when(flags)
                 .getMeasurementVtcConfigurableMaxEventReportsCount();
+        doReturn(MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY)
+                .when(flags)
+                .getMeasurementInstallAttrDualDestinationEventNoiseProbability();
+        doReturn(MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY)
+                .when(flags)
+                .getMeasurementInstallAttrDualDestinationNavigationNoiseProbability();
+        doReturn(MEASUREMENT_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY)
+                .when(flags)
+                .getMeasurementDualDestinationNavigationNoiseProbability();
+        doReturn(MEASUREMENT_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY)
+                .when(flags)
+                .getMeasurementDualDestinationEventNoiseProbability();
+        doReturn(MEASUREMENT_INSTALL_ATTR_EVENT_NOISE_PROBABILITY)
+                .when(flags)
+                .getMeasurementInstallAttrEventNoiseProbability();
+        doReturn(MEASUREMENT_INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY)
+                .when(flags)
+                .getMeasurementInstallAttrNavigationNoiseProbability();
+        doReturn(MEASUREMENT_EVENT_NOISE_PROBABILITY)
+                .when(flags)
+                .getMeasurementEventNoiseProbability();
+        doReturn(MEASUREMENT_NAVIGATION_NOISE_PROBABILITY)
+                .when(flags)
+                .getMeasurementNavigationNoiseProbability();
 
         // Execution
         double actualProbability =

@@ -19,10 +19,12 @@ package com.android.adservices.data.measurement;
 import android.net.Uri;
 
 import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
 import org.json.JSONException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,6 +36,7 @@ import java.util.Collection;
 @RunWith(Parameterized.class)
 public class AppDeletionIntegrationTest extends AbstractDbIntegrationTest {
     private final Uri mUri;
+    private final AdServicesErrorLogger mErrorLogger;
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> data() throws IOException, JSONException {
@@ -47,11 +50,13 @@ public class AppDeletionIntegrationTest extends AbstractDbIntegrationTest {
     // test, although it's ostensibly unused by this constructor.
     public AppDeletionIntegrationTest(DbState input, DbState output, Uri uri, String name) {
         super(input, output);
+
         this.mUri = uri;
+        mErrorLogger = Mockito.mock(AdServicesErrorLogger.class);
     }
 
     public void runActionToTest() {
-        new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest())
+        new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger)
                 .runInTransaction((dao) -> dao.deleteAppRecords(mUri));
     }
 }

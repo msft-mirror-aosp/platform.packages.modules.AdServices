@@ -18,14 +18,20 @@ package com.android.adservices.service.measurement.inputverification;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.hardware.input.InputManager;
 import android.view.InputEvent;
 import android.view.MotionEvent;
+import android.view.VerifiedMotionEvent;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.measurement.Source;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.MeasurementClickVerificationStats;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import org.junit.Before;
@@ -41,68 +47,151 @@ public final class ClickVerifierTest {
 
     @Mock private InputManager mInputManager;
     @Mock private Flags mFlags;
+
+    @Mock private AdServicesLogger mAdServicesLogger;
+
+    @Mock private VerifiedMotionEvent mVerifiedMotionEvent;
     private ClickVerifier mClickVerifier;
+
+    private static final String SOURCE_REGISTRANT = "source_registrant";
 
     @Before
     public void before() {
         MockitoAnnotations.initMocks(this);
-        mClickVerifier = new ClickVerifier(mInputManager, mFlags);
+        mClickVerifier = new ClickVerifier(mInputManager, mFlags, mAdServicesLogger);
     }
 
     @Test
     public void testInputEventOutsideTimeRangeReturnsFalse() {
         InputEvent eventOutsideRange = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
+        when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);
+        when(mInputManager.verifyInputEvent(eventOutsideRange)).thenReturn(mVerifiedMotionEvent);
+        long registerTimestamp =
+                FlagsFactory.getFlagsForTest().getMeasurementRegistrationInputEventValidWindowMs()
+                        + 1;
         assertThat(
-                        mClickVerifier.isInputEventWithinValidTimeRange(
-                                FlagsFactory.getFlagsForTest()
-                                                .getMeasurementRegistrationInputEventValidWindowMs()
-                                        + 1,
-                                eventOutsideRange))
+                        mClickVerifier.isInputEventVerifiable(
+                                eventOutsideRange, registerTimestamp, SOURCE_REGISTRANT))
                 .isFalse();
     }
 
     @Test
-    public void testInputEventInsideTimeRangeReturnsTrue() {
+    public void testVerifiedInputEventInsideTimeRangeReturnsTrue() {
         InputEvent eventInsideRange = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
+        when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);
+        when(mInputManager.verifyInputEvent(eventInsideRange)).thenReturn(mVerifiedMotionEvent);
         long registerTimestamp =
                 FlagsFactory.getFlagsForTest().getMeasurementRegistrationInputEventValidWindowMs();
         when(mFlags.getMeasurementRegistrationInputEventValidWindowMs())
                 .thenReturn(registerTimestamp);
-
         assertThat(
-                        mClickVerifier.isInputEventWithinValidTimeRange(
-                                registerTimestamp, eventInsideRange))
+                        mClickVerifier.isInputEventVerifiable(
+                                eventInsideRange, registerTimestamp, SOURCE_REGISTRANT))
                 .isTrue();
     }
 
     @Test
     public void testInputEventNotValidatedBySystem() {
-        InputEvent inputEvent =
-                MotionEvent.obtain(
-                        0,
-                        FlagsFactory.getFlagsForTest()
-                                .getMeasurementRegistrationInputEventValidWindowMs(),
-                        MotionEvent.ACTION_DOWN,
-                        0,
-                        0,
-                        0);
+        InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
+        long registerTimestamp =
+                FlagsFactory.getFlagsForTest().getMeasurementRegistrationInputEventValidWindowMs();
+        when(mFlags.getMeasurementRegistrationInputEventValidWindowMs())
+                .thenReturn(registerTimestamp);
         when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);
         when(mInputManager.verifyInputEvent(inputEvent)).thenReturn(null);
-        assertThat(mClickVerifier.isInputEventVerifiableBySystem(inputEvent)).isFalse();
+        assertThat(
+                        mClickVerifier.isInputEventVerifiable(
+                                inputEvent, registerTimestamp, SOURCE_REGISTRANT))
+                .isFalse();
     }
 
     @Test
     public void testInputEvent_verifyByInputEventFlagDisabled_Verified() {
-        InputEvent inputEvent =
-                MotionEvent.obtain(
-                        266L,
-                        FlagsFactory.getFlagsForTest()
-                                .getMeasurementRegistrationInputEventValidWindowMs(),
-                        MotionEvent.ACTION_DOWN,
-                        24.3f,
-                        46.7f,
-                        0);
+        InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
+        long registerTimestamp =
+                FlagsFactory.getFlagsForTest().getMeasurementRegistrationInputEventValidWindowMs();
+        when(mFlags.getMeasurementRegistrationInputEventValidWindowMs())
+                .thenReturn(registerTimestamp);
         when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(false);
-        assertThat(mClickVerifier.isInputEventVerifiableBySystem(inputEvent)).isTrue();
+        when(mInputManager.verifyInputEvent(inputEvent)).thenReturn(null);
+        assertThat(
+                        mClickVerifier.isInputEventVerifiable(
+                                inputEvent, registerTimestamp, SOURCE_REGISTRANT))
+                .isTrue();
+    }
+
+    @Test
+    public void testLog_inputEventVerified() {
+        InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
+        when(mInputManager.verifyInputEvent(inputEvent)).thenReturn(mVerifiedMotionEvent);
+        when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);
+        when(mFlags.getMeasurementRegistrationInputEventValidWindowMs()).thenReturn(6000L);
+        long registerTimestamp = mFlags.getMeasurementRegistrationInputEventValidWindowMs() / 2;
+        mClickVerifier.isInputEventVerifiable(inputEvent, registerTimestamp, SOURCE_REGISTRANT);
+
+        MeasurementClickVerificationStats stats =
+                MeasurementClickVerificationStats.builder()
+                        .setSourceType(Source.SourceType.NAVIGATION.getIntValue())
+                        .setInputEventPresent(true)
+                        .setSystemClickVerificationEnabled(
+                                mFlags.getMeasurementIsClickVerifiedByInputEvent())
+                        .setSystemClickVerificationSuccessful(true)
+                        .setInputEventDelayMillis(registerTimestamp)
+                        .setValidDelayWindowMillis(
+                                mFlags.getMeasurementRegistrationInputEventValidWindowMs())
+                        .setSourceRegistrant(SOURCE_REGISTRANT)
+                        .build();
+
+        verify(mAdServicesLogger).logMeasurementClickVerificationStats(eq(stats));
+    }
+
+    @Test
+    public void testLogClickVerification_inputEventNotVerifiedBySystem() {
+        InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
+        when(mInputManager.verifyInputEvent(inputEvent)).thenReturn(null);
+        when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);
+        when(mFlags.getMeasurementRegistrationInputEventValidWindowMs()).thenReturn(6000L);
+        long registerTimestamp = mFlags.getMeasurementRegistrationInputEventValidWindowMs() / 2;
+        mClickVerifier.isInputEventVerifiable(inputEvent, registerTimestamp, SOURCE_REGISTRANT);
+
+        MeasurementClickVerificationStats stats =
+                MeasurementClickVerificationStats.builder()
+                        .setSourceType(Source.SourceType.EVENT.getIntValue())
+                        .setInputEventPresent(true)
+                        .setSystemClickVerificationEnabled(
+                                mFlags.getMeasurementIsClickVerifiedByInputEvent())
+                        .setSystemClickVerificationSuccessful(false)
+                        .setInputEventDelayMillis(registerTimestamp)
+                        .setValidDelayWindowMillis(
+                                mFlags.getMeasurementRegistrationInputEventValidWindowMs())
+                        .setSourceRegistrant(SOURCE_REGISTRANT)
+                        .build();
+
+        verify(mAdServicesLogger).logMeasurementClickVerificationStats(eq(stats));
+    }
+
+    @Test
+    public void testLogClickVerification_inputEventOutsideValidWindow() {
+        InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
+        when(mInputManager.verifyInputEvent(inputEvent)).thenReturn(mVerifiedMotionEvent);
+        when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);
+        when(mFlags.getMeasurementRegistrationInputEventValidWindowMs()).thenReturn(6000L);
+        long registerTimestamp = mFlags.getMeasurementRegistrationInputEventValidWindowMs() * 2;
+        mClickVerifier.isInputEventVerifiable(inputEvent, registerTimestamp, SOURCE_REGISTRANT);
+
+        MeasurementClickVerificationStats stats =
+                MeasurementClickVerificationStats.builder()
+                        .setSourceType(Source.SourceType.EVENT.getIntValue())
+                        .setInputEventPresent(true)
+                        .setSystemClickVerificationEnabled(
+                                mFlags.getMeasurementIsClickVerifiedByInputEvent())
+                        .setSystemClickVerificationSuccessful(true)
+                        .setInputEventDelayMillis(registerTimestamp)
+                        .setValidDelayWindowMillis(
+                                mFlags.getMeasurementRegistrationInputEventValidWindowMs())
+                        .setSourceRegistrant(SOURCE_REGISTRANT)
+                        .build();
+
+        verify(mAdServicesLogger).logMeasurementClickVerificationStats(eq(stats));
     }
 }

@@ -8,7 +8,7 @@
         }
       },
       "response": {
-        "body": "BiddingLogicV3.js.txt",
+        "body": "BiddingLogicV3.js",
         "header": {
           "x_fledge_buyer_bidding_logic_version": "3"
         }
@@ -20,7 +20,7 @@
         "path": "scoring"
       },
       "response": {
-        "body": "ScoringLogic.js.txt"
+        "body": "ScoringLogic.js"
       },
       "verify_called": true
     },
