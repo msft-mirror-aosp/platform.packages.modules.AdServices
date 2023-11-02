@@ -26,8 +26,7 @@ import com.android.internal.annotations.VisibleForTesting;
 import java.util.Objects;
 
 /** AdServices implementation of {@link AbstractAdServicesErrorLogger}. */
-public final class AdServicesErrorLoggerImpl extends AbstractAdServicesErrorLogger
-        implements AdServicesErrorLogger {
+public final class AdServicesErrorLoggerImpl extends AbstractAdServicesErrorLogger {
     private static final Object SINGLETON_LOCK = new Object();
     private static volatile AdServicesErrorLoggerImpl sSingleton;
     private final Flags mFlags;
