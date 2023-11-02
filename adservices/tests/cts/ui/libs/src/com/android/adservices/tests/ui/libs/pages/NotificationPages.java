@@ -80,8 +80,7 @@ public class NotificationPages {
                 break;
             case RVC_UX:
                 notificationTitle = R.string.notificationUI_u18_notification_title;
-                // TODO(298245196) Update notification activity for R ux
-                notificationHeader = R.string.notificationUI_header_ga_title;
+                notificationHeader = R.string.notificationUI_u18_header_title;
                 break;
         }
 
