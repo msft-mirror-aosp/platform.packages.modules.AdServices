@@ -28,6 +28,7 @@ import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
+import com.android.adservices.service.devapi.DevContext;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.FluentFuture;
@@ -36,8 +37,10 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -55,44 +58,46 @@ public class EncoderLogicHandler {
 
     @VisibleForTesting static final String ENCODER_VERSION_RESPONSE_HEADER = "X_ENCODER_VERSION";
     @VisibleForTesting static final int FALLBACK_VERSION = 0;
-    @NonNull private final EncoderPersistenceManager mEncoderPersistenceManager;
+    @NonNull private final EncoderPersistenceDao mEncoderPersistenceDao;
     @NonNull private final EncoderEndpointsDao mEncoderEndpointsDao;
-    @NonNull private final EncoderLogicDao mEncoderLogicDao;
+    @NonNull private final EncoderLogicMetadataDao mEncoderLogicMetadataDao;
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
-    @NonNull private final Map<AdTechIdentifier, ReentrantLock> mBuyerTransactionLocks;
+
+    @NonNull
+    private static final Map<AdTechIdentifier, ReentrantLock> BUYER_REENTRANT_LOCK_HASH_MAP =
+            new HashMap<>();
 
     @NonNull
     private final ImmutableSet<String> mDownloadRequestProperties =
             ImmutableSet.of(ENCODER_VERSION_RESPONSE_HEADER);
 
     @VisibleForTesting
-    EncoderLogicHandler(
-            @NonNull EncoderPersistenceManager encoderPersistenceManager,
+    public EncoderLogicHandler(
+            @NonNull EncoderPersistenceDao encoderPersistenceDao,
             @NonNull EncoderEndpointsDao encoderEndpointsDao,
-            @NonNull EncoderLogicDao encoderLogicDao,
+            @NonNull EncoderLogicMetadataDao encoderLogicMetadataDao,
             @NonNull AdServicesHttpsClient httpsClient,
             @NonNull ListeningExecutorService backgroundExecutorService) {
-        Objects.requireNonNull(encoderPersistenceManager);
+        Objects.requireNonNull(encoderPersistenceDao);
         Objects.requireNonNull(encoderEndpointsDao);
-        Objects.requireNonNull(encoderLogicDao);
+        Objects.requireNonNull(encoderLogicMetadataDao);
         Objects.requireNonNull(httpsClient);
         Objects.requireNonNull(backgroundExecutorService);
-        mEncoderPersistenceManager = encoderPersistenceManager;
+        mEncoderPersistenceDao = encoderPersistenceDao;
         mEncoderEndpointsDao = encoderEndpointsDao;
-        mEncoderLogicDao = encoderLogicDao;
+        mEncoderLogicMetadataDao = encoderLogicMetadataDao;
         mAdServicesHttpsClient = httpsClient;
         mBackgroundExecutorService = backgroundExecutorService;
-        mBuyerTransactionLocks = new HashMap<>();
     }
 
     public EncoderLogicHandler(@NonNull Context context) {
         this(
-                EncoderPersistenceManager.getInstance(context),
+                EncoderPersistenceDao.getInstance(context),
                 ProtectedSignalsDatabase.getInstance(context).getEncoderEndpointsDao(),
-                ProtectedSignalsDatabase.getInstance(context).getEncoderLogicDao(),
+                ProtectedSignalsDatabase.getInstance(context).getEncoderLogicMetadataDao(),
                 new AdServicesHttpsClient(
-                        AdServicesExecutors.getBlockingExecutor(),
+                        AdServicesExecutors.getBackgroundExecutor(),
                         CacheProviderFactory.createNoOpCache()),
                 AdServicesExecutors.getBackgroundExecutor());
     }
@@ -106,16 +111,18 @@ public class EncoderLogicHandler {
      *   <li>3. Extract the encoder from the web-response and persist
      *       <ol>
      *         <li>3a. The encoder body is persisted in file storage using {@link
-     *             EncoderPersistenceManager}
+     *             EncoderPersistenceDao}
      *         <li>3b. The entry for the downloaded encoder and the version is persisted using
-     *             {@link EncoderLogicDao}
+     *             {@link EncoderLogicMetadataDao}
      *       </ol>
      * </ol>
      *
      * @param buyer The buyer for which the encoder logic is required to be updated
+     * @param devContext development context used for testing network calls
      * @return a Fluent Future with success or failure in the form of boolean
      */
-    public FluentFuture<Boolean> downloadAndUpdate(@NonNull AdTechIdentifier buyer) {
+    public FluentFuture<Boolean> downloadAndUpdate(
+            @NonNull AdTechIdentifier buyer, @NonNull DevContext devContext) {
         Objects.requireNonNull(buyer);
 
         DBEncoderEndpoint encoderEndpoint = mEncoderEndpointsDao.getEndpoint(buyer);
@@ -132,7 +139,11 @@ public class EncoderLogicHandler {
                         .setUri(encoderEndpoint.getDownloadUri())
                         .setUseCache(false)
                         .setResponseHeaderKeys(mDownloadRequestProperties)
+                        .setDevContext(devContext)
                         .build();
+        sLogger.v(
+                "Initiating encoder download request for buyer: %s, uri: %s",
+                buyer, encoderEndpoint.getDownloadUri());
         FluentFuture<AdServicesHttpClientResponse> response =
                 FluentFuture.from(mAdServicesHttpsClient.fetchPayload(downloadRequest));
 
@@ -143,6 +154,12 @@ public class EncoderLogicHandler {
     @VisibleForTesting
     protected boolean extractAndPersistEncoder(
             AdTechIdentifier buyer, AdServicesHttpClientResponse response) {
+
+        if (response == null || response.getResponseBody().isEmpty()) {
+            sLogger.e("Empty response from from client for downloading encoder");
+            return false;
+        }
+
         String encoderLogicBody = response.getResponseBody();
 
         int version = FALLBACK_VERSION;
@@ -157,11 +174,11 @@ public class EncoderLogicHandler {
             }
 
         } catch (NumberFormatException e) {
-            sLogger.e("Invalid or missing version, setting to fallback:" + FALLBACK_VERSION);
+            sLogger.e("Invalid or missing version, setting to fallback: " + FALLBACK_VERSION);
         }
 
-        DBEncoderLogic encoderLogicEntry =
-                DBEncoderLogic.builder()
+        DBEncoderLogicMetadata encoderLogicEntry =
+                DBEncoderLogicMetadata.builder()
                         .setBuyer(buyer)
                         .setCreationTime(Instant.now())
                         .setVersion(version)
@@ -170,12 +187,13 @@ public class EncoderLogicHandler {
 
         ReentrantLock buyerLock = getBuyerLock(buyer);
         if (buyerLock.tryLock()) {
-            updateSucceeded = mEncoderPersistenceManager.persistEncoder(buyer, encoderLogicBody);
+            updateSucceeded = mEncoderPersistenceDao.persistEncoder(buyer, encoderLogicBody);
 
             if (updateSucceeded) {
                 sLogger.v(
-                        "Update for encoding logic on persistence layer succeeded, updating entry");
-                mEncoderLogicDao.persistEncoder(encoderLogicEntry);
+                        "Update for encoding logic on persistence layer succeeded, updating DB"
+                                + " entry");
+                mEncoderLogicMetadataDao.persistEncoderLogicMetadata(encoderLogicEntry);
             } else {
                 sLogger.e(
                         "Update for encoding logic on persistence layer failed, skipping update"
@@ -188,13 +206,61 @@ public class EncoderLogicHandler {
 
     @VisibleForTesting
     protected ReentrantLock getBuyerLock(AdTechIdentifier buyer) {
-        synchronized (mBuyerTransactionLocks) {
-            ReentrantLock lock = mBuyerTransactionLocks.get(buyer);
+        synchronized (BUYER_REENTRANT_LOCK_HASH_MAP) {
+            ReentrantLock lock = BUYER_REENTRANT_LOCK_HASH_MAP.get(buyer);
             if (lock == null) {
                 lock = new ReentrantLock();
-                mBuyerTransactionLocks.put(buyer, lock);
+                BUYER_REENTRANT_LOCK_HASH_MAP.put(buyer, lock);
             }
             return lock;
+        }
+    }
+
+    /**
+     * @return all the buyers that have registered their encoders
+     */
+    public List<AdTechIdentifier> getBuyersWithEncoders() {
+        return mEncoderLogicMetadataDao.getAllBuyersWithRegisteredEncoders();
+    }
+
+    /** Returns all registered encoding logic metadata. */
+    public List<DBEncoderLogicMetadata> getAllRegisteredEncoders() {
+        return mEncoderLogicMetadataDao.getAllRegisteredEncoders();
+    }
+
+    /** Returns the encoding logic for the given buyer. */
+    public String getEncoder(AdTechIdentifier buyer) {
+        return mEncoderPersistenceDao.getEncoder(buyer);
+    }
+
+    /** Returns the encoder metadata for the given buyer. */
+    public DBEncoderLogicMetadata getEncoderLogicMetadata(AdTechIdentifier adTechIdentifier) {
+        return mEncoderLogicMetadataDao.getMetadata(adTechIdentifier);
+    }
+
+    /** Update the failed count for a buyer */
+    public void updateEncoderFailedCount(AdTechIdentifier adTechIdentifier, int count) {
+        mEncoderLogicMetadataDao.updateEncoderFailedCount(adTechIdentifier, count);
+    }
+
+    /**
+     * @param expiry time before which the encoders are considered stale
+     * @return the list of buyers that have stale encoders
+     */
+    public List<AdTechIdentifier> getBuyersWithStaleEncoders(Instant expiry) {
+        return mEncoderLogicMetadataDao.getBuyersWithEncodersBeforeTime(expiry);
+    }
+
+    /** Deletes the encoder endpoint and logic for a list of buyers */
+    public void deleteEncodersForBuyers(Set<AdTechIdentifier> buyers) {
+        for (AdTechIdentifier buyer : buyers) {
+            ReentrantLock buyerLock = getBuyerLock(buyer);
+            if (buyerLock.tryLock()) {
+                mEncoderLogicMetadataDao.deleteEncoder(buyer);
+                mEncoderPersistenceDao.deleteEncoder(buyer);
+                mEncoderEndpointsDao.deleteEncoderEndpoint(buyer);
+                buyerLock.unlock();
+            }
         }
     }
 }

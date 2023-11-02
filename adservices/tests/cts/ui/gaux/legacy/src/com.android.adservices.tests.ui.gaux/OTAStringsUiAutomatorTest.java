@@ -20,6 +20,7 @@ import static com.android.adservices.tests.ui.libs.UiConstants.ENTRY_POINT_ENABL
 
 import android.adservices.common.AdServicesCommonManager;
 import android.content.Context;
+import android.platform.test.rule.ScreenRecordRule;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -28,18 +29,23 @@ import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.Until;
 
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.tests.ui.libs.UiUtils;
 import com.android.compatibility.common.util.ShellUtils;
 
+
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+
 @RunWith(AndroidJUnit4.class)
+@ScreenRecordRule.ScreenRecord
 public class OTAStringsUiAutomatorTest {
     private static final int LAUNCH_TIMEOUT = 5000;
     private static final String MDD_URL =
@@ -47,23 +53,32 @@ public class OTAStringsUiAutomatorTest {
                     + "-ui-ota-strings/1522/bd19b7e7d207afc30f1c07de7df5766a21a1b0eb";
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();
+
+    @Rule public final ScreenRecordRule sScreenRecordRule = new ScreenRecordRule();
     private static UiDevice sDevice;
 
     private static AdServicesCommonManager sCommonManager;
 
+    private String mTestName;
+
     @BeforeClass
-    public static void initTestClass() throws InterruptedException, UiObjectNotFoundException {
+    public static void initTestClass() throws Exception, UiObjectNotFoundException {
         // Initialize UiDevice instance
         sDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
         // enable wifi
-        UiUtils.connectToWifi(sDevice);
+        UiUtils.connectToWifi();
 
         // wait for wifi to connect
         Thread.sleep(LAUNCH_TIMEOUT);
 
+        UiUtils.disableNotificationFlowV2();
+
         // download test OTA strings
         sCommonManager = sContext.getSystemService(AdServicesCommonManager.class);
+
         UiUtils.setupOTAStrings(sContext, sDevice, sCommonManager, MDD_URL);
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
     @AfterClass
@@ -76,6 +91,8 @@ public class OTAStringsUiAutomatorTest {
 
     @Before
     public void initTestCase() {
+        // Skip the test if it runs on unsupported platforms.
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
         // Start from the home screen
         sDevice.pressHome();
@@ -94,11 +111,14 @@ public class OTAStringsUiAutomatorTest {
     }
 
     @Test
-    @Ignore("b/297347345")
     public void checkOTAStringsNotificationAndSettingsPageTest()
-            throws UiObjectNotFoundException, InterruptedException {
+            throws UiObjectNotFoundException, Exception {
+        UiUtils.enableBeta();
+        UiUtils.setAsRowDevice();
+        AdservicesTestHelper.killAdservicesProcess(sContext);
+        // open notification tray so notification is expanded when shown to show full string
+        sDevice.openNotification();
         sCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
-
         UiUtils.verifyNotificationAndSettingsPage(sContext, sDevice, true);
     }
 }

@@ -15,8 +15,10 @@
  */
 package com.android.adservices.common;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastR;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastS;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastT;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastU;
 
 import android.util.Log;
 
@@ -44,15 +46,32 @@ public final class SdkLevelSupportRuleTest
     protected void setDeviceSdkLevel(AndroidSdkLevel level) {
         Log.v(TAG, "setDeviceSdkLevel(" + level + ")");
         switch (level) {
+                // TODO(b/295321663): this combination of mockIsAtLeastX() is hacky, need to
+                // refactor
+                // the rule to use SDK ints directly
+            case R:
+                mockIsAtLeastR(true);
+                mockIsAtLeastS(false);
+                mockIsAtLeastT(false);
+                mockIsAtLeastU(false);
+                return;
             case S:
-                // TODO(b/295321663): this is hacky, need to refactor the rule to use SDK ints
-                // directly
+                mockIsAtLeastR(true);
                 mockIsAtLeastS(true);
                 mockIsAtLeastT(false);
+                mockIsAtLeastU(false);
                 return;
             case T:
+                mockIsAtLeastR(true);
                 mockIsAtLeastS(true);
                 mockIsAtLeastT(true);
+                mockIsAtLeastU(false);
+                return;
+            case U:
+                mockIsAtLeastR(true);
+                mockIsAtLeastS(true);
+                mockIsAtLeastT(true);
+                mockIsAtLeastU(true);
                 return;
             default:
                 throw new UnsupportedOperationException(

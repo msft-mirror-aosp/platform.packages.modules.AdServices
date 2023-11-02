@@ -18,7 +18,8 @@ package com.android.adservices.service.adselection;
 
 import androidx.annotation.NonNull;
 
-class DebugReportingScriptDisabledStrategy extends DebugReportingScriptStrategy {
+/** A no-op Debug reporting strategy */
+public class DebugReportingScriptDisabledStrategy extends DebugReportingScriptStrategy {
 
     private static final String DEFAULT_SCRIPT =
             HEADER_SCRIPT

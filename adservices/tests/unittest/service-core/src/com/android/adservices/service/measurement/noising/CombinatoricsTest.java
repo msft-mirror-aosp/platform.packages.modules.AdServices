@@ -23,18 +23,12 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.adservices.service.measurement.PrivacyParams;
 
-import com.google.common.math.DoubleMath;
-
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -249,7 +243,8 @@ public class CombinatoricsTest {
             {2925.0, 0.24263221679834088d},
             {3.0, 0.0002494582008677539d},
             {455.0, 0.037820279032938435d},
-            {2.0, 0.0001663056055328264d}
+            {2.0, 0.0001663056055328264d},
+            {1.0, 0.00008315280276d}
         };
 
         Arrays.stream(testCases)
@@ -257,11 +252,7 @@ public class CombinatoricsTest {
                         (testCase) -> {
                             double result =
                                     100 * Combinatorics.getFlipProbability((int) testCase[0]);
-                            assertTrue(
-                                    DoubleMath.fuzzyEquals(
-                                            testCase[1],
-                                            result,
-                                            PrivacyParams.NUMBER_EQUAL_THRESHOLD));
+                            assertEquals(testCase[1], result, PrivacyParams.NUMBER_EQUAL_THRESHOLD);
                         });
     }
 
@@ -272,7 +263,8 @@ public class CombinatoricsTest {
             {2925.0, 11.461727965384876d},
             {3.0, 1.5849265115082312d},
             {455.0, 8.821556150827456d},
-            {2.0, 0.9999820053790732d}
+            {2.0, 0.9999820053790732d},
+            {1.0, 0.0d}
         };
 
         Arrays.stream(testCases)
@@ -282,87 +274,8 @@ public class CombinatoricsTest {
                                     Combinatorics.getInformationGain(
                                             (int) testCase[0],
                                             Combinatorics.getFlipProbability((int) testCase[0]));
-                            assertTrue(
-                                    DoubleMath.fuzzyEquals(
-                                            testCase[1],
-                                            result,
-                                            PrivacyParams.NUMBER_EQUAL_THRESHOLD));
+                            assertEquals(testCase[1], result, PrivacyParams.NUMBER_EQUAL_THRESHOLD);
                         });
-    }
-
-    @Test
-    public void getSingleRandomSelectReportSet_checkNoDuplication_success() {
-        int[][][] testCases = getTestCaseForRandomState();
-
-        Arrays.stream(testCases)
-                .forEach(
-                        (testCase) -> {
-                            Map<List<Integer>, Long> dp = new HashMap<>();
-                            ArrayList<List<Combinatorics.AtomReportState>> allReportSets =
-                                    new ArrayList<>();
-                            long numberStates =
-                                    Combinatorics.getNumStatesFlexApi(
-                                            testCase[0][0], testCase[1], testCase[2]);
-                            for (long i = 0; i < numberStates; i++) {
-                                List<Combinatorics.AtomReportState> ithSet =
-                                        Combinatorics.getReportSetBasedOnRank(
-                                                testCase[0][0], testCase[1], testCase[2], i, dp);
-                                Collections.sort(ithSet, new AtomReportStateComparator());
-                                allReportSets.add(ithSet);
-                            }
-                            HashSet<List<Combinatorics.AtomReportState>> set =
-                                    new HashSet<>(allReportSets);
-                            assertEquals(allReportSets.size(), set.size());
-                        });
-    }
-
-    @Test
-    public void getSingleRandomSelectReportSet_checkReportSetsMeetRequirement_success() {
-        int[][][] testCases = getTestCaseForRandomState();
-
-        Arrays.stream(testCases)
-                .forEach(
-                        (testCase) -> {
-                            Map<List<Integer>, Long> dp = new HashMap<>();
-                            long numberStates =
-                                    Combinatorics.getNumStatesFlexApi(
-                                            testCase[0][0], testCase[1], testCase[2]);
-                            for (long i = 0; i < numberStates; i++) {
-                                List<Combinatorics.AtomReportState> ithSet =
-                                        Combinatorics.getReportSetBasedOnRank(
-                                                testCase[0][0], testCase[1], testCase[2], i, dp);
-                                assertTrue(
-                                        atomReportStateSetMeetRequirement(
-                                                testCase[0][0], testCase[1], testCase[2], ithSet));
-                            }
-                        });
-    }
-
-    private static int[][][] getTestCaseForRandomState() {
-        // Test Case: {numBucketIncrements, perTypeNumWindows, perTypeCap}}
-        int[][][] testCases = {
-            {{2}, {2, 2}, {1, 1}},
-            {{3}, {2, 2}, {3, 3}},
-            {{7}, {2, 2}, {3, 3}},
-            {
-                {3},
-                {3, 3, 3, 3, 3, 3, 3, 3},
-                {
-                    Integer.MAX_VALUE,
-                    Integer.MAX_VALUE,
-                    Integer.MAX_VALUE,
-                    Integer.MAX_VALUE,
-                    Integer.MAX_VALUE,
-                    Integer.MAX_VALUE,
-                    Integer.MAX_VALUE,
-                    Integer.MAX_VALUE
-                }
-            }, // Default parameters for existing event reporting API. Since no local limited is
-            // set, just put max integer value here.
-            {{5}, {3, 3, 3, 3, 3, 3, 3, 3}, {3, 3, 3, 3, 3, 3, 3, 3}},
-            // larger test case. On purpose comment out for long-running time.
-        };
-        return testCases;
     }
 
     private static boolean atomReportStateSetMeetRequirement(

@@ -31,6 +31,7 @@ public class AsyncRegistration {
 
     public enum RegistrationType {
         APP_SOURCE,
+        APP_SOURCES,
         APP_TRIGGER,
         WEB_SOURCE,
         WEB_TRIGGER
@@ -220,7 +221,7 @@ public class AsyncRegistration {
 
     /** Indicates whether the registration runner should process redirects for this registration. */
     public boolean shouldProcessRedirects() {
-        return isAppRequest();
+        return mType == RegistrationType.APP_SOURCE || mType == RegistrationType.APP_TRIGGER;
     }
 
     public boolean isWebRequest() {
@@ -228,15 +229,19 @@ public class AsyncRegistration {
     }
 
     public boolean isAppRequest() {
-        return !isWebRequest();
+        return mType == RegistrationType.APP_SOURCE
+                || mType == RegistrationType.APP_TRIGGER
+                || mType == RegistrationType.APP_SOURCES;
     }
 
     public boolean isSourceRequest() {
-        return mType == RegistrationType.APP_SOURCE || mType == RegistrationType.WEB_SOURCE;
+        return mType == RegistrationType.APP_SOURCE
+                || mType == RegistrationType.WEB_SOURCE
+                || mType == RegistrationType.APP_SOURCES;
     }
 
     public boolean isTriggerRequest() {
-        return !isSourceRequest();
+        return mType == RegistrationType.APP_TRIGGER || mType == RegistrationType.WEB_TRIGGER;
     }
 
     /** Builder for {@link AsyncRegistration}. */

@@ -69,6 +69,8 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.data.signals.EncodedPayloadDao;
+import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdSelectionE2ETest.AdSelectionTestCallback;
@@ -190,6 +192,7 @@ public class FrequencyCapFilteringE2ETest {
 
     private AdSelectionEntryDao mAdSelectionEntryDao;
     private CustomAudienceDao mCustomAudienceDao;
+    private EncodedPayloadDao mEncodedPayloadDao;
     private AppInstallDao mAppInstallDao;
     private FrequencyCapDao mFrequencyCapDaoSpy;
     private EncryptionKeyDao mEncryptionKeyDao;
@@ -205,6 +208,7 @@ public class FrequencyCapFilteringE2ETest {
     private UpdateAdCounterHistogramInput mInputParams;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptor;
     @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
+    @Mock private AdIdFetcher mAdIdFetcher;
 
     @Before
     public void setup() {
@@ -224,6 +228,10 @@ public class FrequencyCapFilteringE2ETest {
                         .addTypeConverter(new DBCustomAudience.Converters(true, true))
                         .build()
                         .customAudienceDao();
+        mEncodedPayloadDao =
+                Room.inMemoryDatabaseBuilder(mContextSpy, ProtectedSignalsDatabase.class)
+                        .build()
+                        .getEncodedPayloadDao();
         mAppInstallDao =
                 Room.inMemoryDatabaseBuilder(mContextSpy, SharedStorageDatabase.class)
                         .build()
@@ -262,6 +270,7 @@ public class FrequencyCapFilteringE2ETest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mEncodedPayloadDao,
                         mFrequencyCapDaoSpy,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
@@ -279,7 +288,8 @@ public class FrequencyCapFilteringE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         mInputParams =
                 new UpdateAdCounterHistogramInput.Builder(
@@ -426,6 +436,7 @@ public class FrequencyCapFilteringE2ETest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mEncodedPayloadDao,
                         mFrequencyCapDaoSpy,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
@@ -443,7 +454,8 @@ public class FrequencyCapFilteringE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         UpdateAdCounterHistogramTestCallback callback = callUpdateAdCounterHistogram(mInputParams);
 
@@ -486,6 +498,7 @@ public class FrequencyCapFilteringE2ETest {
                             mAdSelectionEntryDao,
                             mAppInstallDao,
                             mCustomAudienceDao,
+                            mEncodedPayloadDao,
                             mFrequencyCapDaoSpy,
                             mEncryptionContextDao,
                             mEncryptionKeyDao,
@@ -510,7 +523,8 @@ public class FrequencyCapFilteringE2ETest {
                             mAdFilteringFeatureFactory,
                             mConsentManagerMock,
                             mObliviousHttpEncryptor,
-                            mAdSelectionDebugReportDao);
+                            mAdSelectionDebugReportDao,
+                            mAdIdFetcher);
 
             UpdateAdCounterHistogramTestCallback callback =
                     callUpdateAdCounterHistogram(mInputParams);
@@ -736,6 +750,7 @@ public class FrequencyCapFilteringE2ETest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mEncodedPayloadDao,
                         mFrequencyCapDaoSpy,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
@@ -753,7 +768,8 @@ public class FrequencyCapFilteringE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         // Persist ad selections
         mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);
@@ -848,6 +864,7 @@ public class FrequencyCapFilteringE2ETest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mEncodedPayloadDao,
                         mFrequencyCapDaoSpy,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
@@ -865,7 +882,8 @@ public class FrequencyCapFilteringE2ETest {
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
-                        mAdSelectionDebugReportDao);
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         // Persist ad selections
         mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);

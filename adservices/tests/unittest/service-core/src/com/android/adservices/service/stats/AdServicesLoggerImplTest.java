@@ -88,6 +88,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
 import com.android.adservices.service.enrollment.EnrollmentStatus;
+import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.WipeoutStatus;
 import com.android.adservices.service.measurement.attribution.AttributionStatus;
 
@@ -529,10 +530,10 @@ public class AdServicesLoggerImplTest {
         MeasurementAttributionStats stats =
                 new MeasurementAttributionStats.Builder()
                         .setCode(AD_SERVICES_MEASUREMENT_ATTRIBUTION)
-                        .setSourceType(AttributionStatus.SourceType.EVENT.ordinal())
-                        .setSurfaceType(AttributionStatus.AttributionSurface.APP_WEB.ordinal())
-                        .setResult(AttributionStatus.AttributionResult.SUCCESS.ordinal())
-                        .setFailureType(AttributionStatus.FailureType.UNKNOWN.ordinal())
+                        .setSourceType(AttributionStatus.SourceType.VIEW.getValue())
+                        .setSurfaceType(AttributionStatus.AttributionSurface.APP_WEB.getValue())
+                        .setResult(AttributionStatus.AttributionResult.SUCCESS.getValue())
+                        .setFailureType(AttributionStatus.FailureType.UNKNOWN.getValue())
                         .setSourceDerived(false)
                         .setInstallAttribution(true)
                         .setAttributionDelay(100L)
@@ -545,16 +546,16 @@ public class AdServicesLoggerImplTest {
         assertEquals(argumentCaptor.getValue().getCode(), AD_SERVICES_MEASUREMENT_ATTRIBUTION);
         assertEquals(
                 argumentCaptor.getValue().getSourceType(),
-                AttributionStatus.SourceType.EVENT.ordinal());
+                AttributionStatus.SourceType.VIEW.getValue());
         assertEquals(
                 argumentCaptor.getValue().getSurfaceType(),
-                AttributionStatus.AttributionSurface.APP_WEB.ordinal());
+                AttributionStatus.AttributionSurface.APP_WEB.getValue());
         assertEquals(
                 argumentCaptor.getValue().getResult(),
-                AttributionStatus.AttributionResult.SUCCESS.ordinal());
+                AttributionStatus.AttributionResult.SUCCESS.getValue());
         assertEquals(
                 argumentCaptor.getValue().getFailureType(),
-                AttributionStatus.FailureType.UNKNOWN.ordinal());
+                AttributionStatus.FailureType.UNKNOWN.getValue());
         assertEquals(argumentCaptor.getValue().isSourceDerived(), false);
         assertEquals(argumentCaptor.getValue().isInstallAttribution(), true);
         assertEquals(argumentCaptor.getValue().getAttributionDelay(), 100L);
@@ -643,5 +644,34 @@ public class AdServicesLoggerImplTest {
                         eq(10),
                         eq("SomeSdkName"),
                         eq(errorCauseEnumValue));
+    }
+
+    @Test
+    public void testLogMsmtClickVerificationStats() {
+        int sourceType = Source.SourceType.NAVIGATION.getIntValue();
+        boolean inputEventPresent = true;
+        boolean systemClickVerificationSuccessful = true;
+        boolean systemClickVerificationEnabled = true;
+        long inputEventDelayMs = 200L;
+        long validDelayWindowMs = 1000L;
+        String sourceRegistrant = "test_source_registrant";
+
+        MeasurementClickVerificationStats stats =
+                MeasurementClickVerificationStats.builder()
+                        .setSourceType(sourceType)
+                        .setInputEventPresent(inputEventPresent)
+                        .setSystemClickVerificationSuccessful(systemClickVerificationSuccessful)
+                        .setSystemClickVerificationEnabled(systemClickVerificationEnabled)
+                        .setInputEventDelayMillis(inputEventDelayMs)
+                        .setValidDelayWindowMillis(validDelayWindowMs)
+                        .setSourceRegistrant(sourceRegistrant)
+                        .build();
+
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logMeasurementClickVerificationStats(stats);
+        ArgumentCaptor<MeasurementClickVerificationStats> argumentCaptor =
+                ArgumentCaptor.forClass(MeasurementClickVerificationStats.class);
+        verify(mStatsdLoggerMock).logMeasurementClickVerificationStats(argumentCaptor.capture());
+        assertEquals(stats, argumentCaptor.getValue());
     }
 }

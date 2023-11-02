@@ -17,8 +17,6 @@
 package android.adservices.test.scenario.adservices.topics;
 
 import android.platform.test.microbenchmark.Microbenchmark;
-import android.platform.test.microbenchmark.Microbenchmark.NoMetricAfter;
-import android.platform.test.microbenchmark.Microbenchmark.NoMetricBefore;
 import android.platform.test.rule.DropCachesRule;
 
 import org.junit.Rule;
@@ -28,14 +26,4 @@ import org.junit.runner.RunWith;
 @RunWith(Microbenchmark.class)
 public class GetTopicsDisabledApiCallMicrobenchmark extends GetTopicsDisabledApiCall {
     @Rule public RuleChain rules = RuleChain.outerRule(new DropCachesRule());
-
-    @NoMetricBefore
-    public void setup() {
-        super.setup();
-    }
-
-    @NoMetricAfter
-    public void teardown() {
-        super.teardown();
-    }
 }

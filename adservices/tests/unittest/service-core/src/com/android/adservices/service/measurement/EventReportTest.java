@@ -15,13 +15,13 @@
  */
 package com.android.adservices.service.measurement;
 
+import static com.android.adservices.service.Flags.MEASUREMENT_EVENT_NOISE_PROBABILITY;
+import static com.android.adservices.service.Flags.MEASUREMENT_INSTALL_ATTR_EVENT_NOISE_PROBABILITY;
+import static com.android.adservices.service.Flags.MEASUREMENT_INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY;
 import static com.android.adservices.service.Flags.MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS;
-import static com.android.adservices.service.measurement.PrivacyParams.EVENT_NOISE_PROBABILITY;
-import static com.android.adservices.service.measurement.PrivacyParams.INSTALL_ATTR_EVENT_NOISE_PROBABILITY;
+import static com.android.adservices.service.Flags.MEASUREMENT_NAVIGATION_NOISE_PROBABILITY;
 import static com.android.adservices.service.measurement.PrivacyParams.INSTALL_ATTR_NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS;
-import static com.android.adservices.service.measurement.PrivacyParams.INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY;
 import static com.android.adservices.service.measurement.PrivacyParams.NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS;
-import static com.android.adservices.service.measurement.PrivacyParams.NAVIGATION_NOISE_PROBABILITY;
 import static com.android.adservices.service.measurement.SourceFixture.ValidSourceParams;
 import static com.android.adservices.service.measurement.SourceFixture.getMinimalValidSourceBuilder;
 import static com.android.adservices.service.measurement.TriggerFixture.getValidTriggerBuilder;
@@ -39,6 +39,7 @@ import android.util.Pair;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
@@ -234,7 +235,7 @@ public final class EventReportTest {
         Trigger trigger = createTriggerForTest(
                 baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION, EventSurfaceType.APP);
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -261,7 +262,7 @@ public final class EventReportTest {
         assertEquals(source.getEventReportWindow() + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 report.getReportTime());
         assertEquals(source.getSourceType(), report.getSourceType());
-        assertEquals(EVENT_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
+        assertEquals(MEASUREMENT_EVENT_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
         assertEquals(SOURCE_ID, report.getSourceId());
         assertEquals(TRIGGER_ID, report.getTriggerId());
         assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
@@ -290,7 +291,7 @@ public final class EventReportTest {
                         APP_DESTINATION,
                         EventSurfaceType.APP);
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -333,7 +334,7 @@ public final class EventReportTest {
         Trigger trigger = createTriggerForTest(
                 baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION, EventSurfaceType.APP);
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventTrigger eventTrigger = spy(eventTriggers.get(0));
         when(eventTrigger.getTriggerData()).thenReturn(new UnsignedLong(-50003L));
         EventReport report =
@@ -365,7 +366,7 @@ public final class EventReportTest {
                 report.getReportTime());
         assertEquals(Source.SourceType.NAVIGATION, report.getSourceType());
         assertEquals(
-                NAVIGATION_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
+                MEASUREMENT_NAVIGATION_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
         assertEquals(SOURCE_ID, report.getSourceId());
         assertEquals(TRIGGER_ID, report.getTriggerId());
         assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
@@ -380,7 +381,7 @@ public final class EventReportTest {
         Trigger trigger = createTriggerForTest(
                 baseTime + TimeUnit.SECONDS.toMillis(10), WEB_DESTINATION, EventSurfaceType.WEB);
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -406,7 +407,7 @@ public final class EventReportTest {
         assertEquals(source.getEventReportWindow() + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 report.getReportTime());
         assertEquals(Source.SourceType.EVENT, report.getSourceType());
-        assertEquals(EVENT_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
+        assertEquals(MEASUREMENT_EVENT_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
         assertEquals(SOURCE_ID, report.getSourceId());
         assertEquals(TRIGGER_ID, report.getTriggerId());
         assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
@@ -420,7 +421,7 @@ public final class EventReportTest {
         Trigger trigger = createTriggerForTest(
                 baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION, EventSurfaceType.APP);
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -445,7 +446,7 @@ public final class EventReportTest {
                 report.getReportTime());
         assertEquals(Source.SourceType.EVENT, report.getSourceType());
         assertEquals(
-                INSTALL_ATTR_EVENT_NOISE_PROBABILITY,
+                MEASUREMENT_INSTALL_ATTR_EVENT_NOISE_PROBABILITY,
                 report.getRandomizedTriggerRate(),
                 DOUBLE_MAX_DELTA);
         assertEquals(SOURCE_ID, report.getSourceId());
@@ -461,7 +462,7 @@ public final class EventReportTest {
         Trigger trigger = createTriggerForTest(
                 baseTime + TimeUnit.SECONDS.toMillis(10), WEB_DESTINATION, EventSurfaceType.WEB);
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -485,7 +486,7 @@ public final class EventReportTest {
         assertEquals(source.getEventReportWindow() + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 report.getReportTime());
         assertEquals(Source.SourceType.EVENT, report.getSourceType());
-        assertEquals(EVENT_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
+        assertEquals(MEASUREMENT_EVENT_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
         assertEquals(SOURCE_ID, report.getSourceId());
         assertEquals(TRIGGER_ID, report.getTriggerId());
         assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
@@ -500,7 +501,7 @@ public final class EventReportTest {
         Trigger trigger = createTriggerForTest(
                 baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION, EventSurfaceType.APP);
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -527,7 +528,7 @@ public final class EventReportTest {
                 report.getReportTime());
         assertEquals(Source.SourceType.NAVIGATION, report.getSourceType());
         assertEquals(
-                NAVIGATION_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
+                MEASUREMENT_NAVIGATION_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
         assertEquals(SOURCE_ID, report.getSourceId());
         assertEquals(TRIGGER_ID, report.getTriggerId());
         assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
@@ -542,7 +543,7 @@ public final class EventReportTest {
         Trigger trigger = createTriggerForTest(
                 baseTime + TimeUnit.SECONDS.toMillis(10), WEB_DESTINATION, EventSurfaceType.WEB);
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -569,7 +570,7 @@ public final class EventReportTest {
                 report.getReportTime());
         assertEquals(source.getSourceType(), report.getSourceType());
         assertEquals(
-                NAVIGATION_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
+                MEASUREMENT_NAVIGATION_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
         assertEquals(SOURCE_ID, report.getSourceId());
         assertEquals(TRIGGER_ID, report.getTriggerId());
         assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
@@ -584,7 +585,7 @@ public final class EventReportTest {
         Trigger trigger = createTriggerForTest(
                 baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION, EventSurfaceType.APP);
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -614,7 +615,7 @@ public final class EventReportTest {
                 report.getReportTime());
         assertEquals(Source.SourceType.NAVIGATION, report.getSourceType());
         assertEquals(
-                INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY,
+                MEASUREMENT_INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY,
                 report.getRandomizedTriggerRate(),
                 DOUBLE_MAX_DELTA);
         assertEquals(SOURCE_ID, report.getSourceId());
@@ -631,7 +632,7 @@ public final class EventReportTest {
         Trigger trigger = createTriggerForTest(
                 baseTime + TimeUnit.SECONDS.toMillis(10), WEB_DESTINATION, EventSurfaceType.WEB);
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -661,7 +662,7 @@ public final class EventReportTest {
                 report.getReportTime());
         assertEquals(source.getSourceType(), report.getSourceType());
         assertEquals(
-                NAVIGATION_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
+                MEASUREMENT_NAVIGATION_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
         assertEquals(SOURCE_ID, report.getSourceId());
         assertEquals(TRIGGER_ID, report.getTriggerId());
         assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
@@ -689,7 +690,7 @@ public final class EventReportTest {
                         WEB_DESTINATION,
                         EventSurfaceType.WEB);
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -721,7 +722,7 @@ public final class EventReportTest {
         assertEquals(source.getEventReportWindow() + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 report.getReportTime());
         assertEquals(Source.SourceType.EVENT, report.getSourceType());
-        assertEquals(EVENT_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
+        assertEquals(MEASUREMENT_EVENT_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
         assertEquals(SOURCE_ID, report.getSourceId());
         assertEquals(TRIGGER_ID, report.getTriggerId());
         assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
@@ -794,7 +795,7 @@ public final class EventReportTest {
                         .setRegistrationOrigin(triggerRegistrationUrl)
                         .build();
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -851,7 +852,7 @@ public final class EventReportTest {
                         + "]\n";
         Trigger trigger = getValidTriggerBuilder().setEventTriggers(eventTriggers1).build();
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(false);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report1 =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -941,7 +942,8 @@ public final class EventReportTest {
                         + "]\n";
         Trigger trigger = getValidTriggerBuilder().setEventTriggers(eventTriggers1).build();
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(true);
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report1 =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -1021,7 +1023,8 @@ public final class EventReportTest {
                         .setTriggerTime(baseTime + 8000)
                         .build();
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(true);
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report1 =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -1082,7 +1085,8 @@ public final class EventReportTest {
                         .setTriggerTime(baseTime + 8000)
                         .build();
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(true);
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report1 =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(
@@ -1142,7 +1146,8 @@ public final class EventReportTest {
                         .setTriggerTime(baseTime + 18000000)
                         .build();
 
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(true);
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
         EventReport report1 =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(

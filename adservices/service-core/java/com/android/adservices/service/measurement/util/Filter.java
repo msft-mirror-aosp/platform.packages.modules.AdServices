@@ -18,7 +18,9 @@ package com.android.adservices.service.measurement.util;
 
 import android.annotation.NonNull;
 
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.FilterMap;
+import com.android.adservices.service.measurement.FilterValue;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -31,7 +33,11 @@ import java.util.Set;
 
 /** Filtering utilities for measurement. */
 public final class Filter {
-    private Filter() { }
+    private final Flags mFlags;
+
+    public Filter(@NonNull Flags flags) {
+        mFlags = flags;
+    }
 
     /**
      * Checks whether source filter and trigger filter are matched. When a key is only present in
@@ -43,9 +49,9 @@ public final class Filter {
      * @param isFilter true for filters, false for not_filters.
      * @return return true when all keys shared by source filter and trigger filter are matched.
      */
-    public static boolean isFilterMatch(
+    public boolean isFilterMatch(
             FilterMap sourceFilter, List<FilterMap> triggerFilters, boolean isFilter) {
-        if (sourceFilter.getAttributionFilterMap().isEmpty() || triggerFilters.isEmpty()) {
+        if (sourceFilter.isEmpty(mFlags) || triggerFilters.isEmpty()) {
             return true;
         }
         for (FilterMap filterMap : triggerFilters) {
@@ -56,7 +62,14 @@ public final class Filter {
         return false;
     }
 
-    private static boolean isFilterMatch(
+    private boolean isFilterMatch(
+            FilterMap sourceFilter, FilterMap triggerFilter, boolean isFilter) {
+        return mFlags.getMeasurementEnableLookbackWindowFilter()
+                ? isFilterMatchWithLookbackWindow(sourceFilter, triggerFilter, isFilter)
+                : isFilterMatchV1(sourceFilter, triggerFilter, isFilter);
+    }
+
+    private boolean isFilterMatchV1(
             FilterMap sourceFilter, FilterMap triggerFilter, boolean isFilter) {
         for (String key : triggerFilter.getAttributionFilterMap().keySet()) {
             if (!sourceFilter.getAttributionFilterMap().containsKey(key)) {
@@ -72,8 +85,51 @@ public final class Filter {
         return true;
     }
 
-    private static boolean matchFilterValues(List<String> sourceValues, List<String> triggerValues,
-            boolean isFilter) {
+    private boolean isFilterMatchWithLookbackWindow(
+            FilterMap sourceFilter, FilterMap triggerFilter, boolean isFilter) {
+        for (String key : triggerFilter.getAttributionFilterMapWithLongValue().keySet()) {
+            if (!sourceFilter.getAttributionFilterMapWithLongValue().containsKey(key)) {
+                continue;
+            }
+            FilterValue filterValue = triggerFilter.getAttributionFilterMapWithLongValue().get(key);
+            switch (filterValue.kind()) {
+                case STRING_LIST_VALUE:
+                    // Finds the intersection of two value lists.
+                    List<String> sourceValues =
+                            sourceFilter
+                                    .getAttributionFilterMapWithLongValue()
+                                    .get(key)
+                                    .stringListValue();
+                    List<String> triggerValues =
+                            triggerFilter
+                                    .getAttributionFilterMapWithLongValue()
+                                    .get(key)
+                                    .stringListValue();
+                    if (!matchFilterValues(sourceValues, triggerValues, isFilter)) {
+                        return false;
+                    }
+                    break;
+                case LONG_VALUE:
+                    if (!sourceFilter.getAttributionFilterMapWithLongValue().containsKey(key)
+                            || !FilterMap.LOOKBACK_WINDOW.equals(key)) {
+                        continue;
+                    }
+                    long lookbackWindow = triggerFilter.getLongValue(key);
+                    long durationFromSource = sourceFilter.getLongValue(key);
+                    boolean lessOrEqual = durationFromSource <= lookbackWindow;
+                    if (lessOrEqual != isFilter) {
+                        return false;
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+        return true;
+    }
+
+    private boolean matchFilterValues(
+            List<String> sourceValues, List<String> triggerValues, boolean isFilter) {
         if (triggerValues.isEmpty()) {
             return isFilter ? sourceValues.isEmpty() : !sourceValues.isEmpty();
         }
@@ -90,12 +146,13 @@ public final class Filter {
      * @throws JSONException if the deserialization fails
      */
     @NonNull
-    public static List<FilterMap> deserializeFilterSet(@NonNull JSONArray filters)
-            throws JSONException {
+    public List<FilterMap> deserializeFilterSet(@NonNull JSONArray filters) throws JSONException {
         List<FilterMap> filterSet = new ArrayList<>();
         for (int i = 0; i < filters.length(); i++) {
             FilterMap filterMap =
-                    new FilterMap.Builder().buildFilterData(filters.getJSONObject(i)).build();
+                    new FilterMap.Builder()
+                            .buildFilterData(filters.getJSONObject(i), mFlags)
+                            .build();
             filterSet.add(filterMap);
         }
         return filterSet;
@@ -109,10 +166,10 @@ public final class Filter {
      * @return serialized filter maps
      */
     @NonNull
-    public static JSONArray serializeFilterSet(@NonNull List<FilterMap> filterMaps) {
+    public JSONArray serializeFilterSet(@NonNull List<FilterMap> filterMaps) {
         JSONArray serializedFilterMaps = new JSONArray();
-        for (FilterMap sourceNotFilter : filterMaps) {
-            serializedFilterMaps.put(sourceNotFilter.serializeAsJson());
+        for (FilterMap filter : filterMaps) {
+            serializedFilterMaps.put(filter.serializeAsJson(mFlags));
         }
         return serializedFilterMaps;
     }

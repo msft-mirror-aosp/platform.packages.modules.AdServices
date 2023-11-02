@@ -42,6 +42,8 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"‏يتيح هذا الإذن للتطبيق الوصول إلى واجهة برمجة تطبيقات AdService’s enablement state."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"‏الوصول إلى واجهات برمجة تطبيقات AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"‏يسمح هذا الإذن للتطبيق بالوصول إلى واجهات برمجة تطبيقات AdServicesManager."</string>
+    <string name="permlab_updateAdservicesAdId" msgid="1817012692601139702">"‏الوصول إلى واجهة برمجة التطبيقات AdService’s Update AdId API"</string>
+    <string name="permdesc_updateAdservicesAdId" msgid="1594321436876709737">"‏يتيح هذا الإذن للتطبيق الوصول إلى واجهة برمجة التطبيقات AdService’s Update AdId API."</string>
     <string name="app_label" msgid="5844694701336604490">"الخصوصية في عرض الإعلانات"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"‏الانضمام إلى الإصدار التجريبي من الخصوصية في عرض الإعلانات على Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"‏يعمل نظام Android على استكشاف طرق أكثر خصوصية لتتمكن التطبيقات من عرض إعلاناتك."</string>

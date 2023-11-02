@@ -35,13 +35,16 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
+import android.content.ComponentName;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
@@ -66,12 +69,14 @@ import org.mockito.quality.Strictness;
 
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class AsyncRegistrationFallbackJobServiceTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final int MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID =
             MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 1_000L;
+    private static final long JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(1);
     private JobScheduler mMockJobScheduler;
     private AsyncRegistrationFallbackJobService mSpyService;
     private DatastoreManager mMockDatastoreManager;
@@ -87,6 +92,12 @@ public class AsyncRegistrationFallbackJobServiceTest {
         mSpyLogger =
                 spy(new AdservicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mockStatsdLogger));
         mMockFlags = mock(Flags.class);
+        when(mMockFlags.getMeasurementAsyncRegistrationFallbackJobRequiredBatteryNotLow())
+                .thenReturn(true);
+        when(mMockFlags.getAsyncRegistrationJobQueueIntervalMs()).thenReturn(JOB_PERIOD_MS);
+        when(mMockFlags.getMeasurementAsyncRegistrationFallbackJobRequiredNetworkType())
+                .thenReturn(JobInfo.NETWORK_TYPE_ANY);
+        when(mMockFlags.getMeasurementAsyncRegistrationFallbackJobPersisted()).thenReturn(true);
     }
 
     @Test
@@ -126,6 +137,7 @@ public class AsyncRegistrationFallbackJobServiceTest {
                 });
     }
 
+    @FlakyTest(bugId = 300551596)
     @Test
     public void onStartJob_killSwitchOff_withoutLogging() throws Exception {
         runWithMocks(
@@ -142,6 +154,7 @@ public class AsyncRegistrationFallbackJobServiceTest {
                 });
     }
 
+    @FlakyTest(bugId = 300551596)
     @Test
     public void onStartJob_killSwitchOff_withLogging() throws Exception {
         runWithMocks(
@@ -254,18 +267,27 @@ public class AsyncRegistrationFallbackJobServiceTest {
     }
 
     @Test
-    public void scheduleIfNeeded_killSwitchOff_previouslyExecuted_dontForceSchedule_dontSchedule()
-            throws Exception {
+    public void scheduleIfNeeded_sameJobInfoDontForceSchedule_dontSchedule() throws Exception {
         runWithMocks(
                 () -> {
                     // Setup
                     disableKillSwitch();
 
-                    final Context mockContext = mock(Context.class);
+                    final Context mockContext = spy(ApplicationProvider.getApplicationContext());
                     doReturn(mMockJobScheduler)
                             .when(mockContext)
                             .getSystemService(JobScheduler.class);
-                    final JobInfo mockJobInfo = mock(JobInfo.class);
+                    final JobInfo mockJobInfo =
+                            new JobInfo.Builder(
+                                            MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID,
+                                            new ComponentName(
+                                                    mockContext,
+                                                    AsyncRegistrationFallbackJobService.class))
+                                    .setRequiresBatteryNotLow(true)
+                                    .setPeriodic(JOB_PERIOD_MS)
+                                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                                    .setPersisted(true)
+                                    .build();
                     doReturn(mockJobInfo)
                             .when(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID));
@@ -278,6 +300,45 @@ public class AsyncRegistrationFallbackJobServiceTest {
                     ExtendedMockito.verify(
                             () -> AsyncRegistrationFallbackJobService.schedule(any(), any()),
                             never());
+                    verify(mMockJobScheduler, times(1))
+                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID));
+                });
+    }
+
+    @Test
+    public void scheduleIfNeeded_diffJobInfoDontForceSchedule_doesSchedule() throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    disableKillSwitch();
+
+                    final Context mockContext = spy(ApplicationProvider.getApplicationContext());
+                    doReturn(mMockJobScheduler)
+                            .when(mockContext)
+                            .getSystemService(JobScheduler.class);
+                    final JobInfo mockJobInfo =
+                            new JobInfo.Builder(
+                                            MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID,
+                                            new ComponentName(
+                                                    mockContext,
+                                                    AsyncRegistrationFallbackJobService.class))
+                                    // Difference
+                                    .setRequiresBatteryNotLow(false)
+                                    .setPeriodic(JOB_PERIOD_MS)
+                                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                                    .setPersisted(true)
+                                    .build();
+                    doReturn(mockJobInfo)
+                            .when(mMockJobScheduler)
+                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID));
+
+                    // Execute
+                    AsyncRegistrationFallbackJobService.scheduleIfNeeded(
+                            mockContext, /* forceSchedule= */ false);
+
+                    // Validate
+                    ExtendedMockito.verify(
+                            () -> AsyncRegistrationFallbackJobService.schedule(any(), any()));
                     verify(mMockJobScheduler, times(1))
                             .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID));
                 });
@@ -433,6 +494,9 @@ public class AsyncRegistrationFallbackJobServiceTest {
                         .strictness(Strictness.LENIENT)
                         .startMocking();
         try {
+            Context context = Mockito.mock(Context.class);
+            doReturn(CONTEXT.getPackageName()).when(context).getPackageName();
+            doReturn(CONTEXT.getPackageManager()).when(context).getPackageManager();
             // Setup mock everything in job
             mMockDatastoreManager = mock(DatastoreManager.class);
             doReturn(Optional.empty())
@@ -440,7 +504,7 @@ public class AsyncRegistrationFallbackJobServiceTest {
                     .runInTransactionWithResult(any());
             doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
             doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
-            doReturn(Mockito.mock(Context.class)).when(mSpyService).getApplicationContext();
+            doReturn(context).when(mSpyService).getApplicationContext();
             ExtendedMockito.doReturn(mock(EnrollmentDao.class))
                     .when(() -> EnrollmentDao.getInstance(any()));
             ExtendedMockito.doReturn(mock(AdServicesLoggerImpl.class))

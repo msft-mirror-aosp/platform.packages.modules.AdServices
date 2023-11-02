@@ -216,6 +216,7 @@ public final class MeasurementTables {
         String ENROLLMENT_ID = "enrollment_id";
         String SOURCE_ID = "source_id";
         String TRIGGER_ID = "trigger_id";
+        String REGISTRATION_ORIGIN = "registration_origin";
     }
 
     /** Contract for Unencrypted aggregate payload. */
@@ -259,6 +260,8 @@ public final class MeasurementTables {
         String ENROLLMENT_ID = "enrollment_id";
         String REGISTRATION_ORIGIN = "registration_origin";
         String REFERENCE_ID = "reference_id";
+        String INSERTION_TIME = "insertion_time";
+        String REGISTRANT = "registrant";
     }
 
     /** Contract for xna ignored sources. */
@@ -782,7 +785,47 @@ public final class MeasurementTables {
                     + ") ON DELETE CASCADE"
                     + ")";
 
-    public static final String CREATE_TABLE_ATTRIBUTION_LATEST = CREATE_TABLE_ATTRIBUTION_V6;
+    public static final String CREATE_TABLE_ATTRIBUTION_LATEST =
+            "CREATE TABLE "
+                    + AttributionContract.TABLE
+                    + " ("
+                    + AttributionContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + AttributionContract.SOURCE_SITE
+                    + " TEXT, "
+                    + AttributionContract.SOURCE_ORIGIN
+                    + " TEXT, "
+                    + AttributionContract.DESTINATION_SITE
+                    + " TEXT, "
+                    + AttributionContract.DESTINATION_ORIGIN
+                    + " TEXT, "
+                    + AttributionContract.ENROLLMENT_ID
+                    + " TEXT, "
+                    + AttributionContract.TRIGGER_TIME
+                    + " INTEGER, "
+                    + AttributionContract.REGISTRANT
+                    + " TEXT, "
+                    + AttributionContract.SOURCE_ID
+                    + " TEXT, "
+                    + AttributionContract.TRIGGER_ID
+                    + " TEXT, "
+                    + AttributionContract.REGISTRATION_ORIGIN
+                    + " TEXT, "
+                    + "FOREIGN KEY ("
+                    + AttributionContract.SOURCE_ID
+                    + ") REFERENCES "
+                    + SourceContract.TABLE
+                    + "("
+                    + SourceContract.ID
+                    + ") ON DELETE CASCADE, "
+                    + "FOREIGN KEY ("
+                    + AttributionContract.TRIGGER_ID
+                    + ") REFERENCES "
+                    + TriggerContract.TABLE
+                    + "("
+                    + TriggerContract.ID
+                    + ") ON DELETE CASCADE"
+                    + ")";
 
     public static final String CREATE_TABLE_AGGREGATE_REPORT_V6 =
             "CREATE TABLE "
@@ -945,9 +988,12 @@ public final class MeasurementTables {
                     + DebugReportContract.REGISTRATION_ORIGIN
                     + " TEXT, "
                     + DebugReportContract.REFERENCE_ID
+                    + " TEXT, "
+                    + DebugReportContract.INSERTION_TIME
+                    + " INTEGER, "
+                    + DebugReportContract.REGISTRANT
                     + " TEXT "
                     + ")";
-
     public static final String CREATE_TABLE_XNA_IGNORED_SOURCES_V6 =
             "CREATE TABLE "
                     + XnaIgnoredSourcesContract.TABLE

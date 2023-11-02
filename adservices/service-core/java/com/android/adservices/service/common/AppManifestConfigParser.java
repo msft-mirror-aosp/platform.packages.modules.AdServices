@@ -20,6 +20,8 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.res.XmlResourceParser;
 
+import androidx.annotation.VisibleForTesting;
+
 import com.android.adservices.service.exception.XmlParseException;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -45,6 +47,12 @@ public class AppManifestConfigParser {
 
     private AppManifestConfigParser() {}
 
+    @VisibleForTesting
+    static AppManifestConfig getConfig(@NonNull XmlResourceParser parser)
+            throws XmlParseException, XmlPullParserException, IOException {
+        return getConfig(parser, /* enabledByDefault=*/ false);
+    }
+
     /**
      * Parses and validates the given XML resource into a {@link AppManifestConfig} object.
      *
@@ -52,8 +60,9 @@ public class AppManifestConfigParser {
      * app_manifest_config.xsd schema.
      *
      * @param parser the XmlParser representing the AdServices App Manifest configuration
+     * @param enabledByDefault whether APIs should be enabled by default when missing from the
      */
-    public static AppManifestConfig getConfig(@NonNull XmlResourceParser parser)
+    static AppManifestConfig getConfig(@NonNull XmlResourceParser parser, boolean enabledByDefault)
             throws XmlParseException, XmlPullParserException, IOException {
         AppManifestIncludesSdkLibraryConfig includesSdkLibraryConfig;
         AppManifestAttributionConfig attributionConfig = null;
@@ -61,7 +70,7 @@ public class AppManifestConfigParser {
         AppManifestTopicsConfig topicsConfig = null;
         AppManifestAdIdConfig adIdConfig = null;
         AppManifestAppSetIdConfig appSetIdConfig = null;
-        List<String> includesSdkLibraries = new ArrayList<>();
+        List<String> includesSdkLibraries = null;
 
         // The first next goes to START_DOCUMENT, so we need another next to go to START_TAG.
         parser.next();
@@ -95,6 +104,9 @@ public class AppManifestConfigParser {
                     if (sdkLibrary == null || sdkLibrary.isEmpty()) {
                         throw new XmlParseException(
                                 "Sdk name not mentioned in <includes-sdk-library>");
+                    }
+                    if (includesSdkLibraries == null) {
+                        includesSdkLibraries = new ArrayList<>();
                     }
                     if (!includesSdkLibraries.contains(sdkLibrary)) {
                         includesSdkLibraries.add(sdkLibrary);
@@ -170,14 +182,16 @@ public class AppManifestConfigParser {
             parser.next();
         }
 
-        includesSdkLibraryConfig = new AppManifestIncludesSdkLibraryConfig(includesSdkLibraries);
+        includesSdkLibraryConfig =
+                new AppManifestIncludesSdkLibraryConfig(enabledByDefault, includesSdkLibraries);
         return new AppManifestConfig(
                 includesSdkLibraryConfig,
                 attributionConfig,
                 customAudiencesConfig,
                 topicsConfig,
                 adIdConfig,
-                appSetIdConfig);
+                appSetIdConfig,
+                enabledByDefault);
     }
 
     private static String getSdkLibrary(@NonNull XmlResourceParser parser) {

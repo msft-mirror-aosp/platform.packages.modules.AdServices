@@ -99,6 +99,12 @@
                 android:description="@string/permdesc_accessAdServicesState"
                 android:protectionLevel="signature|configurator"/>
 
+    <!-- Permission to allow calling updating AdId Cache API via Common Service. -->
+    <permission android:name="android.permission.UPDATE_PRIVILEGED_AD_ID_COMPAT"
+                android:label="@string/permlab_updateAdservicesAdId"
+                android:description="@string/permdesc_updateAdservicesAdId"
+                android:protectionLevel="signature|configurator"/>
+
     <uses-permission android:name="android.permission.ACCESS_PRIVILEGED_AD_ID_COMPAT"/>
     <uses-permission android:name="android.permission.ACCESS_PRIVILEGED_APP_SET_ID_COMPAT"/>
     <uses-permission android:name="android.permission.ACCESS_PRIVILEGED_ADSERVICES_COBALT_UPLOAD_COMPAT" />
@@ -225,6 +231,17 @@
             </intent-filter>
         </service>
 
+        <service android:name=
+                     "android.adservices.signals.ProtectedSignalsService"
+                 android:exported="true"
+                 android:visibleToInstantApps="false"
+                 android:process=".adservices">
+            <intent-filter android:priority="1">
+                <action android:name=
+                            "android.adservices.signals.PROTECTED_SIGNALS_SERVICE"/>
+            </intent-filter>
+        </service>
+
         <service android:name="com.android.adservices.topics.TopicsService"
                  android:exported="true"
                  android:visibleToInstantApps="false"
@@ -284,6 +301,12 @@
 
         <!-- Mdd background Job. -->
         <service android:name="com.android.adservices.download.MddJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE"
+                 android:process=".adservices">
+        </service>
+
+        <!-- Encryption key fetch job. -->
+        <service android:name="com.android.adservices.service.encryptionkey.EncryptionKeyJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE"
                  android:process=".adservices">
         </service>
@@ -373,6 +396,13 @@
         <!-- FLEDGE Ad selection debug report sender Job -->
         <service android:name=
                      "com.android.adservices.service.adselection.DebugReportSenderJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE"
+                 android:process=".adservices">
+        </service>
+
+        <!-- FLEDGE Protected Signals periodic encoding job -->
+        <service android:name=
+                     "com.android.adservices.service.signals.PeriodicEncodingJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE"
                  android:process=".adservices">
         </service>

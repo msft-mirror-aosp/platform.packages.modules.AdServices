@@ -147,7 +147,7 @@
           "trigger_debug_key" : "8971346781"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
-        "report_time": "1643411975000"
+        "report_time": "1643411973000"
       },
       {
         "payload": {
@@ -161,7 +161,7 @@
           "trigger_debug_key" : "8971346782"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
-        "report_time": "1643411976000"
+        "report_time": "1643411973000"
       }
     ],
     "debug_event_level_results": [
@@ -208,7 +208,7 @@
           "trigger_debug_key": "8971346781"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
-        "report_time": "1643237512998"
+        "report_time": "1643239175000"
       }
     ],
     "debug_aggregatable_results": [
@@ -225,7 +225,7 @@
           "trigger_debug_key": "8971346781"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
-        "report_time": "1643237512998"
+        "report_time": "1643235575000"
       }
     ],
     "verbose_debug_reports": [

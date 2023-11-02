@@ -149,6 +149,13 @@ public class AdServicesLoggerImpl implements AdServicesLogger {
     }
 
     @Override
+    public void logMeasurementClickVerificationStats(
+            MeasurementClickVerificationStats measurementClickVerificationStats) {
+        mStatsdAdServicesLogger.logMeasurementClickVerificationStats(
+                measurementClickVerificationStats);
+    }
+
+    @Override
     public void logEnrollmentDataStats(int mType, boolean mIsSuccessful, int mBuildId) {
         mStatsdAdServicesLogger.logEnrollmentDataStats(mType, mIsSuccessful, mBuildId);
     }

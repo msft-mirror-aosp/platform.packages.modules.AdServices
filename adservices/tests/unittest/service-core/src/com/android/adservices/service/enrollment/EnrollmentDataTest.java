@@ -17,9 +17,7 @@
 package com.android.adservices.service.enrollment;
 
 import static com.android.adservices.service.enrollment.EnrollmentData.SEPARATOR;
-
 import static com.google.common.truth.Truth.assertThat;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -47,8 +45,7 @@ public final class EnrollmentDataTest {
             ImmutableList.of("reporting1.example.com", "reporting2.example.com");
     private static final ImmutableList<String> REMARKETING_RESPONSE_BASED_REGISTRATION_URLS =
             ImmutableList.of("remarketing1.example.com", "remarketing2.example.com");
-    private static final ImmutableList<String> ENCRYPTION_KEY_URLS =
-            ImmutableList.of("encryption1.example.com", "encryption2.example.com");
+    private static final String ENCRYPTION_KEY_URL = "encryption1.example.com";
 
     private EnrollmentData createEnrollmentData() {
         return new EnrollmentData.Builder()
@@ -60,7 +57,7 @@ public final class EnrollmentDataTest {
                 .setAttributionReportingUrl(ATTRIBUTION_REPORTING_REGISTRATION_URLS)
                 .setRemarketingResponseBasedRegistrationUrl(
                         REMARKETING_RESPONSE_BASED_REGISTRATION_URLS)
-                .setEncryptionKeyUrl(ENCRYPTION_KEY_URLS)
+                .setEncryptionKeyUrl(ENCRYPTION_KEY_URL)
                 .build();
     }
 
@@ -79,8 +76,7 @@ public final class EnrollmentDataTest {
                 .containsExactlyElementsIn(ATTRIBUTION_REPORTING_REGISTRATION_URLS);
         assertThat(enrollmentData.getRemarketingResponseBasedRegistrationUrl())
                 .containsExactlyElementsIn(REMARKETING_RESPONSE_BASED_REGISTRATION_URLS);
-        assertThat(enrollmentData.getEncryptionKeyUrl())
-                .containsExactlyElementsIn(ENCRYPTION_KEY_URLS);
+        assertEquals(ENCRYPTION_KEY_URL, enrollmentData.getEncryptionKeyUrl());
     }
 
     @Test
@@ -99,7 +95,7 @@ public final class EnrollmentDataTest {
                         .setRemarketingResponseBasedRegistrationUrl(
                                 String.join(
                                         SEPARATOR, REMARKETING_RESPONSE_BASED_REGISTRATION_URLS))
-                        .setEncryptionKeyUrl(String.join(SEPARATOR, ENCRYPTION_KEY_URLS))
+                        .setEncryptionKeyUrl(ENCRYPTION_KEY_URL)
                         .build();
 
         assertEquals(ENROLLMENT_ID, enrollmentData.getEnrollmentId());
@@ -113,8 +109,7 @@ public final class EnrollmentDataTest {
                 .containsExactlyElementsIn(ATTRIBUTION_REPORTING_REGISTRATION_URLS);
         assertThat(enrollmentData.getRemarketingResponseBasedRegistrationUrl())
                 .containsExactlyElementsIn(REMARKETING_RESPONSE_BASED_REGISTRATION_URLS);
-        assertThat(enrollmentData.getEncryptionKeyUrl())
-                .containsExactlyElementsIn(ENCRYPTION_KEY_URLS);
+        assertEquals(ENCRYPTION_KEY_URL, enrollmentData.getEncryptionKeyUrl());
     }
 
     @Test
@@ -146,7 +141,7 @@ public final class EnrollmentDataTest {
         assertEquals(enrollmentData.getAttributionTriggerRegistrationUrl().size(), 0);
         assertEquals(enrollmentData.getAttributionReportingUrl().size(), 0);
         assertEquals(enrollmentData.getRemarketingResponseBasedRegistrationUrl().size(), 0);
-        assertEquals(enrollmentData.getEncryptionKeyUrl().size(), 0);
+        assertNull(enrollmentData.getEncryptionKeyUrl());
     }
 
     @Test
@@ -164,7 +159,7 @@ public final class EnrollmentDataTest {
                         .setAttributionReportingUrl(Arrays.asList("https://2test.com"))
                         .setRemarketingResponseBasedRegistrationUrl(
                                 Arrays.asList("https://2test.com"))
-                        .setEncryptionKeyUrl(Arrays.asList("https://2test.com/keys"))
+                        .setEncryptionKeyUrl("https://2test.com/keys")
                         .build();
         EnrollmentData e2 =
                 new EnrollmentData.Builder()
@@ -179,7 +174,7 @@ public final class EnrollmentDataTest {
                         .setAttributionReportingUrl(Arrays.asList("https://2test.com"))
                         .setRemarketingResponseBasedRegistrationUrl(
                                 Arrays.asList("https://2test.com"))
-                        .setEncryptionKeyUrl(Arrays.asList("https://2test.com/keys"))
+                        .setEncryptionKeyUrl("https://2test.com/keys")
                         .build();
         assertEquals(e1, e2);
     }

@@ -54,8 +54,10 @@ public final class TestDeviceHelper {
         return device;
     }
 
+    // cmdFmt must be final because it's being passed to a method taking @FormatString
     @FormatMethod
-    public static String runShellCommand(@FormatString String cmdFmt, @Nullable Object... cmdArgs) {
+    public static String runShellCommand(
+            @FormatString final String cmdFmt, @Nullable Object... cmdArgs) {
         return runShellCommand(getTestDevice(), cmdFmt, cmdArgs);
     }
 
@@ -74,27 +76,15 @@ public final class TestDeviceHelper {
     }
 
     public static int getApiLevel() {
-        try {
-            return getTestDevice().getApiLevel();
-        } catch (DeviceNotAvailableException e) {
-            throw new DeviceUnavailableException(e);
-        }
+        return call(device -> device.getApiLevel());
     }
 
     public static String getProperty(String name) {
-        try {
-            return getTestDevice().getProperty(name);
-        } catch (DeviceNotAvailableException e) {
-            throw new DeviceUnavailableException(e);
-        }
+        return call(device -> device.getProperty(name));
     }
 
     public static void setProperty(String name, String value) {
-        try {
-            getTestDevice().setProperty(name, value);
-        } catch (DeviceNotAvailableException e) {
-            throw new DeviceUnavailableException(e);
-        }
+        run(device -> device.setProperty(name, value));
     }
 
     public static void startActivity(String intent) {
@@ -104,10 +94,48 @@ public final class TestDeviceHelper {
                 .doesNotContain("Error: Activity not started, unable to resolve Intent");
     }
 
+    public static void enableComponent(String packageName, String className) {
+        runShellCommand("pm enable %s/%s", packageName, className);
+    }
+
     private static final class DeviceUnavailableException extends IllegalStateException {
         private DeviceUnavailableException(DeviceNotAvailableException cause) {
             super(cause);
         }
+    }
+
+    /**
+     * Runs the given command without throwing a checked exception.
+     *
+     * @throws DeviceUnavailableException if device is not available.
+     */
+    public static <T> T call(Command<T> command) {
+        try {
+            return command.run(getTestDevice());
+        } catch (DeviceNotAvailableException e) {
+            throw new DeviceUnavailableException(e);
+        }
+    }
+
+    /**
+     * Runs the given command without throwing a checked exception.
+     *
+     * @throws DeviceUnavailableException if device is not available.
+     */
+    public static void run(VoidCommand command) {
+        try {
+            command.run(getTestDevice());
+        } catch (DeviceNotAvailableException e) {
+            throw new DeviceUnavailableException(e);
+        }
+    }
+
+    interface Command<T> {
+        T run(ITestDevice device) throws DeviceNotAvailableException;
+    }
+
+    interface VoidCommand {
+        void run(ITestDevice device) throws DeviceNotAvailableException;
     }
 
     private TestDeviceHelper() {

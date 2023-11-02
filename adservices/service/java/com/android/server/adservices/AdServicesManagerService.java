@@ -47,6 +47,7 @@ import android.util.Dumpable;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.modules.utils.BackgroundThread;
 import com.android.server.LocalManagerRegistry;
 import com.android.server.SystemService;
 import com.android.server.adservices.data.topics.TopicsDao;
@@ -139,9 +140,10 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         mContext = context;
         mUserInstanceManager = userInstanceManager;
 
+        // TODO(b/298635325): use AdServices shared background thread pool instead.
         DeviceConfig.addOnPropertiesChangedListener(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                mContext.getMainExecutor(),
+                BackgroundThread.getExecutor(),
                 mOnFlagsChangedListener);
 
         registerReceivers();
@@ -740,7 +742,12 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
             pw.printf("mAdServicesPackagesRolledBackFrom: %s\n", mAdServicesPackagesRolledBackFrom);
             pw.printf("mAdServicesPackagesRolledBackTo: %s\n", mAdServicesPackagesRolledBackTo);
         }
+        pw.printf("ShellCmd enabled: %b\n", isShellCmdEnabled());
         mUserInstanceManager.dump(pw, args);
+    }
+
+    private static boolean isShellCmdEnabled() {
+        return FlagsFactory.getFlags().getAdServicesShellCommandEnabled();
     }
 
     @Override
@@ -750,13 +757,14 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
             ParcelFileDescriptor err,
             String[] args) {
 
-        if (!FlagsFactory.getFlags().getAdServicesShellCommandEnabled()) {
+        if (!isShellCmdEnabled()) {
             LogUtil.d(
                     "handleShellCommand(%s): disabled by flag %s",
                     Arrays.toString(args), PhFlags.KEY_ADSERVICES_SHELL_COMMAND_ENABLED);
             return super.handleShellCommand(in, out, err, args);
         }
 
+        LogUtil.v("Executing shell cmd: %s", Arrays.toString(args));
         return new AdServicesShellCommand()
                 .exec(
                         this,

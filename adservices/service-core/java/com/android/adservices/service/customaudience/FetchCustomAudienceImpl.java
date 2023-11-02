@@ -34,6 +34,7 @@ import android.adservices.exceptions.RetryableAdServicesNetworkException;
 import android.annotation.NonNull;
 import android.net.Uri;
 import android.os.Build;
+import android.os.LimitExceededException;
 import android.os.RemoteException;
 
 import androidx.annotation.RequiresApi;
@@ -323,6 +324,9 @@ public class FetchCustomAudienceImpl {
                                 throw new FilterException(t);
                             }
 
+                            // Ensure request is not quarantined
+                            assertNotQuarantined();
+
                             // Check if Custom Audience API quota exists.
                             mCustomAudienceQuantityChecker.check(
                                     PLACEHOLDER_CUSTOM_AUDIENCE, input.getCallerPackageName());
@@ -363,6 +367,25 @@ public class FetchCustomAudienceImpl {
                         .setUri(mFetchUri)
                         .setDevContext(devContext)
                         .build());
+    }
+
+    private void assertNotQuarantined() throws LimitExceededException {
+        if (mCustomAudienceDao.doesCustomAudienceQuarantineExist(mOwner, mBuyer)) {
+            Instant expiration =
+                    mCustomAudienceDao.getCustomAudienceQuarantineExpiration(mOwner, mBuyer);
+            Instant now = mClock.instant();
+            if (now.isBefore(expiration)) {
+                sLogger.d(
+                        String.format(
+                                "Combination of owner:%s and buyer%s is quarantined!",
+                                mOwner, mBuyer.toString()));
+                throw new LimitExceededException(
+                        "This combination of owner and buyer is quarantined!");
+            } else {
+                sLogger.v("Clearing stale quarantine entry");
+                mCustomAudienceDao.deleteQuarantineEntry(mOwner, mBuyer);
+            }
+        }
     }
 
     private ListenableFuture<Void> validateResponse(
@@ -520,7 +543,8 @@ public class FetchCustomAudienceImpl {
                 resultCode = AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
             } else if (t instanceof InvalidObjectException) {
                 resultCode = AdServicesStatusUtils.STATUS_INVALID_OBJECT;
-            } else if (t instanceof RetryableAdServicesNetworkException) {
+            } else if (t instanceof RetryableAdServicesNetworkException
+                    || (t instanceof LimitExceededException)) {
                 resultCode = AdServicesStatusUtils.STATUS_SERVER_RATE_LIMIT_REACHED;
             } else {
                 sLogger.d(t, "Unexpected error during operation");

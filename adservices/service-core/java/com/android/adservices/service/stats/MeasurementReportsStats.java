@@ -31,6 +31,7 @@ public class MeasurementReportsStats {
     private int mUploadMethod;
     private long mReportingDelay;
     private String mSourceRegistrant;
+    private int mRetryCount;
 
     public MeasurementReportsStats() {}
 
@@ -46,7 +47,8 @@ public class MeasurementReportsStats {
                 && mFailureType == measurementReportsStats.getFailureType()
                 && mUploadMethod == measurementReportsStats.getUploadMethod()
                 && mReportingDelay == measurementReportsStats.getReportingDelay()
-                && Objects.equals(mSourceRegistrant, measurementReportsStats.getSourceRegistrant());
+                && Objects.equals(mSourceRegistrant, measurementReportsStats.getSourceRegistrant())
+                && mRetryCount == measurementReportsStats.getRetryCount();
     }
 
     @Override
@@ -58,7 +60,8 @@ public class MeasurementReportsStats {
                 mFailureType,
                 mUploadMethod,
                 mReportingDelay,
-                mSourceRegistrant);
+                mSourceRegistrant,
+                mRetryCount);
     }
 
     public int getCode() {
@@ -87,6 +90,10 @@ public class MeasurementReportsStats {
 
     public String getSourceRegistrant() {
         return mSourceRegistrant;
+    }
+
+    public int getRetryCount() {
+        return mRetryCount;
     }
 
     /**
@@ -145,6 +152,12 @@ public class MeasurementReportsStats {
         public @NonNull MeasurementReportsStats.Builder setSourceRegistrant(
                 String sourceRegistrant) {
             mBuilding.mSourceRegistrant = sourceRegistrant;
+            return this;
+        }
+
+        /** See {@link MeasurementReportsStats#getRetryCount()} . */
+        public @NonNull MeasurementReportsStats.Builder setRetryCount(int retryCount) {
+            mBuilding.mRetryCount = retryCount;
             return this;
         }
 
