@@ -81,3 +81,69 @@ JNIEXPORT jboolean JNICALL Java_com_android_adservices_ActJniUtility_checkClient
         return false;
     }
 }
+
+JNIEXPORT jbyteArray JNICALL Java_com_android_adservices_ActJniUtility_generateTokensResponse(
+    JNIEnv *env,
+    jclass,
+    jbyteArray tokens_request_bytes,
+    jbyteArray scheme_parameter_bytes,
+    jbyteArray client_public_parameters_bytes,
+    jbyteArray server_public_parameters_bytes,
+    jbyteArray server_private_parameters_bytes) {
+    TokensRequest tokens_request_proto;
+    if(!jni_util::JniUtil::BytesToCppProto(env, &tokens_request_proto, tokens_request_bytes)) {
+        jni_util::JniUtil::ThrowJavaException(
+                env, IllegalArgumentExceptionClass, "Error while parsing Tokens Request Proto");
+    }
+
+    SchemeParameters scheme_parameter_proto;
+    if(!jni_util::JniUtil::BytesToCppProto(env, &scheme_parameter_proto, scheme_parameter_bytes)) {
+        jni_util::JniUtil::ThrowJavaException(
+                env, IllegalArgumentExceptionClass, "Error while parsing SchemeParameters Proto");
+    }
+
+    ClientPublicParameters client_public_parameters_proto;
+    if(!jni_util::JniUtil::BytesToCppProto(env, &client_public_parameters_proto,
+                                                                 client_public_parameters_bytes)) {
+        jni_util::JniUtil::ThrowJavaException(
+            env, IllegalArgumentExceptionClass, "Error parsing ClientPublicParameters Proto");
+    }
+    ServerPublicParameters server_public_parameters_proto;
+    if(!jni_util::JniUtil::BytesToCppProto(env, &server_public_parameters_proto,
+                                                                 server_public_parameters_bytes)) {
+        jni_util::JniUtil::ThrowJavaException(
+                env,
+                IllegalArgumentExceptionClass,
+                "Error while parsing ServerPublicParameters Proto");
+    }
+
+    ServerPrivateParameters server_private_parameters_proto;
+    if(!jni_util::JniUtil::BytesToCppProto(env, &server_private_parameters_proto,
+                                                                server_private_parameters_bytes)) {
+        jni_util::JniUtil::ThrowJavaException(
+                env,
+                IllegalArgumentExceptionClass,
+                "Error while parsing ServerPrivateParameters Proto");
+    }
+
+    std::unique_ptr<AnonymousCountingTokens> act = AnonymousCountingTokensV0::Create();
+    auto status_or = (act -> GenerateTokensResponse(
+                                              tokens_request_proto,
+                                              scheme_parameter_proto,
+                                              client_public_parameters_proto,
+                                              server_public_parameters_proto,
+                                              server_private_parameters_proto));
+
+
+    TokensResponse tokens_response;
+    if(status_or.ok()) {
+        tokens_response = std::move(status_or).value();
+    } else {
+        jni_util::JniUtil::ThrowJavaException(
+                    env, IllegalArgumentExceptionClass, status_or.status().ToString().c_str());
+        return nullptr;
+    }
+    jbyteArray tokens_response_in_bytes =
+                              jni_util::JniUtil::SerializeProtoToJniByteArray(env, tokens_response);
+    return tokens_response_in_bytes;
+}
