@@ -85,6 +85,11 @@ public class SqliteObjectMapper {
                 MeasurementTables.EventReportContract.TRIGGER_DEBUG_KEY,
                 builder::setTriggerDebugKey);
         setTextColumn(
+                cursor,
+                MeasurementTables.EventReportContract.TRIGGER_DEBUG_KEYS,
+                (concatArray) ->
+                        builder.setTriggerDebugKeys(unsignedLongsStringToList(concatArray)));
+        setTextColumn(
                 cursor, MeasurementTables.EventReportContract.SOURCE_ID, builder::setSourceId);
         setTextColumn(
                 cursor, MeasurementTables.EventReportContract.TRIGGER_ID, builder::setTriggerId);
@@ -129,12 +134,13 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.SourceContract.EVENT_REPORT_DEDUP_KEYS,
                 (concatArray) ->
-                        builder.setEventReportDedupKeys(dedupKeysStringToList(concatArray)));
+                        builder.setEventReportDedupKeys(unsignedLongsStringToList(concatArray)));
         setTextColumn(
                 cursor,
                 MeasurementTables.SourceContract.AGGREGATE_REPORT_DEDUP_KEYS,
                 (concatArray) ->
-                        builder.setAggregateReportDedupKeys(dedupKeysStringToList(concatArray)));
+                        builder.setAggregateReportDedupKeys(
+                                unsignedLongsStringToList(concatArray)));
         setIntColumn(cursor, MeasurementTables.SourceContract.STATUS,
                 builder::setStatus);
         setUriColumn(cursor, MeasurementTables.SourceContract.REGISTRANT,
@@ -516,7 +522,7 @@ public class SqliteObjectMapper {
         }
     }
 
-    private static List<UnsignedLong> dedupKeysStringToList(String concatArray) {
+    private static List<UnsignedLong> unsignedLongsStringToList(String concatArray) {
         return Arrays.stream(concatArray.split(","))
                 .map(String::trim)
                 .filter(not(String::isEmpty))

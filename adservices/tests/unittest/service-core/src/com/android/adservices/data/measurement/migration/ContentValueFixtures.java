@@ -263,6 +263,9 @@ public class ContentValueFixtures {
 
         // Added in V23
         public static final String TRIGGER_SUMMARY_BUCKET = "1,3";
+
+        // Added in V28
+        public static final String TRIGGER_DEBUG_KEYS = "9223372036854775809,15";
     }
 
     public static class AggregateReportValues {
@@ -938,18 +941,6 @@ public class ContentValueFixtures {
         return generateTriggerContentValuesV20();
     }
 
-    public static ContentValues generateTriggerContentValuesV22() {
-        ContentValues values = generateTriggerContentValuesV21();
-        values.put(
-                MeasurementTables.SourceContract.SHARED_FILTER_DATA_KEYS,
-                SourceValues.SHARED_FILTER_DATA_KEYS);
-        return values;
-    }
-
-    public static ContentValues generateTriggerContentValuesV23() {
-        return generateTriggerContentValuesV22();
-    }
-
     public static ContentValues generateAttributionContentValuesV1() {
         ContentValues attribution = new ContentValues();
 
@@ -1199,6 +1190,25 @@ public class ContentValueFixtures {
         eventReport.put(
                 MeasurementTables.EventReportContract.TRIGGER_SUMMARY_BUCKET,
                 EventReportValues.TRIGGER_SUMMARY_BUCKET);
+        return eventReport;
+    }
+
+    /** Returns content values for event report version 26 */
+    public static ContentValues generateEventReportContentValuesV26() {
+        return generateEventReportContentValuesV23();
+    }
+
+    /** Returns content values for event report version 27 */
+    public static ContentValues generateEventReportContentValuesV27() {
+        return generateEventReportContentValuesV26();
+    }
+
+    /** Returns content values for event report version 28 */
+    public static ContentValues generateEventReportContentValuesV28() {
+        ContentValues eventReport = generateEventReportContentValuesV27();
+        eventReport.put(
+                MeasurementTables.EventReportContract.TRIGGER_DEBUG_KEYS,
+                EventReportValues.TRIGGER_DEBUG_KEYS);
         return eventReport;
     }
 
