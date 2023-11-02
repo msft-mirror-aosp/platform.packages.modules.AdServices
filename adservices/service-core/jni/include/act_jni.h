@@ -29,6 +29,23 @@ extern "C" {
 JNIEXPORT jbyteArray JNICALL Java_com_android_adservices_ActJni_generateClientParameters
   (JNIEnv *, jclass, jbyteArray, jbyteArray);
 
+/*
+* Class:     com_android_adservices_ActJni
+* Method:    generateTokensRequest
+* Signature: ([B[B[B[B)[B
+*/
+JNIEXPORT jbyteArray JNICALL Java_com_android_adservices_ActJni_generateTokensRequest
+(JNIEnv *, jclass, jbyteArray, jbyteArray, jbyteArray, jbyteArray, jbyteArray);
+
+/*
+* Class:     com_android_adservices_ActJni
+* Method:    verifyTokensResponse
+* Signature: ([B[B[B[B[B[B[B[B)Z
+*/
+JNIEXPORT jboolean JNICALL Java_com_android_adservices_ActJni_verifyTokensResponse
+(JNIEnv *, jclass, jbyteArray, jbyteArray, jbyteArray,
+                                        jbyteArray, jbyteArray, jbyteArray, jbyteArray, jbyteArray);
+
 #ifdef __cplusplus
 }
 #endif

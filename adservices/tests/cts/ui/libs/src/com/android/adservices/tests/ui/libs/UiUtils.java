@@ -40,7 +40,9 @@ import androidx.test.uiautomator.BySelector;
 import androidx.test.uiautomator.Direction;
 import androidx.test.uiautomator.SearchCondition;
 import androidx.test.uiautomator.UiDevice;
+import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObject2;
+import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.LogUtil;
@@ -58,6 +60,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 public class UiUtils {
@@ -773,5 +776,26 @@ public class UiUtils {
 
         Boolean response = responseFuture.get();
         assertThat(response).isTrue();
+    }
+
+    /***
+     * Click on the More button on the notification page.
+     * @param moreButton moreButton
+     * @throws UiObjectNotFoundException uiObjectNotFoundException
+     * @throws InterruptedException interruptedException
+     */
+    public static void clickMoreToBottom(UiObject moreButton)
+            throws UiObjectNotFoundException, InterruptedException {
+        if (!moreButton.exists()) {
+            LogUtil.e("More Button not Found");
+            return;
+        }
+
+        int clickCount = 10;
+        while (moreButton.exists() && clickCount-- > 0) {
+            moreButton.click();
+            TimeUnit.MILLISECONDS.sleep(SCROLL_WAIT_TIME);
+        }
+        assertThat(moreButton.exists()).isFalse();
     }
 }

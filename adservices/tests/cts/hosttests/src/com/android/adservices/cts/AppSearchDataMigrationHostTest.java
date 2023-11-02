@@ -143,7 +143,7 @@ public class AppSearchDataMigrationHostTest extends AdServicesHostSideTestCase {
 
         // Need to re-set these system properties because the reboot in the setup method causes them
         // to be cleared.
-        flags.setOrCacheDebugSystemProperty(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true)
+        flags.setSystemProperty(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true)
                 .setLogcatTag("adservices", "VERBOSE")
                 .setLogcatTag("AppSearchWriterActivity", "VERBOSE");
 
