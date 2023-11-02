@@ -18,8 +18,6 @@ package android.sdksandbox.test.scenario.testsdk;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.os.SystemClock;
-
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject2;
@@ -84,12 +82,12 @@ final class ClientAppUtils {
      *
      * @param uiDevice is the device that is being used.
      */
-    public void assertAdLoaded(UiDevice uiDevice) {
+    public void assertAdLoaded(UiDevice uiDevice) throws Exception {
         int retries = 0;
         boolean adLoaded = false;
         // wait until Ad Loaded.
         while (!adLoaded && retries < UI_RETRIES_WAIT_LOAD_AD) {
-            SystemClock.sleep(UI_WAIT_LOAD_AD_MS);
+            Thread.sleep(UI_WAIT_LOAD_AD_MS);
             if (getLoadAdButton(uiDevice).getText().equals(ClientAppUtils.AD_LOADED_BUTTON_TEXT)) {
                 adLoaded = true;
             }
