@@ -16,9 +16,12 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static android.app.job.JobInfo.NETWORK_TYPE_ANY;
+
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -35,10 +38,12 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
+import android.content.ComponentName;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -61,6 +66,8 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
+import org.mockito.internal.stubbing.answers.AnswersWithDelay;
+import org.mockito.internal.stubbing.answers.CallsRealMethods;
 import org.mockito.quality.Strictness;
 
 import java.util.Optional;
@@ -75,6 +82,7 @@ public class AggregateFallbackReportingJobServiceTest {
     private static final int MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID =
             MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 1_000L;
+    private static final long JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(4);
 
     private DatastoreManager mMockDatastoreManager;
     private JobScheduler mMockJobScheduler;
@@ -94,6 +102,13 @@ public class AggregateFallbackReportingJobServiceTest {
         mSpyLogger =
                 spy(new AdservicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mockStatsdLogger));
         mMockFlags = mock(Flags.class);
+        when(mMockFlags.getMeasurementAggregateFallbackReportingJobPersisted()).thenReturn(true);
+        when(mMockFlags.getMeasurementAggregateFallbackReportingJobRequiredNetworkType())
+                .thenReturn(JobInfo.NETWORK_TYPE_ANY);
+        when(mMockFlags.getMeasurementAggregateFallbackReportingJobRequiredBatteryNotLow())
+                .thenReturn(true);
+        when(mMockFlags.getMeasurementAggregateFallbackReportingJobPeriodMs())
+                .thenReturn(JOB_PERIOD_MS);
     }
 
     @Test
@@ -264,23 +279,71 @@ public class AggregateFallbackReportingJobServiceTest {
                     // Setup
                     disableKillSwitch();
 
-                    final Context mockContext = mock(Context.class);
+                    final Context spyContext = spy(CONTEXT);
                     doReturn(mMockJobScheduler)
-                            .when(mockContext)
+                            .when(spyContext)
                             .getSystemService(JobScheduler.class);
-                    final JobInfo mockJobInfo = mock(JobInfo.class);
-                    doReturn(mockJobInfo)
+                    final JobInfo scheduledJobInfo =
+                            new JobInfo.Builder(
+                                            MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID,
+                                            new ComponentName(
+                                                    spyContext,
+                                                    AggregateFallbackReportingJobService.class))
+                                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                                    .setRequiresBatteryNotLow(true)
+                                    .setPeriodic(JOB_PERIOD_MS)
+                                    .setPersisted(true)
+                                    .build();
+                    doReturn(scheduledJobInfo)
                             .when(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID));
 
                     // Execute
                     AggregateFallbackReportingJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule = */ false);
+                            spyContext, /* forceSchedule = */ false);
 
                     // Validate
                     ExtendedMockito.verify(
                             () -> AggregateFallbackReportingJobService.schedule(any(), any()),
                             never());
+                    verify(mMockJobScheduler, times(1))
+                            .getPendingJob(eq(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID));
+                });
+    }
+
+    @Test
+    public void scheduleIfNeeded_killSwitchOffPreviouslyScheduledWithDiffParams_reschedules()
+            throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    disableKillSwitch();
+
+                    final Context spyContext = spy(CONTEXT);
+                    doReturn(mMockJobScheduler)
+                            .when(spyContext)
+                            .getSystemService(JobScheduler.class);
+                    final JobInfo scheduledJobInfo =
+                            new JobInfo.Builder(
+                                            MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID,
+                                            new ComponentName(
+                                                    spyContext,
+                                                    AggregateFallbackReportingJobService.class))
+                                    .setRequiresBatteryNotLow(true)
+                                    .setPeriodic(JOB_PERIOD_MS - 1)
+                                    .setPersisted(true)
+                                    .build();
+                    doReturn(scheduledJobInfo)
+                            .when(mMockJobScheduler)
+                            .getPendingJob(eq(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID));
+
+                    // Execute
+                    AggregateFallbackReportingJobService.scheduleIfNeeded(
+                            spyContext, /* forceSchedule= */ false);
+
+                    // Validate
+                    ExtendedMockito.verify(
+                            () -> AggregateFallbackReportingJobService.schedule(any(), any()));
                     verify(mMockJobScheduler, times(1))
                             .getPendingJob(eq(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID));
                 });
@@ -345,11 +408,18 @@ public class AggregateFallbackReportingJobServiceTest {
     }
 
     @Test
-    public void testSchedule_jobInfoIsPersisted() throws Exception {
+    public void testSchedule_jobInfoCheckParameters() throws Exception {
         runWithMocks(
                 () -> {
+                    // Setup
+                    disableKillSwitch();
+                    Context spyContext = spy(CONTEXT);
                     final JobScheduler jobScheduler = mock(JobScheduler.class);
+                    doReturn(jobScheduler).when(spyContext).getSystemService(JobScheduler.class);
                     final ArgumentCaptor<JobInfo> captor = ArgumentCaptor.forClass(JobInfo.class);
+                    doReturn(null)
+                            .when(jobScheduler)
+                            .getPendingJob(eq(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID));
 
                     // Execute
                     ExtendedMockito.doCallRealMethod()
@@ -357,13 +427,39 @@ public class AggregateFallbackReportingJobServiceTest {
                                     () ->
                                             AggregateFallbackReportingJobService.schedule(
                                                     any(), any()));
-                    AggregateFallbackReportingJobService.schedule(
-                            mock(Context.class), jobScheduler);
+                    AggregateFallbackReportingJobService.scheduleIfNeeded(spyContext, true);
 
                     // Validate
                     verify(jobScheduler, times(1)).schedule(captor.capture());
-                    assertNotNull(captor.getValue());
-                    assertTrue(captor.getValue().isPersisted());
+
+                    final JobInfo jobInfo = captor.getValue();
+                    assertNotNull(jobInfo);
+                    assertEquals(NETWORK_TYPE_ANY, jobInfo.getNetworkType());
+                    assertTrue(jobInfo.isRequireBatteryNotLow());
+                    assertTrue(jobInfo.isPeriodic());
+                    assertTrue(jobInfo.isPersisted());
+                });
+    }
+
+    @Test
+    public void testOnStopJob_stopsExecutingThread() throws Exception {
+        runWithMocks(
+                () -> {
+                    disableKillSwitch();
+
+                    doAnswer(new AnswersWithDelay(WAIT_IN_MILLIS * 10, new CallsRealMethods()))
+                            .when(mSpyService)
+                            .processPendingReports();
+                    mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+                    Thread.sleep(WAIT_IN_MILLIS);
+
+                    assertNotNull(mSpyService.getFutureForTesting());
+
+                    boolean onStopJobResult =
+                            mSpyService.onStopJob(Mockito.mock(JobParameters.class));
+                    verify(mSpyService, times(0)).jobFinished(any(), anyBoolean());
+                    assertTrue(onStopJobResult);
+                    assertTrue(mSpyService.getFutureForTesting().isCancelled());
                 });
     }
 
@@ -435,6 +531,9 @@ public class AggregateFallbackReportingJobServiceTest {
                         .strictness(Strictness.LENIENT)
                         .startMocking();
         try {
+            Context context = Mockito.mock(Context.class);
+            doReturn(CONTEXT.getPackageName()).when(context).getPackageName();
+            doReturn(CONTEXT.getPackageManager()).when(context).getPackageManager();
             // Setup mock everything in job
             mMockDatastoreManager = mock(DatastoreManager.class);
             doReturn(Optional.empty())
@@ -442,7 +541,7 @@ public class AggregateFallbackReportingJobServiceTest {
                     .runInTransactionWithResult(any());
             doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
             doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
-            doReturn(Mockito.mock(Context.class)).when(mSpyService).getApplicationContext();
+            doReturn(context).when(mSpyService).getApplicationContext();
             ExtendedMockito.doReturn(TimeUnit.HOURS.toMillis(4))
                     .when(AdServicesConfig::getMeasurementAggregateMainReportingJobPeriodMs);
             ExtendedMockito.doReturn(TimeUnit.HOURS.toMillis(24))

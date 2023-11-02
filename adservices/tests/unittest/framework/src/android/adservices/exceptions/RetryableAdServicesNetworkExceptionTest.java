@@ -22,6 +22,7 @@ import static android.adservices.exceptions.RetryableAdServicesNetworkException.
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import static java.util.Locale.ENGLISH;
@@ -41,6 +42,8 @@ public class RetryableAdServicesNetworkExceptionTest {
     private static final Duration VALID_RETRY_AFTER = Duration.of(1000, ChronoUnit.MILLIS);
     private static final Duration UNSET_RETRY_AFTER = Duration.ZERO;
     private static final Duration NEGATIVE_RETRY_AFTER = Duration.of(-1, ChronoUnit.MILLIS);
+    private static final long MIN_RETRY_AFTER_DURATION_MS = 30 * 1000;
+    private static final long MAX_RETRY_AFTER_DURATION_MS = 90 * 1000;
 
     @Test
     public void testExceptionWithErrorCodeAndRetryAfter_valid() {
@@ -87,6 +90,42 @@ public class RetryableAdServicesNetworkExceptionTest {
                                 new RetryableAdServicesNetworkException(
                                         VALID_ERROR_CODE, NEGATIVE_RETRY_AFTER));
         assertThat(exception.getMessage()).isEqualTo(INVALID_RETRY_AFTER_MESSAGE);
+    }
+
+    @Test
+    public void testSetRetryAfterToValidDurationStaysSame() throws Exception {
+        long validMs = 60 * 1000;
+        RetryableAdServicesNetworkException exception =
+                new RetryableAdServicesNetworkException(
+                        VALID_ERROR_CODE, Duration.ofMillis(validMs));
+
+        exception.setRetryAfterToValidDuration(
+                MIN_RETRY_AFTER_DURATION_MS, MAX_RETRY_AFTER_DURATION_MS);
+        assertEquals(validMs, exception.getRetryAfter().toMillis());
+    }
+
+    @Test
+    public void testSetRetryAfterToValidDurationGetsCappedToDefault() throws Exception {
+        long tooSmallMs = 20 * 1000;
+        RetryableAdServicesNetworkException exception =
+                new RetryableAdServicesNetworkException(
+                        VALID_ERROR_CODE, Duration.ofMillis(tooSmallMs));
+
+        exception.setRetryAfterToValidDuration(
+                MIN_RETRY_AFTER_DURATION_MS, MAX_RETRY_AFTER_DURATION_MS);
+        assertEquals(MIN_RETRY_AFTER_DURATION_MS, exception.getRetryAfter().toMillis());
+    }
+
+    @Test
+    public void testSetRetryAfterToValidDurationGetsCappedToMax() throws Exception {
+        long tooBigSecondsMs = 100 * 1000;
+        RetryableAdServicesNetworkException exception =
+                new RetryableAdServicesNetworkException(
+                        VALID_ERROR_CODE, Duration.ofMillis(tooBigSecondsMs));
+
+        exception.setRetryAfterToValidDuration(
+                MIN_RETRY_AFTER_DURATION_MS, MAX_RETRY_AFTER_DURATION_MS);
+        assertEquals(MAX_RETRY_AFTER_DURATION_MS, exception.getRetryAfter().toMillis());
     }
 
     private String getHumanReadableRetryableNetworkException(int errorCode, Duration retryAfter) {

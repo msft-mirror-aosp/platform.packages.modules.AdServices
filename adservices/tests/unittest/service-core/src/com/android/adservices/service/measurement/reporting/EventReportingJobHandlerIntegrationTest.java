@@ -25,6 +25,8 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DbState;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -44,6 +46,8 @@ public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrati
     private final JSONObject mParam;
     private final EnrollmentDao mEnrollmentDao;
     private final Flags mFlags;
+    private final AdServicesLogger mLogger;
+    private final AdServicesErrorLogger mErrorLogger;
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> data() throws IOException, JSONException {
@@ -60,6 +64,8 @@ public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrati
         mParam = param;
         mEnrollmentDao = Mockito.mock(EnrollmentDao.class);
         mFlags = Mockito.mock(Flags.class);
+        mLogger = Mockito.mock(AdServicesLogger.class);
+        mErrorLogger = Mockito.mock(AdServicesErrorLogger.class);
     }
 
     public enum Action {
@@ -74,9 +80,11 @@ public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrati
         final String registration_origin = (String) get("registration_origin");
 
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
         EventReportingJobHandler spyReportingService =
-                Mockito.spy(new EventReportingJobHandler(mEnrollmentDao, datastoreManager, mFlags));
+                Mockito.spy(
+                        new EventReportingJobHandler(
+                                mEnrollmentDao, datastoreManager, mFlags, mLogger, sContext));
         try {
             Mockito.doReturn(returnCode)
                     .when(spyReportingService)

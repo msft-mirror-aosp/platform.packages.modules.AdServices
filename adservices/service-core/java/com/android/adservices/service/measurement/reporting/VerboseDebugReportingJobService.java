@@ -27,25 +27,33 @@ import android.content.ComponentName;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.util.JobLockHolder;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
-import java.util.concurrent.Executor;
+import com.google.common.util.concurrent.ListeningExecutorService;
+
+import java.util.concurrent.Future;
 
 /**
  * Main service for scheduling verbose debug reporting jobs. The actual job execution logic is part
  * of {@link DebugReportingJobHandler }.
  */
 public final class VerboseDebugReportingJobService extends JobService {
-    private static final Executor sBlockingExecutor = AdServicesExecutors.getBlockingExecutor();
-    private static final int VERBOSE_DEBUG_REPORT_JOB_ID =
-            MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB.getJobId();
+    private static final ListeningExecutorService sBlockingExecutor =
+            AdServicesExecutors.getBlockingExecutor();
+    static final int VERBOSE_DEBUG_REPORT_JOB_ID = MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB.getJobId();
+
+    private Future mExecutorFuture;
 
     @Override
     public boolean onStartJob(JobParameters params) {
@@ -58,36 +66,45 @@ public final class VerboseDebugReportingJobService extends JobService {
             return skipAndCancelBackgroundJob(params);
         }
 
+        AdservicesJobServiceLogger.getInstance(this).recordOnStartJob(VERBOSE_DEBUG_REPORT_JOB_ID);
+
         if (FlagsFactory.getFlags().getMeasurementJobVerboseDebugReportingKillSwitch()) {
-            LogUtil.e("VerboseDebugReportingJobService is disabled");
+            LoggerFactory.getMeasurementLogger().e("VerboseDebugReportingJobService is disabled");
             return skipAndCancelBackgroundJob(params);
         }
 
-        LogUtil.d("VerboseDebugReportingJobService.onStartJob");
-        sBlockingExecutor.execute(
-                () -> {
-                    sendReports();
-                    jobFinished(params, /* wantsReschedule= */ false);
-                });
+        LoggerFactory.getMeasurementLogger().d("VerboseDebugReportingJobService.onStartJob");
+        mExecutorFuture =
+                sBlockingExecutor.submit(
+                        () -> {
+                            sendReports();
+                            AdservicesJobServiceLogger.getInstance(
+                                            VerboseDebugReportingJobService.this)
+                                    .recordJobFinished(
+                                            VERBOSE_DEBUG_REPORT_JOB_ID,
+                                            /* isSuccessful */ true,
+                                            /* shouldRetry*/ false);
+                            jobFinished(params, /* wantsReschedule= */ false);
+                        });
         return true;
     }
 
     @Override
     public boolean onStopJob(JobParameters params) {
-        LogUtil.d("VerboseDebugReportingJobService.onStopJob");
-        return true;
+        LoggerFactory.getMeasurementLogger().d("VerboseDebugReportingJobService.onStopJob");
+        boolean shouldRetry = true;
+        if (mExecutorFuture != null) {
+            shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
+        }
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordOnStopJob(params, VERBOSE_DEBUG_REPORT_JOB_ID, shouldRetry);
+        return shouldRetry;
     }
 
     /** Schedules {@link VerboseDebugReportingJobService} */
     @VisibleForTesting
-    static void schedule(Context context, JobScheduler jobScheduler) {
-        final JobInfo job =
-                new JobInfo.Builder(
-                                VERBOSE_DEBUG_REPORT_JOB_ID,
-                                new ComponentName(context, VerboseDebugReportingJobService.class))
-                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                        .build();
-        jobScheduler.schedule(job);
+    static void schedule(JobScheduler jobScheduler, JobInfo jobInfo) {
+        jobScheduler.schedule(jobInfo);
     }
 
     /**
@@ -97,25 +114,38 @@ public final class VerboseDebugReportingJobService extends JobService {
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
-        if (FlagsFactory.getFlags().getMeasurementJobVerboseDebugReportingKillSwitch()) {
-            LogUtil.d("VerboseDebugReportingJobService is disabled, skip scheduling");
+        Flags flags = FlagsFactory.getFlags();
+        if (flags.getMeasurementJobVerboseDebugReportingKillSwitch()) {
+            LoggerFactory.getMeasurementLogger()
+                    .d("VerboseDebugReportingJobService is disabled, skip scheduling");
             return;
         }
 
         final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
         if (jobScheduler == null) {
-            LogUtil.e("JobScheduler not found");
+            LoggerFactory.getMeasurementLogger().e("JobScheduler not found");
             return;
         }
 
-        final JobInfo job = jobScheduler.getPendingJob(VERBOSE_DEBUG_REPORT_JOB_ID);
+        final JobInfo scheduledJob = jobScheduler.getPendingJob(VERBOSE_DEBUG_REPORT_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
-        if (job == null || forceSchedule) {
-            schedule(context, jobScheduler);
-            LogUtil.d("Scheduled VerboseDebugReportingJobService");
+        JobInfo jobInfo = buildJobInfo(context, flags);
+        if (forceSchedule || !jobInfo.equals(scheduledJob)) {
+            schedule(jobScheduler, jobInfo);
+            LoggerFactory.getMeasurementLogger().d("Scheduled VerboseDebugReportingJobService");
         } else {
-            LogUtil.d("VerboseDebugReportingJobService already scheduled, skipping reschedule");
+            LoggerFactory.getMeasurementLogger()
+                    .d("VerboseDebugReportingJobService already scheduled, skipping reschedule");
         }
+    }
+
+    private static JobInfo buildJobInfo(Context context, Flags flags) {
+        return new JobInfo.Builder(
+                        VERBOSE_DEBUG_REPORT_JOB_ID,
+                        new ComponentName(context, VerboseDebugReportingJobService.class))
+                .setRequiredNetworkType(
+                        flags.getMeasurementVerboseDebugReportingJobRequiredNetworkType())
+                .build();
     }
 
     private boolean skipAndCancelBackgroundJob(final JobParameters params) {
@@ -131,7 +161,8 @@ public final class VerboseDebugReportingJobService extends JobService {
         return false;
     }
 
-    private void sendReports() {
+    @VisibleForTesting
+    void sendReports() {
         final JobLockHolder lock = JobLockHolder.getInstance(VERBOSE_DEBUG_REPORTING);
         if (lock.tryLock()) {
             try {
@@ -139,13 +170,24 @@ public final class VerboseDebugReportingJobService extends JobService {
                 DatastoreManager datastoreManager =
                         DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
                 new DebugReportingJobHandler(
-                                enrollmentDao, datastoreManager, FlagsFactory.getFlags())
+                                enrollmentDao,
+                                datastoreManager,
+                                FlagsFactory.getFlags(),
+                                AdServicesLoggerImpl.getInstance(),
+                                ReportingStatus.UploadMethod.REGULAR,
+                                getApplicationContext())
                         .performScheduledPendingReports();
                 return;
             } finally {
                 lock.unlock();
             }
         }
-        LogUtil.d("VerboseDebugReportingJobService did not acquire the lock");
+        LoggerFactory.getMeasurementLogger()
+                .d("VerboseDebugReportingJobService did not acquire the lock");
+    }
+
+    @VisibleForTesting
+    Future getFutureForTesting() {
+        return mExecutorFuture;
     }
 }

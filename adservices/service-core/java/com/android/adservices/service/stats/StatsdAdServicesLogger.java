@@ -28,9 +28,9 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_MATCHED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_GET_TOP_TOPICS_REPORTED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_GET_TOPICS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_AD_ID_MATCH_FOR_DEBUG_KEYS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_CLICK_VERIFICATION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.BACKGROUND_FETCH_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PER_CA_PROCESS_REPORTED;
@@ -42,23 +42,21 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.UPDATE_CUS
 import android.annotation.NonNull;
 import android.util.proto.ProtoOutputStream;
 
-import com.android.adservices.errorlogging.AdServicesErrorStats;
-import com.android.adservices.errorlogging.StatsdAdServicesErrorLogger;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.spe.stats.ExecutionReportedStats;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
 
+import java.util.Objects;
+
 import javax.annotation.concurrent.ThreadSafe;
 
-/**
- * {@link AdServicesLogger} that log stats to StatsD and {@link StatsdAdServicesErrorLogger} that
- * logs error stats to Statsd.
- */
+/** {@link AdServicesLogger} that log stats to StatsD. */
 @ThreadSafe
-public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdServicesErrorLogger {
+public class StatsdAdServicesLogger implements AdServicesLogger {
     private static final int AD_SERVICES_TOPIC_IDS_FIELD_ID = 1;
 
     @GuardedBy("SINGLETON_LOCK")
@@ -69,8 +67,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
     @NonNull private final Flags mFlags;
 
     @VisibleForTesting
-    protected StatsdAdServicesLogger(@NonNull Flags mFlags) {
-        this.mFlags = mFlags;
+    protected StatsdAdServicesLogger(@NonNull Flags flags) {
+        this.mFlags = Objects.requireNonNull(flags);
     }
 
     /** Returns an instance of {@link StatsdAdServicesLogger}. */
@@ -85,6 +83,15 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
         return sStatsdAdServicesLogger;
     }
 
+    private String getAllowlistedAppPackageName(String appPackageName) {
+        if (!mFlags.getMeasurementEnableAppPackageNameLogging()
+                || !AllowLists.isPackageAllowListed(
+                        mFlags.getMeasurementAppPackageNameLoggingAllowlist(), appPackageName)) {
+            return "";
+        }
+        return appPackageName;
+    }
+
     /** log method for measurement reporting. */
     public void logMeasurementReports(MeasurementReportsStats measurementReportsStats) {
         AdServicesStatsLog.write(
@@ -94,7 +101,10 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 measurementReportsStats.getFailureType(),
                 measurementReportsStats.getUploadMethod(),
                 measurementReportsStats.getReportingDelay(),
-                measurementReportsStats.getSourceRegistrant());
+                getAllowlistedAppPackageName(measurementReportsStats.getSourceRegistrant()),
+                measurementReportsStats.getRetryCount(),
+                /* httpResponseCode */ 0,
+                /* isMarkedForDeletion */ false);
     }
 
     /** log method for API call stats. */
@@ -139,7 +149,10 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 stats.getRegistrationStatus(),
                 stats.getFailureType(),
                 stats.getRegistrationDelay(),
-                stats.getSourceRegistrant());
+                getAllowlistedAppPackageName(stats.getSourceRegistrant()),
+                stats.getRetryCount(),
+                /* httpResponseCode */ 0,
+                stats.isRedirectOnly());
     }
 
     @Override
@@ -326,7 +339,7 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 stats.isMatched(),
                 stats.getDebugJoinKeyHashedValue(),
                 stats.getDebugJoinKeyHashLimit(),
-                stats.getSourceRegistrant());
+                getAllowlistedAppPackageName(stats.getSourceRegistrant()));
     }
 
     @Override
@@ -338,19 +351,7 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 stats.isMatched(),
                 stats.getNumUniqueAdIds(),
                 stats.getNumUniqueAdIdsLimit(),
-                stats.getSourceRegistrant());
-    }
-
-    @Override
-    public void logAdServicesError(AdServicesErrorStats stats) {
-        AdServicesStatsLog.write(
-                AD_SERVICES_ERROR_REPORTED,
-                stats.getErrorCode(),
-                stats.getPpapiName(),
-                stats.getClassName(),
-                stats.getMethodName(),
-                stats.getLineNumber(),
-                stats.getLastObservedExceptionName());
+                getAllowlistedAppPackageName(stats.getSourceRegistrant()));
     }
 
     /** Logging method for AdServices background job execution stats. */
@@ -376,7 +377,12 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 measurementAttributionStats.isSourceDerived(),
                 measurementAttributionStats.isInstallAttribution(),
                 measurementAttributionStats.getAttributionDelay(),
-                measurementAttributionStats.getSourceRegistrant());
+                getAllowlistedAppPackageName(measurementAttributionStats.getSourceRegistrant()),
+                measurementAttributionStats.getAggregateReportCount(),
+                measurementAttributionStats.getAggregateDebugReportCount(),
+                measurementAttributionStats.getEventReportCount(),
+                measurementAttributionStats.getEventDebugReportCount(),
+                /* retryCount */ 0);
     }
 
     /** log method for measurement wipeout. */
@@ -384,7 +390,7 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
         AdServicesStatsLog.write(
                 measurementWipeoutStats.getCode(),
                 measurementWipeoutStats.getWipeoutType(),
-                measurementWipeoutStats.getSourceRegistrant());
+                getAllowlistedAppPackageName(measurementWipeoutStats.getSourceRegistrant()));
     }
 
     /** log method for measurement attribution. */
@@ -394,7 +400,23 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 measurementDelayedSourceRegistrationStats.getCode(),
                 measurementDelayedSourceRegistrationStats.getRegistrationStatus(),
                 measurementDelayedSourceRegistrationStats.getRegistrationDelay(),
-                measurementDelayedSourceRegistrationStats.getRegistrant());
+                getAllowlistedAppPackageName(
+                        measurementDelayedSourceRegistrationStats.getRegistrant()));
+    }
+
+    /** Log method for measurement click verification. */
+    public void logMeasurementClickVerificationStats(
+            MeasurementClickVerificationStats measurementClickVerificationStats) {
+        AdServicesStatsLog.write(
+                AD_SERVICES_MEASUREMENT_CLICK_VERIFICATION,
+                measurementClickVerificationStats.getSourceType(),
+                measurementClickVerificationStats.isInputEventPresent(),
+                measurementClickVerificationStats.isSystemClickVerificationSuccessful(),
+                measurementClickVerificationStats.isSystemClickVerificationEnabled(),
+                measurementClickVerificationStats.getInputEventDelayMillis(),
+                measurementClickVerificationStats.getValidDelayWindowMillis(),
+                getAllowlistedAppPackageName(
+                        measurementClickVerificationStats.getSourceRegistrant()));
     }
 
     /** log method for consent migrations. */

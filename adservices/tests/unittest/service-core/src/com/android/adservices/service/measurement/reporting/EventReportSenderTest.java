@@ -20,7 +20,10 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 
+import android.content.Context;
 import android.net.Uri;
+
+import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
@@ -45,6 +48,8 @@ public class EventReportSenderTest {
     private static final String REPORT_ID = "678";
     private static final String SOURCE_TYPE = "event";
     private static final double RANDOMIZED_TRIGGER_RATE = 0.0024;
+
+    protected static final Context sContext = ApplicationProvider.getApplicationContext();
 
     /**
      * Example event report payload.
@@ -76,7 +81,7 @@ public class EventReportSenderTest {
         Uri reportingOrigin = Uri.parse("https://ad-tech.example");
         JSONObject eventReportJson = createEventReportPayloadExample1().toJson();
 
-        EventReportSender eventReportSender = new EventReportSender(false);
+        EventReportSender eventReportSender = new EventReportSender(false, sContext);
         EventReportSender spyEventReportSender = Mockito.spy(eventReportSender);
 
         Mockito.doReturn(httpUrlConnection).when(spyEventReportSender)
@@ -91,9 +96,9 @@ public class EventReportSenderTest {
 
     @Test
     public void testDebugReportUriPath() {
-        assertThat(new EventReportSender(false).getReportUriPath())
+        assertThat(new EventReportSender(false, sContext).getReportUriPath())
                 .isEqualTo(EventReportSender.EVENT_ATTRIBUTION_REPORT_URI_PATH);
-        assertThat(new EventReportSender(true).getReportUriPath())
+        assertThat(new EventReportSender(true, sContext).getReportUriPath())
                 .isEqualTo(EventReportSender.DEBUG_EVENT_ATTRIBUTION_REPORT_URI_PATH);
     }
 }

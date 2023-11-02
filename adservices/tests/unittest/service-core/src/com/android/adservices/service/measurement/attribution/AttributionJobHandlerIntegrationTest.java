@@ -22,12 +22,17 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DbState;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
+import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
 import org.json.JSONException;
 import org.junit.Assert;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,6 +43,9 @@ import java.util.Collection;
  */
 @RunWith(Parameterized.class)
 public class AttributionJobHandlerIntegrationTest extends AbstractDbIntegrationTest {
+
+    private final AdServicesLogger mLogger;
+    private final AdServicesErrorLogger mErrorLogger;
 
     @Parameterized.Parameters(name = "{2}")
     public static Collection<Object[]> data() throws IOException, JSONException {
@@ -50,17 +58,24 @@ public class AttributionJobHandlerIntegrationTest extends AbstractDbIntegrationT
     // test, although it's ostensibly unused by this constructor.
     public AttributionJobHandlerIntegrationTest(DbState input, DbState output, String name) {
         super(input, output);
+        mLogger = Mockito.mock(AdServicesLogger.class);
+        mErrorLogger = Mockito.mock(AdServicesErrorLogger.class);
     }
 
     @Override
     public void runActionToTest() {
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
         Assert.assertTrue(
                 "Attribution failed.",
                 (new AttributionJobHandler(
                                 datastoreManager,
-                                new DebugReportApi(sContext, FlagsFactory.getFlagsForTest())))
-                        .performPendingAttributions());
+                                FlagsFactory.getFlags(),
+                                new DebugReportApi(sContext, FlagsFactory.getFlagsForTest()),
+                                new EventReportWindowCalcDelegate(FlagsFactory.getFlags()),
+                                new SourceNoiseHandler(FlagsFactory.getFlags()),
+                                mLogger,
+                                new XnaSourceCreator(FlagsFactory.getFlags()))
+                        .performPendingAttributions()));
     }
 }

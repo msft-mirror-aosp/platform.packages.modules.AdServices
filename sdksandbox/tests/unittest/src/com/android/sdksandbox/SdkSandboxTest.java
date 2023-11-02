@@ -34,7 +34,6 @@ import android.app.sdksandbox.testutils.StubSdkToServiceLink;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.Build;
@@ -112,7 +111,7 @@ public class SdkSandboxTest {
             new SharedPreferencesUpdate(KEYS_TO_SYNC, getBundleFromMap(TEST_DATA));
     private static final SandboxLatencyInfo SANDBOX_LATENCY_INFO = new SandboxLatencyInfo();
 
-    private static boolean sCustomizedSdkContextEnabled;
+    private static boolean sCustomizedSdkContextEnabled = SdkLevel.isAtLeastU();
     private static SdkSandboxActivityRegistry sSdkSandboxActivityRegistry;
 
     private Context mContext;
@@ -160,7 +159,7 @@ public class SdkSandboxTest {
                         InstrumentationRegistry.getInstrumentation().getContext(),
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         "sdksandbox_customized_sdk_context_enabled");
-        sCustomizedSdkContextEnabled = Boolean.parseBoolean(stateManager.get());
+        sCustomizedSdkContextEnabled &= Boolean.parseBoolean(stateManager.get());
         sSdkSandboxActivityRegistry = Mockito.spy(SdkSandboxActivityRegistry.getInstance());
     }
 
@@ -275,8 +274,6 @@ public class SdkSandboxTest {
 
         SdkSandboxStorageCallback sdkSandboxStorageCallback = new SdkSandboxStorageCallback();
         mService.computeSdkStorage(sharedPaths, sdkPaths, sdkSandboxStorageCallback);
-
-        Thread.sleep(5000);
 
         assertThat(sdkSandboxStorageCallback.getSdkStorage()).isEqualTo(1024F);
         assertThat(sdkSandboxStorageCallback.getSharedStorage()).isEqualTo(1024F);
@@ -406,30 +403,6 @@ public class SdkSandboxTest {
         final StringWriter stringWriter = new StringWriter();
         mService.dump(new FileDescriptor(), new PrintWriter(stringWriter), new String[0]);
         assertThat(stringWriter.toString()).contains("mHeldSdk size:");
-    }
-
-    @Test
-    public void testDisabledWhenWebviewNotResolvable() throws Exception {
-        // WebView provider cannot be resolved, therefore sandbox should be disabled.
-        Mockito.doReturn(null)
-                .when(mSpyPackageManager)
-                .getPackageInfo(
-                        Mockito.anyString(), Mockito.any(PackageManager.PackageInfoFlags.class));
-        SdkSandboxDisabledCallback callback = new SdkSandboxDisabledCallback();
-        mService.isDisabled(callback);
-        assertThat(callback.mIsDisabled).isTrue();
-    }
-
-    @Test
-    public void testNotDisabledWhenWebviewResolvable() throws Exception {
-        // WebView provider can be resolved, therefore sandbox should not be disabled.
-        Mockito.doReturn(new PackageInfo())
-                .when(mSpyPackageManager)
-                .getPackageInfo(
-                        Mockito.anyString(), Mockito.any(PackageManager.PackageInfoFlags.class));
-        SdkSandboxDisabledCallback callback = new SdkSandboxDisabledCallback();
-        mService.isDisabled(callback);
-        assertThat(callback.isDisabled()).isFalse();
     }
 
     @Test
@@ -839,26 +812,6 @@ public class SdkSandboxTest {
             mErrorCode = errorCode;
             mSuccessful = false;
             mLatch.countDown();
-        }
-    }
-
-    private static class SdkSandboxDisabledCallback extends ISdkSandboxDisabledCallback.Stub {
-        private final CountDownLatch mLatch;
-        private boolean mIsDisabled;
-
-        SdkSandboxDisabledCallback() {
-            mLatch = new CountDownLatch(1);
-        }
-
-        @Override
-        public void onResult(boolean isDisabled) {
-            mIsDisabled = isDisabled;
-            mLatch.countDown();
-        }
-
-        boolean isDisabled() throws Exception {
-            assertThat(mLatch.await(1, TimeUnit.SECONDS)).isTrue();
-            return mIsDisabled;
         }
     }
 

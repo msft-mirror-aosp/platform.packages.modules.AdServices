@@ -68,7 +68,7 @@
             }
           }
         }],
-        "timestamp": "2000000"
+        "timestamp": "200000"
       },
       // Should result in an event-level report, but not aggregatable report as
       // aggregatable report window has passed.
@@ -182,7 +182,7 @@
           "trigger_debug_key" : "8971346781"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
-        "report_time": "3086572"
+        "report_time": "3800000"
       }
     ],
     "debug_aggregatable_results": [
@@ -199,7 +199,7 @@
           "trigger_debug_key" : "8971346781"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
-        "report_time": "3086572"
+        "report_time": "200000"
       }
     ],
     "verbose_debug_reports": [

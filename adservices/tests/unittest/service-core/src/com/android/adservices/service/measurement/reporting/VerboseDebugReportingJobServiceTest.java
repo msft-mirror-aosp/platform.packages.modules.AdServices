@@ -16,12 +16,16 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static com.android.adservices.service.measurement.reporting.VerboseDebugReportingJobService.VERBOSE_DEBUG_REPORT_JOB_ID;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
@@ -31,11 +35,15 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
+import android.content.ComponentName;
 import android.content.Context;
+
+import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
@@ -44,6 +52,9 @@ import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.service.stats.Clock;
+import com.android.adservices.service.stats.StatsdAdServicesLogger;
+import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -51,6 +62,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
+import org.mockito.internal.stubbing.answers.AnswersWithDelay;
+import org.mockito.internal.stubbing.answers.CallsRealMethods;
 import org.mockito.quality.Strictness;
 
 import java.util.Optional;
@@ -58,6 +71,7 @@ import java.util.concurrent.CountDownLatch;
 
 /** Unit test for {@link VerboseDebugReportingJobService} */
 public class VerboseDebugReportingJobServiceTest {
+    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final int MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID =
             MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB.getJobId();
 
@@ -66,6 +80,7 @@ public class VerboseDebugReportingJobServiceTest {
     private DatastoreManager mMockDatastoreManager;
     private JobScheduler mMockJobScheduler;
     private JobParameters mJobParameters;
+    private AdservicesJobServiceLogger mSpyLogger;
     private VerboseDebugReportingJobService mSpyService;
 
     @Before
@@ -74,6 +89,9 @@ public class VerboseDebugReportingJobServiceTest {
         mMockDatastoreManager = mock(DatastoreManager.class);
         mMockJobScheduler = mock(JobScheduler.class);
         mJobParameters = mock(JobParameters.class);
+        StatsdAdServicesLogger mockStatsdLogger = mock(StatsdAdServicesLogger.class);
+        mSpyLogger =
+                spy(new AdservicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mockStatsdLogger));
     }
 
     @Test
@@ -213,17 +231,24 @@ public class VerboseDebugReportingJobServiceTest {
     }
 
     @Test
-    public void scheduleIfNeeded_killSwitchOff_previouslyExecuted_dontForceSchedule_dontSchedule()
+    public void scheduleIfNeeded_killSwitchOff_sameJobInfoDontForceSchedule_dontSchedule()
             throws Exception {
         runWithMocks(
                 () -> {
                     // Setup
                     disableKillSwitch();
-                    final Context mockContext = mock(Context.class);
+                    final Context mockContext = spy(ApplicationProvider.getApplicationContext());
                     doReturn(mMockJobScheduler)
                             .when(mockContext)
                             .getSystemService(JobScheduler.class);
-                    final JobInfo mockJobInfo = mock(JobInfo.class);
+                    final JobInfo mockJobInfo =
+                            new JobInfo.Builder(
+                                            VERBOSE_DEBUG_REPORT_JOB_ID,
+                                            new ComponentName(
+                                                    mockContext,
+                                                    VerboseDebugReportingJobService.class))
+                                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                                    .build();
                     doReturn(mockJobInfo)
                             .when(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID));
@@ -235,6 +260,42 @@ public class VerboseDebugReportingJobServiceTest {
                     // Validate
                     ExtendedMockito.verify(
                             () -> VerboseDebugReportingJobService.schedule(any(), any()), never());
+                    verify(mMockJobScheduler, times(1))
+                            .getPendingJob(eq(MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID));
+                });
+    }
+
+    @Test
+    public void scheduleIfNeeded_killSwitchOff_diffJobInfoDontForceSchedule_doesSchedule()
+            throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    disableKillSwitch();
+                    final Context mockContext = spy(ApplicationProvider.getApplicationContext());
+                    doReturn(mMockJobScheduler)
+                            .when(mockContext)
+                            .getSystemService(JobScheduler.class);
+                    final JobInfo mockJobInfo =
+                            new JobInfo.Builder(
+                                            VERBOSE_DEBUG_REPORT_JOB_ID,
+                                            new ComponentName(
+                                                    mockContext,
+                                                    VerboseDebugReportingJobService.class))
+                                    // Difference
+                                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_CELLULAR)
+                                    .build();
+                    doReturn(mockJobInfo)
+                            .when(mMockJobScheduler)
+                            .getPendingJob(eq(MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID));
+
+                    // Execute
+                    VerboseDebugReportingJobService.scheduleIfNeeded(
+                            mockContext, /* forceSchedule = */ false);
+
+                    // Validate
+                    ExtendedMockito.verify(
+                            () -> VerboseDebugReportingJobService.schedule(any(), any()));
                     verify(mMockJobScheduler, times(1))
                             .getPendingJob(eq(MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID));
                 });
@@ -295,6 +356,28 @@ public class VerboseDebugReportingJobServiceTest {
                 });
     }
 
+    @Test
+    public void testOnStopJob_stopsExecutingThread() throws Exception {
+        runWithMocks(
+                () -> {
+                    disableKillSwitch();
+
+                    doAnswer(new AnswersWithDelay(WAIT_IN_MILLIS * 10, new CallsRealMethods()))
+                            .when(mSpyService)
+                            .sendReports();
+                    mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+                    Thread.sleep(WAIT_IN_MILLIS);
+
+                    assertNotNull(mSpyService.getFutureForTesting());
+
+                    boolean onStopJobResult =
+                            mSpyService.onStopJob(Mockito.mock(JobParameters.class));
+                    verify(mSpyService, times(0)).jobFinished(any(), anyBoolean());
+                    assertTrue(onStopJobResult);
+                    assertTrue(mSpyService.getFutureForTesting().isCancelled());
+                });
+    }
+
     private void runWithMocks(TestUtils.RunnableWithThrow execute) throws Exception {
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
@@ -303,6 +386,7 @@ public class VerboseDebugReportingJobServiceTest {
                         .spyStatic(EnrollmentDao.class)
                         .spyStatic(VerboseDebugReportingJobService.class)
                         .spyStatic(FlagsFactory.class)
+                        .spyStatic(AdservicesJobServiceLogger.class)
                         .mockStatic(ServiceCompatUtils.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
@@ -321,6 +405,13 @@ public class VerboseDebugReportingJobServiceTest {
                     .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
             ExtendedMockito.doNothing()
                     .when(() -> VerboseDebugReportingJobService.schedule(any(), any()));
+
+            // Mock AdservicesJobServiceLogger to not actually log the stats to server
+            Mockito.doNothing()
+                    .when(mSpyLogger)
+                    .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+            ExtendedMockito.doReturn(mSpyLogger)
+                    .when(() -> AdservicesJobServiceLogger.getInstance(any(Context.class)));
 
             // Execute
             execute.run();
@@ -343,6 +434,8 @@ public class VerboseDebugReportingJobServiceTest {
         ExtendedMockito.doReturn(value)
                 .when(mockFlags)
                 .getMeasurementJobVerboseDebugReportingKillSwitch();
+        when(mockFlags.getMeasurementVerboseDebugReportingJobRequiredNetworkType())
+                .thenReturn(JobInfo.NETWORK_TYPE_ANY);
     }
 
     private CountDownLatch createCountDownLatch() {

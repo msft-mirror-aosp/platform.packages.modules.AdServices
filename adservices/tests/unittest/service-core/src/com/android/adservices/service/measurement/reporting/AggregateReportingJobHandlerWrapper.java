@@ -23,6 +23,8 @@ import static org.mockito.Mockito.when;
 
 import android.net.Uri;
 
+import androidx.test.core.app.ApplicationProvider;
+
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.Flags;
@@ -30,6 +32,7 @@ import com.android.adservices.service.measurement.aggregation.AggregateCryptoFix
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.stats.AdServicesLogger;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -57,6 +60,7 @@ public class AggregateReportingJobHandlerWrapper {
         AggregateEncryptionKeyManager mockEncryptionManager =
                 Mockito.mock(AggregateEncryptionKeyManager.class);
         Flags mockFlags = Mockito.mock(Flags.class);
+        AdServicesLogger mockLogger = Mockito.mock(AdServicesLogger.class);
         when(mockEncryptionManager.getAggregateEncryptionKeys(any(), captorNumberOfKeys.capture()))
                 .thenAnswer(
                         invocation -> {
@@ -74,8 +78,9 @@ public class AggregateReportingJobHandlerWrapper {
                                         enrollmentDao,
                                         datastoreManager,
                                         mockEncryptionManager,
-                                        ReportingStatus.UploadMethod.REGULAR,
-                                        mockFlags)
+                                        mockFlags,
+                                        mockLogger,
+                                        ApplicationProvider.getApplicationContext())
                                 .setIsDebugInstance(isDebugInstance));
         Mockito.doReturn(200).when(aggregateReportingJobHandler)
                 .makeHttpPostRequest(any(), any());

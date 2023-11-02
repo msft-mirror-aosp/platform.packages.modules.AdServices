@@ -53,7 +53,7 @@ public abstract class UpdateEncoderEvent {
         /** see {@link #getUpdateType()} for more details */
         public abstract Builder setUpdateType(@NonNull UpdateType action);
 
-        /** see {@link #getEncoderEndpointUri()} fro more details */
+        /** see {@link #getEncoderEndpointUri()} for more details */
         public abstract Builder setEncoderEndpointUri(@Nullable Uri endpointUri);
 
         /**
@@ -65,7 +65,6 @@ public abstract class UpdateEncoderEvent {
     }
 
     public enum UpdateType {
-        REGISTER,
-        DELETE
+        REGISTER
     }
 }

@@ -32,4 +32,11 @@ interface Flags {
     default boolean getAdServicesSystemServiceEnabled() {
         return ADSERVICES_SYSTEM_SERVICE_ENABLED;
     }
+
+    /** Whether to enable the AdServices Shell Command interface. By default, it's disabled. */
+    boolean ADSERVICES_SHELL_COMMAND_ENABLED = false;
+
+    default boolean getAdServicesShellCommandEnabled() {
+        return ADSERVICES_SHELL_COMMAND_ENABLED;
+    }
 }

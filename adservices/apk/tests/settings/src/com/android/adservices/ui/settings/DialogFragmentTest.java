@@ -27,9 +27,11 @@ import static org.mockito.Mockito.verify;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
@@ -80,6 +82,9 @@ public class DialogFragmentTest {
     public void setup() throws UiObjectNotFoundException, IOException {
         // Skip the test if it runs on unsupported platforms.
         Assume.assumeTrue(ApkTestUtil.isDeviceSupported());
+
+        // Skip the test on S- since Back Compat only support GA UX
+        Assume.assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU);
 
         // Static mocking
         mStaticMockSession =
@@ -333,6 +338,7 @@ public class DialogFragmentTest {
     }
 
     @Test
+    @FlakyTest(bugId = 301779505)
     public void blockAppDialogTest() throws UiObjectNotFoundException, IOException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 

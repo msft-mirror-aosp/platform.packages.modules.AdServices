@@ -18,16 +18,18 @@ package com.android.adservices.data.measurement;
 
 import android.net.Uri;
 
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Source;
-import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
 import org.json.JSONException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -90,8 +92,9 @@ public class DeleteExpiredDynamicIntegrationTest extends AbstractDbIntegrationTe
     // test, although it's ostensibly unused by this constructor.
     public DeleteExpiredDynamicIntegrationTest(DbState input, DbState output, String name) {
         super(input, output);
+        AdServicesErrorLogger errorLogger = Mockito.mock(AdServicesErrorLogger.class);
         this.mDatastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), errorLogger);
     }
 
     public void runActionToTest() {

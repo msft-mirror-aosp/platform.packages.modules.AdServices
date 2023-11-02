@@ -28,18 +28,21 @@ import android.content.ComponentName;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
-import com.android.adservices.service.AdServicesConfig;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
-import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.measurement.util.JobLockHolder;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
-import java.util.concurrent.Executor;
+import com.google.common.util.concurrent.ListeningExecutorService;
+
+import java.util.concurrent.Future;
 
 /**
  * Main service for scheduling event reporting jobs. The actual job execution logic is part of
@@ -49,7 +52,9 @@ public final class EventReportingJobService extends JobService {
     private static final int MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID =
             MEASUREMENT_EVENT_MAIN_REPORTING_JOB.getJobId();
 
-    private static final Executor sBlockingExecutor = AdServicesExecutors.getBlockingExecutor();
+    private static final ListeningExecutorService sBlockingExecutor =
+            AdServicesExecutors.getBlockingExecutor();
+    private Future mExecutorFuture;
 
     @Override
     public boolean onStartJob(JobParameters params) {
@@ -66,40 +71,46 @@ public final class EventReportingJobService extends JobService {
                 .recordOnStartJob(MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementJobEventReportingKillSwitch()) {
-            LogUtil.e("EventReportingJobService is disabled");
+            LoggerFactory.getMeasurementLogger().e("EventReportingJobService is disabled");
             return skipAndCancelBackgroundJob(
                     params,
                     AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON,
                     /* doRecord=*/ true);
         }
 
-        LogUtil.d("EventReportingJobService.onStartJob: ");
-        sBlockingExecutor.execute(
-                () -> {
-                    processPendingReports();
+        LoggerFactory.getMeasurementLogger().d("EventReportingJobService.onStartJob: ");
+        mExecutorFuture =
+                sBlockingExecutor.submit(
+                        () -> {
+                            processPendingReports();
 
-                    AdservicesJobServiceLogger.getInstance(EventReportingJobService.this)
-                            .recordJobFinished(
-                                    MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID,
-                                    /* isSuccessful= */ true,
-                                    /* shouldRetry= */ false);
+                            AdservicesJobServiceLogger.getInstance(EventReportingJobService.this)
+                                    .recordJobFinished(
+                                            MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID,
+                                            /* isSuccessful= */ true,
+                                            /* shouldRetry= */ false);
 
-                    jobFinished(params, /* wantsReschedule= */ false);
-                });
+                            jobFinished(params, /* wantsReschedule= */ false);
+                        });
         return true;
     }
 
-    private void processPendingReports() {
+    @VisibleForTesting
+    void processPendingReports() {
         final JobLockHolder lock = JobLockHolder.getInstance(EVENT_REPORTING);
         if (lock.tryLock()) {
             try {
                 long maxEventReportUploadRetryWindowMs =
-                        SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS;
+                        FlagsFactory.getFlags().getMeasurementMaxEventReportUploadRetryWindowMs();
                 new EventReportingJobHandler(
                                 EnrollmentDao.getInstance(getApplicationContext()),
                                 DatastoreManagerFactory.getDatastoreManager(
                                         getApplicationContext()),
-                                ReportingStatus.UploadMethod.REGULAR)
+                                FlagsFactory.getFlags(),
+                                AdServicesLoggerImpl.getInstance(),
+                                ReportingStatus.ReportType.EVENT,
+                                ReportingStatus.UploadMethod.REGULAR,
+                                getApplicationContext())
                         .performScheduledPendingReportsInWindow(
                                 System.currentTimeMillis() - maxEventReportUploadRetryWindowMs,
                                 System.currentTimeMillis());
@@ -108,14 +119,16 @@ public final class EventReportingJobService extends JobService {
                 lock.unlock();
             }
         }
-        LogUtil.d("EventReportingJobService did not acquire the lock");
+        LoggerFactory.getMeasurementLogger().d("EventReportingJobService did not acquire the lock");
     }
 
     @Override
     public boolean onStopJob(JobParameters params) {
-        LogUtil.d("EventReportingJobService.onStopJob");
+        LoggerFactory.getMeasurementLogger().d("EventReportingJobService.onStopJob");
         boolean shouldRetry = true;
-
+        if (mExecutorFuture != null) {
+            shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
+        }
         AdservicesJobServiceLogger.getInstance(this)
                 .recordOnStopJob(params, MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID, shouldRetry);
         return shouldRetry;
@@ -123,17 +136,7 @@ public final class EventReportingJobService extends JobService {
 
     /** Schedules {@link EventReportingJobService} */
     @VisibleForTesting
-    static void schedule(Context context, JobScheduler jobScheduler) {
-        final JobInfo job =
-                new JobInfo.Builder(
-                                MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID,
-                                new ComponentName(context, EventReportingJobService.class))
-                        .setRequiresDeviceIdle(true)
-                        .setRequiresBatteryNotLow(true)
-                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
-                        .setPeriodic(AdServicesConfig.getMeasurementEventMainReportingJobPeriodMs())
-                        .setPersisted(true)
-                        .build();
+    static void schedule(JobScheduler jobScheduler, JobInfo job) {
         jobScheduler.schedule(job);
     }
 
@@ -144,25 +147,42 @@ public final class EventReportingJobService extends JobService {
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
-        if (FlagsFactory.getFlags().getMeasurementJobEventReportingKillSwitch()) {
-            LogUtil.d("EventReportingJobService is disabled, skip scheduling");
+        Flags flags = FlagsFactory.getFlags();
+        if (flags.getMeasurementJobEventReportingKillSwitch()) {
+            LoggerFactory.getMeasurementLogger()
+                    .d("EventReportingJobService is disabled, skip scheduling");
             return;
         }
 
         final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
         if (jobScheduler == null) {
-            LogUtil.e("JobScheduler not found");
+            LoggerFactory.getMeasurementLogger().e("JobScheduler not found");
             return;
         }
 
-        final JobInfo job = jobScheduler.getPendingJob(MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID);
+        final JobInfo scheduledJob =
+                jobScheduler.getPendingJob(MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
-        if (job == null || forceSchedule) {
-            schedule(context, jobScheduler);
-            LogUtil.d("Scheduled EventReportingJobService");
+        JobInfo jobInfo = buildJobInfo(context, flags);
+        if (forceSchedule || !jobInfo.equals(scheduledJob)) {
+            schedule(jobScheduler, jobInfo);
+            LoggerFactory.getMeasurementLogger().d("Scheduled EventReportingJobService");
         } else {
-            LogUtil.d("EventReportingJobService already scheduled, skipping reschedule");
+            LoggerFactory.getMeasurementLogger()
+                    .d("EventReportingJobService already scheduled, skipping reschedule");
         }
+    }
+
+    private static JobInfo buildJobInfo(Context context, Flags flags) {
+        return new JobInfo.Builder(
+                        MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID,
+                        new ComponentName(context, EventReportingJobService.class))
+                .setRequiresBatteryNotLow(
+                        flags.getMeasurementEventReportingJobRequiredBatteryNotLow())
+                .setRequiredNetworkType(flags.getMeasurementEventReportingJobRequiredNetworkType())
+                .setPeriodic(flags.getMeasurementEventMainReportingJobPeriodMs())
+                .setPersisted(flags.getMeasurementEventReportingJobPersisted())
+                .build();
     }
 
     private boolean skipAndCancelBackgroundJob(
@@ -182,5 +202,10 @@ public final class EventReportingJobService extends JobService {
 
         // Returning false means that this job has completed its work.
         return false;
+    }
+
+    @VisibleForTesting
+    Future getFutureForTesting() {
+        return mExecutorFuture;
     }
 }

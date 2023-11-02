@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.common.httpclient;
 
+import static android.adservices.exceptions.RetryableAdServicesNetworkException.DEFAULT_RETRY_AFTER_VALUE;
+
 import android.adservices.exceptions.AdServicesNetworkException;
 import android.adservices.exceptions.RetryableAdServicesNetworkException;
 import android.annotation.NonNull;
@@ -520,6 +522,8 @@ public class AdServicesHttpsClient {
                     if (headerValue != null) {
                         // TODO(b/282017541): Add a maximum allowed retry-after duration.
                         retryAfterDuration = Duration.ofMillis(Long.parseLong(headerValue));
+                    } else {
+                        retryAfterDuration = DEFAULT_RETRY_AFTER_VALUE;
                     }
                 } else {
                     errorCode = AdServicesNetworkException.ERROR_CLIENT;

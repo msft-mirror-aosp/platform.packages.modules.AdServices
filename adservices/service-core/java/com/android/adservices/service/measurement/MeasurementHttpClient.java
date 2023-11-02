@@ -17,11 +17,13 @@
 package com.android.adservices.service.measurement;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.WebAddresses;
@@ -31,6 +33,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -45,10 +49,21 @@ import javax.net.ssl.X509TrustManager;
  * @hide
  */
 public class MeasurementHttpClient {
+    private static final String APEX_VERSION_WHEN_NOT_FOUND = "000000";
 
     enum HttpMethod {
         GET,
         POST
+    }
+
+    private final Map<Long, String> mApexVersionToHeaderVersion = new HashMap<>();
+    private Long mApexVersion;
+
+    public MeasurementHttpClient(Context context) {
+        if (mApexVersion == null) {
+            mApexVersion =
+                    getAdservicesApexVersion(context.getPackageManager(), context.getPackageName());
+        }
     }
 
     /**
@@ -62,8 +77,11 @@ public class MeasurementHttpClient {
 
         final HttpsURLConnection urlConnection = (HttpsURLConnection) url.openConnection();
         if (WebAddresses.isLocalhost(Uri.parse(url.toString()))) {
-            LogUtil.d("MeasurementHttpClient::setup : setting unsafe SSL for localhost, URI: %s",
-                    url.toString());
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "MeasurementHttpClient::setup : setting unsafe SSL for localhost, URI:"
+                                    + " %s",
+                            url.toString());
             urlConnection.setSSLSocketFactory(getUnsafeSslSocketFactory());
         }
         final Flags flags = FlagsFactory.getFlags();
@@ -72,8 +90,11 @@ public class MeasurementHttpClient {
 
         // Overriding default headers to avoid leaking information
         urlConnection.setRequestProperty("User-Agent", "");
-        urlConnection.setRequestProperty("Version", flags.getMainlineTrainVersion());
-
+        String version =
+                flags.getEnableComputeVersionFromMappings()
+                        ? getHeaderVersion()
+                        : flags.getMainlineTrainVersion();
+        urlConnection.setRequestProperty("Version", version);
         return urlConnection;
     }
 
@@ -97,8 +118,37 @@ public class MeasurementHttpClient {
             sslContext.init(null, bypassTrustManagers, new SecureRandom());
             return sslContext.getSocketFactory();
         } catch (Exception e) {
-            LogUtil.e(e, "getUnsafeSslSocketFactory caught exception");
+            LoggerFactory.getMeasurementLogger().e(e, "getUnsafeSslSocketFactory caught exception");
             return null;
         }
+    }
+
+    private String getHeaderVersion() {
+        return mApexVersionToHeaderVersion.computeIfAbsent(
+                mApexVersion, headerVersion -> computeHeaderVersion());
+    }
+
+    private Long getAdservicesApexVersion(PackageManager packageManager, String packageName) {
+        try {
+            return packageManager
+                    .getPackageInfo(packageName, PackageManager.MATCH_APEX)
+                    .getLongVersionCode();
+        } catch (PackageManager.NameNotFoundException e) {
+            return 0L;
+        }
+    }
+
+    private String computeHeaderVersion() {
+        String listOfMappings = FlagsFactory.getFlags().getAdservicesVersionMappings();
+        String[] mappings = listOfMappings.split("\\|");
+        for (String mapping : mappings) {
+            String[] range = mapping.split(",");
+            int startRange = Integer.parseInt(range[0]);
+            int endRange = Integer.parseInt(range[1]);
+            if (mApexVersion >= startRange && mApexVersion < endRange) {
+                return range[2];
+            }
+        }
+        return APEX_VERSION_WHEN_NOT_FOUND;
     }
 }

@@ -106,4 +106,27 @@ public class ContentProviderRestrictionsHostTest extends BaseHostJUnit4Test {
     public void testRegisterContentObserver_defaultValueRestrictionsApplied() throws Exception {
         runPhase("testRegisterContentObserver_defaultValueRestrictionsApplied");
     }
+
+    @Test
+    public void testGetContentProvider_defaultAllowlist() throws Exception {
+        runPhase("testGetContentProvider_defaultAllowlist");
+    }
+
+    @Test
+    public void
+            testGetContentProvider_nextAllowlistApplied_allAllowlistsAbsent_appliesDefaultAllowlist()
+                    throws Exception {
+        runPhase(
+                "testGetContentProvider_nextAllowlistApplied_allAllowlistsAbsent"
+                        + "_appliesDefaultAllowlist");
+    }
+
+    @Test
+    public void
+            testGetContentProvider_nextAllowlistApplied_currentAllowlistPresent_appliesCurrentAllowlist_allowlistForTargetSdkVersion()
+                    throws Exception {
+        runPhase(
+                "testGetContentProvider_nextAllowlistApplied_currentAllowlistPresent"
+                        + "_appliesCurrentAllowlist_allowlistForTargetSdkVersion");
+    }
 }

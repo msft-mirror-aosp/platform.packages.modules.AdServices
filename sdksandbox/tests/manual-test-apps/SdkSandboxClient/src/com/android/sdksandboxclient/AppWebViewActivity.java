@@ -17,7 +17,7 @@
 package com.android.sdksandboxclient;
 
 import android.app.Activity;
-import android.app.sdksandbox.interfaces.ISdkApi;
+import android.app.sdksandbox.interfaces.IMediateeSdkApi;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.webkit.JavascriptInterface;
@@ -36,7 +36,7 @@ public class AppWebViewActivity extends Activity {
         setContentView(R.layout.activity_app_webview);
         mInterface =
                 new JsInterface(
-                        ISdkApi.Stub.asInterface(
+                        IMediateeSdkApi.Stub.asInterface(
                                 getIntent().getIBinderExtra(SANDBOXED_SDK_BINDER)));
         startWebview();
     }
@@ -70,9 +70,9 @@ public class AppWebViewActivity extends Activity {
     }
 
     private static class JsInterface {
-        ISdkApi mApi;
+        IMediateeSdkApi mApi;
 
-        private JsInterface(ISdkApi api) {
+        private JsInterface(IMediateeSdkApi api) {
             mApi = api;
         }
 

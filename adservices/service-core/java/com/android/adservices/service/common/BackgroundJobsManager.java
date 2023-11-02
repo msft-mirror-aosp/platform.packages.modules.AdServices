@@ -18,6 +18,7 @@ package com.android.adservices.service.common;
 
 import static com.android.adservices.spe.AdservicesJobInfo.COBALT_LOGGING_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.CONSENT_NOTIFICATION_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.ENCRYPTION_KEY_PERIODIC_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.FLEDGE_AD_SELECTION_DEBUG_REPORT_SENDER_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MAINTENANCE_JOB;
@@ -33,6 +34,7 @@ import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DELETE_UN
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_EVENT_MAIN_REPORTING_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.PERIODIC_SIGNALS_ENCODING_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.TOPICS_EPOCH_JOB;
 
 import android.annotation.NonNull;
@@ -49,6 +51,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.adselection.DebugReportSenderJobService;
 import com.android.adservices.service.consent.AdServicesApiType;
+import com.android.adservices.service.encryptionkey.EncryptionKeyJobService;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.DeleteUninstalledJobService;
 import com.android.adservices.service.measurement.attribution.AttributionFallbackJobService;
@@ -161,6 +164,7 @@ public class BackgroundJobsManager {
             EpochJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
             MaintenanceJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
             scheduleMddBackgroundJobs(context);
+            scheduleEncryptionKeyBackgroundJobs(context);
             scheduleCobaltBackgroundJob(context);
         }
     }
@@ -174,6 +178,18 @@ public class BackgroundJobsManager {
     public static void scheduleMddBackgroundJobs(@NonNull Context context) {
         if (!FlagsFactory.getFlags().getMddBackgroundTaskKillSwitch()) {
             MddJobService.scheduleIfNeeded(context, /* forceSchedule */ false);
+        }
+    }
+
+    /**
+     * Tries to schedule EncryptionKey related background jobs if the
+     * EncryptionKeyPeriodicFetchKillSwitch is disabled.
+     *
+     * @param context application context.
+     */
+    public static void scheduleEncryptionKeyBackgroundJobs(@NonNull Context context) {
+        if (!FlagsFactory.getFlags().getEncryptionKeyPeriodicFetchKillSwitch()) {
+            EncryptionKeyJobService.scheduleIfNeeded(context, /* forceSchedule */ false);
         }
     }
 
@@ -215,6 +231,7 @@ public class BackgroundJobsManager {
                     context, /* forceSchedule= */ false);
             DebugReportingFallbackJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
             scheduleMddBackgroundJobs(context);
+            scheduleEncryptionKeyBackgroundJobs(context);
         }
     }
 
@@ -248,6 +265,8 @@ public class BackgroundJobsManager {
         jobScheduler.cancel(CONSENT_NOTIFICATION_JOB.getJobId());
 
         MddJobService.unscheduleAllJobs(jobScheduler);
+
+        jobScheduler.cancel(ENCRYPTION_KEY_PERIODIC_JOB.getJobId());
 
         unscheduleCobaltJob(jobScheduler);
     }
@@ -295,6 +314,7 @@ public class BackgroundJobsManager {
 
         jobScheduler.cancel(FLEDGE_BACKGROUND_FETCH_JOB.getJobId());
         jobScheduler.cancel(FLEDGE_AD_SELECTION_DEBUG_REPORT_SENDER_JOB.getJobId());
+        jobScheduler.cancel(PERIODIC_SIGNALS_ENCODING_JOB.getJobId());
     }
 
     /**
