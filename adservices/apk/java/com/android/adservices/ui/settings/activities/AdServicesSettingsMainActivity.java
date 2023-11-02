@@ -106,6 +106,11 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
         initMainActivity(R.layout.main_u18_activity);
     }
 
+    @Override
+    public void initRvc() {
+        initU18();
+    }
+
     private void initMainActivity(int layoutResID) {
         setContentView(layoutResID);
         // no need to store since not using

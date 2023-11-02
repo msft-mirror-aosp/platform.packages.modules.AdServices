@@ -47,6 +47,9 @@ public interface UxSelector {
             case BETA_UX:
                 initBeta();
                 break;
+            case RVC_UX:
+                initRvc();
+                break;
             default:
                 // TODO: log some warning or error
                 initGA();
@@ -70,4 +73,10 @@ public interface UxSelector {
      * PrivacySandboxUxCollection#U18_UX} mode.
      */
     void initU18();
+
+    /**
+     * This method will be called in {@link #initWithUx} if app is in {@link
+     * PrivacySandboxUxCollection#RVC_UX} mode.
+     */
+    void initRvc();
 }
