@@ -142,6 +142,12 @@ public class AdServicesStatusUtils {
      * <p>This error may be considered similar to {@link LimitExceededException}.
      */
     public static final int STATUS_SERVER_RATE_LIMIT_REACHED = 17;
+    /**
+     * Consent notification has not been displayed yet. AdServices is not available.
+     *
+     * <p>This error may be considered similar to {@link IllegalStateException}.
+     */
+    public static final int STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET = 18;
 
     /** The error message to be returned along with {@link IllegalStateException}. */
     public static final String ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE = "Service is not available.";
@@ -204,6 +210,7 @@ public class AdServicesStatusUtils {
             case STATUS_IO_ERROR:
                 return new IOException();
             case STATUS_KILLSWITCH_ENABLED: // Intentional fallthrough
+            case STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET: // Intentional fallthrough
             case STATUS_USER_CONSENT_REVOKED: // Intentional fallthrough
             case STATUS_JS_SANDBOX_UNAVAILABLE:
                 return new IllegalStateException(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
@@ -261,7 +268,8 @@ public class AdServicesStatusUtils {
                 STATUS_TIMEOUT,
                 STATUS_JS_SANDBOX_UNAVAILABLE,
                 STATUS_INVALID_OBJECT,
-                STATUS_SERVER_RATE_LIMIT_REACHED
+                STATUS_SERVER_RATE_LIMIT_REACHED,
+                STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface StatusCode {}
