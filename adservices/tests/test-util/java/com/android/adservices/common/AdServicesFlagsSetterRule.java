@@ -90,19 +90,14 @@ public final class AdServicesFlagsSetterRule
                 .setMsmtApiAppAllowList(packageName)
                 .setMsmtWebContextClientAllowList(packageName)
                 .setConsentManagerDebugMode(true)
-                .setOrCacheDebugSystemProperty(KEY_GLOBAL_KILL_SWITCH, false)
-                .setOrCacheDebugSystemProperty(KEY_MEASUREMENT_KILL_SWITCH, false)
-                .setOrCacheDebugSystemProperty(
-                        KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH, false)
-                .setOrCacheDebugSystemProperty(
-                        KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH, false)
-                .setOrCacheDebugSystemProperty(
-                        KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH, false)
-                .setOrCacheDebugSystemProperty(
-                        KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH, false)
-                .setOrCacheDebugSystemProperty(
-                        KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH, false)
-                .setOrCacheDebugSystemProperty(KEY_MEASUREMENT_API_STATUS_KILL_SWITCH, false)
+                .setSystemProperty(KEY_GLOBAL_KILL_SWITCH, false)
+                .setSystemProperty(KEY_MEASUREMENT_KILL_SWITCH, false)
+                .setSystemProperty(KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH, false)
+                .setSystemProperty(KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH, false)
+                .setSystemProperty(KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH, false)
+                .setSystemProperty(KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH, false)
+                .setSystemProperty(KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH, false)
+                .setSystemProperty(KEY_MEASUREMENT_API_STATUS_KILL_SWITCH, false)
                 .setAdIdKillSwitchForTests(false);
     }
 
