@@ -22,6 +22,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__RESOURCES_PROVIDER_ADD_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.loader.ResourcesLoader;
@@ -99,11 +100,10 @@ public class OTAResourcesManager {
         if (!resourcesFile.hasFileUri()) {
             ErrorLogUtil.e(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DOWNLOADED_OTA_FILE_ERROR,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX,
-                    OTAResourcesManager.class.getSimpleName(),
-                    new Object() {}.getClass().getEnclosingMethod().getName());
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
             return;
         }
+        @SuppressLint("NewAdServicesFile")
         File f = new File(context.getDataDir() + Uri.parse(resourcesFile.getFileUri()).getPath());
         LogUtil.d("got this file:" + resourcesFile.getFileUri());
         // Clear previous ResourceProvider and add new one created from arsc file

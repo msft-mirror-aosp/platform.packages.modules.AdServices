@@ -215,7 +215,6 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                     MeasurementImpl.getInstance(context).deletePackageRecords(packageUri);
                 });
 
-        // Log wipeout event triggered by request (from Android) to delete data of package on device
         WipeoutStatus wipeoutStatus = new WipeoutStatus();
         wipeoutStatus.setWipeoutType(WipeoutStatus.WipeoutType.CLEAR_DATA);
         logWipeoutStats(wipeoutStatus, packageUri.toString());
@@ -383,7 +382,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                 .logMeasurementWipeoutStats(
                         new MeasurementWipeoutStats.Builder()
                                 .setCode(AD_SERVICES_MEASUREMENT_WIPEOUT)
-                                .setWipeoutType(wipeoutStatus.getWipeoutType().ordinal())
+                                .setWipeoutType(wipeoutStatus.getWipeoutType().getValue())
                                 .setSourceRegistrant(appPackageName)
                                 .build());
     }

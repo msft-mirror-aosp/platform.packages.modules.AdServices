@@ -33,7 +33,6 @@ import com.android.internal.annotations.VisibleForTesting;
         },
         version = CobaltDatabase.VERSION)
 @TypeConverters({Converters.class})
-@VisibleForTesting
 public abstract class CobaltDatabase extends RoomDatabase {
     static final int VERSION = 1;
 

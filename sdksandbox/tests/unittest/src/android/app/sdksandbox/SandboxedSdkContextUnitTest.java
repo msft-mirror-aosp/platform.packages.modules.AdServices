@@ -69,18 +69,18 @@ public class SandboxedSdkContextUnitTest {
     private static final String SDK_CE_DATA_DIR = "/data/misc_ce/0/sdksandbox/com.foo/sdk@123";
     private static final String SDK_DE_DATA_DIR = "/data/misc_de/0/sdksandbox/com.foo/sdk@123";
 
-    private static boolean sCustomizedSdkContextEnabled;
+    private static boolean sCustomizedSdkContextEnabled = SdkLevel.isAtLeastU();
 
     private MockitoSession mStaticMockSession;
 
     @BeforeClass
-    public static void setUpClass() throws Exception {
+    public static void setUpClass() {
         DeviceConfigStateManager stateManager =
                 new DeviceConfigStateManager(
                         InstrumentationRegistry.getInstrumentation().getContext(),
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         "sdksandbox_customized_sdk_context_enabled");
-        sCustomizedSdkContextEnabled = Boolean.parseBoolean(stateManager.get());
+        sCustomizedSdkContextEnabled &= Boolean.parseBoolean(stateManager.get());
     }
 
     @Before
@@ -281,6 +281,86 @@ public class SandboxedSdkContextUnitTest {
         ActivityManager am1 = ctx1.getSystemService(ActivityManager.class);
         ActivityManager am2 = ctx2.getSystemService(ActivityManager.class);
         assertThat(am1).isNotSameInstanceAs(am2);
+    }
+
+    /**
+     * Test the getter of customizedSdkContextEnabled flag
+     *
+     * @throws Exception for errors to retrieve the ApplicationInfo from PackageManager
+     */
+    @Test
+    public void testisCustomizedSdkContextEnabled() throws Exception {
+        ApplicationInfo info =
+                InstrumentationRegistry.getContext()
+                        .getPackageManager()
+                        .getApplicationInfo(
+                                RESOURCES_PACKAGE,
+                                PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES);
+
+        boolean isCustomizedSdkContextEnabled = true;
+        SandboxedSdkContext context =
+                new SandboxedSdkContext(
+                        InstrumentationRegistry.getContext()
+                                .createCredentialProtectedStorageContext(),
+                        getClass().getClassLoader(),
+                        CLIENT_PACKAGE_NAME,
+                        info,
+                        SDK_NAME,
+                        SDK_CE_DATA_DIR,
+                        SDK_DE_DATA_DIR,
+                        isCustomizedSdkContextEnabled);
+        assertThat(context.isCustomizedSdkContextEnabled())
+                .isEqualTo(isCustomizedSdkContextEnabled);
+
+        isCustomizedSdkContextEnabled = false;
+        context =
+                new SandboxedSdkContext(
+                        InstrumentationRegistry.getContext()
+                                .createCredentialProtectedStorageContext(),
+                        getClass().getClassLoader(),
+                        CLIENT_PACKAGE_NAME,
+                        info,
+                        SDK_NAME,
+                        SDK_CE_DATA_DIR,
+                        SDK_DE_DATA_DIR,
+                        isCustomizedSdkContextEnabled);
+        assertThat(context.isCustomizedSdkContextEnabled())
+                .isEqualTo(isCustomizedSdkContextEnabled);
+    }
+
+    /**
+     * Ensure that SandboxedSdkContext objects can create new instances from the same class with new
+     * Context as base.
+     *
+     * @throws Exception for errors to retrieve the ApplicationInfo from PackageManager
+     */
+    @Test
+    public void testCreateContextWithNewBase() throws Exception {
+        ApplicationInfo info =
+                InstrumentationRegistry.getContext()
+                        .getPackageManager()
+                        .getApplicationInfo(
+                                RESOURCES_PACKAGE,
+                                PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES);
+        TestService testService = new TestService(InstrumentationRegistry.getContext());
+        TestContext baseContext = new TestContext(testService);
+        SandboxedSdkContext sdkContext =
+                new SandboxedSdkContext(
+                        baseContext,
+                        getClass().getClassLoader(),
+                        CLIENT_PACKAGE_NAME,
+                        info,
+                        SDK_NAME,
+                        SDK_CE_DATA_DIR,
+                        SDK_DE_DATA_DIR,
+                        sCustomizedSdkContextEnabled);
+        assertThat(sdkContext.getBaseContext()).isEqualTo(baseContext);
+
+        Context newBaseContext = new TestContext(testService);
+        SandboxedSdkContext contextWithNewBase =
+                sdkContext.createContextWithNewBase(newBaseContext);
+
+        assertThat(contextWithNewBase.getBaseContext()).isEqualTo(newBaseContext);
     }
 
     private static class TestContext extends MockContext {

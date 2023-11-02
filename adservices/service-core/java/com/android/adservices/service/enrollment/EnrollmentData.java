@@ -38,7 +38,7 @@ public class EnrollmentData {
     private List<String> mAttributionTriggerRegistrationUrl;
     private List<String> mAttributionReportingUrl;
     private List<String> mRemarketingResponseBasedRegistrationUrl;
-    private List<String> mEncryptionKeyUrl;
+    private String mEncryptionKeyUrl;
 
     private EnrollmentData() {
         mEnrollmentId = null;
@@ -48,7 +48,7 @@ public class EnrollmentData {
         mAttributionTriggerRegistrationUrl = new ArrayList<>();
         mAttributionReportingUrl = new ArrayList<>();
         mRemarketingResponseBasedRegistrationUrl = new ArrayList<>();
-        mEncryptionKeyUrl = new ArrayList<>();
+        mEncryptionKeyUrl = null;
     }
 
     @Override
@@ -121,8 +121,9 @@ public class EnrollmentData {
         return mRemarketingResponseBasedRegistrationUrl;
     }
 
-    /** Returns URLs used to fetch public/private keys for encrypting API requests. */
-    public List<String> getEncryptionKeyUrl() {
+    /** Returns URL used to fetch public/private keys for encrypting API requests. */
+    @Nullable
+    public String getEncryptionKeyUrl() {
         return mEncryptionKeyUrl;
     }
 
@@ -231,14 +232,8 @@ public class EnrollmentData {
         }
 
         /** See {@link EnrollmentData#getEncryptionKeyUrl()}. */
-        public Builder setEncryptionKeyUrl(List<String> encryptionKeyUrl) {
-            mBuilding.mEncryptionKeyUrl = encryptionKeyUrl;
-            return this;
-        }
-
-        /** See {@link EnrollmentData#getEncryptionKeyUrl()}. */
         public Builder setEncryptionKeyUrl(String encryptionKeyUrl) {
-            mBuilding.mEncryptionKeyUrl = splitEnrollmentInputToList(encryptionKeyUrl);
+            mBuilding.mEncryptionKeyUrl = encryptionKeyUrl;
             return this;
         }
 

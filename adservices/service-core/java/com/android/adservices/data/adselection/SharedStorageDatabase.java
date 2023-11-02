@@ -16,13 +16,11 @@
 
 package com.android.adservices.data.adselection;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
 import androidx.room.AutoMigration;
 import androidx.room.Database;
-import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
@@ -52,7 +50,6 @@ public abstract class SharedStorageDatabase extends RoomDatabase {
     private static volatile SharedStorageDatabase sSingleton = null;
 
     /** Returns or creates the instance of SharedStorageDatabase given a context. */
-    @SuppressLint("NewAdServicesFile")
     public static SharedStorageDatabase getInstance(@NonNull Context context) {
         Objects.requireNonNull(context, "Context must be provided.");
         // Initialization pattern recommended on page 334 of "Effective Java" 3rd edition
@@ -63,7 +60,8 @@ public abstract class SharedStorageDatabase extends RoomDatabase {
         synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
                 sSingleton =
-                        Room.databaseBuilder(context, SharedStorageDatabase.class, DATABASE_NAME)
+                        FileCompatUtils.roomDatabaseBuilderHelper(
+                                        context, SharedStorageDatabase.class, DATABASE_NAME)
                                 .fallbackToDestructiveMigration()
                                 .build();
             }

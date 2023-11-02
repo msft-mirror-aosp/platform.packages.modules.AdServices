@@ -24,13 +24,16 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import android.content.Context;
+
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.cobalt.CobaltRegistryLoader;
 import com.android.adservices.data.topics.Topic;
 import com.android.cobalt.CobaltLogger;
+import com.android.cobalt.domain.Project;
 
-import com.google.cobalt.CobaltRegistry;
 import com.google.cobalt.MetricDefinition;
 import com.google.common.collect.ImmutableList;
 
@@ -53,6 +56,8 @@ public final class TopicsCobaltLoggerTest {
     private static final int LAST_TOPIC = FIRST_TOPIC + SUPPORTED_TOPICS_COUNT - 1;
     private static final int LOGGED_TOPICS_COUNT = 10;
 
+    private static final Context sContext = ApplicationProvider.getApplicationContext();
+
     @Mock private CobaltLogger mMockCobaltLogger;
     private TopicsCobaltLogger mTopicsCobaltLogger;
 
@@ -70,11 +75,9 @@ public final class TopicsCobaltLoggerTest {
         // See
         // //packages/modules/AdServices/adservices/service-core/resources/cobalt_registry.textpb
         // for the actual registy.
-        CobaltRegistry cobaltRegistry = CobaltRegistryLoader.getRegistry();
-        assertThat(cobaltRegistry.getCustomersCount()).isAtLeast(1);
-        assertThat(cobaltRegistry.getCustomers(0).getProjectsCount()).isAtLeast(1);
+        Project cobaltRegistry = CobaltRegistryLoader.getRegistry(sContext);
         MetricDefinition topicsMetric =
-                cobaltRegistry.getCustomers(0).getProjects(0).getMetricsList().stream()
+                cobaltRegistry.getMetrics().stream()
                         .filter(m -> m.getMetricName().equals("returned_topics"))
                         .findFirst()
                         .orElseThrow();

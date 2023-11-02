@@ -39,6 +39,8 @@ public class AuctionServerPayloadFormatterFactory {
 
         if (version == AuctionServerPayloadFormatterV0.VERSION) {
             return new AuctionServerPayloadFormatterV0(availableBucketSizes);
+        } else if (version == AuctionServerPayloadFormatterExcessiveMaxSize.VERSION) {
+            return new AuctionServerPayloadFormatterExcessiveMaxSize();
         }
 
         String errMsg =
@@ -56,6 +58,8 @@ public class AuctionServerPayloadFormatterFactory {
         if (version == AuctionServerPayloadFormatterV0.VERSION) {
             // Extract data does not need bucket size list.
             return new AuctionServerPayloadFormatterV0(ImmutableList.of());
+        } else if (version == AuctionServerPayloadFormatterExcessiveMaxSize.VERSION) {
+            return new AuctionServerPayloadFormatterExcessiveMaxSize();
         }
 
         String errMsg =

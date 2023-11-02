@@ -16,6 +16,9 @@
 
 package android.adservices.test.scenario.adservices.fledge;
 
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
+
 import android.Manifest;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.GetAdSelectionDataOutcome;
@@ -49,6 +52,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -59,6 +63,8 @@ public class AdSelectionDataE2ETest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final String CONTEXTUAL_SIGNALS_ONE_BUYER = "ContextualSignalsOneBuyer.json";
+    private static final String CONTEXTUAL_SIGNALS_CONTEXTUAL_WINNER =
+            "ContextualSignalsContextualWinner.json";
 
     private static final String CONTEXTUAL_SIGNALS_FIVE_BUYERS = "ContextualSignalsFiveBuyers.json";
     private static final String CUSTOM_AUDIENCE_ONE_BUYER_ONE_CA_ONE_AD =
@@ -66,7 +72,11 @@ public class AdSelectionDataE2ETest {
     private static final String CUSTOM_AUDIENCE_FIVE_BUYERS_MULTIPLE_CA =
             "CustomAudienceServerAuctionFiveBuyersMultipleCa.json";
     private static final String CUSTOM_AUDIENCE_NO_AD_RENDER_ID = "CustomAudienceNoAdRenderId.json";
-    private static final String SELLER = "example.com";
+    private static final String SELLER = "ba-seller-5jyy5ulagq-uc.a.run.app";
+    private static final String SFE_ADDRESS = "https://seller1-nmb.sfe-gcp.com/v1/selectAd";
+    private static final boolean SERVER_RESPONSE_LOGGING_ENABLED = true;
+
+    private static final String AD_WINNER_DOMAIN = "https://ba-buyer-5jyy5ulagq-uc.a.run.app/";
 
     private static final int API_RESPONSE_TIMEOUT_SECONDS = 100;
     private static final AdSelectionClient AD_SELECTION_CLIENT =
@@ -117,7 +127,10 @@ public class AdSelectionDataE2ETest {
 
         SelectAdResponse selectAdResponse =
                 FakeAdExchangeServer.runServerAuction(
-                        CONTEXTUAL_SIGNALS_ONE_BUYER, outcome.getAdSelectionData());
+                        CONTEXTUAL_SIGNALS_ONE_BUYER,
+                        outcome.getAdSelectionData(),
+                        SFE_ADDRESS,
+                        SERVER_RESPONSE_LOGGING_ENABLED);
 
         PersistAdSelectionResultRequest persistAdSelectionResultRequest =
                 new PersistAdSelectionResultRequest.Builder()
@@ -135,7 +148,9 @@ public class AdSelectionDataE2ETest {
 
         CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
 
-        Assert.assertEquals("test-winningCA.com/1a", adSelectionOutcome.getRenderUri().toString());
+        Assert.assertEquals(
+                AD_WINNER_DOMAIN + getWinningAdRenderIdForDummyScripts(customAudiences),
+                adSelectionOutcome.getRenderUri().toString());
     }
 
     @Test
@@ -157,7 +172,10 @@ public class AdSelectionDataE2ETest {
 
         SelectAdResponse selectAdResponse =
                 FakeAdExchangeServer.runServerAuction(
-                        CONTEXTUAL_SIGNALS_FIVE_BUYERS, outcome.getAdSelectionData());
+                        CONTEXTUAL_SIGNALS_FIVE_BUYERS,
+                        outcome.getAdSelectionData(),
+                        SFE_ADDRESS,
+                        SERVER_RESPONSE_LOGGING_ENABLED);
 
         PersistAdSelectionResultRequest persistAdSelectionResultRequest =
                 new PersistAdSelectionResultRequest.Builder()
@@ -175,18 +193,21 @@ public class AdSelectionDataE2ETest {
 
         CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
 
-        Assert.assertEquals("test-winningCA.com/1a", adSelectionOutcome.getRenderUri().toString());
+        Assert.assertEquals(
+                AD_WINNER_DOMAIN + getWinningAdRenderIdForDummyScripts(customAudiences),
+                adSelectionOutcome.getRenderUri().toString());
     }
 
     @Test
-    public void runAdSelection_noAdRenderId_contextualWinner() throws Exception {
+    public void runAdSelection_noAdRenderId_baReturnsError_ppapiThrowsError() throws Exception {
         List<CustomAudience> customAudiences =
                 CustomAudienceTestFixture.readCustomAudiences(CUSTOM_AUDIENCE_NO_AD_RENDER_ID);
         CustomAudienceTestFixture.joinCustomAudiences(customAudiences);
 
         GetAdSelectionDataRequest request =
                 new GetAdSelectionDataRequest.Builder()
-                        .setSeller(AdTechIdentifier.fromString("example.com"))
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
                         .build();
         GetAdSelectionDataOutcome outcome =
                 AD_SELECTION_CLIENT
@@ -195,12 +216,62 @@ public class AdSelectionDataE2ETest {
 
         SelectAdResponse selectAdResponse =
                 FakeAdExchangeServer.runServerAuction(
-                        CONTEXTUAL_SIGNALS_ONE_BUYER, outcome.getAdSelectionData());
+                        CONTEXTUAL_SIGNALS_ONE_BUYER,
+                        outcome.getAdSelectionData(),
+                        SFE_ADDRESS,
+                        SERVER_RESPONSE_LOGGING_ENABLED);
 
         PersistAdSelectionResultRequest persistAdSelectionResultRequest =
                 new PersistAdSelectionResultRequest.Builder()
                         .setAdSelectionId(outcome.getAdSelectionId())
-                        .setSeller(AdTechIdentifier.fromString("example.com"))
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
+                        .setAdSelectionResult(
+                                BaseEncoding.base64()
+                                        .decode(selectAdResponse.auctionResultCiphertext))
+                        .build();
+
+        // AuctionConfig returns an Error saying no buyer inputs found
+        // PPAPI reads that and throws IllegalArgumentException
+        // PPAPI returns an IllegalArgumentException but it seems to be getting wrapped in
+        // ExecutionException somewhere in the test framework.
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                AD_SELECTION_CLIENT
+                                        .persistAdSelectionResult(persistAdSelectionResultRequest)
+                                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS));
+
+        assertTrue(exception.getMessage().contains("IllegalArgumentException"));
+    }
+
+    @Test
+    public void runAdSelection_baReturnsIsChaffTrue_noAdReturnedByPpapi() throws Exception {
+        List<CustomAudience> customAudiences =
+                CustomAudienceTestFixture.readCustomAudiences(
+                        CUSTOM_AUDIENCE_ONE_BUYER_ONE_CA_ONE_AD);
+        CustomAudienceTestFixture.joinCustomAudiences(customAudiences);
+
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder()
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
+                        .build();
+        GetAdSelectionDataOutcome outcome =
+                AD_SELECTION_CLIENT
+                        .getAdSelectionData(request)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        SelectAdResponse selectAdResponse =
+                FakeAdExchangeServer.runServerAuction(
+                        CONTEXTUAL_SIGNALS_CONTEXTUAL_WINNER,
+                        outcome.getAdSelectionData(),
+                        SFE_ADDRESS,
+                        SERVER_RESPONSE_LOGGING_ENABLED);
+
+        PersistAdSelectionResultRequest persistAdSelectionResultRequest =
+                new PersistAdSelectionResultRequest.Builder()
+                        .setAdSelectionId(outcome.getAdSelectionId())
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
                         .setAdSelectionResult(
                                 BaseEncoding.base64()
                                         .decode(selectAdResponse.auctionResultCiphertext))
@@ -214,5 +285,17 @@ public class AdSelectionDataE2ETest {
         CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
 
         Assert.assertTrue(adSelectionOutcome.getRenderUri().toString().isEmpty());
+
+    }
+
+    private String getWinningAdRenderIdForDummyScripts(List<CustomAudience> customAudiences) {
+        for (CustomAudience ca : customAudiences) {
+            // Logic obtained from our custom dummy bidding script where we bid the highest
+            // for the first ad in the CA winningCA
+            if (ca.getName().equals("winningCA")) {
+                return ca.getAds().get(0).getAdRenderId();
+            }
+        }
+        return "";
     }
 }
