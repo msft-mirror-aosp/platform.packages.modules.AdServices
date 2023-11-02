@@ -1072,6 +1072,32 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK =
             "measurement_enable_api_status_allow_list_check";
 
+    public static final String
+            KEY_MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY =
+            "measurement_install_attr_dual_destination_event_noise_probability";
+
+    public static final String KEY_MEASUREMENT_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY =
+            "measurement_dual_destination_navigation_noise_probability";
+
+    public static final String
+            KEY_MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY =
+            "measurement_install_attr_dual_destination_navigation_noise_probability";
+
+    public static final String KEY_MEASUREMENT_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY =
+            "measurement_dual_destination_event_noise_probability";
+
+    public static final String KEY_MEASUREMENT_INSTALL_ATTR_EVENT_NOISE_PROBABILITY =
+            "measurement_install_attr_event_noise_probability";
+
+    public static final String KEY_MEASUREMENT_INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY =
+            "measurement_install_attr_navigation_noise_probability";
+
+    public static final String KEY_MEASUREMENT_EVENT_NOISE_PROBABILITY =
+            "measurement_event_noise_probability";
+
+    public static final String KEY_MEASUREMENT_NAVIGATION_NOISE_PROBABILITY =
+            "measurement_navigation_noise_probability";
+
     // Database Schema Version Flags
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 =
             "enable_database_schema_version_8";
