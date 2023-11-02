@@ -38,7 +38,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
@@ -137,10 +136,8 @@ public class AdExtBootCompletedReceiverTest {
     }
 
     @Test
-    public void testOnReceive_s_flagsOff() {
-        Assume.assumeTrue(
-                Build.VERSION.SDK_INT == Build.VERSION_CODES.S
-                        || Build.VERSION.SDK_INT == Build.VERSION_CODES.S_V2);
+    public void testOnReceive_sminus_flagsOff() {
+        Assume.assumeFalse(SdkLevel.isAtLeastT());
         AdExtBootCompletedReceiver bootCompletedReceiver =
                 Mockito.spy(new AdExtBootCompletedReceiver());
         doReturn(false).when(mMockFlags).getEnableBackCompat();
@@ -170,10 +167,8 @@ public class AdExtBootCompletedReceiverTest {
     }
 
     @Test
-    public void testOnReceive_SFlagsOn() {
-        Assume.assumeTrue(
-                Build.VERSION.SDK_INT == Build.VERSION_CODES.S
-                        || Build.VERSION.SDK_INT == Build.VERSION_CODES.S_V2);
+    public void testOnReceive_sminus_flagsOn() {
+        Assume.assumeFalse(SdkLevel.isAtLeastT());
         AdExtBootCompletedReceiver bootCompletedReceiver =
                 Mockito.spy(new AdExtBootCompletedReceiver());
         doReturn(true).when(mMockFlags).getEnableBackCompat();
@@ -189,9 +184,7 @@ public class AdExtBootCompletedReceiverTest {
 
     @Test
     public void testRegisterReceivers() {
-        Assume.assumeTrue(
-                Build.VERSION.SDK_INT == Build.VERSION_CODES.S
-                        || Build.VERSION.SDK_INT == Build.VERSION_CODES.S_V2);
+        Assume.assumeFalse(SdkLevel.isAtLeastT());
         AdExtBootCompletedReceiver bootCompletedReceiver = new AdExtBootCompletedReceiver();
         bootCompletedReceiver.registerPackagedChangedBroadcastReceivers(sContext);
         verify(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any(Flags.class)));
@@ -208,10 +201,8 @@ public class AdExtBootCompletedReceiverTest {
     }
 
     @Test
-    public void testEnableActivities_s() {
-        Assume.assumeTrue(
-                Build.VERSION.SDK_INT == Build.VERSION_CODES.S
-                        || Build.VERSION.SDK_INT == Build.VERSION_CODES.S_V2);
+    public void testEnableActivities_sminus() {
+        Assume.assumeFalse(SdkLevel.isAtLeastT());
         AdExtBootCompletedReceiver bootCompletedReceiver =
                 Mockito.spy(new AdExtBootCompletedReceiver());
 
@@ -229,7 +220,7 @@ public class AdExtBootCompletedReceiverTest {
 
     @Test
     public void testDisableActivities_tPlus() {
-        Assume.assumeTrue(Build.VERSION.SDK_INT == 33);
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
         AdExtBootCompletedReceiver bootCompletedReceiver =
                 Mockito.spy(new AdExtBootCompletedReceiver());
         setCommonMocks(TEST_PACKAGE_NAME);
@@ -262,10 +253,8 @@ public class AdExtBootCompletedReceiverTest {
     }
 
     @Test
-    public void testUpdateAdExtServicesServices_s() {
-        Assume.assumeTrue(
-                Build.VERSION.SDK_INT == Build.VERSION_CODES.S
-                        || Build.VERSION.SDK_INT == Build.VERSION_CODES.S_V2);
+    public void testUpdateAdExtServicesServices_sminus() {
+        Assume.assumeFalse(SdkLevel.isAtLeastT());
         AdExtBootCompletedReceiver bootCompletedReceiver =
                 Mockito.spy(new AdExtBootCompletedReceiver());
         setCommonMocks(TEST_PACKAGE_NAME);

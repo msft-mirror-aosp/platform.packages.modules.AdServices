@@ -112,7 +112,8 @@ class AppSearchUxStatesDao extends AppSearchDao {
     public static AppSearchUxStatesDao readData(
             @NonNull ListenableFuture<GlobalSearchSession> searchSession,
             @NonNull Executor executor,
-            @NonNull String userId) {
+            @NonNull String userId,
+            @NonNull String adServicesPackageName) {
         Objects.requireNonNull(searchSession);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(userId);
@@ -120,7 +121,12 @@ class AppSearchUxStatesDao extends AppSearchDao {
         String query = getQuery(userId);
         AppSearchUxStatesDao dao =
                 AppSearchDao.readConsentData(
-                        AppSearchUxStatesDao.class, searchSession, executor, NAMESPACE, query);
+                        AppSearchUxStatesDao.class,
+                        searchSession,
+                        executor,
+                        NAMESPACE,
+                        query,
+                        adServicesPackageName);
         LogUtil.d("AppSearch UX states read: " + dao + " [ query: " + query + "]");
         return dao;
     }
@@ -288,8 +294,9 @@ class AppSearchUxStatesDao extends AppSearchDao {
     public static boolean readIsAdIdEnabled(
             @NonNull ListenableFuture<GlobalSearchSession> searchSession,
             @NonNull Executor executor,
-            @NonNull String userId) {
-        AppSearchUxStatesDao dao = readData(searchSession, executor, userId);
+            @NonNull String userId,
+            @NonNull String adServicesPackageName) {
+        AppSearchUxStatesDao dao = readData(searchSession, executor, userId, adServicesPackageName);
         if (dao == null) {
             return false;
         }
@@ -300,8 +307,9 @@ class AppSearchUxStatesDao extends AppSearchDao {
     public static boolean readIsU18Account(
             @NonNull ListenableFuture<GlobalSearchSession> searchSession,
             @NonNull Executor executor,
-            @NonNull String userId) {
-        AppSearchUxStatesDao dao = readData(searchSession, executor, userId);
+            @NonNull String userId,
+            @NonNull String adServicesPackageName) {
+        AppSearchUxStatesDao dao = readData(searchSession, executor, userId, adServicesPackageName);
         if (dao == null) {
             return false;
         }
@@ -312,8 +320,9 @@ class AppSearchUxStatesDao extends AppSearchDao {
     public static boolean readIsEntryPointEnabled(
             @NonNull ListenableFuture<GlobalSearchSession> searchSession,
             @NonNull Executor executor,
-            @NonNull String userId) {
-        AppSearchUxStatesDao dao = readData(searchSession, executor, userId);
+            @NonNull String userId,
+            @NonNull String adServicesPackageName) {
+        AppSearchUxStatesDao dao = readData(searchSession, executor, userId, adServicesPackageName);
         if (dao == null) {
             return false;
         }
@@ -324,8 +333,9 @@ class AppSearchUxStatesDao extends AppSearchDao {
     public static boolean readIsAdultAccount(
             @NonNull ListenableFuture<GlobalSearchSession> searchSession,
             @NonNull Executor executor,
-            @NonNull String userId) {
-        AppSearchUxStatesDao dao = readData(searchSession, executor, userId);
+            @NonNull String userId,
+            @NonNull String adServicesPackageName) {
+        AppSearchUxStatesDao dao = readData(searchSession, executor, userId, adServicesPackageName);
         if (dao == null) {
             return false;
         }
@@ -336,8 +346,9 @@ class AppSearchUxStatesDao extends AppSearchDao {
     public static boolean readIsU18NotificationDisplayed(
             @NonNull ListenableFuture<GlobalSearchSession> searchSession,
             @NonNull Executor executor,
-            @NonNull String userId) {
-        AppSearchUxStatesDao dao = readData(searchSession, executor, userId);
+            @NonNull String userId,
+            @NonNull String adServicesPackageName) {
+        AppSearchUxStatesDao dao = readData(searchSession, executor, userId, adServicesPackageName);
         if (dao == null) {
             return false;
         }
@@ -348,8 +359,9 @@ class AppSearchUxStatesDao extends AppSearchDao {
     public static PrivacySandboxUxCollection readUx(
             @NonNull ListenableFuture<GlobalSearchSession> searchSession,
             @NonNull Executor executor,
-            @NonNull String userId) {
-        AppSearchUxStatesDao dao = readData(searchSession, executor, userId);
+            @NonNull String userId,
+            @NonNull String adServicesPackageName) {
+        AppSearchUxStatesDao dao = readData(searchSession, executor, userId, adServicesPackageName);
         if (dao == null) {
             return PrivacySandboxUxCollection.UNSUPPORTED_UX;
         }
@@ -365,8 +377,9 @@ class AppSearchUxStatesDao extends AppSearchDao {
             @NonNull ListenableFuture<GlobalSearchSession> searchSession,
             @NonNull Executor executor,
             @NonNull String userId,
-            @NonNull PrivacySandboxUxCollection ux) {
-        AppSearchUxStatesDao dao = readData(searchSession, executor, userId);
+            @NonNull PrivacySandboxUxCollection ux,
+            @NonNull String adServicesPackageName) {
+        AppSearchUxStatesDao dao = readData(searchSession, executor, userId, adServicesPackageName);
         if (dao == null) {
             return null;
         }

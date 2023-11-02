@@ -27,13 +27,13 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CallerMetadata;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
-import android.annotation.SuppressLint;
 import android.content.Context;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.adselection.AdBiddingOutcome;
+import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.List;
@@ -532,7 +532,6 @@ public class AdSelectionExecutionLogger extends ApiServiceLatencyCalculator {
     }
 
     /** records the end state of a finished persist-ad-selection process. */
-    @SuppressLint("NewAdServicesFile")
     public void endPersistAdSelection() throws IllegalStateException {
         if (mPersistAdSelectionStartTimestamp == 0L) {
             throw new IllegalStateException(MISSING_START_PERSIST_AD_SELECTION);
@@ -542,7 +541,8 @@ public class AdSelectionExecutionLogger extends ApiServiceLatencyCalculator {
         }
         sLogger.v("Ends the persisting ad selection.");
         this.mPersistAdSelectionEndTimestamp = getServiceElapsedTimestamp();
-        this.mDBAdSelectionSizeInBytes = mContext.getDatabasePath(DATABASE_NAME).length();
+        this.mDBAdSelectionSizeInBytes =
+                FileCompatUtils.getDatabasePathHelper(mContext, DATABASE_NAME).length();
         sLogger.v("The persistAdSelection end timestamp is %d:", mPersistAdSelectionEndTimestamp);
         sLogger.v("The database file size is %d", mDBAdSelectionSizeInBytes);
     }

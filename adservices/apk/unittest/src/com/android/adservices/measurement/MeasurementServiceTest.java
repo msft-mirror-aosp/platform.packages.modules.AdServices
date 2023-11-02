@@ -45,6 +45,7 @@ import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.service.encryptionkey.EncryptionKeyJobService;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.DeleteUninstalledJobService;
@@ -89,7 +90,7 @@ public class MeasurementServiceTest {
                     .setAttributionTriggerRegistrationUrl(List.of("https://test.com/trigger"))
                     .setAttributionReportingUrl(List.of("https://test.com"))
                     .setRemarketingResponseBasedRegistrationUrl(List.of("https://test.com"))
-                    .setEncryptionKeyUrl(List.of("https://test.com/keys"))
+                    .setEncryptionKeyUrl("https://test.com/keys")
                     .build();
 
     /** Setup for tests */
@@ -253,6 +254,7 @@ public class MeasurementServiceTest {
                         .spyStatic(DeleteExpiredJobService.class)
                         .spyStatic(DeleteUninstalledJobService.class)
                         .spyStatic(MddJobService.class)
+                        .spyStatic(EncryptionKeyJobService.class)
                         .spyStatic(FlagsFactory.class)
                         .spyStatic(MeasurementImpl.class)
                         .spyStatic(AsyncRegistrationQueueJobService.class)
@@ -289,7 +291,6 @@ public class MeasurementServiceTest {
             doReturn(ENROLLMENT)
                     .when(mMockEnrollmentDao)
                     .getEnrollmentDataFromMeasurementUrl(any());
-
             ExtendedMockito.doReturn(mMockMeasurementImpl)
                     .when(() -> MeasurementImpl.getInstance(any()));
 
@@ -325,6 +326,8 @@ public class MeasurementServiceTest {
                     .when(() -> DeleteUninstalledJobService.scheduleIfNeeded(any(), anyBoolean()));
             ExtendedMockito.doReturn(true)
                     .when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
+            ExtendedMockito.doReturn(true)
+                    .when(() -> EncryptionKeyJobService.scheduleIfNeeded(any(), anyBoolean()));
             ExtendedMockito.doNothing()
                     .when(
                             () ->
@@ -345,7 +348,6 @@ public class MeasurementServiceTest {
                             () ->
                                     DebugReportingFallbackJobService.scheduleIfNeeded(
                                             any(), anyBoolean()));
-
             // Execute
             execute.run();
         } finally {
@@ -380,6 +382,9 @@ public class MeasurementServiceTest {
                 times(timesCalled));
         ExtendedMockito.verify(
                 () -> MddJobService.scheduleIfNeeded(any(), anyBoolean()), times(timesCalled));
+        ExtendedMockito.verify(
+                () -> EncryptionKeyJobService.scheduleIfNeeded(any(), anyBoolean()),
+                times(timesCalled));
         ExtendedMockito.verify(
                 () -> AsyncRegistrationQueueJobService.scheduleIfNeeded(any(), anyBoolean()),
                 times(timesCalled));

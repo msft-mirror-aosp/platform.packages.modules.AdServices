@@ -49,7 +49,7 @@ import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
 
 @RunWith(JUnit4.class)
-public class SdkSandboxStorageTest {
+public class SdkSandboxStorageTest extends SandboxKillerBeforeTest {
 
     private static final String SDK_NAME_1 = "com.android.ctssdkprovider";
     private static final String FD_VALUE = "file-descriptor-value";

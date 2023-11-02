@@ -20,12 +20,12 @@ import android.annotation.NonNull;
 import android.app.adservices.AdServicesManager;
 import android.util.ArrayMap;
 
+import com.android.adservices.shared.storage.BooleanFileDatastore;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.adservices.LogUtil;
-import com.android.server.adservices.common.BooleanFileDatastore;
 
 import java.io.IOException;
-import java.util.Map;
+import java.io.PrintWriter;
 import java.util.Objects;
 
 /**
@@ -43,10 +43,13 @@ public final class RollbackHandlingManager {
 
     static final String VERSION_KEY = "adservices_version";
 
+    @VisibleForTesting static final String DUMP_PREFIX = "  ";
+
     private final String mDatastoreDir;
     private final int mPackageVersion;
 
-    private final Map<Integer, BooleanFileDatastore> mBooleanFileDatastoreMap = new ArrayMap<>();
+    private final ArrayMap<Integer, BooleanFileDatastore> mBooleanFileDatastoreMap =
+            new ArrayMap<>();
 
     private RollbackHandlingManager(@NonNull String datastoreDir, int packageVersion) {
         Objects.requireNonNull(datastoreDir);
@@ -134,6 +137,29 @@ public final class RollbackHandlingManager {
                 LogUtil.e(
                         e, "Reset deletion status failed due to IOException thrown by Datastore.");
             }
+        }
+    }
+
+    /** Dumps its internal state. */
+    public void dump(PrintWriter writer, String prefix) {
+        writer.printf("%sRollbackHandlingManager:\n", prefix);
+        String prefix2 = prefix + DUMP_PREFIX;
+
+        writer.printf("%smDatastoreDir: %s\n", prefix2, mDatastoreDir);
+        writer.printf("%smPackageVersion: %s\n", prefix2, mPackageVersion);
+
+        int mapSize = mBooleanFileDatastoreMap.size();
+        writer.printf("%s%d datastores", prefix2, mapSize);
+        if (mapSize == 0) {
+            writer.println();
+            return;
+        }
+        writer.println(':');
+        String prefix3 = prefix2 + DUMP_PREFIX;
+        String prefix4 = prefix3 + DUMP_PREFIX;
+        for (int i = 0; i < mapSize; i++) {
+            writer.printf("%s deletion API type %d:\n", prefix3, mBooleanFileDatastoreMap.keyAt(i));
+            mBooleanFileDatastoreMap.valueAt(i).dump(writer, prefix4);
         }
     }
 

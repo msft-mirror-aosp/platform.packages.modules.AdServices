@@ -53,6 +53,8 @@ import com.android.adservices.service.measurement.aggregation.AggregateHistogram
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.aggregation.AggregateReportFixture;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.json.JSONArray;
@@ -152,11 +154,17 @@ public class MeasurementDataDeleterTest {
     @Mock private List<Uri> mOriginUris;
     @Mock private List<Uri> mDomainUris;
     @Mock private Flags mFlags;
+    @Mock private AdServicesErrorLogger mErrorLogger;
+    @Mock private AdServicesLogger mLogger;
 
     private MeasurementDataDeleter mMeasurementDataDeleter;
     private MockitoSession mStaticMockSession;
 
     private class FakeDatastoreManager extends DatastoreManager {
+        private FakeDatastoreManager() {
+            super(mErrorLogger);
+        }
+
         @Override
         public ITransaction createNewTransaction() {
             return mTransaction;
@@ -184,8 +192,8 @@ public class MeasurementDataDeleterTest {
         ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
         when(mFlags.getMeasurementEnableAraDeduplicationAlignmentV1()).thenReturn(true);
         when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(false);
-        mMeasurementDataDeleter = spy(new MeasurementDataDeleter(
-                new FakeDatastoreManager(), mFlags));
+        mMeasurementDataDeleter =
+                spy(new MeasurementDataDeleter(new FakeDatastoreManager(), mFlags, mLogger));
     }
 
     @After
@@ -301,8 +309,8 @@ public class MeasurementDataDeleterTest {
                 eq(source1.getId()), attributionStatusArg.capture());
         List<String> attributionStatuses = attributionStatusArg.getAllValues();
         assertEquals(
-                getAttributionStatus(List.of("trigger2", "trigger3"),
-                      List.of("5", "6"), List.of("2", "3")),
+                getAttributionStatus(
+                        List.of("trigger2", "trigger3"), List.of("5", "6"), List.of("2", "3")),
                 attributionStatuses.get(0));
         assertEquals(
                 getAttributionStatus(List.of("trigger2"), List.of("5"), List.of("2")),

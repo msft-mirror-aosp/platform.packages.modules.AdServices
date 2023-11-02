@@ -282,12 +282,14 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
         try {
             enforceForeground(callingUid, topicsParam.getSdkName());
         } catch (WrongCallingApplicationStateException backgroundCaller) {
+            sLogger.v("STATUS_BACKGROUND_CALLER: Failed foreground check");
             invokeCallbackWithStatus(
                     callback, STATUS_BACKGROUND_CALLER, backgroundCaller.getMessage());
             return STATUS_BACKGROUND_CALLER;
         }
 
         if (!sufficientPermission) {
+            sLogger.v("STATUS_PERMISSION_NOT_REQUESTED: Caller did not declare permission");
             invokeCallbackWithStatus(
                     callback,
                     STATUS_PERMISSION_NOT_REQUESTED,
@@ -302,6 +304,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                 mContext,
                 mFlags.getPpapiAppSignatureAllowList(),
                 topicsParam.getAppPackageName())) {
+            sLogger.v("STATUS_CALLER_NOT_ALLOWED: Caller signature not allowlisted");
             invokeCallbackWithStatus(
                     callback,
                     STATUS_CALLER_NOT_ALLOWED,
@@ -313,6 +316,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
         int resultCode =
                 enforceCallingPackageBelongsToUid(topicsParam.getAppPackageName(), callingUid);
         if (resultCode != STATUS_SUCCESS) {
+            sLogger.v("STATUS_UNAUTHORIZED: Caller UID mismatch");
             invokeCallbackWithStatus(callback, resultCode, "Caller is not authorized.");
             return resultCode;
         }
@@ -325,6 +329,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
         }
 
         if (!userConsent.isGiven()) {
+            sLogger.v("STATUS_USER_CONSENT_REVOKED: User consent revoked");
             invokeCallbackWithStatus(
                     callback, STATUS_USER_CONSENT_REVOKED, "User consent revoked.");
             return STATUS_USER_CONSENT_REVOKED;
@@ -334,16 +339,30 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
         // access to use the enrollment ID. Get the enrollment ID for this SDK and
         // check that against the app's manifest.
         if (!mFlags.isDisableTopicsEnrollmentCheck() && !topicsParam.getSdkName().isEmpty()) {
+            String errorString = "STATUS_SUCCESS";
             EnrollmentData enrollmentData =
                     mEnrollmentDao.getEnrollmentDataFromSdkName(topicsParam.getSdkName());
-            boolean permitted =
-                    (enrollmentData != null && enrollmentData.getEnrollmentId() != null)
-                            && AppManifestConfigHelper.isAllowedTopicsAccess(
-                                    mContext,
-                                    ProcessCompatUtils.isSdkSandboxUid(callingUid),
-                                    topicsParam.getAppPackageName(),
-                                    enrollmentData.getEnrollmentId())
-                            && !mFlags.isEnrollmentBlocklisted(enrollmentData.getEnrollmentId());
+            boolean permitted = true;
+
+            if (enrollmentData == null) {
+                errorString = "STATUS_CALLER_NOT_ALLOWED: Enrollment not found";
+                permitted = false;
+            } else if (enrollmentData.getEnrollmentId() == null) {
+                errorString = "STATUS_CALLER_NOT_ALLOWED: Enrollment ID invalid";
+                permitted = false;
+            } else if (!AppManifestConfigHelper.isAllowedTopicsAccess(
+                    mContext,
+                    ProcessCompatUtils.isSdkSandboxUid(callingUid),
+                    topicsParam.getAppPackageName(),
+                    enrollmentData.getEnrollmentId())) {
+                errorString = "STATUS_CALLER_NOT_ALLOWED: App manifest config failed";
+                permitted = false;
+            } else if (mFlags.isEnrollmentBlocklisted(enrollmentData.getEnrollmentId())) {
+                errorString = "STATUS_CALLER_NOT_ALLOWED: Enrollment blocklisted";
+                permitted = false;
+            }
+
+            sLogger.v("Checked Topics enrollment: %s", errorString);
 
             if (!permitted) {
                 invokeCallbackWithStatus(

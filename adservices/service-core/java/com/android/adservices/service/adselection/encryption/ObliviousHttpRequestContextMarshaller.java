@@ -18,6 +18,7 @@ package com.android.adservices.service.adselection.encryption;
 
 import static com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION;
 
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.DBEncryptionContext;
 import com.android.adservices.data.adselection.EncryptionContextDao;
 import com.android.adservices.data.adselection.EncryptionKeyConstants;
@@ -25,11 +26,14 @@ import com.android.adservices.ohttp.EncapsulatedSharedSecret;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.ohttp.ObliviousHttpRequestContext;
 
+import java.security.spec.InvalidKeySpecException;
 import java.time.Clock;
+import java.util.Locale;
 import java.util.Objects;
 
 /** Marshalls DBEncryptionContext into ObliviousHttpRequestContext and vice-versa. */
 public class ObliviousHttpRequestContextMarshaller {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private final EncryptionContextDao mEncryptionContextDao;
     private final Clock mClock;
 
@@ -43,11 +47,21 @@ public class ObliviousHttpRequestContextMarshaller {
 
     /** Fetches from EncryptionContextDao the ObliviousHttpRequestContext for given contextId. */
     public ObliviousHttpRequestContext getAuctionOblivioushttpRequestContext(long contextId)
-            throws Exception {
+            throws InvalidKeySpecException {
         DBEncryptionContext dbEncryptionContext =
                 mEncryptionContextDao.getEncryptionContext(
                         contextId,
                         EncryptionKeyConstants.EncryptionKeyType.ENCRYPTION_KEY_TYPE_AUCTION);
+
+        if (Objects.isNull(dbEncryptionContext)) {
+            String err =
+                    String.format(
+                            Locale.ENGLISH,
+                            "Encryption context cannot be found for the given id: %s",
+                            contextId);
+            sLogger.e(err);
+            throw new IllegalArgumentException(err);
+        }
         return ObliviousHttpRequestContext.create(
                 ObliviousHttpKeyConfig.fromSerializedKeyConfig(dbEncryptionContext.getKeyConfig()),
                 EncapsulatedSharedSecret.create(dbEncryptionContext.getSharedSecret()),

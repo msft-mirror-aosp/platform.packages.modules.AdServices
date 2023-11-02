@@ -5,7 +5,7 @@
         "path": "bidding"
       },
       "response": {
-        "body": "BiddingLogicV2.js.txt"
+        "body": "BiddingLogicV2.js"
       },
       "verify_called": true
     },
@@ -14,7 +14,7 @@
         "path": "scoring"
       },
       "response": {
-        "body": "ScoringLogic.js.txt"
+        "body": "ScoringLogic.js"
       },
       "verify_called": true
     }

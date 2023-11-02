@@ -34,17 +34,18 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
+import android.content.ComponentName;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
-import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
@@ -71,6 +72,7 @@ public class DeleteExpiredJobServiceTest {
     private static final int MEASUREMENT_DELETE_EXPIRED_JOB_ID =
             MEASUREMENT_DELETE_EXPIRED_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 1_000L;
+    private static final long JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(4);
 
     private DatastoreManager mMockDatastoreManager;
     private JobScheduler mMockJobScheduler;
@@ -90,6 +92,9 @@ public class DeleteExpiredJobServiceTest {
         mSpyLogger =
                 spy(new AdservicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mockStatsdLogger));
         mMockFlags = mock(Flags.class);
+        when(mMockFlags.getMeasurementDeleteExpiredJobPersisted()).thenReturn(true);
+        when(mMockFlags.getMeasurementDeleteExpiredJobRequiresDeviceIdle()).thenReturn(true);
+        when(mMockFlags.getMeasurementDeleteExpiredJobPeriodMs()).thenReturn(JOB_PERIOD_MS);
     }
 
     @Test
@@ -222,18 +227,25 @@ public class DeleteExpiredJobServiceTest {
     }
 
     @Test
-    public void scheduleIfNeeded_killSwitchOff_previouslyExecuted_dontForceSchedule_dontSchedule()
-            throws Exception {
+    public void scheduleIfNeeded_sameJobInfoNoForceSchedule_dontSchedule() throws Exception {
         runWithMocks(
                 () -> {
                     // Setup
                     disableKillSwitch();
 
-                    final Context mockContext = mock(Context.class);
+                    final Context mockContext = spy(ApplicationProvider.getApplicationContext());
                     doReturn(mMockJobScheduler)
                             .when(mockContext)
                             .getSystemService(JobScheduler.class);
-                    final JobInfo mockJobInfo = mock(JobInfo.class);
+                    final JobInfo mockJobInfo =
+                            new JobInfo.Builder(
+                                            MEASUREMENT_DELETE_EXPIRED_JOB_ID,
+                                            new ComponentName(
+                                                    mockContext, DeleteExpiredJobService.class))
+                                    .setRequiresDeviceIdle(true)
+                                    .setPeriodic(JOB_PERIOD_MS)
+                                    .setPersisted(true)
+                                    .build();
                     doReturn(mockJobInfo)
                             .when(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_DELETE_EXPIRED_JOB_ID));
@@ -245,6 +257,41 @@ public class DeleteExpiredJobServiceTest {
                     // Validate
                     ExtendedMockito.verify(
                             () -> DeleteExpiredJobService.schedule(any(), any()), never());
+                    verify(mMockJobScheduler, times(1))
+                            .getPendingJob(eq(MEASUREMENT_DELETE_EXPIRED_JOB_ID));
+                });
+    }
+
+    @Test
+    public void scheduleIfNeeded_diffJobInfoNoForceSchedule_dontSchedule() throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    disableKillSwitch();
+
+                    final Context mockContext = spy(ApplicationProvider.getApplicationContext());
+                    doReturn(mMockJobScheduler)
+                            .when(mockContext)
+                            .getSystemService(JobScheduler.class);
+                    final JobInfo mockJobInfo =
+                            new JobInfo.Builder(
+                                            MEASUREMENT_DELETE_EXPIRED_JOB_ID,
+                                            new ComponentName(
+                                                    mockContext, DeleteExpiredJobService.class))
+                                    .setRequiresDeviceIdle(true)
+                                    .setPeriodic(JOB_PERIOD_MS - 1)
+                                    .setPersisted(true)
+                                    .build();
+                    doReturn(mockJobInfo)
+                            .when(mMockJobScheduler)
+                            .getPendingJob(eq(MEASUREMENT_DELETE_EXPIRED_JOB_ID));
+
+                    // Execute
+                    DeleteExpiredJobService.scheduleIfNeeded(
+                            mockContext, /* forceSchedule = */ false);
+
+                    // Validate
+                    ExtendedMockito.verify(() -> DeleteExpiredJobService.schedule(any(), any()));
                     verify(mMockJobScheduler, times(1))
                             .getPendingJob(eq(MEASUREMENT_DELETE_EXPIRED_JOB_ID));
                 });
@@ -307,18 +354,30 @@ public class DeleteExpiredJobServiceTest {
     }
 
     @Test
-    public void testSchedule_jobInfoIsPersisted() {
+    public void testSchedule_jobInfoIsPersisted() throws Exception {
         // Setup
-        final JobScheduler jobScheduler = mock(JobScheduler.class);
-        final ArgumentCaptor<JobInfo> captor = ArgumentCaptor.forClass(JobInfo.class);
+        runWithMocks(
+                () -> {
+                    // Setup
+                    disableKillSwitch();
+                    Context spyContext = spy(CONTEXT);
+                    final JobScheduler jobScheduler = mock(JobScheduler.class);
+                    doReturn(jobScheduler).when(spyContext).getSystemService(JobScheduler.class);
+                    final ArgumentCaptor<JobInfo> captor = ArgumentCaptor.forClass(JobInfo.class);
+                    doReturn(null)
+                            .when(jobScheduler)
+                            .getPendingJob(eq(MEASUREMENT_DELETE_EXPIRED_JOB_ID));
 
-        // Execute
-        DeleteExpiredJobService.schedule(mock(Context.class), jobScheduler);
+                    // Execute
+                    ExtendedMockito.doCallRealMethod()
+                            .when(() -> DeleteExpiredJobService.schedule(any(), any()));
+                    DeleteExpiredJobService.scheduleIfNeeded(spyContext, true);
 
-        // Validate
-        verify(jobScheduler, times(1)).schedule(captor.capture());
-        assertNotNull(captor.getValue());
-        assertTrue(captor.getValue().isPersisted());
+                    // Validate
+                    verify(jobScheduler, times(1)).schedule(captor.capture());
+                    assertNotNull(captor.getValue());
+                    assertTrue(captor.getValue().isPersisted());
+                });
     }
 
     private void onStartJob_killSwitchOn() throws Exception {
@@ -377,7 +436,6 @@ public class DeleteExpiredJobServiceTest {
     private void runWithMocks(TestUtils.RunnableWithThrow execute) throws Exception {
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
-                        .spyStatic(AdServicesConfig.class)
                         .spyStatic(DatastoreManagerFactory.class)
                         .spyStatic(DeleteExpiredJobService.class)
                         .spyStatic(FlagsFactory.class)
@@ -391,8 +449,6 @@ public class DeleteExpiredJobServiceTest {
             doReturn(true).when(mMockDatastoreManager).runInTransaction(any());
             doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
             doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
-            ExtendedMockito.doReturn(TimeUnit.HOURS.toMillis(24))
-                    .when(AdServicesConfig::getMeasurementDeleteExpiredJobPeriodMs);
             ExtendedMockito.doReturn(mMockDatastoreManager)
                     .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
             ExtendedMockito.doNothing().when(() -> DeleteExpiredJobService.schedule(any(), any()));

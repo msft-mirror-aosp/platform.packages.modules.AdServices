@@ -28,11 +28,13 @@ import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
+import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
+import com.android.adservices.service.measurement.reporting.DebugReport;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -141,6 +143,36 @@ public abstract class AbstractDbIntegrationTest {
         Assert.assertTrue(
                 "Async Registration mismatch",
                 areEqual(mOutput.mAsyncRegistrationList, dbState.mAsyncRegistrationList));
+        for (int i = 0; i < mOutput.mDebugReportList.size(); i++) {
+            Assert.assertTrue(
+                    "DebugReport Mismatch",
+                    areDebugReportContentsSimilar(
+                            mOutput.mDebugReportList.get(i), dbState.mDebugReportList.get(i)));
+        }
+        for (int i = 0; i < mOutput.mKeyValueDataList.size(); i++) {
+            Assert.assertTrue(
+                    "KeyValueData Mismatch",
+                    areEqualKeyValueData(
+                            mOutput.mKeyValueDataList.get(i), dbState.mKeyValueDataList.get(i)));
+        }
+    }
+
+    private boolean areDebugReportContentsSimilar(
+            DebugReport debugReport, DebugReport debugReport1) {
+        // TODO (b/300109438) Investigate DebugReport::equals
+        return Objects.equals(debugReport.getType(), debugReport1.getType())
+                && Objects.equals(
+                        debugReport.getBody().toString(), debugReport1.getBody().toString())
+                && Objects.equals(debugReport.getEnrollmentId(), debugReport1.getEnrollmentId())
+                && Objects.equals(
+                        debugReport.getRegistrationOrigin(), debugReport1.getRegistrationOrigin())
+                && Objects.equals(debugReport.getReferenceId(), debugReport1.getReferenceId());
+    }
+
+    private boolean areEqualKeyValueData(KeyValueData keyValueData, KeyValueData keyValueData1) {
+        return Objects.equals(keyValueData.getKey(), keyValueData1.getKey())
+                && Objects.equals(keyValueData.getDataType(), keyValueData1.getDataType())
+                && Objects.equals(keyValueData.getValue(), keyValueData1.getValue());
     }
 
     private boolean fuzzyCompareAggregateReport(
@@ -271,6 +303,8 @@ public abstract class AbstractDbIntegrationTest {
         db.delete(MeasurementTables.AggregateReport.TABLE, null, null);
         db.delete(MeasurementTables.AggregateEncryptionKey.TABLE, null, null);
         db.delete(MeasurementTables.AsyncRegistrationContract.TABLE, null, null);
+        db.delete(MeasurementTables.DebugReportContract.TABLE, null, null);
+        db.delete(MeasurementTables.KeyValueDataContract.TABLE, null, null);
     }
 
     /**
@@ -299,9 +333,14 @@ public abstract class AbstractDbIntegrationTest {
         for (AggregateEncryptionKey key : input.mAggregateEncryptionKeyList) {
             insertToDb(key, db);
         }
-
         for (AsyncRegistration registration : input.mAsyncRegistrationList) {
             insertToDb(registration, db);
+        }
+        for (DebugReport debugReport : input.mDebugReportList) {
+            insertToDb(debugReport, db);
+        }
+        for (KeyValueData keyValueData : input.mKeyValueDataList) {
+            insertToDb(keyValueData, db);
         }
     }
 
@@ -591,6 +630,43 @@ public abstract class AbstractDbIntegrationTest {
                         values);
         if (rowId == -1) {
             throw new SQLiteException("Async Registration insertion failed.");
+        }
+    }
+
+    public static void insertToDb(KeyValueData keyValueData, SQLiteDatabase db)
+            throws SQLiteException {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.KeyValueDataContract.KEY, keyValueData.getKey());
+        values.put(MeasurementTables.KeyValueDataContract.VALUE, keyValueData.getValue());
+        values.put(
+                MeasurementTables.KeyValueDataContract.DATA_TYPE,
+                keyValueData.getDataType().toString());
+        long rowId =
+                db.insert(
+                        MeasurementTables.KeyValueDataContract.TABLE,
+                        /* nullColumnHack= */ null,
+                        values);
+        if (rowId == -1) {
+            throw new SQLiteException("KeyValueData insertion failed.");
+        }
+    }
+
+    public static void insertToDb(DebugReport debugReport, SQLiteDatabase db)
+            throws SQLiteException {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.DebugReportContract.ID, debugReport.getId());
+        values.put(MeasurementTables.DebugReportContract.BODY, debugReport.getBody().toString());
+        values.put(MeasurementTables.DebugReportContract.TYPE, debugReport.getType());
+        values.put(
+                MeasurementTables.DebugReportContract.REGISTRANT,
+                getNullableUriString(debugReport.getRegistrant()));
+        long rowId =
+                db.insert(
+                        MeasurementTables.DebugReportContract.TABLE,
+                        /* nullColumnHack= */ null,
+                        values);
+        if (rowId == -1) {
+            throw new SQLiteException("DebugReport insertion failed.");
         }
     }
 

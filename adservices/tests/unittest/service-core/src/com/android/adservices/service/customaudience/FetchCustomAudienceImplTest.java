@@ -26,6 +26,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ER
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_OBJECT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SERVER_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
@@ -40,6 +41,7 @@ import static android.adservices.customaudience.CustomAudienceFixture.VALID_NAME
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_OWNER;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS;
 import static android.adservices.customaudience.CustomAudienceFixture.getValidDailyUpdateUriByBuyer;
+import static android.adservices.exceptions.RetryableAdServicesNetworkException.DEFAULT_RETRY_AFTER_VALUE;
 
 import static com.android.adservices.service.common.AdTechUriValidator.IDENTIFIER_AND_URI_ARE_INCONSISTENT;
 import static com.android.adservices.service.common.Validator.EXCEPTION_MESSAGE_FORMAT;
@@ -81,6 +83,8 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.times;
 
 import android.adservices.common.AdTechIdentifier;
@@ -91,13 +95,10 @@ import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceCallback;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceInput;
 import android.adservices.http.MockWebServerRule;
-import android.content.Context;
 import android.net.Uri;
 import android.os.LimitExceededException;
 import android.os.Process;
 import android.os.RemoteException;
-
-import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
@@ -108,6 +109,7 @@ import com.android.adservices.data.customaudience.AdDataConversionStrategy;
 import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceStats;
+import com.android.adservices.data.customaudience.DBCustomAudienceQuarantine;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
 import com.android.adservices.service.common.AdRenderIdValidator;
@@ -155,7 +157,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class FetchCustomAudienceImplTest {
     private static final int API_NAME =
             AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final ExecutorService DIRECT_EXECUTOR = MoreExecutors.newDirectExecutorService();
     private static final AdDataConversionStrategy AD_DATA_CONVERSION_STRATEGY =
             AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
@@ -236,6 +237,10 @@ public class FetchCustomAudienceImplTest {
                                 .build())
                 .when(mCustomAudienceDaoMock)
                 .getCustomAudienceStats(eq(VALID_OWNER));
+
+        doReturn(false)
+                .when(mCustomAudienceDaoMock)
+                .doesCustomAudienceQuarantineExist(VALID_OWNER, BUYER);
     }
 
     @After
@@ -871,6 +876,81 @@ public class FetchCustomAudienceImplTest {
                         differentDailyUpdateUri);
 
         verify(mAdServicesLoggerMock, times(2))
+                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_SUCCESS), anyInt());
+    }
+
+    @Test
+    public void testImpl_AddsToQuarantineTableWhenServerReturns429() throws Exception {
+        // Respond with a 429
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(new MockResponse().setResponseCode(429)));
+
+        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+        assertEquals(1, mockWebServer.getRequestCount());
+        assertFalse(callback.mIsSuccess);
+        assertEquals(
+                STATUS_SERVER_RATE_LIMIT_REACHED, callback.mFledgeErrorResponse.getStatusCode());
+        verify(mCustomAudienceDaoMock)
+                .safelyInsertCustomAudienceQuarantine(
+                        any(DBCustomAudienceQuarantine.class), anyLong());
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(STATUS_SERVER_RATE_LIMIT_REACHED), anyInt());
+    }
+
+    @Test
+    public void testImpl_ReturnsServerRateLimitReachedWhenEntryIsInQuarantineTable()
+            throws Exception {
+        doReturn(true)
+                .when(mCustomAudienceDaoMock)
+                .doesCustomAudienceQuarantineExist(VALID_OWNER, BUYER);
+        // Return a time in the future so request gets filtered
+        doReturn(CLOCK.instant().plusMillis(2 * DEFAULT_RETRY_AFTER_VALUE.toMillis()))
+                .when(mCustomAudienceDaoMock)
+                .getCustomAudienceQuarantineExpiration(VALID_OWNER, BUYER);
+
+        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+        assertFalse(callback.mIsSuccess);
+        assertEquals(
+                STATUS_SERVER_RATE_LIMIT_REACHED, callback.mFledgeErrorResponse.getStatusCode());
+        verify(mCustomAudienceDaoMock).doesCustomAudienceQuarantineExist(VALID_OWNER, BUYER);
+        verify(mCustomAudienceDaoMock).getCustomAudienceQuarantineExpiration(VALID_OWNER, BUYER);
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(STATUS_SERVER_RATE_LIMIT_REACHED), anyInt());
+    }
+
+    @Test
+    public void testImpl_SucceedsAndRemovesEntryFromQuarantineTable() throws Exception {
+        doReturn(true)
+                .when(mCustomAudienceDaoMock)
+                .doesCustomAudienceQuarantineExist(VALID_OWNER, BUYER);
+        // Return a time in the past so request is not filtered
+        doReturn(CLOCK.instant().minusMillis(2 * DEFAULT_RETRY_AFTER_VALUE.toMillis()))
+                .when(mCustomAudienceDaoMock)
+                .getCustomAudienceQuarantineExpiration(VALID_OWNER, BUYER);
+
+        // Respond with a complete custom audience including the request values as is.
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse()
+                                        .setBody(getFullSuccessfulJsonResponseString(BUYER))));
+
+        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+        assertEquals(1, mockWebServer.getRequestCount());
+        assertTrue(callback.mIsSuccess);
+
+        verify(mCustomAudienceDaoMock).doesCustomAudienceQuarantineExist(VALID_OWNER, BUYER);
+        verify(mCustomAudienceDaoMock).getCustomAudienceQuarantineExpiration(VALID_OWNER, BUYER);
+        verify(mCustomAudienceDaoMock).deleteQuarantineEntry(VALID_OWNER, BUYER);
+        verify(mCustomAudienceDaoMock)
+                .insertOrOverwriteCustomAudience(
+                        FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
+                        getValidDailyUpdateUriByBuyer(BUYER));
+
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_SUCCESS), anyInt());
     }
 

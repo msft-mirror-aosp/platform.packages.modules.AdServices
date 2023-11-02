@@ -19,6 +19,7 @@ package com.android.adservices.service.topics.classifier;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlagsForTest;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilError;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilErrorWithAnyException;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CLASSIFIER_METADATA_REDUNDANT_ASSET;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__INVALID_TOPIC_ID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__NO_CLASSIFIER_MODEL_AVAILABLE;
@@ -26,6 +27,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_LOAD_ML_MODEL_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -193,10 +195,9 @@ public class ModelManagerTest {
         // Check byteBuffer capacity is 0 when failed to read a model.
         assertThat(byteBuffer.capacity()).isEqualTo(0);
 
-        verifyErrorLogUtilError(
+        verifyErrorLogUtilErrorWithAnyException(
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_LOAD_ML_MODEL_FAILURE,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
-                /* numberOfInvocations= */ 1);
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
     }
 
     @Test
@@ -307,10 +308,9 @@ public class ModelManagerTest {
         // Check empty list returned.
         assertThat(labels).isEmpty();
 
-        verifyErrorLogUtilError(
+        verifyErrorLogUtilErrorWithAnyException(
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__READ_LABELS_FILE_FAILURE,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
-                /* numberOfInvocations= */ 1);
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
     }
 
     @Test
@@ -335,10 +335,9 @@ public class ModelManagerTest {
         // Check empty list returned.
         assertThat(labels).isEmpty();
 
-        verifyErrorLogUtilError(
+        verifyErrorLogUtilErrorWithAnyException(
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__READ_LABELS_FILE_FAILURE,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
-                /* numberOfInvocations= */ 1);
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
     }
 
     @Test
@@ -409,9 +408,7 @@ public class ModelManagerTest {
         verifyErrorLogUtilError(
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__INVALID_TOPIC_ID,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
-                MODEL_MANAGER_CLASS_NAME,
-                GET_APPS_TOPIC_MAP_METHOD_NAME,
-                /* numberOfInvocations= */ 5);
+                times(5));
     }
 
     @Test
@@ -448,9 +445,7 @@ public class ModelManagerTest {
         verifyErrorLogUtilError(
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__INVALID_TOPIC_ID,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
-                MODEL_MANAGER_CLASS_NAME,
-                GET_APPS_TOPIC_MAP_METHOD_NAME,
-                /* numberOfInvocations= */ 5);
+                times(5));
     }
 
     @Test
@@ -529,9 +524,7 @@ public class ModelManagerTest {
         verifyErrorLogUtilError(
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CLASSIFIER_METADATA_REDUNDANT_ASSET,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
-                MODEL_MANAGER_CLASS_NAME,
-                GET_ASSETS_METADATA_MAP_METHOD_NAME,
-                /* numberOfInvocations= */ 2);
+                times(2));
     }
 
     @Test
@@ -565,10 +558,10 @@ public class ModelManagerTest {
                 .isEqualTo("2");
 
         // The property "version_info" should have attribution "build_id"
-        // and its value should be "1800". This is used for comparing the model version with MDD
+        // and its value should be "1986". This is used for comparing the model version with MDD
         // downloaded model.
         assertThat(mProductionClassifierAssetsMetadata.get("version_info").get("build_id"))
-                .isEqualTo("1800");
+                .isEqualTo("1986");
 
         // The property "version_info" should have attribution "taxonomy_type"
         // and its value should be "chrome_and_mobile_taxonomy".
@@ -647,10 +640,10 @@ public class ModelManagerTest {
                 .isEqualTo("2");
 
         // The property "version_info" should have attribution "build_id"
-        // and its value should be "1800". This is used for comparing the model version with MDD
+        // and its value should be "1986". This is used for comparing the model version with MDD
         // downloaded model.
         assertThat(mProductionClassifierAssetsMetadata.get("version_info").get("build_id"))
-                .isEqualTo("1800");
+                .isEqualTo("1986");
 
         // The property "version_info" should have attribution "taxonomy_type"
         // and its value should be "chrome_and_mobile_taxonomy".
@@ -895,15 +888,14 @@ public class ModelManagerTest {
                         TEST_CLASSIFIER_INPUT_CONFIG_PATH,
                         "ModelWrongPath",
                         mMockFileStorage,
-                        null /*No downloaded files.*/);
+                        /* downloadedFiles= */ null);
 
         // If the bundled model is available but null, return false.
         assertThat(mTestModelManager.isModelAvailable()).isFalse();
 
-        verifyErrorLogUtilError(
+        verifyErrorLogUtilErrorWithAnyException(
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__NO_CLASSIFIER_MODEL_AVAILABLE,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
-                /* numberOfInvocations= */ 1);
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
     }
 
     @Test
@@ -949,8 +941,6 @@ public class ModelManagerTest {
         verifyErrorLogUtilError(
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CLASSIFIER_METADATA_REDUNDANT_ASSET,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
-                MODEL_MANAGER_CLASS_NAME,
-                GET_ASSETS_METADATA_MAP_METHOD_NAME,
-                /* numberOfInvocations= */ 2);
+                times(2));
     }
 }

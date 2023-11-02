@@ -21,15 +21,13 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_FAILED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_FILE_DOWNLOADED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_MATCHED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_AD_ID_MATCH_FOR_DEBUG_KEYS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_ATTRIBUTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_WIPEOUT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_CLICK_VERIFICATION;
 import static com.android.adservices.service.stats.EpochComputationClassifierStats.ClassifierType;
 import static com.android.adservices.service.stats.EpochComputationClassifierStats.OnDeviceClassifierStatus;
 import static com.android.adservices.service.stats.EpochComputationClassifierStats.PrecomputedClassifierStatus;
@@ -45,9 +43,9 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
-import com.android.adservices.errorlogging.AdServicesErrorStats;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.enrollment.EnrollmentStatus;
+import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.WipeoutStatus;
 import com.android.adservices.service.measurement.attribution.AttributionStatus;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -443,14 +441,18 @@ public class StatsdAdServicesLoggerTest {
         MeasurementAttributionStats stats =
                 new MeasurementAttributionStats.Builder()
                         .setCode(AD_SERVICES_MEASUREMENT_ATTRIBUTION)
-                        .setSourceType(AttributionStatus.SourceType.EVENT.ordinal())
-                        .setSurfaceType(AttributionStatus.AttributionSurface.APP_WEB.ordinal())
-                        .setResult(AttributionStatus.AttributionResult.SUCCESS.ordinal())
-                        .setFailureType(AttributionStatus.FailureType.UNKNOWN.ordinal())
+                        .setSourceType(AttributionStatus.SourceType.VIEW.getValue())
+                        .setSurfaceType(AttributionStatus.AttributionSurface.APP_WEB.getValue())
+                        .setResult(AttributionStatus.AttributionResult.SUCCESS.getValue())
+                        .setFailureType(AttributionStatus.FailureType.UNKNOWN.getValue())
                         .setSourceDerived(false)
                         .setInstallAttribution(true)
                         .setAttributionDelay(100L)
                         .setSourceRegistrant(SOURCE_REGISTRANT)
+                        .setAggregateReportCount(1)
+                        .setAggregateDebugReportCount(1)
+                        .setEventReportCount(3)
+                        .setEventDebugReportCount(1)
                         .build();
         ExtendedMockito.doNothing()
                 .when(
@@ -464,7 +466,12 @@ public class StatsdAdServicesLoggerTest {
                                         anyBoolean(),
                                         anyBoolean(),
                                         anyLong(),
-                                        anyString()));
+                                        anyString(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt()));
 
         // Invoke logging call
         mLogger.logMeasurementAttributionStats(stats);
@@ -474,14 +481,19 @@ public class StatsdAdServicesLoggerTest {
                 () ->
                         AdServicesStatsLog.write(
                                 eq(AD_SERVICES_MEASUREMENT_ATTRIBUTION),
-                                eq(AttributionStatus.SourceType.EVENT.ordinal()),
-                                eq(AttributionStatus.AttributionSurface.APP_WEB.ordinal()),
-                                eq(AttributionStatus.AttributionResult.SUCCESS.ordinal()),
-                                eq(AttributionStatus.FailureType.UNKNOWN.ordinal()),
+                                eq(AttributionStatus.SourceType.VIEW.getValue()),
+                                eq(AttributionStatus.AttributionSurface.APP_WEB.getValue()),
+                                eq(AttributionStatus.AttributionResult.SUCCESS.getValue()),
+                                eq(AttributionStatus.FailureType.UNKNOWN.getValue()),
                                 eq(false),
                                 eq(true),
                                 eq(100L),
-                                eq(SOURCE_REGISTRANT));
+                                eq(SOURCE_REGISTRANT),
+                                eq(1),
+                                eq(1),
+                                eq(3),
+                                eq(1),
+                                eq(0));
 
         ExtendedMockito.verify(writeInvocation);
 
@@ -545,53 +557,6 @@ public class StatsdAdServicesLoggerTest {
                                 eq(registrationDelay),
                                 eq(SOURCE_REGISTRANT));
 
-        ExtendedMockito.verify(writeInvocation);
-
-        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
-    }
-
-    @Test
-    public void logAdServicesError_success() {
-        String className = "TopicsService";
-        String methodName = "getTopics";
-        int lineNumber = 100;
-        String exceptionName = "SQLiteException";
-        AdServicesErrorStats stats =
-                AdServicesErrorStats.builder()
-                        .setErrorCode(
-                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION)
-                        .setPpapiName(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)
-                        .setClassName(className)
-                        .setMethodName(methodName)
-                        .setLineNumber(lineNumber)
-                        .setLastObservedExceptionName(exceptionName)
-                        .build();
-        ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyString(),
-                                        anyString(),
-                                        anyInt(),
-                                        anyString()));
-
-        // Invoke logging call
-        mLogger.logAdServicesError(stats);
-
-        // Verify only compat logging took place
-        MockedVoidMethod writeInvocation =
-                () ->
-                        AdServicesStatsLog.write(
-                                eq(AD_SERVICES_ERROR_REPORTED),
-                                eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION),
-                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS),
-                                eq(className),
-                                eq(methodName),
-                                eq(lineNumber),
-                                eq(exceptionName));
         ExtendedMockito.verify(writeInvocation);
 
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
@@ -910,6 +875,61 @@ public class StatsdAdServicesLoggerTest {
                                 eq(10),
                                 eq("SomeSdkName"),
                                 eq(errorCauseEnumValue));
+
+        ExtendedMockito.verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void logMeasurementClickVerificationStats_success() {
+        int sourceType = Source.SourceType.NAVIGATION.getIntValue();
+        boolean inputEventPresent = true;
+        boolean systemClickVerificationSuccessful = true;
+        boolean systemClickVerificationEnabled = true;
+        long inputEventDelayMs = 200L;
+        long validDelayWindowMs = 1000L;
+        String sourceRegistrant = "test_source_registrant";
+
+        MeasurementClickVerificationStats stats =
+                MeasurementClickVerificationStats.builder()
+                        .setSourceType(sourceType)
+                        .setInputEventPresent(inputEventPresent)
+                        .setSystemClickVerificationSuccessful(systemClickVerificationSuccessful)
+                        .setSystemClickVerificationEnabled(systemClickVerificationEnabled)
+                        .setInputEventDelayMillis(inputEventDelayMs)
+                        .setValidDelayWindowMillis(validDelayWindowMs)
+                        .setSourceRegistrant(sourceRegistrant)
+                        .build();
+
+        ExtendedMockito.doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(),
+                                        anyInt(),
+                                        anyBoolean(),
+                                        anyBoolean(),
+                                        anyBoolean(),
+                                        anyLong(),
+                                        anyLong(),
+                                        anyString()));
+
+        // Invoke logging call.
+        mLogger.logMeasurementClickVerificationStats(stats);
+
+        // Verify only compat logging took place.
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_MEASUREMENT_CLICK_VERIFICATION),
+                                eq(sourceType),
+                                eq(inputEventPresent),
+                                eq(systemClickVerificationSuccessful),
+                                eq(systemClickVerificationEnabled),
+                                eq(inputEventDelayMs),
+                                eq(validDelayWindowMs),
+                                eq("")); // App package name not in allow list.
 
         ExtendedMockito.verify(writeInvocation);
 
