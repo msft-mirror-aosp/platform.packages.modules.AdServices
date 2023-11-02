@@ -20,11 +20,13 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.verify;
 
+import android.content.Context;
 import android.net.Uri;
 
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -36,13 +38,17 @@ import java.io.IOException;
 /** A wrapper class to expose a constructor for DebugReportingJobHandler in testing. */
 public class DebugReportingJobHandlerWrapper {
     public static Object[] spyPerformScheduledPendingReports(
-            EnrollmentDao enrollmentDao, DatastoreManager datastoreManager)
+            EnrollmentDao enrollmentDao, DatastoreManager datastoreManager, Context context)
             throws IOException, JSONException {
         // Set up debug reporting job handler spy
         DebugReportingJobHandler debugReportingJobHandler =
                 Mockito.spy(
                         new DebugReportingJobHandler(
-                                enrollmentDao, datastoreManager, FlagsFactory.getFlags()));
+                                enrollmentDao,
+                                datastoreManager,
+                                FlagsFactory.getFlags(),
+                                AdServicesLoggerImpl.getInstance(),
+                                context));
         Mockito.doReturn(200).when(debugReportingJobHandler).makeHttpPostRequest(any(), any());
 
         debugReportingJobHandler.performScheduledPendingReports();

@@ -16,7 +16,6 @@
 
 package com.android.tests.sandbox.adid;
 
-
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.content.Context;
@@ -48,6 +47,7 @@ public class SandboxedAdIdManagerTest {
     private static final String SDK_NAME = "com.android.tests.providers.adidsdk";
 
     private static final int LOAD_SDK_FROM_INTERNET_TIMEOUT_SEC = 60;
+    private static final int FOREGROUND_ACTIVITY_BROADCAST_WAITING_TIMEOUT_MS = 10_000;
 
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();
@@ -55,7 +55,8 @@ public class SandboxedAdIdManagerTest {
     @Before
     public void setup() throws TimeoutException, InterruptedException {
         // Start a foreground activity
-        SimpleActivity.startAndWaitForSimpleActivity(sContext, Duration.ofMillis(1000));
+        SimpleActivity.startAndWaitForSimpleActivity(
+                sContext, Duration.ofMillis(FOREGROUND_ACTIVITY_BROADCAST_WAITING_TIMEOUT_MS));
         overridingBeforeTest();
     }
 

@@ -23,7 +23,7 @@ import android.adservices.measurement.DeletionRequest;
 import android.annotation.NonNull;
 import android.net.Uri;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
@@ -36,6 +36,7 @@ import com.android.adservices.service.measurement.WipeoutStatus;
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementWipeoutStats;
 import com.android.internal.annotations.VisibleForTesting;
@@ -54,13 +55,20 @@ import java.util.Objects;
 public class MeasurementDataDeleter {
     static final String ANDROID_APP_SCHEME = "android-app";
     private static final int AGGREGATE_CONTRIBUTIONS_VALUE_MINIMUM_LIMIT = 0;
-
     private final DatastoreManager mDatastoreManager;
     private final Flags mFlags;
+    private final AdServicesLogger mLogger;
 
     public MeasurementDataDeleter(DatastoreManager datastoreManager, Flags flags) {
+        this(datastoreManager, flags, AdServicesLoggerImpl.getInstance());
+    }
+
+    @VisibleForTesting
+    public MeasurementDataDeleter(
+            DatastoreManager datastoreManager, Flags flags, AdServicesLogger logger) {
         mDatastoreManager = datastoreManager;
         mFlags = flags;
+        mLogger = logger;
     }
 
     /**
@@ -139,9 +147,10 @@ public class MeasurementDataDeleter {
                                 triggerIds.addAll(
                                         source.getFlexEventReportSpec().getAllTriggerIds());
                             } catch (JSONException e) {
-                                LogUtil.e(
-                                        "MeasurementDataDeleter::delete unable to build event "
-                                                + "report spec");
+                                LoggerFactory.getMeasurementLogger()
+                                        .e(
+                                                "MeasurementDataDeleter::delete unable to build"
+                                                        + " event report spec");
                             }
                         }
                     }
@@ -173,10 +182,10 @@ public class MeasurementDataDeleter {
                     dao.updateSourceStatus(sourceIds, Source.Status.MARKED_TO_DELETE);
                     dao.updateTriggerStatus(triggerIds, Trigger.Status.MARKED_TO_DELETE);
 
-                    // Log wipeout event triggered by request (from Chrome) to delete data of
-                    // package on device for parity
+                    // Log wipeout event triggered by request (from the delete registrations API)
                     WipeoutStatus wipeoutStatus = new WipeoutStatus();
-                    wipeoutStatus.setWipeoutType(WipeoutStatus.WipeoutType.UNKNOWN);
+                    wipeoutStatus.setWipeoutType(
+                            WipeoutStatus.WipeoutType.DELETE_REGISTRATIONS_API);
                     logWipeoutStats(
                             wipeoutStatus,
                             getRegistrant(deletionParam.getAppPackageName()).toString());
@@ -189,7 +198,7 @@ public class MeasurementDataDeleter {
             throws DatastoreException {
         for (AggregateReport report : aggregateReports) {
             if (report.getSourceId() == null) {
-                LogUtil.d("SourceId is null on event report.");
+                LoggerFactory.getMeasurementLogger().d("SourceId is null on event report.");
                 return;
             }
 
@@ -217,7 +226,8 @@ public class MeasurementDataDeleter {
             throws DatastoreException {
         for (EventReport report : eventReports) {
             if (report.getSourceId() == null) {
-                LogUtil.d("resetDedupKeys: SourceId on the event report is null.");
+                LoggerFactory.getMeasurementLogger()
+                        .d("resetDedupKeys: SourceId on the event report is null.");
                 continue;
             }
 
@@ -242,7 +252,8 @@ public class MeasurementDataDeleter {
                                     source.getId(), source.attributedTriggersToJson());
                         }
                     } catch (JSONException e) {
-                        LogUtil.e(e, "resetDedupKeys: failed to build attributed triggers.");
+                        LoggerFactory.getMeasurementLogger()
+                                .e(e, "resetDedupKeys: failed to build attributed triggers.");
                     }
                 }
             } else {
@@ -257,7 +268,7 @@ public class MeasurementDataDeleter {
             throws DatastoreException {
         for (AggregateReport report : aggregateReports) {
             if (report.getSourceId() == null) {
-                LogUtil.d("SourceId on the aggregate report is null.");
+                LoggerFactory.getMeasurementLogger().d("SourceId on the aggregate report is null.");
                 continue;
             }
 
@@ -275,13 +286,12 @@ public class MeasurementDataDeleter {
     }
 
     private void logWipeoutStats(WipeoutStatus wipeoutStatus, String sourceRegistrant) {
-        AdServicesLoggerImpl.getInstance()
-                .logMeasurementWipeoutStats(
-                        new MeasurementWipeoutStats.Builder()
-                                .setCode(AD_SERVICES_MEASUREMENT_WIPEOUT)
-                                .setWipeoutType(wipeoutStatus.getWipeoutType().ordinal())
-                                .setSourceRegistrant(sourceRegistrant)
-                                .build());
+        mLogger.logMeasurementWipeoutStats(
+                new MeasurementWipeoutStats.Builder()
+                        .setCode(AD_SERVICES_MEASUREMENT_WIPEOUT)
+                        .setWipeoutType(wipeoutStatus.getWipeoutType().getValue())
+                        .setSourceRegistrant(sourceRegistrant)
+                        .build());
     }
 
     List<EventReport> filterReportFlexibleEventsAPI(
@@ -302,7 +312,7 @@ public class MeasurementDataDeleter {
                 try {
                     source.buildFlexibleEventReportApi();
                 } catch (JSONException e) {
-                    LogUtil.d("Unable to read JSON from Database");
+                    LoggerFactory.getMeasurementLogger().d("Unable to read JSON from Database");
                     eventReportsToDelete.add(eventReport);
                     continue;
                 }

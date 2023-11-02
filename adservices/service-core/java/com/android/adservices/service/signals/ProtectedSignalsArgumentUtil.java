@@ -20,30 +20,39 @@ import androidx.annotation.VisibleForTesting;
 
 import com.android.adservices.service.js.JSScriptArgument;
 
+import org.json.JSONException;
+
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
 /** Creates an {@link JSScriptArgument} for raw protected signals */
 public class ProtectedSignalsArgumentUtil {
 
-    public static final String SIGNAL_FIELD_NAME = "signals";
-
     public static final String VALUE_KEY_NAME = "val";
     public static final String CREATION_TIME_KEY_NAME = "time";
     public static final String PACKAGE_KEY_NAME = "app";
+    public static final String HEX = "%02X";
 
+    public static final String INVALID_BASE64_SIGNAL = "Signals have invalid base64 key or values";
     /**
      * @param rawSignals map of {@link ProtectedSignal}, where map key is the base64 encoded key for
      *     signals
      * @return an {@link JSScriptArgument}
      */
-    public static JSScriptArgument asScriptArgument(Map<String, List<ProtectedSignal>> rawSignals) {
-        return JSScriptArgument.stringArg(SIGNAL_FIELD_NAME, marshalToJson(rawSignals));
+    public static JSScriptArgument asScriptArgument(
+            String name, Map<String, List<ProtectedSignal>> rawSignals) throws JSONException {
+        return JSScriptArgument.jsonArrayArg(name, marshalToJson(rawSignals));
     }
 
     @VisibleForTesting
     static String marshalToJson(Map<String, List<ProtectedSignal>> rawSignals) {
-        // TODO(b/298081186) Explore StringBuilder vs JSONObject for converting signals to JS arg
+
+        /**
+         * We analyzed various JSON building approaches, turns out using StringBuilder is orders of
+         * magnitude faster. Also, given the signals have base64 encoded strings initially fetched
+         * as JSON, using string builder is also a safe choice.
+         */
         StringBuilder sb = new StringBuilder();
         sb.append("[");
         for (Map.Entry<String, List<ProtectedSignal>> signalsPerKey : rawSignals.entrySet()) {
@@ -64,7 +73,7 @@ public class ProtectedSignalsArgumentUtil {
     static String serializeEntryToJson(Map.Entry<String, List<ProtectedSignal>> entry) {
         StringBuilder jsonBuilder = new StringBuilder();
         jsonBuilder.append("{");
-        jsonBuilder.append("\"").append(entry.getKey()).append("\":[");
+        jsonBuilder.append("\"").append(validateAndSerializeBase64(entry.getKey())).append("\":[");
 
         List<ProtectedSignal> protectedSignals = entry.getValue();
         for (int i = 0; i < protectedSignals.size(); i++) {
@@ -72,7 +81,7 @@ public class ProtectedSignalsArgumentUtil {
             jsonBuilder.append("{");
             jsonBuilder
                     .append("\"" + VALUE_KEY_NAME + "\":\"")
-                    .append(protectedSignal.getValue())
+                    .append(validateAndSerializeBase64(protectedSignal.getBase64EncodedValue()))
                     .append("\",");
             jsonBuilder
                     .append("\"" + CREATION_TIME_KEY_NAME + "\":")
@@ -92,5 +101,20 @@ public class ProtectedSignalsArgumentUtil {
         jsonBuilder.append("}");
 
         return jsonBuilder.toString();
+    }
+
+    // TODO(b/294900378) Avoid second serialization
+    @VisibleForTesting
+    static String validateAndSerializeBase64(String base64String) {
+        try {
+            byte[] bytes = Base64.getDecoder().decode(base64String);
+            StringBuilder sb = new StringBuilder(bytes.length * 2);
+            for (byte b : bytes) {
+                sb.append(String.format(HEX, b));
+            }
+            return sb.toString();
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException(INVALID_BASE64_SIGNAL);
+        }
     }
 }

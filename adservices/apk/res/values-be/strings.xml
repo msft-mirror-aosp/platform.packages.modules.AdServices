@@ -30,10 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Дазваляе праграме доступ да AdServices Consent API."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Доступ да Ad ID API"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Дазваляе праграме доступ да Ad ID API."</string>
-    <!-- no translation found for permlab_adServicesAccessAdServicesCobaltUpload (3305366770828562349) -->
-    <skip />
-    <!-- no translation found for permdesc_adServicesAccessAdServicesCobaltUpload (2584490228435633488) -->
-    <skip />
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"Доступ да AdServices Cobalt Upload API"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Праграма з гэтым дазволам зможа атрымліваць доступ да AdServices Cobalt Upload API."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Доступ да App Set ID API"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Дазваляе праграме доступ да App Set ID API."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Доступ да Consent Service API"</string>
@@ -44,6 +42,8 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Дазваляе праграме мець доступ да API стану ўключэння AdService."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Доступ да інтэрфэйсаў API AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Дазваляе праграме мець доступ да інтэрфэйсаў API AdServicesManager."</string>
+    <string name="permlab_updateAdservicesAdId" msgid="1817012692601139702">"Доступ да API ад AdService для абнаўлення рэкламных ідэнтыфікатараў."</string>
+    <string name="permdesc_updateAdservicesAdId" msgid="1594321436876709737">"Дазваляе праграме мець доступ да API ад AdService для абнаўлення рэкламных ідэнтыфікатараў."</string>
     <string name="app_label" msgid="5844694701336604490">"Прыватнасць у рэкламе"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Далучайцеся да тэсціравання бэта-версіі праграмы \"Прыватнасць у рэкламе на прыладах Android\"."</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android даследуе больш прыватныя спосабы паказу рэкламы ў праграмах"</string>

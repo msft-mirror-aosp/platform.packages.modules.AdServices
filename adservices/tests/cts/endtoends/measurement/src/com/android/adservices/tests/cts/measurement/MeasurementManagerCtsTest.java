@@ -46,12 +46,12 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.RequiresLowRamDevice;
+import com.android.adservices.common.WebUtil;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
@@ -82,14 +82,15 @@ public class MeasurementManagerCtsTest {
     /* Note: The source and trigger registration used here must match one of those in
        {@link PreEnrolledAdTechForTest}.
     */
-    private static final Uri SOURCE_REGISTRATION_URI = Uri.parse("https://test.com/source");
-    private static final Uri TRIGGER_REGISTRATION_URI = Uri.parse("https://test.com/trigger");
+    private static final Uri SOURCE_REGISTRATION_URI = WebUtil.validUri("https://test.test/source");
+    private static final Uri TRIGGER_REGISTRATION_URI =
+            WebUtil.validUri("https://test.test/trigger");
     private static final Uri LOCALHOST = Uri.parse("https://localhost");
-    private static final Uri DESTINATION = Uri.parse("http://trigger-origin.com");
+    private static final Uri DESTINATION = WebUtil.validUri("http://trigger-origin.test");
     private static final Uri OS_DESTINATION = Uri.parse("android-app://com.os.destination");
-    private static final Uri WEB_DESTINATION = Uri.parse("http://web-destination.com");
-    private static final Uri ORIGIN_URI = Uri.parse("https://sample.example1.com");
-    private static final Uri DOMAIN_URI = Uri.parse("https://example2.com");
+    private static final Uri WEB_DESTINATION = WebUtil.validUri("http://web-destination.test");
+    private static final Uri ORIGIN_URI = WebUtil.validUri("https://sample.example1.test");
+    private static final Uri DOMAIN_URI = WebUtil.validUri("https://example2.test");
     private static final InputEvent INPUT_EVENT =
             new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_1);
     private static final float DEFAULT_REQUEST_PER_SECOND = 25f;
@@ -107,45 +108,21 @@ public class MeasurementManagerCtsTest {
 
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
 
-    private String mPreviousAppAllowList;
-
-    @Rule
+    @Rule(order = 0)
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
             new AdServicesDeviceSupportedRule();
 
+    @Rule(order = 1)
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forMeasurementE2ETests(sContext.getPackageName());
+
     @Before
     public void setup() throws Exception {
-        if (!SdkLevel.isAtLeastT()) {
-            mPreviousAppAllowList =
-                    CompatAdServicesTestUtils.getAndOverrideMsmtApiAppAllowList(
-                            sContext.getPackageName());
-            CompatAdServicesTestUtils.setFlags();
-        }
-
-        // To grant access to all pp api app
-        allowAllPackageNamesAccessToMeasurementApis();
-
-        // We need to turn the Consent Manager into debug mode
-        overrideConsentManagerDebugMode();
-
-        overrideMeasurementKillSwitches(true);
-
         mMeasurementManager = MeasurementManager.get(sContext);
         Objects.requireNonNull(mMeasurementManager);
 
         // Cool-off rate limiter in case it was initialized by another test
         TimeUnit.SECONDS.sleep(1);
-    }
-
-    @After
-    public void tearDown() {
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setMsmtApiAppAllowList(mPreviousAppAllowList);
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
-        resetAllowSandboxPackageNameAccessMeasurementApis();
-        resetOverrideConsentManagerDebugMode();
-        overrideMeasurementKillSwitches(false);
     }
 
     @Test
@@ -1036,66 +1013,21 @@ public class MeasurementManagerCtsTest {
 
     private void allowAllPackageNamesAccessToMeasurementApis() {
         final String packageName = "*";
-        ShellUtils.runShellCommand(
-                "device_config put adservices msmt_api_app_allow_list " + packageName);
-        ShellUtils.runShellCommand(
-                "device_config put adservices web_context_client_allow_list " + packageName);
+        flags.setMsmtApiAppAllowList(packageName).setMsmtWebContextClientAllowList(packageName);
     }
 
     private void blockAllPackageNamesAccessToMeasurementApis() {
         final String packageName = "";
-        ShellUtils.runShellCommand(
-                "device_config put adservices msmt_api_app_allow_list " + packageName);
-        ShellUtils.runShellCommand(
-                "device_config put adservices web_context_client_allow_list " + packageName);
-    }
-
-    // Override the Consent Manager behaviour - Consent Given
-    private void overrideConsentManagerDebugMode() {
-        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
-    }
-
-    private void resetAllowSandboxPackageNameAccessMeasurementApis() {
-        ShellUtils.runShellCommand("device_config put adservices msmt_api_app_allow_list null");
-        ShellUtils.runShellCommand(
-                "device_config put adservices web_context_client_allow_list null");
-    }
-
-    private void resetOverrideConsentManagerDebugMode() {
-        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode null");
-    }
-
-    // Override measurement related kill switch to ignore the effect of actual PH values.
-    // If isOverride = true, override measurement related kill switch to OFF to allow adservices
-    // If isOverride = false, override measurement related kill switch to meaningless value so that
-    // PhFlags will use the default value.
-    private void overrideMeasurementKillSwitches(boolean isOverride) {
-        String overrideString = isOverride ? "false" : "null";
-        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.measurement_kill_switch " + overrideString);
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.measurement_api_register_source_kill_switch "
-                        + overrideString);
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.measurement_api_register_trigger_kill_switch "
-                        + overrideString);
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.measurement_api_register_web_source_kill_switch "
-                        + overrideString);
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.measurement_api_register_web_trigger_kill_switch "
-                        + overrideString);
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.measurement_api_delete_registrations_kill_switch "
-                        + overrideString);
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.measurement_api_status_kill_switch " + overrideString);
-        ShellUtils.runShellCommand("setprop debug.adservices.adid_kill_switch " + overrideString);
+        flags.setMsmtApiAppAllowList(packageName).setMsmtWebContextClientAllowList(packageName);
     }
 
     private void enableGlobalKillSwitch(boolean enabled) {
-        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + enabled);
+        if (SdkLevel.isAtLeastT()) {
+            ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + enabled);
+        } else {
+            ShellUtils.runShellCommand(
+                    "device_config put adservices enable_back_compat " + !enabled);
+        }
     }
 
     private void enableMeasurementKillSwitch(boolean enabled) {

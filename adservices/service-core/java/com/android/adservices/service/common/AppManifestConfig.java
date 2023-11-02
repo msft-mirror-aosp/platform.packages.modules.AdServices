@@ -16,19 +16,30 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.service.common.AppManifestConfigParser.TAG_ADID;
+import static com.android.adservices.service.common.AppManifestConfigParser.TAG_APPSETID;
+import static com.android.adservices.service.common.AppManifestConfigParser.TAG_ATTRIBUTION;
+import static com.android.adservices.service.common.AppManifestConfigParser.TAG_CUSTOM_AUDIENCES;
+import static com.android.adservices.service.common.AppManifestConfigParser.TAG_TOPICS;
+
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
 
+import java.util.function.Supplier;
+
 /** The object representing the AdServices manifest config. */
-public class AppManifestConfig {
+public final class AppManifestConfig {
     @NonNull private final AppManifestIncludesSdkLibraryConfig mIncludesSdkLibraryConfig;
     @Nullable private final AppManifestAttributionConfig mAttributionConfig;
     @Nullable private final AppManifestCustomAudiencesConfig mCustomAudiencesConfig;
     @Nullable private final AppManifestTopicsConfig mTopicsConfig;
     @Nullable private final AppManifestAdIdConfig mAdIdConfig;
     @Nullable private final AppManifestAppSetIdConfig mAppSetIdConfig;
+    // TODO(b/297585683): remove this attribute (and update test cases) once it's always enabled by
+    // default (it will be initially determined by a flag).
+    private final boolean mEnabledByDefault;
 
     /**
      * AdServices manifest config must contain configs for Attribution, Custom Audiences, AdId,
@@ -43,6 +54,7 @@ public class AppManifestConfig {
      * @param topicsConfig the config for Topics.
      * @param adIdConfig the config for adId.
      * @param appSetIdConfig the config for appSetId.
+     * @param enabledByDefault whether APIs should be enabled by default when missing from the
      */
     public AppManifestConfig(
             @NonNull AppManifestIncludesSdkLibraryConfig includesSdkLibraryConfig,
@@ -50,13 +62,15 @@ public class AppManifestConfig {
             @Nullable AppManifestCustomAudiencesConfig customAudiencesConfig,
             @Nullable AppManifestTopicsConfig topicsConfig,
             @Nullable AppManifestAdIdConfig adIdConfig,
-            @Nullable AppManifestAppSetIdConfig appSetIdConfig) {
+            @Nullable AppManifestAppSetIdConfig appSetIdConfig,
+            boolean enabledByDefault) {
         mIncludesSdkLibraryConfig = includesSdkLibraryConfig;
         mAttributionConfig = attributionConfig;
         mCustomAudiencesConfig = customAudiencesConfig;
         mTopicsConfig = topicsConfig;
         mAdIdConfig = adIdConfig;
         mAppSetIdConfig = appSetIdConfig;
+        mEnabledByDefault = enabledByDefault;
     }
 
     /** Getter for IncludesSdkLibraryConfig. */
@@ -72,11 +86,10 @@ public class AppManifestConfig {
      */
     @Nullable
     public AppManifestAttributionConfig getAttributionConfig() {
-        if (mAttributionConfig == null) {
-            LogUtil.v("App manifest config attribution tag not found");
-        }
-
-        return mAttributionConfig;
+        return getConfig(
+                TAG_ATTRIBUTION,
+                mAttributionConfig,
+                AppManifestAttributionConfig::getEnabledByDefaultInstance);
     }
 
     /**
@@ -86,13 +99,7 @@ public class AppManifestConfig {
      * <p>If the tag is not found in the app manifest config, returns {@code false}.
      */
     public boolean isAllowedAttributionAccess(@NonNull String enrollmentId) {
-        if (mAttributionConfig == null) {
-            LogUtil.v("App manifest config attribution tag not found");
-            return false;
-        }
-
-        return mAttributionConfig.getAllowAllToAccess()
-                || mAttributionConfig.getAllowAdPartnersToAccess().contains(enrollmentId);
+        return isAllowedAccess(TAG_ATTRIBUTION, mAttributionConfig, enrollmentId);
     }
 
     /**
@@ -102,11 +109,10 @@ public class AppManifestConfig {
      */
     @Nullable
     public AppManifestCustomAudiencesConfig getCustomAudiencesConfig() {
-        if (mCustomAudiencesConfig == null) {
-            LogUtil.v("App manifest config custom-audiences tag not found");
-        }
-
-        return mCustomAudiencesConfig;
+        return getConfig(
+                TAG_CUSTOM_AUDIENCES,
+                mCustomAudiencesConfig,
+                AppManifestCustomAudiencesConfig::getEnabledByDefaultInstance);
     }
 
     /**
@@ -116,13 +122,7 @@ public class AppManifestConfig {
      * <p>If the tag is not found in the app manifest config, returns {@code false}.
      */
     public boolean isAllowedCustomAudiencesAccess(@NonNull String enrollmentId) {
-        if (mCustomAudiencesConfig == null) {
-            LogUtil.v("App manifest config custom-audiences tag not found");
-            return false;
-        }
-
-        return mCustomAudiencesConfig.getAllowAllToAccess()
-                || mCustomAudiencesConfig.getAllowAdPartnersToAccess().contains(enrollmentId);
+        return isAllowedAccess(TAG_CUSTOM_AUDIENCES, mCustomAudiencesConfig, enrollmentId);
     }
 
     /**
@@ -132,11 +132,8 @@ public class AppManifestConfig {
      */
     @Nullable
     public AppManifestTopicsConfig getTopicsConfig() {
-        if (mTopicsConfig == null) {
-            LogUtil.v("App manifest config topics tag not found");
-        }
-
-        return mTopicsConfig;
+        return getConfig(
+                TAG_TOPICS, mTopicsConfig, AppManifestTopicsConfig::getEnabledByDefaultInstance);
     }
 
     /**
@@ -146,13 +143,7 @@ public class AppManifestConfig {
      * <p>If the tag is not found in the app manifest config, returns {@code false}.
      */
     public boolean isAllowedTopicsAccess(@NonNull String enrollmentId) {
-        if (mTopicsConfig == null) {
-            LogUtil.v("App manifest config topics tag not found");
-            return false;
-        }
-
-        return mTopicsConfig.getAllowAllToAccess()
-                || mTopicsConfig.getAllowAdPartnersToAccess().contains(enrollmentId);
+        return isAllowedAccess(TAG_TOPICS, mTopicsConfig, enrollmentId);
     }
 
     /**
@@ -162,11 +153,7 @@ public class AppManifestConfig {
      */
     @Nullable
     public AppManifestAdIdConfig getAdIdConfig() {
-        if (mAdIdConfig == null) {
-            LogUtil.v("App manifest config adid tag not found");
-        }
-
-        return mAdIdConfig;
+        return getConfig(TAG_ADID, mAdIdConfig, AppManifestAdIdConfig::getEnabledByDefaultInstance);
     }
 
     /**
@@ -175,13 +162,7 @@ public class AppManifestConfig {
      * <p>If the tag is not found in the app manifest config, returns {@code false}.
      */
     public boolean isAllowedAdIdAccess(@NonNull String sdk) {
-        if (mAdIdConfig == null) {
-            LogUtil.v("App manifest config adid tag not found");
-            return false;
-        }
-
-        return mAdIdConfig.getAllowAllToAccess()
-                || mAdIdConfig.getAllowAdPartnersToAccess().contains(sdk);
+        return isAllowedAccess(TAG_ADID, mAdIdConfig, sdk);
     }
 
     /**
@@ -191,11 +172,10 @@ public class AppManifestConfig {
      */
     @Nullable
     public AppManifestAppSetIdConfig getAppSetIdConfig() {
-        if (mAdIdConfig == null) {
-            LogUtil.v("App manifest config appsetid tag not found");
-        }
-
-        return mAppSetIdConfig;
+        return getConfig(
+                TAG_APPSETID,
+                mAppSetIdConfig,
+                AppManifestAppSetIdConfig::getEnabledByDefaultInstance);
     }
 
     /**
@@ -204,12 +184,31 @@ public class AppManifestConfig {
      * <p>If the tag is not found in the app manifest config, returns {@code false}.
      */
     public boolean isAllowedAppSetIdAccess(@NonNull String sdk) {
-        if (mAdIdConfig == null) {
-            LogUtil.v("App manifest config appsetid tag not found");
-            return false;
+        return isAllowedAccess(TAG_APPSETID, mAppSetIdConfig, sdk);
+    }
+
+    private <T extends AppManifestApiConfig> T getConfig(
+            String tag, @Nullable T config, Supplier<T> supplier) {
+        if (config != null) {
+            return config;
+        }
+        if (mEnabledByDefault) {
+            LogUtil.v("app manifest config tag '%s' not found, returning default", tag);
+            return supplier.get();
+        }
+        LogUtil.v("app manifest config tag '%s' not found, returning null", tag);
+        return null;
+    }
+
+    private boolean isAllowedAccess(
+            String tag, @Nullable AppManifestApiConfig config, String partnerId) {
+        if (config == null) {
+            LogUtil.v(
+                    "app manifest config tag '%s' not found, returning %b", tag, mEnabledByDefault);
+            return mEnabledByDefault;
         }
 
-        return mAppSetIdConfig.getAllowAllToAccess()
-                || mAppSetIdConfig.getAllowAdPartnersToAccess().contains(sdk);
+        return config.getAllowAllToAccess()
+                || config.getAllowAdPartnersToAccess().contains(partnerId);
     }
 }

@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement;
 
 import android.net.Uri;
 
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import java.util.List;
@@ -43,5 +44,9 @@ public final class EventReportFixture {
                 .setTriggerId(UUID.randomUUID().toString())
                 .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example.test"))
                 .setTriggerSummaryBucket("2,3");
+    }
+
+    public static class ValidEventReportParams {
+        public static final long TRIGGER_TIME = 8640000000L;
     }
 }

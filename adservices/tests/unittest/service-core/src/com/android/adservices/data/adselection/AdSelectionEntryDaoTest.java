@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.adselection;
 
+import static android.adservices.adselection.DataHandlersFixture.AD_SELECTION_INITIALIZATION_1;
+import static android.adservices.adselection.DataHandlersFixture.DB_AD_SELECTION_INITIALIZATION_1;
 import static android.adservices.adselection.DataHandlersFixture.TEST_PACKAGE_NAME_1;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -343,6 +345,18 @@ public class AdSelectionEntryDaoTest {
                     .setInteractionReportingUri(BUYER_CLICK_URI)
                     .build();
 
+    private static final DBReportingComputationInfo DB_REPORTING_COMPUTATION_INFO_1 =
+            DBReportingComputationInfo.builder()
+                    .setAdSelectionId(AD_SELECTION_ID_1)
+                    .setBiddingLogicUri(BIDDING_LOGIC_URI_1)
+                    .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS_1)
+                    .setSellerContextualSignals(SELLER_CONTEXTUAL_SIGNALS)
+                    .setBuyerContextualSignals(BUYER_CONTEXTUAL_SIGNALS)
+                    .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
+                    .setWinningAdBid(BID)
+                    .setWinningAdRenderUri(RENDER_URI)
+                    .build();
+
     private AdSelectionEntryDao mAdSelectionEntryDao;
 
     @Before
@@ -351,6 +365,18 @@ public class AdSelectionEntryDaoTest {
                 Room.inMemoryDatabaseBuilder(CONTEXT, AdSelectionDatabase.class)
                         .build()
                         .adSelectionEntryDao();
+    }
+
+    @Test
+    public void testInsertDBReportingComputationInfo() {
+        assertFalse(mAdSelectionEntryDao.doesReportingComputationInfoExist(AD_SELECTION_ID_1));
+        assertFalse(mAdSelectionEntryDao.doesReportingComputationInfoExist(AD_SELECTION_ID_2));
+
+        mAdSelectionEntryDao.insertDBAdSelectionInitialization(DB_AD_SELECTION_INITIALIZATION_1);
+        mAdSelectionEntryDao.insertDBReportingComputationInfo(DB_REPORTING_COMPUTATION_INFO_1);
+
+        assertTrue(mAdSelectionEntryDao.doesReportingComputationInfoExist(AD_SELECTION_ID_1));
+        assertFalse(mAdSelectionEntryDao.doesReportingComputationInfoExist(AD_SELECTION_ID_2));
     }
 
     @Test
@@ -572,6 +598,59 @@ public class AdSelectionEntryDaoTest {
 
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID_1));
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID_2));
+    }
+
+    @Test
+    public void testReturnsTrueIfAdSelectionIdExistsUponFlagOldTable() {
+        assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionIdExistUponFlag(
+                        AD_SELECTION_ID_1, /* shouldCheckUnifiedTable= */ false));
+        assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionIdExistUponFlag(
+                        AD_SELECTION_ID_1, /* shouldCheckUnifiedTable= */ true));
+
+        assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionIdExistUponFlag(
+                        AD_SELECTION_ID_2, /* shouldCheckUnifiedTable= */ false));
+        assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionIdExistUponFlag(
+                        AD_SELECTION_ID_2, /* shouldCheckUnifiedTable= */ true));
+
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_1);
+
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionIdExistUponFlag(
+                        AD_SELECTION_ID_1, /* shouldCheckUnifiedTable= */ false));
+        assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionIdExistUponFlag(
+                        AD_SELECTION_ID_1, /* shouldCheckUnifiedTable= */ true));
+    }
+
+    @Test
+    public void testReturnsTrueIfAdSelectionIdExistsUponFlagNewTable() {
+        assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionIdExistUponFlag(
+                        AD_SELECTION_ID_1, /* shouldCheckUnifiedTable= */ false));
+        assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionIdExistUponFlag(
+                        AD_SELECTION_ID_1, /* shouldCheckUnifiedTable= */ true));
+
+        assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionIdExistUponFlag(
+                        AD_SELECTION_ID_2, /* shouldCheckUnifiedTable= */ false));
+        assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionIdExistUponFlag(
+                        AD_SELECTION_ID_2, /* shouldCheckUnifiedTable= */ true));
+
+        mAdSelectionEntryDao.persistAdSelectionInitialization(
+                AD_SELECTION_ID_2, AD_SELECTION_INITIALIZATION_1);
+
+        assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionIdExistUponFlag(
+                        AD_SELECTION_ID_2, /* shouldCheckUnifiedTable= */ false));
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionIdExistUponFlag(
+                        AD_SELECTION_ID_2, /* shouldCheckUnifiedTable= */ true));
     }
 
     @Test
@@ -1852,22 +1931,20 @@ public class AdSelectionEntryDaoTest {
     @Test
     public void testDoesAdSelectionMatchingCallerPackageNameExist() {
         assertFalse(
-                mAdSelectionEntryDao
-                        .doesAdSelectionMatchingCallerPackageNameExistInServerAuctionTable(
-                                AD_SELECTION_ID_1, TEST_PACKAGE_NAME_1));
+                mAdSelectionEntryDao.doesAdSelectionIdAndCallerPackageNameExists(
+                        AD_SELECTION_ID_1, TEST_PACKAGE_NAME_1));
         mAdSelectionEntryDao.persistAdSelectionInitialization(
                 AD_SELECTION_ID_1, DataHandlersFixture.AD_SELECTION_INITIALIZATION_1);
         assertTrue(
-                mAdSelectionEntryDao
-                        .doesAdSelectionMatchingCallerPackageNameExistInServerAuctionTable(
-                                AD_SELECTION_ID_1, TEST_PACKAGE_NAME_1));
+                mAdSelectionEntryDao.doesAdSelectionIdAndCallerPackageNameExists(
+                        AD_SELECTION_ID_1, TEST_PACKAGE_NAME_1));
 
         assertFalse(
-                mAdSelectionEntryDao.doesAdSelectionMatchingCallerPackageNameExistInOnDeviceTable(
+                mAdSelectionEntryDao.doesAdSelectionIdAndCallerPackageNameExists(
                         AD_SELECTION_ID_2, CALLER_PACKAGE_NAME_2));
         mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_2);
         assertTrue(
-                mAdSelectionEntryDao.doesAdSelectionMatchingCallerPackageNameExistInOnDeviceTable(
+                mAdSelectionEntryDao.doesAdSelectionIdAndCallerPackageNameExists(
                         AD_SELECTION_ID_2, CALLER_PACKAGE_NAME_2));
     }
 

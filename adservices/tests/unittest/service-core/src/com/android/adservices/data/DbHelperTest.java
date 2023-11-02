@@ -22,7 +22,7 @@ import static com.android.adservices.data.DbTestUtil.doesTableExist;
 import static com.android.adservices.data.DbTestUtil.doesTableExistAndColumnCountMatch;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_WRITE_EXCEPTION;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -49,6 +49,7 @@ import com.android.adservices.data.topics.migration.TopicsDbMigratorV8;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
@@ -124,7 +125,7 @@ public class DbHelperTest {
 
     @Test
     public void testGetDbFileSize() {
-        final String databaseName = "testsize.db";
+        final String databaseName = FileCompatUtils.getAdservicesFilename("testsize.db");
         DbHelper dbHelper = new DbHelper(sContext, databaseName, 1);
 
         // Create database
@@ -198,7 +199,7 @@ public class DbHelperTest {
 
     @Test
     public void testOnUpgrade_topicsV8Migration_loggedTopicColumnExist() {
-        String dbName = "test_db";
+        String dbName = FileCompatUtils.getAdservicesFilename("test_db");
         DbHelperV1 dbHelperV1 = new DbHelperV1(sContext, dbName, /* dbVersion */ 1);
         SQLiteDatabase db = dbHelperV1.safeGetWritableDatabase();
 
@@ -236,7 +237,7 @@ public class DbHelperTest {
                         ErrorLogUtil.e(
                                 tr,
                                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION,
-                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED));
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON));
     }
 
     @Test
@@ -254,12 +255,12 @@ public class DbHelperTest {
                         ErrorLogUtil.e(
                                 tr,
                                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_WRITE_EXCEPTION,
-                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED));
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON));
     }
 
     @Test
     public void testOnUpgrade_measurementMigration_tablesExist() {
-        String dbName = "test_db";
+        String dbName = FileCompatUtils.getAdservicesFilename("test_db");
         DbHelperV1 dbHelperV1 = new DbHelperV1(sContext, dbName, 1);
         SQLiteDatabase db = dbHelperV1.safeGetWritableDatabase();
 
@@ -272,7 +273,7 @@ public class DbHelperTest {
 
     @Test
     public void testOnUpgrade_measurementMigration_tablesDoNotExist() {
-        String dbName = "test_db_2";
+        String dbName = FileCompatUtils.getAdservicesFilename("test_db_2");
         DbHelperV1 dbHelperV1 = new DbHelperV1(sContext, dbName, 1);
         SQLiteDatabase db = dbHelperV1.safeGetWritableDatabase();
 

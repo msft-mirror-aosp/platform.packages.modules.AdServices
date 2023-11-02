@@ -30,10 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"AdServices Consent APIa erabiltzeko baimena ematen die aplikazioei."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"atzitu Ad ID APIa"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Ad ID APIa erabiltzeko baimena ematen die aplikazioei."</string>
-    <!-- no translation found for permlab_adServicesAccessAdServicesCobaltUpload (3305366770828562349) -->
-    <skip />
-    <!-- no translation found for permdesc_adServicesAccessAdServicesCobaltUpload (2584490228435633488) -->
-    <skip />
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"atzitu AdServices Cobalt Upload APIa"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"AdServices Cobalt Upload APIa atzitzeko baimena ematen zaie aplikazioei."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"atzitu App Set ID APIa"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"App Set ID APIa erabiltzeko baimena ematen die aplikazioei."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service APIrako sarbidea"</string>
@@ -44,6 +42,8 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"AdService-ren gaitze-egoeraren APIa erabiltzeko baimena ematen die aplikazioei."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Atzitu AdServicesManager-en APIak"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"AdServicesManager-en APIak erabiltzeko baimena ematen die aplikazioei."</string>
+    <string name="permlab_updateAdservicesAdId" msgid="1817012692601139702">"AdService’s update AdId APIa erabiltzeko baimena."</string>
+    <string name="permdesc_updateAdservicesAdId" msgid="1594321436876709737">"Aplikazio bati AdService’s update AdId APIa erabiltzeko baimena ematen dio."</string>
     <string name="app_label" msgid="5844694701336604490">"Iragarkien pribatutasuna"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Probatu Android-eko iragarkien pribatutasunaren beta-bertsioa"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Aplikazioek iragarkiak erakusteko aukera pribatuagoak arakatzen ari da Android"</string>
@@ -194,11 +194,11 @@
     <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Iragarkien gaiak aktibatuta daude"</string>
     <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Interesatzen zaizkizun gaiak hautematen hasiko da Android, baina tarte bat beharko da lehen gaiak agertzen hasi arte."</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Iragarkien gaiak desaktibatu nahi dituzu?"</string>
-    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Gaien zerrenda ezabatu egingo da. Aurrerantzean, Android-ek ez ditu hautemango interesatzen zaizkizun gaiak, baina baliteke iragarki egokituak ikustea oraindik ere."</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Gaien zerrenda ezabatu egingo da. Aurrerantzean, Android-ek ez ditu hautemango interesatzen zaizkizun gaiak, baina baliteke iragarki egokiak ikustea oraindik ere."</string>
     <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Aplikazioek iradokitako iragarkiak aktibatuta daude"</string>
     <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Baliteke aplikazioak iragarkiak iradokitzen hastea. Hori gertatzean, aplikazioen zerrenda bat ikusiko duzu."</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Aplikazioek iradokitako iragarkiak desaktibatu nahi dituzu?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Iradokitako iragarkiei buruzko datu guztiak ezabatuko dira. Aurrerantzean, aplikazioek ezingo dituzte iradoki iragarkiak, baina baliteke iragarki egokituak ikustea oraindik ere."</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Iradokitako iragarkiei buruzko datu guztiak ezabatuko dira. Aurrerantzean, aplikazioek ezingo dituzte iradoki iragarkiak, baina baliteke iragarki egokiak ikustea oraindik ere."</string>
     <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Iragarkien neurketa aktibatuta dago"</string>
     <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android-ek informazio oso mugatua parteka dezake aplikazioekin, haien iragarkien errendimendua neur dezaten."</string>
     <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Iragarkien neurketa desaktibatu nahi duzu?"</string>
@@ -441,7 +441,7 @@
     <string name="topic10204" msgid="6591131759521321677">"Bizi-aseguruak"</string>
     <string name="topic10205" msgid="3294946723815021478">"Bidaia-aseguruak"</string>
     <string name="topic10206" msgid="6166888350685752683">"Inbertsioak"</string>
-    <string name="topic10207" msgid="2296385804039743999">"Salgaien eta gerokoen merkataritza"</string>
+    <string name="topic10207" msgid="2296385804039743999">"Salgaien eta finantza-gerokoen merkataritza"</string>
     <string name="topic10208" msgid="2717498987483479091">"Monetak eta trukea"</string>
     <string name="topic10209" msgid="5204948738662951962">"Estaldura-funtsak"</string>
     <string name="topic10210" msgid="4607225697024266227">"Funts mutualistak"</string>
@@ -470,7 +470,7 @@
     <string name="topic10233" msgid="8318075279868138231">"Borroka-jokoak"</string>
     <string name="topic10234" msgid="3899847414436099153">"Bideojokoei buruzko erreferentziak eta iritziak"</string>
     <string name="topic10235" msgid="5851356242523630529">"Bideojokoetarako tranpak eta iradokizunak"</string>
-    <string name="topic10236" msgid="1986665634014804954">"Jokalari anitzeko joko masiboak"</string>
+    <string name="topic10236" msgid="1986665634014804954">"Jokalari bat baino gehiagoko joko masiboak"</string>
     <string name="topic10237" msgid="5569920221620447713">"Musika- eta dantza-jokoak"</string>
     <string name="topic10238" msgid="7431087331656772530">"Mundu irekiko jokoak"</string>
     <string name="topic10239" msgid="8667462879554115515">"Tiroketa-jokoak"</string>
@@ -577,9 +577,9 @@
     <string name="topic10340" msgid="6538182603360796294">"Haurrentzako segurtasuna Interneten"</string>
     <string name="topic10341" msgid="3586543243312398568">"Erromantikoak"</string>
     <string name="topic10342" msgid="3695176378281477573">"Zientzia-fikzioa eta fantasia"</string>
-    <string name="topic10343" msgid="2318169062960263837">"Maskotak eta animaliak"</string>
-    <string name="topic10344" msgid="2005534117977874327">"Maskotentzako janaria eta maskotak zaintzeko hornigaiak"</string>
-    <string name="topic10345" msgid="2397329020706244200">"Maskotak"</string>
+    <string name="topic10343" msgid="2318169062960263837">"Konpainia-animaliak eta animaliak"</string>
+    <string name="topic10344" msgid="2005534117977874327">"Konpainia-animalientzako janaria eta haiek zaintzeko hornigaiak"</string>
+    <string name="topic10345" msgid="2397329020706244200">"Konpainia-animaliak"</string>
     <string name="topic10346" msgid="1323702748723563694">"Txoriak"</string>
     <string name="topic10347" msgid="3301879823396773413">"Katuak"</string>
     <string name="topic10348" msgid="8066686305498410222">"Txakurrak"</string>

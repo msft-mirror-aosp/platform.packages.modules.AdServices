@@ -16,135 +16,62 @@
 
 package com.android.adservices.cts;
 
-import com.android.ddmlib.MultiLineReceiver;
-import com.android.tradefed.device.BackgroundDeviceAction;
-import com.android.tradefed.device.ITestDevice;
-import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
-import com.android.tradefed.testtype.IDeviceTest;
+import static com.google.common.truth.Truth.assertWithMessage;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.Before;
+import com.android.adservices.common.AdServicesHostSideFlagsSetterRule;
+import com.android.adservices.common.AdServicesHostSideTestCase;
+import com.android.adservices.common.BackgroundLogReceiver;
+import com.android.adservices.common.HostSideSdkLevelSupportRule;
+import com.android.adservices.common.RequiresSdkLevelLessThanT;
+import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
+
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 /** Test to check if com.google.android.ext.services failed to mount */
 @RunWith(DeviceJUnit4ClassRunner.class)
-public class AdExtServicesFailedToMountHostTest implements IDeviceTest {
+public class AdExtServicesFailedToMountHostTest extends AdServicesHostSideTestCase {
+    private static final String LOGCAT_COMMAND = "logcat";
+    private static final String PATTERN_TO_MATCH =
+            "com\\.google\\.android\\.ext\\.services"
+                    + ".*Failed to mount.*No such file or directory";
 
-    private static String sWildcardString = ".*";
-    private static String sExtservicesString = "com\\.google\\.android\\.ext\\.services";
-    private static String sFailedToMountString = "Failed to mount";
-    private static String sNoSuchString = "No such file or directory";
+    @Rule(order = 0)
+    public final HostSideSdkLevelSupportRule sdkLevel = HostSideSdkLevelSupportRule.forAnyLevel();
 
-    private ITestDevice mDevice;
-
-    @Override
-    public void setDevice(ITestDevice device) {
-        mDevice = device;
-    }
-
-    @Override
-    public ITestDevice getDevice() {
-        return mDevice;
-    }
-
-    @Before
-    public void setUp() throws Exception {
-        overrideCompatFlags();
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        resetCompatFlags();
-    }
+    // Sets flags used in the test (and automatically reset them at the end)
+    @Rule(order = 1)
+    public final AdServicesHostSideFlagsSetterRule flags =
+            AdServicesHostSideFlagsSetterRule.forCompatModeEnabledTests();
 
     @Test
+    @RequiresSdkLevelLessThanT(reason = "Test is for ExtServices only")
     public void testLogcatDoesNotContainError() throws Exception {
-        final int apiLevel = getDevice().getApiLevel();
-        Assume.assumeTrue(
-                apiLevel == 30
-                        || apiLevel == 31
-                        || apiLevel == 32 /* Build.VERSION_CODES.R or S/S_V2 */);
-        ITestDevice device = getDevice();
-
         // reboot the device
-        device.reboot();
-        device.waitForDeviceAvailable();
+        mDevice.reboot();
+        mDevice.waitForDeviceAvailable();
 
-        AdservicesLogcatReceiver logcatReceiver =
-                new AdservicesLogcatReceiver("receiver", " logcat");
-        logcatReceiver.start(device);
+        Pattern errorPattern = Pattern.compile(PATTERN_TO_MATCH);
 
-        // Sleep 5 min to allow time for the error to occur
-        Thread.sleep(300 * 1000);
-        logcatReceiver.stop();
+        // Wait for up to 5 minutes, looking for the error log
+        BackgroundLogReceiver logcatReceiver =
+                new BackgroundLogReceiver.Builder()
+                        .setDevice(mDevice)
+                        .setLogCatCommand(LOGCAT_COMMAND)
+                        .setEarlyStopCondition(stopIfErrorLogOccurs(errorPattern))
+                        .build();
+        logcatReceiver.collectLogs(/* timeoutMilliseconds= */ 5 * 60 * 1000);
 
-        Pattern errorPattern =
-                Pattern.compile(
-                        sExtservicesString
-                                + sWildcardString
-                                + sFailedToMountString
-                                + sWildcardString
-                                + sNoSuchString);
-        Assert.assertFalse(logcatReceiver.patternMatches(errorPattern));
+        assertWithMessage("logcat matches regex (%s)", PATTERN_TO_MATCH)
+                .that(logcatReceiver.patternMatches(errorPattern))
+                .isFalse();
     }
 
-    private void overrideCompatFlags() throws Exception {
-        getDevice().executeShellCommand("device_config put adservices global_kill_switch false");
-        getDevice().executeShellCommand("device_config put adservices adservice_enabled true");
-        getDevice().executeShellCommand("device_config put adservices enable_back_compat true");
-    }
-
-    private void resetCompatFlags() throws Exception {
-        getDevice().executeShellCommand("device_config delete adservices global_kill_switch");
-        getDevice().executeShellCommand("device_config delete adservices adservice_enabled");
-        getDevice().executeShellCommand("device_config delete adservices enable_back_compat");
-    }
-
-    // TODO: b/288892905 consolidate with existing logcat receiver
-    private static class AdservicesLogcatReceiver extends MultiLineReceiver {
-        private volatile boolean mCancelled = false;
-        private final StringBuilder mBuilder = new StringBuilder();
-        private final String mName;
-        private final String mLogcatCmd;
-        private BackgroundDeviceAction mBackgroundDeviceAction;
-
-        AdservicesLogcatReceiver(String name, String logcatCmd) {
-            this.mName = name;
-            this.mLogcatCmd = logcatCmd;
-        }
-
-        @Override
-        public void processNewLines(String[] lines) {
-            if (lines.length == 0) {
-                return;
-            }
-            mBuilder.append(String.join("\n", lines));
-        }
-
-        @Override
-        public boolean isCancelled() {
-            return mCancelled;
-        }
-
-        public void start(ITestDevice device) {
-            mBackgroundDeviceAction =
-                    new BackgroundDeviceAction(mLogcatCmd, mName, device, this, 0);
-            mBackgroundDeviceAction.start();
-        }
-
-        public void stop() {
-            if (mBackgroundDeviceAction != null) mBackgroundDeviceAction.cancel();
-            if (isCancelled()) return;
-            mCancelled = true;
-        }
-
-        public boolean patternMatches(Pattern pattern) {
-            return mBuilder.length() > 0 && pattern.matcher(mBuilder).find();
-        }
+    private Predicate<String[]> stopIfErrorLogOccurs(Pattern errorPattern) {
+        return (s) -> errorPattern.matcher(String.join("\n", s)).find();
     }
 }

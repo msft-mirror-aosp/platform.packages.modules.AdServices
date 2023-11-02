@@ -39,7 +39,7 @@ public class ScenarioDispatcherTest {
     @Test
     public void testScenarioDispatcher_happyPath_httpGetSuccess() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario("scenarios/remarketing-cuj-default.json", "");
+                ScenarioDispatcher.fromScenario("scenarios/scenario-test-001.json", "");
         MockWebServer server = mMockWebServerRule.startMockWebServer(dispatcher);
 
         makeSimpleGetRequest(new URL(mMockWebServerRule.getServerBaseAddress() + "/bidding"));
@@ -51,7 +51,7 @@ public class ScenarioDispatcherTest {
     @Test
     public void testScenarioDispatcher_withPrefix_httpGetSuccess() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario("scenarios/remarketing-cuj-default.json", "/hello");
+                ScenarioDispatcher.fromScenario("scenarios/scenario-test-001.json", "/hello");
         MockWebServer server = mMockWebServerRule.startMockWebServer(dispatcher);
 
         URL url = new URL(mMockWebServerRule.getServerBaseAddress() + "/hello/bidding");
@@ -64,14 +64,46 @@ public class ScenarioDispatcherTest {
     @Test
     public void testScenarioDispatcher_withVerifyCalled_success() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario("scenarios/remarketing-cuj-default.json", "");
+                ScenarioDispatcher.fromScenario("scenarios/scenario-test-002.json", "");
         MockWebServer server = mMockWebServerRule.startMockWebServer(dispatcher);
 
-        makeSimpleGetRequest(new URL(mMockWebServerRule.getServerBaseAddress() + "/bidding"));
-        makeSimpleGetRequest(new URL(mMockWebServerRule.getServerBaseAddress() + "/scoring"));
+        String baseAddress = mMockWebServerRule.getServerBaseAddress();
+        makeSimpleGetRequest(new URL(baseAddress + "/bidding"));
+        makeSimpleGetRequest(new URL(baseAddress + "/scoring"));
 
         assertThat(dispatcher.getCalledPaths())
                 .containsExactlyElementsIn(dispatcher.getVerifyCalledPaths());
+        server.shutdown();
+    }
+
+    @Test
+    public void testScenarioDispatcher_withVerifyNotCalled_success() throws Exception {
+        ScenarioDispatcher dispatcher =
+                ScenarioDispatcher.fromScenario("scenarios/scenario-test-003.json", "");
+        MockWebServer server = mMockWebServerRule.startMockWebServer(dispatcher);
+
+        String baseAddress = mMockWebServerRule.getServerBaseAddress();
+        makeSimpleGetRequest(new URL(baseAddress + "/bidding")); // Call something else.
+
+        assertThat(dispatcher.getCalledPaths())
+                .doesNotContain(dispatcher.getVerifyNotCalledPaths());
+        server.shutdown();
+    }
+
+    @Test
+    public void testScenarioDispatcher_withTwoSecondDelay_success() throws Exception {
+        ScenarioDispatcher dispatcher =
+                ScenarioDispatcher.fromScenario("scenarios/scenario-test-004.json", "");
+        MockWebServer server = mMockWebServerRule.startMockWebServer(dispatcher);
+
+        String baseAddress = mMockWebServerRule.getServerBaseAddress();
+        long startTime = System.currentTimeMillis();
+        makeSimpleGetRequest(new URL(baseAddress + "/bidding")); // Call something else.
+        long endTime = System.currentTimeMillis();
+
+        assertThat(dispatcher.getCalledPaths())
+                .containsNoneIn(dispatcher.getVerifyNotCalledPaths());
+        assertThat(endTime - startTime).isAtLeast(2000);
         server.shutdown();
     }
 

@@ -27,7 +27,7 @@ public final class SdkSandboxDeviceSupportedRule extends AbstractSdkSandboxDevic
 
     @Override
     public boolean isSdkSandboxSupportedOnDevice() {
-        boolean isSupported = AdServicesSupportHelper.isDeviceSupported();
+        boolean isSupported = AdServicesSupportHelper.getInstance().isDeviceSupported();
         mLog.v("isSdkSandboxSupportedOnDevice(): %b", isSupported);
         return isSupported;
     }

@@ -28,11 +28,12 @@ import com.android.adservices.data.measurement.AbstractDbIntegrationTest;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DbState;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -54,7 +55,8 @@ import java.util.Objects;
 public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbIntegrationTest {
     private final JSONObject mParam;
     private final EnrollmentDao mEnrollmentDao;
-    private final Flags mFlags;
+    private final AdServicesLogger mLogger;
+    private final AdServicesErrorLogger mErrorLogger;
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> data() throws IOException, JSONException {
@@ -70,7 +72,8 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
         super(input, output);
         mParam = param;
         mEnrollmentDao = Mockito.mock(EnrollmentDao.class);
-        mFlags = Mockito.mock(Flags.class);
+        mLogger = Mockito.mock(AdServicesLogger.class);
+        mErrorLogger = Mockito.mock(AdServicesErrorLogger.class);
     }
 
     public enum Action {
@@ -96,15 +99,16 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
                             return keys;
                         });
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
         AggregateReportingJobHandler spyReportingService =
                 Mockito.spy(
                         new AggregateReportingJobHandler(
                                 mEnrollmentDao,
                                 datastoreManager,
                                 mockKeyManager,
-                                ReportingStatus.UploadMethod.REGULAR,
-                                FlagsFactory.getFlagsForTest()));
+                                FlagsFactory.getFlagsForTest(),
+                                mLogger,
+                                sContext));
         try {
             Mockito.doReturn(returnCode)
                     .when(spyReportingService)

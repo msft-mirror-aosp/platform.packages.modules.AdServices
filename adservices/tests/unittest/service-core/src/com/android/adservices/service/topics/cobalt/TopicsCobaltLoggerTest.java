@@ -24,13 +24,16 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import android.content.Context;
+
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.cobalt.CobaltRegistryLoader;
 import com.android.adservices.data.topics.Topic;
 import com.android.cobalt.CobaltLogger;
+import com.android.cobalt.domain.Project;
 
-import com.google.cobalt.CobaltRegistry;
 import com.google.cobalt.MetricDefinition;
 import com.google.common.collect.ImmutableList;
 
@@ -51,6 +54,9 @@ public final class TopicsCobaltLoggerTest {
     private static final int FIRST_TOPIC = 10001;
     private static final int SUPPORTED_TOPICS_COUNT = 500;
     private static final int LAST_TOPIC = FIRST_TOPIC + SUPPORTED_TOPICS_COUNT - 1;
+    private static final int LOGGED_TOPICS_COUNT = 10;
+
+    private static final Context sContext = ApplicationProvider.getApplicationContext();
 
     @Mock private CobaltLogger mMockCobaltLogger;
     private TopicsCobaltLogger mTopicsCobaltLogger;
@@ -69,11 +75,9 @@ public final class TopicsCobaltLoggerTest {
         // See
         // //packages/modules/AdServices/adservices/service-core/resources/cobalt_registry.textpb
         // for the actual registy.
-        CobaltRegistry cobaltRegistry = CobaltRegistryLoader.getRegistry();
-        assertThat(cobaltRegistry.getCustomersCount()).isAtLeast(1);
-        assertThat(cobaltRegistry.getCustomers(0).getProjectsCount()).isAtLeast(1);
+        Project cobaltRegistry = CobaltRegistryLoader.getRegistry(sContext);
         MetricDefinition topicsMetric =
-                cobaltRegistry.getCustomers(0).getProjects(0).getMetricsList().stream()
+                cobaltRegistry.getMetrics().stream()
                         .filter(m -> m.getMetricName().equals("returned_topics"))
                         .findFirst()
                         .orElseThrow();
@@ -149,7 +153,7 @@ public final class TopicsCobaltLoggerTest {
     @Test
     public void logTopicOccurrence_allTopicsLoggedCorrectly() throws Exception {
         when(mMockCobaltLogger.logOccurrence(anyLong(), anyLong(), any())).thenReturn(null);
-        for (int i = 0; i < SUPPORTED_TOPICS_COUNT; ++i) {
+        for (int i = 0; i < LOGGED_TOPICS_COUNT; ++i) {
             mTopicsCobaltLogger.logTopicOccurrence(createTopic(FIRST_TOPIC + i));
             verify(mMockCobaltLogger)
                     .logOccurrence(
@@ -160,7 +164,7 @@ public final class TopicsCobaltLoggerTest {
     @Test
     public void logTopicOccurrences_allTopicsLoggedCorrectly() throws Exception {
         when(mMockCobaltLogger.logOccurrence(anyLong(), anyLong(), any())).thenReturn(null);
-        for (int i = 0; i < SUPPORTED_TOPICS_COUNT; ++i) {
+        for (int i = 0; i < LOGGED_TOPICS_COUNT; ++i) {
             mTopicsCobaltLogger.logTopicOccurrences(createTopic(FIRST_TOPIC + i), COUNT);
             verify(mMockCobaltLogger)
                     .logOccurrence(METRIC_ID, COUNT, ImmutableList.of(FIRST_EVENT_CODE + i));

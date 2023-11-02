@@ -18,7 +18,6 @@ package android.app.sdksandbox.testutils;
 
 import android.content.Context;
 
-import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.common.AdServicesSupportHelper;
 
@@ -26,14 +25,11 @@ import com.android.adservices.common.AdServicesSupportHelper;
 /** Utility class to control which devices SDK sandbox tests run on. */
 public final class DeviceSupportUtils {
 
-    private static final Context sContext =
-            InstrumentationRegistry.getInstrumentation().getTargetContext();
-
     /**
      * @deprecated - use {@link SdkSandboxDeviceSupportedRule} instead
      */
     @Deprecated
     public static boolean isSdkSandboxSupported(Context context) {
-        return AdServicesSupportHelper.isDeviceSupported();
+        return AdServicesSupportHelper.getInstance().isDeviceSupported();
     }
 }

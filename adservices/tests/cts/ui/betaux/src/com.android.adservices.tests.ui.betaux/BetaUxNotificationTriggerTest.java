@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.tests.ui.notification;
+package com.android.adservices.tests.ui.betaux;
 
 import static com.android.adservices.tests.ui.libs.UiConstants.AD_ID_DISABLED;
 import static com.android.adservices.tests.ui.libs.UiConstants.AD_ID_ENABLED;
@@ -22,6 +22,7 @@ import static com.android.adservices.tests.ui.libs.UiConstants.ENTRY_POINT_ENABL
 
 import android.adservices.common.AdServicesCommonManager;
 import android.content.Context;
+import android.platform.test.rule.ScreenRecordRule;
 
 import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -36,20 +37,25 @@ import com.android.adservices.tests.ui.libs.UiUtils;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /** Test for verifying user consent notification trigger behaviors. */
 @RunWith(AndroidJUnit4.class)
+@ScreenRecordRule.ScreenRecord
 public class BetaUxNotificationTriggerTest {
 
     private AdServicesCommonManager mCommonManager;
 
     private UiDevice mDevice;
 
+    private String mTestName;
+
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();
+
+    @Rule public final ScreenRecordRule sScreenRecordRule = new ScreenRecordRule();
 
     @Before
     public void setUp() throws Exception {
@@ -67,6 +73,8 @@ public class BetaUxNotificationTriggerTest {
         // consent debug mode is turned on for this test class as we only care about the
         // first trigger (API call).
         UiUtils.enableConsentDebugMode();
+        UiUtils.disableNotificationFlowV2();
+        UiUtils.disableOtaStrings();
 
         mDevice.pressHome();
     }
@@ -75,33 +83,23 @@ public class BetaUxNotificationTriggerTest {
     public void tearDown() throws Exception {
         if (!AdservicesTestHelper.isDeviceSupported()) return;
 
+        UiUtils.takeScreenshot(mDevice, getClass().getSimpleName() + "_" + mTestName + "_");
+
         mDevice.pressHome();
+
         AdservicesTestHelper.killAdservicesProcess(sContext);
-    }
-
-    /** Verify no notification is displayed when the entry point is disabled for EU devices. */
-    @Test
-    @FlakyTest(bugId = 297347345)
-    public void testBetaEuEntryPointDisabled() throws Exception {
-        UiUtils.setAsEuDevice();
-        UiUtils.enableBeta();
-
-        mCommonManager.setAdServicesEnabled(ENTRY_POINT_DISABLED, AD_ID_ENABLED);
-
-        AdservicesWorkflows.verifyNotification(
-                sContext,
-                mDevice,
-                /* isDisplayed */ false,
-                /* isEuTest */ true,
-                /* isGa */ UiConstants.UX.BETA_UX);
     }
 
     /** Verify no notification is displayed when the entry point is disabled for ROW devices. */
     @Test
-    @FlakyTest(bugId = 297347345)
+    @FlakyTest(bugId = 297119850)
     public void testBetaRowEntryPointDisabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsRowDevice();
         UiUtils.enableBeta();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_DISABLED, AD_ID_ENABLED);
 
@@ -109,52 +107,22 @@ public class BetaUxNotificationTriggerTest {
                 sContext,
                 mDevice,
                 /* isDisplayed */ false,
-                /* isEuTest */ true,
-                /* isGa */ UiConstants.UX.BETA_UX);
-    }
-
-    /** Verify that for EU devices with zeroed-out AdId, the EU notification is displayed. */
-    @Test
-    @FlakyTest(bugId = 297347345)
-    public void testBetaEuAdIdDisabled() throws Exception {
-        UiUtils.setAsEuDevice();
-        UiUtils.enableBeta();
-
-        mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_DISABLED);
-
-        AdservicesWorkflows.verifyNotification(
-                sContext,
-                mDevice,
-                /* isDisplayed */ true,
                 /* isEuTest */ true,
                 /* isGa */ UiConstants.UX.BETA_UX);
     }
 
     /** Verify that for ROW devices with zeroed-out AdId, the EU notification is displayed. */
     @Test
-    @Ignore("b/297119850")
+    @FlakyTest(bugId = 297119850)
     public void testBetaRowAdIdDisabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsRowDevice();
         UiUtils.enableBeta();
 
+        AdservicesTestHelper.killAdservicesProcess(sContext);
+
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_DISABLED);
-
-        AdservicesWorkflows.verifyNotification(
-                sContext,
-                mDevice,
-                /* isDisplayed */ true,
-                /* isEuTest */ true,
-                /* isGa */ UiConstants.UX.BETA_UX);
-    }
-
-    /** Verify that for EU devices with non zeroed-out AdId, the EU notification is displayed. */
-    @Test
-    @Ignore("b/297119850")
-    public void testBetaEuAdIdEnabled() throws Exception {
-        UiUtils.setAsEuDevice();
-        UiUtils.enableBeta();
-
-        mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
 
         AdservicesWorkflows.verifyNotification(
                 sContext,
@@ -166,10 +134,14 @@ public class BetaUxNotificationTriggerTest {
 
     /** Verify that for ROW devices with non zeroed-out AdId, the ROW notification is displayed. */
     @Test
-    @Ignore("b/297119850")
+    @FlakyTest(bugId = 297119850)
     public void testBetaRowAdIdEnabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsRowDevice();
         UiUtils.enableBeta();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
 

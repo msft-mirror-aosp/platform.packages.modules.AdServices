@@ -22,7 +22,7 @@ import static android.adservices.cobalt.EncryptedCobaltEnvelopeParams.ENVIRONMEN
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilError;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__COBALT_UPLOAD_API_REMOTE_EXCEPTION;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -44,12 +44,10 @@ import com.google.cobalt.EncryptedMessage;
 import com.google.common.truth.Expect;
 import com.google.protobuf.ByteString;
 
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import org.mockito.MockitoAnnotations;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,11 +62,6 @@ public final class CobaltUploaderTest {
     @Rule
     public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
             new AdServicesExtendedMockitoRule.Builder(this).spyStatic(ErrorLogUtil.class).build();
-
-    @Before
-    public void setUp() {
-        MockitoAnnotations.initMocks(this);
-    }
 
     static class AdServicesCobaltUploadServiceStub extends IAdServicesCobaltUploadService.Stub {
         private final List<EncryptedCobaltEnvelopeParams> mParams;
@@ -151,6 +144,7 @@ public final class CobaltUploaderTest {
 
     @Test
     public void uploadThrowsRemoteException_logsError() throws Exception {
+        RemoteException exception = new RemoteException("D'OH!");
         CobaltUploader uploader =
                 new CobaltUploader(
                         ApplicationProvider.getApplicationContext(), CobaltPipelineType.PROD);
@@ -160,7 +154,7 @@ public final class CobaltUploaderTest {
                     @Override
                     public void uploadEncryptedCobaltEnvelope(EncryptedCobaltEnvelopeParams params)
                             throws RemoteException {
-                        throw new RemoteException();
+                        throw exception;
                     }
                 };
         doReturn(interfaceStub).when(spyUploader).getService();
@@ -172,7 +166,8 @@ public final class CobaltUploaderTest {
                         .setCiphertext(ByteString.copyFrom(BYTES))
                         .build());
         verifyErrorLogUtilError(
+                exception,
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__COBALT_UPLOAD_API_REMOTE_EXCEPTION,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED);
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
     }
 }
