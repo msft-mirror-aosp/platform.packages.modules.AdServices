@@ -13,9 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <jni.h>
+/* Header for class com_android_adservices_ActJni */
 
-package com.android.adservices.errorlogging;
+#ifndef ADSERVICES_UNIT_TEST_SERVICE_CORE_JNI_INCLUDE_ACT_UTIL_JNI_H_
+#define ADSERVICES_UNIT_TEST_SERVICE_CORE_JNI_INCLUDE_ACT_UTIL_JNI_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
+/*
+ * Class:     com_android_adservices_ActJniUtils
+ * Method:    checkClientParameters
+ * Signature: ([B[B[B[B)Z
+ */
+JNIEXPORT jboolean JNICALL Java_com_android_adservices_ActJniUtility_checkClientParameters
+  (JNIEnv *, jclass, jbyteArray, jbyteArray, jbyteArray, jbyteArray);
 
-/** Interface for Adservices error logger. */
-public interface AdServicesErrorLogger
-        extends com.android.adservices.shared.errorlogging.AdServicesErrorLogger {}
+#ifdef __cplusplus
+}
+#endif
+#endif

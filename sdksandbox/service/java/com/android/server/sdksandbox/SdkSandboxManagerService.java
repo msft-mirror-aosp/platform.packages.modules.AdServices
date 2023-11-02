@@ -100,6 +100,7 @@ import com.android.server.LocalManagerRegistry;
 import com.android.server.SystemService;
 import com.android.server.am.ActivityManagerLocal;
 import com.android.server.pm.PackageManagerLocal;
+import com.android.server.sdksandbox.helpers.StringHelper;
 import com.android.server.sdksandbox.proto.Activity.ActivityAllowlists;
 import com.android.server.sdksandbox.proto.Activity.AllowedActivities;
 import com.android.server.sdksandbox.proto.BroadcastReceiver.AllowedBroadcastReceivers;
@@ -2305,14 +2306,15 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     private ApplicationInfo getSdkSandboxApplicationInfoForInstrumentation(
-            ApplicationInfo clientAppInfo, int userId, boolean isSdkInSandbox)
+            ApplicationInfo clientAppInfo, boolean isSdkInSandbox)
             throws PackageManager.NameNotFoundException {
+        int uid = clientAppInfo.uid;
         PackageManager pm = mContext.getPackageManager();
         ApplicationInfo sdkSandboxInfo =
                 pm.getApplicationInfoAsUser(
                         pm.getSdkSandboxPackageName(),
                         /* flags= */ 0,
-                        UserHandle.getUserHandleForUid(userId));
+                        UserHandle.getUserHandleForUid(uid));
         ApplicationInfo sdkSandboxInfoForInstrumentation =
                 (isSdkInSandbox)
                         ? createCustomizedApplicationInfo(
@@ -2323,7 +2325,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         : sdkSandboxInfo;
 
         // Required to allow adopt shell permissions in tests.
-        sdkSandboxInfoForInstrumentation.uid = Process.toSdkSandboxUid(clientAppInfo.uid);
+        sdkSandboxInfoForInstrumentation.uid = Process.toSdkSandboxUid(uid);
         // We want to use a predictable process name during testing.
         sdkSandboxInfoForInstrumentation.processName =
                 getLocalManager().getSdkSandboxProcessNameForInstrumentation(clientAppInfo);
@@ -2811,17 +2813,17 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         for (int i = 0; i < allowedServices.getAllowedServicesCount(); i++) {
             AllowedService allowedService = allowedServices.getAllowedServices(i);
-            if (doesInputMatchWildcardPattern(
+            if (StringHelper.doesInputMatchWildcardPattern(
                             allowedService.getAction(), action, /*matchOnNullInput=*/ true)
-                    && doesInputMatchWildcardPattern(
+                    && StringHelper.doesInputMatchWildcardPattern(
                             allowedService.getPackageName(),
                             packageName,
                             /*matchOnNullInput=*/ true)
-                    && doesInputMatchWildcardPattern(
+                    && StringHelper.doesInputMatchWildcardPattern(
                             allowedService.getComponentClassName(),
                             componentClassName,
                             /*matchOnNullInput=*/ true)
-                    && doesInputMatchWildcardPattern(
+                    && StringHelper.doesInputMatchWildcardPattern(
                             allowedService.getComponentPackageName(),
                             componentPackageName,
                             /*matchOnNullInput=*/ true)) {
@@ -2829,75 +2831,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
         return false;
-    }
-
-    /**
-     * Checks if a given input string matches any of the given patterns. Each pattern can contain
-     * wildcards in the form of an asterisk. This wildcard should match 0 or more number of
-     * characters in the input string.
-     */
-    private static boolean doesInputMatchAnyWildcardPattern(
-            ArraySet<String> patterns, String input) {
-        for (int i = 0; i < patterns.size(); ++i) {
-            if (doesInputMatchWildcardPattern(
-                    patterns.valueAt(i), input, /*matchOnNullInput=*/ false)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Checks if a given input string matches the given pattern. The pattern can contain wildcards
-     * in the form of an asterisk. This wildcard should match 0 or more number of characters in the
-     * input string.
-     */
-    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
-    static boolean doesInputMatchWildcardPattern(
-            String pattern, String input, boolean matchOnNullInput) {
-        if (matchOnNullInput && (pattern != null && pattern.equals("*"))) {
-            return true;
-        }
-        if (pattern == null || input == null) {
-            return false;
-        }
-
-        /*
-         * We split the pattern by the wildcard. It is split with a non-negative limit, indicating
-         * that the pattern is applied as many times as possible e.g. if pattern = "*a*", the split
-         * would be ["","a",""].
-         */
-        // TODO(b/289197372): Optimize by splitting beforehand.
-        String[] patternSubstrings = pattern.split("\\*", -1);
-        int inputMatchStartIndex = 0;
-        for (int i = 0; i < patternSubstrings.length; ++i) {
-            if (i == 0) {
-                // Verify that the input string starts with the characters present before the first
-                // wildcard.
-                if (!input.startsWith(patternSubstrings[i])) {
-                    return false;
-                }
-                inputMatchStartIndex = patternSubstrings[i].length();
-            } else if (i == patternSubstrings.length - 1) {
-                // Verify that the input string (after the point where it's been matched so far)
-                // matches with the characters after the last wildcard.
-                if (!input.substring(inputMatchStartIndex).endsWith(patternSubstrings[i])) {
-                    return false;
-                }
-                inputMatchStartIndex = input.length();
-            } else {
-                // For patterns between the first and last wildcard, greedily check if the input
-                // (after the point where it's been matched so far) matches properly.
-                int substringIndex = input.indexOf(patternSubstrings[i], inputMatchStartIndex);
-                if (substringIndex == -1) {
-                    return false;
-                }
-                inputMatchStartIndex = substringIndex + patternSubstrings[i].length();
-            }
-        }
-
-        // Verify that the whole input has been matched.
-        return inputMatchStartIndex >= input.length();
     }
 
     private class LocalImpl implements SdkSandboxManagerLocal {
@@ -2917,10 +2850,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         @NonNull
         @Override
         public ApplicationInfo getSdkSandboxApplicationInfoForInstrumentation(
-                @NonNull ApplicationInfo clientAppInfo, int userId, boolean isSdkInSandbox)
+                @NonNull ApplicationInfo clientAppInfo, boolean isSdkInSandbox)
                 throws PackageManager.NameNotFoundException {
             return SdkSandboxManagerService.this.getSdkSandboxApplicationInfoForInstrumentation(
-                    clientAppInfo, userId, isSdkInSandbox);
+                    clientAppInfo, isSdkInSandbox);
         }
 
         @Override
@@ -2969,7 +2902,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 return;
             }
 
-            if (doesInputMatchAnyWildcardPattern(getActivityAllowlist(), intent.getAction())) {
+            if (StringHelper.doesInputMatchAnyWildcardPattern(
+                    getActivityAllowlist(), intent.getAction())) {
                 return;
             }
             // During CTS-in-sandbox testing, we store the package name of the instrumented test in
@@ -3014,7 +2948,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
             try {
                 return !mSdkSandboxSettingsListener.areRestrictionsEnforced()
-                        || doesInputMatchAnyWildcardPattern(
+                        || StringHelper.doesInputMatchAnyWildcardPattern(
                                 getContentProviderAllowlist(), providerInfo.authority);
             } finally {
                 Binder.restoreCallingIdentity(token);
@@ -3100,7 +3034,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     return onlyProtectedBroadcasts;
                 }
                 for (int i = 0; i < actionsCount; ++i) {
-                    if (!doesInputMatchAnyWildcardPattern(
+                    if (!StringHelper.doesInputMatchAnyWildcardPattern(
                             broadcastReceiverAllowlist, intentFilter.getAction(i))) {
                         return false;
                     }

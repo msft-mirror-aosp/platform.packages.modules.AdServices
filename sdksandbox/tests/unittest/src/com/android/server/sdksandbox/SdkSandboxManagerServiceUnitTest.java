@@ -186,7 +186,6 @@ public class SdkSandboxManagerServiceUnitTest {
     @Rule(order = 0)
     public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
 
-
     @Before
     public void setup() {
         StaticMockitoSessionBuilder mockitoSessionBuilder =
@@ -1378,7 +1377,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         ApplicationInfo sdkSandboxInfo =
                 sSdkSandboxManagerLocal.getSdkSandboxApplicationInfoForInstrumentation(
-                        clientAppInfo, /* userId= */ 0, /* isSdkInSandbox= */ false);
+                        clientAppInfo, /* isSdkInSandbox= */ false);
 
         assertThat(sdkSandboxInfo.processName)
                 .isEqualTo(TEST_PACKAGE + SANDBOX_INSTR_PROCESS_NAME_SUFFIX);
@@ -1394,7 +1393,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         ApplicationInfo sdkSandboxInfo =
                 sSdkSandboxManagerLocal.getSdkSandboxApplicationInfoForInstrumentation(
-                        clientAppInfo, /* userId= */ 0, /* isSdkInSandbox= */ true);
+                        clientAppInfo, /* isSdkInSandbox= */ true);
 
         assertThat(sdkSandboxInfo.processName)
                 .isEqualTo(TEST_PACKAGE + SANDBOX_INSTR_PROCESS_NAME_SUFFIX);
@@ -2890,75 +2889,6 @@ public class SdkSandboxManagerServiceUnitTest {
         assertThat(activityInfo.processName)
                 .isEqualTo(TEST_PACKAGE + SANDBOX_INSTR_PROCESS_NAME_SUFFIX);
         assertThat(activityInfo.applicationInfo.uid).isEqualTo(mClientAppUid);
-    }
-
-    @Test
-    public void testWildcardPatternMatch() {
-        String pattern1 = "abcd*";
-        verifyPatternMatch(pattern1, "abcd", /*matchOnNullInput=*/ false, true);
-        verifyPatternMatch(pattern1, "abcdef", /*matchOnNullInput=*/ false, true);
-        verifyPatternMatch(pattern1, "abcdabcd", /*matchOnNullInput=*/ false, true);
-        verifyPatternMatch(pattern1, "efgh", /*matchOnNullInput=*/ false, false);
-        verifyPatternMatch(pattern1, "efgabcd", /*matchOnNullInput=*/ false, false);
-        verifyPatternMatch(pattern1, "abc", /*matchOnNullInput=*/ false, false);
-
-        String pattern2 = "*";
-        verifyPatternMatch(pattern2, "", /*matchOnNullInput=*/ false, true);
-        verifyPatternMatch(pattern2, "abcd", /*matchOnNullInput=*/ false, true);
-
-        String pattern3 = "abcd*efgh*";
-        verifyPatternMatch(pattern3, "abcdefgh", /*matchOnNullInput=*/ false, true);
-        verifyPatternMatch(pattern3, "abcdrefghij", /*matchOnNullInput=*/ false, true);
-        verifyPatternMatch(pattern3, "abcd", /*matchOnNullInput=*/ false, false);
-        verifyPatternMatch(pattern3, "abcdteffgh", /*matchOnNullInput=*/ false, false);
-
-        String pattern4 = "*abcd";
-        verifyPatternMatch(pattern4, "abcdabcd", /*matchOnNullInput=*/ false, true);
-        verifyPatternMatch(pattern4, "abcdabcdabcd", /*matchOnNullInput=*/ false, true);
-        verifyPatternMatch(pattern4, "efgabcd", /*matchOnNullInput=*/ false, true);
-        verifyPatternMatch(pattern4, "abcd", /*matchOnNullInput=*/ false, true);
-        verifyPatternMatch(pattern4, "abcde", /*matchOnNullInput=*/ false, false);
-
-        String pattern5 = "abcd*e";
-        verifyPatternMatch(pattern5, "abcde", /*matchOnNullInput=*/ false, true);
-        verifyPatternMatch(pattern5, "abcdee", /*matchOnNullInput=*/ false, true);
-        verifyPatternMatch(pattern5, "abcdef", /*matchOnNullInput=*/ false, false);
-
-        String pattern6 = "";
-        verifyPatternMatch(pattern6, "", /*matchOnNullInput=*/ false, true);
-        verifyPatternMatch(pattern6, "ab", /*matchOnNullInput=*/ false, false);
-
-        String pattern7 = "*abcd*";
-        verifyPatternMatch(pattern7, "abcdabcdabcd", /*matchOnNullInput=*/ false, true);
-
-        String pattern8 = "a*a";
-        verifyPatternMatch(pattern8, "aa", /*matchOnNullInput=*/ false, true);
-        verifyPatternMatch(pattern8, "a", /*matchOnNullInput=*/ false, false);
-
-        String pattern9 = "abcd";
-        verifyPatternMatch(pattern9, "abcd", /*matchOnNullInput=*/ false, true);
-        verifyPatternMatch(pattern9, "a", /*matchOnNullInput=*/ false, false);
-
-        verifyPatternMatch("*aab", "aaaab", /*matchOnNullInput=*/ false, true);
-        verifyPatternMatch("a", "ab", /*matchOnNullInput=*/ false, false);
-
-        verifyPatternMatch("*", null, /*matchOnNullInput=*/ false, false);
-        verifyPatternMatch("*", null, /*matchOnNullInput=*/ true, true);
-    }
-
-    private void verifyPatternMatch(
-            String pattern, String input, boolean matchOnNullInput, boolean shouldMatch) {
-        if (shouldMatch) {
-            assertThat(
-                            SdkSandboxManagerService.doesInputMatchWildcardPattern(
-                                    pattern, input, matchOnNullInput))
-                    .isTrue();
-        } else {
-            assertThat(
-                            SdkSandboxManagerService.doesInputMatchWildcardPattern(
-                                    pattern, input, matchOnNullInput))
-                    .isFalse();
-        }
     }
 
     private ActivityInterceptorCallback.ActivityInterceptResult interceptActivityLunch(

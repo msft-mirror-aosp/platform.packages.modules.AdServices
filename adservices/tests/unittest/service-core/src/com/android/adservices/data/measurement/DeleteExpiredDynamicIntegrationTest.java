@@ -20,11 +20,11 @@ import android.net.Uri;
 
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.DbTestUtil;
-import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
 import org.json.JSONException;
 import org.junit.runner.RunWith;

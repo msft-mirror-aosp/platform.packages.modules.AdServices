@@ -455,7 +455,7 @@ abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<T>> imp
         return setOrCacheDebugSystemProperty(name, Boolean.toString(value));
     }
 
-    protected final T setOrCacheDebugSystemProperty(String name, long value) {
+    protected final T setSystemProperty(String name, long value) {
         return setOrCacheDebugSystemProperty(name, Long.toString(value));
     }
 
