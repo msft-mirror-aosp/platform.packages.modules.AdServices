@@ -151,6 +151,7 @@ android_library {
         "adservices-cobalt",
         "adservices-proto-lite",
         "adservices-grpclib-lite",
+        "adservices-shared-common",
         "adservices-shared-error-logging",
         "adservices-shared-storage",
         "modules-utils-build",
