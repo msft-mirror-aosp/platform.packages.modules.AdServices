@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.common;
+package com.android.adservices.shared.testing.common;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
