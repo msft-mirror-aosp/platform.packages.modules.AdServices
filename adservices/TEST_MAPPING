@@ -60,10 +60,20 @@
       "name": "CtsAdServicesNotInAllowListEndToEndTests[com.google.android.adservices.apex]"
     },
     {
-      "name": "CtsAdServicesTopicsAppUpdateTests[com.google.android.adservices.apex]"
+      "name": "CtsAdServicesTopicsAppUpdateTests[com.google.android.adservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
     },
     {
-      "name": "CtsAdServicesTopicsConnectionTests[com.google.android.adservices.apex]"
+      "name": "CtsAdServicesTopicsConnectionTests[com.google.android.adservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
     },
     {
       "name": "CtsAdServicesMddTests[com.google.android.adservices.apex]"
@@ -74,7 +84,12 @@
     },
     {
       // Install com.google.android.adservices.apex and run CtsSandboxedTopicsManagerTests.
-      "name": "CtsSandboxedTopicsManagerTests[com.google.android.adservices.apex]"
+      "name": "CtsSandboxedTopicsManagerTests[com.google.android.adservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
     },
     {
       // Install com.google.android.adservices.apex and run CtsSandboxedMeasurementManagerTests.
