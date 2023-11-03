@@ -17,9 +17,11 @@ package android.adservices.adid;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_AD_ID;
 
+import android.adservices.FlagsConstants;
 import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.common.OutcomeReceiverConverter;
 import android.annotation.CallbackExecutor;
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.app.sdksandbox.SandboxedSdkContext;
@@ -112,9 +114,9 @@ public class AdIdManager {
      * @param executor The executor to run callback.
      * @param callback The callback that's called after adid are available or an error occurs.
      * @throws IllegalStateException if this API is not available.
-     * @hide
      */
     @RequiresPermission(ACCESS_ADSERVICES_AD_ID)
+    @FlaggedApi(FlagsConstants.KEY_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED)
     @NonNull
     public void getAdId(
             @NonNull @CallbackExecutor Executor executor,

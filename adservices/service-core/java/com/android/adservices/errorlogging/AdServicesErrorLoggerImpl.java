@@ -18,7 +18,9 @@ package com.android.adservices.errorlogging;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.stats.StatsdAdServicesLogger;
+import com.android.adservices.shared.errorlogging.AbstractAdServicesErrorLogger;
+import com.android.adservices.shared.errorlogging.StatsdAdServicesErrorLogger;
+import com.android.adservices.shared.errorlogging.StatsdAdServicesErrorLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
@@ -35,7 +37,8 @@ public final class AdServicesErrorLoggerImpl extends AbstractAdServicesErrorLogg
                 if (sSingleton == null) {
                     sSingleton =
                             new AdServicesErrorLoggerImpl(
-                                    FlagsFactory.getFlags(), StatsdAdServicesLogger.getInstance());
+                                    FlagsFactory.getFlags(),
+                                    StatsdAdServicesErrorLoggerImpl.getInstance());
                 }
             }
         }

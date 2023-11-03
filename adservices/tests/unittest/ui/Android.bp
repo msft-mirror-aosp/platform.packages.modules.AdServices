@@ -46,7 +46,7 @@ android_test {
         "androidx.concurrent_concurrent-futures",
         "androidx.test.rules",
         "compatibility-device-util-axt",
-        "truth-prebuilt",
+        "truth",
         "adservices-assets",
         "adservices-service-core-schema",
         "adservices-test-utility",
@@ -124,7 +124,7 @@ android_test {
         "opencensus-java-api",
         "opencensus-java-contrib-grpc-metrics",
         "tflite_support_classifiers_java",
-        "truth-prebuilt",
+        "truth",
     ],
     libs: [
         "android.ext.adservices",

@@ -17,9 +17,11 @@ package android.adservices.measurement;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION;
 
+import android.adservices.FlagsConstants;
 import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.common.OutcomeReceiverConverter;
 import android.annotation.CallbackExecutor;
+import android.annotation.FlaggedApi;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -156,8 +158,8 @@ public class MeasurementManager {
      *     event).
      * @param executor used by callback to dispatch results.
      * @param callback intended to notify asynchronously the API result.
-     * @hide
      */
+    @FlaggedApi(FlagsConstants.KEY_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED)
     @RequiresPermission(ACCESS_ADSERVICES_ATTRIBUTION)
     public void registerSource(
             @NonNull Uri attributionSource,
@@ -192,8 +194,8 @@ public class MeasurementManager {
      * @param request app source registration request
      * @param executor used by callback to dispatch results
      * @param callback intended to notify asynchronously the API result
-     * @hide
      */
+    @FlaggedApi(FlagsConstants.KEY_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED)
     @RequiresPermission(ACCESS_ADSERVICES_ATTRIBUTION)
     public void registerSource(
             @NonNull SourceRegistrationRequest request,
@@ -239,8 +241,8 @@ public class MeasurementManager {
      * @param request source registration request
      * @param executor used by callback to dispatch results.
      * @param callback intended to notify asynchronously the API result.
-     * @hide
      */
+    @FlaggedApi(FlagsConstants.KEY_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED)
     @RequiresPermission(ACCESS_ADSERVICES_ATTRIBUTION)
     public void registerWebSource(
             @NonNull WebSourceRegistrationRequest request,
@@ -284,8 +286,8 @@ public class MeasurementManager {
      * @param request trigger registration request
      * @param executor used by callback to dispatch results
      * @param callback intended to notify asynchronously the API result
-     * @hide
      */
+    @FlaggedApi(FlagsConstants.KEY_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED)
     @RequiresPermission(ACCESS_ADSERVICES_ATTRIBUTION)
     public void registerWebTrigger(
             @NonNull WebTriggerRegistrationRequest request,
@@ -322,8 +324,8 @@ public class MeasurementManager {
      *     sources during the attribution process.
      * @param executor used by callback to dispatch results.
      * @param callback intended to notify asynchronously the API result.
-     * @hide
      */
+    @FlaggedApi(FlagsConstants.KEY_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED)
     @RequiresPermission(ACCESS_ADSERVICES_ATTRIBUTION)
     public void registerTrigger(
             @NonNull Uri trigger,
@@ -364,8 +366,8 @@ public class MeasurementManager {
      * @param deletionRequest The request for deleting data.
      * @param executor The executor to run callback.
      * @param callback intended to notify asynchronously the API result.
-     * @hide
      */
+    @FlaggedApi(FlagsConstants.KEY_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED)
     public void deleteRegistrations(
             @NonNull DeletionRequest deletionRequest,
             @NonNull @CallbackExecutor Executor executor,
@@ -397,8 +399,8 @@ public class MeasurementManager {
      *
      * @param executor used by callback to dispatch results.
      * @param callback intended to notify asynchronously the API result.
-     * @hide
      */
+    @FlaggedApi(FlagsConstants.KEY_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED)
     @RequiresPermission(ACCESS_ADSERVICES_ATTRIBUTION)
     public void getMeasurementApiStatus(
             @NonNull @CallbackExecutor Executor executor,

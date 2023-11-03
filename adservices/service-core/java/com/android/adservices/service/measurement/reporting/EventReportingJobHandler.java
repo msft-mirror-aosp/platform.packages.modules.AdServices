@@ -216,6 +216,7 @@ public class EventReportingJobHandler {
                         -> dao.getEventReport(eventReportId));
         if (!eventReportOpt.isPresent()) {
             LoggerFactory.getMeasurementLogger().d("Event report not found");
+            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.REPORT_NOT_FOUND);
             return AdServicesStatusUtils.STATUS_IO_ERROR;
         }
         EventReport eventReport = eventReportOpt.get();

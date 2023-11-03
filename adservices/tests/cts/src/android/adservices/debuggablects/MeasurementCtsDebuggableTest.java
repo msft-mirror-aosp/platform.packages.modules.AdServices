@@ -591,6 +591,10 @@ public class MeasurementCtsDebuggableTest {
         getUiDevice().executeShellCommand(
                 "device_config set_sync_disabled_for_tests persistent");
 
+        // Override consent notified behavior to give user consent.
+        getUiDevice()
+                .executeShellCommand("setprop debug.adservices.consent_notified_debug_mode true");
+
         // Override consent manager behavior to give user consent.
         getUiDevice().executeShellCommand(
                 "setprop debug.adservices.consent_manager_debug_mode true");
@@ -634,13 +638,19 @@ public class MeasurementCtsDebuggableTest {
         getUiDevice()
                 .executeShellCommand(
                         "device_config put adservices "
-                                + "measurement_default_aggregation_coordinator_origin"
+                                + "measurement_aggregation_coordinator_origin_list "
                                 + AGGREGATE_ENCRYPTION_KEY_COORDINATOR_ORIGIN);
 
         getUiDevice()
                 .executeShellCommand(
                         "device_config put adservices "
-                                + "measurement_aggregation_coordinator_path"
+                                + "measurement_default_aggregation_coordinator_origin "
+                                + AGGREGATE_ENCRYPTION_KEY_COORDINATOR_ORIGIN);
+
+        getUiDevice()
+                .executeShellCommand(
+                        "device_config put adservices "
+                                + "measurement_aggregation_coordinator_path "
                                 + AGGREGATE_ENCRYPTION_KEY_COORDINATOR_PATH);
 
         // Set reporting windows
