@@ -25,6 +25,7 @@ import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.content.Context;
 import android.os.Bundle;
 
+import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.common.AdservicesTestHelper;
@@ -107,6 +108,7 @@ public class SandboxedTopicsManagerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 301370748)
     public void loadSdkAndRunTopicsApi() throws Exception {
         final SdkSandboxManager sdkSandboxManager =
                 sContext.getSystemService(SdkSandboxManager.class);
