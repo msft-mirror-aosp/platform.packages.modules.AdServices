@@ -814,6 +814,24 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public int getMeasurementMaxEventAttributionPerRateLimitWindow() {
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW,
+                /* defaultValue */ MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW);
+    }
+
+    @Override
+    public int getMeasurementMaxAggregateAttributionPerRateLimitWindow() {
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW,
+                /* defaultValue */ MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW);
+    }
+
+    @Override
     public int getMeasurementMaxDistinctEnrollmentsInAttribution() {
         return DeviceConfig.getInt(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -4287,6 +4305,18 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getMeasurementMaxAttributionPerRateLimitWindow());
         writer.println(
                 "\t"
+                        + FlagsConstants
+                                .KEY_MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW
+                        + " = "
+                        + getMeasurementMaxEventAttributionPerRateLimitWindow());
+        writer.println(
+                "\t"
+                        + FlagsConstants
+                                .KEY_MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW
+                        + " = "
+                        + getMeasurementMaxAggregateAttributionPerRateLimitWindow());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION
                         + " = "
                         + getMeasurementMaxDistinctEnrollmentsInAttribution());
@@ -4350,6 +4380,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING
                         + " = "
                         + getMeasurementEnableSourceDeactivationAfterFiltering());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT
+                        + " = "
+                        + getMeasurementEnableScopedAttributionRateLimit());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING
@@ -5853,6 +5888,15 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 /* flagName */ FlagsConstants
                         .KEY_MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING,
                 /* defaultValue */ MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING);
+    }
+
+    @Override
+    public boolean getMeasurementEnableScopedAttributionRateLimit() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT,
+                /* defaultValue */ MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT);
     }
 
     @Override

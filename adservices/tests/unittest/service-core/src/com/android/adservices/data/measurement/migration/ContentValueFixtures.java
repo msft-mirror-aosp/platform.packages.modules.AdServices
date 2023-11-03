@@ -233,6 +233,9 @@ public class ContentValueFixtures {
 
         // Added in V25
         public static final Uri REGISTRATION_ORIGIN = ContentValueFixtures.REGISTRATION_ORIGIN;
+
+        // Added in V29
+        public static final int SCOPE = 0;
     }
 
     public static class EventReportValues {
@@ -1041,6 +1044,25 @@ public class ContentValueFixtures {
         values.put(
                 MeasurementTables.AttributionContract.REGISTRATION_ORIGIN,
                 AttributionValues.REGISTRATION_ORIGIN.toString());
+        return values;
+    }
+
+    /** Return content values for an attribution record version 26 */
+    public static ContentValues generateAttributionContentValuesV26() {
+        return generateAttributionContentValuesV25();
+    }
+
+    /** Return content values for an attribution record version 28 */
+    public static ContentValues generateAttributionContentValuesV28() {
+        return generateAttributionContentValuesV26();
+    }
+
+    /** Return content values for an attribution record version 29 */
+    public static ContentValues generateAttributionContentValuesV29() {
+        ContentValues values = generateAttributionContentValuesV28();
+        values.put(
+                MeasurementTables.AttributionContract.SCOPE,
+                AttributionValues.SCOPE);
         return values;
     }
 

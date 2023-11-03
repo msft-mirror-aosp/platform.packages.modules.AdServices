@@ -385,6 +385,16 @@ public interface IMeasurementDao {
     long getAttributionsPerRateLimitWindow(@NonNull Source source, @NonNull Trigger trigger)
             throws DatastoreException;
 
+    /**
+     * Find the number of entries for a rate limit window, scoped to event- or aggregate-level using
+     * the {@link Source} and {@link Trigger}. Rate-Limit Window: (Scope, Source Site, Destination
+     * Site, Window) from triggerTime.
+     *
+     * @return the number of entries for the window.
+     */
+    long getAttributionsPerRateLimitWindow(@Attribution.Scope int scope, @NonNull Source source,
+            @NonNull Trigger trigger) throws DatastoreException;
+
     /** Add an entry in Attribution datastore. */
     void insertAttribution(@NonNull Attribution attribution) throws DatastoreException;
 

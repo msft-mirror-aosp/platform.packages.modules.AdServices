@@ -246,6 +246,12 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW =
             "measurement_max_attribution_per_rate_limit_window";
 
+    public static final String KEY_MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW =
+            "measurement_max_event_attribution_per_rate_limit_window";
+
+    public static final String KEY_MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW =
+            "measurement_max_aggregate_attribution_per_rate_limit_window";
+
     public static final String KEY_MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION =
             "measurement_max_distinct_enrollments_in_attribution";
 
@@ -290,6 +296,9 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING =
             "measurement_enable_source_deactivation_after_filtering";
+
+    public static final String KEY_MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT =
+            "measurement_enable_scoped_attribution_rate_limit";
 
     public static final String KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS =
             "measurement_debug_reporting_fallback_job_period_ms";
