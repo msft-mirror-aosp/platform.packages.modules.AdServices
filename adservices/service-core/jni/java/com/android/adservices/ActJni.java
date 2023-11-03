@@ -25,6 +25,9 @@ import private_join_and_compute.anonymous_counting_tokens.GeneratedTokensRequest
 import private_join_and_compute.anonymous_counting_tokens.MessagesSet;
 import private_join_and_compute.anonymous_counting_tokens.SchemeParameters;
 import private_join_and_compute.anonymous_counting_tokens.ServerPublicParameters;
+import private_join_and_compute.anonymous_counting_tokens.TokensRequest;
+import private_join_and_compute.anonymous_counting_tokens.TokensRequestPrivateState;
+import private_join_and_compute.anonymous_counting_tokens.TokensResponse;
 
 /** Contains JNI wrappers for the ACT(Anonymous counting tokens). */
 public class ActJni {
@@ -38,6 +41,16 @@ public class ActJni {
 
     private static native byte[] generateTokensRequest(
             byte[] messages,
+            byte[] schemeParameters,
+            byte[] clientPublicParameters,
+            byte[] clientPrivateParameters,
+            byte[] serverPublicParameters);
+
+    private static native boolean verifyTokensResponse(
+            byte[] messages,
+            byte[] tokensRequest,
+            byte[] tokensRequestPrivateState,
+            byte[] tokensResponse,
             byte[] schemeParameters,
             byte[] clientPublicParameters,
             byte[] clientPrivateParameters,
@@ -83,5 +96,38 @@ public class ActJni {
                         clientPrivateParametersInBytes,
                         serverPublicParametersInBytes);
         return GeneratedTokensRequestProto.parseFrom(generateTokensRequestInBytes);
+    }
+
+    /**
+     * Returns {@code true} on a valid response. Returns {@code false} if the parameters don't
+     * correspond to ACT v0.
+     */
+    public static boolean verifyTokensResponse(
+            MessagesSet messagesProto,
+            TokensRequest tokensRequestProto,
+            TokensRequestPrivateState tokensRequestPrivateStateProto,
+            TokensResponse tokenResponseProto,
+            SchemeParameters schemeParametersProto,
+            ClientPublicParameters clientPublicParametersProto,
+            ClientPrivateParameters clientPrivateParametersProto,
+            ServerPublicParameters serverPublicParameters) {
+        byte[] messagesInBytes = messagesProto.toByteArray();
+        byte[] tokensRequestInBytes = tokensRequestProto.toByteArray();
+        byte[] tokensRequestPrivateStateInBytes = tokensRequestPrivateStateProto.toByteArray();
+        byte[] tokenResponseInBytes = tokenResponseProto.toByteArray();
+        byte[] schemeParametersInBytes = schemeParametersProto.toByteArray();
+        byte[] clientPublicParametersInBytes = clientPublicParametersProto.toByteArray();
+        byte[] clientPrivateParametersInBytes = clientPrivateParametersProto.toByteArray();
+        byte[] serverPublicParametersInBytes = serverPublicParameters.toByteArray();
+
+        return verifyTokensResponse(
+                messagesInBytes,
+                tokensRequestInBytes,
+                tokensRequestPrivateStateInBytes,
+                tokenResponseInBytes,
+                schemeParametersInBytes,
+                clientPublicParametersInBytes,
+                clientPrivateParametersInBytes,
+                serverPublicParametersInBytes);
     }
 }

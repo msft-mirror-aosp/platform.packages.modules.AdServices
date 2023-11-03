@@ -39,6 +39,9 @@ import private_join_and_compute.anonymous_counting_tokens.MessagesSet;
 import private_join_and_compute.anonymous_counting_tokens.SchemeParameters;
 import private_join_and_compute.anonymous_counting_tokens.ServerPrivateParameters;
 import private_join_and_compute.anonymous_counting_tokens.ServerPublicParameters;
+import private_join_and_compute.anonymous_counting_tokens.TokensRequest;
+import private_join_and_compute.anonymous_counting_tokens.TokensRequestPrivateState;
+import private_join_and_compute.anonymous_counting_tokens.TokensResponse;
 import private_join_and_compute.anonymous_counting_tokens.Transcript;
 
 
@@ -152,5 +155,83 @@ public class ActJniTest {
                 }
             }
         }
+    }
+
+    @Test
+    public void test_verifyTokensResponse_throwsErrorWithIncorrectTokenResponse()
+            throws InvalidProtocolBufferException {
+        ClientPublicParameters clientPublicParameters = mClientParameters.getPublicParameters();
+        ClientPrivateParameters clientPrivateParameters = mClientParameters.getPrivateParameters();
+        MessagesSet messagesSet =
+                MessagesSet.newBuilder()
+                        .addMessage("message_0")
+                        .addMessage("message_1")
+                        .addMessage("message_2")
+                        .build();
+        GeneratedTokensRequestProto generatedTokenRequestResponse =
+                ActJni.generateTokensRequest(
+                        messagesSet,
+                        mSchemeParameters,
+                        clientPublicParameters,
+                        clientPrivateParameters,
+                        mServerPublicParameters);
+        TokensRequestPrivateState tokensRequestPrivateState =
+                generatedTokenRequestResponse.getTokensRequestPrivateState();
+        TokensRequest tokensRequest = generatedTokenRequestResponse.getTokenRequest();
+        TokensResponse tokensResponse = TokensResponse.newBuilder().build();
+
+        Assert.assertThrows(
+                IllegalStateException.class,
+                () ->
+                        ActJni.verifyTokensResponse(
+                                messagesSet,
+                                tokensRequest,
+                                tokensRequestPrivateState,
+                                tokensResponse,
+                                mSchemeParameters,
+                                clientPublicParameters,
+                                clientPrivateParameters,
+                                mServerPublicParameters));
+    }
+
+    @Test
+    public void test_verifyTokensResponse_returnsTrueWithCorrectTokenResponse()
+            throws InvalidProtocolBufferException {
+        ClientPublicParameters clientPublicParameters = mClientParameters.getPublicParameters();
+        ClientPrivateParameters clientPrivateParameters = mClientParameters.getPrivateParameters();
+        MessagesSet messagesSet =
+                MessagesSet.newBuilder()
+                        .addMessage("message_0")
+                        .addMessage("message_1")
+                        .addMessage("message_2")
+                        .build();
+        GeneratedTokensRequestProto generatedTokenRequestResponse =
+                ActJni.generateTokensRequest(
+                        messagesSet,
+                        mSchemeParameters,
+                        clientPublicParameters,
+                        clientPrivateParameters,
+                        mServerPublicParameters);
+        TokensRequestPrivateState tokensRequestPrivateState =
+                generatedTokenRequestResponse.getTokensRequestPrivateState();
+        TokensRequest tokensRequest = generatedTokenRequestResponse.getTokenRequest();
+        TokensResponse tokensResponse =
+                ActJniUtility.generateTokensResponse(
+                        tokensRequest,
+                        mSchemeParameters,
+                        clientPublicParameters,
+                        mServerPublicParameters,
+                        mServerPrivateParameters);
+
+        Assert.assertTrue(
+                ActJni.verifyTokensResponse(
+                        messagesSet,
+                        tokensRequest,
+                        tokensRequestPrivateState,
+                        tokensResponse,
+                        mSchemeParameters,
+                        clientPublicParameters,
+                        clientPrivateParameters,
+                        mServerPublicParameters));
     }
 }
