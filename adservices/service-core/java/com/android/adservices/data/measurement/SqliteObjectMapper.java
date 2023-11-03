@@ -338,6 +338,8 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.AggregateReport.AGGREGATION_COORDINATOR_ORIGIN,
                 builder::setAggregationCoordinatorOrigin);
+        setBooleanColumn(
+                cursor, MeasurementTables.AggregateReport.IS_FAKE_REPORT, builder::setIsFakeReport);
         return builder.build();
     }
 

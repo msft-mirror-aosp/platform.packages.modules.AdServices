@@ -903,7 +903,6 @@ class MeasurementDao implements IMeasurementDao {
         }
     }
 
-
     @Override
     public List<String> getPendingDebugEventReportIds() throws DatastoreException {
         List<String> eventReports = new ArrayList<>();
@@ -2350,6 +2349,8 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.AggregateReport.AGGREGATION_COORDINATOR_ORIGIN,
                 aggregateReport.getAggregationCoordinatorOrigin().toString());
+        values.put(
+                MeasurementTables.AggregateReport.IS_FAKE_REPORT, aggregateReport.isFakeReport());
         long rowId =
                 mSQLTransaction
                         .getDatabase()
@@ -2437,7 +2438,6 @@ class MeasurementDao implements IMeasurementDao {
             return debugReportIds;
         }
     }
-
 
     @Override
     public Map<String, List<String>> getPendingAggregateDebugReportIdsByCoordinator()
@@ -3023,10 +3023,10 @@ class MeasurementDao implements IMeasurementDao {
             query =
                     String.format(
                             Locale.ENGLISH,
-                            "SELECT COUNT(*) FROM %2$s WHERE %1$s = %3$s"
+                            "SELECT COUNT(*) FROM %2$s WHERE (%1$s = %3$s"
                                     + " OR %1$s LIKE %4$s"
                                     + " OR %1$s LIKE %5$s"
-                                    + " OR %1$s LIKE %6$s",
+                                    + " OR %1$s LIKE %6$s)",
                             columnName,
                             tableName,
                             noSubdomainOrPostfixMatch,
@@ -3038,13 +3038,23 @@ class MeasurementDao implements IMeasurementDao {
                     String.format(
                             Locale.ENGLISH,
                             "SELECT COUNT(*) FROM %2$s WHERE"
-                                    + " %1$s = %3$s"
-                                    + " OR %1$s LIKE %4$s",
+                                    + " (%1$s = %3$s"
+                                    + " OR %1$s LIKE %4$s)",
                             columnName,
                             tableName,
                             noSubdomainOrPostfixMatch,
                             postfixMatch);
         }
+
+        if (FlagsFactory.getFlags().getMeasurementNullAggregateReportEnabled()
+                && tableName.equals(MeasurementTables.AggregateReport.TABLE)) {
+            query +=
+                    String.format(
+                            Locale.ENGLISH,
+                            " AND %1$s = 0",
+                            MeasurementTables.AggregateReport.IS_FAKE_REPORT);
+        }
+
         return (int) DatabaseUtils.longForQuery(mSQLTransaction.getDatabase(), query, null);
     }
 

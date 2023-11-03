@@ -548,6 +548,8 @@ public abstract class AbstractDbIntegrationTest {
         values.put(
                 MeasurementTables.AggregateReport.AGGREGATION_COORDINATOR_ORIGIN,
                 aggregateReport.getAggregationCoordinatorOrigin().toString());
+        values.put(
+                MeasurementTables.AggregateReport.IS_FAKE_REPORT, aggregateReport.isFakeReport());
         long row = db.insert(MeasurementTables.AggregateReport.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("AggregateReport insertion failed");
