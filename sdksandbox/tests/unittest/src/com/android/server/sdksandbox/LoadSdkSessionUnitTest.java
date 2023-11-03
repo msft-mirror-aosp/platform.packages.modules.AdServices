@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import android.Manifest;
+import android.app.sdksandbox.IUnloadSdkCallback;
 import android.app.sdksandbox.SandboxLatencyInfo;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallbackBinder;
@@ -36,6 +37,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 public class LoadSdkSessionUnitTest {
 
@@ -47,6 +49,7 @@ public class LoadSdkSessionUnitTest {
     private FakeSdkSandboxService mSdkSandboxService;
     private CallingInfo mTestCallingInfo;
     private SandboxLatencyInfo mSandboxLatencyInfo;
+    private IUnloadSdkCallback.Stub mUnloadSdkCallback;
 
     @Before
     public void setup() {
@@ -55,6 +58,7 @@ public class LoadSdkSessionUnitTest {
         mSdkSandboxService = new FakeSdkSandboxService();
         mTestCallingInfo = new CallingInfo(Process.myUid(), TEST_PACKAGE);
         mSandboxLatencyInfo = new SandboxLatencyInfo();
+        mUnloadSdkCallback = Mockito.mock(IUnloadSdkCallback.Stub.class);
 
         // Required for using MATCH_ANY_USER when fetching installed SDK.
         InstrumentationRegistry.getInstrumentation()
@@ -255,7 +259,7 @@ public class LoadSdkSessionUnitTest {
         LoadSdkSession sdkSession = loadSdk();
 
         // Unloading SDK should go through as a successful request.
-        sdkSession.unload(-1);
+        sdkSession.unload(mSandboxLatencyInfo, mUnloadSdkCallback);
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.UNLOADED);
     }
 
@@ -278,7 +282,9 @@ public class LoadSdkSessionUnitTest {
         sdkSession.load(mSdkSandboxService, new ApplicationInfo(), mSandboxLatencyInfo);
 
         // Unloading SDK should throw exception.
-        assertThrows(IllegalArgumentException.class, () -> sdkSession.unload(-1));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> sdkSession.unload(mSandboxLatencyInfo, mUnloadSdkCallback));
         // The status after trying to unload should still be a pending load.
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOAD_PENDING);
 
@@ -307,7 +313,7 @@ public class LoadSdkSessionUnitTest {
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOAD_FAILED);
         callback.assertLoadSdkIsUnsuccessful();
 
-        sdkSession.unload(-1);
+        sdkSession.unload(mSandboxLatencyInfo, mUnloadSdkCallback);
         // The status should still be failed load, instead of unload.
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOAD_FAILED);
     }
@@ -321,7 +327,7 @@ public class LoadSdkSessionUnitTest {
         sdkSession.onSandboxDeath();
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.UNLOADED);
 
-        sdkSession.unload(-1);
+        sdkSession.unload(mSandboxLatencyInfo, mUnloadSdkCallback);
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.UNLOADED);
         // Verify that unload wss not called in the sandbox service.
         assertThat(mSdkSandboxService.isSdkUnloaded()).isFalse();
@@ -333,7 +339,7 @@ public class LoadSdkSessionUnitTest {
         LoadSdkSession sdkSession = loadSdk();
 
         // Unloading SDK should go through as a successful request.
-        sdkSession.unload(-1);
+        sdkSession.unload(mSandboxLatencyInfo, mUnloadSdkCallback);
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.UNLOADED);
 
         // Trying to load the SDK again as part of the same session should fail.
