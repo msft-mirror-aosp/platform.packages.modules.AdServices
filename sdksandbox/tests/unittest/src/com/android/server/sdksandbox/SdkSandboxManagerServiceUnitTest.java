@@ -79,7 +79,7 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSessionBuilder;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.sdksandbox.IComputeSdkStorageCallback;
-import com.android.sdksandbox.IUnloadSdkCallback;
+import com.android.sdksandbox.IUnloadSdkInSandboxCallback;
 import com.android.server.LocalManagerRegistry;
 import com.android.server.SystemService.TargetUser;
 import com.android.server.am.ActivityManagerLocal;
@@ -124,8 +124,6 @@ public class SdkSandboxManagerServiceUnitTest {
             "com.android.codeproviderresources";
     private static final String TEST_PACKAGE = "com.android.server.sdksandbox.tests";
     private static final String PROPERTY_DISABLE_SANDBOX = "disable_sdk_sandbox";
-    // TODO(b/287047664): use SandboxLatencyInfo object to pass latency info in lifecycle callback
-    // and unloadSdk methods
     private static final long TIME_APP_CALLED_SYSTEM_SERVER = 1;
 
     private static final String TEST_KEY = "key";
@@ -2043,7 +2041,7 @@ public class SdkSandboxManagerServiceUnitTest {
         // Load SDK to bring up a sandbox
         loadSdk(SDK_NAME);
         // Trying to unload an SDK that is not loaded should do nothing - it's a no-op.
-        mService.unloadSdk(TEST_PACKAGE, SDK_PROVIDER_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER);
+        mService.unloadSdk(TEST_PACKAGE, SDK_PROVIDER_PACKAGE, mSandboxLatencyInfo);
     }
 
     @Test
@@ -2052,13 +2050,12 @@ public class SdkSandboxManagerServiceUnitTest {
         loadSdk(SDK_NAME);
 
         loadSdk(SDK_PROVIDER_RESOURCES_SDK_NAME);
-        mService.unloadSdk(TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER);
+        mService.unloadSdk(TEST_PACKAGE, SDK_NAME, mSandboxLatencyInfo);
 
         // One SDK should still be loaded, therefore the sandbox should still be alive.
         assertThat(sProvider.getSdkSandboxServiceForApp(mCallingInfo)).isNotNull();
 
-        mService.unloadSdk(
-                TEST_PACKAGE, SDK_PROVIDER_RESOURCES_SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER);
+        mService.unloadSdk(TEST_PACKAGE, SDK_PROVIDER_RESOURCES_SDK_NAME, mSandboxLatencyInfo);
 
         // No more SDKs should be loaded at this point. Verify that the sandbox has been killed.
         if (!SdkLevel.isAtLeastU()) {
@@ -2090,12 +2087,12 @@ public class SdkSandboxManagerServiceUnitTest {
         // Trying to unload an SDK that is being loaded should fail
         assertThrows(
                 IllegalArgumentException.class,
-                () -> mService.unloadSdk(TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER));
+                () -> mService.unloadSdk(TEST_PACKAGE, SDK_NAME, mSandboxLatencyInfo));
 
         // After loading the SDK, unloading should not fail
         mSdkSandboxService.sendLoadSdkSuccessful();
         callback.assertLoadSdkIsSuccessful();
-        mService.unloadSdk(TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER);
+        mService.unloadSdk(TEST_PACKAGE, SDK_NAME, mSandboxLatencyInfo);
     }
 
     @Test
@@ -2104,7 +2101,7 @@ public class SdkSandboxManagerServiceUnitTest {
         killSandbox();
 
         // Unloading SDK should be a no-op
-        mService.unloadSdk(TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER);
+        mService.unloadSdk(TEST_PACKAGE, SDK_NAME, mSandboxLatencyInfo);
     }
 
     @Test
@@ -2555,7 +2552,7 @@ public class SdkSandboxManagerServiceUnitTest {
         Mockito.verify(mSdkSandboxService, Mockito.never())
                 .unloadSdk(
                         Mockito.anyString(),
-                        Mockito.any(IUnloadSdkCallback.class),
+                        Mockito.any(IUnloadSdkInSandboxCallback.class),
                         Mockito.any(SandboxLatencyInfo.class));
     }
 

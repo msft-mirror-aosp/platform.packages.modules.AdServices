@@ -61,7 +61,7 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     @Override
     public void unloadSdk(
-            String callingPackageName, String sdkName, long timeAppCalledSystemServer) {}
+            String callingPackageName, String sdkName, SandboxLatencyInfo sandboxLatencyInfo) {}
 
     @Override
     public void requestSurfacePackage(
