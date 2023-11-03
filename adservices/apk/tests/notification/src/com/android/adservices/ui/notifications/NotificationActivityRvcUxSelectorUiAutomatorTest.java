@@ -31,7 +31,6 @@ import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
-import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
@@ -56,10 +55,9 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 @RunWith(AndroidJUnit4.class)
-public class NotificationActivityU18UxSelectorUiAutomatorTest {
+public class NotificationActivityRvcUxSelectorUiAutomatorTest {
     private static final UiDevice sDevice =
             UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-
     private String mTestName;
 
     @Rule(order = 0)
@@ -74,8 +72,12 @@ public class NotificationActivityU18UxSelectorUiAutomatorTest {
                     .setFlag(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true)
                     .setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
                     .setFlag(KEY_U18_UX_ENABLED, true)
-                    .setFlag(KEY_DEBUG_UX, "U18_UX");
+                    .setFlag(KEY_DEBUG_UX, "RVC_UX");
 
+    /***
+     * Setup for test.
+     * @throws InterruptedException interruptedException
+     */
     @BeforeClass
     public static void classSetup() throws InterruptedException {
         AdservicesTestHelper.killAdservicesProcess(ApplicationProvider.getApplicationContext());
@@ -124,7 +126,6 @@ public class NotificationActivityU18UxSelectorUiAutomatorTest {
     }
 
     @Test
-    @FlakyTest(bugId = 302607350)
     public void clickSettingsTest() throws UiObjectNotFoundException, InterruptedException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
@@ -154,5 +155,4 @@ public class NotificationActivityU18UxSelectorUiAutomatorTest {
         }
         assertThat(measurementTitle.exists()).isTrue();
     }
-
 }

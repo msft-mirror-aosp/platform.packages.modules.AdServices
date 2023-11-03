@@ -33,6 +33,7 @@ import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.JoinCustomAudienceRequest;
 import android.adservices.customaudience.TrustedBiddingData;
+import android.adservices.utils.DevContextUtils;
 import android.adservices.utils.MockWebServerRule;
 import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.Scenarios;
@@ -85,6 +86,7 @@ public abstract class FledgeScenarioTest extends ForegroundDebuggableCtsTest {
     private static final String PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final long AD_ID_FETCHER_TIMEOUT = 1000;
     private static final long AD_ID_FETCHER_TIMEOUT_DEFAULT = 50;
+    private final Random mCacheBusterRandom = new Random();
 
     protected AdvertisingCustomAudienceClient mCustomAudienceClient;
     protected AdSelectionClient mAdSelectionClient;
@@ -92,33 +94,35 @@ public abstract class FledgeScenarioTest extends ForegroundDebuggableCtsTest {
     protected AdTechIdentifier mAdTechIdentifier;
     private String mServerBaseAddress;
     private MockWebServer mMockWebServer;
-
-    private final Random mCacheBusterRandom = new Random();
     // Prefix added to all requests to bust cache.
     private int mCacheBuster;
 
     @Rule(order = 0)
+    public final SupportedByConditionRule devOptionsEnabled =
+            DevContextUtils.createDevOptionsAvailableRule(sContext, TAG);
+
+    @Rule(order = 1)
     public final AdServicesDeviceSupportedRule deviceSupported =
             new AdServicesDeviceSupportedRule();
 
-    @Rule(order = 1)
+    @Rule(order = 2)
     public final SupportedByConditionRule webViewSupportsJSSandbox =
             WebViewSupportUtil.createJSSandboxAvailableRule();
 
-    @Rule(order = 2)
+    @Rule(order = 3)
     public final SupportedByConditionRule webViewSupportsConfigurableHeapSize =
             WebViewSupportUtil.createJSSandboxConfigurableHeapSizeRule(CONTEXT);
-
-    @Rule(order = 3)
-    public MockWebServerRule mMockWebServerRule =
-            MockWebServerRule.forHttps(
-                    CONTEXT, "adservices_untrusted_test_server.p12", "adservices_test");
 
     @Rule(order = 4)
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
                     .setCompatModeFlags()
                     .setPpapiAppAllowList(sContext.getPackageName());
+
+    @Rule(order = 5)
+    public MockWebServerRule mMockWebServerRule =
+            MockWebServerRule.forHttps(
+                    CONTEXT, "adservices_untrusted_test_server.p12", "adservices_test");
 
     protected static void overrideBiddingLogicVersionToV3(boolean useVersion3) {
         ShellUtils.runShellCommand(

@@ -41,6 +41,7 @@ import static com.android.adservices.service.Flags.COBALT_UPLOAD_SERVICE_UNBIND_
 import static com.android.adservices.service.Flags.COMPAT_LOGGING_KILL_SWITCH;
 import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_RESET_TOKEN;
+import static com.android.adservices.service.Flags.CONSENT_NOTIFIED_DEBUG_MODE;
 import static com.android.adservices.service.Flags.DEBUG_UX;
 import static com.android.adservices.service.Flags.DEFAULT_ADID_CACHE_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED;
@@ -270,6 +271,8 @@ import static com.android.adservices.service.Flags.MEASUREMENT_DELETE_EXPIRED_JO
 import static com.android.adservices.service.Flags.MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED;
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
+import static com.android.adservices.service.Flags.MEASUREMENT_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY;
+import static com.android.adservices.service.Flags.MEASUREMENT_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING;
@@ -305,6 +308,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_EVENT_FALLBACK_RE
 import static com.android.adservices.service.Flags.MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.Flags.MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS;
+import static com.android.adservices.service.Flags.MEASUREMENT_EVENT_NOISE_PROBABILITY;
 import static com.android.adservices.service.Flags.MEASUREMENT_EVENT_REPORTING_JOB_PERSISTED;
 import static com.android.adservices.service.Flags.MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
@@ -317,6 +321,10 @@ import static com.android.adservices.service.Flags.MEASUREMENT_FLEX_API_MAX_INFO
 import static com.android.adservices.service.Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY;
 import static com.android.adservices.service.Flags.MEASUREMENT_FLEX_LITE_API_ENABLED;
+import static com.android.adservices.service.Flags.MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY;
+import static com.android.adservices.service.Flags.MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
+import static com.android.adservices.service.Flags.MEASUREMENT_INSTALL_ATTR_EVENT_NOISE_PROBABILITY;
+import static com.android.adservices.service.Flags.MEASUREMENT_INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY;
 import static com.android.adservices.service.Flags.MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED;
 import static com.android.adservices.service.Flags.MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT;
 import static com.android.adservices.service.Flags.MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH;
@@ -359,6 +367,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_MIN_INSTALL_ATTRI
 import static com.android.adservices.service.Flags.MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+import static com.android.adservices.service.Flags.MEASUREMENT_NAVIGATION_NOISE_PROBABILITY;
 import static com.android.adservices.service.Flags.MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_NETWORK_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS;
@@ -443,6 +452,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_COBALT_UPLOAD_SE
 import static com.android.adservices.service.FlagsConstants.KEY_COMPAT_LOGGING_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_RESET_TOKEN;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.FlagsConstants.KEY_DEBUG_UX;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
@@ -632,6 +642,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELE
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING;
@@ -670,6 +682,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVEN
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_NOISE_PROBABILITY;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_REPORTING_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
@@ -682,6 +695,10 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_FLEX
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_FLEX_LITE_API_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_INSTALL_ATTR_EVENT_NOISE_PROBABILITY;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH;
@@ -734,6 +751,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MIN_
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_NAVIGATION_NOISE_PROBABILITY;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_NETWORK_READ_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS;
@@ -7519,6 +7537,145 @@ public class PhFlagsTest {
     }
 
     @Test
+    public void testGetMeasurementInstallAttrDualDestinationEventNoiseProbability() {
+        assertThat(mPhFlags.getMeasurementInstallAttrDualDestinationEventNoiseProbability())
+                .isEqualTo(MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY);
+
+        // Now overriding with the value from PH.
+        float phOverridingValue =
+                MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY + .0001f;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY,
+                Float.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getMeasurementInstallAttrDualDestinationEventNoiseProbability())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetMeasurementDualDestinationNavigationNoiseProbability() {
+        assertThat(mPhFlags.getMeasurementDualDestinationNavigationNoiseProbability())
+                .isEqualTo(MEASUREMENT_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY);
+
+        // Now overriding with the value from PH.
+        float phOverridingValue =
+                MEASUREMENT_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY + .0001f;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY,
+                Float.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getMeasurementDualDestinationNavigationNoiseProbability())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetMeasurementInstallAttrDualDestinationNavigationNoiseProbability() {
+        assertThat(mPhFlags.getMeasurementInstallAttrDualDestinationNavigationNoiseProbability())
+                .isEqualTo(MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY);
+
+        // Now overriding with the value from PH.
+        float phOverridingValue =
+                MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY + .0001f;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY,
+                Float.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getMeasurementInstallAttrDualDestinationNavigationNoiseProbability())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetMeasurementDualDestinationEventNoiseProbability() {
+        assertThat(mPhFlags.getMeasurementDualDestinationEventNoiseProbability())
+                .isEqualTo(MEASUREMENT_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY);
+
+        // Now overriding with the value from PH.
+        float phOverridingValue = MEASUREMENT_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY + .0001f;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY,
+                Float.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getMeasurementDualDestinationEventNoiseProbability())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetMeasurementInstallAttrEventNoiseProbability() {
+        assertThat(mPhFlags.getMeasurementInstallAttrEventNoiseProbability())
+                .isEqualTo(MEASUREMENT_INSTALL_ATTR_EVENT_NOISE_PROBABILITY);
+
+        // Now overriding with the value from PH.
+        float phOverridingValue = MEASUREMENT_INSTALL_ATTR_EVENT_NOISE_PROBABILITY + .0001f;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_INSTALL_ATTR_EVENT_NOISE_PROBABILITY,
+                Float.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getMeasurementInstallAttrEventNoiseProbability())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetMeasurementInstallAttrNavigationNoiseProbability() {
+        assertThat(mPhFlags.getMeasurementInstallAttrNavigationNoiseProbability())
+                .isEqualTo(MEASUREMENT_INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY);
+
+        // Now overriding with the value from PH.
+        float phOverridingValue = MEASUREMENT_INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY + .0001f;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY,
+                Float.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getMeasurementInstallAttrNavigationNoiseProbability())
+                .isEqualTo(phOverridingValue);
+    }
+
+
+    @Test
+    public void testGetMeasurementEventNoiseProbability() {
+        assertThat(mPhFlags.getMeasurementEventNoiseProbability())
+                .isEqualTo(MEASUREMENT_EVENT_NOISE_PROBABILITY);
+
+        // Now overriding with the value from PH.
+        float phOverridingValue = MEASUREMENT_EVENT_NOISE_PROBABILITY + .0001f;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_EVENT_NOISE_PROBABILITY,
+                Float.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getMeasurementEventNoiseProbability()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetMeasurementNavigationNoiseProbability() {
+        assertThat(mPhFlags.getMeasurementNavigationNoiseProbability())
+                .isEqualTo(MEASUREMENT_NAVIGATION_NOISE_PROBABILITY);
+
+        // Now overriding with the value from PH.
+        float phOverridingValue = MEASUREMENT_NAVIGATION_NOISE_PROBABILITY + .0001f;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_NAVIGATION_NOISE_PROBABILITY,
+                Float.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getMeasurementNavigationNoiseProbability())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
     public void testGetMeasurementEnablePreinstallCheck() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         assertThat(mPhFlags.getMeasurementEnablePreinstallCheck())
@@ -8975,6 +9132,21 @@ public class PhFlagsTest {
                 /* makeDefault */ !CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE);
 
         assertThat(mPhFlags.getConsentNotificationActivityDebugMode()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testConsentNotifiedDebugMode() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getConsentNotifiedDebugMode()).isEqualTo(CONSENT_NOTIFIED_DEBUG_MODE);
+
+        boolean phOverridingValue = !CONSENT_NOTIFIED_DEBUG_MODE;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_CONSENT_NOTIFIED_DEBUG_MODE,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getConsentNotifiedDebugMode()).isEqualTo(phOverridingValue);
     }
 
     @Test
