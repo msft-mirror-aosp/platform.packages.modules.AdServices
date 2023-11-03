@@ -33,6 +33,8 @@ public class MeasurementRegistrationResponseStats {
     private final int mFailureType;
     private final long mRegistrationDelay;
     private final String mSourceRegistrant;
+    private final int mRetryCount;
+    private final boolean mIsRedirectOnly;
 
     private MeasurementRegistrationResponseStats(Builder builder) {
         mCode = builder.mCode;
@@ -45,6 +47,8 @@ public class MeasurementRegistrationResponseStats {
         mFailureType = builder.mFailureType;
         mRegistrationDelay = builder.mRegistrationDelay;
         mSourceRegistrant = builder.mSourceRegistrant;
+        mRetryCount = builder.mRetryCount;
+        mIsRedirectOnly = builder.mIsRedirectOnly;
     }
 
     @Override
@@ -61,7 +65,9 @@ public class MeasurementRegistrationResponseStats {
                 && mRegistrationStatus == that.mRegistrationStatus
                 && mFailureType == that.mFailureType
                 && mRegistrationDelay == that.mRegistrationDelay
-                && Objects.equals(mSourceRegistrant, that.mSourceRegistrant);
+                && Objects.equals(mSourceRegistrant, that.mSourceRegistrant)
+                && mRetryCount == that.mRetryCount
+                && mIsRedirectOnly == that.mIsRedirectOnly;
     }
 
     @Override
@@ -76,7 +82,9 @@ public class MeasurementRegistrationResponseStats {
                 mRegistrationStatus,
                 mFailureType,
                 mRegistrationDelay,
-                mSourceRegistrant);
+                mSourceRegistrant,
+                mRetryCount,
+                mIsRedirectOnly);
     }
 
     @Override
@@ -102,6 +110,10 @@ public class MeasurementRegistrationResponseStats {
                 + mRegistrationDelay
                 + ", mSourceRegistrant="
                 + mSourceRegistrant
+                + ", mRetryCount="
+                + mRetryCount
+                + ", mIsRedirectOnly="
+                + mIsRedirectOnly
                 + '}';
     }
 
@@ -146,6 +158,14 @@ public class MeasurementRegistrationResponseStats {
         return mSourceRegistrant;
     }
 
+    public int getRetryCount() {
+        return mRetryCount;
+    }
+
+    public boolean isRedirectOnly() {
+        return mIsRedirectOnly;
+    }
+
     /** Builder for {@link MeasurementRegistrationResponseStats}. */
     public static final class Builder {
         private final int mCode;
@@ -158,6 +178,8 @@ public class MeasurementRegistrationResponseStats {
         private final int mFailureType;
         private final long mRegistrationDelay;
         private final String mSourceRegistrant;
+        private final int mRetryCount;
+        private final boolean mIsRedirectOnly;
 
         public Builder(
                 int code,
@@ -168,7 +190,9 @@ public class MeasurementRegistrationResponseStats {
                 int registrationStatus,
                 int failureType,
                 long registrationDelay,
-                String sourceRegistrant) {
+                String sourceRegistrant,
+                int retryCount,
+                boolean isRedirectOnly) {
             mCode = code;
             mRegistrationType = registrationType;
             mResponseSize = responseSize;
@@ -178,6 +202,8 @@ public class MeasurementRegistrationResponseStats {
             mFailureType = failureType;
             mRegistrationDelay = registrationDelay;
             mSourceRegistrant = sourceRegistrant;
+            mRetryCount = retryCount;
+            mIsRedirectOnly = isRedirectOnly;
         }
 
         /** See {@link MeasurementRegistrationResponseStats#getAdTechDomain()} . */

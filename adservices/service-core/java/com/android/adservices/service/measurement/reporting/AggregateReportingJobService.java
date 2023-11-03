@@ -28,14 +28,17 @@ import android.content.ComponentName;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
-import com.android.adservices.service.AdServicesConfig;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
-import com.android.adservices.service.measurement.SystemHealthParams;
+import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
 import com.android.adservices.service.measurement.util.JobLockHolder;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -70,14 +73,14 @@ public final class AggregateReportingJobService extends JobService {
                 .recordOnStartJob(MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementJobAggregateReportingKillSwitch()) {
-            LogUtil.e("AggregateReportingJobService is disabled");
+            LoggerFactory.getMeasurementLogger().e("AggregateReportingJobService is disabled");
             return skipAndCancelBackgroundJob(
                     params,
                     AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON,
                     /* doRecord=*/ true);
         }
 
-        LogUtil.d("AggregateReportingJobService.onStartJob");
+        LoggerFactory.getMeasurementLogger().d("AggregateReportingJobService.onStartJob");
         mExecutorFuture =
                 sBlockingExecutor.submit(
                         () -> {
@@ -101,12 +104,20 @@ public final class AggregateReportingJobService extends JobService {
         if (lock.tryLock()) {
             try {
                 long maxAggregateReportUploadRetryWindowMs =
-                        SystemHealthParams.MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS;
+                        FlagsFactory.getFlags()
+                                .getMeasurementMaxAggregateReportUploadRetryWindowMs();
+                DatastoreManager datastoreManager =
+                        DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
                 new AggregateReportingJobHandler(
                                 EnrollmentDao.getInstance(getApplicationContext()),
-                                DatastoreManagerFactory.getDatastoreManager(
-                                        getApplicationContext()),
-                                ReportingStatus.UploadMethod.REGULAR)
+                                datastoreManager,
+                                new AggregateEncryptionKeyManager(
+                                        datastoreManager, getApplicationContext()),
+                                FlagsFactory.getFlags(),
+                                AdServicesLoggerImpl.getInstance(),
+                                ReportingStatus.ReportType.AGGREGATE,
+                                ReportingStatus.UploadMethod.REGULAR,
+                                getApplicationContext())
                         .performScheduledPendingReportsInWindow(
                                 System.currentTimeMillis() - maxAggregateReportUploadRetryWindowMs,
                                 System.currentTimeMillis());
@@ -115,12 +126,13 @@ public final class AggregateReportingJobService extends JobService {
                 lock.unlock();
             }
         }
-        LogUtil.d("AggregateReportingJobService did not acquire the lock");
+        LoggerFactory.getMeasurementLogger()
+                .d("AggregateReportingJobService did not acquire the lock");
     }
 
     @Override
     public boolean onStopJob(JobParameters params) {
-        LogUtil.d("AggregateReportingJobService.onStopJob");
+        LoggerFactory.getMeasurementLogger().d("AggregateReportingJobService.onStopJob");
         boolean shouldRetry = true;
         if (mExecutorFuture != null) {
             shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
@@ -143,40 +155,43 @@ public final class AggregateReportingJobService extends JobService {
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
-        if (FlagsFactory.getFlags().getMeasurementJobAggregateReportingKillSwitch()) {
-            LogUtil.d("AggregateReportingJobService is disabled, skip scheduling");
+        Flags flags = FlagsFactory.getFlags();
+        if (flags.getMeasurementJobAggregateReportingKillSwitch()) {
+            LoggerFactory.getMeasurementLogger()
+                    .d("AggregateReportingJobService is disabled, skip scheduling");
             return;
         }
 
         final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
         if (jobScheduler == null) {
-            LogUtil.e("JobScheduler not found");
+            LoggerFactory.getMeasurementLogger().e("JobScheduler not found");
             return;
         }
 
         final JobInfo scheduledJobInfo =
                 jobScheduler.getPendingJob(MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID);
-        JobInfo jobInfo = buildJobInfo(context);
+        JobInfo jobInfo = buildJobInfo(context, flags);
         // Schedule if it hasn't been scheduled already or force rescheduling
         if (forceSchedule || !jobInfo.equals(scheduledJobInfo)) {
             schedule(jobScheduler, jobInfo);
-            LogUtil.d("Scheduled AggregateReportingJobService");
+            LoggerFactory.getMeasurementLogger().d("Scheduled AggregateReportingJobService");
         } else {
-            LogUtil.d("AggregateReportingJobService already scheduled, skipping reschedule");
+            LoggerFactory.getMeasurementLogger()
+                    .d("AggregateReportingJobService already scheduled, skipping reschedule");
         }
     }
 
-    private static JobInfo buildJobInfo(Context context) {
+    private static JobInfo buildJobInfo(Context context, Flags flags) {
         final JobInfo job =
                 new JobInfo.Builder(
                                 MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID,
                                 new ComponentName(context, AggregateReportingJobService.class))
-                        .setRequiresDeviceIdle(true)
-                        .setRequiresBatteryNotLow(true)
-                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
-                        .setPeriodic(
-                                AdServicesConfig.getMeasurementAggregateMainReportingJobPeriodMs())
-                        .setPersisted(true)
+                        .setRequiresBatteryNotLow(
+                                flags.getMeasurementAggregateReportingJobRequiredBatteryNotLow())
+                        .setRequiredNetworkType(
+                                flags.getMeasurementAggregateReportingJobRequiredNetworkType())
+                        .setPeriodic(flags.getMeasurementAggregateMainReportingJobPeriodMs())
+                        .setPersisted(flags.getMeasurementAggregateReportingJobPersisted())
                         .build();
         return job;
     }

@@ -36,8 +36,8 @@ import java.net.URL;
 /** Utility class holding methods that enable Unified Flow auction */
 public class FakeAdExchangeServer {
 
+    private static final long NANO_TO_MILLISECONDS = 1000000;
     private static final String TAG = "AdSelectionDataE2ETest";
-    private static final String SFE_ADDRESS = "https://seller1-nmb.sfe-gcp.com/v1/selectAd";
 
     private static Gson sGson =
             new GsonBuilder()
@@ -45,23 +45,33 @@ public class FakeAdExchangeServer {
                     .create();
 
     public static SelectAdResponse runServerAuction(
-            String contextualSignalFileName, byte[] adSelectionData) throws IOException {
+            String contextualSignalFileName,
+            byte[] adSelectionData,
+            String sfeAddress,
+            boolean loggingEnabled)
+            throws IOException {
         // Add contextual data
         SelectAdRequest selectAdRequest =
                 getSelectAdRequestWithContextualSignals(contextualSignalFileName);
-        Log.d(TAG, "get ad selection data : " + BaseEncoding.base64().encode(adSelectionData));
+
+        if (loggingEnabled) {
+            Log.d(TAG, "get ad selection data : " + BaseEncoding.base64().encode(adSelectionData));
+        }
 
         // Because we are making a HTTPS call, we need to encode the ciphertext byte array
         selectAdRequest.setProtectedAudienceCiphertext(
                 BaseEncoding.base64().encode(adSelectionData));
 
-        return makeSelectAdsCall(selectAdRequest);
+        return makeSelectAdsCall(selectAdRequest, sfeAddress, loggingEnabled);
     }
 
-    private static SelectAdResponse makeSelectAdsCall(SelectAdRequest request) throws IOException {
+    private static SelectAdResponse makeSelectAdsCall(
+            SelectAdRequest request, String sfeAddress, boolean loggingEnabled) throws IOException {
         String requestPayload = getSelectAdPayload(request);
-        String response = makeHttpPostCall(SFE_ADDRESS, requestPayload);
-        Log.d(TAG, "Response from b&a : " + response);
+        String response = makeHttpPostCall(sfeAddress, requestPayload, loggingEnabled);
+        if (loggingEnabled) {
+            Log.d(TAG, "Response from b&a : " + response);
+        }
         return parseSelectAdResponse(response);
     }
 
@@ -80,8 +90,8 @@ public class FakeAdExchangeServer {
         return sGson.toJson(selectAdRequest);
     }
 
-    private static String makeHttpPostCall(String address, String jsonInputString)
-            throws IOException {
+    private static String makeHttpPostCall(
+            String address, String jsonInputString, boolean loggingEnabled) throws IOException {
         URL url = new URL(address);
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod("POST");
@@ -91,7 +101,10 @@ public class FakeAdExchangeServer {
         try (OutputStream os = con.getOutputStream()) {
             byte[] input = jsonInputString.getBytes("utf-8");
             os.write(input, 0, input.length);
-            Log.d(TAG, "HTTP Post call made with payload : " + jsonInputString);
+            if (loggingEnabled) {
+                Log.d(TAG, "HTTP Post call made with payload : ");
+                largeLog(TAG, jsonInputString);
+            }
         }
 
         try (BufferedReader br =
@@ -101,9 +114,32 @@ public class FakeAdExchangeServer {
             while ((responseLine = br.readLine()) != null) {
                 response.append(responseLine.trim());
             }
-            Log.d(TAG, "Response read : " + response.toString());
+            if (loggingEnabled) {
+                Log.d(TAG, "Response from B&A : " + response.toString());
+            }
 
             return response.toString();
+        }
+    }
+
+    private static String generateLogLabel(
+            String classSimpleName, String testName, long elapsedMs) {
+        return "("
+                + "SELECT_ADS_LATENCY_"
+                + classSimpleName
+                + "#"
+                + testName
+                + ": "
+                + elapsedMs
+                + " ms)";
+    }
+
+    private static void largeLog(String tag, String content) {
+        if (content.length() > 4000) {
+            Log.d(tag, content.substring(0, 4000));
+            largeLog(tag, content.substring(4000));
+        } else {
+            Log.d(tag, content);
         }
     }
 

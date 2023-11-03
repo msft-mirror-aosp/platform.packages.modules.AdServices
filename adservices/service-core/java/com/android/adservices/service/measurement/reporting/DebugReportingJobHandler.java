@@ -18,17 +18,21 @@ package com.android.adservices.service.measurement.reporting;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MESUREMENT_REPORTS_UPLOADED;
 
 import android.adservices.common.AdServicesStatusUtils;
+import android.content.Context;
 import android.net.Uri;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.KeyValueData;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.MeasurementReportsStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
@@ -46,12 +50,40 @@ public class DebugReportingJobHandler {
     private final EnrollmentDao mEnrollmentDao;
     private final DatastoreManager mDatastoreManager;
     private final Flags mFlags;
+    private ReportingStatus.UploadMethod mUploadMethod;
+    private AdServicesLogger mLogger;
+
+    private Context mContext;
+
+    @VisibleForTesting
+    DebugReportingJobHandler(
+            EnrollmentDao enrollmentDao,
+            DatastoreManager datastoreManager,
+            Flags flags,
+            AdServicesLogger logger,
+            Context context) {
+        this(
+                enrollmentDao,
+                datastoreManager,
+                flags,
+                logger,
+                ReportingStatus.UploadMethod.UNKNOWN,
+                context);
+    }
 
     DebugReportingJobHandler(
-            EnrollmentDao enrollmentDao, DatastoreManager datastoreManager, Flags flags) {
+            EnrollmentDao enrollmentDao,
+            DatastoreManager datastoreManager,
+            Flags flags,
+            AdServicesLogger logger,
+            ReportingStatus.UploadMethod uploadMethod,
+            Context context) {
         mEnrollmentDao = enrollmentDao;
         mDatastoreManager = datastoreManager;
         mFlags = flags;
+        mLogger = logger;
+        mUploadMethod = uploadMethod;
+        mContext = context;
     }
 
     /** Finds all debug reports and attempts to upload them individually. */
@@ -59,7 +91,7 @@ public class DebugReportingJobHandler {
         Optional<List<String>> pendingDebugReports =
                 mDatastoreManager.runInTransactionWithResult(IMeasurementDao::getDebugReportIds);
         if (!pendingDebugReports.isPresent()) {
-            LogUtil.d("Pending Debug Reports not found");
+            LoggerFactory.getMeasurementLogger().d("Pending Debug Reports not found");
             return;
         }
 
@@ -69,20 +101,33 @@ public class DebugReportingJobHandler {
             // service will interrupt this thread.  If the thread has been interrupted, it will exit
             // early.
             if (Thread.currentThread().isInterrupted()) {
-                LogUtil.d(
-                        "DebugReportingJobHandler performScheduledPendingReports "
-                                + "thread interrupted, exiting early.");
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "DebugReportingJobHandler performScheduledPendingReports "
+                                        + "thread interrupted, exiting early.");
                 return;
             }
 
-            @AdServicesStatusUtils.StatusCode int result = performReport(debugReportId);
-            if (result != AdServicesStatusUtils.STATUS_SUCCESS) {
-                mDatastoreManager.runInTransaction(
-                        (dao) ->
-                                dao.incrementReportingRetryCount(
-                                        debugReportId,
-                                        KeyValueData.DataType.DEBUG_REPORT_RETRY_COUNT));
+            ReportingStatus reportingStatus = new ReportingStatus();
+            if (mUploadMethod != null) {
+                reportingStatus.setUploadMethod(mUploadMethod);
             }
+            @AdServicesStatusUtils.StatusCode
+            int result = performReport(debugReportId, reportingStatus);
+            if (result == AdServicesStatusUtils.STATUS_SUCCESS) {
+                reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.SUCCESS);
+            } else {
+                reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.FAILURE);
+                mDatastoreManager.runInTransaction(
+                        (dao) -> {
+                            int retryCount =
+                                    dao.incrementAndGetReportingRetryCount(
+                                            debugReportId,
+                                            KeyValueData.DataType.DEBUG_REPORT_RETRY_COUNT);
+                            reportingStatus.setRetryCount(retryCount);
+                        });
+            }
+            logReportingStats(reportingStatus);
         }
     }
 
@@ -93,15 +138,20 @@ public class DebugReportingJobHandler {
      * @param debugReportId for the datastore id of the {@link DebugReport}
      * @return success
      */
-    int performReport(String debugReportId) {
+    int performReport(String debugReportId, ReportingStatus reportingStatus) {
         Optional<DebugReport> debugReportOpt =
                 mDatastoreManager.runInTransactionWithResult(
                         (dao) -> dao.getDebugReport(debugReportId));
         if (!debugReportOpt.isPresent()) {
-            LogUtil.d("Reading Scheduled Debug Report failed");
+            LoggerFactory.getMeasurementLogger().d("Reading Scheduled Debug Report failed");
+            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.REPORT_NOT_FOUND);
             return AdServicesStatusUtils.STATUS_IO_ERROR;
         }
         DebugReport debugReport = debugReportOpt.get();
+        reportingStatus.setReportingDelay(
+                System.currentTimeMillis() - debugReport.getInsertionTime());
+        reportingStatus.setReportType(debugReport.getType());
+        reportingStatus.setSourceRegistrant(getAppPackageName(debugReport));
 
         try {
             Uri reportingOrigin = debugReport.getRegistrationOrigin();
@@ -117,28 +167,36 @@ public class DebugReportingJobHandler {
                 if (success) {
                     return AdServicesStatusUtils.STATUS_SUCCESS;
                 } else {
-                    LogUtil.d("Deleting debug report failed");
+                    LoggerFactory.getMeasurementLogger().d("Deleting debug report failed");
+                    reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.DATASTORE);
                     return AdServicesStatusUtils.STATUS_IO_ERROR;
                 }
             } else {
-                LogUtil.d("Sending debug report failed with http error");
+                LoggerFactory.getMeasurementLogger()
+                        .d("Sending debug report failed with http error");
+                reportingStatus.setFailureStatus(
+                        ReportingStatus.FailureStatus.UNSUCCESSFUL_HTTP_RESPONSE_CODE);
                 return AdServicesStatusUtils.STATUS_IO_ERROR;
             }
         } catch (IOException e) {
-            LogUtil.d(e, "Network error occurred when attempting to deliver debug report.");
+            LoggerFactory.getMeasurementLogger()
+                    .d(e, "Network error occurred when attempting to deliver debug report.");
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
+            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.NETWORK);
             // TODO(b/298330312): Change to defined error codes
             return AdServicesStatusUtils.STATUS_IO_ERROR;
         } catch (JSONException e) {
-            LogUtil.d(e, "Serialization error occurred at debug report delivery.");
+            LoggerFactory.getMeasurementLogger()
+                    .d(e, "Serialization error occurred at debug report delivery.");
             // TODO(b/298330312): Change to defined error codes
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
+            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.SERIALIZATION_ERROR);
             if (mFlags.getMeasurementEnableReportDeletionOnUnrecoverableException()) {
                 // Unrecoverable state - delete the report.
                 mDatastoreManager.runInTransaction(dao -> dao.deleteDebugReport(debugReportId));
@@ -152,12 +210,14 @@ public class DebugReportingJobHandler {
             }
             return AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } catch (Exception e) {
-            LogUtil.e(e, "Unexpected exception occurred when attempting to deliver debug report.");
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "Unexpected exception occurred when attempting to deliver debug report.");
             // TODO(b/298330312): Change to defined error codes
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
+            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.UNKNOWN);
             if (mFlags.getMeasurementEnableReportingJobsThrowUnaccountedException()
                     && ThreadLocalRandom.current().nextFloat()
                             < mFlags.getMeasurementThrowUnknownExceptionSamplingRate()) {
@@ -179,7 +239,33 @@ public class DebugReportingJobHandler {
     @VisibleForTesting
     public int makeHttpPostRequest(Uri adTechDomain, JSONArray debugReportPayload)
             throws IOException {
-        DebugReportSender debugReportSender = new DebugReportSender();
+        DebugReportSender debugReportSender = new DebugReportSender(mContext);
         return debugReportSender.sendReport(adTechDomain, debugReportPayload);
+    }
+
+    private String getAppPackageName(DebugReport debugReport) {
+        if (!mFlags.getMeasurementEnableAppPackageNameLogging()) {
+            return "";
+        }
+        Uri sourceRegistrant = debugReport.getRegistrant();
+        if (sourceRegistrant == null) {
+            LoggerFactory.getMeasurementLogger().d("Source registrant is null on debug report");
+            return "";
+        }
+        return sourceRegistrant.toString();
+    }
+
+    private void logReportingStats(ReportingStatus reportingStatus) {
+        mLogger.logMeasurementReports(
+                new MeasurementReportsStats.Builder()
+                        .setCode(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED)
+                        .setType(reportingStatus.getReportType().getValue())
+                        .setResultCode(reportingStatus.getUploadStatus().getValue())
+                        .setFailureType(reportingStatus.getFailureStatus().getValue())
+                        .setUploadMethod(reportingStatus.getUploadMethod().getValue())
+                        .setReportingDelay(reportingStatus.getReportingDelay())
+                        .setSourceRegistrant(reportingStatus.getSourceRegistrant())
+                        .setRetryCount(reportingStatus.getRetryCount())
+                        .build());
     }
 }

@@ -22,10 +22,12 @@ import android.annotation.NonNull;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEvent;
 import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
+import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -46,6 +48,10 @@ import java.util.stream.Collectors;
 public class UpdateProcessingOrchestrator {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
+    @VisibleForTesting
+    public static final String COLLISION_ERROR =
+            "Updates JSON attempts to perform multiple operations on a single key";
+
     @NonNull private final ProtectedSignalsDao mProtectedSignalsDao;
     @NonNull private final UpdateProcessorSelector mUpdateProcessorSelector;
     @NonNull private final UpdateEncoderEventHandler mUpdateEncoderEventHandler;
@@ -62,13 +68,13 @@ public class UpdateProcessingOrchestrator {
         mUpdateEncoderEventHandler = updateEncoderEventHandler;
     }
 
-    /**
-     * Takes a signal update JSON and adds/removes signals based on it.
-     *
-     * @param json The JSON to process.
-     */
+    /** Takes a signal update JSON and adds/removes signals based on it. */
     public void processUpdates(
-            AdTechIdentifier adtech, String packageName, Instant creationTime, JSONObject json) {
+            AdTechIdentifier adtech,
+            String packageName,
+            Instant creationTime,
+            JSONObject json,
+            DevContext devContext) {
         sLogger.v("Processing signal updates for " + adtech);
         try {
             // Load the current signals, organizing them into a map for quick access
@@ -93,7 +99,7 @@ public class UpdateProcessingOrchestrator {
                     "Finished parsing JSON %d signals to add, and %d signals to remove",
                     combinedUpdates.getToAdd().size(), combinedUpdates.getToRemove().size());
 
-            writeChanges(adtech, packageName, creationTime, combinedUpdates);
+            writeChanges(adtech, packageName, creationTime, combinedUpdates, devContext);
         } catch (JSONException e) {
             throw new IllegalArgumentException("Couldn't unpack signal updates JSON", e);
         }
@@ -127,16 +133,14 @@ public class UpdateProcessingOrchestrator {
         for (Iterator<String> iter = json.keys(); iter.hasNext(); ) {
             String key = iter.next();
             sLogger.v("Running update processor %s", key);
-            JSONObject value = json.getJSONObject(key);
             UpdateOutput output =
                     mUpdateProcessorSelector
                             .getUpdateProcessor(key)
-                            .processUpdates(value, currentSignalsMap);
+                            .processUpdates(json.get(key), currentSignalsMap);
             combinedUpdates.getToAdd().addAll(output.getToAdd());
             combinedUpdates.getToRemove().addAll(output.getToRemove());
             if (!Collections.disjoint(combinedUpdates.getKeysTouched(), output.getKeysTouched())) {
-                throw new IllegalArgumentException(
-                        "Updates JSON attempts to perform multiple operations on a single key");
+                throw new IllegalArgumentException(COLLISION_ERROR);
             }
             combinedUpdates.getKeysTouched().addAll(output.getKeysTouched());
 
@@ -152,7 +156,8 @@ public class UpdateProcessingOrchestrator {
             AdTechIdentifier adtech,
             String packageName,
             Instant creationTime,
-            UpdateOutput combinedUpdates) {
+            UpdateOutput combinedUpdates,
+            DevContext devContext) {
         /* Modify the DB based on the output of the update processors. Might be worth skipping
          * this is both signalsToAdd and signalsToDelete are empty.
          */
@@ -169,7 +174,8 @@ public class UpdateProcessingOrchestrator {
 
         // There is a valid possibility where there is no update for encoder
         if (combinedUpdates.getUpdateEncoderEvent() != null) {
-            mUpdateEncoderEventHandler.handle(adtech, combinedUpdates.getUpdateEncoderEvent());
+            mUpdateEncoderEventHandler.handle(
+                    adtech, combinedUpdates.getUpdateEncoderEvent(), devContext);
         }
     }
 }

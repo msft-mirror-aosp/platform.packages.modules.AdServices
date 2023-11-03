@@ -16,7 +16,9 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -36,19 +38,23 @@ import android.net.Uri;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.EventReport;
-import com.android.adservices.service.measurement.WebUtil;
+import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.MeasurementReportsStats;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSession;
 
@@ -58,6 +64,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -96,6 +103,7 @@ public class EventReportingJobHandlerTest {
 
     @Mock Flags mFlags;
     @Mock AdServicesLogger mLogger;
+    @Mock AdServicesErrorLogger mErrorLogger;
 
     EventReportingJobHandler mEventReportingJobHandler;
     EventReportingJobHandler mSpyEventReportingJobHandler;
@@ -103,6 +111,10 @@ public class EventReportingJobHandlerTest {
 
 
     class FakeDatasoreManager extends DatastoreManager {
+        FakeDatasoreManager() {
+            super(mErrorLogger);
+        }
+
         @Override
         public ITransaction createNewTransaction() {
             return mTransaction;
@@ -124,6 +136,7 @@ public class EventReportingJobHandlerTest {
         mMockitoSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
+                        .spyStatic(ErrorLogUtil.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
         mMockFlags = mock(Flags.class);
@@ -135,14 +148,28 @@ public class EventReportingJobHandlerTest {
         doReturn(false).when(mFlags).getMeasurementEnableReportingJobsThrowJsonException();
         doReturn(false).when(mFlags).getMeasurementEnableReportingJobsThrowCryptoException();
         doReturn(false).when(mFlags).getMeasurementEnableReportingJobsThrowUnaccountedException();
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         mEventReportingJobHandler =
                 new EventReportingJobHandler(
-                        mEnrollmentDao, mDatastoreManager, null, mFlags, mLogger);
+                        mEnrollmentDao,
+                        mDatastoreManager,
+                        mFlags,
+                        mLogger,
+                        ReportingStatus.ReportType.EVENT,
+                        ReportingStatus.UploadMethod.UNKNOWN,
+                        sContext);
         mSpyEventReportingJobHandler = Mockito.spy(mEventReportingJobHandler);
         mSpyDebugEventReportingJobHandler =
                 Mockito.spy(
                         new EventReportingJobHandler(
-                                        mEnrollmentDao, mDatastoreManager, null, mFlags, mLogger)
+                                        mEnrollmentDao,
+                                        mDatastoreManager,
+                                        mFlags,
+                                        mLogger,
+                                        ReportingStatus.ReportType.EVENT,
+                                        ReportingStatus.UploadMethod.UNKNOWN,
+                                        sContext)
                                 .setIsDebugInstance(true));
     }
 
@@ -791,6 +818,86 @@ public class EventReportingJobHandlerTest {
         verify(mMeasurementDao, times(0)).markEventReportStatus(any(), anyInt());
         verify(mSpyEventReportingJobHandler, times(0))
                 .makeHttpPostRequest(Mockito.eq(REPORTING_ORIGIN), Mockito.any());
+    }
+
+    @Test
+    public void testPerformScheduledPendingReports_LogZeroRetryCount()
+            throws DatastoreException, IOException, JSONException {
+        EventReport eventReport1 =
+                new EventReport.Builder()
+                        .setId("eventReport1")
+                        .setSourceEventId(new UnsignedLong(1234L))
+                        .setAttributionDestinations(ATTRIBUTION_DESTINATIONS)
+                        .setStatus(EventReport.Status.PENDING)
+                        .setReportTime(1000L)
+                        .setRegistrationOrigin(REPORTING_ORIGIN)
+                        .build();
+        JSONObject eventReportPayload1 =
+                new EventReportPayload.Builder()
+                        .setReportId(eventReport1.getId())
+                        .setSourceEventId(eventReport1.getSourceEventId())
+                        .setAttributionDestination(eventReport1.getAttributionDestinations())
+                        .build()
+                        .toJson();
+
+        when(mMeasurementDao.getPendingEventReportIdsInWindow(1000, 1100))
+                .thenReturn(List.of(eventReport1.getId()));
+        when(mMeasurementDao.getEventReport(eventReport1.getId())).thenReturn(eventReport1);
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyEventReportingJobHandler)
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any());
+        doReturn(eventReportPayload1)
+                .when(mSpyEventReportingJobHandler)
+                .createReportJsonPayload(eventReport1);
+
+        assertTrue(mSpyEventReportingJobHandler.performScheduledPendingReportsInWindow(1000, 1100));
+        ArgumentCaptor<MeasurementReportsStats> statusArg =
+                ArgumentCaptor.forClass(MeasurementReportsStats.class);
+        verify(mLogger).logMeasurementReports(statusArg.capture());
+        MeasurementReportsStats measurementReportsStats = statusArg.getValue();
+        assertEquals(
+                measurementReportsStats.getType(), ReportingStatus.ReportType.EVENT.getValue());
+        assertEquals(
+                measurementReportsStats.getResultCode(),
+                ReportingStatus.UploadStatus.SUCCESS.getValue());
+        assertEquals(
+                measurementReportsStats.getFailureType(),
+                ReportingStatus.FailureStatus.UNKNOWN.getValue());
+        verify(mMeasurementDao, never()).incrementAndGetReportingRetryCount(any(), any());
+    }
+
+    @Test
+    public void testPerformScheduledPendingReports_LogReportNotFound() throws DatastoreException {
+        EventReport eventReport1 =
+                new EventReport.Builder()
+                        .setId("eventReport1")
+                        .setSourceEventId(new UnsignedLong(1234L))
+                        .setAttributionDestinations(ATTRIBUTION_DESTINATIONS)
+                        .setStatus(EventReport.Status.PENDING)
+                        .setReportTime(1000L)
+                        .setRegistrationOrigin(REPORTING_ORIGIN)
+                        .build();
+
+        when(mMeasurementDao.getPendingEventReportIdsInWindow(1000, 1100))
+                .thenReturn(List.of(eventReport1.getId()));
+        when(mMeasurementDao.getEventReport(eventReport1.getId())).thenReturn(null);
+
+        assertTrue(mSpyEventReportingJobHandler.performScheduledPendingReportsInWindow(1000, 1100));
+        ArgumentCaptor<MeasurementReportsStats> statusArg =
+                ArgumentCaptor.forClass(MeasurementReportsStats.class);
+        verify(mLogger).logMeasurementReports(statusArg.capture());
+        MeasurementReportsStats measurementReportsStats = statusArg.getValue();
+        assertEquals(
+                measurementReportsStats.getType(), ReportingStatus.ReportType.EVENT.getValue());
+        assertEquals(
+                measurementReportsStats.getResultCode(),
+                ReportingStatus.UploadStatus.FAILURE.getValue());
+        assertEquals(
+                measurementReportsStats.getFailureType(),
+                ReportingStatus.FailureStatus.REPORT_NOT_FOUND.getValue());
+        verify(mMeasurementDao)
+                .incrementAndGetReportingRetryCount(
+                        eventReport1.getId(), KeyValueData.DataType.EVENT_REPORT_RETRY_COUNT);
     }
 
     @After

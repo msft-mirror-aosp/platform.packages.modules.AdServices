@@ -107,13 +107,18 @@ public class JSScriptEngine {
             synchronized (mSandboxLock) {
                 if (mFutureSandbox == null) {
                     if (!AvailabilityChecker.isJSSandboxAvailable()) {
+                        JSSandboxIsNotAvailableException exception =
+                                new JSSandboxIsNotAvailableException();
                         mLogger.e(
+                                exception,
                                 "JS Sandbox is not available in this version of WebView "
                                         + "or WebView is not installed at all!");
-                        throw new JSSandboxIsNotAvailableException();
+                        mFutureSandbox =
+                                FluentFuture.from(Futures.immediateFailedFuture(exception));
+                        return mFutureSandbox;
                     }
 
-                    mLogger.i("Creating JavaScriptSandbox");
+                    mLogger.d("Creating JavaScriptSandbox");
                     mSandboxInitStopWatch =
                             mProfiler.start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME);
 
@@ -129,7 +134,7 @@ public class JSScriptEngine {
                                 @Override
                                 public void onSuccess(JavaScriptSandbox result) {
                                     mSandboxInitStopWatch.stop();
-                                    mLogger.i("JSScriptEngine created.");
+                                    mLogger.d("JSScriptEngine created.");
                                 }
 
                                 @Override
@@ -153,10 +158,10 @@ public class JSScriptEngine {
             synchronized (mSandboxLock) {
                 if (mFutureSandbox != null) {
                     ListenableFuture<Void> result =
-                            FluentFuture.from(mFutureSandbox)
+                            mFutureSandbox
                                     .<Void>transform(
                                             jsSandbox -> {
-                                                mLogger.i(
+                                                mLogger.d(
                                                         "Closing connection from JSScriptEngine to"
                                                                 + " WebView Sandbox");
                                                 jsSandbox.close();
@@ -166,7 +171,8 @@ public class JSScriptEngine {
                                     .catching(
                                             Throwable.class,
                                             t -> {
-                                                mLogger.i(
+                                                mLogger.w(
+                                                        t,
                                                         "JavaScriptSandbox initialization failed,"
                                                                 + " won't close");
                                                 return null;
@@ -468,7 +474,18 @@ public class JSScriptEngine {
                 .transform(this::isWasmSupported, mExecutorService);
     }
 
-    boolean isConfigurableHeapSizeSupported(JavaScriptSandbox jsSandbox) {
+    /**
+     * @return a future value indicating if the JS Sandbox installed on the device supports
+     *     configurable Heap size.
+     */
+    @VisibleForTesting
+    public ListenableFuture<Boolean> isConfigurableHeapSizeSupported() {
+        return mJsSandboxProvider
+                .getFutureInstance(mContext)
+                .transform(this::isConfigurableHeapSizeSupported, mExecutorService);
+    }
+
+    private boolean isConfigurableHeapSizeSupported(JavaScriptSandbox jsSandbox) {
         boolean isConfigurableHeapSupported =
                 jsSandbox.isFeatureSupported(JavaScriptSandbox.JS_FEATURE_ISOLATE_MAX_HEAP_SIZE);
         mLogger.v("Is configurable max heap size supported? : %b", isConfigurableHeapSupported);

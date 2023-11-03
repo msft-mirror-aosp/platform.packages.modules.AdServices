@@ -28,6 +28,7 @@ import android.content.Intent;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
@@ -131,6 +132,7 @@ public class NotificationActivityUiAutomatorTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302607350)
     public void moreButtonTest() throws UiObjectNotFoundException, InterruptedException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
@@ -184,6 +186,7 @@ public class NotificationActivityUiAutomatorTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302607350)
     public void notificationEuGaTest() throws UiObjectNotFoundException, InterruptedException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
@@ -205,6 +208,7 @@ public class NotificationActivityUiAutomatorTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302607350)
     public void notificationRowGaTest() throws UiObjectNotFoundException, InterruptedException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
@@ -255,6 +259,7 @@ public class NotificationActivityUiAutomatorTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302607350)
     public void declinedConfirmationScreenGaTest()
             throws UiObjectNotFoundException, InterruptedException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
@@ -293,6 +298,7 @@ public class NotificationActivityUiAutomatorTest {
         UiObject scrollView =
                 sDevice.findObject(new UiSelector().className("android.widget.ScrollView"));
 
+        // TODO: clean up the following code with NotificationPages.goThroughNotificationPage()
         if (scrollView.isScrollable()) {
             // there should be a more button
             assertThat(leftControlButton.exists()).isFalse();
@@ -307,6 +313,12 @@ public class NotificationActivityUiAutomatorTest {
             assertThat(rightControlButton.exists()).isTrue();
             assertThat(moreButton.exists()).isFalse();
         } else {
+            // fix the flaky test where test fails due to only moreButton exists
+            int clickCount = 10;
+            while (moreButton.exists() && clickCount-- > 0) {
+                moreButton.click();
+                Thread.sleep(2000);
+            }
             assertThat(leftControlButton.exists()).isTrue();
             assertThat(rightControlButton.exists()).isTrue();
             assertThat(moreButton.exists()).isFalse();

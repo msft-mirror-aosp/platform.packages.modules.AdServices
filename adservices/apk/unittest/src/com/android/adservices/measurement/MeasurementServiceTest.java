@@ -45,6 +45,7 @@ import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.service.encryptionkey.EncryptionKeyJobService;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.DeleteUninstalledJobService;
@@ -59,6 +60,7 @@ import com.android.adservices.service.measurement.reporting.DebugReportingFallba
 import com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.EventReportingJobService;
 import com.android.adservices.service.measurement.reporting.VerboseDebugReportingFallbackJobService;
+import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -74,6 +76,7 @@ import java.util.List;
 /** Unit test for {@link com.android.adservices.measurement.MeasurementService}. */
 public class MeasurementServiceTest {
     @Mock ConsentManager mMockConsentManager;
+    @Mock UxStatesManager mUxStatesManager;
     @Mock DevContextFilter mDevContextFilter;
     @Mock Flags mMockFlags;
     @Mock MeasurementImpl mMockMeasurementImpl;
@@ -89,7 +92,7 @@ public class MeasurementServiceTest {
                     .setAttributionTriggerRegistrationUrl(List.of("https://test.com/trigger"))
                     .setAttributionReportingUrl(List.of("https://test.com"))
                     .setRemarketingResponseBasedRegistrationUrl(List.of("https://test.com"))
-                    .setEncryptionKeyUrl(List.of("https://test.com/keys"))
+                    .setEncryptionKeyUrl("https://test.com/keys")
                     .build();
 
     /** Setup for tests */
@@ -105,6 +108,7 @@ public class MeasurementServiceTest {
         runWithMocks(
                 /* killSwitchOff */ false,
                 /* consentGiven */ true,
+                /* consentNotified */ true,
                 /* isGaUxEnabled */ false,
                 () -> {
                     // Execute
@@ -125,6 +129,7 @@ public class MeasurementServiceTest {
             throws Exception {
         runWithMocks(
                 /* killSwitchOff */ false,
+                /* consentNotifiedState */ true,
                 /* consentRevoked */ false,
                 /* isGaUxEnabled */ false,
                 () -> {
@@ -143,6 +148,7 @@ public class MeasurementServiceTest {
     public void testBindableMeasurementService_killSwitchOn_gaUxDisabled() throws Exception {
         runWithMocks(
                 /* killSwitchOn */ true,
+                /* consentNotifiedState */ true,
                 /* consentGiven */ true,
                 /* isGaUxEnabled */ false,
                 () -> {
@@ -162,6 +168,7 @@ public class MeasurementServiceTest {
             throws Exception {
         runWithMocks(
                 /* killSwitchOff */ false,
+                /* consentNotifiedState */ true,
                 /* consentGiven */ true,
                 /* isGaUxEnabled */ true,
                 () -> {
@@ -185,6 +192,7 @@ public class MeasurementServiceTest {
             throws Exception {
         runWithMocks(
                 /* killSwitchOff */ false,
+                /* consentNotifiedState */ true,
                 /* consentRevoked */ false,
                 /* isGaUxEnabled */ true,
                 () -> {
@@ -205,6 +213,7 @@ public class MeasurementServiceTest {
     public void testBindableMeasurementService_killSwitchOn_gaUxEnabled() throws Exception {
         runWithMocks(
                 /* killSwitchOn */ true,
+                /* consentNotifiedState */ true,
                 /* consentGiven */ true,
                 /* isGaUxEnabled */ false,
                 () -> {
@@ -232,6 +241,7 @@ public class MeasurementServiceTest {
 
     private void runWithMocks(
             boolean killSwitchStatus,
+            boolean consentNotifiedState,
             boolean consentStatus,
             boolean isGaUxEnabled,
             TestUtils.RunnableWithThrow execute)
@@ -245,6 +255,7 @@ public class MeasurementServiceTest {
                         .spyStatic(AttributionJobService.class)
                         .spyStatic(AttributionFallbackJobService.class)
                         .spyStatic(ConsentManager.class)
+                        .spyStatic(UxStatesManager.class)
                         .spyStatic(DevContextFilter.class)
                         .spyStatic(EnrollmentDao.class)
                         .spyStatic(EventReportingJobService.class)
@@ -253,6 +264,7 @@ public class MeasurementServiceTest {
                         .spyStatic(DeleteExpiredJobService.class)
                         .spyStatic(DeleteUninstalledJobService.class)
                         .spyStatic(MddJobService.class)
+                        .spyStatic(EncryptionKeyJobService.class)
                         .spyStatic(FlagsFactory.class)
                         .spyStatic(MeasurementImpl.class)
                         .spyStatic(AsyncRegistrationQueueJobService.class)
@@ -269,6 +281,9 @@ public class MeasurementServiceTest {
 
             ExtendedMockito.doReturn(mMockConsentManager)
                     .when(() -> ConsentManager.getInstance(any()));
+
+            ExtendedMockito.doReturn(mUxStatesManager)
+                    .when(() -> UxStatesManager.getInstance(any()));
 
             ExtendedMockito.doReturn(mDevContextFilter)
                     .when(() -> DevContextFilter.create(any(Context.class)));
@@ -289,7 +304,6 @@ public class MeasurementServiceTest {
             doReturn(ENROLLMENT)
                     .when(mMockEnrollmentDao)
                     .getEnrollmentDataFromMeasurementUrl(any());
-
             ExtendedMockito.doReturn(mMockMeasurementImpl)
                     .when(() -> MeasurementImpl.getInstance(any()));
 
@@ -325,6 +339,8 @@ public class MeasurementServiceTest {
                     .when(() -> DeleteUninstalledJobService.scheduleIfNeeded(any(), anyBoolean()));
             ExtendedMockito.doReturn(true)
                     .when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
+            ExtendedMockito.doReturn(true)
+                    .when(() -> EncryptionKeyJobService.scheduleIfNeeded(any(), anyBoolean()));
             ExtendedMockito.doNothing()
                     .when(
                             () ->
@@ -345,7 +361,6 @@ public class MeasurementServiceTest {
                             () ->
                                     DebugReportingFallbackJobService.scheduleIfNeeded(
                                             any(), anyBoolean()));
-
             // Execute
             execute.run();
         } finally {
@@ -380,6 +395,9 @@ public class MeasurementServiceTest {
                 times(timesCalled));
         ExtendedMockito.verify(
                 () -> MddJobService.scheduleIfNeeded(any(), anyBoolean()), times(timesCalled));
+        ExtendedMockito.verify(
+                () -> EncryptionKeyJobService.scheduleIfNeeded(any(), anyBoolean()),
+                times(timesCalled));
         ExtendedMockito.verify(
                 () -> AsyncRegistrationQueueJobService.scheduleIfNeeded(any(), anyBoolean()),
                 times(timesCalled));

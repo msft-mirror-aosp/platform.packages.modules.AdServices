@@ -16,7 +16,7 @@
 
 package android.adservices.signals;
 
-import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS;
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
@@ -117,9 +117,9 @@ public class ProtectedSignalsManager {
     }
 
     /**
-     * The fetchSignalUpdates API will retrieve a JSON from the URI that describes which signals to
-     * add or remove. This API also allows registering or deleting the encoder endpoint. The
-     * endpoint is used to download an encoding logic, which enables encoding the signals.
+     * The updateSignals API will retrieve a JSON from the URI that describes which signals to add
+     * or remove. This API also allows registering the encoder endpoint. The endpoint is used to
+     * download an encoding logic, which enables encoding the signals.
      *
      * <p>The top level keys for the JSON must correspond to one of 5 commands:
      *
@@ -153,9 +153,6 @@ public class ProtectedSignalsManager {
      *   <li>"REGISTER" : Registers the encoder endpoint if provided for the first time or
      *       overwrites the existing one with the newly provided endpoint. Providing the "endpoint"
      *       is required for the "REGISTER" action.
-     *   <li>"DELETE" : Deletes the encoder endpoint if already registered, also deletes the
-     *       persisted encoding logic, if any. Providing the "endpoint" is not required for the
-     *       "DELETE" action.
      * </ol>
      *
      * <p>The sub-key for providing an encoder endpoint is "endpoint" and the value is the URI
@@ -184,23 +181,23 @@ public class ProtectedSignalsManager {
      * <p>This call fails with an {@link IllegalStateException} if an internal service error is
      * encountered.
      */
-    @RequiresPermission(ACCESS_ADSERVICES_PROTECTED_SIGNALS)
-    public void fetchSignalUpdates(
-            @NonNull FetchSignalUpdatesRequest fetchSignalUpdatesRequest,
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    public void updateSignals(
+            @NonNull UpdateSignalsRequest updateSignalsRequest,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<Object, Exception> receiver) {
-        Objects.requireNonNull(fetchSignalUpdatesRequest);
+        Objects.requireNonNull(updateSignalsRequest);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
 
         try {
             final IProtectedSignalsService service = getService();
 
-            service.fetchSignalUpdates(
-                    new FetchSignalUpdatesInput.Builder(
-                                    fetchSignalUpdatesRequest.getFetchUri(), getCallerPackageName())
+            service.updateSignals(
+                    new UpdateSignalsInput.Builder(
+                                    updateSignalsRequest.getUpdateUri(), getCallerPackageName())
                             .build(),
-                    new FetchSignalUpdatesCallback.Stub() {
+                    new UpdateSignalsCallback.Stub() {
                         @Override
                         public void onSuccess() {
                             executor.execute(() -> receiver.onResult(new Object()));
