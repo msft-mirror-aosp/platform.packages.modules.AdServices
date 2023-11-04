@@ -20,7 +20,6 @@ import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentat
 
 
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.platform.test.scenario.annotation.Scenario;
 
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -62,6 +61,6 @@ public class LoadAd {
     public void testLoadAd() throws Exception {
         sClientAppUtils.loadAd(sUiDevice);
         sClientAppUtils.assertAdLoaded(sUiDevice);
-        SystemClock.sleep(WAIT_TIME_BEFORE_END_TEST_MS);
+        Thread.sleep(WAIT_TIME_BEFORE_END_TEST_MS);
     }
 }

@@ -29,4 +29,6 @@ public final class FlagsConstants {
     public static final String KEY_ENABLE_ADSERVICES_API_ENABLED = "enable_adservices_api_enabled";
     public static final String KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED =
             "adservices_enablement_check_enabled";
+    public static final String KEY_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED =
+            "adservices_outcomereceiver_r_api_enabled";
 }
