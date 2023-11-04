@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_IO_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.view.MotionEvent.ACTION_BUTTON_PRESS;
 
@@ -27,6 +28,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
@@ -35,6 +37,8 @@ import static org.mockito.Mockito.when;
 
 import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.DeletionRequest;
+import android.adservices.measurement.SourceRegistrationRequest;
+import android.adservices.measurement.SourceRegistrationRequestInternal;
 import android.adservices.measurement.WebSourceParams;
 import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.adservices.measurement.WebSourceRegistrationRequestInternal;
@@ -53,6 +57,7 @@ import android.view.MotionEvent;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
@@ -66,6 +71,7 @@ import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.attribution.TriggerContentProvider;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationContentProvider;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -124,9 +130,11 @@ public final class MeasurementImplTest {
     private static final String POST_BODY = "{\"ad_location\":\"bottom_right\"}";
     private static final String AD_ID_VALUE = "ad_id_value";
 
+    @Mock AdServicesErrorLogger mErrorLogger;
+
     @Spy
     private DatastoreManager mDatastoreManager =
-            new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
+            new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
 
     @Mock private ContentProviderClient mMockContentProviderClient;
     @Mock private ContentResolver mContentResolver;
@@ -183,6 +191,16 @@ public final class MeasurementImplTest {
                 .build();
     }
 
+    private static SourceRegistrationRequestInternal createSourceRegistrationRequest() {
+        SourceRegistrationRequest request =
+                new SourceRegistrationRequest.Builder(
+                                Arrays.asList(REGISTRATION_URI_1, REGISTRATION_URI_2))
+                        .build();
+        return new SourceRegistrationRequestInternal.Builder(
+                        request, DEFAULT_CONTEXT.getPackageName(), SDK_PACKAGE_NAME, REQUEST_TIME)
+                .build();
+    }
+
     @Before
     public void before() throws RemoteException {
         MockitoAnnotations.initMocks(this);
@@ -204,7 +222,7 @@ public final class MeasurementImplTest {
                                 mClickVerifier,
                                 mMeasurementDataDeleter,
                                 mContentResolver));
-        doReturn(true).when(mClickVerifier).isInputEventVerifiable(any(), anyLong());
+        doReturn(true).when(mClickVerifier).isInputEventVerifiable(any(), anyLong(), anyString());
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(any()))
                 .thenReturn(getEnrollment(DEFAULT_ENROLLMENT));
     }
@@ -216,7 +234,8 @@ public final class MeasurementImplTest {
         MeasurementImpl measurement =
                 new MeasurementImpl(
                         DEFAULT_CONTEXT,
-                        new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest()),
+                        new SQLDatastoreManager(
+                                DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger),
                         mClickVerifier,
                         mMeasurementDataDeleter,
                         mContentResolver);
@@ -339,7 +358,7 @@ public final class MeasurementImplTest {
     public void testRegisterEvent_noOptionalParameters_success() {
         final int result =
                 mMeasurementImpl.registerEvent(
-                        DEFAULT_URI,
+                        REGISTRATION_URI_1,
                         DEFAULT_CONTEXT.getPackageName(),
                         SDK_PACKAGE_NAME,
                         false,
@@ -351,10 +370,10 @@ public final class MeasurementImplTest {
 
     @Test
     public void testRegisterEvent_optionalParameters_success() {
-        doReturn(true).when(mClickVerifier).isInputEventVerifiable(any(), anyLong());
+        doReturn(true).when(mClickVerifier).isInputEventVerifiable(any(), anyLong(), anyString());
         final int result =
                 mMeasurementImpl.registerEvent(
-                        DEFAULT_URI,
+                        REGISTRATION_URI_1,
                         DEFAULT_CONTEXT.getPackageName(),
                         SDK_PACKAGE_NAME,
                         false,
@@ -366,29 +385,33 @@ public final class MeasurementImplTest {
 
     @Test
     public void testGetSourceType_verifiedInputEvent_returnsNavigationSourceType() {
-        doReturn(true).when(mClickVerifier).isInputEventVerifiable(any(), anyLong());
+        doReturn(true).when(mClickVerifier).isInputEventVerifiable(any(), anyLong(), anyString());
         assertEquals(
                 Source.SourceType.NAVIGATION,
-                mMeasurementImpl.getSourceType(getInputEvent(), 1000L));
+                mMeasurementImpl.getSourceType(getInputEvent(), 1000L, "app_name"));
     }
 
     @Test
     public void testGetSourceType_noInputEventGiven() {
-        assertEquals(Source.SourceType.EVENT, mMeasurementImpl.getSourceType(null, 1000L));
+        assertEquals(
+                Source.SourceType.EVENT, mMeasurementImpl.getSourceType(null, 1000L, "app_name"));
     }
 
     @Test
     public void testGetSourceType_inputEventNotVerifiable_returnsEventSourceType() {
-        doReturn(false).when(mClickVerifier).isInputEventVerifiable(any(), anyLong());
+        doReturn(false).when(mClickVerifier).isInputEventVerifiable(any(), anyLong(), anyString());
         assertEquals(
-                Source.SourceType.EVENT, mMeasurementImpl.getSourceType(getInputEvent(), 1000L));
+                Source.SourceType.EVENT,
+                mMeasurementImpl.getSourceType(getInputEvent(), 1000L, "app_name"));
     }
 
     @Test
     public void testGetSourceType_clickVerificationDisabled_returnsNavigationSourceType() {
         Flags mockFlags = Mockito.mock(Flags.class);
         ClickVerifier mockClickVerifier = Mockito.mock(ClickVerifier.class);
-        doReturn(false).when(mockClickVerifier).isInputEventVerifiable(any(), anyLong());
+        doReturn(false)
+                .when(mockClickVerifier)
+                .isInputEventVerifiable(any(), anyLong(), anyString());
         doReturn(false).when(mockFlags).getMeasurementIsClickVerificationEnabled();
         ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlagsForTest);
         MeasurementImpl measurementImpl =
@@ -403,7 +426,7 @@ public final class MeasurementImplTest {
         // input event is not verifiable.
         assertEquals(
                 Source.SourceType.NAVIGATION,
-                measurementImpl.getSourceType(getInputEvent(), 1000L));
+                measurementImpl.getSourceType(getInputEvent(), 1000L, "app_name"));
     }
 
     @Test
@@ -867,6 +890,23 @@ public final class MeasurementImplTest {
 
         // Verify that the code doesn't accidentally fall through into the Android S part.
         ExtendedMockito.verify(FlagsFactory::getFlags, never());
+    }
+
+    @Test
+    public void testRegisterSources_success() {
+        final int result =
+                mMeasurementImpl.registerSources(
+                        createSourceRegistrationRequest(), System.currentTimeMillis());
+        assertEquals(STATUS_SUCCESS, result);
+    }
+
+    @Test
+    public void testRegisterSources_ioError() {
+        doReturn(false).when(mDatastoreManager).runInTransaction(any());
+        final int result =
+                mMeasurementImpl.registerSources(
+                        createSourceRegistrationRequest(), System.currentTimeMillis());
+        assertEquals(STATUS_IO_ERROR, result);
     }
 
     private void disableRollbackDeletion() {

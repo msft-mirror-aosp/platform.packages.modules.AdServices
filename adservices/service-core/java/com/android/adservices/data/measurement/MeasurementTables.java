@@ -260,6 +260,8 @@ public final class MeasurementTables {
         String ENROLLMENT_ID = "enrollment_id";
         String REGISTRATION_ORIGIN = "registration_origin";
         String REFERENCE_ID = "reference_id";
+        String INSERTION_TIME = "insertion_time";
+        String REGISTRANT = "registrant";
     }
 
     /** Contract for xna ignored sources. */
@@ -986,9 +988,12 @@ public final class MeasurementTables {
                     + DebugReportContract.REGISTRATION_ORIGIN
                     + " TEXT, "
                     + DebugReportContract.REFERENCE_ID
+                    + " TEXT, "
+                    + DebugReportContract.INSERTION_TIME
+                    + " INTEGER, "
+                    + DebugReportContract.REGISTRANT
                     + " TEXT "
                     + ")";
-
     public static final String CREATE_TABLE_XNA_IGNORED_SOURCES_V6 =
             "CREATE TABLE "
                     + XnaIgnoredSourcesContract.TABLE

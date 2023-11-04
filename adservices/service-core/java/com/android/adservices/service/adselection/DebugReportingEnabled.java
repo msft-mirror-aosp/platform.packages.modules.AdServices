@@ -17,6 +17,10 @@
 package com.android.adservices.service.adselection;
 
 import android.annotation.NonNull;
+import android.content.Context;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.service.Flags;
@@ -24,18 +28,23 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
 
 /** Class to provide implementation when Debug Reporting is enabled for on device auction. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class DebugReportingEnabled extends DebugReporting {
 
+    private final Context mContext;
     private final boolean mShouldSendReportImmediately;
     private final AdServicesHttpsClient mAdServicesHttpsClient;
     private final DevContext mDevContext;
     private final AdSelectionDebugReportDao mAdSelectionDebugReportDao;
 
     public DebugReportingEnabled(
+            @NonNull Context context,
             @NonNull Flags flags,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull DevContext devContext,
             @NonNull AdSelectionDebugReportDao adSelectionDebugReportDao) {
+        mContext = context;
         mAdServicesHttpsClient = adServicesHttpsClient;
         mDevContext = devContext;
         mAdSelectionDebugReportDao = adSelectionDebugReportDao;
@@ -51,7 +60,8 @@ public class DebugReportingEnabled extends DebugReporting {
     public DebugReportSenderStrategy getSenderStrategy() {
         return mShouldSendReportImmediately
                 ? new DebugReportSenderStrategyHttpImpl(mAdServicesHttpsClient, mDevContext)
-                : new DebugReportSenderStrategyBatchImpl(mAdSelectionDebugReportDao, mDevContext);
+                : new DebugReportSenderStrategyBatchImpl(
+                        mContext, mAdSelectionDebugReportDao, mDevContext);
     }
 
     @Override

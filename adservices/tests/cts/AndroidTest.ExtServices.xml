@@ -27,9 +27,9 @@
         <option name="max-sdk-level" value="32"/>
     </object>
 
-    <!-- Prevent tests from running on Android R- -->
+    <!-- Prevent tests from running on Android Q- -->
     <object type="module_controller"
-            class="com.android.tradefed.testtype.suite.module.Sdk31ModuleController"/>
+            class="com.android.tradefed.testtype.suite.module.Sdk30ModuleController"/>
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
@@ -54,6 +54,12 @@
                 value="setprop debug.adservices.fledge_select_ads_kill_switch false"/>
         <option name="run-command"
                 value="setprop debug.adservices.fledge_custom_audience_service_kill_switch false"/>
+
+        <!-- Override Consent notification to debug mode to grant user consent -->
+        <option name="run-command"
+                value="setprop debug.adservices.consent_notified_debug_mode true"/>
+        <option name="teardown-command"
+                value="setprop debug.adservices.consent_notified_debug_mode false"/>
 
         <!-- Override Consent Manager to debug mode to grant user consent -->
         <option name="run-command"

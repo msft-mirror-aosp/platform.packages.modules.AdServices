@@ -16,9 +16,9 @@
 
 package com.android.sdksandboxclient;
 
-import android.app.sdksandbox.interfaces.IAppOwnedSdkApi;
+import android.app.sdksandbox.interfaces.IMediateeSdkApi;
 
-public class AppOwnedSdkApi extends IAppOwnedSdkApi.Stub {
+public class AppOwnedSdkApi extends IMediateeSdkApi.Stub {
 
     @Override
     public String getMessage() {

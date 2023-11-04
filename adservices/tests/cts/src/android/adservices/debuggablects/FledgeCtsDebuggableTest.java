@@ -68,16 +68,18 @@ import android.net.Uri;
 import android.os.Process;
 import android.util.Log;
 
+import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.adselection.AdCost;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.js.JSScriptEngine;
-import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
@@ -91,6 +93,7 @@ import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
 
@@ -354,27 +357,29 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     private boolean mHasAccessToDevOverrides;
 
     private String mAccessStatus;
-    private String mPreviousAppAllowList;
 
     private final ArrayList<CustomAudience> mCustomAudiencesToCleanUp = new ArrayList<>();
     private static final AtomicInteger sFrequencyCapKeyToFilter = new AtomicInteger(0);
 
+    @Rule(order = 0)
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
+    @Rule(order = 1)
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
+                    .setCompatModeFlags()
+                    .setPpapiAppAllowList(sContext.getPackageName());
+
     @Before
     public void setup() throws InterruptedException {
-        // Skip the test if it runs on unsupported platforms
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         if (SdkLevel.isAtLeastT()) {
             assertForegroundActivityStarted();
-            ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 2");
-        } else {
-            mPreviousAppAllowList =
-                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
-                            String.format(
-                                    "%s,%s",
-                                    sContext.getPackageName(), "ad-selection-from-outcomes"));
-            CompatAdServicesTestUtils.setFlags();
+            flags.setFlag(
+                    FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH,
+                    FlagsConstants.PPAPI_AND_SYSTEM_SERVER);
         }
 
         mAdSelectionClient =
@@ -426,6 +431,11 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Disable ad selection prebuilt by default
         PhFlagsFixture.overrideFledgeAdSelectionPrebuiltUriEnabled(false);
 
+        PhFlagsFixture.overrideFledgeOnDeviceAdSelectionTimeouts(
+                PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS,
+                PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS,
+                PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS);
+
         // Clear the buyer list with an empty call to setAppInstallAdvertisers
         mAdSelectionClient.setAppInstallAdvertisers(
                 new SetAppInstallAdvertisersRequest(Collections.EMPTY_SET));
@@ -436,8 +446,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
     @After
     public void tearDown() throws Exception {
-        if (!AdservicesTestHelper.isDeviceSupported()
-                || !JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable()) {
+        if (!JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable()) {
             return;
         }
 
@@ -451,11 +460,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Reset the filtering flag
         PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(false);
         AdservicesTestHelper.killAdservicesProcess(sContext);
-
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
     }
 
     @Test
@@ -1856,150 +1860,203 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     public void testAdSelectionFlow_skipCAsThatTimeoutDuringBidding_Success() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
-        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
-        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+        long biddingScoringTimeoutMs = 5_000L;
+        PhFlagsFixture.overrideFledgeOnDeviceAdSelectionTimeouts(
+                biddingScoringTimeoutMs,
+                biddingScoringTimeoutMs,
+                PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS);
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
-        CustomAudience customAudience1 = createCustomAudience(BUYER_1, bidsForBuyer1);
-        CustomAudience customAudience2 = createCustomAudience(BUYER_2, bidsForBuyer2);
+        try {
+            List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+            List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
 
-        // Joining custom audiences, no result to do assertion on. Failures will generate an
-        // exception."
-        joinCustomAudience(customAudience1);
-        joinCustomAudience(customAudience2);
+            CustomAudience customAudience1 = createCustomAudience(BUYER_1, bidsForBuyer1);
+            CustomAudience customAudience2 = createCustomAudience(BUYER_2, bidsForBuyer2);
 
-        String jsWaitMoreThanAllowedForBiddingPerCa = insertJsWait(5000);
-        String readBidFromAdMetadataWithDelayJs =
-                "function generateBid(ad, auction_signals, per_buyer_signals,"
-                        + " trusted_bidding_signals, contextual_signals,"
-                        + " custom_audience_signals) { \n"
-                        + jsWaitMoreThanAllowedForBiddingPerCa
-                        + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
-                        + "'render': result.render_uri };\n"
-                        + "}\n";
+            // Joining custom audiences, no result to do assertion on. Failures will generate an
+            // exception.
+            joinCustomAudience(customAudience1);
+            joinCustomAudience(customAudience2);
 
-        // Adding AdSelection override, no result to do assertion on. Failures will generate an
-        // exception."
-        AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
-                new AddAdSelectionOverrideRequest(
-                        AD_SELECTION_CONFIG, DEFAULT_DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
+            String jsWaitMoreThanAllowedForBiddingPerCa =
+                    insertJsWait(biddingScoringTimeoutMs + 100L);
+            String readBidFromAdMetadataWithDelayJs =
+                    "function generateBid(ad, auction_signals, per_buyer_signals,"
+                            + " trusted_bidding_signals, contextual_signals,"
+                            + " custom_audience_signals) { \n"
+                            + jsWaitMoreThanAllowedForBiddingPerCa
+                            + "    return { 'status': 0, 'ad': result, 'bid': result.metadata"
+                            + ".result, "
+                            + "'render': result.render_uri };\n"
+                            + "}\n";
 
-        mTestAdSelectionClient
-                .overrideAdSelectionConfigRemoteInfo(addAdSelectionOverrideRequest)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            // Adding AdSelection override, no result to do assertion on. Failures will generate an
+            // exception.
+            AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
+                    new AddAdSelectionOverrideRequest(
+                            AD_SELECTION_CONFIG,
+                            DEFAULT_DECISION_LOGIC_JS,
+                            TRUSTED_SCORING_SIGNALS);
 
-        AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest1 =
-                new AddCustomAudienceOverrideRequest.Builder()
-                        .setBuyer(customAudience1.getBuyer())
-                        .setName(customAudience1.getName())
-                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
-                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
-                        .build();
-        AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
-                new AddCustomAudienceOverrideRequest.Builder()
-                        .setBuyer(customAudience2.getBuyer())
-                        .setName(customAudience2.getName())
-                        .setBiddingLogicJs(readBidFromAdMetadataWithDelayJs)
-                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
-                        .build();
+            mTestAdSelectionClient
+                    .overrideAdSelectionConfigRemoteInfo(addAdSelectionOverrideRequest)
+                    .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        // Adding Custom audience override, no result to do assertion on. Failures will generate an
-        // exception."
-        mTestCustomAudienceClient
-                .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        mTestCustomAudienceClient
-                .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest2)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest1 =
+                    new AddCustomAudienceOverrideRequest.Builder()
+                            .setBuyer(customAudience1.getBuyer())
+                            .setName(customAudience1.getName())
+                            .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
+                            .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                            .build();
+            AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
+                    new AddCustomAudienceOverrideRequest.Builder()
+                            .setBuyer(customAudience2.getBuyer())
+                            .setName(customAudience2.getName())
+                            .setBiddingLogicJs(readBidFromAdMetadataWithDelayJs)
+                            .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                            .build();
 
-        // Running ad selection and asserting that the outcome is returned in < 10 seconds
-        AdSelectionOutcome outcome =
-                mAdSelectionClient
-                        .selectAds(AD_SELECTION_CONFIG)
-                        .get(API_RESPONSE_LONGER_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            // Adding Custom audience override, no result to do assertion on. Failures will
+            // generate an exception.
+            mTestCustomAudienceClient
+                    .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
+                    .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            mTestCustomAudienceClient
+                    .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest2)
+                    .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        // Assert that the ad3 from buyer 2 is skipped despite having the highest bid, since it
-        // timed out
-        // The winner should come from buyer1 with the highest bid i.e. ad2
-        Assert.assertEquals(
-                CommonFixture.getUri(BUYER_1, AD_URI_PREFIX + "/ad2"), outcome.getRenderUri());
+            // Running ad selection and asserting that the outcome is returned in < 10 seconds
+            AdSelectionOutcome outcome =
+                    mAdSelectionClient
+                            .selectAds(AD_SELECTION_CONFIG)
+                            .get(API_RESPONSE_LONGER_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        ReportImpressionRequest reportImpressionRequest =
-                new ReportImpressionRequest(outcome.getAdSelectionId(), AD_SELECTION_CONFIG);
+            // Assert that the ad3 from buyer 2 is skipped despite having the highest bid, since it
+            // timed out
+            // The winner should come from buyer1 with the highest bid i.e. ad2
+            Assert.assertEquals(
+                    CommonFixture.getUri(BUYER_1, AD_URI_PREFIX + "/ad2"), outcome.getRenderUri());
 
-        // Performing reporting, and asserting that no exception is thrown
-        mAdSelectionClient
-                .reportImpression(reportImpressionRequest)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            ReportImpressionRequest reportImpressionRequest =
+                    new ReportImpressionRequest(outcome.getAdSelectionId(), AD_SELECTION_CONFIG);
+
+            // Performing reporting, and asserting that no exception is thrown
+            mAdSelectionClient
+                    .reportImpression(reportImpressionRequest)
+                    .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        } finally {
+            PhFlagsFixture.overrideFledgeOnDeviceAdSelectionTimeouts(
+                    PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS,
+                    PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS,
+                    PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS);
+            AdservicesTestHelper.killAdservicesProcess(sContext);
+        }
     }
 
     @Test
     public void testAdSelection_overallTimeout_Failure() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
-        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
-        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+        long longerBiddingScoringTimeoutMs = 8_000L;
+        long shortOverallAdSelectionTimeoutMs = 2_000L;
+        PhFlagsFixture.overrideFledgeOnDeviceAdSelectionTimeouts(
+                longerBiddingScoringTimeoutMs,
+                longerBiddingScoringTimeoutMs,
+                shortOverallAdSelectionTimeoutMs);
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
-        CustomAudience customAudience1 = createCustomAudience(BUYER_1, bidsForBuyer1);
+        try {
+            List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+            List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
 
-        CustomAudience customAudience2 = createCustomAudience(BUYER_2, bidsForBuyer2);
+            CustomAudience customAudience1 = createCustomAudience(BUYER_1, bidsForBuyer1);
 
-        // Joining custom audiences, no result to do assertion on. Failures will generate an
-        // exception."
-        joinCustomAudience(customAudience1);
-        joinCustomAudience(customAudience2);
+            CustomAudience customAudience2 = createCustomAudience(BUYER_2, bidsForBuyer2);
 
-        String jsWaitMoreThanAllowedForScoring = insertJsWait(10000);
-        String useBidAsScoringWithDelayJs =
-                "function scoreAd(ad, bid, auction_config, seller_signals, "
-                        + "trusted_scoring_signals, contextual_signal, user_signal, "
-                        + "custom_audience_signal) { \n"
-                        + jsWaitMoreThanAllowedForScoring
-                        + "  return {'status': 0, 'score': bid };\n"
-                        + "}";
+            // Joining custom audiences, no result to do assertion on. Failures will generate an
+            // exception.
+            joinCustomAudience(customAudience1);
+            joinCustomAudience(customAudience2);
 
-        // Adding AdSelection override, no result to do assertion on. Failures will generate an
-        // exception."
-        AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
-                new AddAdSelectionOverrideRequest(
-                        AD_SELECTION_CONFIG, useBidAsScoringWithDelayJs, TRUSTED_SCORING_SIGNALS);
+            String jsWaitMoreThanAllowedForBiddingScoring =
+                    insertJsWait(longerBiddingScoringTimeoutMs - 100L);
+            String biddingLogicWithWaitJs =
+                    "function generateBid(ad, auction_signals, per_buyer_signals,"
+                            + " trusted_bidding_signals, contextual_signals,"
+                            + " custom_audience_signals) { \n"
+                            + jsWaitMoreThanAllowedForBiddingScoring
+                            + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
+                            + "}\n"
+                            + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                            + " signals_for_buyer, contextual_signals, custom_audience_signals) {"
+                            + " \n"
+                            + " return {'status': 0, 'results': {'reporting_uri': '"
+                            + BUYER_2_REPORTING_URI
+                            + "' } };\n"
+                            + "}";
+            String useBidAsScoringWithDelayJs =
+                    "function scoreAd(ad, bid, auction_config, seller_signals, "
+                            + "trusted_scoring_signals, contextual_signal, user_signal, "
+                            + "custom_audience_signal) { \n"
+                            + jsWaitMoreThanAllowedForBiddingScoring
+                            + "  return {'status': 0, 'score': bid };\n"
+                            + "}";
 
-        mTestAdSelectionClient
-                .overrideAdSelectionConfigRemoteInfo(addAdSelectionOverrideRequest)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            // Adding AdSelection override, no result to do assertion on. Failures will generate an
+            // exception.
+            AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
+                    new AddAdSelectionOverrideRequest(
+                            AD_SELECTION_CONFIG,
+                            useBidAsScoringWithDelayJs,
+                            TRUSTED_SCORING_SIGNALS);
 
-        AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest =
-                new AddCustomAudienceOverrideRequest.Builder()
-                        .setBuyer(customAudience2.getBuyer())
-                        .setName(customAudience2.getName())
-                        .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS)
-                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
-                        .build();
+            mTestAdSelectionClient
+                    .overrideAdSelectionConfigRemoteInfo(addAdSelectionOverrideRequest)
+                    .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        // Adding Custom audience override, no result to do assertion on. Failures will generate an
-        // exception."
-        mTestCustomAudienceClient
-                .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest =
+                    new AddCustomAudienceOverrideRequest.Builder()
+                            .setBuyer(customAudience2.getBuyer())
+                            .setName(customAudience2.getName())
+                            .setBiddingLogicJs(biddingLogicWithWaitJs)
+                            .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                            .build();
 
-        Log.i(
-                TAG,
-                "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
-        Log.i(
-                TAG,
-                "Decision logic URI domain is "
-                        + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
+            // Adding Custom audience override, no result to do assertion on. Failures will
+            // generate an exception.
+            mTestCustomAudienceClient
+                    .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest)
+                    .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        // Running ad selection and asserting that the outcome is returned in < 10 seconds
-        Exception selectAdsException =
-                assertThrows(
-                        ExecutionException.class,
-                        () ->
-                                mAdSelectionClient
-                                        .selectAds(AD_SELECTION_CONFIG)
-                                        .get(
-                                                API_RESPONSE_LONGER_TIMEOUT_SECONDS,
-                                                TimeUnit.SECONDS));
-        assertThat(selectAdsException.getCause()).isInstanceOf(TimeoutException.class);
+            Log.i(
+                    TAG,
+                    "Running ad selection with logic URI "
+                            + AD_SELECTION_CONFIG.getDecisionLogicUri());
+            Log.i(
+                    TAG,
+                    "Decision logic URI domain is "
+                            + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
+
+            // Running ad selection and asserting that the outcome is returned in < 10 seconds
+            Exception selectAdsException =
+                    assertThrows(
+                            ExecutionException.class,
+                            () ->
+                                    mAdSelectionClient
+                                            .selectAds(AD_SELECTION_CONFIG)
+                                            .get(
+                                                    shortOverallAdSelectionTimeoutMs + 200L,
+                                                    TimeUnit.MILLISECONDS));
+            assertThat(selectAdsException.getCause()).isInstanceOf(TimeoutException.class);
+        } finally {
+            PhFlagsFixture.overrideFledgeOnDeviceAdSelectionTimeouts(
+                    PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS,
+                    PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS,
+                    PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS);
+            AdservicesTestHelper.killAdservicesProcess(sContext);
+        }
     }
 
     @Test
@@ -4114,6 +4171,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     }
 
     @Test
+    @FlakyTest(bugId = 298832350)
     public void testGetAdSelectionData_collectsCa_success()
             throws ExecutionException, InterruptedException, TimeoutException {
         // TODO(b/293022107): Add success tests when encryption key fetch can be done in CTS
@@ -4144,6 +4202,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302669752)
     public void testPersistAdSelectionData_adSelectionIdDoesntExist_failure()
             throws ExecutionException, InterruptedException, TimeoutException {
         // TODO(b/293022107): This test is currently using a placeholder ad selection id that cause
@@ -4208,7 +4267,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // assertThat(outcome2.getRenderUri()).isNotEqualTo(Uri.EMPTY);
     }
 
-    private String insertJsWait(long waitTime) {
+    private String insertJsWait(long waitTimeMs) {
         return "    const wait = (ms) => {\n"
                 + "       var start = new Date().getTime();\n"
                 + "       var end = start;\n"
@@ -4216,7 +4275,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 + "         end = new Date().getTime();\n"
                 + "      }\n"
                 + "    }\n"
-                + String.format("    wait(\"%d\");\n", waitTime);
+                + String.format("    wait(\"%d\");\n", waitTimeMs);
     }
 
     /**

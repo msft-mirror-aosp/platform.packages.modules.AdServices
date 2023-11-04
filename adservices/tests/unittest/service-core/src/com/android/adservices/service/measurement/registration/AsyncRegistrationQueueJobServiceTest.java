@@ -36,6 +36,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -51,7 +52,6 @@ import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
-import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
@@ -70,12 +70,15 @@ import org.mockito.quality.Strictness;
 
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class AsyncRegistrationQueueJobServiceTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final int MEASUREMENT_ASYNC_REGISTRATION_JOB_ID =
             MEASUREMENT_ASYNC_REGISTRATION_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 1_000L;
+    private static final long JOB_TRIGGER_MIN_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
+    private static final long JOB_TRIGGER_MAX_DELAY_MS = TimeUnit.MINUTES.toMillis(5);
     private JobScheduler mMockJobScheduler;
     private AsyncRegistrationQueueJobService mSpyService;
     private DatastoreManager mMockDatastoreManager;
@@ -91,6 +94,13 @@ public class AsyncRegistrationQueueJobServiceTest {
         mSpyLogger =
                 spy(new AdservicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mockStatsdLogger));
         mMockFlags = mock(Flags.class);
+        when(mMockFlags.getMeasurementAsyncRegistrationQueueJobPersisted()).thenReturn(false);
+        when(mMockFlags.getMeasurementAsyncRegistrationQueueJobRequiredNetworkType())
+                .thenReturn(JobInfo.NETWORK_TYPE_ANY);
+        when(mMockFlags.getMeasurementAsyncRegistrationJobTriggerMinDelayMs())
+                .thenReturn(JOB_TRIGGER_MIN_DELAY_MS);
+        when(mMockFlags.getMeasurementAsyncRegistrationJobTriggerMaxDelayMs())
+                .thenReturn(JOB_TRIGGER_MAX_DELAY_MS);
     }
 
     @Test
@@ -268,10 +278,6 @@ public class AsyncRegistrationQueueJobServiceTest {
                     doReturn(mMockJobScheduler)
                             .when(spyContext)
                             .getSystemService(JobScheduler.class);
-                    long minDelay =
-                            SystemHealthParams.getMeasurementAsyncRegistrationJobQueueMinDelayMs();
-                    long maxDelay =
-                            SystemHealthParams.getMeasurementAsyncRegistrationJobQueueMaxDelayMs();
                     final JobInfo mockJobInfo =
                             new JobInfo.Builder(
                                             MEASUREMENT_ASYNC_REGISTRATION_JOB_ID,
@@ -283,8 +289,8 @@ public class AsyncRegistrationQueueJobServiceTest {
                                                     AsyncRegistrationContentProvider.TRIGGER_URI,
                                                     JobInfo.TriggerContentUri
                                                             .FLAG_NOTIFY_FOR_DESCENDANTS))
-                                    .setTriggerContentUpdateDelay(minDelay)
-                                    .setTriggerContentMaxDelay(maxDelay)
+                                    .setTriggerContentUpdateDelay(JOB_TRIGGER_MIN_DELAY_MS)
+                                    .setTriggerContentMaxDelay(JOB_TRIGGER_MAX_DELAY_MS)
                                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                                     .setPersisted(false) // Can't call addTriggerContentUri() on a
                                     // persisted job
@@ -316,10 +322,6 @@ public class AsyncRegistrationQueueJobServiceTest {
                     doReturn(mMockJobScheduler)
                             .when(spyContext)
                             .getSystemService(JobScheduler.class);
-                    long minDelay =
-                            SystemHealthParams.getMeasurementAsyncRegistrationJobQueueMinDelayMs();
-                    long maxDelay =
-                            SystemHealthParams.getMeasurementAsyncRegistrationJobQueueMaxDelayMs();
                     final JobInfo mockJobInfo =
                             new JobInfo.Builder(
                                             MEASUREMENT_ASYNC_REGISTRATION_JOB_ID,
@@ -332,8 +334,8 @@ public class AsyncRegistrationQueueJobServiceTest {
                                                     JobInfo.TriggerContentUri
                                                             .FLAG_NOTIFY_FOR_DESCENDANTS))
                                     // different
-                                    .setTriggerContentUpdateDelay(minDelay - 1)
-                                    .setTriggerContentMaxDelay(maxDelay)
+                                    .setTriggerContentUpdateDelay(JOB_TRIGGER_MIN_DELAY_MS - 1)
+                                    .setTriggerContentMaxDelay(JOB_TRIGGER_MAX_DELAY_MS)
                                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                                     .setPersisted(false) // Can't call addTriggerContentUri() on a
                                     // persisted job
@@ -418,15 +420,6 @@ public class AsyncRegistrationQueueJobServiceTest {
                 () -> {
                     // Setup
                     disableKillSwitch();
-                    long minDelay = 30000L;
-                    doReturn(minDelay)
-                            .when(mMockFlags)
-                            .getMeasurementAsyncRegistrationJobTriggerMinDelayMs();
-                    long maxDelay = 60000L;
-                    doReturn(maxDelay)
-                            .when(mMockFlags)
-                            .getMeasurementAsyncRegistrationJobTriggerMaxDelayMs();
-
                     final Context mockContext = mock(Context.class);
                     doReturn(mMockJobScheduler)
                             .when(mockContext)
@@ -446,8 +439,8 @@ public class AsyncRegistrationQueueJobServiceTest {
                             ArgumentCaptor.forClass(JobInfo.class);
                     verify(mMockJobScheduler, times(1)).schedule(jobInfoArgumentCaptor.capture());
                     JobInfo job = jobInfoArgumentCaptor.getValue();
-                    assertEquals(minDelay, job.getTriggerContentUpdateDelay());
-                    assertEquals(maxDelay, job.getTriggerContentMaxDelay());
+                    assertEquals(JOB_TRIGGER_MIN_DELAY_MS, job.getTriggerContentUpdateDelay());
+                    assertEquals(JOB_TRIGGER_MAX_DELAY_MS, job.getTriggerContentMaxDelay());
                 });
     }
 
@@ -537,6 +530,9 @@ public class AsyncRegistrationQueueJobServiceTest {
                         .strictness(Strictness.LENIENT)
                         .startMocking();
         try {
+            Context context = Mockito.mock(Context.class);
+            doReturn(CONTEXT.getPackageName()).when(context).getPackageName();
+            doReturn(CONTEXT.getPackageManager()).when(context).getPackageManager();
             // Setup mock everything in job
             mMockDatastoreManager = mock(DatastoreManager.class);
             doReturn(Optional.empty())
@@ -544,7 +540,7 @@ public class AsyncRegistrationQueueJobServiceTest {
                     .runInTransactionWithResult(any());
             doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
             doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
-            doReturn(Mockito.mock(Context.class)).when(mSpyService).getApplicationContext();
+            doReturn(context).when(mSpyService).getApplicationContext();
             ExtendedMockito.doReturn(mock(EnrollmentDao.class))
                     .when(() -> EnrollmentDao.getInstance(any()));
             ExtendedMockito.doReturn(mock(AdServicesLoggerImpl.class))

@@ -1,10 +1,8 @@
 {
   "description": "W2A test for trigger-reporting-origin-limit debug report.",
-  "api_config": {
-    "rate_limit_max_attribution_reporting_origins": "1"
-  },
   "phflags_override": {
-    "measurement_debug_join_key_enrollment_allowlist": "enrollment-id-ad-tech1.test"
+    "measurement_debug_join_key_enrollment_allowlist": "enrollment-id-ad-tech1.test",
+    "measurement_max_distinct_enrollments_in_attribution": "1"
   },
   "input": {
     "web_sources": [
@@ -138,7 +136,7 @@
           "trigger_debug_key": "8971346781"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
-        "report_time": "1643411975000"
+        "report_time": "1643411973000"
       }
     ],
     "debug_event_level_results": [

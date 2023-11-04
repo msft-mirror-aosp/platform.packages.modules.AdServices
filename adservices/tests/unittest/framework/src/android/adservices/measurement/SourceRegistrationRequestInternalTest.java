@@ -37,8 +37,8 @@ public class SourceRegistrationRequestInternalTest {
 
     private static final Context CONTEXT =
             InstrumentationRegistry.getInstrumentation().getContext();
-    private static final Uri REGISTRATION_URI_1 = Uri.parse("android-app://com.example.app1");
-    private static final Uri REGISTRATION_URI_2 = Uri.parse("android-app://com.example.app2");
+    private static final Uri REGISTRATION_URI_1 = Uri.parse("https://bar.test");
+    private static final Uri REGISTRATION_URI_2 = Uri.parse("https://foo.test");
     private static final String SDK_PACKAGE_NAME = "sdk.package.name";
     private static final KeyEvent INPUT_KEY_EVENT =
             new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_1);

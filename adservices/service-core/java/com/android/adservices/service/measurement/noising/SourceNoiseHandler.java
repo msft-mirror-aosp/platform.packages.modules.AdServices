@@ -20,7 +20,6 @@ import android.annotation.NonNull;
 import android.net.Uri;
 
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.ReportSpec;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
@@ -160,8 +159,10 @@ public class SourceNoiseHandler {
                 && source.hasWebDestinations()
                 && isInstallDetectionEnabled(source)) {
             return source.getSourceType() == Source.SourceType.EVENT
-                    ? PrivacyParams.INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY
-                    : PrivacyParams.INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
+                    ? convertToDoubleAndLimitDecimal(
+                    mFlags.getMeasurementInstallAttrDualDestinationEventNoiseProbability())
+                    : convertToDoubleAndLimitDecimal(
+                            mFlags.getMeasurementInstallAttrDualDestinationNavigationNoiseProbability());
         }
 
         // Both destinations are set but install attribution isn't supported
@@ -169,21 +170,27 @@ public class SourceNoiseHandler {
                 && source.hasAppDestinations()
                 && source.hasWebDestinations()) {
             return source.getSourceType() == Source.SourceType.EVENT
-                    ? PrivacyParams.DUAL_DESTINATION_EVENT_NOISE_PROBABILITY
-                    : PrivacyParams.DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
+                    ? convertToDoubleAndLimitDecimal(mFlags.getMeasurementDualDestinationEventNoiseProbability())
+                    : convertToDoubleAndLimitDecimal(mFlags.getMeasurementDualDestinationNavigationNoiseProbability());
         }
 
         // App destination is set and install attribution is supported
         if (isInstallDetectionEnabled(source)) {
             return source.getSourceType() == Source.SourceType.EVENT
-                    ? PrivacyParams.INSTALL_ATTR_EVENT_NOISE_PROBABILITY
-                    : PrivacyParams.INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY;
+                    ? convertToDoubleAndLimitDecimal(mFlags.getMeasurementInstallAttrEventNoiseProbability())
+                    : convertToDoubleAndLimitDecimal(mFlags.getMeasurementInstallAttrNavigationNoiseProbability());
         }
 
         // One of the destinations is available without install attribution support
         return source.getSourceType() == Source.SourceType.EVENT
-                ? PrivacyParams.EVENT_NOISE_PROBABILITY
-                : PrivacyParams.NAVIGATION_NOISE_PROBABILITY;
+                ?  convertToDoubleAndLimitDecimal(mFlags.getMeasurementEventNoiseProbability())
+                : convertToDoubleAndLimitDecimal(mFlags.getMeasurementNavigationNoiseProbability());
+    }
+
+    private double convertToDoubleAndLimitDecimal(double probability) {
+        return BigDecimal.valueOf(probability)
+                .setScale(PROBABILITY_DECIMAL_POINTS_LIMIT, RoundingMode.HALF_UP)
+                .doubleValue();
     }
 
     private double calculateNoiseDynamically(Source source) {
@@ -202,9 +209,7 @@ public class SourceNoiseHandler {
                                 * reportingWindowCountForNoising
                                 * destinationMultiplier);
         double absoluteProbability = Combinatorics.getFlipProbability(numberOfStates);
-        return BigDecimal.valueOf(absoluteProbability)
-                .setScale(PROBABILITY_DECIMAL_POINTS_LIMIT, RoundingMode.HALF_UP)
-                .doubleValue();
+        return convertToDoubleAndLimitDecimal(absoluteProbability);
     }
 
     private boolean isVtcDualDestinationModeWithPostInstallEnabled(Source source) {

@@ -22,15 +22,17 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 
 import android.util.Log;
 
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.server.LocalManagerRegistry;
+
+import org.mockito.verification.VerificationMode;
 
 /**
  * Provides Mockito expectation for common calls.
@@ -58,22 +60,28 @@ public final class ExtendedMockitoExpectations {
         doReturn(null).when(() -> LocalManagerRegistry.getManager(managerClass));
     }
 
+    /** Mocks a call to {@link SdkLevel#isAtLeastR()}, returning {@code isIt}. */
+    public static void mockIsAtLeastR(boolean isIt) {
+        Log.v(TAG, "mockIsAtLeastR(" + isIt + ")");
+        doReturn(isIt).when(SdkLevel::isAtLeastR);
+    }
+
     /** Mocks a call to {@link SdkLevel#isAtLeastS()}, returning {@code isIt}. */
     public static void mockIsAtLeastS(boolean isIt) {
         Log.v(TAG, "mockIsAtLeastS(" + isIt + ")");
         doReturn(isIt).when(SdkLevel::isAtLeastS);
     }
 
-    /** Mocks a call to {@link SdkLevel#isAtLeastSv2()}, returning {@code isIt}. */
-    public static void mockIsAtLeastSv2(boolean isIt) {
-        Log.v(TAG, "mockIsAtLeastSv2(" + isIt + ")");
-        doReturn(isIt).when(SdkLevel::isAtLeastSv2);
-    }
-
     /** Mocks a call to {@link SdkLevel#isAtLeastT()}, returning {@code isIt}. */
     public static void mockIsAtLeastT(boolean isIt) {
         Log.v(TAG, "mockIsAtLeastT(" + isIt + ")");
         doReturn(isIt).when(SdkLevel::isAtLeastT);
+    }
+
+    /** Mocks a call to {@link SdkLevel#isAtLeastU()}, returning {@code isIt}. */
+    public static void mockIsAtLeastU(boolean isIt) {
+        Log.v(TAG, "mockIsAtLeastU(" + isIt + ")");
+        doReturn(isIt).when(SdkLevel::isAtLeastU);
     }
 
     /**
@@ -83,7 +91,7 @@ public final class ExtendedMockitoExpectations {
      */
     public static void doNothingOnErrorLogUtilError() {
         doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
-        doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt(), anyString(), anyString()));
+        doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
     }
 
     /**
@@ -91,31 +99,69 @@ public final class ExtendedMockitoExpectations {
      * FlagsFactory#getFlagsForTest()}
      */
     public static void mockGetFlagsForTest() {
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        mockGetFlags(FlagsFactory.getFlagsForTest());
     }
 
-    /** Verifies {@link ErrorLogUtil#e()} was called with the expected values. */
-    public static void verifyErrorLogUtilError(
-            int errorCode, int ppapiName, int numberOfInvocations) {
-        verify(
-                () -> {
-                    ErrorLogUtil.e(any(), eq(errorCode), eq(ppapiName));
-                },
-                times(numberOfInvocations));
+    /**
+     * Mocks a call of {@link FlagsFactory#getFlags()} to return the passed-in mocking {@link Flags}
+     * object.
+     */
+    public static void mockGetFlags(Flags mockedFlags) {
+        doReturn(mockedFlags).when(FlagsFactory::getFlags);
     }
 
-    /** Verifies {@link ErrorLogUtil#e()} was called with the expected values. */
+    /**
+     * Verifies {@link ErrorLogUtil#e()} was called with the expected values.
+     *
+     * <p><b>Note: </b>you must call {@link #doNothingOnErrorLogUtilError()} before the test calls
+     * {@link ErrorLogUtil#e()}.
+     */
+    public static void verifyErrorLogUtilErrorWithAnyException(int errorCode, int ppapiName) {
+        verify(() -> ErrorLogUtil.e(any(), eq(errorCode), eq(ppapiName)));
+    }
+
+    /**
+     * Verifies {@link ErrorLogUtil#e()} was called with the expected values.
+     *
+     * <p><b>Note: </b>you must call {@link #doNothingOnErrorLogUtilError()} before the test calls
+     * {@link ErrorLogUtil#e()}.
+     */
+    public static void verifyErrorLogUtilError(Exception exception, int errorCode, int ppapiName) {
+        verifyErrorLogUtilError(exception, errorCode, ppapiName, times(1));
+    }
+
+    /**
+     * Verifies {@link ErrorLogUtil#e()} was called with the expected values, using Mockito's {@link
+     * VerificationMode} to set the number of times (like {@code times(2)} or {@code never}).
+     *
+     * <p><b>Note: </b>you must call {@link #doNothingOnErrorLogUtilError()} before the test calls
+     * {@link ErrorLogUtil#e()}.
+     */
     public static void verifyErrorLogUtilError(
-            int errorCode,
-            int ppapiName,
-            String className,
-            String methodName,
-            int numberOfInvocations) {
-        verify(
-                () -> {
-                    ErrorLogUtil.e(eq(errorCode), eq(ppapiName), eq(className), eq(methodName));
-                },
-                times(numberOfInvocations));
+            Exception exception, int errorCode, int ppapiName, VerificationMode mode) {
+        verify(() -> ErrorLogUtil.e(exception, errorCode, ppapiName), mode);
+    }
+
+    /**
+     * Verifies {@link ErrorLogUtil#e()} was called with the expected values.
+     *
+     * <p><b>Note: </b>you must call {@link #doNothingOnErrorLogUtilError()} before the test calls
+     * {@link ErrorLogUtil#e()}.
+     */
+    public static void verifyErrorLogUtilError(int errorCode, int ppapiName) {
+        verify(() -> ErrorLogUtil.e(errorCode, ppapiName));
+    }
+
+    /**
+     * Verifies {@link ErrorLogUtil#e()} was called with the expected values, using Mockito's {@link
+     * VerificationMode} to set the number of times (like {@code times(2)} or {@code never}).
+     *
+     * <p><b>Note: </b>you must call {@link #doNothingOnErrorLogUtilError()} before the test calls
+     * {@link ErrorLogUtil#e()}.
+     */
+    public static void verifyErrorLogUtilError(
+            int errorCode, int ppapiName, VerificationMode mode) {
+        verify(() -> ErrorLogUtil.e(errorCode, ppapiName), mode);
     }
 
     private ExtendedMockitoExpectations() {

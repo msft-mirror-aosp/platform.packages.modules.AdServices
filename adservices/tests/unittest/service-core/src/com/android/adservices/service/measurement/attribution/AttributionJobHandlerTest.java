@@ -41,6 +41,7 @@ import android.util.Pair;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
@@ -55,7 +56,6 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.TriggerFixture;
-import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.aggregation.AggregateAttributionData;
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
@@ -66,6 +66,7 @@ import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementAttributionStats;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import org.json.JSONArray;
@@ -99,6 +100,7 @@ public class AttributionJobHandlerTest {
     private static final long SOURCE_TIME = 1690000000000L;
     private static final long TRIGGER_TIME = 1690000001000L;
     private static final long EXPIRY_TIME = 1692592000000L;
+    private static final long LOOKBACK_WINDOW = 1000L;
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Uri APP_DESTINATION = Uri.parse("android-app://com.example.app");
     private static final Uri WEB_DESTINATION = WebUtil.validUri("https://web.example.test");
@@ -149,10 +151,14 @@ public class AttributionJobHandlerTest {
     @Mock Flags mFlags;
 
     @Mock AdServicesLogger mLogger;
-
+    @Mock AdServicesErrorLogger mErrorLogger;
     @Mock DebugReportApi mDebugReportApi;
 
     class FakeDatastoreManager extends DatastoreManager {
+
+        FakeDatastoreManager() {
+            super(mErrorLogger);
+        }
 
         @Override
         public ITransaction createNewTransaction() {
@@ -189,6 +195,12 @@ public class AttributionJobHandlerTest {
         when(mFlags.getMeasurementMaxAttributionPerRateLimitWindow()).thenReturn(100);
         when(mFlags.getMeasurementMaxDistinctEnrollmentsInAttribution()).thenReturn(10);
         when(mFlags.getMeasurementEnableAraDeduplicationAlignmentV1()).thenReturn(true);
+        when(mFlags.getMeasurementMaxAttributionsPerInvocation())
+                .thenReturn(Flags.DEFAULT_MEASUREMENT_MAX_ATTRIBUTIONS_PER_INVOCATION);
+        when(mFlags.getMeasurementMaxEventReportsPerDestination())
+                .thenReturn(Flags.MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION);
+        when(mFlags.getMeasurementMaxAggregateReportsPerDestination())
+                .thenReturn(Flags.MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION);
     }
 
     @Test
@@ -390,6 +402,7 @@ public class AttributionJobHandlerTest {
                 .thenReturn(Pair.create(
                         source.getAppDestinations(),
                         source.getWebDestinations()));
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
 
         assertTrue(mHandler.performPendingAttributions());
         // Verify trigger status updates.
@@ -405,7 +418,7 @@ public class AttributionJobHandlerTest {
         assertEquals(1, newReportArgs.size());
         assertEquals(
                 newReportArgs.get(0).getTriggerData(),
-                triggers.get(0).parseEventTriggers(true).get(0).getTriggerData());
+                triggers.get(0).parseEventTriggers(mFlags).get(0).getTriggerData());
     }
 
     @Test
@@ -1225,10 +1238,11 @@ public class AttributionJobHandlerTest {
         verify(mMeasurementDao, times(2)).insertEventReport(reportArg.capture());
         List<EventReport> newReportArgs = reportArg.getAllValues();
         boolean flexEventReportFlag = true;
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
         for (int i = 0; i < newReportArgs.size(); i++) {
             assertEquals(
                     newReportArgs.get(i).getTriggerDedupKey(),
-                    triggers.get(i).parseEventTriggers(flexEventReportFlag).get(0).getDedupKey());
+                    triggers.get(i).parseEventTriggers(mFlags).get(0).getDedupKey());
             assertEquals(
                     newReportArgs.get(i).getRegistrationOrigin(),
                     triggers.get(i).getRegistrationOrigin());
@@ -3958,7 +3972,7 @@ public class AttributionJobHandlerTest {
                         .setAttributionConfig(
                                 new JSONArray(
                                                 Collections.singletonList(
-                                                        attributionConfig.serializeAsJson()))
+                                                        attributionConfig.serializeAsJson(mFlags)))
                                         .toString())
                         .build();
 
@@ -4054,7 +4068,7 @@ public class AttributionJobHandlerTest {
                         .setAttributionConfig(
                                 new JSONArray(
                                                 Collections.singletonList(
-                                                        attributionConfig.serializeAsJson()))
+                                                        attributionConfig.serializeAsJson(mFlags)))
                                         .toString())
                         .build();
 
@@ -4149,7 +4163,7 @@ public class AttributionJobHandlerTest {
                         .setAttributionConfig(
                                 new JSONArray(
                                                 Collections.singletonList(
-                                                        attributionConfig.serializeAsJson()))
+                                                        attributionConfig.serializeAsJson(mFlags)))
                                         .toString())
                         .build();
 
@@ -4418,8 +4432,9 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}]\n")
                         .setTriggerTime(
-                                baseTime + TimeUnit.DAYS.toMillis(1)
-                                + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                                baseTime
+                                        + TimeUnit.DAYS.toMillis(1)
+                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
                         .setAggregateTriggerData(buildAggregateTriggerData().toString())
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .build();
@@ -4431,8 +4446,9 @@ public class AttributionJobHandlerTest {
                         .setEnrollmentId("another-enrollment-id")
                         .setAttributionDestinations(List.of(Uri.parse("https://bar.test")))
                         .setReportTime(
-                                baseTime + TimeUnit.DAYS.toMillis(3)
-                                + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                                baseTime
+                                        + TimeUnit.DAYS.toMillis(3)
+                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
                         .setStatus(EventReport.Status.PENDING)
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setRegistrationOrigin(WebUtil.validUri("https://adtech2.test"))
@@ -4559,8 +4575,9 @@ public class AttributionJobHandlerTest {
                         .setEnrollmentId("another-enrollment-id")
                         .setAttributionDestinations(List.of(Uri.parse("https://bar.test")))
                         .setReportTime(
-                                baseTime + TimeUnit.DAYS.toMillis(2)
-                                + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                                baseTime
+                                        + TimeUnit.DAYS.toMillis(2)
+                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
                         .setStatus(EventReport.Status.PENDING)
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setRegistrationOrigin(WebUtil.validUri("https://adtech2.test"))
@@ -4712,8 +4729,9 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}]\n")
                         .setTriggerTime(
-                                baseTime + TimeUnit.DAYS.toMillis(1)
-                                + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                                baseTime
+                                        + TimeUnit.DAYS.toMillis(1)
+                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
                         .setAggregateTriggerData(buildAggregateTriggerData().toString())
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .build();
@@ -4725,8 +4743,9 @@ public class AttributionJobHandlerTest {
                         .setEnrollmentId("another-enrollment-id")
                         .setAttributionDestinations(List.of(Uri.parse("https://bar.test")))
                         .setReportTime(
-                                baseTime + TimeUnit.DAYS.toMillis(2)
-                                + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                                baseTime
+                                        + TimeUnit.DAYS.toMillis(2)
+                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
                         .setStatus(EventReport.Status.PENDING)
                         .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
                         .setSourceType(Source.SourceType.NAVIGATION)
@@ -4824,8 +4843,7 @@ public class AttributionJobHandlerTest {
                         .getValue()
                         .longValue());
         assertEquals(
-                TimeUnit.DAYS.toMillis(2)
-                + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 reportArgInsertedReport.getAllValues().get(0).getReportTime() - baseTime);
         verify(mMeasurementDao, times(1)).updateSourceAttributedTriggers(
                 eq(source.getId()), eq(source.attributedTriggersToJsonFlexApi()));
@@ -4864,8 +4882,9 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}]\n")
                         .setTriggerTime(
-                                baseTime + TimeUnit.DAYS.toMillis(1)
-                                + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                                baseTime
+                                        + TimeUnit.DAYS.toMillis(1)
+                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
                         .setAggregateTriggerData(buildAggregateTriggerData().toString())
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .build();
@@ -4878,8 +4897,9 @@ public class AttributionJobHandlerTest {
                         .setEnrollmentId("another-enrollment-id")
                         .setAttributionDestinations(List.of(Uri.parse("https://bar.test")))
                         .setReportTime(
-                                baseTime + TimeUnit.DAYS.toMillis(2)
-                                + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                                baseTime
+                                        + TimeUnit.DAYS.toMillis(2)
+                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
                         .setStatus(EventReport.Status.PENDING)
                         .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
                         .setSourceType(Source.SourceType.NAVIGATION)
@@ -5417,7 +5437,7 @@ public class AttributionJobHandlerTest {
                         .setAttributionConfig(
                                 new JSONArray(
                                                 Collections.singletonList(
-                                                        attributionConfig.serializeAsJson()))
+                                                        attributionConfig.serializeAsJson(mFlags)))
                                         .toString())
                         .build();
 
@@ -5479,6 +5499,198 @@ public class AttributionJobHandlerTest {
         verify(mLogger).logMeasurementAttributionStats(statusArg.capture());
         MeasurementAttributionStats measurementAttributionStats = statusArg.getValue();
         assertTrue(measurementAttributionStats.isSourceDerived());
+    }
+
+    @Test
+    public void performAttributions_withinLookbackWindow_attributeTrigger()
+            throws DatastoreException {
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        // Setup
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setStatus(Trigger.Status.PENDING)
+                        .setEventTriggers(
+                                "[\n"
+                                        + "{\n"
+                                        + "  \"trigger_data\": \"2\",\n"
+                                        + "  \"priority\": \"2\",\n"
+                                        + "  \"deduplication_key\": \"2\",\n"
+                                        + "  \"filters\": [{\n"
+                                        + "    \"source_type\": [\"event\"], \n"
+                                        + "    \"dummy_key\": [\"dummy_value\"] \n"
+                                        + "   }]\n"
+                                        + "},"
+                                        + "{\n"
+                                        + "  \"trigger_data\": \"3\",\n"
+                                        + "  \"priority\": \"3\",\n"
+                                        + "  \"deduplication_key\": \"3\",\n"
+                                        + "  \"filters\": [{\n"
+                                        + "    \"source_type\": [\"navigation\"], \n"
+                                        + "    \"dummy_key\": [\"dummy_value\"] \n"
+                                        + "   }]\n"
+                                        + "}"
+                                        + "]\n")
+                        .setTriggerTime(TRIGGER_TIME)
+                        .setFilters(
+                                "[{\n"
+                                        + "  \"key_1\": [\"value_11\", \"value_12\"],\n"
+                                        // Set Lookback window to be greater than duration from
+                                        // source to trigger time.
+                                        + "  \"_lookback_window\": 1000\n"
+                                        + "}]\n")
+                        .build();
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setFilterData(
+                                "{\n" + "  \"key_1\": [\"value_11\", \"value_12\"]\n" + "}\n")
+                        .setId("sourceId")
+                        .setEventTime(TRIGGER_TIME - TimeUnit.SECONDS.toMillis(LOOKBACK_WINDOW - 1))
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setEventReportWindow(TRIGGER_TIME + 1)
+                        .setAggregatableReportWindow(TRIGGER_TIME + 1)
+                        .build();
+        EventReport expectedEventReport =
+                new EventReport.Builder()
+                        .setTriggerPriority(3L)
+                        .setTriggerDedupKey(new UnsignedLong(3L))
+                        .setTriggerData(new UnsignedLong(3L))
+                        .setTriggerTime(trigger.getTriggerTime())
+                        .setSourceEventId(source.getEventId())
+                        .setStatus(EventReport.Status.PENDING)
+                        .setAttributionDestinations(source.getAppDestinations())
+                        .setEnrollmentId(source.getEnrollmentId())
+                        .setReportTime(
+                                mEventReportWindowCalcDelegate.getReportingTime(
+                                        source,
+                                        trigger.getTriggerTime(),
+                                        trigger.getDestinationType()))
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setRandomizedTriggerRate(
+                                mSourceNoiseHandler.getRandomAttributionProbability(source))
+                        .setSourceId(source.getId())
+                        .setTriggerId(trigger.getId())
+                        .setRegistrationOrigin(REGISTRATION_URI)
+                        .build();
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getSourceDestinations(source.getId()))
+                .thenReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()));
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
+        when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
+
+        // Execution
+        mHandler.performPendingAttributions();
+
+        // Assertions
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())),
+                        eq(Trigger.Status.ATTRIBUTED));
+        String expectedAttributionStatus =
+                getAttributionStatus(List.of(trigger.getId()), List.of("3"), List.of("3"));
+        verify(mMeasurementDao)
+                .updateSourceAttributedTriggers(eq(source.getId()), eq(expectedAttributionStatus));
+        verify(mMeasurementDao).insertEventReport(eq(expectedEventReport));
+    }
+
+    @Test
+    public void performAttributions_outsideLookbackWindow_noAttributionTrigger()
+            throws DatastoreException {
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        // Setup
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setStatus(Trigger.Status.PENDING)
+                        .setEventTriggers(
+                                "[\n"
+                                        + "{\n"
+                                        + "  \"trigger_data\": \"2\",\n"
+                                        + "  \"priority\": \"2\",\n"
+                                        + "  \"deduplication_key\": \"2\",\n"
+                                        + "  \"filters\": [{\n"
+                                        + "    \"source_type\": [\"event\"], \n"
+                                        + "    \"dummy_key\": [\"dummy_value\"] \n"
+                                        + "   }]\n"
+                                        + "},"
+                                        + "{\n"
+                                        + "  \"trigger_data\": \"3\",\n"
+                                        + "  \"priority\": \"3\",\n"
+                                        + "  \"deduplication_key\": \"3\",\n"
+                                        + "  \"filters\": [{\n"
+                                        + "    \"source_type\": [\"navigation\"], \n"
+                                        + "    \"dummy_key\": [\"dummy_value\"] \n"
+                                        + "   }]\n"
+                                        + "}"
+                                        + "]\n")
+                        .setTriggerTime(TRIGGER_TIME)
+                        .setFilters(
+                                "[{\n"
+                                        + "  \"key_1\": [\"value_11\", \"value_12\"],\n"
+                                        // Set Lookback window to be smaller than duration from
+                                        // source to trigger time.
+                                        + "  \"_lookback_window\": 1000\n"
+                                        + "}]\n")
+                        .build();
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setFilterData(
+                                "{\n" + "  \"key_1\": [\"value_11\", \"value_12\"]\n" + "}\n")
+                        .setId("sourceId")
+                        .setEventTime(TRIGGER_TIME - TimeUnit.SECONDS.toMillis(LOOKBACK_WINDOW + 1))
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setEventReportWindow(TRIGGER_TIME + 1)
+                        .setAggregatableReportWindow(TRIGGER_TIME + 1)
+                        .build();
+        EventReport expectedEventReport =
+                new EventReport.Builder()
+                        .setTriggerPriority(2L)
+                        .setTriggerDedupKey(new UnsignedLong(2L))
+                        .setTriggerData(new UnsignedLong(2L))
+                        .setTriggerTime(trigger.getTriggerTime())
+                        .setSourceEventId(source.getEventId())
+                        .setStatus(EventReport.Status.PENDING)
+                        .setAttributionDestinations(source.getAppDestinations())
+                        .setEnrollmentId(source.getEnrollmentId())
+                        .setReportTime(
+                                mEventReportWindowCalcDelegate.getReportingTime(
+                                        source,
+                                        trigger.getTriggerTime(),
+                                        trigger.getDestinationType()))
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setRandomizedTriggerRate(
+                                mSourceNoiseHandler.getRandomAttributionProbability(source))
+                        .setSourceId(source.getId())
+                        .setTriggerId(trigger.getId())
+                        .setRegistrationOrigin(REGISTRATION_URI)
+                        .build();
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getSourceDestinations(source.getId()))
+                .thenReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()));
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
+        when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
+
+        // Execution
+        mHandler.performPendingAttributions();
+
+        // Assertions
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())), eq(Trigger.Status.IGNORED));
+        verify(mMeasurementDao, never()).updateSourceAttributedTriggers(any(), any());
+        verify(mMeasurementDao, never()).insertEventReport(eq(expectedEventReport));
     }
 
     public static Trigger.Builder getXnaTriggerBuilder() {

@@ -64,6 +64,11 @@ public class MeasurementActivityActionDelegate extends BaseActionDelegate {
         configureSharedElements();
     }
 
+    @Override
+    public void initRvc() {
+        initU18();
+    }
+
     private void configureSharedElements() {
         // consent switch
         configureElement(
