@@ -15,7 +15,6 @@
  */
 package android.sdksandbox.test.scenario.sampleclient;
 
-import android.os.SystemClock;
 import android.platform.test.scenario.annotation.Scenario;
 
 import org.junit.AfterClass;
@@ -44,8 +43,8 @@ public class RemoteRenderAd {
     }
 
     @Test
-    public void testRemoteRenderAd() {
+    public void testRemoteRenderAd() throws Exception {
         mSdkSandboxTestHelper.remoteRenderAd();
-        SystemClock.sleep(WAIT_TIME_BEFORE_END_TEST_MS);
+        Thread.sleep(WAIT_TIME_BEFORE_END_TEST_MS);
     }
 }

@@ -19,7 +19,7 @@ package com.android.adservices.data.measurement;
 import android.net.Uri;
 
 import com.android.adservices.data.DbTestUtil;
-import com.android.adservices.errorlogging.AdServicesErrorLogger;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
 import org.json.JSONException;
 import org.junit.runner.RunWith;
