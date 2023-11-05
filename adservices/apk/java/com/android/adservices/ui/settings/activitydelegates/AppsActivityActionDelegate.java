@@ -159,6 +159,9 @@ public class AppsActivityActionDelegate extends BaseActionDelegate {
     @Override
     public void initU18() {}
 
+    @Override
+    public void initRvc() {}
+
     private void configureSharedElements() {
         // recycler view (apps list)
         Function<App, OnClickListener> getOnclickListener =
