@@ -17,9 +17,9 @@
 package com.android.adservices.data.measurement;
 
 import com.android.adservices.data.DbTestUtil;
-import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.json.JSONException;

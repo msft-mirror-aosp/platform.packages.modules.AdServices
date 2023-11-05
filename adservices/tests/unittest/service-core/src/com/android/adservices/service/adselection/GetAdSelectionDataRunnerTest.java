@@ -38,11 +38,11 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import android.adservices.adselection.AdSelectionConfigFixture;
-import android.adservices.adselection.AssetFileDescriptorUtil;
 import android.adservices.adselection.GetAdSelectionDataCallback;
 import android.adservices.adselection.GetAdSelectionDataInput;
 import android.adservices.adselection.GetAdSelectionDataResponse;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.AssetFileDescriptorUtil;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
 import android.content.Context;
@@ -108,6 +108,8 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 public class GetAdSelectionDataRunnerTest {
     private static final int CALLER_UID = Process.myUid();
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
+    private static final ExecutorService BLOCKING_EXECUTOR =
+            AdServicesExecutors.getBlockingExecutor();
     private static final AdTechIdentifier SELLER = AdSelectionConfigFixture.SELLER_1;
     private static final AdTechIdentifier BUYER_1 = AdSelectionConfigFixture.BUYER_1;
     private static final AdTechIdentifier BUYER_2 = AdSelectionConfigFixture.BUYER_2;
@@ -258,15 +260,10 @@ public class GetAdSelectionDataRunnerTest {
         // Make sure AssetFile descriptor is not null
         Assert.assertNotNull(callback.mGetAdSelectionDataResponse.getAssetFileDescriptor());
 
-        byte[] result =
-                new byte
-                        [(int)
-                                callback.mGetAdSelectionDataResponse
-                                        .getAssetFileDescriptor()
-                                        .getLength()];
         // Read result into buffer
-        AssetFileDescriptorUtil.readAssetFileDescriptorIntoBuffer(
-                result, callback.mGetAdSelectionDataResponse.getAssetFileDescriptor());
+        byte[] result =
+                AssetFileDescriptorUtil.readAssetFileDescriptorIntoBuffer(
+                        callback.mGetAdSelectionDataResponse.getAssetFileDescriptor());
 
         // Assert result is expected
         Assert.assertArrayEquals(CIPHER_TEXT_BYTES, result);
@@ -288,7 +285,7 @@ public class GetAdSelectionDataRunnerTest {
         mFlags = new GetAdSelectionDataRunnerTestFlagsWithExcessiveSizeFormatter();
         mGetAdSelectionDataRunner = initRunner(mFlags);
         doThrow(new IOException())
-                .when(() -> AssetFileDescriptorUtil.setupAssetFileDescriptorResponse(any()));
+                .when(() -> AssetFileDescriptorUtil.setupAssetFileDescriptorResponse(any(), any()));
 
         doReturn(mFlags).when(FlagsFactory::getFlags);
 
@@ -459,6 +456,7 @@ public class GetAdSelectionDataRunnerTest {
                         mAdFiltererSpy,
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
+                        BLOCKING_EXECUTOR,
                         mScheduledExecutor,
                         shortTimeoutFlags,
                         CALLER_UID,
@@ -501,6 +499,7 @@ public class GetAdSelectionDataRunnerTest {
                 mAdFiltererSpy,
                 mBackgroundExecutorService,
                 mLightweightExecutorService,
+                BLOCKING_EXECUTOR,
                 mScheduledExecutor,
                 flags,
                 CALLER_UID,

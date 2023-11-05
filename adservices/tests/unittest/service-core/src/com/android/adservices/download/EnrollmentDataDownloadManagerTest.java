@@ -17,7 +17,7 @@
 package com.android.adservices.download;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlagsForTest;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilErrorWithAnyException;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_INSERT_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__LOAD_MDD_FILE_GROUP_FAILURE;
@@ -97,7 +97,7 @@ public class EnrollmentDataDownloadManagerTest {
     @Rule
     public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
             new AdServicesExtendedMockitoRule.Builder(this)
-                    .mockStatic(FlagsFactory.class)
+                    .spyStatic(FlagsFactory.class)
                     .mockStatic(MobileDataDownloadFactory.class)
                     .mockStatic(EnrollmentDao.class)
                     .mockStatic(EncryptionKeyDao.class)
@@ -111,7 +111,7 @@ public class EnrollmentDataDownloadManagerTest {
 
     @Test
     public void testGetInstance() {
-        mockGetFlagsForTest();
+        mockGetFlags(mMockFlags);
         EnrollmentDataDownloadManager firstInstance =
                 EnrollmentDataDownloadManager.getInstance(sContext);
         EnrollmentDataDownloadManager secondInstance =

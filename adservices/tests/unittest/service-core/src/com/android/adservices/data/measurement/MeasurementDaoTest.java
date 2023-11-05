@@ -24,7 +24,9 @@ import static com.android.adservices.data.measurement.MeasurementTables.MSMT_TAB
 import static com.android.adservices.data.measurement.MeasurementTables.SourceContract;
 import static com.android.adservices.data.measurement.MeasurementTables.TriggerContract;
 import static com.android.adservices.data.measurement.MeasurementTables.XnaIgnoredSourcesContract;
-import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+import static com.android.adservices.service.Flags.MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW;
+import static com.android.adservices.service.Flags.MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS;
 import static com.android.adservices.service.measurement.SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -54,7 +56,6 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.measurement.MeasurementTables.DebugReportContract;
-import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.AsyncRegistrationFixture;
@@ -65,7 +66,6 @@ import com.android.adservices.service.measurement.EventReportFixture;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.KeyValueData.DataType;
-import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.ReportSpec;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
@@ -79,6 +79,7 @@ import com.android.adservices.service.measurement.registration.AsyncRegistration
 import com.android.adservices.service.measurement.reporting.DebugReport;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
@@ -203,6 +204,7 @@ public class MeasurementDaoTest {
         Source validSource =
                 SourceFixture.getValidSourceBuilder()
                         .setEventReportWindows("{'start_time': 1, 'end_times': ['3600', '7200']}")
+                        .setStatus(Source.Status.MARKED_TO_DELETE)
                         .build();
         mDatastoreManager.runInTransaction((dao) -> dao.insertSource(validSource));
 
@@ -221,6 +223,7 @@ public class MeasurementDaoTest {
         assertEquals(validSource.getRegistrant(), source.getRegistrant());
         assertEquals(validSource.getEventTime(), source.getEventTime());
         assertEquals(validSource.getExpiryTime(), source.getExpiryTime());
+        assertEquals(validSource.getStatus(), source.getStatus());
         assertEquals(validSource.getEventReportWindow(), source.getEventReportWindow());
         assertEquals(
                 validSource.getAggregatableReportWindow(), source.getAggregatableReportWindow());
@@ -1748,7 +1751,7 @@ public class MeasurementDaoTest {
                                     EventSurfaceType.APP,
                                     SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                                     System.currentTimeMillis(),
-                                    PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
+                                    MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
                 });
     }
 
@@ -1781,7 +1784,7 @@ public class MeasurementDaoTest {
                                     EventSurfaceType.APP,
                                     SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                                     System.currentTimeMillis(),
-                                    PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
+                                    MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
                 });
     }
 
@@ -1814,7 +1817,7 @@ public class MeasurementDaoTest {
                                     EventSurfaceType.WEB,
                                     SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                                     System.currentTimeMillis(),
-                                    PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
+                                    MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
                 });
     }
 
@@ -1848,7 +1851,7 @@ public class MeasurementDaoTest {
                                     EventSurfaceType.APP,
                                     differentEnrollment,
                                     System.currentTimeMillis(),
-                                    PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
+                                    MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
                 });
     }
 
@@ -1881,7 +1884,7 @@ public class MeasurementDaoTest {
                                     EventSurfaceType.APP,
                                     SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                                     System.currentTimeMillis(),
-                                    PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
+                                    MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
                 });
     }
 
@@ -1914,7 +1917,7 @@ public class MeasurementDaoTest {
                                     EventSurfaceType.APP,
                                     SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                                     System.currentTimeMillis(),
-                                    PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
+                                    MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
                 });
     }
 
@@ -4313,7 +4316,7 @@ public class MeasurementDaoTest {
                         .setRegistrant(source.getRegistrant().toString())
                         .setTriggerTime(
                                 trigger.getTriggerTime()
-                                        - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS
+                                        - MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS
                                         + 1)
                         .setRegistrationOrigin(trigger.getRegistrationOrigin())
                         .build();
@@ -4352,7 +4355,7 @@ public class MeasurementDaoTest {
                         .setRegistrant(source.getRegistrant().toString())
                         .setTriggerTime(
                                 trigger.getTriggerTime()
-                                        - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS)
+                                        - MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS)
                         .setRegistrationOrigin(trigger.getRegistrationOrigin())
                         .build();
 
@@ -6211,7 +6214,7 @@ public class MeasurementDaoTest {
         long expiryTime =
                 eventTime
                         + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
         return new Source.Builder()
                 .setEventId(new UnsignedLong(0L))
                 .setEventTime(eventTime)
@@ -6238,7 +6241,7 @@ public class MeasurementDaoTest {
         long expiryTime =
                 eventTime
                         + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
         return getSourcesWithDifferentDestinations(
                 numSources,
                 hasAppDestinations,
@@ -6262,7 +6265,7 @@ public class MeasurementDaoTest {
         long expiryTime =
                 eventTime
                         + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
         return getSourcesWithDifferentDestinations(
                 numSources,
                 hasAppDestinations,
@@ -6322,7 +6325,7 @@ public class MeasurementDaoTest {
         long expiryTime =
                 eventTime
                         + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
         return getSourcesWithDifferentRegistrationOrigins(
                 numSources,
                 appDestinations,

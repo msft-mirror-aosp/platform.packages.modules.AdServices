@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.errorlogging;
-
+package com.android.adservices.shared.errorlogging;
 
 /** Interface for Adservices error logger. */
 public interface AdServicesErrorLogger {
