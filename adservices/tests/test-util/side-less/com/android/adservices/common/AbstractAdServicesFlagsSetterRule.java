@@ -118,24 +118,27 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
      * run.
      */
     public T setTopicsEpochJobPeriodMsForTests(long value) {
-        return setOrCacheDebugSystemProperty(FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS, value);
+        return setSystemProperty(FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS, value);
     }
 
     /** Overrides the system property that defines the percentage for random topic. */
     public T setTopicsPercentageForRandomTopicForTests(long value) {
-        return setOrCacheDebugSystemProperty(
-                FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC, value);
+        return setSystemProperty(FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC, value);
     }
 
     /** Overrides the system property used to disable topics enrollment check. */
     public T setDisableTopicsEnrollmentCheckForTests(boolean value) {
-        return setOrCacheDebugSystemProperty(
-                FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, value);
+        return setSystemProperty(FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, value);
+    }
+
+    /** Overrides the system property used to set ConsentManager notification debug mode keys. */
+    public T setConsentNotifiedDebugMode(boolean value) {
+        return setSystemProperty(FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE, value);
     }
 
     /** Overrides the system property used to set ConsentManager debug mode keys. */
     public T setConsentManagerDebugMode(boolean value) {
-        return setOrCacheDebugSystemProperty(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, value);
+        return setSystemProperty(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, value);
     }
 
     /**
@@ -195,7 +198,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
      * com.android.adservices.service.PhFlags#getAdIdKillSwitchForTests()}.
      */
     public T setAdIdKillSwitchForTests(boolean value) {
-        return setOrCacheDebugSystemProperty(FlagsConstants.KEY_ADID_KILL_SWITCH, value);
+        return setSystemProperty(FlagsConstants.KEY_ADID_KILL_SWITCH, value);
     }
 
     /** Overrides flag used by {@link android.adservices.common.AdServicesCommonManager}. */

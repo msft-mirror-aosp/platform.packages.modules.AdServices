@@ -79,47 +79,6 @@ public final class PrivacyParams {
     public static final long[] INSTALL_ATTR_EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS =
             new long[]{ TimeUnit.DAYS.toMillis(2) };
 
-    /** {@link Source} Noise probability for 'Event'. */
-    public static final double EVENT_NOISE_PROBABILITY = 0.0000025D;
-
-    /** {@link Source} Noise probability for 'Navigation'. */
-    public static final double NAVIGATION_NOISE_PROBABILITY = 0.0024263D;
-
-    /**
-     * {@link Source} Noise probability for 'Event' which supports install attribution.
-     */
-    public static final double INSTALL_ATTR_EVENT_NOISE_PROBABILITY = 0.0000125D;
-
-    /**
-     * {@link Source} Noise probability for 'Navigation' which supports install attribution.
-     */
-    public static final double INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY =
-                NAVIGATION_NOISE_PROBABILITY;
-
-    /**
-     * {@link Source} Noise probability for 'Event', when both destinations (app and web) are
-     * available on the source.
-     */
-    public static final double DUAL_DESTINATION_EVENT_NOISE_PROBABILITY = 0.0000042D;
-
-    /**
-     * {@link Source} Noise probability for 'Navigation', when both destinations (app and web) are
-     * available on the source.
-     */
-    public static final double DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY = 0.0170218D;
-
-    /**
-     * {@link Source} Noise probability for 'Event', when both destinations (app and web) are
-     * available on the source and supports install attribution.
-     */
-    public static final double INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY = 0.0000208D;
-
-    /**
-     * {@link Source} Noise probability for 'Navigation', when both destinations (app and web) are
-     * available on the source and supports install attribution.
-     */
-    public static final double INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY =
-            DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
 
     /**
      * Trigger data cardinality for 'Event' {@link Source} attribution.
@@ -134,21 +93,6 @@ public final class PrivacyParams {
     public static int getNavigationTriggerDataCardinality() {
         return NAVIGATION_TRIGGER_DATA_CARDINALITY;
     }
-
-    /** Min expiration value in seconds for attribution reporting register source. */
-    public static final long MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS =
-            TimeUnit.DAYS.toSeconds(1);
-
-    /**
-     * Max expiration value in seconds for attribution reporting register source. This value is also
-     * the default no expiration was specified.
-     */
-    public static final long MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS =
-            TimeUnit.DAYS.toSeconds(30);
-
-
-    /** Minimum time window after which reporting origin can be migrated */
-    public static final long MIN_REPORTING_ORIGIN_UPDATE_WINDOW = TimeUnit.DAYS.toMillis(1);
 
     /**
      * L1, the maximum sum of the contributions (values) across all buckets for a given source

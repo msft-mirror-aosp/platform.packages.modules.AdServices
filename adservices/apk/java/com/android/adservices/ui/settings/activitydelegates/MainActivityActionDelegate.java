@@ -157,6 +157,11 @@ public class MainActivityActionDelegate extends BaseActionDelegate {
                         : R.string.settingsUI_subtitle_consent_off);
     }
 
+    @Override
+    public void initRvc() {
+        initU18();
+    }
+
     private void listenToMainViewModelUiEvents() {
         Observer<MainViewModel.MainViewModelUiEvent> observer =
                 event -> {

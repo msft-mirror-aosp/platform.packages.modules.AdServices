@@ -67,7 +67,7 @@ public class NotInAllowListTest {
 
     @Rule(order = 1)
     public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
+            AdServicesFlagsSetterRule.forAllApisEnabledTests()
                     .setCompatModeFlags()
                     .overridePpapiAppSignatureAllowList("empty");
 

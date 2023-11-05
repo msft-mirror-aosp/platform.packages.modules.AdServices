@@ -25,6 +25,7 @@ import static com.android.adservices.service.consent.ConsentManager.MANUAL_INTER
 import static com.android.adservices.service.consent.ConsentManager.NO_MANUAL_INTERACTIONS_RECORDED;
 import static com.android.adservices.service.consent.ConsentManager.UNKNOWN;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.GA_UX;
+import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.RVC_UX;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.UNSUPPORTED_UX;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -570,5 +571,18 @@ public class UxEngineUtilTest {
         ExtendedMockito.verify(
                 () -> BackgroundJobsManager.scheduleAllBackgroundJobs(mContext), times(1)
         );
+    }
+
+    @Test
+    public void startBackgroundTasksUponConsentTest_rvcUxConsentGiven() {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
+
+        mUxEngineUtil.startBackgroundTasksUponConsent(RVC_UX, mContext, mFlags);
+
+        ExtendedMockito.verify(
+                () -> PackageChangedReceiver.enableReceiver(mContext, mFlags), times(1));
+
+        ExtendedMockito.verify(
+                () -> BackgroundJobsManager.scheduleMeasurementBackgroundJobs(mContext), times(1));
     }
 }

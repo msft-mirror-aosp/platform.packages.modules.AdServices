@@ -21,13 +21,19 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 import static com.android.adservices.spe.AdservicesJobInfo.MAINTENANCE_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyLong;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.atLeastOnce;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.spy;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.staticMockMarker;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.timeout;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyNoMoreInteractions;
 
@@ -37,11 +43,6 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -51,7 +52,6 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.common.FledgeMaintenanceTasksWorker;
@@ -474,7 +474,6 @@ public class MaintenanceJobServiceTest {
     }
 
     @Test
-    @FlakyTest(bugId = 302683283)
     public void testOnStartJob_killSwitchOnDoesTopicsJobWhenFledgeThrowsException()
             throws Exception {
         final TopicsWorker topicsWorker =
@@ -538,15 +537,19 @@ public class MaintenanceJobServiceTest {
                 .that(jobCompletionLatch.await(1, TimeUnit.SECONDS))
                 .isTrue();
 
-        verify(() -> TopicsWorker.getInstance(any(Context.class)));
-        verify(mMockAppUpdateManager)
+        verify(
+                () -> TopicsWorker.getInstance(any(Context.class)),
+                timeout(BACKGROUND_THREAD_TIMEOUT_MS));
+        verify(mMockAppUpdateManager, timeout(BACKGROUND_THREAD_TIMEOUT_MS))
                 .reconcileUninstalledApps(any(Context.class), eq(CURRENT_EPOCH_ID));
-        verify(mMockAppUpdateManager)
+        verify(mMockAppUpdateManager, timeout(BACKGROUND_THREAD_TIMEOUT_MS))
                 .reconcileInstalledApps(any(Context.class), /* currentEpochId */ anyLong());
 
-        verify(mFledgeMaintenanceTasksWorkerMock).clearExpiredAdSelectionData();
+        verify(mFledgeMaintenanceTasksWorkerMock, timeout(BACKGROUND_THREAD_TIMEOUT_MS))
+                .clearExpiredAdSelectionData();
 
-        verify(mSignalsMaintenanceTasksWorkerMock).clearInvalidProtectedSignalsData();
+        verify(mSignalsMaintenanceTasksWorkerMock, timeout(BACKGROUND_THREAD_TIMEOUT_MS))
+                .clearInvalidProtectedSignalsData();
     }
 
     @Test

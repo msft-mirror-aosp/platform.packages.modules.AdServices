@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.errorlogging;
+package com.android.adservices.shared.errorlogging;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION;
 

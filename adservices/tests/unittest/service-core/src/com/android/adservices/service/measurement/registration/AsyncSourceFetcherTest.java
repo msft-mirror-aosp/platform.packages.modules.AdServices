@@ -7433,6 +7433,38 @@ public final class AsyncSourceFetcherTest {
         verify(mFetcher, times(1)).openUrl(any());
     }
 
+    @Test
+    public void fetchSource_dropSourceIfInstalled_success() throws Exception {
+        when(mFlags.getMeasurementEnablePreinstallCheck()).thenReturn(true);
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getOutputStream()).thenReturn(outputStream);
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "\"source_event_id\":\"35\","
+                                                + "\"drop_source_if_installed\":true}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        verify(mFetcher, times(1)).openUrl(any());
+        assertTrue(fetch.get().shouldDropSourceIfInstalled());
+    }
+
     private RegistrationRequest buildRequest(String registrationUri) {
         return buildRequest(registrationUri, null);
     }
