@@ -170,6 +170,11 @@ public class UiUtils {
         forceSetFlag("rvc_ux_enabled", true);
     }
 
+    /** Override flag rvc_notification_enabled in tests to true */
+    public static void enableRvcNotification() throws Exception {
+        forceSetFlag("rvc_notification_enabled", true);
+    }
+
     /** Override flag rvc_ux_enabled in tests to false */
     public static void disableRvc() throws Exception {
         forceSetFlag("rvc_ux_enabled", false);
