@@ -122,7 +122,7 @@ public class AdServicesPermissions {
      *
      * @hide
      */
-    @SystemApi
+    // @SystemApi
     @FlaggedApi(FlagsConstants.KEY_AD_ID_CACHE_ENABLED)
     public static final String UPDATE_PRIVILEGED_AD_ID =
             "android.permission.UPDATE_PRIVILEGED_AD_ID";
@@ -132,7 +132,7 @@ public class AdServicesPermissions {
      *
      * @hide
      */
-    @SystemApi
+    // @SystemApi
     @FlaggedApi(FlagsConstants.KEY_AD_ID_CACHE_ENABLED)
     public static final String UPDATE_PRIVILEGED_AD_ID_COMPAT =
             "android.permission.UPDATE_PRIVILEGED_AD_ID_COMPAT";
