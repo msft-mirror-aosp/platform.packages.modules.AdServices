@@ -33,4 +33,5 @@ public final class FlagsConstants {
             "adservices_outcomereceiver_r_api_enabled";
     public static final String KEY_ENABLE_ADEXT_DATA_SERVICE_APIS =
             "enable_adext_data_service_apis";
+    public static final String KEY_TOPICS_ENCRYPTION_ENABLED = "topics_encryption_enabled";
 }
