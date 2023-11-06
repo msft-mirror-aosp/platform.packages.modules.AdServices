@@ -31,4 +31,6 @@ public final class FlagsConstants {
             "adservices_enablement_check_enabled";
     public static final String KEY_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED =
             "adservices_outcomereceiver_r_api_enabled";
+    public static final String KEY_ENABLE_ADEXT_DATA_SERVICE_APIS =
+            "enable_adext_data_service_apis";
 }

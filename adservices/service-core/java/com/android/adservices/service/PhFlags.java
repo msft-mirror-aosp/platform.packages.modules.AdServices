@@ -6204,6 +6204,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getEnableAdExtDataServiceApis() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS,
+                /* defaultValue */ DEFAULT_ENABLE_ADEXT_DATA_SERVICE_APIS);
+    }
+
+    @Override
     public boolean getEnableAdservicesApiEnabled() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
