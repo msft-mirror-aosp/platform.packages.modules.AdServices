@@ -13,73 +13,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package android.app.sdksandbox.sandboxactivity;
 
 import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
-import android.annotation.Nullable;
 import android.annotation.SystemApi;
-import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.sdkprovider.SdkSandboxActivityRegistry;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import com.android.internal.annotations.GuardedBy;
 import com.android.sdksandbox.flags.Flags;
 
 /**
- * Provides information required for building the sandbox activities.
+ * A singleton class to provide instances of {@link ActivityContextInfo} to the callers.
  *
  * @hide
  */
-@SystemApi(client = SystemApi.Client.MODULE_LIBRARIES)
 @FlaggedApi(Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
-public abstract class SdkSandboxActivityAuthority {
+@SystemApi(client = SystemApi.Client.MODULE_LIBRARIES)
+public abstract class ActivityContextInfoProvider {
+    private static final Object sLock = new Object();
 
-    private static class InstanceHolder {
-        private static final SdkSandboxActivityAuthority INSTANCE =
-                new SdkSandboxActivityAuthorityImpl();
-    }
+    @GuardedBy("sLock")
+    private static ActivityContextInfoProvider sInstance;
 
-    /** Returns a Single instance of this class, instantiated lazily. */
+    private ActivityContextInfoProvider() {}
+
+    /** Returns a Single instance of this class. */
     @NonNull
-    @FlaggedApi(Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
-    public static SdkSandboxActivityAuthority getInstance() {
-        return InstanceHolder.INSTANCE;
-    }
-
-    private SdkSandboxActivityAuthority() {}
-
-    /**
-     * Returns true if the intent is an SdkSandbox Activity intent. In other words, if the intent
-     * targets either the Sdk Sandbox package or the action is {@link
-     * ACTION_START_SANDBOXED_ACTIVITY}.
-     *
-     * @param context the context.
-     * @param intent the intent.
-     * @hide
-     */
-    @SystemApi(client = SystemApi.Client.MODULE_LIBRARIES)
-    @FlaggedApi(Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
-    public static boolean isSdkSandboxActivity(@NonNull Context context, @Nullable Intent intent) {
-        if (intent == null) {
-            return false;
+    public static ActivityContextInfoProvider getInstance() {
+        synchronized (sLock) {
+            if (sInstance == null) {
+                sInstance = new ActivityContextInfoProviderImpl();
+            }
+            return sInstance;
         }
-        if (intent.getAction() != null
-                && intent.getAction().equals(SdkSandboxManager.ACTION_START_SANDBOXED_ACTIVITY)) {
-            return true;
-        }
-        final String sandboxPackageName = context.getPackageManager().getSdkSandboxPackageName();
-        if (intent.getPackage() != null && intent.getPackage().equals(sandboxPackageName)) {
-            return true;
-        }
-        if (intent.getComponent() != null
-                && intent.getComponent().getPackageName().equals(sandboxPackageName)) {
-            return true;
-        }
-        return false;
     }
 
     /**
@@ -95,7 +67,6 @@ public abstract class SdkSandboxActivityAuthority {
      */
     @NonNull
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
-    @FlaggedApi(Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
     public ActivityContextInfo getActivityContextInfo(@NonNull Intent intent) {
         SdkSandboxActivityRegistry registry = SdkSandboxActivityRegistry.getInstance();
         ActivityContextInfo contextInfo = registry.getContextInfo(intent);
@@ -108,5 +79,5 @@ public abstract class SdkSandboxActivityAuthority {
         return contextInfo;
     }
 
-    private static class SdkSandboxActivityAuthorityImpl extends SdkSandboxActivityAuthority {}
+    private static class ActivityContextInfoProviderImpl extends ActivityContextInfoProvider {}
 }

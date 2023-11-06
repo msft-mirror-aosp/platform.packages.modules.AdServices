@@ -29,8 +29,6 @@ java_defaults {
         "compatibility-device-util-axt-minus-dexmaker",
         "mockito-target-extended-minus-junit4",
         "truth",
-        "flag-junit",
-        "platform-test-annotations",
         "SdkSandboxTestUtils",
         "SdkSandbox-java-lib",
     ],

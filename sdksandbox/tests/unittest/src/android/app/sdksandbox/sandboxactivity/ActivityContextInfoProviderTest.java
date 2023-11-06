@@ -16,48 +16,31 @@
 
 package android.app.sdksandbox.sandboxactivity;
 
-import static android.app.sdksandbox.sandboxactivity.SdkSandboxActivityAuthority.isSdkSandboxActivity;
-
 import static com.google.common.truth.Truth.assertThat;
-
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assume.assumeTrue;
 
 import android.app.sdksandbox.SandboxedSdkContext;
-import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.sdkprovider.SdkSandboxActivityHandler;
 import android.app.sdksandbox.sdkprovider.SdkSandboxActivityRegistry;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.platform.test.annotations.RequiresFlagsEnabled;
-import android.platform.test.flag.junit.CheckFlagsRule;
-import android.platform.test.flag.junit.DeviceFlagsValueProvider;
-
-import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.modules.utils.build.SdkLevel;
-import com.android.sdksandbox.flags.Flags;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
 @RunWith(JUnit4.class)
-public class SdkSandboxActivityAuthorityTest {
-
-    @Rule
-    public final CheckFlagsRule mCheckFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule();
-
+public class ActivityContextInfoProviderTest {
     private SdkSandboxActivityRegistry mRegistry;
-    private SdkSandboxActivityAuthority mSdkSandboxActivityAuthority;
+    private ActivityContextInfoProvider mContextInfoProvider;
     private SdkSandboxActivityHandler mHandler;
     private SandboxedSdkContext mSdkContext;
 
@@ -66,7 +49,7 @@ public class SdkSandboxActivityAuthorityTest {
     public void setUp() {
         assumeTrue(SdkLevel.isAtLeastU());
         mRegistry = SdkSandboxActivityRegistry.getInstance();
-        mSdkSandboxActivityAuthority = SdkSandboxActivityAuthority.getInstance();
+        mContextInfoProvider = ActivityContextInfoProvider.getInstance();
         mHandler = Mockito.spy(activity -> {});
         mSdkContext = Mockito.mock(SandboxedSdkContext.class);
     }
@@ -83,38 +66,15 @@ public class SdkSandboxActivityAuthorityTest {
         }
     }
 
-    @Test
-    @RequiresFlagsEnabled(Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
-    public void testSdkSandboxActivity() {
-        final Context context = InstrumentationRegistry.getInstrumentation().getContext();
-        final String sandboxPackageName = context.getPackageManager().getSdkSandboxPackageName();
-
-        assertThat(isSdkSandboxActivity(context, new Intent())).isFalse();
-        assertThat(
-                        isSdkSandboxActivity(
-                                context,
-                                new Intent(SdkSandboxManager.ACTION_START_SANDBOXED_ACTIVITY)))
-                .isTrue();
-        assertThat(isSdkSandboxActivity(context, new Intent().setPackage(sandboxPackageName)))
-                .isTrue();
-        assertThat(
-                        isSdkSandboxActivity(
-                                context,
-                                new Intent()
-                                        .setComponent(new ComponentName(sandboxPackageName, ""))))
-                .isTrue();
-    }
-
     /** Ensure the returned instance ActivityContextInfo has the expected fields. */
     @Test
-    @RequiresFlagsEnabled(Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
     public void testGetActivityContextInfo() {
         final IBinder token = mRegistry.register(mSdkContext, mHandler);
         Intent intent = buildSandboxActivityIntent(token);
 
         Mockito.when(mSdkContext.isCustomizedSdkContextEnabled()).thenReturn(true);
 
-        assertThat(mSdkSandboxActivityAuthority.getActivityContextInfo(intent))
+        assertThat(mContextInfoProvider.getActivityContextInfo(intent))
                 .isInstanceOf(ActivityContextInfo.class);
     }
 
@@ -123,15 +83,14 @@ public class SdkSandboxActivityAuthorityTest {
      * it.
      */
     @Test
-    @RequiresFlagsEnabled(Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
-    public void testGetSdkSandboxActivityAuthorityFailForNonRegisteredHandlers() {
+    public void testGetActivityContextInfoProviderFailForNonRegisteredHandlers() {
         final Intent intent = buildSandboxActivityIntent(new Binder());
         Mockito.when(mSdkContext.isCustomizedSdkContextEnabled()).thenReturn(true);
 
         IllegalArgumentException exception =
                 assertThrows(
                         IllegalArgumentException.class,
-                        () -> mSdkSandboxActivityAuthority.getActivityContextInfo(intent));
+                        () -> mContextInfoProvider.getActivityContextInfo(intent));
         assertThat(
                         exception
                                 .getMessage()
@@ -146,8 +105,7 @@ public class SdkSandboxActivityAuthorityTest {
      * ActivityContextInfo instance.
      */
     @Test
-    @RequiresFlagsEnabled(Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
-    public void testGetSdkSandboxActivityAuthorityFailIfCustomizedSdkFlagIsDisabled() {
+    public void testGetActivityContextInfoProviderFailIfCustomizedSdkFlagIsDisabled() {
         final IBinder token = mRegistry.register(mSdkContext, mHandler);
         Intent intent = buildSandboxActivityIntent(token);
 
@@ -156,7 +114,7 @@ public class SdkSandboxActivityAuthorityTest {
         IllegalStateException exception =
                 assertThrows(
                         IllegalStateException.class,
-                        () -> mSdkSandboxActivityAuthority.getActivityContextInfo(intent));
+                        () -> mContextInfoProvider.getActivityContextInfo(intent));
         assertThat(exception.getMessage()).isEqualTo("Customized SDK flag is disabled.");
     }
 
