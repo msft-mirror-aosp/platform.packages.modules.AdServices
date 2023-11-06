@@ -311,7 +311,8 @@ public class DebugReportingJobHandlerTest {
         verify(mLogger).logMeasurementReports(statusArg.capture());
         MeasurementReportsStats measurementReportsStats = statusArg.getValue();
         assertEquals(
-                measurementReportsStats.getType(), ReportingStatus.ReportType.UNKNOWN.getValue());
+                measurementReportsStats.getType(),
+                ReportingStatus.ReportType.VERBOSE_DEBUG_UNKNOWN.getValue());
         assertEquals(
                 measurementReportsStats.getResultCode(),
                 ReportingStatus.UploadStatus.FAILURE.getValue());
