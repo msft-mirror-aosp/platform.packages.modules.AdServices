@@ -149,6 +149,9 @@ public class TopicsActivityActionDelegate extends BaseActionDelegate {
     @Override
     public void initU18() {}
 
+    @Override
+    public void initRvc() {}
+
     private void configureSharedElements() {
         // recycler view (topics list)
         Function<Topic, OnClickListener> getOnclickListener =
