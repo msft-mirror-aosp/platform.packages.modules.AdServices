@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.ui.enrollment.impl;
 
-import static com.android.adservices.service.FlagsConstants.KEY_RVC_UX_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_RVC_NOTIFICATION_ENABLED;
 
 import android.content.Context;
 import android.os.Build;
@@ -39,7 +39,7 @@ public class RvcPostOTAChannel implements PrivacySandboxEnrollmentChannel {
             ConsentManager consentManager,
             UxStatesManager uxStatesManager) {
         // Only user who opted in msmt API on R is eligible
-        return uxStatesManager.getFlag(KEY_RVC_UX_ENABLED)
+        return uxStatesManager.getFlag(KEY_RVC_NOTIFICATION_ENABLED)
                 && consentManager.getConsentFromR().isGiven();
     }
 
