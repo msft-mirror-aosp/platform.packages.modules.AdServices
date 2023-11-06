@@ -18,9 +18,10 @@ package android.app.sdksandbox.sandboxactivity {
     field public static final int CONTEXT_FLAGS = 3; // 0x3
   }
 
-  @FlaggedApi(com.android.sdksandbox.flags.Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT) public abstract class ActivityContextInfoProvider {
-    method @NonNull public android.app.sdksandbox.sandboxactivity.ActivityContextInfo getActivityContextInfo(@NonNull android.content.Intent);
-    method @NonNull public static android.app.sdksandbox.sandboxactivity.ActivityContextInfoProvider getInstance();
+  @FlaggedApi(com.android.sdksandbox.flags.Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT) public abstract class SdkSandboxActivityAuthority {
+    method @FlaggedApi(com.android.sdksandbox.flags.Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT) @NonNull public android.app.sdksandbox.sandboxactivity.ActivityContextInfo getActivityContextInfo(@NonNull android.content.Intent);
+    method @FlaggedApi(com.android.sdksandbox.flags.Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT) @NonNull public static android.app.sdksandbox.sandboxactivity.SdkSandboxActivityAuthority getInstance();
+    method @FlaggedApi(com.android.sdksandbox.flags.Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT) public static boolean isSdkSandboxActivity(@NonNull android.content.Context, @Nullable android.content.Intent);
   }
 
 }
