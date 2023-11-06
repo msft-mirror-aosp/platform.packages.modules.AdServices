@@ -23,6 +23,7 @@ android_test {
     defaults: ["adservices-extended-mockito-defaults"],
     static_libs: [
         "adservices-shared-common",
+        "adservices-shared-error-logging",
         "adservices-shared-storage",
         "adservices-test-utility",
         "androidx.test.core",
