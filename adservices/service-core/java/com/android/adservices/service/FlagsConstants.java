@@ -1128,6 +1128,9 @@ public final class FlagsConstants {
     public static final String KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT =
             "app_config_returns_enabled_by_detault";
 
+    public static final String KEY_ENABLE_ADEXT_DATA_SERVICE_APIS =
+            "enable_adext_data_service_apis";
+
     public static final String KEY_ENABLE_ADSERVICES_API_ENABLED = "enable_adservices_api_enabled";
 
     public static final String KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED =
