@@ -45,7 +45,9 @@ public class SelectAdRequest {
     public static class PerBuyerConfig {
         public String buyerSignals;
         public int buyerKvExperimentGroupId;
-        public int generateBidCodeVersion;
+        public String generateBidCodeVersion;
         public String buyerDebugId;
+        public String protectedSignalsGenerateBidCodeVersion;
+        public String protectedSignalsGenerateEmbeddingsVersion;
     }
 }

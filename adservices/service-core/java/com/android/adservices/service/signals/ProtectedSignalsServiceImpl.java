@@ -16,16 +16,16 @@
 
 package com.android.adservices.service.signals;
 
-import static com.android.adservices.service.common.Throttler.ApiKey.PROTECTED_SIGNAL_API_FETCH_SIGNAL_UPDATES;
+import static com.android.adservices.service.common.Throttler.ApiKey.PROTECTED_SIGNAL_API_UPDATE_SIGNALS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__FLEDGE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
-import android.adservices.signals.FetchSignalUpdatesCallback;
-import android.adservices.signals.FetchSignalUpdatesInput;
 import android.adservices.signals.IProtectedSignalsService;
+import android.adservices.signals.UpdateSignalsCallback;
+import android.adservices.signals.UpdateSignalsInput;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.os.Build;
@@ -58,6 +58,7 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 
 /** Implementation of the Protected Signals service. */
@@ -69,11 +70,11 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
     public static final long MAX_SIZE_BYTES = 10000;
     public static final String ADTECH_CALLER_NAME = "caller";
     public static final String CLASS_NAME = "ProtectedSignalsServiceImpl";
-    public static final String FIELD_NAME = "fetchUri";
+    public static final String FIELD_NAME = "updateUri";
 
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final Context mContext;
-    @NonNull private final FetchOrchestrator mFetchOrchestrator;
+    @NonNull private final UpdateSignalsOrchestrator mUpdateSignalsOrchestrator;
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
     @NonNull private final ConsentManager mConsentManager;
     @NonNull private final ExecutorService mExecutorService;
@@ -87,7 +88,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
     private ProtectedSignalsServiceImpl(@NonNull Context context) {
         this(
                 context,
-                new FetchOrchestrator(
+                new UpdateSignalsOrchestrator(
                         AdServicesExecutors.getBackgroundExecutor(),
                         new UpdatesDownloader(
                                 AdServicesExecutors.getLightWeightExecutor(),
@@ -95,13 +96,12 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                                         AdServicesExecutors.getBlockingExecutor(),
                                         TIMEOUT_MS,
                                         TIMEOUT_MS,
-                                        MAX_SIZE_BYTES)),
+                                        FlagsFactory.getFlags()
+                                                .getProtectedSignalsFetchSignalUpdatesMaxSizeBytes())),
                         new UpdateProcessingOrchestrator(
                                 ProtectedSignalsDatabase.getInstance(context).protectedSignalsDao(),
                                 new UpdateProcessorSelector(),
-                                new UpdateEncoderEventHandler(
-                                        ProtectedSignalsDatabase.getInstance(context)
-                                                .getEncoderEndpointsDao())),
+                                new UpdateEncoderEventHandler(context)),
                         new AdTechUriValidator(ADTECH_CALLER_NAME, "", CLASS_NAME, FIELD_NAME)),
                 FledgeAuthorizationFilter.create(context, AdServicesLoggerImpl.getInstance()),
                 ConsentManager.getInstance(context),
@@ -130,7 +130,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
     @VisibleForTesting
     public ProtectedSignalsServiceImpl(
             @NonNull Context context,
-            @NonNull FetchOrchestrator fetchOrchestrator,
+            @NonNull UpdateSignalsOrchestrator updateSignalsOrchestrator,
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
             @NonNull ConsentManager consentManager,
             @NonNull DevContextFilter devContextFilter,
@@ -140,7 +140,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
             @NonNull CallingAppUidSupplier callingAppUidSupplier,
             @NonNull CustomAudienceServiceFilter customAudienceServiceFilter) {
         Objects.requireNonNull(context);
-        Objects.requireNonNull(fetchOrchestrator);
+        Objects.requireNonNull(updateSignalsOrchestrator);
         Objects.requireNonNull(fledgeAuthorizationFilter);
         Objects.requireNonNull(consentManager);
         Objects.requireNonNull(executorService);
@@ -148,7 +148,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
         Objects.requireNonNull(customAudienceServiceFilter);
 
         mContext = context;
-        mFetchOrchestrator = fetchOrchestrator;
+        mUpdateSignalsOrchestrator = updateSignalsOrchestrator;
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
         mConsentManager = consentManager;
         mDevContextFilter = devContextFilter;
@@ -165,18 +165,18 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
     }
 
     @Override
-    public void fetchSignalUpdates(
-            @NonNull FetchSignalUpdatesInput fetchSignalUpdatesInput,
-            @NonNull FetchSignalUpdatesCallback fetchSignalUpdatesCallback)
+    public void updateSignals(
+            @NonNull UpdateSignalsInput updateSignalsInput,
+            @NonNull UpdateSignalsCallback updateSignalsCallback)
             throws RemoteException {
-        sLogger.v("Entering fetchSignalUpdates");
+        sLogger.v("Entering updateSignals");
 
         // TODO(b/296586554) Add API id
         final int apiName = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 
         try {
-            Objects.requireNonNull(fetchSignalUpdatesInput);
-            Objects.requireNonNull(fetchSignalUpdatesCallback);
+            Objects.requireNonNull(updateSignalsInput);
+            Objects.requireNonNull(updateSignalsCallback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
@@ -186,26 +186,23 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
 
         // Caller permissions must be checked in the binder thread, before anything else
         mFledgeAuthorizationFilter.assertAppDeclaredPermission(
-                mContext, fetchSignalUpdatesInput.getCallerPackageName(), apiName);
+                mContext, updateSignalsInput.getCallerPackageName(), apiName);
 
         final int callerUid = getCallingUid(apiName);
         final DevContext devContext = mDevContextFilter.createDevContext();
-        sLogger.v("Running fetchSignalUpdates");
+        sLogger.v("Running updateSignals");
         mExecutorService.execute(
                 () ->
-                        doFetchSignalUpdates(
-                                fetchSignalUpdatesInput,
-                                fetchSignalUpdatesCallback,
-                                callerUid,
-                                devContext));
+                        doUpdateSignals(
+                                updateSignalsInput, updateSignalsCallback, callerUid, devContext));
     }
 
-    private void doFetchSignalUpdates(
-            FetchSignalUpdatesInput input,
-            FetchSignalUpdatesCallback callback,
+    private void doUpdateSignals(
+            UpdateSignalsInput input,
+            UpdateSignalsCallback callback,
             int callerUid,
             DevContext devContext) {
-        sLogger.v("Entering doFetchSignalUpdates");
+        sLogger.v("Entering doUpdateSignals");
 
         // TODO(b/296586554) Add API id
         final int apiName = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
@@ -215,42 +212,57 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
         boolean shouldLog = false;
         try {
             try {
-                // Filter and validate request -- the custom audience filter does what we need so
-                // I don't see much value in creating a new one
-                AdTechIdentifier buyer =
-                        mCustomAudienceServiceFilter.filterRequestAndExtractIdentifier(
-                                input.getFetchUri(),
-                                input.getCallerPackageName(),
-                                mFlags.getDisableFledgeEnrollmentCheck(),
-                                // We will always enforce the foreground check, I don't see a reason
-                                // to make a flags for this like other APIs do
-                                true,
-                                true,
-                                callerUid,
-                                apiName,
-                                PROTECTED_SIGNAL_API_FETCH_SIGNAL_UPDATES,
-                                devContext);
-                shouldLog = true;
+                AdTechIdentifier buyer;
+                try {
+                    /* Filter and validate request -- the custom audience filter does what we need
+                     * so I don't see much value in creating a new one.
+                     */
+                    buyer =
+                            mCustomAudienceServiceFilter.filterRequestAndExtractIdentifier(
+                                    input.getUpdateUri(),
+                                    input.getCallerPackageName(),
+                                    mFlags.getDisableFledgeEnrollmentCheck(),
+                                    mFlags.getEnforceForegroundStatusForSignals(),
+                                    // Consent is enforced in a separate call below.
+                                    false,
+                                    callerUid,
+                                    apiName,
+                                    PROTECTED_SIGNAL_API_UPDATE_SIGNALS,
+                                    devContext);
+                    shouldLog = true;
+                } catch (Throwable t) {
+                    throw new FilterException(t);
+                }
 
                 // Fail silently for revoked user consent
                 if (!mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
                         input.getCallerPackageName())) {
-                    sLogger.v("Fetching signal updates");
-                    mFetchOrchestrator
-                            .orchestrateFetch(
-                                    input.getFetchUri(), buyer, input.getCallerPackageName())
+                    sLogger.v("Orchestrating signal update");
+                    mUpdateSignalsOrchestrator
+                            .orchestrateUpdate(
+                                    input.getUpdateUri(),
+                                    buyer,
+                                    input.getCallerPackageName(),
+                                    devContext)
                             .get();
+                    PeriodicEncodingJobService.scheduleIfNeeded(mContext, mFlags, false);
                     resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
                 } else {
                     sLogger.v("Consent revoked");
                     resultCode = AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                 }
+            } catch (ExecutionException exception) {
+                sLogger.d(
+                        exception,
+                        "Error encountered in updateSignals, unpacking from ExecutionException"
+                                + " and notifying caller");
+                resultCode = notifyFailure(callback, exception.getCause());
+                return;
             } catch (Exception exception) {
-                sLogger.d(exception, "Error encountered in fetchSignalUpdates, notifying caller");
+                sLogger.d(exception, "Error encountered in updateSignals, notifying caller");
                 resultCode = notifyFailure(callback, exception);
                 return;
             }
-
             callback.onSuccess();
         } catch (Exception exception) {
             sLogger.e(exception, "Unable to send result to the callback");
@@ -273,8 +285,8 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
         }
     }
 
-    private int notifyFailure(FetchSignalUpdatesCallback callback, Throwable t)
-            throws RemoteException {
+    private int notifyFailure(UpdateSignalsCallback callback, Throwable t) throws RemoteException {
+        sLogger.d(t, "Notifying caller about exception");
         int resultCode;
 
         boolean isFilterException = t instanceof FilterException;

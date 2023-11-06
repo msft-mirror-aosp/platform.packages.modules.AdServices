@@ -143,6 +143,18 @@ public abstract class AdSelectionEntryDao {
             String adSelectionConfigId, String appPackageName);
 
     /**
+     * Checks if there is a row in the {@link DBReportingComputationInfo} table with the unique key
+     * ad_selection_id in on device auction tables
+     *
+     * @param adSelectionId which is the key to query the corresponding ad selection data.
+     * @return true if row exists, false otherwise
+     */
+    @Query(
+            "SELECT EXISTS(SELECT 1 FROM reporting_computation_info WHERE ad_selection_id ="
+                    + " :adSelectionId LIMIT 1)")
+    public abstract boolean doesReportingComputationInfoExist(long adSelectionId);
+
+    /**
      * Checks if there is a row in the registered_ad_interactions table that matches the primary key
      * combination of adSelectionId, interactionKey, and destination
      *
@@ -306,7 +318,7 @@ public abstract class AdSelectionEntryDao {
 
     /**
      * Gets the {@link DBAdSelectionHistogramInfo} representing the histogram information associated
-     * with a given ad selection.
+     * with a given ad selection for on device.
      *
      * @return a {@link DBAdSelectionHistogramInfo} containing the histogram info associated with
      *     the ad selection, or {@code null} if no match is found
@@ -315,6 +327,30 @@ public abstract class AdSelectionEntryDao {
             "SELECT custom_audience_signals_buyer, ad_counter_int_keys FROM ad_selection "
                     + "WHERE ad_selection_id = :adSelectionId "
                     + "AND caller_package_name = :callerPackageName")
+    @Nullable
+    public abstract DBAdSelectionHistogramInfo getAdSelectionHistogramInfoInOnDeviceTable(
+            long adSelectionId, @NonNull String callerPackageName);
+
+    /**
+     * Gets the {@link DBAdSelectionHistogramInfo} representing the histogram information associated
+     * with a given ad selection for server auction.
+     *
+     * @return a {@link DBAdSelectionHistogramInfo} containing the histogram info associated with
+     *     the ad selection, or {@code null} if no match is found
+     */
+    @Query(
+            "SELECT custom_audience_signals_buyer, ad_counter_int_keys "
+                    + "FROM ad_selection "
+                    + "WHERE ad_selection_id = :adSelectionId "
+                    + "AND caller_package_name = :callerPackageName "
+                    + "UNION ALL "
+                    + "SELECT winning_buyer AS custom_audience_signals_buyer, "
+                    + "winning_custom_audience_ad_counter_int_keys AS ad_counter_int_keys "
+                    + "FROM ad_selection_result results "
+                    + "JOIN ad_selection_initialization init "
+                    + "ON results.ad_selection_id = init.ad_selection_id "
+                    + "WHERE init.ad_selection_id = :adSelectionId "
+                    + "AND init.caller_package_name = :callerPackageName")
     @Nullable
     public abstract DBAdSelectionHistogramInfo getAdSelectionHistogramInfo(
             long adSelectionId, @NonNull String callerPackageName);
@@ -606,6 +642,19 @@ public abstract class AdSelectionEntryDao {
     public abstract boolean doesAdSelectionIdExistInInitializationTable(long adSelectionId);
 
     /**
+     * Checks if adSelectionId exists in {@link DBAdSelectionInitialization} or in {@link
+     * DBAdSelection}, depending on the flag.
+     */
+    @Transaction
+    public boolean doesAdSelectionIdExistUponFlag(
+            long adSelectionId, boolean shouldCheckUnifiedTable) {
+        if (shouldCheckUnifiedTable) {
+            return doesAdSelectionIdExistInInitializationTable(adSelectionId);
+        }
+        return doesAdSelectionIdExist(adSelectionId);
+    }
+
+    /**
      * Checks if there is a row in the ad selection with the unique key ad_selection_id and caller
      * package name.
      *
@@ -645,9 +694,7 @@ public abstract class AdSelectionEntryDao {
      */
     @Transaction
     public boolean persistAdSelectionInitialization(
-            long adSelectionId,
-            AdSelectionInitialization adSelectionInitialization,
-            Instant creationInstant) {
+            long adSelectionId, AdSelectionInitialization adSelectionInitialization) {
         if (doesAdSelectionIdExistInInitializationTable(adSelectionId)
                 || doesAdSelectionIdExist(adSelectionId)) {
             return false;
@@ -657,7 +704,7 @@ public abstract class AdSelectionEntryDao {
                         .setAdSelectionId(adSelectionId)
                         .setCallerPackageName(adSelectionInitialization.getCallerPackageName())
                         .setSeller(adSelectionInitialization.getSeller())
-                        .setCreationInstant(creationInstant)
+                        .setCreationInstant(adSelectionInitialization.getCreationInstant())
                         .build();
         insertDBAdSelectionInitialization(dbAdSelectionInitialization);
         return true;
@@ -783,10 +830,10 @@ public abstract class AdSelectionEntryDao {
     /** Query to fetch caller package name and seller which initialized the ad selection run. */
     @Query(
             "SELECT seller, "
-                    + "caller_package_name AS callerPackageName "
+                    + "caller_package_name AS callerPackageName, "
+                    + "creation_instant AS creationInstant "
                     + "FROM ad_selection_initialization WHERE ad_selection_id = :adSelectionId")
-    public abstract AdSelectionInitialization getSellerAndCallerPackageNameForId(
-            long adSelectionId);
+    public abstract AdSelectionInitialization getAdSelectionInitializationForId(long adSelectionId);
 
     /** Query to fetch winning buyer of ad selection run identified by adSelectionId. */
     @Query("SELECT winning_buyer FROM ad_selection_result WHERE ad_selection_id = :adSelectionId")
@@ -840,6 +887,10 @@ public abstract class AdSelectionEntryDao {
      */
     @Insert(onConflict = OnConflictStrategy.ABORT)
     abstract void insertDBAdSelectionResult(DBAdSelectionResult dbAdSelectionResult);
+
+    /** Insert new {@link DBReportingComputationInfo} record. */
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    abstract void insertDBReportingComputationInfo(DBReportingComputationInfo dbAdSelectionResult);
 
     /**
      * Insert a reporting URI record. Aborts if adselectionId already exists.

@@ -89,6 +89,16 @@ public class FlagsFactory {
             public boolean getFledgeAuctionServerEnabled() {
                 return true;
             }
+
+            @Override
+            public boolean getFledgeEventLevelDebugReportingEnabled() {
+                return true;
+            }
+
+            @Override
+            public boolean getAppConfigReturnsEnabledByDefault() {
+                return false;
+            }
         };
     }
 }

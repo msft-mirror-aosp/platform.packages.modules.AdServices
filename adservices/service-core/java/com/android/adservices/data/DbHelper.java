@@ -18,7 +18,7 @@ package com.android.adservices.data;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_WRITE_EXCEPTION;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -41,6 +41,7 @@ import com.android.adservices.data.topics.migration.TopicsDbMigratorV7;
 import com.android.adservices.data.topics.migration.TopicsDbMigratorV8;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
@@ -62,7 +63,8 @@ public class DbHelper extends SQLiteOpenHelper {
 
     public static final int DATABASE_VERSION = 7;
 
-    private static final String DATABASE_NAME = "adservices.db";
+    private static final String DATABASE_NAME =
+            FileCompatUtils.getAdservicesFilename("adservices.db");
 
     private static DbHelper sSingleton = null;
     private final File mDbFile;
@@ -79,7 +81,7 @@ public class DbHelper extends SQLiteOpenHelper {
     @VisibleForTesting
     public DbHelper(@NonNull Context context, @NonNull String dbName, int dbVersion) {
         super(context, dbName, null, dbVersion);
-        mDbFile = context.getDatabasePath(dbName);
+        mDbFile = FileCompatUtils.getDatabasePathHelper(context, dbName);
         this.mDbVersion = dbVersion;
     }
 
@@ -121,7 +123,7 @@ public class DbHelper extends SQLiteOpenHelper {
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED);
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
             return null;
         }
     }
@@ -136,7 +138,7 @@ public class DbHelper extends SQLiteOpenHelper {
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_WRITE_EXCEPTION,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED);
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
             return null;
         }
     }

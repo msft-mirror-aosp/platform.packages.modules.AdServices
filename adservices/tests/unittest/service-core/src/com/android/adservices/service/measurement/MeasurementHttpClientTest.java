@@ -19,15 +19,25 @@ package com.android.adservices.service.measurement;
 import static com.android.adservices.service.Flags.MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_NETWORK_READ_TIMEOUT_MS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 import android.adservices.http.MockWebServerRule;
+import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.provider.DeviceConfig;
 
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.SmallTest;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.WebAddresses;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.TestableDeviceConfig;
@@ -36,12 +46,17 @@ import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -50,25 +65,161 @@ import java.net.URLConnection;
 import javax.net.ssl.SSLHandshakeException;
 
 /** Unit tests for {@link MeasurementHttpClient} */
-@SmallTest
+@RunWith(AndroidJUnit4.class)
 public final class MeasurementHttpClientTest {
+
+    private static final String PACKAGE_NAME = "com.google.android.adservices";
     private static final String KEY_CONNECT_TIMEOUT = "measurement_network_connect_timeout_ms";
     private static final String KEY_READ_TIMEOUT = "measurement_network_read_timeout_ms";
-    private final MeasurementHttpClient mNetworkConnection =
-            Mockito.spy(new MeasurementHttpClient());
+
+    private static final String MAPPINGS =
+            "341300000,341400000,202401"
+                    + "|341400000,341500000,202402"
+                    + "|341500000,341600000,202403";
+    private MeasurementHttpClient mNetworkConnection;
+    @Mock Flags mMockFlags;
+    @Mock PackageManager mMockPackageManager;
+    @Mock Context mContext;
 
     @Rule
     public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
             new TestableDeviceConfig.TestableDeviceConfigRule();
 
+    @Before
+    public void setup() throws PackageManager.NameNotFoundException {
+        MockitoAnnotations.initMocks(this);
+        setupPackageVersion(341500000L);
+    }
+
     @Test
     public void testOpenAndSetupConnectionDefaultTimeoutValues_success() throws Exception {
         final URL url = new URL("https://google.com");
+        mNetworkConnection = new MeasurementHttpClient(mContext);
         final URLConnection urlConnection = mNetworkConnection.setup(url);
 
         Assert.assertEquals(
                 MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS, urlConnection.getConnectTimeout());
         Assert.assertEquals(MEASUREMENT_NETWORK_READ_TIMEOUT_MS, urlConnection.getReadTimeout());
+    }
+
+    @Test
+    public void testSetup_ForComputeFromMappingsFlagTrue_SetsCorrectHeader()
+            throws IOException, PackageManager.NameNotFoundException {
+
+        final MockitoSession mockitoSession =
+                ExtendedMockito.mockitoSession()
+                        .mockStatic(FlagsFactory.class)
+                        .strictness(Strictness.WARN)
+                        .initMocks(this)
+                        .startMocking();
+        try {
+            ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+            doReturn(true).when(mMockFlags).getEnableComputeVersionFromMappings();
+            doReturn(MAPPINGS).when(mMockFlags).getAdservicesVersionMappings();
+            setupPackageVersion(341410234L);
+            final URL url = new URL("https://test.com");
+            mNetworkConnection = new MeasurementHttpClient(mContext);
+            final URLConnection urlConnection = mNetworkConnection.setup(url);
+            Assert.assertEquals("202402", urlConnection.getRequestProperty("Version"));
+        } finally {
+            mockitoSession.finishMocking();
+        }
+    }
+
+    @Test
+    public void testSetup_ForComputeFromMappingsFlagTrueAndVersionAsStartRange_SetsCorrectHeader()
+            throws IOException, PackageManager.NameNotFoundException {
+
+        final MockitoSession mockitoSession =
+                ExtendedMockito.mockitoSession()
+                        .mockStatic(FlagsFactory.class)
+                        .strictness(Strictness.WARN)
+                        .initMocks(this)
+                        .startMocking();
+        try {
+            ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+            doReturn(true).when(mMockFlags).getEnableComputeVersionFromMappings();
+            doReturn(MAPPINGS).when(mMockFlags).getAdservicesVersionMappings();
+            setupPackageVersion(341500000L);
+            mNetworkConnection = new MeasurementHttpClient(mContext);
+            final URL url = new URL("https://test.com");
+            final URLConnection urlConnection = mNetworkConnection.setup(url);
+            Assert.assertEquals("202403", urlConnection.getRequestProperty("Version"));
+        } finally {
+            mockitoSession.finishMocking();
+        }
+    }
+
+    @Test
+    public void testSetup_ForComputeFromMappingsFlagTrueAndVersionAsEndRange_SetsCorrectHeader()
+            throws IOException, PackageManager.NameNotFoundException {
+
+        final MockitoSession mockitoSession =
+                ExtendedMockito.mockitoSession()
+                        .mockStatic(FlagsFactory.class)
+                        .strictness(Strictness.WARN)
+                        .initMocks(this)
+                        .startMocking();
+        try {
+            ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+            doReturn(true).when(mMockFlags).getEnableComputeVersionFromMappings();
+            doReturn(MAPPINGS).when(mMockFlags).getAdservicesVersionMappings();
+            setupPackageVersion(341400000L);
+            final URL url = new URL("https://test.com");
+            mNetworkConnection = new MeasurementHttpClient(mContext);
+            final URLConnection urlConnection = mNetworkConnection.setup(url);
+            Assert.assertEquals("202402", urlConnection.getRequestProperty("Version"));
+        } finally {
+            mockitoSession.finishMocking();
+        }
+    }
+
+    @Test
+    public void testSetup_ForComputeFromMappingsFlagTrueAndVersionNotInRange_SetsHeaderAsNotFound()
+            throws IOException, PackageManager.NameNotFoundException {
+
+        final MockitoSession mockitoSession =
+                ExtendedMockito.mockitoSession()
+                        .mockStatic(FlagsFactory.class)
+                        .strictness(Strictness.WARN)
+                        .initMocks(this)
+                        .startMocking();
+        try {
+            ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+            doReturn(true).when(mMockFlags).getEnableComputeVersionFromMappings();
+            doReturn(MAPPINGS).when(mMockFlags).getAdservicesVersionMappings();
+            setupPackageVersion(341700000L);
+            final URL url = new URL("https://test.com");
+            mNetworkConnection = new MeasurementHttpClient(mContext);
+            final URLConnection urlConnection = mNetworkConnection.setup(url);
+            Assert.assertEquals("000000", urlConnection.getRequestProperty("Version"));
+        } finally {
+            mockitoSession.finishMocking();
+        }
+    }
+
+    @Test
+    public void testSetup_ForComputeFromMappingsFlagFalse_SetsHeaderUsingVersionFlag()
+            throws IOException, PackageManager.NameNotFoundException {
+        final MockitoSession mockitoSession =
+                ExtendedMockito.mockitoSession()
+                        .mockStatic(FlagsFactory.class)
+                        .strictness(Strictness.WARN)
+                        .initMocks(this)
+                        .startMocking();
+        try {
+            ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+            doReturn(false).when(mMockFlags).getEnableComputeVersionFromMappings();
+            doReturn("202311").when(mMockFlags).getMainlineTrainVersion();
+            setupPackageVersion(341700000L);
+            final URL url = new URL("https://test.com");
+            mNetworkConnection = new MeasurementHttpClient(mContext);
+            final URLConnection urlConnection = mNetworkConnection.setup(url);
+            Assert.assertEquals("202311", urlConnection.getRequestProperty("Version"));
+
+        } finally {
+            mockitoSession.finishMocking();
+        }
     }
 
     @Test
@@ -87,6 +238,7 @@ public final class MeasurementHttpClientTest {
                             });
 
             final URL url = server.getUrl("/test");
+            mNetworkConnection = new MeasurementHttpClient(mContext);
             final HttpURLConnection urlConnection =
                     (HttpURLConnection) mNetworkConnection.setup(url);
 
@@ -116,7 +268,7 @@ public final class MeasurementHttpClientTest {
             final URL url = server.getUrl("/test");
 
             Assert.assertTrue(WebAddresses.isLocalhost(Uri.parse(url.toString())));
-
+            mNetworkConnection = new MeasurementHttpClient(mContext);
             final HttpURLConnection urlConnection =
                     (HttpURLConnection) mNetworkConnection.setup(url);
 
@@ -152,7 +304,7 @@ public final class MeasurementHttpClientTest {
             final URL url = server.getUrl("/test");
 
             Assert.assertFalse(WebAddresses.isLocalhost(Uri.parse(url.toString())));
-
+            mNetworkConnection = new MeasurementHttpClient(mContext);
             final HttpURLConnection urlConnection =
                     (HttpURLConnection) mNetworkConnection.setup(url);
 
@@ -180,6 +332,7 @@ public final class MeasurementHttpClientTest {
                 /* makeDefault */ false);
 
         final URL url = new URL("https://google.com");
+        mNetworkConnection = new MeasurementHttpClient(mContext);
         final URLConnection urlConnection = mNetworkConnection.setup(url);
 
         Assert.assertEquals(123456, urlConnection.getConnectTimeout());
@@ -187,12 +340,14 @@ public final class MeasurementHttpClientTest {
     }
 
     @Test
-    public void testOpenAndSetupConnectionONullUrl_failure() throws Exception {
+    public void testOpenAndSetupConnectionONullUrl_failure() {
+        mNetworkConnection = new MeasurementHttpClient(mContext);
         Assert.assertThrows(NullPointerException.class, () -> mNetworkConnection.setup(null));
     }
 
     @Test
-    public void testOpenAndSetupConnectionOInvalidUrl_failure() throws Exception {
+    public void testOpenAndSetupConnectionOInvalidUrl_failure() {
+        mNetworkConnection = new MeasurementHttpClient(mContext);
         Assert.assertThrows(
                 MalformedURLException.class, () -> mNetworkConnection.setup(new URL("x")));
     }
@@ -202,5 +357,15 @@ public final class MeasurementHttpClientTest {
                 ApplicationProvider.getApplicationContext(),
                 "adservices_untrusted_test_server.p12",
                 "adservices_test");
+    }
+
+    private void setupPackageVersion(long version) throws PackageManager.NameNotFoundException {
+        PackageInfo packageInfo = Mockito.spy(PackageInfo.class);
+        packageInfo.packageName = PACKAGE_NAME;
+        packageInfo.isApex = true;
+        packageInfo.setLongVersionCode(version);
+        when(mMockPackageManager.getPackageInfo(anyString(), anyInt())).thenReturn(packageInfo);
+        when(mContext.getPackageManager()).thenReturn(mMockPackageManager);
+        when(mContext.getPackageName()).thenReturn(PACKAGE_NAME);
     }
 }

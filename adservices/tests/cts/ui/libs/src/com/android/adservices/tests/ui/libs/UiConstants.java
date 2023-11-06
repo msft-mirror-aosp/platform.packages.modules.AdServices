@@ -29,6 +29,9 @@ public class UiConstants {
 
     public static final int LAUNCH_TIMEOUT_MS = 8000; /* wait time for UI elements to launch */
 
+    public static final int SCROLL_TIMEOUT = 500;
+
+    public static final int PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS = 1000;
     public static final String SYSTEM_UI_NAME = "com.android.systemui";
 
     public static final String SYSTEM_UI_RESOURCE_ID =
@@ -38,5 +41,6 @@ public class UiConstants {
         GA_UX,
         BETA_UX,
         U18_UX,
+        RVC_UX,
     }
 }

@@ -16,7 +16,11 @@
 
 package com.android.adservices.service.topics;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_COBALT_LOGGER_INITIALIZATION_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
+
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.content.Context;
 import android.os.Build;
 import android.util.Pair;
@@ -24,13 +28,17 @@ import android.util.Pair;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.cobalt.CobaltFactory;
+import com.android.adservices.cobalt.CobaltInitializationException;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.GetTopicsReportedStats;
+import com.android.adservices.service.topics.cobalt.TopicsCobaltLogger;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -83,6 +91,11 @@ public class CacheManager {
 
     // Set containing Global Blocked Topic Ids
     private HashSet<Integer> mCachedGlobalBlockedTopicIds;
+
+    @Nullable
+    // Expected to be null when the topics cobalt flag is disabled.
+    private final TopicsCobaltLogger mTopicsCobaltLogger;
+
     private final AdServicesLogger mLogger;
 
     @VisibleForTesting
@@ -91,12 +104,14 @@ public class CacheManager {
             Flags flags,
             AdServicesLogger logger,
             BlockedTopicsManager blockedTopicsManager,
-            GlobalBlockedTopicsManager globalBlockedTopicsManager) {
+            GlobalBlockedTopicsManager globalBlockedTopicsManager,
+            TopicsCobaltLogger topicsCobaltLogger) {
         mTopicsDao = topicsDao;
         mFlags = flags;
         mLogger = logger;
         mBlockedTopicsManager = blockedTopicsManager;
         mCachedGlobalBlockedTopicIds = globalBlockedTopicsManager.getGlobalBlockedTopicIds();
+        mTopicsCobaltLogger = topicsCobaltLogger;
     }
 
     /** Returns an instance of the CacheManager given a context. */
@@ -104,13 +119,30 @@ public class CacheManager {
     public static CacheManager getInstance(Context context) {
         synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
+                TopicsCobaltLogger topicsCobaltLogger = null;
+                try {
+                    if (FlagsFactory.getFlags().getTopicsCobaltLoggingEnabled()) {
+                        topicsCobaltLogger =
+                                new TopicsCobaltLogger(
+                                        CobaltFactory.getCobaltLogger(
+                                                context, FlagsFactory.getFlags()));
+                    }
+                } catch (CobaltInitializationException e) {
+                    sLogger.e(e, "Cobalt logger could not be initialised.");
+                    ErrorLogUtil.e(
+                            e,
+                            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_COBALT_LOGGER_INITIALIZATION_FAILURE,
+                            AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
+                }
+
                 sSingleton =
                         new CacheManager(
                                 TopicsDao.getInstance(context),
                                 FlagsFactory.getFlags(),
                                 AdServicesLoggerImpl.getInstance(),
                                 BlockedTopicsManager.getInstance(context),
-                                GlobalBlockedTopicsManager.getInstance());
+                                GlobalBlockedTopicsManager.getInstance(),
+                                topicsCobaltLogger);
             }
             return sSingleton;
         }
@@ -234,6 +266,11 @@ public class CacheManager {
                             .build());
         }
 
+        if (mFlags.getTopicsCobaltLoggingEnabled()) {
+            if (mTopicsCobaltLogger != null) {
+                mTopicsCobaltLogger.logTopicOccurrences(topics);
+            }
+        }
 
         return topics;
     }

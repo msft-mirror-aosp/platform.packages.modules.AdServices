@@ -25,11 +25,10 @@ import android.adservices.common.FledgeErrorResponse;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.annotation.RequiresApi;
 import android.net.Uri;
 import android.os.Build;
 import android.os.RemoteException;
-
-import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -71,6 +70,7 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -80,6 +80,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 /** Runner class for ProcessAdSelectionResultRunner service */
+// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class PersistAdSelectionResultRunner {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -114,6 +115,9 @@ public class PersistAdSelectionResultRunner {
     private ReportingRegistrationLimits mReportingLimits;
     @NonNull private AuctionServerDataCompressor mDataCompressor;
     @NonNull private AuctionServerPayloadExtractor mPayloadExtractor;
+    @NonNull private AdCounterHistogramUpdater mAdCounterHistogramUpdater;
+
+    @NonNull private AuctionResultValidator mAuctionResultValidator;
 
     public PersistAdSelectionResultRunner(
             @NonNull final ObliviousHttpEncryptor obliviousHttpEncryptor,
@@ -127,7 +131,9 @@ public class PersistAdSelectionResultRunner {
             @NonNull final DevContext devContext,
             final long overallTimeout,
             final boolean forceContinueOnAbsentOwner,
-            final ReportingRegistrationLimits reportingLimits) {
+            @NonNull final ReportingRegistrationLimits reportingLimits,
+            @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
+            @NonNull final AuctionResultValidator auctionResultValidator) {
         Objects.requireNonNull(obliviousHttpEncryptor);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(customAudienceDao);
@@ -137,6 +143,8 @@ public class PersistAdSelectionResultRunner {
         Objects.requireNonNull(scheduledExecutorService);
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(reportingLimits);
+        Objects.requireNonNull(adCounterHistogramUpdater);
+        Objects.requireNonNull(auctionResultValidator);
 
         mObliviousHttpEncryptor = obliviousHttpEncryptor;
         mAdSelectionEntryDao = adSelectionEntryDao;
@@ -150,6 +158,8 @@ public class PersistAdSelectionResultRunner {
         mOverallTimeout = overallTimeout;
         mForceSearchOnAbsentOwner = forceContinueOnAbsentOwner;
         mReportingLimits = reportingLimits;
+        mAdCounterHistogramUpdater = adCounterHistogramUpdater;
+        mAuctionResultValidator = auctionResultValidator;
     }
 
     /** Orchestrates PersistAdSelectionResultRunner process. */
@@ -241,14 +251,27 @@ public class PersistAdSelectionResultRunner {
                 .transform(this::parseAdSelectionResult, mLightweightExecutorService)
                 .transform(
                         auctionResult -> {
-                            if (auctionResult.getIsChaff()) {
+                            if (auctionResult.getError().getCode() != 0) {
+                                String err =
+                                        String.format(
+                                                Locale.ENGLISH,
+                                                "AuctionResult has an error: %s",
+                                                auctionResult.getError().getMessage());
+                                sLogger.e(err);
+                                throw new IllegalArgumentException(err);
+                            } else if (auctionResult.getIsChaff()) {
                                 sLogger.v("Result is chaff, truncating persistAdSelectionResult");
+                            } else if (auctionResult.getAdType() == AuctionResult.AdType.UNKNOWN) {
+                                String err = "AuctionResult type is unknown";
+                                sLogger.e(err);
+                                throw new IllegalArgumentException(err);
                             } else {
                                 validateAuctionResult(auctionResult);
-                                fetchAdWithRenderUri(auctionResult);
+                                DBAdData winningAd = fetchWinningAd(auctionResult);
                                 int persistingCookie =
                                         Tracing.beginAsyncSection(Tracing.PERSIST_AUCTION_RESULTS);
-                                persistAuctionResults(auctionResult, adSelectionId, seller);
+                                persistAuctionResults(
+                                        auctionResult, winningAd, adSelectionId, seller);
                                 persistAdInteractionKeysAndUrls(
                                         auctionResult, adSelectionId, seller);
                                 Tracing.endAsyncSection(
@@ -273,7 +296,26 @@ public class PersistAdSelectionResultRunner {
     }
 
     @NonNull
-    private DBAdData fetchAdWithRenderUri(AuctionResult auctionResult) {
+    private DBAdData fetchWinningAd(AuctionResult auctionResult) {
+        DBAdData winningAd;
+        if (auctionResult.getAdType() == AuctionResult.AdType.REMARKETING_AD) {
+            winningAd = fetchRemarketingAd(auctionResult);
+        } else if (auctionResult.getAdType() == AuctionResult.AdType.APP_INSTALL_AD) {
+            winningAd = fetchAppInstallAd(auctionResult);
+        } else {
+            String err =
+                    String.format(
+                            Locale.ENGLISH,
+                            "The value: '%s' is not defined in AdType proto!",
+                            auctionResult.getAdType().getNumber());
+            sLogger.e(err);
+            throw new IllegalArgumentException(err);
+        }
+        return winningAd;
+    }
+
+    @NonNull
+    private DBAdData fetchRemarketingAd(AuctionResult auctionResult) {
         Uri adRenderUri = Uri.parse(auctionResult.getAdRenderUrl());
         AdTechIdentifier buyer = AdTechIdentifier.fromString(auctionResult.getBuyer());
         String name = auctionResult.getCustomAudienceName();
@@ -290,9 +332,12 @@ public class PersistAdSelectionResultRunner {
             if (Objects.isNull(winningCustomAudience)) {
                 String err =
                         String.format(
+                                Locale.ENGLISH,
                                 "Custom Audience is not found by given owner='%s', "
                                         + "buyer='%s', name='%s'",
-                                owner, buyer, name);
+                                owner,
+                                buyer,
+                                name);
                 sLogger.e(err);
                 throw new IllegalArgumentException(err);
             }
@@ -342,8 +387,18 @@ public class PersistAdSelectionResultRunner {
         return winningAd;
     }
 
+    @NonNull
+    private DBAdData fetchAppInstallAd(AuctionResult auctionResult) {
+        Uri adRenderUri = Uri.parse(auctionResult.getAdRenderUrl());
+        return new DBAdData.Builder()
+                .setMetadata("")
+                .setRenderUri(adRenderUri)
+                .setAdCounterKeys(Collections.emptySet())
+                .build();
+    }
+
     private void validateAuctionResult(AuctionResult auctionResult) {
-        new AuctionResultValidator().validate(auctionResult);
+        mAuctionResultValidator.validate(auctionResult);
     }
 
     @Nullable
@@ -418,20 +473,10 @@ public class PersistAdSelectionResultRunner {
     }
 
     private void persistAuctionResults(
-            AuctionResult auctionResult, long adSelectionId, AdTechIdentifier seller) {
-        mAdSelectionEntryDao.persistAdSelectionResultForCustomAudience(
-                adSelectionId,
-                AdSelectionResultBidAndUri.builder()
-                        .setAdSelectionId(adSelectionId)
-                        .setWinningAdBid(auctionResult.getBid())
-                        .setWinningAdRenderUri(Uri.parse(auctionResult.getAdRenderUrl()))
-                        .build(),
-                AdTechIdentifier.fromString(auctionResult.getBuyer()),
-                WinningCustomAudience.builder()
-                        .setOwner(auctionResult.getCustomAudienceOwner())
-                        .setName(auctionResult.getCustomAudienceName())
-                        .build());
-
+            AuctionResult auctionResult,
+            DBAdData winningAd,
+            long adSelectionId,
+            AdTechIdentifier seller) {
         final WinReportingUrls winReportingUrls = auctionResult.getWinReportingUrls();
         final Uri buyerReportingUrl =
                 validateAdTechUriAndReturnEmptyIfInvalid(
@@ -446,14 +491,46 @@ public class PersistAdSelectionResultRunner {
                         SELLER_WIN_REPORTING_URI_FIELD_NAME,
                         Uri.parse(
                                 winReportingUrls
-                                        .getComponentSellerReportingUrls()
+                                        .getTopLevelSellerReportingUrls()
                                         .getReportingUrl()));
-        mAdSelectionEntryDao.persistReportingData(
-                adSelectionId,
+        AdSelectionInitialization adSelectionInitialization =
+                mAdSelectionEntryDao.getAdSelectionInitializationForId(adSelectionId);
+        AdTechIdentifier buyer = AdTechIdentifier.fromString(auctionResult.getBuyer());
+        WinningCustomAudience winningCustomAudience =
+                WinningCustomAudience.builder()
+                        .setOwner(auctionResult.getCustomAudienceOwner())
+                        .setName(auctionResult.getCustomAudienceName())
+                        .setAdCounterKeys(winningAd.getAdCounterKeys())
+                        .build();
+        ReportingData reportingData =
                 ReportingData.builder()
                         .setBuyerWinReportingUri(buyerReportingUrl)
                         .setSellerWinReportingUri(sellerReportingUrl)
-                        .build());
+                        .build();
+        AdSelectionResultBidAndUri resultBidAndUri =
+                AdSelectionResultBidAndUri.builder()
+                        .setAdSelectionId(adSelectionId)
+                        .setWinningAdBid(auctionResult.getBid())
+                        .setWinningAdRenderUri(Uri.parse(auctionResult.getAdRenderUrl()))
+                        .build();
+        sLogger.v("Persisting ad selection results for id: %s", adSelectionId);
+        sLogger.v("AdSelectionResultBidAndUri: %s", resultBidAndUri);
+        sLogger.v("WinningCustomAudience: %s", winningCustomAudience);
+        sLogger.v("ReportingData: %s", reportingData);
+        mAdSelectionEntryDao.persistAdSelectionResultForCustomAudience(
+                adSelectionId, resultBidAndUri, buyer, winningCustomAudience);
+        mAdSelectionEntryDao.persistReportingData(adSelectionId, reportingData);
+
+        try {
+            mAdCounterHistogramUpdater.updateWinHistogram(
+                    buyer, adSelectionInitialization, winningCustomAudience);
+        } catch (Exception exception) {
+            // Frequency capping is not crucial enough to crash the entire process
+            sLogger.w(
+                    exception,
+                    "Error encountered updating ad counter histogram with win event; "
+                            + "continuing ad selection persistence");
+        }
     }
 
     /**
@@ -486,7 +563,7 @@ public class PersistAdSelectionResultRunner {
                         seller.toString(),
                         SELLER_INTERACTION_REPORTING_URI_FIELD_NAME,
                         winReportingUrls
-                                .getComponentSellerReportingUrls()
+                                .getTopLevelSellerReportingUrls()
                                 .getInteractionReportingUrls());
         sLogger.v("Valid buyer interaction urls: %s", buyerInteractionReportingUrls);
         persistAdInteractionKeysAndUrls(
@@ -605,10 +682,11 @@ public class PersistAdSelectionResultRunner {
     private void validateSellerAndCallerPackageName(
             PersistAdSelectionResultInput inputParams, long adSelectionId) {
         AdSelectionInitialization initializationData =
-                mAdSelectionEntryDao.getSellerAndCallerPackageNameForId(adSelectionId);
+                mAdSelectionEntryDao.getAdSelectionInitializationForId(adSelectionId);
         if (Objects.isNull(initializationData)) {
             String err =
                     String.format(
+                            Locale.ENGLISH,
                             "Initialization info cannot be found for the given ad selection id: %s",
                             adSelectionId);
             sLogger.e(err);
@@ -623,9 +701,13 @@ public class PersistAdSelectionResultRunner {
         if (!sellerInDB.equals(sellerInRequest) || !callerInDB.equals(callerInRequest)) {
             String err =
                     String.format(
+                            Locale.ENGLISH,
                             "Initialization info in db (seller=%s, callerPackageName=%s) doesn't "
                                     + "match the request (seller=%s, callerPackageName=%s)",
-                            sellerInDB, callerInDB, sellerInRequest, callerInRequest);
+                            sellerInDB,
+                            callerInDB,
+                            sellerInRequest,
+                            callerInRequest);
             sLogger.e(err);
             throw new IllegalArgumentException(err);
         }
@@ -707,7 +789,7 @@ public class PersistAdSelectionResultRunner {
                 auctionResult.getWinReportingUrls().getBuyerReportingUrls().getReportingUrl(),
                 auctionResult
                         .getWinReportingUrls()
-                        .getComponentSellerReportingUrls()
+                        .getTopLevelSellerReportingUrls()
                         .getReportingUrl());
     }
 

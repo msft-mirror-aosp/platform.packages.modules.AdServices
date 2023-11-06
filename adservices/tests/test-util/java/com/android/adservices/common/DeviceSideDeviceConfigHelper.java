@@ -19,30 +19,19 @@ import static com.android.compatibility.common.util.ShellIdentityUtils.invokeSta
 
 import android.provider.DeviceConfig;
 
-import com.android.adservices.common.DeviceConfigHelper.SyncDisabledModeForTest;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
-import java.util.Objects;
+import com.google.errorprone.annotations.FormatMethod;
+import com.google.errorprone.annotations.FormatString;
+
 import java.util.concurrent.Callable;
 
 /** Device-side implementation of {@link DeviceConfigHelper.Interface}. */
-final class DeviceSideDeviceConfigHelper implements DeviceConfigHelper.Interface {
-
-    private static final Logger sLogger =
-            new Logger(AndroidLogger.getInstance(), DeviceSideDeviceConfigHelper.class);
-
-    private final String mNamespace;
+final class DeviceSideDeviceConfigHelper extends DeviceConfigHelper.Interface {
 
     DeviceSideDeviceConfigHelper(String namespace) {
-        mNamespace = Objects.requireNonNull(namespace);
-    }
-
-    @Override
-    public void setSyncDisabledModeForTest(SyncDisabledModeForTest mode) {
-        String value = mode.name().toLowerCase();
-        sLogger.v("setSyncDisabledModeForTest(%s)", value);
-        ShellUtils.runShellCommand("device_config set_sync_disabled_for_test %s", value);
+        super(namespace, AndroidLogger.getInstance());
     }
 
     @Override
@@ -51,32 +40,31 @@ final class DeviceSideDeviceConfigHelper implements DeviceConfigHelper.Interface
                 () -> DeviceConfig.getString(mNamespace, name, /* defaultValue= */ null));
     }
 
+    // TODO(b/300136201): override non-async methods to use a DeviceConfig listener
+
     @Override
-    public void set(String name, String value) {
-        sLogger.v("set(%s=%s)", name, value);
-        callWithDeviceConfigPermissions(
+    public boolean asyncSet(String name, String value) {
+        mLog.v("asyncSet(%s=%s)", name, value);
+        return callWithDeviceConfigPermissions(
                 () -> DeviceConfig.setProperty(mNamespace, name, value, /* makeDefault= */ false));
     }
 
     @Override
-    public void delete(String name) {
-        sLogger.v("delete(%s)", name);
+    public boolean asyncDelete(String name) {
+        mLog.v("asyncDelete(%s)", name);
 
         if (SdkLevel.isAtLeastT()) {
-            callWithDeviceConfigPermissions(() -> DeviceConfig.deleteProperty(mNamespace, name));
-            return;
+            return callWithDeviceConfigPermissions(
+                    () -> DeviceConfig.deleteProperty(mNamespace, name));
         }
-        ShellUtils.runShellCommand("device_config delete %s %s", mNamespace, name);
+        // Use shell command instead
+        return super.asyncDelete(name);
     }
 
     @Override
-    public String dump() {
-        return ShellUtils.runShellCommand("device_config list %s", mNamespace).trim();
-    }
-
-    @Override
-    public String toString() {
-        return DeviceSideDeviceConfigHelper.class.getSimpleName();
+    @FormatMethod
+    protected String runShellCommand(@FormatString String cmdFmt, @Nullable Object... cmdArgs) {
+        return ShellUtils.runShellCommand(cmdFmt, cmdArgs);
     }
 
     static <T> T callWithDeviceConfigPermissions(Callable<T> c) {

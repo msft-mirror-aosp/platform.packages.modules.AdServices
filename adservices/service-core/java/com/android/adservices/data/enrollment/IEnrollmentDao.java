@@ -28,6 +28,9 @@ import java.util.Set;
 /** Interface for enrollment related data access operations. */
 public interface IEnrollmentDao {
 
+    /** Returns all enrollment data in enrollment table. */
+    List<EnrollmentData> getAllEnrollmentData();
+
     /**
      * Returns the {@link EnrollmentData}.
      *

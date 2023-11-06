@@ -64,6 +64,7 @@ import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
+import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
@@ -79,6 +80,8 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.data.signals.EncodedPayloadDao;
+import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
@@ -125,7 +128,7 @@ public class AdSelectionFromOutcomesE2ETest {
     private static final int CALLER_UID = Process.myUid();
     private static final String SELECTION_PICK_HIGHEST_LOGIC_JS_PATH = "/selectionPickHighestJS/";
     private static final String SELECTION_PICK_NONE_LOGIC_JS_PATH = "/selectionPickNoneJS/";
-    private static final String SELECTION_WATERFALL_LOGIC_JS_PATH = "/selectionWaterfallJS/";
+    static final String SELECTION_WATERFALL_LOGIC_JS_PATH = "/selectionWaterfallJS/";
     private static final String SELECTION_FAULTY_LOGIC_JS_PATH = "/selectionFaultyJS/";
     private static final String SELECTION_PICK_HIGHEST_LOGIC_JS =
             "function selectOutcome(outcomes, selection_signals) {\n"
@@ -143,7 +146,7 @@ public class AdSelectionFromOutcomesE2ETest {
             "function selectOutcome(outcomes, selection_signals) {\n"
                     + "    return {'status': 0, 'result': null};\n"
                     + "}";
-    private static final String SELECTION_WATERFALL_LOGIC_JS =
+    static final String SELECTION_WATERFALL_LOGIC_JS =
             "function selectOutcome(outcomes, selection_signals) {\n"
                     + "    if (outcomes.length != 1 || selection_signals.bid_floor =="
                     + " undefined) return null;\n"
@@ -157,7 +160,7 @@ public class AdSelectionFromOutcomesE2ETest {
                     + "    return {'status': 0, 'result': {\"id\": outcomes[0].id + 1, \"bid\": "
                     + "outcomes[0].bid}};\n"
                     + "}";
-    private static final String BID_FLOOR_SELECTION_SIGNAL_TEMPLATE = "{\"bid_floor\":%s}";
+    static final String BID_FLOOR_SELECTION_SIGNAL_TEMPLATE = "{\"bid_floor\":%s}";
 
     private static final AdTechIdentifier SELLER_INCONSISTENT_WITH_SELECTION_URI =
             AdTechIdentifier.fromString("inconsistent.developer.android.com");
@@ -192,6 +195,7 @@ public class AdSelectionFromOutcomesE2ETest {
     private ExecutorService mBackgroundExecutorService;
     private ScheduledThreadPoolExecutor mScheduledExecutor;
     private CustomAudienceDao mCustomAudienceDao;
+    private EncodedPayloadDao mEncodedPayloadDao;
     private AppInstallDao mAppInstallDao;
     private FrequencyCapDao mFrequencyCapDao;
     private EncryptionKeyDao mEncryptionKeyDao;
@@ -203,6 +207,8 @@ public class AdSelectionFromOutcomesE2ETest {
     private AdFilteringFeatureFactory mAdFilteringFeatureFactory;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptor;
+    @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
+    @Mock private AdIdFetcher mAdIdFetcher;
 
     @Before
     public void setUp() throws Exception {
@@ -233,6 +239,10 @@ public class AdSelectionFromOutcomesE2ETest {
                         .addTypeConverter(new DBCustomAudience.Converters(true, true))
                         .build()
                         .customAudienceDao();
+        mEncodedPayloadDao =
+                Room.inMemoryDatabaseBuilder(mContext, ProtectedSignalsDatabase.class)
+                        .build()
+                        .getEncodedPayloadDao();
         SharedStorageDatabase sharedDb =
                 Room.inMemoryDatabaseBuilder(mContext, SharedStorageDatabase.class).build();
         mAppInstallDao = sharedDb.appInstallDao();
@@ -258,6 +268,7 @@ public class AdSelectionFromOutcomesE2ETest {
                         mAdSelectionEntryDaoSpy,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mEncodedPayloadDao,
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
@@ -274,7 +285,9 @@ public class AdSelectionFromOutcomesE2ETest {
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor);
+                        mObliviousHttpEncryptor,
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         // Create a dispatcher that helps map a request -> response in mockWebServer
         mDispatcher =
@@ -385,6 +398,7 @@ public class AdSelectionFromOutcomesE2ETest {
                         mAdSelectionEntryDaoSpy,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mEncodedPayloadDao,
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
@@ -401,7 +415,9 @@ public class AdSelectionFromOutcomesE2ETest {
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor);
+                        mObliviousHttpEncryptor,
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher);
 
         AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback resultsCallback =
                 invokeSelectAdsFromOutcomes(adSelectionService, config, CALLER_PACKAGE_NAME);
@@ -684,6 +700,7 @@ public class AdSelectionFromOutcomesE2ETest {
                     AdSelectionInitialization.builder()
                             .setSeller(SAMPLE_SELLER)
                             .setCallerPackageName(CALLER_PACKAGE_NAME)
+                            .setCreationInstant(Instant.now())
                             .build();
             final AdSelectionResultBidAndUri idWithBidAndRenderUri =
                     AdSelectionResultBidAndUri.builder()
@@ -692,9 +709,7 @@ public class AdSelectionFromOutcomesE2ETest {
                             .setWinningAdRenderUri(renderUri)
                             .build();
             mAdSelectionEntryDaoSpy.persistAdSelectionInitialization(
-                    idWithBidAndRenderUri.getAdSelectionId(),
-                    adSelectionInitialization,
-                    Instant.now());
+                    idWithBidAndRenderUri.getAdSelectionId(), adSelectionInitialization);
         }
     }
 

@@ -17,7 +17,7 @@
 package com.android.adservices.tests.ui.libs.pages;
 
 import static com.android.adservices.tests.ui.libs.UiUtils.PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT;
-import static com.android.adservices.tests.ui.libs.UiUtils.scrollAndClickButton;
+import static com.android.adservices.tests.ui.libs.UiUtils.scrollToAndClick;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -30,6 +30,7 @@ import androidx.test.uiautomator.UiSelector;
 
 import com.android.adservices.api.R;
 import com.android.adservices.tests.ui.libs.UiConstants;
+import com.android.adservices.tests.ui.libs.UiUtils;
 
 public class SettingsPages {
     public static void testSettingsPageConsents(
@@ -55,46 +56,56 @@ public class SettingsPages {
                 flipConsent(device, isOptin, flipConsent);
                 break;
             case U18_UX:
-                enterMsmtConsentPage(context, device);
+                enterU18ConsentPage(context, device);
                 flipConsent(device, isOptin, flipConsent);
         }
     }
 
     public static void enterTopicsConsentPage(Context context, UiDevice device)
             throws UiObjectNotFoundException, InterruptedException {
-        scrollAndClickButton(context, device, R.string.settingsUI_topics_ga_title);
+        scrollToAndClick(context, device, R.string.settingsUI_topics_ga_title);
     }
 
     public static void enterMsmtConsentPage(Context context, UiDevice device)
             throws UiObjectNotFoundException, InterruptedException {
-        scrollAndClickButton(context, device, R.string.settingsUI_measurement_view_title);
+        scrollToAndClick(context, device, R.string.settingsUI_measurement_view_title);
+    }
+
+    public static void enterU18ConsentPage(Context context, UiDevice device)
+            throws UiObjectNotFoundException, InterruptedException {
+        scrollToAndClick(context, device, R.string.settingsUI_u18_measurement_view_title);
     }
 
     public static void enterFledgeConsentPage(Context context, UiDevice device)
             throws UiObjectNotFoundException, InterruptedException {
-        scrollAndClickButton(context, device, R.string.settingsUI_apps_ga_title);
+        scrollToAndClick(context, device, R.string.settingsUI_apps_ga_title);
     }
 
+    /** Flips the consent toggle. */
     public static void flipConsent(UiDevice device, boolean isOptin, boolean flipConsent)
             throws UiObjectNotFoundException, InterruptedException {
         UiObject consentSwitch =
                 device.findObject(new UiSelector().className("android.widget.Switch"));
         consentSwitch.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(consentSwitch.exists()).isTrue();
+
+        // The consent toggle can be blocked by the navigation bar on some devices.
+        UiUtils.gentleSwipe(device);
+
         boolean consentStatus = consentSwitch.isChecked();
         if (flipConsent) {
-            consentSwitch.click();
+            consentSwitch.clickTopLeft();
             Thread.sleep(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
             assertThat(consentSwitch.isChecked()).isEqualTo(!consentStatus);
         } else if (isOptin) {
             if (!consentStatus) {
-                consentSwitch.click();
+                consentSwitch.clickTopLeft();
             }
             Thread.sleep(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
             assertThat(consentSwitch.isChecked()).isTrue();
         } else {
             if (consentStatus) {
-                consentSwitch.click();
+                consentSwitch.clickTopLeft();
             }
             Thread.sleep(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
             assertThat(consentSwitch.isChecked()).isFalse();

@@ -35,23 +35,17 @@
         <option name="jar" value="CtsAdExtServicesHostTests.jar" />
     </test>
 
-    <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
-        <option name="run-command" value="setprop log.tag.adservices VERBOSE"/>
-        <option name="run-command" value="setprop log.tag.adservices.topics VERBOSE"/>
-        <!-- Temporarily disable Device Config sync -->
-        <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
-        <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
-        <option name="run-command" value="device_config put adservices enable_back_compat true"/>
-    </target_preparer>
+    <!-- NOTE: DeviceConfig and SystemProperties are handled by AdServicesFlagsSetterRule -->
+
     <!-- Prevent test from running on Android T+ -->
     <object type="module_controller"
             class="com.android.tradefed.testtype.suite.module.MaxSdkModuleController">
         <option name="max-sdk-level" value="32"/>
     </object>
 
-    <!-- Prevent tests from running on Android R- -->
+    <!-- Prevent tests from running on Android Q- -->
     <object type="module_controller"
-            class="com.android.tradefed.testtype.suite.module.Sdk31ModuleController"/>
+            class="com.android.tradefed.testtype.suite.module.Sdk30ModuleController"/>
 
     <object type="module_controller"
         class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController">

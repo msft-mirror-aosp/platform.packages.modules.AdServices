@@ -58,25 +58,44 @@ import java.util.Objects;
  * public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
  *     new AdServicesDeviceSupportedRule();
  * </pre>
+ *
+ * <p><b>NOTE: </b>this class should NOT be used as {@code ClassRule}, as it would result in a "no
+ * tests run" scenario if it throws a {@link AssumptionViolatedException}.
  */
 public abstract class AbstractAdServicesDeviceSupportedRule implements TestRule {
 
     protected final Logger mLog;
+    private final AbstractDeviceSupportHelper mDeviceSupportHelper;
 
     /** Default constructor. */
-    public AbstractAdServicesDeviceSupportedRule(RealLogger logger) {
-        mLog = new Logger(Objects.requireNonNull(logger), "AdServicesDeviceSupportedRule");
+    public AbstractAdServicesDeviceSupportedRule(
+            RealLogger logger, AbstractDeviceSupportHelper deviceSupportHelper) {
+        mLog = new Logger(Objects.requireNonNull(logger), getClass());
+        mDeviceSupportHelper = Objects.requireNonNull(deviceSupportHelper);
         mLog.d("Constructor: logger=%s", logger);
     }
 
     /** Checks whether {@code AdServices} is supported by the device. */
-    public abstract boolean isAdServicesSupportedOnDevice() throws Exception;
+    public final boolean isAdServicesSupportedOnDevice() throws Exception {
+        boolean isSupported = mDeviceSupportHelper.isDeviceSupported();
+        mLog.v("isAdServicesSupportedOnDevice(): %b", isSupported);
+        return isSupported;
+    }
 
     /** Checks whether the device has low ram. */
-    public abstract boolean isLowRamDevice() throws Exception;
+    public final boolean isLowRamDevice() throws Exception {
+        boolean isLowRamDevice = mDeviceSupportHelper.isLowRamDevice();
+        mLog.v("isLowRamDevice(): %b", isLowRamDevice);
+        return isLowRamDevice;
+    }
 
     @Override
     public Statement apply(Statement base, Description description) {
+        if (!description.isTest()) {
+            throw new IllegalStateException(
+                    "This rule can only be applied to individual tests, it cannot be used as"
+                            + " @ClassRule or in a test suite");
+        }
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {

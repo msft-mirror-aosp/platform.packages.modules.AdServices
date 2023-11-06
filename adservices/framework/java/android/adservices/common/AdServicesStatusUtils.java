@@ -136,11 +136,23 @@ public class AdServicesStatusUtils {
      */
     public static final int STATUS_CALLER_NOT_ALLOWED_TO_CROSS_USER_BOUNDARIES = 16;
 
+    /**
+     * Result code for Server Rate Limit Reached.
+     *
+     * <p>This error may be considered similar to {@link LimitExceededException}.
+     */
+    public static final int STATUS_SERVER_RATE_LIMIT_REACHED = 17;
+
     /** The error message to be returned along with {@link IllegalStateException}. */
     public static final String ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE = "Service is not available.";
 
     /** The error message to be returned along with {@link LimitExceededException}. */
     public static final String RATE_LIMIT_REACHED_ERROR_MESSAGE = "API rate limit exceeded.";
+
+    /** The error message to be returned along with {@link LimitExceededException}. */
+    public static final String SERVER_RATE_LIMIT_REACHED_ERROR_MESSAGE =
+            "Server rate limit exceeded.";
+
     /**
      * The error message to be returned along with {@link SecurityException} when permission was not
      * requested in the manifest.
@@ -211,6 +223,8 @@ public class AdServicesStatusUtils {
                 return new LimitExceededException(RATE_LIMIT_REACHED_ERROR_MESSAGE);
             case STATUS_INVALID_OBJECT:
                 return new InvalidObjectException(INVALID_OBJECT_ERROR_MESSAGE);
+            case STATUS_SERVER_RATE_LIMIT_REACHED:
+                return new LimitExceededException(SERVER_RATE_LIMIT_REACHED_ERROR_MESSAGE);
             default:
                 return new IllegalStateException();
         }
@@ -246,7 +260,8 @@ public class AdServicesStatusUtils {
                 STATUS_UNAUTHORIZED,
                 STATUS_TIMEOUT,
                 STATUS_JS_SANDBOX_UNAVAILABLE,
-                STATUS_INVALID_OBJECT
+                STATUS_INVALID_OBJECT,
+                STATUS_SERVER_RATE_LIMIT_REACHED
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface StatusCode {}

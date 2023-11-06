@@ -23,6 +23,8 @@ import android.content.pm.PackageManager;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
+import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
+import com.android.adservices.data.adselection.AdSelectionDebugReportingDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.EncryptionContextDao;
@@ -41,6 +43,7 @@ import java.util.Objects;
 public class FledgeMaintenanceTasksWorker {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
+    @NonNull private final AdSelectionDebugReportDao mAdSelectionDebugReportDao;
     @NonNull private final FrequencyCapDao mFrequencyCapDao;
     @NonNull private final EnrollmentDao mEnrollmentDao;
     @NonNull private final EncryptionContextDao mEncryptionContextDao;
@@ -54,6 +57,7 @@ public class FledgeMaintenanceTasksWorker {
             @NonNull FrequencyCapDao frequencyCapDao,
             @NonNull EnrollmentDao enrollmentDao,
             @NonNull EncryptionContextDao encryptionContextDao,
+            @NonNull AdSelectionDebugReportDao adSelectionDebugReportDao,
             @NonNull Clock clock) {
         Objects.requireNonNull(flags);
         Objects.requireNonNull(adSelectionEntryDao);
@@ -61,6 +65,7 @@ public class FledgeMaintenanceTasksWorker {
         Objects.requireNonNull(enrollmentDao);
         Objects.requireNonNull(clock);
         Objects.requireNonNull(encryptionContextDao);
+        Objects.requireNonNull(adSelectionDebugReportDao);
 
         mFlags = flags;
         mAdSelectionEntryDao = adSelectionEntryDao;
@@ -68,6 +73,7 @@ public class FledgeMaintenanceTasksWorker {
         mEnrollmentDao = enrollmentDao;
         mEncryptionContextDao = encryptionContextDao;
         mClock = clock;
+        mAdSelectionDebugReportDao = adSelectionDebugReportDao;
     }
 
     private FledgeMaintenanceTasksWorker(@NonNull Context context) {
@@ -79,6 +85,9 @@ public class FledgeMaintenanceTasksWorker {
         mEncryptionContextDao =
                 AdSelectionServerDatabase.getInstance(context).encryptionContextDao();
         mClock = Clock.systemUTC();
+        mAdSelectionDebugReportDao =
+                AdSelectionDebugReportingDatabase.getInstance(context)
+                        .getAdSelectionDebugReportDao();
     }
 
     /** Creates a new instance of {@link FledgeMaintenanceTasksWorker}. */
@@ -113,6 +122,11 @@ public class FledgeMaintenanceTasksWorker {
 
             sLogger.v("Clearing expired Encryption Context");
             mEncryptionContextDao.removeExpiredEncryptionContext(expirationTime);
+        }
+
+        if (mFlags.getFledgeEventLevelDebugReportingEnabled()) {
+            sLogger.v("Clearing expired debug reports ");
+            mAdSelectionDebugReportDao.deleteDebugReportsBeforeTime(expirationTime);
         }
     }
 

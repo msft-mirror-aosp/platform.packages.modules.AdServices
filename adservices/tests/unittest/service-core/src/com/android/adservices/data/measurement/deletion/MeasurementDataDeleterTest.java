@@ -39,7 +39,9 @@ import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
+import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventReportFixture;
 import com.android.adservices.service.measurement.ReportSpec;
@@ -52,17 +54,22 @@ import com.android.adservices.service.measurement.aggregation.AggregateHistogram
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.aggregation.AggregateReportFixture;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.MockitoSession;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.quality.Strictness;
 
 import java.math.BigInteger;
 import java.time.Instant;
@@ -147,10 +154,17 @@ public class MeasurementDataDeleterTest {
     @Mock private List<Uri> mOriginUris;
     @Mock private List<Uri> mDomainUris;
     @Mock private Flags mFlags;
+    @Mock private AdServicesErrorLogger mErrorLogger;
+    @Mock private AdServicesLogger mLogger;
 
     private MeasurementDataDeleter mMeasurementDataDeleter;
+    private MockitoSession mStaticMockSession;
 
     private class FakeDatastoreManager extends DatastoreManager {
+        private FakeDatastoreManager() {
+            super(mErrorLogger);
+        }
+
         @Override
         public ITransaction createNewTransaction() {
             return mTransaction;
@@ -170,10 +184,21 @@ public class MeasurementDataDeleterTest {
     @Before
     public void setup() throws Exception {
         MockitoAnnotations.initMocks(this);
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
+                        .strictness(Strictness.WARN)
+                        .startMocking();
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
         when(mFlags.getMeasurementEnableAraDeduplicationAlignmentV1()).thenReturn(true);
         when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(false);
-        mMeasurementDataDeleter = spy(new MeasurementDataDeleter(
-                new FakeDatastoreManager(), mFlags));
+        mMeasurementDataDeleter =
+                spy(new MeasurementDataDeleter(new FakeDatastoreManager(), mFlags, mLogger));
+    }
+
+    @After
+    public void cleanup() {
+        mStaticMockSession.finishMocking();
     }
 
     @Test

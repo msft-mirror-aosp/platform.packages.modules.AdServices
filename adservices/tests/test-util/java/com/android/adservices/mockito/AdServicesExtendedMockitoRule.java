@@ -17,13 +17,32 @@
 package com.android.adservices.mockito;
 
 import com.android.modules.utils.testing.AbstractExtendedMockitoRule;
-import com.android.modules.utils.testing.AbstractExtendedMockitoRule.AbstractBuilder;
-import com.android.modules.utils.testing.ExtendedMockitoRule;
 import com.android.modules.utils.testing.StaticMockFixture;
 
 import java.util.function.Supplier;
 
-/** Abstraction for {@link ExtendedMockitoRule}. */
+// NOTE: javadoc below copied mostly as-is from ExtendedMockitoRule
+/**
+ * Rule to make it easier to use Extended Mockito:
+ *
+ * <ul>
+ *   <li>Automatically creates and finishes the mock session.
+ *   <li>Provides multiple ways to set which classes must be statically mocked or spied
+ *   <li>Automatically starts mocking (so tests don't need a mockito runner or rule)
+ *   <li>Automatically clears the inlined mocks at the end (to avoid OOM)
+ *   <li>Allows other customization like strictness
+ * </ul>
+ *
+ * <p>Typical usage:
+ *
+ * <pre class="prettyprint">
+ * &#064;Rule
+ * public final AdServicesExtendedMockitoRule extendedMockito =
+ *   new AdServicesExtendedMockitoRule.Builder(this)
+ *     .spyStatic(SomeClassWithStaticMethodsToBeMocked)
+ *     .build();
+ * </pre>
+ */
 public class AdServicesExtendedMockitoRule
         extends AbstractExtendedMockitoRule<
                 AdServicesExtendedMockitoRule, AdServicesExtendedMockitoRule.Builder> {

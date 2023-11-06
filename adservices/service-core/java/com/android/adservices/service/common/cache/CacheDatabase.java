@@ -22,7 +22,6 @@ import android.content.Context;
 
 import androidx.annotation.NonNull;
 import androidx.room.Database;
-import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
@@ -54,7 +53,8 @@ public abstract class CacheDatabase extends RoomDatabase {
         synchronized (SINGLETON_LOCK) {
             if (Objects.isNull(sSingleton)) {
                 sSingleton =
-                        Room.databaseBuilder(context, CacheDatabase.class, DATABASE_NAME)
+                        FileCompatUtils.roomDatabaseBuilderHelper(
+                                        context, CacheDatabase.class, DATABASE_NAME)
                                 .fallbackToDestructiveMigration()
                                 .build();
             }

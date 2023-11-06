@@ -16,7 +16,7 @@
 
 package android.adservices.signals;
 
-import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS;
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
@@ -117,8 +117,11 @@ public class ProtectedSignalsManager {
     }
 
     /**
-     * The fetchSignalUpdates API will retrieve a JSON from the URI that describes which signals to
-     * add or remove. The top level keys for the JSON must correspond to one of 4 commands:
+     * The updateSignals API will retrieve a JSON from the URI that describes which signals to add
+     * or remove. This API also allows registering the encoder endpoint. The endpoint is used to
+     * download an encoding logic, which enables encoding the signals.
+     *
+     * <p>The top level keys for the JSON must correspond to one of 5 commands:
      *
      * <p>"put" - Adds a new signal, overwriting any existing signals with the same key. The value
      * for this is a JSON object where the keys are base 64 strings corresponding to the key to put
@@ -142,6 +145,19 @@ public class ProtectedSignalsManager {
      * <p>"remove" - Removes the signal for a key. The value of this is a list of base 64 strings
      * corresponding to the keys of signals that should be deleted.
      *
+     * <p>"update_encoder" - Provides an action to update the endpoint, and a URI which can be used
+     * to retrieve an encoding logic. The sub-key for providing an update action is "action" and the
+     * values currently supported are:
+     *
+     * <ol>
+     *   <li>"REGISTER" : Registers the encoder endpoint if provided for the first time or
+     *       overwrites the existing one with the newly provided endpoint. Providing the "endpoint"
+     *       is required for the "REGISTER" action.
+     * </ol>
+     *
+     * <p>The sub-key for providing an encoder endpoint is "endpoint" and the value is the URI
+     * string for the endpoint.
+     *
      * <p>Key may only be operated on by one command per JSON. If two command attempt to operate on
      * the same key, this method will through an {@link IllegalArgumentException}
      *
@@ -156,7 +172,7 @@ public class ProtectedSignalsManager {
      *
      * <ol>
      *   <li>The JSON retrieved from the server is not valid.
-     *   <li>The provided Uri is invalid.
+     *   <li>The provided URI is invalid.
      * </ol>
      *
      * <p>This call fails with {@link LimitExceededException} if the calling package exceeds the
@@ -165,23 +181,23 @@ public class ProtectedSignalsManager {
      * <p>This call fails with an {@link IllegalStateException} if an internal service error is
      * encountered.
      */
-    @RequiresPermission(ACCESS_ADSERVICES_PROTECTED_SIGNALS)
-    public void fetchSignalUpdates(
-            @NonNull FetchSignalUpdatesRequest fetchSignalUpdatesRequest,
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    public void updateSignals(
+            @NonNull UpdateSignalsRequest updateSignalsRequest,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<Object, Exception> receiver) {
-        Objects.requireNonNull(fetchSignalUpdatesRequest);
+        Objects.requireNonNull(updateSignalsRequest);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
 
         try {
             final IProtectedSignalsService service = getService();
 
-            service.fetchSignalUpdates(
-                    new FetchSignalUpdatesInput.Builder(
-                                    fetchSignalUpdatesRequest.getFetchUri(), getCallerPackageName())
+            service.updateSignals(
+                    new UpdateSignalsInput.Builder(
+                                    updateSignalsRequest.getUpdateUri(), getCallerPackageName())
                             .build(),
-                    new FetchSignalUpdatesCallback.Stub() {
+                    new UpdateSignalsCallback.Stub() {
                         @Override
                         public void onSuccess() {
                             executor.execute(() -> receiver.onResult(new Object()));

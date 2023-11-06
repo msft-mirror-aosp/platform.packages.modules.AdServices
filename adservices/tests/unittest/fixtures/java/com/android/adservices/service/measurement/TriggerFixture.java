@@ -19,6 +19,8 @@ package com.android.adservices.service.measurement;
 import android.net.Uri;
 import android.util.Pair;
 
+import com.android.adservices.common.WebUtil;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -145,7 +147,10 @@ public final class TriggerFixture {
                         .build();
 
         public static final String ATTRIBUTION_CONFIGS_STRING =
-                new JSONArray(Collections.singletonList(ATTRIBUTION_CONFIG.serializeAsJson()))
+                new JSONArray(
+                                Collections.singletonList(
+                                        ATTRIBUTION_CONFIG.serializeAsJson(
+                                                FlagsFactory.getFlagsForTest())))
                         .toString();
 
         public static final String X_NETWORK_KEY_MAPPING =

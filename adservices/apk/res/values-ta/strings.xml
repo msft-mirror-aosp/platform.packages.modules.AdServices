@@ -42,6 +42,8 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"AdServiceஸின் இயக்க நிலை APIயை அணுக ஆப்ஸை அனுமதிக்கும்."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManagerரின் APIகளுக்கான அணுகல்"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"AdServicesManagerரின் APIகளை அணுக ஆப்ஸை அனுமதிக்கும்."</string>
+    <string name="permlab_updateAdservicesAdId" msgid="1817012692601139702">"AdServiceஸின் புதுப்பிக்கப்பட்ட AdId APIயை அணுகுதல்."</string>
+    <string name="permdesc_updateAdservicesAdId" msgid="1594321436876709737">"AdServiceஸின் புதுப்பிக்கப்பட்ட AdId APIயை அணுக ஆப்ஸை அனுமதிக்கும்."</string>
     <string name="app_label" msgid="5844694701336604490">"விளம்பரங்கள் தொடர்பான தனியுரிமை"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Androidன் விளம்பரத் தனியுரிமை பீட்டா பதிப்பில் இணைதல்"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"ஆப்ஸ் உங்களுக்கு விளம்பரங்களைக் காட்டுவதற்கான கூடுதல் வழிகளை Android ஆராய்ந்து வருகிறது"</string>
@@ -193,7 +195,7 @@
     <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"ஆர்வமுள்ள தலைப்புகளை Android குறித்துக்கொள்ளத் தொடங்கும். ஆனால் உங்கள் முதல் சில தலைப்புகள் தோன்றுவதற்குச் சிறிது நேரம் ஆகலாம்."</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"\'விளம்பரத் தலைப்புகளை\' முடக்கவா?"</string>
     <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"இந்தத் தலைப்புகளின் பட்டியல் நீக்கப்படும். ஆர்வமுள்ள தலைப்புகளை Android இனி குறித்துக்கொள்ளாது. எனினும் தொடர்புடைய விளம்பரங்கள் உங்களுக்குக் காட்டப்படலாம்."</string>
-    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"\'ஆப்ஸால் பரிந்துரைக்கப்படும் விளம்பரங்கள்\' இயக்கப்பட்டுள்ளது"</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"\'ஆப்ஸ் பரிந்துரைக்கும் விளம்பரங்கள்\' இயக்கப்பட்டுள்ளது"</string>
     <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"விளம்பரங்களை ஆப்ஸ் பரிந்துரைக்கத் தொடங்கலாம். விளம்பரங்களை ஆப்ஸ் பரிந்துரைக்கத் தொடங்கியதும் ஆப்ஸின் பட்டியலை நீங்கள் பார்ப்பீர்கள்."</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"\'ஆப்ஸால் பரிந்துரைக்கப்படும் விளம்பரங்களை\' முடக்கவா?"</string>
     <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"விளம்பரப் பரிந்துரை தொடர்பான தரவு அனைத்தும் நீக்கப்படும். ஆப்ஸால் இனி விளம்பரங்களைப் பரிந்துரைக்க முடியாது. எனினும் தொடர்புடைய விளம்பரங்கள் உங்களுக்குக் காட்டப்படலாம்."</string>

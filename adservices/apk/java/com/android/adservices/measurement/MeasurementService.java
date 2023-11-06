@@ -32,18 +32,21 @@ import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.encryptionkey.EncryptionKeyJobService;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.DeleteUninstalledJobService;
 import com.android.adservices.service.measurement.MeasurementServiceImpl;
+import com.android.adservices.service.measurement.attribution.AttributionFallbackJobService;
 import com.android.adservices.service.measurement.attribution.AttributionJobService;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJobService;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.AggregateReportingJobService;
+import com.android.adservices.service.measurement.reporting.DebugReportingFallbackJobService;
 import com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.EventReportingJobService;
+import com.android.adservices.service.measurement.reporting.VerboseDebugReportingFallbackJobService;
 import com.android.adservices.service.stats.Clock;
-
-import java.util.Objects;
 
 /** Measurement Service */
 // TODO(b/269798827): Enable for R.
@@ -91,7 +94,7 @@ public class MeasurementService extends Service {
             // Return null so that clients can not bind to the service.
             return null;
         }
-        return Objects.requireNonNull(mMeasurementService);
+        return mMeasurementService;
     }
 
     private boolean hasUserConsent() {
@@ -108,11 +111,16 @@ public class MeasurementService extends Service {
         AggregateReportingJobService.scheduleIfNeeded(this, false);
         AggregateFallbackReportingJobService.scheduleIfNeeded(this, false);
         AttributionJobService.scheduleIfNeeded(this, false);
+        AttributionFallbackJobService.scheduleIfNeeded(this, false);
         EventReportingJobService.scheduleIfNeeded(this, false);
         EventFallbackReportingJobService.scheduleIfNeeded(this, false);
         DeleteExpiredJobService.scheduleIfNeeded(this, false);
         DeleteUninstalledJobService.scheduleIfNeeded(this, false);
         MddJobService.scheduleIfNeeded(this, false);
         AsyncRegistrationQueueJobService.scheduleIfNeeded(this, false);
+        AsyncRegistrationFallbackJobService.scheduleIfNeeded(this, false);
+        DebugReportingFallbackJobService.scheduleIfNeeded(this, false);
+        VerboseDebugReportingFallbackJobService.scheduleIfNeeded(this, false);
+        EncryptionKeyJobService.scheduleIfNeeded(this, false);
     }
 }

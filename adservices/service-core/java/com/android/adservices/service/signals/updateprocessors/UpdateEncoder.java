@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Updates the encoder for a buyer based on fetchSignals call The value for this is a JSON object
+ * Updates the encoder for a buyer based on updateSignals call The value for this is a JSON object
  * with key "update_encoder"
  *
  * <p>Inside the JSON object the buyer need to provide a valid action from supported choices. The

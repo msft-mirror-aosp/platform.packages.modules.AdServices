@@ -21,14 +21,18 @@ package {
 android_test {
     name: "AdServicesTestUtilityTests",
     srcs: [
-          "src/**/*.java"
+          "src/**/*.java",
+          "side-less/**/*.java",
     ],
     static_libs: [
         "adservices-test-utility",
+        "auto_value_annotations",
         "androidx.test.core",
-        "truth-prebuilt",
+        "truth",
     ],
+    defaults: ["adservices-extended-mockito-defaults"],
     sdk_version: "module_current",
+    plugins: ["auto_annotation_plugin"],
     test_config: "AndroidTest.xml",
     // TODO(b/293894199): should be 30 (see explanation on AndroidTest.xml)
     min_sdk_version: "31",

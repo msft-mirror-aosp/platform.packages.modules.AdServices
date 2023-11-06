@@ -120,11 +120,11 @@ public class SharedPreferencesSyncManager {
             final SharedPreferencesUpdate update =
                     new SharedPreferencesUpdate(keysWithTypeBeingRemoved, new Bundle());
             try {
+                SandboxLatencyInfo sandboxLatencyInfo =
+                        new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_SYNC_DATA_FROM_CLIENT);
+                sandboxLatencyInfo.setTimeAppCalledSystemServer(System.currentTimeMillis());
                 mService.syncDataFromClient(
-                        mContext.getPackageName(),
-                        /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
-                        update,
-                        mCallback);
+                        mContext.getPackageName(), sandboxLatencyInfo, update, mCallback);
             } catch (RemoteException e) {
                 Log.e(TAG, "Couldn't connect to SdkSandboxManagerService: " + e.getMessage());
             }
@@ -199,11 +199,11 @@ public class SharedPreferencesSyncManager {
         final SharedPreferencesUpdate update =
                 new SharedPreferencesUpdate(keysWithTypeBeingSynced, data);
         try {
+            SandboxLatencyInfo sandboxLatencyInfo =
+                    new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_SYNC_DATA_FROM_CLIENT);
+            sandboxLatencyInfo.setTimeAppCalledSystemServer(System.currentTimeMillis());
             mService.syncDataFromClient(
-                    mContext.getPackageName(),
-                    /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
-                    update,
-                    mCallback);
+                    mContext.getPackageName(), sandboxLatencyInfo, update, mCallback);
         } catch (RemoteException e) {
             Log.e(TAG, "Couldn't connect to SdkSandboxManagerService: " + e.getMessage());
         }
@@ -247,11 +247,11 @@ public class SharedPreferencesSyncManager {
                 final SharedPreferencesUpdate update =
                         new SharedPreferencesUpdate(List.of(keyWithType), data);
                 try {
+                    SandboxLatencyInfo sandboxLatencyInfo =
+                            new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_SYNC_DATA_FROM_CLIENT);
+                    sandboxLatencyInfo.setTimeAppCalledSystemServer(System.currentTimeMillis());
                     mService.syncDataFromClient(
-                            mContext.getPackageName(),
-                            /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
-                            update,
-                            mCallback);
+                            mContext.getPackageName(), sandboxLatencyInfo, update, mCallback);
                 } catch (RemoteException e) {
                     Log.e(TAG, "Couldn't connect to SdkSandboxManagerService: " + e.getMessage());
                 }

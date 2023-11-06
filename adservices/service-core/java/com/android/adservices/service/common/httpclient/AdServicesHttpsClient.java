@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.common.httpclient;
 
+import static android.adservices.exceptions.RetryableAdServicesNetworkException.DEFAULT_RETRY_AFTER_VALUE;
+
 import android.adservices.exceptions.AdServicesNetworkException;
 import android.adservices.exceptions.RetryableAdServicesNetworkException;
 import android.annotation.NonNull;
@@ -79,9 +81,9 @@ import javax.net.ssl.X509TrustManager;
  */
 public class AdServicesHttpsClient {
 
+    public static final long DEFAULT_MAX_BYTES = 1048576;
     private static final int DEFAULT_TIMEOUT_MS = 5000;
     // Setting default max content size to 1024 * 1024 which is ~ 1MB
-    private static final long DEFAULT_MAX_BYTES = 1048576;
     private static final String CONTENT_SIZE_ERROR = "Content size exceeds limit!";
     private static final String RETRY_AFTER_HEADER_FIELD = "Retry-After";
     private final int mConnectTimeoutMs;
@@ -520,6 +522,8 @@ public class AdServicesHttpsClient {
                     if (headerValue != null) {
                         // TODO(b/282017541): Add a maximum allowed retry-after duration.
                         retryAfterDuration = Duration.ofMillis(Long.parseLong(headerValue));
+                    } else {
+                        retryAfterDuration = DEFAULT_RETRY_AFTER_VALUE;
                     }
                 } else {
                     errorCode = AdServicesNetworkException.ERROR_CLIENT;
