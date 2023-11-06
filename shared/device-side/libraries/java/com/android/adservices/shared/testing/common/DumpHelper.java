@@ -24,12 +24,14 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /** Provides helpers for {@code dump()}-related tests. */
 public final class DumpHelper {
 
     /** Calls {@code dump()} in the given dumper, and return its output. */
     public static String dump(Dumper dumper) throws IOException {
+        Objects.requireNonNull(dumper);
         try (StringWriter sw = new StringWriter()) {
             PrintWriter pw = new PrintWriter(sw);
             dumper.dump(pw);
