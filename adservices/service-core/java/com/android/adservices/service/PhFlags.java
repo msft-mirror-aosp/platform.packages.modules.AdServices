@@ -3044,6 +3044,16 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getConsentNotifiedDebugMode() {
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE),
+                DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE,
+                        CONSENT_NOTIFIED_DEBUG_MODE));
+    }
+
+    @Override
     public boolean getConsentManagerDebugMode() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE),
@@ -3468,6 +3478,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE
                         + " = "
                         + getConsentNotificationActivityDebugMode());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE
+                        + " = "
+                        + getConsentNotifiedDebugMode());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_CONSENT_NOTIFICATION_RESET_TOKEN
