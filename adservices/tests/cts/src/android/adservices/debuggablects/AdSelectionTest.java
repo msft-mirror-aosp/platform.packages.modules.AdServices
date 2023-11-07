@@ -25,6 +25,7 @@ import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
+import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.Scenarios;
 import android.net.Uri;

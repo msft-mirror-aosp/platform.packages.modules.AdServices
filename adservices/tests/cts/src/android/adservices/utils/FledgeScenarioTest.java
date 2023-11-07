@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package android.adservices.debuggablects;
+package android.adservices.utils;
 
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
@@ -33,10 +33,6 @@ import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.JoinCustomAudienceRequest;
 import android.adservices.customaudience.TrustedBiddingData;
-import android.adservices.utils.DevContextUtils;
-import android.adservices.utils.MockWebServerRule;
-import android.adservices.utils.ScenarioDispatcher;
-import android.adservices.utils.Scenarios;
 import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
@@ -51,7 +47,6 @@ import com.android.adservices.common.SupportedByConditionRule;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.compatibility.common.util.ShellUtils;
-import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -75,9 +70,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /** Abstract class for FLEDGE scenario tests using local servers. */
-public abstract class FledgeScenarioTest extends ForegroundDebuggableCtsTest {
+public abstract class FledgeScenarioTest {
+    protected static final Context sContext = ApplicationProvider.getApplicationContext();
 
-    protected static final String TAG = "android.adservices.debuggablects";
+    protected static final String TAG = "FledgeScenarioTest";
     protected static final int TIMEOUT = 120;
     protected static final String SHOES_CA = "shoes";
     protected static final String SHIRTS_CA = "shirts";
@@ -94,6 +90,7 @@ public abstract class FledgeScenarioTest extends ForegroundDebuggableCtsTest {
     protected AdTechIdentifier mAdTechIdentifier;
     private String mServerBaseAddress;
     private MockWebServer mMockWebServer;
+
     // Prefix added to all requests to bust cache.
     private int mCacheBuster;
 
@@ -137,10 +134,6 @@ public abstract class FledgeScenarioTest extends ForegroundDebuggableCtsTest {
 
     @Before
     public void setUp() throws Exception {
-        if (SdkLevel.isAtLeastT()) {
-            assertForegroundActivityStarted();
-        }
-
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
