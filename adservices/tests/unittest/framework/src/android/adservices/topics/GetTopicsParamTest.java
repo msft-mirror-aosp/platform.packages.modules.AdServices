@@ -29,7 +29,6 @@ public final class GetTopicsParamTest {
     private static final String SOME_PACKAGE_NAME = "SomePackageName";
     private static final String SOME_SDK_NAME = "SomeSdkName";
     private static final String SOME_SDK_PACKAGE_NAME = "SomeSdkPackageName";
-    private static final int SOME_UID = 11;
 
     @Test
     public void test_nonNull() {
