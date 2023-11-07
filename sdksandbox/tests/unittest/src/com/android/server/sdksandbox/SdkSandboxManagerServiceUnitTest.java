@@ -835,7 +835,7 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback =
                 new FakeSdkSandboxProcessDeathCallbackBinder();
         mService.addSdkSandboxProcessDeathCallback(
-                TEST_PACKAGE, mSandboxLatencyInfo, lifecycleCallback);
+                TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback);
 
         // Load SDK and start the sandbox
         loadSdk(SDK_NAME);
@@ -855,7 +855,7 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback =
                 new FakeSdkSandboxProcessDeathCallbackBinder();
         mService.addSdkSandboxProcessDeathCallback(
-                TEST_PACKAGE, mSandboxLatencyInfo, lifecycleCallback);
+                TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback);
 
         killSandbox();
 
@@ -871,7 +871,7 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback1 =
                 new FakeSdkSandboxProcessDeathCallbackBinder();
         mService.addSdkSandboxProcessDeathCallback(
-                TEST_PACKAGE, mSandboxLatencyInfo, lifecycleCallback1);
+                TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback1);
         killSandbox();
         assertThat(lifecycleCallback1.waitForSandboxDeath()).isTrue();
 
@@ -881,7 +881,7 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback2 =
                 new FakeSdkSandboxProcessDeathCallbackBinder();
         mService.addSdkSandboxProcessDeathCallback(
-                TEST_PACKAGE, mSandboxLatencyInfo, lifecycleCallback2);
+                TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback2);
         assertThat(lifecycleCallback2.waitForSandboxDeath()).isFalse();
         killSandbox();
         assertThat(lifecycleCallback2.waitForSandboxDeath()).isTrue();
@@ -896,13 +896,13 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback1 =
                 new FakeSdkSandboxProcessDeathCallbackBinder();
         mService.addSdkSandboxProcessDeathCallback(
-                TEST_PACKAGE, mSandboxLatencyInfo, lifecycleCallback1);
+                TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback1);
 
         // Register for sandbox death event again
         FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback2 =
                 new FakeSdkSandboxProcessDeathCallbackBinder();
         mService.addSdkSandboxProcessDeathCallback(
-                TEST_PACKAGE, mSandboxLatencyInfo, lifecycleCallback2);
+                TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback2);
 
         killSandbox();
 
@@ -920,17 +920,17 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback1 =
                 new FakeSdkSandboxProcessDeathCallbackBinder();
         mService.addSdkSandboxProcessDeathCallback(
-                TEST_PACKAGE, mSandboxLatencyInfo, lifecycleCallback1);
+                TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback1);
 
         // Register for sandbox death event again
         FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback2 =
                 new FakeSdkSandboxProcessDeathCallbackBinder();
         mService.addSdkSandboxProcessDeathCallback(
-                TEST_PACKAGE, mSandboxLatencyInfo, lifecycleCallback2);
+                TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback2);
 
         // Unregister one of the lifecycle callbacks
         mService.removeSdkSandboxProcessDeathCallback(
-                TEST_PACKAGE, mSandboxLatencyInfo, lifecycleCallback1);
+                TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback1);
 
         killSandbox();
 

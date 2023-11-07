@@ -1078,21 +1078,16 @@ public class SdkSandboxStatsdMetricsUnitTest {
     }
 
     @Test
-    public void testLatencyMetrics_addSdkSandboxProcessDeathCallback() throws Exception {
-        final SandboxLatencyInfo sandboxLatencyInfo =
-                new SandboxLatencyInfo(
-                        SandboxLatencyInfo.METHOD_ADD_SDK_SANDBOX_LIFECYCLE_CALLBACK);
+    public void testLatencyMetrics_ipcFromAppToSystemServer_addSdkSandboxProcessDeathCallback()
+            throws Exception {
         Mockito.when(mInjector.getCurrentTime())
-                .thenReturn(
-                        TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
-                        TIME_SYSTEM_SERVER_COMPLETED_EXECUTION);
+                .thenReturn(TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP);
 
         // Register for sandbox death event
         FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback =
                 new FakeSdkSandboxProcessDeathCallbackBinder();
-        sandboxLatencyInfo.setTimeAppCalledSystemServer(TIME_APP_CALLED_SYSTEM_SERVER);
         mService.addSdkSandboxProcessDeathCallback(
-                TEST_PACKAGE, sandboxLatencyInfo, lifecycleCallback);
+                TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback);
 
         ExtendedMockito.verify(
                 () ->
@@ -1105,6 +1100,22 @@ public class SdkSandboxStatsdMetricsUnitTest {
                                 /*success=*/ true,
                                 SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER,
                                 mClientAppUid));
+    }
+
+    @Test
+    public void testLatencyMetrics_systemServerAppToSandbox_addSdkSandboxProcessDeathCallback()
+            throws Exception {
+        Mockito.when(mInjector.getCurrentTime())
+                .thenReturn(
+                        TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
+                        TIME_SYSTEM_SERVER_COMPLETED_EXECUTION);
+
+        // Register for sandbox death event
+        FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback =
+                new FakeSdkSandboxProcessDeathCallbackBinder();
+        mService.addSdkSandboxProcessDeathCallback(
+                TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback);
+
         ExtendedMockito.verify(
                 () ->
                         SdkSandboxStatsLog.write(
@@ -1120,10 +1131,41 @@ public class SdkSandboxStatsdMetricsUnitTest {
     }
 
     @Test
-    public void testLatencyMetrics_removeSdkSandboxProcessDeathCallback() {
-        final SandboxLatencyInfo sandboxLatencyInfo =
-                new SandboxLatencyInfo(
-                        SandboxLatencyInfo.METHOD_REMOVE_SDK_SANDBOX_LIFECYCLE_CALLBACK);
+    public void testLatencyMetrics_ipcFromAppToSystemServer_removeSdkSandboxProcessDeathCallback() {
+        Mockito.when(mInjector.getCurrentTime())
+                .thenReturn(
+                        // for addSdkSandboxLifecycleCallback
+                        TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
+                        TIME_SYSTEM_SERVER_COMPLETED_EXECUTION,
+                        // for removeSdkSandboxLifecycleCallback
+                        TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP);
+
+        // Register for sandbox death event again
+        FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback =
+                new FakeSdkSandboxProcessDeathCallbackBinder();
+        mService.addSdkSandboxProcessDeathCallback(
+                TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback);
+
+        // Unregister one of the lifecycle callbacks
+        mService.removeSdkSandboxProcessDeathCallback(
+                TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback);
+
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                                SANDBOX_API_CALLED__METHOD__REMOVE_SDK_SANDBOX_LIFECYCLE_CALLBACK,
+                                (int)
+                                        (TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP
+                                                - TIME_APP_CALLED_SYSTEM_SERVER),
+                                /*success=*/ true,
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER,
+                                mClientAppUid));
+    }
+
+    @Test
+    public void testLatencyMetrics_systemServerAppToSandbox_removeSdkSandboxProcessDeathCallback()
+            throws Exception {
         Mockito.when(mInjector.getCurrentTime())
                 .thenReturn(
                         // for addSdkSandboxLifecycleCallback
@@ -1137,24 +1179,12 @@ public class SdkSandboxStatsdMetricsUnitTest {
         FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback =
                 new FakeSdkSandboxProcessDeathCallbackBinder();
         mService.addSdkSandboxProcessDeathCallback(
-                TEST_PACKAGE, new SandboxLatencyInfo(), lifecycleCallback);
+                TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback);
 
-        sandboxLatencyInfo.setTimeAppCalledSystemServer(TIME_APP_CALLED_SYSTEM_SERVER);
         // Unregister one of the lifecycle callbacks
         mService.removeSdkSandboxProcessDeathCallback(
-                TEST_PACKAGE, sandboxLatencyInfo, lifecycleCallback);
+                TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback);
 
-        ExtendedMockito.verify(
-                () ->
-                        SdkSandboxStatsLog.write(
-                                SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                                SANDBOX_API_CALLED__METHOD__REMOVE_SDK_SANDBOX_LIFECYCLE_CALLBACK,
-                                (int)
-                                        (TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP
-                                                - TIME_APP_CALLED_SYSTEM_SERVER),
-                                /*success=*/ true,
-                                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER,
-                                mClientAppUid));
         ExtendedMockito.verify(
                 () ->
                         SdkSandboxStatsLog.write(
