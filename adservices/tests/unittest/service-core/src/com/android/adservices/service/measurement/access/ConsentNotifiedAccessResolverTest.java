@@ -25,10 +25,7 @@ import android.adservices.common.AdServicesStatusUtils;
 import android.content.Context;
 
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.ui.data.UxStatesManager;
-import com.android.adservices.service.ui.enrollment.collection.BetaUxEnrollmentChannelCollection;
-import com.android.adservices.service.ui.enrollment.collection.GaUxEnrollmentChannelCollection;
-import com.android.adservices.service.ui.enrollment.collection.U18UxEnrollmentChannelCollection;
+import com.android.adservices.service.consent.ConsentManager;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -36,7 +33,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 public class ConsentNotifiedAccessResolverTest {
-    @Mock private UxStatesManager mUxStatesManager;
+    @Mock private ConsentManager mConsentManager;
+    @Mock private UserConsentAccessResolver mUserConsentAccessResolver;
     @Mock private Context mContext;
     @Mock private Flags mFlags;
 
@@ -46,8 +44,13 @@ public class ConsentNotifiedAccessResolverTest {
     public void setup() {
         MockitoAnnotations.initMocks(this);
         mConsentNotifiedAccessResolver =
-                new ConsentNotifiedAccessResolver(mUxStatesManager, mFlags);
+                new ConsentNotifiedAccessResolver(
+                        mConsentManager, mFlags, mUserConsentAccessResolver);
         doReturn(false).when(mFlags).getConsentNotifiedDebugMode();
+        doReturn(false).when(mUserConsentAccessResolver).isAllowed(mContext);
+        doReturn(false).when(mConsentManager).wasNotificationDisplayed();
+        doReturn(false).when(mConsentManager).wasU18NotificationDisplayed();
+        doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
     }
 
     @Test
@@ -65,33 +68,27 @@ public class ConsentNotifiedAccessResolverTest {
     }
 
     @Test
-    public void isAllowed_returnsTrueWhenGaUXNotificationWasDisplayed() {
+    public void isAllowed_returnsTrueWhenGaUXNotificationDisplayed() {
         // Setup
-        doReturn(GaUxEnrollmentChannelCollection.ALREADY_ENROLLED_CHANNEL)
-                .when(mUxStatesManager)
-                .getEnrollmentChannel();
+        doReturn(true).when(mConsentManager).wasGaUxNotificationDisplayed();
 
         // Assertion
         assertTrue(mConsentNotifiedAccessResolver.isAllowed(mContext));
     }
 
     @Test
-    public void isAllowed_returnsTrueWhenBetaUXNotificationWasDisplayed() {
+    public void isAllowed_returnsTrueWhenBetaNotificationDisplayed() {
         // Setup
-        doReturn(BetaUxEnrollmentChannelCollection.ALREADY_ENROLLED_CHANNEL)
-                .when(mUxStatesManager)
-                .getEnrollmentChannel();
+        doReturn(true).when(mConsentManager).wasNotificationDisplayed();
 
         // Assertion
         assertTrue(mConsentNotifiedAccessResolver.isAllowed(mContext));
     }
 
     @Test
-    public void isAllowed_returnsTrueWhenU18UXNotificationWasDisplayed() {
+    public void isAllowed_returnsTrueWhenU18UXNotificationDisplayed() {
         // Setup
-        doReturn(U18UxEnrollmentChannelCollection.ALREADY_ENROLLED_CHANNEL)
-                .when(mUxStatesManager)
-                .getEnrollmentChannel();
+        doReturn(true).when(mConsentManager).wasU18NotificationDisplayed();
 
         // Assertion
         assertTrue(mConsentNotifiedAccessResolver.isAllowed(mContext));
@@ -100,7 +97,6 @@ public class ConsentNotifiedAccessResolverTest {
     @Test
     public void isAllowed_returnsTrueInDebugMode() {
         // Setup
-        doReturn(null).when(mUxStatesManager).getEnrollmentChannel();
         doReturn(true).when(mFlags).getConsentNotifiedDebugMode();
 
         // Assertion
@@ -109,10 +105,16 @@ public class ConsentNotifiedAccessResolverTest {
 
     @Test
     public void isAllowed_returnsFalseWhenNotificationWasNotDisplayed() {
-        // Setup
-        doReturn(null).when(mUxStatesManager).getEnrollmentChannel();
-
         // Assertion
         assertFalse(mConsentNotifiedAccessResolver.isAllowed(mContext));
+    }
+
+    @Test
+    public void isAllowed_returnsTrueWhenTheUserHasAlreadyConsented() {
+        // Setup
+        doReturn(true).when(mUserConsentAccessResolver).isAllowed(mContext);
+
+        // Assertion
+        assertTrue(mConsentNotifiedAccessResolver.isAllowed(mContext));
     }
 }

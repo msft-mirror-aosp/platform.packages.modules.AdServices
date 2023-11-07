@@ -393,7 +393,7 @@ public class FrequencyCapFilteringE2ETest {
         // Bypass the permission check since it's enforced before the package name check
         doNothing()
                 .when(mFledgeAuthorizationFilterSpy)
-                .assertAppDeclaredPermission(
+                .assertAppDeclaredCustomAudiencePermission(
                         mContextSpy,
                         CommonFixture.TEST_PACKAGE_NAME_1,
                         AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM);
@@ -417,7 +417,7 @@ public class FrequencyCapFilteringE2ETest {
         verifyNoMoreInteractions(mFrequencyCapDaoSpy);
 
         verify(mFledgeAuthorizationFilterSpy)
-                .assertAppDeclaredPermission(
+                .assertAppDeclaredCustomAudiencePermission(
                         mContextSpy,
                         CommonFixture.TEST_PACKAGE_NAME_1,
                         AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM);
