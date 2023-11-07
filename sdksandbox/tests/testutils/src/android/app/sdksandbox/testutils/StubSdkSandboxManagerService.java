@@ -100,13 +100,13 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
     @Override
     public void addSdkSandboxProcessDeathCallback(
             String callingPackageName,
-            SandboxLatencyInfo sandboxLatencyInfo,
+            long timeAppCalledSystemServer,
             ISdkSandboxProcessDeathCallback callback) {}
 
     @Override
     public void removeSdkSandboxProcessDeathCallback(
             String callingPackageName,
-            SandboxLatencyInfo sandboxLatencyInfo,
+            long timeAppCalledSystemServer,
             ISdkSandboxProcessDeathCallback callback) {}
 
     @Override
