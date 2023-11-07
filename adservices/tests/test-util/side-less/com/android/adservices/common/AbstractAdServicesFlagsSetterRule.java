@@ -303,6 +303,17 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         return getThis();
     }
 
+    /**
+     * Sets Measurement {@code logcat} tags.
+     *
+     * <p>This method is usually set automatically by the factory methods, but should be set again
+     * (on host-side tests) after reboot.
+     */
+    public T setMeasurementTags() {
+        setLogcatTag(LOGCAT_TAG_MEASUREMENT, LOGCAT_LEVEL_VERBOSE);
+        return getThis();
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // NOTE: DO NOT add new setXyz() methods, unless they need non-trivial logic. Instead, let    //
     // your test call setFlags(flagName) (statically import FlagsConstant.flagName), which will   //
