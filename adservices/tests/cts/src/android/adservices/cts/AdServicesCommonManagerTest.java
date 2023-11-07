@@ -53,7 +53,7 @@ public class AdServicesCommonManagerTest {
     private final AdServicesCommonManager mCommonManager = AdServicesCommonManager.get(sContext);
 
     @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAnyLevel();
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     // Skip the test if it runs on unsupported platforms.
     @Rule(order = 1)
@@ -96,34 +96,6 @@ public class AdServicesCommonManagerTest {
                 .isInstanceOf(SecurityException.class);
     }
 
-    @Test
-    public void testStatusManagerNotAuthorizedCompat() {
-        flags.setAdserviceEnableStatus(false);
-
-        // At beginning, Sdk1 receives a false status.
-        ListenableFuture<Boolean> adServicesStatusResponse = getAdservicesStatusCompat();
-
-        Exception adServicesStatusResponseException =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> adServicesStatusResponse.get(1, TimeUnit.SECONDS));
-        assertThat(adServicesStatusResponseException.getCause())
-                .isInstanceOf(SecurityException.class);
-    }
-
-    @Test
-    public void testSetStatusEnabledNotExecutedCompat() {
-        mCommonManager.setAdServicesEnabled(true, true);
-
-        ListenableFuture<Boolean> adServicesStatusResponse = getAdservicesStatusCompat();
-
-        Exception adServicesStatusResponseException =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> adServicesStatusResponse.get(1, TimeUnit.SECONDS));
-        assertThat(adServicesStatusResponseException.getCause())
-                .isInstanceOf(SecurityException.class);
-    }
 
     private ListenableFuture<Boolean> getAdservicesStatus() {
         return CallbackToFutureAdapter.getFuture(
@@ -131,28 +103,6 @@ public class AdServicesCommonManagerTest {
                     mCommonManager.isAdServicesEnabled(
                             CALLBACK_EXECUTOR,
                             new OutcomeReceiver<>() {
-                                @Override
-                                public void onResult(Boolean result) {
-                                    completer.set(result);
-                                }
-
-                                @Override
-                                public void onError(Exception error) {
-                                    completer.setException(error);
-                                }
-                            });
-                    // This value is used only for debug purposes: it will be used in toString()
-                    // of returned future or error cases.
-                    return "getStatus";
-                });
-    }
-
-    private ListenableFuture<Boolean> getAdservicesStatusCompat() {
-        return CallbackToFutureAdapter.getFuture(
-                completer -> {
-                    mCommonManager.isAdServicesEnabled(
-                            CALLBACK_EXECUTOR,
-                            new AdServicesOutcomeReceiver<>() {
                                 @Override
                                 public void onResult(Boolean result) {
                                     completer.set(result);
