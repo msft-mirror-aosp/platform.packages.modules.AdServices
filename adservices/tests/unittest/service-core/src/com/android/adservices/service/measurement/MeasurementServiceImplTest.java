@@ -23,6 +23,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 import static android.adservices.measurement.MeasurementManager.MEASUREMENT_API_STATE_DISABLED;
 import static android.adservices.measurement.MeasurementManager.MEASUREMENT_API_STATE_ENABLED;
@@ -226,6 +227,16 @@ public final class MeasurementServiceImplTest {
     }
 
     @Test
+    public void testRegisterSource_failureByConsentNotifiedResolver() throws Exception {
+        runRunMocks(
+                Api.REGISTER_SOURCE,
+                new AccessDenier().deniedByConsentNotificationNotDisplayed().deniedByConsent(),
+                () ->
+                        registerSourceAndAssertFailure(
+                                STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET));
+    }
+
+    @Test
     public void testRegisterSource_failureByForegroundEnforcementAccessResolver() throws Exception {
         runRunMocks(
                 Api.REGISTER_SOURCE,
@@ -254,6 +265,38 @@ public final class MeasurementServiceImplTest {
         runRunMocks(
                 Api.REGISTER_TRIGGER,
                 new AccessDenier(),
+                () -> {
+                    CountDownLatch countDownLatch = new CountDownLatch(1);
+                    final List<Integer> list = new ArrayList<>();
+
+                    createServiceWithMocks()
+                            .register(
+                                    createRegistrationTriggerRequest(),
+                                    createCallerMetadata(),
+                                    new IMeasurementCallback.Stub() {
+                                        @Override
+                                        public void onResult() {
+                                            list.add(STATUS_SUCCESS);
+                                            countDownLatch.countDown();
+                                        }
+
+                                        @Override
+                                        public void onFailure(
+                                                MeasurementErrorResponse responseParcel) {}
+                                    });
+
+                    assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+                    assertThat(list.size()).isEqualTo(1);
+                    assertThat(list.get(0)).isEqualTo(STATUS_SUCCESS);
+                    assertPackageNameLogged();
+                });
+    }
+
+    @Test
+    public void testRegisterTrigger_consentNotNotifiedButConsentGiven_success() throws Exception {
+        runRunMocks(
+                Api.REGISTER_TRIGGER,
+                new AccessDenier().deniedByConsentNotificationNotDisplayed(),
                 () -> {
                     CountDownLatch countDownLatch = new CountDownLatch(1);
                     final List<Integer> list = new ArrayList<>();
@@ -316,8 +359,9 @@ public final class MeasurementServiceImplTest {
         runRunMocks(
                 Api.REGISTER_TRIGGER,
                 new AccessDenier().deniedByDevContext(),
-                () -> registerTriggerAndAssertFailure(
-                        STATUS_UNAUTHORIZED, createRegistrationTriggerRequest(true)));
+                () ->
+                        registerTriggerAndAssertFailure(
+                                STATUS_UNAUTHORIZED, createRegistrationTriggerRequest(true)));
     }
 
     @Test
@@ -342,6 +386,16 @@ public final class MeasurementServiceImplTest {
                 Api.REGISTER_TRIGGER,
                 new AccessDenier().deniedByConsent(),
                 () -> registerTriggerAndAssertFailure(STATUS_USER_CONSENT_REVOKED));
+    }
+
+    @Test
+    public void testRegisterTrigger_failureByConsentNotifiedResolver() throws Exception {
+        runRunMocks(
+                Api.REGISTER_TRIGGER,
+                new AccessDenier().deniedByConsentNotificationNotDisplayed().deniedByConsent(),
+                () ->
+                        registerTriggerAndAssertFailure(
+                                STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET));
     }
 
     @Test
@@ -568,6 +622,35 @@ public final class MeasurementServiceImplTest {
     }
 
     @Test
+    public void testGetMeasurementApiStatus_consentNotNotifiedButConsentGiven_success()
+            throws Exception {
+        runRunMocks(
+                Api.STATUS,
+                new AccessDenier().deniedByConsentNotificationNotDisplayed(),
+                () -> {
+                    CountDownLatch countDownLatch = new CountDownLatch(1);
+                    final AtomicInteger resultWrapper = new AtomicInteger();
+
+                    createServiceWithMocks()
+                            .getMeasurementApiStatus(
+                                    createStatusParam(),
+                                    createCallerMetadata(),
+                                    new IMeasurementApiStatusCallback.Stub() {
+                                        @Override
+                                        public void onResult(int result) {
+                                            resultWrapper.set(result);
+                                            countDownLatch.countDown();
+                                        }
+                                    });
+
+                    assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+                    assertThat(resultWrapper.get())
+                            .isEqualTo(MeasurementManager.MEASUREMENT_API_STATE_ENABLED);
+                    assertPackageNameLogged();
+                });
+    }
+
+    @Test
     public void testGetMeasurementApiStatus_EnableApiStatusAllowListCheck_success()
             throws Exception {
         when(mMockFlags.getMsmtEnableApiStatusAllowListCheck()).thenReturn(true);
@@ -712,6 +795,15 @@ public final class MeasurementServiceImplTest {
     }
 
     @Test
+    public void testGetMeasurementApiStatus_failureByConsentNotifiedAccessResolver()
+            throws Exception {
+        runRunMocks(
+                Api.STATUS,
+                new AccessDenier().deniedByConsentNotificationNotDisplayed().deniedByConsent(),
+                this::getMeasurementApiStatusAndAssertFailure);
+    }
+
+    @Test
     public void testGetMeasurementApiStatus_invalidRequest_throwException() {
         assertThrows(
                 NullPointerException.class,
@@ -814,10 +906,76 @@ public final class MeasurementServiceImplTest {
     }
 
     @Test
+    public void registerWebSource_consentNotNotifiedButConsentGiven_success() throws Exception {
+        runRunMocks(
+                Api.REGISTER_WEB_SOURCE,
+                new AccessDenier().deniedByConsentNotificationNotDisplayed(),
+                () -> {
+                    CountDownLatch countDownLatch = new CountDownLatch(1);
+                    final List<Integer> list = new ArrayList<>();
+
+                    createServiceWithMocks()
+                            .registerWebSource(
+                                    createWebSourceRegistrationRequest(),
+                                    createCallerMetadata(),
+                                    new IMeasurementCallback.Stub() {
+                                        @Override
+                                        public void onResult() {
+                                            list.add(STATUS_SUCCESS);
+                                            countDownLatch.countDown();
+                                        }
+
+                                        @Override
+                                        public void onFailure(
+                                                MeasurementErrorResponse
+                                                        measurementErrorResponse) {}
+                                    });
+
+                    assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+                    assertThat(list.get(0)).isEqualTo(STATUS_SUCCESS);
+                    assertThat(list.size()).isEqualTo(1);
+                    assertPackageNameLogged();
+                });
+    }
+
+    @Test
     public void registerSources_success() throws Exception {
         runRunMocks(
                 Api.REGISTER_SOURCES,
                 new AccessDenier(),
+                () -> {
+                    CountDownLatch countDownLatch = new CountDownLatch(1);
+                    final List<Integer> list = new ArrayList<>();
+
+                    createServiceWithMocks()
+                            .registerSource(
+                                    createSourcesRegistrationRequest(false),
+                                    createCallerMetadata(),
+                                    new IMeasurementCallback.Stub() {
+                                        @Override
+                                        public void onResult() {
+                                            list.add(STATUS_SUCCESS);
+                                            countDownLatch.countDown();
+                                        }
+
+                                        @Override
+                                        public void onFailure(
+                                                MeasurementErrorResponse
+                                                        measurementErrorResponse) {}
+                                    });
+
+                    assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+                    assertThat(list.get(0)).isEqualTo(STATUS_SUCCESS);
+                    assertThat(list.size()).isEqualTo(1);
+                    assertPackageNameLogged();
+                });
+    }
+
+    @Test
+    public void registerSources_consentGivenButNotificationNotShown_success() throws Exception {
+        runRunMocks(
+                Api.REGISTER_SOURCES,
+                new AccessDenier().deniedByConsentNotificationNotDisplayed(),
                 () -> {
                     CountDownLatch countDownLatch = new CountDownLatch(1);
                     final List<Integer> list = new ArrayList<>();
@@ -878,6 +1036,16 @@ public final class MeasurementServiceImplTest {
                 Api.REGISTER_SOURCES,
                 new AccessDenier().deniedByConsent(),
                 () -> registerSourcesAndAssertFailure(STATUS_USER_CONSENT_REVOKED));
+    }
+
+    @Test
+    public void testRegisterSources_failureByConsentNotifiedResolver() throws Exception {
+        runRunMocks(
+                Api.REGISTER_SOURCES,
+                new AccessDenier().deniedByConsentNotificationNotDisplayed().deniedByConsent(),
+                () ->
+                        registerSourcesAndAssertFailure(
+                                STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET));
     }
 
     @Test
@@ -981,6 +1149,16 @@ public final class MeasurementServiceImplTest {
     }
 
     @Test
+    public void testRegisterWebSource_failureByConsentNotifiedResolver() throws Exception {
+        runRunMocks(
+                Api.REGISTER_WEB_SOURCE,
+                new AccessDenier().deniedByConsentNotificationNotDisplayed().deniedByConsent(),
+                () ->
+                        registerWebSourceAndAssertFailure(
+                                STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET));
+    }
+
+    @Test
     public void testRegisterWebSource_failureByForegroundEnforcementAccessResolver()
             throws Exception {
         runRunMocks(
@@ -1071,6 +1249,39 @@ public final class MeasurementServiceImplTest {
                 });
     }
 
+    @Test
+    public void registerWebTrigger_consentNotNotifiedButConsentGivensuccess() throws Exception {
+        runRunMocks(
+                Api.REGISTER_WEB_TRIGGER,
+                new AccessDenier().deniedByConsentNotificationNotDisplayed(),
+                () -> {
+                    CountDownLatch countDownLatch = new CountDownLatch(1);
+                    final List<Integer> list = new ArrayList<>();
+
+                    createServiceWithMocks()
+                            .registerWebTrigger(
+                                    createWebTriggerRegistrationRequest(),
+                                    createCallerMetadata(),
+                                    new IMeasurementCallback.Stub() {
+                                        @Override
+                                        public void onResult() {
+                                            list.add(STATUS_SUCCESS);
+                                            countDownLatch.countDown();
+                                        }
+
+                                        @Override
+                                        public void onFailure(
+                                                MeasurementErrorResponse
+                                                        measurementErrorResponse) {}
+                                    });
+
+                    assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+                    assertThat(list.get(0)).isEqualTo(STATUS_SUCCESS);
+                    assertThat(list.size()).isEqualTo(1);
+                    assertPackageNameLogged();
+                });
+    }
+
     private void registerWebTriggerAndAssertFailure(@AdServicesStatusUtils.StatusCode int status)
             throws InterruptedException {
         registerWebTriggerAndAssertFailure(status, createWebTriggerRegistrationRequest());
@@ -1133,6 +1344,16 @@ public final class MeasurementServiceImplTest {
                 Api.REGISTER_WEB_TRIGGER,
                 new AccessDenier().deniedByConsent(),
                 () -> registerWebTriggerAndAssertFailure(STATUS_USER_CONSENT_REVOKED));
+    }
+
+    @Test
+    public void testRegisterWebTrigger_failureByConsentNotifiedResolver() throws Exception {
+        runRunMocks(
+                Api.REGISTER_WEB_TRIGGER,
+                new AccessDenier().deniedByConsentNotificationNotDisplayed().deniedByConsent(),
+                () ->
+                        registerWebTriggerAndAssertFailure(
+                                STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET));
     }
 
     @Test
@@ -1517,6 +1738,9 @@ public final class MeasurementServiceImplTest {
         // App Package Resolver Measurement Api
         updateAppPackageAccessResolverDenied(accessDenier.mByAppPackageMsmtApiApp);
 
+        // Consent notification displayed Resolver
+        updateConsentNotificationNotDisplayedDenied(accessDenier.mByConsentNotificationDisplayed);
+
         // Consent Resolver
         updateConsentDenied(accessDenier.mByConsent);
 
@@ -1559,6 +1783,9 @@ public final class MeasurementServiceImplTest {
 
         // App Package Resolver Measurement Api
         updateAppPackageAccessResolverDenied(accessDenier.mByAppPackageMsmtApiApp);
+
+        // Consent notification displayed Resolver
+        updateConsentNotificationNotDisplayedDenied(accessDenier.mByConsentNotificationDisplayed);
 
         // Consent Resolver
         updateConsentDenied(accessDenier.mByConsent);
@@ -1603,6 +1830,9 @@ public final class MeasurementServiceImplTest {
 
         // App Package Resolver Measurement Api
         updateAppPackageAccessResolverDenied(accessDenier.mByAppPackageMsmtApiApp);
+
+        // Consent notification displayed Resolver
+        updateConsentNotificationNotDisplayedDenied(accessDenier.mByConsentNotificationDisplayed);
 
         // Consent Resolver
         updateConsentDenied(accessDenier.mByConsent);
@@ -1651,6 +1881,9 @@ public final class MeasurementServiceImplTest {
         // App Package Resolver Web Context Client App
         updateAppPackageResolverWebAppDenied(accessDenier.mByAppPackageWebContextClientApp);
 
+        // Consent notification displayed Resolver
+        updateConsentNotificationNotDisplayedDenied(accessDenier.mByConsentNotificationDisplayed);
+
         // Consent Resolver
         updateConsentDenied(accessDenier.mByConsent);
 
@@ -1696,6 +1929,9 @@ public final class MeasurementServiceImplTest {
         // App Package Resolver Measurement Api
         updateAppPackageAccessResolverDenied(accessDenier.mByAppPackageMsmtApiApp);
 
+        // Consent notification displayed Resolver
+        updateConsentNotificationNotDisplayedDenied(accessDenier.mByConsentNotificationDisplayed);
+
         // Consent Resolver
         updateConsentDenied(accessDenier.mByConsent);
 
@@ -1733,6 +1969,9 @@ public final class MeasurementServiceImplTest {
         updateAppPackageAccessResolverDeniedEnableApiStatusAllowListCheck(
                 accessDenier.mByAppPackageMsmtApiApp);
         updateAppPackageAccessResolverDenied(accessDenier.mByAppPackageMsmtApiApp);
+
+        // Consent notification displayed Resolver
+        updateConsentNotificationNotDisplayedDenied(accessDenier.mByConsentNotificationDisplayed);
 
         // Consent Resolver
         updateConsentDenied(accessDenier.mByConsent);
@@ -1777,6 +2016,10 @@ public final class MeasurementServiceImplTest {
                                         any(Context.class), anyString()));
     }
 
+    private void updateConsentNotificationNotDisplayedDenied(boolean denied) {
+        when(mMockConsentManager.wasNotificationDisplayed()).thenReturn(!denied);
+    }
+
     private void updateConsentDenied(boolean denied) {
         final AdServicesApiConsent apiConsent =
                 denied ? AdServicesApiConsent.REVOKED : AdServicesApiConsent.GIVEN;
@@ -1792,6 +2035,7 @@ public final class MeasurementServiceImplTest {
         private boolean mByAppPackageMsmtApiApp;
         private boolean mByAppPackageWebContextClientApp;
         private boolean mByAttributionPermission;
+        private boolean mByConsentNotificationDisplayed;
         private boolean mByConsent;
         private boolean mByForegroundEnforcement;
         private boolean mByKillSwitch;
@@ -1815,6 +2059,11 @@ public final class MeasurementServiceImplTest {
 
         private AccessDenier deniedByAttributionPermission() {
             mByAttributionPermission = true;
+            return this;
+        }
+
+        private AccessDenier deniedByConsentNotificationNotDisplayed() {
+            mByConsentNotificationDisplayed = true;
             return this;
         }
 

@@ -132,6 +132,11 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
                 FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, value);
     }
 
+    /** Overrides the system property used to set ConsentManager notification debug mode keys. */
+    public T setConsentNotifiedDebugMode(boolean value) {
+        return setSystemProperty(FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE, value);
+    }
+
     /** Overrides the system property used to set ConsentManager debug mode keys. */
     public T setConsentManagerDebugMode(boolean value) {
         return setOrCacheDebugSystemProperty(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, value);
