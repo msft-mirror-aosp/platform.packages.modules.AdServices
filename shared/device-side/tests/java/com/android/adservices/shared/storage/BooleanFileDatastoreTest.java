@@ -16,8 +16,8 @@
 
 package com.android.adservices.shared.storage;
 
-import static com.android.adservices.common.DumpHelper.assertDumpHasPrefix;
-import static com.android.adservices.common.DumpHelper.dump;
+import static com.android.adservices.shared.testing.common.DumpHelper.assertDumpHasPrefix;
+import static com.android.adservices.shared.testing.common.DumpHelper.dump;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastS;
 
 import static com.google.common.truth.Truth.assertWithMessage;

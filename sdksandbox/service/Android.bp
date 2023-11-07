@@ -68,7 +68,7 @@ java_sdk_library {
     ],
     jarjar_rules: "jarjar_rules.txt",
     libs: [
-         "androidx.annotation_annotation",
+        "androidx.annotation_annotation",
         "framework-configinfrastructure",
         "framework-adservices.impl",
         "framework-sdksandbox.impl",
@@ -78,6 +78,7 @@ java_sdk_library {
     ],
     static_libs: [
         "sdksandbox-statsd",
+        "sdk_sandbox_flags_lib",
         "modules-utils-build",
         "modules-utils-backgroundthread",
         "modules-utils-build",
