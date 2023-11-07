@@ -27,7 +27,6 @@ import static android.app.sdksandbox.SdkSandboxManager.REQUEST_SURFACE_PACKAGE_S
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE;
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
 
-import static com.android.sdksandbox.flags.Flags.sandboxActivitySdkBasedContext;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__UNLOAD_SDK;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX;
@@ -52,7 +51,6 @@ import android.app.sdksandbox.SandboxLatencyInfo;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.SharedPreferencesUpdate;
-import android.app.sdksandbox.sandboxactivity.SdkSandboxActivityAuthority;
 import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -2504,8 +2502,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 == PackageManager.PERMISSION_GRANTED;
     }
 
-    // TODO(b/299109198): remove once the {@link SdkSandboxActivityAuthority#isSdkSandboxActivity}
-    // API is stable.
+    //TODO(b/299109198): refactor with the {@link Intent#isSandboxActivity}.
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
     boolean isSdkSandboxActivity(Intent intent) {
         if (intent == null) {
@@ -2566,11 +2563,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 return InterceptCase.NO_INTERCEPT;
             }
 
-            boolean isSdkSandboxActivity =
-                    (sandboxActivitySdkBasedContext())
-                            ? SdkSandboxActivityAuthority.isSdkSandboxActivity(mContext, intent)
-                            : isSdkSandboxActivity(intent);
-            if (isSdkSandboxActivity) {
+            if (isSdkSandboxActivity(intent)) {
                 final String sdkSandboxPackageName =
                         mContext.getPackageManager().getSdkSandboxPackageName();
                 // Only intercept if action and package are both defined and refer to the
