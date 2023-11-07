@@ -845,7 +845,8 @@ public class AuctionServerE2ETest {
                                 seedBytes,
                                 mLightweightExecutorService),
                         mAdSelectionDebugReportDaoSpy,
-                        mAdIdFetcher);
+                        mAdIdFetcher,
+                        false);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -1474,7 +1475,8 @@ public class AuctionServerE2ETest {
                                 seedBytes,
                                 mLightweightExecutorService),
                         mAdSelectionDebugReportDaoSpy,
-                        mAdIdFetcher);
+                        mAdIdFetcher,
+                        false);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -1536,7 +1538,8 @@ public class AuctionServerE2ETest {
                 mConsentManagerMock,
                 mObliviousHttpEncryptorMock,
                 mAdSelectionDebugReportDaoSpy,
-                mAdIdFetcher);
+                mAdIdFetcher,
+                false);
     }
 
     private Map<AdTechIdentifier, BuyerInput> getBuyerInputMapFromDecryptedBytes(

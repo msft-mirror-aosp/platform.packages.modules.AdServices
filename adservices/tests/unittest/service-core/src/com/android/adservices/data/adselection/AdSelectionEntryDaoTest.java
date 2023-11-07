@@ -368,6 +368,20 @@ public class AdSelectionEntryDaoTest {
     }
 
     @Test
+    public void testGetReportingComputationInfoById() {
+        assertNull(mAdSelectionEntryDao.getReportingComputationInfoById(AD_SELECTION_ID_1));
+        assertNull(mAdSelectionEntryDao.getReportingComputationInfoById(AD_SELECTION_ID_2));
+
+        mAdSelectionEntryDao.insertDBAdSelectionInitialization(DB_AD_SELECTION_INITIALIZATION_1);
+        mAdSelectionEntryDao.insertDBReportingComputationInfo(DB_REPORTING_COMPUTATION_INFO_1);
+
+        assertEquals(
+                DB_REPORTING_COMPUTATION_INFO_1,
+                mAdSelectionEntryDao.getReportingComputationInfoById(AD_SELECTION_ID_1));
+        assertNull(mAdSelectionEntryDao.getReportingComputationInfoById(AD_SELECTION_ID_2));
+    }
+
+    @Test
     public void testInsertDBReportingComputationInfo() {
         assertFalse(mAdSelectionEntryDao.doesReportingComputationInfoExist(AD_SELECTION_ID_1));
         assertFalse(mAdSelectionEntryDao.doesReportingComputationInfoExist(AD_SELECTION_ID_2));

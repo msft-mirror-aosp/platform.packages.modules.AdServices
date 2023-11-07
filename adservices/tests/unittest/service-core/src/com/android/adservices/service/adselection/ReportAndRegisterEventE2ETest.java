@@ -1003,7 +1003,8 @@ public class ReportAndRegisterEventE2ETest {
                 mConsentManagerMock,
                 mObliviousHttpEncryptorMock,
                 mAdSelectionDebugReportDaoMock,
-                mAdIdFetcher);
+                mAdIdFetcher,
+                false);
     }
 
     private void initializeReportingArtifacts() throws JSONException {
