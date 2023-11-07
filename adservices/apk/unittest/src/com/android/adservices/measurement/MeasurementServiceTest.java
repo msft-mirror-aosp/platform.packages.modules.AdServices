@@ -76,7 +76,6 @@ import java.util.List;
 /** Unit test for {@link com.android.adservices.measurement.MeasurementService}. */
 public class MeasurementServiceTest {
     @Mock ConsentManager mMockConsentManager;
-    @Mock UxStatesManager mUxStatesManager;
     @Mock DevContextFilter mDevContextFilter;
     @Mock Flags mMockFlags;
     @Mock MeasurementImpl mMockMeasurementImpl;
@@ -107,7 +106,7 @@ public class MeasurementServiceTest {
             throws Exception {
         runWithMocks(
                 /* killSwitchOff */ false,
-                /* consentGiven */ true,
+                /* consentGiven */
                 /* consentNotified */ true,
                 /* isGaUxEnabled */ false,
                 () -> {
@@ -129,7 +128,7 @@ public class MeasurementServiceTest {
             throws Exception {
         runWithMocks(
                 /* killSwitchOff */ false,
-                /* consentNotifiedState */ true,
+                /* consentNotifiedState */
                 /* consentRevoked */ false,
                 /* isGaUxEnabled */ false,
                 () -> {
@@ -148,7 +147,7 @@ public class MeasurementServiceTest {
     public void testBindableMeasurementService_killSwitchOn_gaUxDisabled() throws Exception {
         runWithMocks(
                 /* killSwitchOn */ true,
-                /* consentNotifiedState */ true,
+                /* consentNotifiedState */
                 /* consentGiven */ true,
                 /* isGaUxEnabled */ false,
                 () -> {
@@ -168,7 +167,7 @@ public class MeasurementServiceTest {
             throws Exception {
         runWithMocks(
                 /* killSwitchOff */ false,
-                /* consentNotifiedState */ true,
+                /* consentNotifiedState */
                 /* consentGiven */ true,
                 /* isGaUxEnabled */ true,
                 () -> {
@@ -192,7 +191,7 @@ public class MeasurementServiceTest {
             throws Exception {
         runWithMocks(
                 /* killSwitchOff */ false,
-                /* consentNotifiedState */ true,
+                /* consentNotifiedState */
                 /* consentRevoked */ false,
                 /* isGaUxEnabled */ true,
                 () -> {
@@ -213,7 +212,6 @@ public class MeasurementServiceTest {
     public void testBindableMeasurementService_killSwitchOn_gaUxEnabled() throws Exception {
         runWithMocks(
                 /* killSwitchOn */ true,
-                /* consentNotifiedState */ true,
                 /* consentGiven */ true,
                 /* isGaUxEnabled */ false,
                 () -> {
@@ -241,7 +239,6 @@ public class MeasurementServiceTest {
 
     private void runWithMocks(
             boolean killSwitchStatus,
-            boolean consentNotifiedState,
             boolean consentStatus,
             boolean isGaUxEnabled,
             TestUtils.RunnableWithThrow execute)
@@ -281,9 +278,6 @@ public class MeasurementServiceTest {
 
             ExtendedMockito.doReturn(mMockConsentManager)
                     .when(() -> ConsentManager.getInstance(any()));
-
-            ExtendedMockito.doReturn(mUxStatesManager)
-                    .when(() -> UxStatesManager.getInstance(any()));
 
             ExtendedMockito.doReturn(mDevContextFilter)
                     .when(() -> DevContextFilter.create(any(Context.class)));
