@@ -60,6 +60,7 @@ import com.android.adservices.service.measurement.reporting.DebugReportingFallba
 import com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.EventReportingJobService;
 import com.android.adservices.service.measurement.reporting.VerboseDebugReportingFallbackJobService;
+import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -105,7 +106,8 @@ public class MeasurementServiceTest {
             throws Exception {
         runWithMocks(
                 /* killSwitchOff */ false,
-                /* consentGiven */ true,
+                /* consentGiven */
+                /* consentNotified */ true,
                 /* isGaUxEnabled */ false,
                 () -> {
                     // Execute
@@ -126,6 +128,7 @@ public class MeasurementServiceTest {
             throws Exception {
         runWithMocks(
                 /* killSwitchOff */ false,
+                /* consentNotifiedState */
                 /* consentRevoked */ false,
                 /* isGaUxEnabled */ false,
                 () -> {
@@ -144,6 +147,7 @@ public class MeasurementServiceTest {
     public void testBindableMeasurementService_killSwitchOn_gaUxDisabled() throws Exception {
         runWithMocks(
                 /* killSwitchOn */ true,
+                /* consentNotifiedState */
                 /* consentGiven */ true,
                 /* isGaUxEnabled */ false,
                 () -> {
@@ -163,6 +167,7 @@ public class MeasurementServiceTest {
             throws Exception {
         runWithMocks(
                 /* killSwitchOff */ false,
+                /* consentNotifiedState */
                 /* consentGiven */ true,
                 /* isGaUxEnabled */ true,
                 () -> {
@@ -186,6 +191,7 @@ public class MeasurementServiceTest {
             throws Exception {
         runWithMocks(
                 /* killSwitchOff */ false,
+                /* consentNotifiedState */
                 /* consentRevoked */ false,
                 /* isGaUxEnabled */ true,
                 () -> {
@@ -246,6 +252,7 @@ public class MeasurementServiceTest {
                         .spyStatic(AttributionJobService.class)
                         .spyStatic(AttributionFallbackJobService.class)
                         .spyStatic(ConsentManager.class)
+                        .spyStatic(UxStatesManager.class)
                         .spyStatic(DevContextFilter.class)
                         .spyStatic(EnrollmentDao.class)
                         .spyStatic(EventReportingJobService.class)
