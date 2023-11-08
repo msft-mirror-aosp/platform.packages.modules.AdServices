@@ -1871,6 +1871,19 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementRollbackDeletionREnabled() {
+        String flagName = FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
+        return !getGlobalKillSwitch()
+                && !getMeasurementKillSwitch()
+                && SystemProperties.getBoolean(
+                        getSystemPropertyName(flagName),
+                        /* def= */ DeviceConfig.getBoolean(
+                                FlagsConstants.NAMESPACE_ADSERVICES,
+                                flagName,
+                                MEASUREMENT_ROLLBACK_DELETION_R_ENABLED));
+    }
+
+    @Override
     public String getMeasurementDebugJoinKeyEnrollmentAllowlist() {
         return DeviceConfig.getString(
                 FlagsConstants.NAMESPACE_ADSERVICES,
