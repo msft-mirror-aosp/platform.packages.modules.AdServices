@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "ohttp_jni.h"
+#include "jni_util.h"
 
 #include <android/log.h>
 #include <openssl/digest.h>
@@ -25,6 +26,8 @@
 #include <vector>
 
 constexpr char const *LOG_TAG = "OhttpJniWrapper";
+constexpr const char *IllegalArgumentExceptionClass = "java/lang/IllegalArgumentException";
+constexpr const char* IllegalStateExceptionClass = "java/lang/IllegalStateException";
 
 // TODO(b/274425716) : Use macros similar to Conscrypt's JNI_TRACE for cleaner
 // logging
@@ -184,6 +187,140 @@ Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeCtxSetupSenderWithSeed(
       reinterpret_cast<const jbyte *>(encapsulatedSharedSecret.data()));
 
   return encArray;
+}
+
+JNIEXPORT jbyteArray JNICALL
+Java_com_android_adservices_ohttp_OhttpJniWrapper_gatewayDecrypt(
+    JNIEnv *env, jclass,
+    jlong evpKemRef,
+    jlong evpKdfRef,
+    jlong evpAeadRef,
+    jbyteArray privKeyArray,
+    jbyteArray encArray,
+    jbyteArray infoArray,
+    jbyteArray encryptedDataArray)
+    {
+
+  __android_log_write(ANDROID_LOG_INFO, LOG_TAG, "gatewayDecrypt");
+
+  if (infoArray == nullptr ||
+        encryptedDataArray == nullptr ||
+        encArray == nullptr ||
+        privKeyArray == nullptr) {
+    jni_util::JniUtil::ThrowJavaException(
+            env,
+            IllegalArgumentExceptionClass,
+            "One of required input parameters is null");
+    return {};
+  }
+
+  const EVP_HPKE_KEM *kem = reinterpret_cast<const EVP_HPKE_KEM *>(evpKemRef);
+  const EVP_HPKE_KDF *kdf = reinterpret_cast<const EVP_HPKE_KDF *>(evpKdfRef);
+  const EVP_HPKE_AEAD *aead =
+      reinterpret_cast<const EVP_HPKE_AEAD *>(evpAeadRef);
+
+  if (kem == nullptr || kdf == nullptr || aead == nullptr) {
+    jni_util::JniUtil::ThrowJavaException(
+            env,
+            IllegalArgumentExceptionClass,
+            "One of HPKE Algorithms is null");
+    return {};
+  }
+
+  jbyte* privKeyPtr = env->GetByteArrayElements(privKeyArray, 0);
+  size_t keyLength = env->GetArrayLength(privKeyArray);
+
+  EVP_HPKE_KEY *recipientKey = EVP_HPKE_KEY_new();
+  if (recipientKey == nullptr) {
+    env->ReleaseByteArrayElements(privKeyArray, privKeyPtr, JNI_ABORT);
+    jni_util::JniUtil::ThrowJavaException(
+            env,
+            IllegalStateExceptionClass,
+            "Could't create new ENV_HPKE_KEY");
+    return {};
+  }
+
+  if (!EVP_HPKE_KEY_init(
+          recipientKey, kem,
+          reinterpret_cast<const uint8_t*>(privKeyPtr),
+          keyLength)) {
+    env->ReleaseByteArrayElements(privKeyArray, privKeyPtr, JNI_ABORT);
+    jni_util::JniUtil::ThrowJavaException(
+            env,
+            IllegalStateExceptionClass,
+            "Could't initialize ENV_HPKE_KEY with gateway private key");
+      return {};
+  }
+
+  jbyte* encPtr = env->GetByteArrayElements(encArray, 0);
+  size_t encLength = env->GetArrayLength(encArray);
+
+  jbyte* infoPtr = env->GetByteArrayElements(infoArray, 0);
+  size_t infoLen = env->GetArrayLength(infoArray);
+
+  jbyte* encryptedDataPtr = env->GetByteArrayElements(encryptedDataArray, 0);
+  size_t encryptedDataLen = env->GetArrayLength(encryptedDataArray);
+
+  EVP_HPKE_CTX *gatewayCtx = EVP_HPKE_CTX_new();
+  if (gatewayCtx == nullptr) {
+    env->ReleaseByteArrayElements(privKeyArray, privKeyPtr, JNI_ABORT);
+    env->ReleaseByteArrayElements(encArray, encPtr, JNI_ABORT);
+    env->ReleaseByteArrayElements(infoArray, infoPtr, JNI_ABORT);
+    env->ReleaseByteArrayElements(encryptedDataArray, encryptedDataPtr, JNI_ABORT);
+    jni_util::JniUtil::ThrowJavaException(
+            env,
+            IllegalStateExceptionClass,
+            "Could't create new HPKE context");
+    return {};
+  }
+
+  if (!EVP_HPKE_CTX_setup_recipient(
+          gatewayCtx, recipientKey, kdf,
+          aead,
+          reinterpret_cast<const uint8_t*>(encPtr),
+          encLength,
+          reinterpret_cast<const uint8_t*>(infoPtr), infoLen)) {
+    env->ReleaseByteArrayElements(privKeyArray, privKeyPtr, JNI_ABORT);
+    env->ReleaseByteArrayElements(encArray, encPtr, JNI_ABORT);
+    env->ReleaseByteArrayElements(infoArray, infoPtr, JNI_ABORT);
+    env->ReleaseByteArrayElements(encryptedDataArray, encryptedDataPtr, JNI_ABORT);
+    jni_util::JniUtil::ThrowJavaException(
+            env,
+            IllegalStateExceptionClass,
+            "Could't setup receiver context");
+    return {};
+  }
+
+  std::string decrypted(encryptedDataLen, '\0');
+  size_t decryptedLen;
+  if (!EVP_HPKE_CTX_open(
+          gatewayCtx, reinterpret_cast<uint8_t*>(decrypted.data()),
+          &decryptedLen, decrypted.size(),
+          reinterpret_cast<const uint8_t*>(encryptedDataPtr),
+          encryptedDataLen, nullptr, 0)) {
+    env->ReleaseByteArrayElements(privKeyArray, privKeyPtr, JNI_ABORT);
+    env->ReleaseByteArrayElements(encArray, encPtr, JNI_ABORT);
+    env->ReleaseByteArrayElements(infoArray, infoPtr, JNI_ABORT);
+    env->ReleaseByteArrayElements(encryptedDataArray, encryptedDataPtr, JNI_ABORT);
+    jni_util::JniUtil::ThrowJavaException(
+            env,
+            IllegalStateExceptionClass,
+            "Could't decrypt ciphertext");
+    return {};
+  }
+
+  decrypted.resize(decryptedLen);
+
+  // Release resources
+  env->ReleaseByteArrayElements(privKeyArray, privKeyPtr, JNI_ABORT);
+  env->ReleaseByteArrayElements(encArray, encPtr, JNI_ABORT);
+  env->ReleaseByteArrayElements(infoArray, infoPtr, JNI_ABORT);
+  env->ReleaseByteArrayElements(encryptedDataArray, encryptedDataPtr, JNI_ABORT);
+
+  jbyteArray decryptedArray = env->NewByteArray(decryptedLen);
+  env->SetByteArrayRegion(decryptedArray, 0, decryptedLen,
+                          reinterpret_cast<const jbyte *>(decrypted.data()));
+  return decryptedArray;
 }
 
 JNIEXPORT jbyteArray JNICALL
