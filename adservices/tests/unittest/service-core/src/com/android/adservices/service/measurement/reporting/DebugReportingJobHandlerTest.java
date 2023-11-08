@@ -42,13 +42,13 @@ import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
-import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementReportsStats;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSession;
 
@@ -311,7 +311,8 @@ public class DebugReportingJobHandlerTest {
         verify(mLogger).logMeasurementReports(statusArg.capture());
         MeasurementReportsStats measurementReportsStats = statusArg.getValue();
         assertEquals(
-                measurementReportsStats.getType(), ReportingStatus.ReportType.UNKNOWN.getValue());
+                measurementReportsStats.getType(),
+                ReportingStatus.ReportType.VERBOSE_DEBUG_UNKNOWN.getValue());
         assertEquals(
                 measurementReportsStats.getResultCode(),
                 ReportingStatus.UploadStatus.FAILURE.getValue());

@@ -19,6 +19,7 @@ package android.adservices.adid {
   public class AdIdManager {
     method @NonNull public static android.adservices.adid.AdIdManager get(@NonNull android.content.Context);
     method @NonNull @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_AD_ID) public void getAdId(@NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<android.adservices.adid.AdId,java.lang.Exception>);
+    method @FlaggedApi("adservices_outcomereceiver_r_api_enabled") @NonNull @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_AD_ID) public void getAdId(@NonNull java.util.concurrent.Executor, @NonNull android.adservices.common.AdServicesOutcomeReceiver<android.adservices.adid.AdId,java.lang.Exception>);
   }
 
 }
@@ -491,13 +492,20 @@ package android.adservices.measurement {
 
   public class MeasurementManager {
     method public void deleteRegistrations(@NonNull android.adservices.measurement.DeletionRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
+    method @FlaggedApi("adservices_outcomereceiver_r_api_enabled") public void deleteRegistrations(@NonNull android.adservices.measurement.DeletionRequest, @NonNull java.util.concurrent.Executor, @NonNull android.adservices.common.AdServicesOutcomeReceiver<java.lang.Object,java.lang.Exception>);
     method @NonNull public static android.adservices.measurement.MeasurementManager get(@NonNull android.content.Context);
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void getMeasurementApiStatus(@NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Integer,java.lang.Exception>);
+    method @FlaggedApi("adservices_outcomereceiver_r_api_enabled") @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void getMeasurementApiStatus(@NonNull java.util.concurrent.Executor, @NonNull android.adservices.common.AdServicesOutcomeReceiver<java.lang.Integer,java.lang.Exception>);
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerSource(@NonNull android.net.Uri, @Nullable android.view.InputEvent, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
+    method @FlaggedApi("adservices_outcomereceiver_r_api_enabled") @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerSource(@NonNull android.net.Uri, @Nullable android.view.InputEvent, @Nullable java.util.concurrent.Executor, @Nullable android.adservices.common.AdServicesOutcomeReceiver<java.lang.Object,java.lang.Exception>);
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerSource(@NonNull android.adservices.measurement.SourceRegistrationRequest, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
+    method @FlaggedApi("adservices_outcomereceiver_r_api_enabled") @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerSource(@NonNull android.adservices.measurement.SourceRegistrationRequest, @Nullable java.util.concurrent.Executor, @Nullable android.adservices.common.AdServicesOutcomeReceiver<java.lang.Object,java.lang.Exception>);
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerTrigger(@NonNull android.net.Uri, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
+    method @FlaggedApi("adservices_outcomereceiver_r_api_enabled") @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerTrigger(@NonNull android.net.Uri, @Nullable java.util.concurrent.Executor, @Nullable android.adservices.common.AdServicesOutcomeReceiver<java.lang.Object,java.lang.Exception>);
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerWebSource(@NonNull android.adservices.measurement.WebSourceRegistrationRequest, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
+    method @FlaggedApi("adservices_outcomereceiver_r_api_enabled") @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerWebSource(@NonNull android.adservices.measurement.WebSourceRegistrationRequest, @Nullable java.util.concurrent.Executor, @Nullable android.adservices.common.AdServicesOutcomeReceiver<java.lang.Object,java.lang.Exception>);
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerWebTrigger(@NonNull android.adservices.measurement.WebTriggerRegistrationRequest, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
+    method @FlaggedApi("adservices_outcomereceiver_r_api_enabled") @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerWebTrigger(@NonNull android.adservices.measurement.WebTriggerRegistrationRequest, @Nullable java.util.concurrent.Executor, @Nullable android.adservices.common.AdServicesOutcomeReceiver<java.lang.Object,java.lang.Exception>);
     field public static final int MEASUREMENT_API_STATE_DISABLED = 0; // 0x0
     field public static final int MEASUREMENT_API_STATE_ENABLED = 1; // 0x1
   }
@@ -582,6 +590,13 @@ package android.adservices.measurement {
 
 package android.adservices.topics {
 
+  @FlaggedApi(android.adservices.FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED) public final class EncryptedTopic {
+    ctor @FlaggedApi(android.adservices.FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED) public EncryptedTopic(@NonNull byte[], @NonNull String, @NonNull byte[]);
+    method @FlaggedApi(android.adservices.FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED) @NonNull public byte[] getEncapsulatedKey();
+    method @FlaggedApi(android.adservices.FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED) @NonNull public byte[] getEncryptedTopic();
+    method @FlaggedApi(android.adservices.FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED) @NonNull public String getKeyIdentifier();
+  }
+
   public final class GetTopicsRequest {
     method @NonNull public String getAdsSdkName();
     method public boolean shouldRecordObservation();
@@ -595,11 +610,13 @@ package android.adservices.topics {
   }
 
   public final class GetTopicsResponse {
+    method @FlaggedApi(android.adservices.FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED) @NonNull public java.util.List<android.adservices.topics.EncryptedTopic> getEncryptedTopics();
     method @NonNull public java.util.List<android.adservices.topics.Topic> getTopics();
   }
 
   public static final class GetTopicsResponse.Builder {
-    ctor public GetTopicsResponse.Builder(@NonNull java.util.List<android.adservices.topics.Topic>);
+    ctor @Deprecated public GetTopicsResponse.Builder(@NonNull java.util.List<android.adservices.topics.Topic>);
+    ctor @FlaggedApi(android.adservices.FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED) public GetTopicsResponse.Builder(@NonNull java.util.List<android.adservices.topics.Topic>, @NonNull java.util.List<android.adservices.topics.EncryptedTopic>);
     method @NonNull public android.adservices.topics.GetTopicsResponse build();
   }
 

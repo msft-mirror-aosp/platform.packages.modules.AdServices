@@ -827,7 +827,7 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback =
                 new FakeSdkSandboxProcessDeathCallbackBinder();
         mService.addSdkSandboxProcessDeathCallback(
-                TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback);
+                TEST_PACKAGE, mSandboxLatencyInfo, lifecycleCallback);
 
         // Load SDK and start the sandbox
         loadSdk(SDK_NAME);
@@ -847,7 +847,7 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback =
                 new FakeSdkSandboxProcessDeathCallbackBinder();
         mService.addSdkSandboxProcessDeathCallback(
-                TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback);
+                TEST_PACKAGE, mSandboxLatencyInfo, lifecycleCallback);
 
         killSandbox();
 
@@ -863,7 +863,7 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback1 =
                 new FakeSdkSandboxProcessDeathCallbackBinder();
         mService.addSdkSandboxProcessDeathCallback(
-                TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback1);
+                TEST_PACKAGE, mSandboxLatencyInfo, lifecycleCallback1);
         killSandbox();
         assertThat(lifecycleCallback1.waitForSandboxDeath()).isTrue();
 
@@ -873,7 +873,7 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback2 =
                 new FakeSdkSandboxProcessDeathCallbackBinder();
         mService.addSdkSandboxProcessDeathCallback(
-                TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback2);
+                TEST_PACKAGE, mSandboxLatencyInfo, lifecycleCallback2);
         assertThat(lifecycleCallback2.waitForSandboxDeath()).isFalse();
         killSandbox();
         assertThat(lifecycleCallback2.waitForSandboxDeath()).isTrue();
@@ -888,13 +888,13 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback1 =
                 new FakeSdkSandboxProcessDeathCallbackBinder();
         mService.addSdkSandboxProcessDeathCallback(
-                TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback1);
+                TEST_PACKAGE, mSandboxLatencyInfo, lifecycleCallback1);
 
         // Register for sandbox death event again
         FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback2 =
                 new FakeSdkSandboxProcessDeathCallbackBinder();
         mService.addSdkSandboxProcessDeathCallback(
-                TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback2);
+                TEST_PACKAGE, mSandboxLatencyInfo, lifecycleCallback2);
 
         killSandbox();
 
@@ -912,17 +912,17 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback1 =
                 new FakeSdkSandboxProcessDeathCallbackBinder();
         mService.addSdkSandboxProcessDeathCallback(
-                TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback1);
+                TEST_PACKAGE, mSandboxLatencyInfo, lifecycleCallback1);
 
         // Register for sandbox death event again
         FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback2 =
                 new FakeSdkSandboxProcessDeathCallbackBinder();
         mService.addSdkSandboxProcessDeathCallback(
-                TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback2);
+                TEST_PACKAGE, mSandboxLatencyInfo, lifecycleCallback2);
 
         // Unregister one of the lifecycle callbacks
         mService.removeSdkSandboxProcessDeathCallback(
-                TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback1);
+                TEST_PACKAGE, mSandboxLatencyInfo, lifecycleCallback1);
 
         killSandbox();
 
@@ -2782,75 +2782,6 @@ public class SdkSandboxManagerServiceUnitTest {
         ActivityInterceptorCallback.ActivityInterceptResult result = interceptActivityLunch(intent);
 
         assertThat(result).isNull();
-    }
-
-    @Test
-    public void testWildcardPatternMatch() {
-        String pattern1 = "abcd*";
-        verifyPatternMatch(pattern1, "abcd", /*matchOnNullInput=*/ false, true);
-        verifyPatternMatch(pattern1, "abcdef", /*matchOnNullInput=*/ false, true);
-        verifyPatternMatch(pattern1, "abcdabcd", /*matchOnNullInput=*/ false, true);
-        verifyPatternMatch(pattern1, "efgh", /*matchOnNullInput=*/ false, false);
-        verifyPatternMatch(pattern1, "efgabcd", /*matchOnNullInput=*/ false, false);
-        verifyPatternMatch(pattern1, "abc", /*matchOnNullInput=*/ false, false);
-
-        String pattern2 = "*";
-        verifyPatternMatch(pattern2, "", /*matchOnNullInput=*/ false, true);
-        verifyPatternMatch(pattern2, "abcd", /*matchOnNullInput=*/ false, true);
-
-        String pattern3 = "abcd*efgh*";
-        verifyPatternMatch(pattern3, "abcdefgh", /*matchOnNullInput=*/ false, true);
-        verifyPatternMatch(pattern3, "abcdrefghij", /*matchOnNullInput=*/ false, true);
-        verifyPatternMatch(pattern3, "abcd", /*matchOnNullInput=*/ false, false);
-        verifyPatternMatch(pattern3, "abcdteffgh", /*matchOnNullInput=*/ false, false);
-
-        String pattern4 = "*abcd";
-        verifyPatternMatch(pattern4, "abcdabcd", /*matchOnNullInput=*/ false, true);
-        verifyPatternMatch(pattern4, "abcdabcdabcd", /*matchOnNullInput=*/ false, true);
-        verifyPatternMatch(pattern4, "efgabcd", /*matchOnNullInput=*/ false, true);
-        verifyPatternMatch(pattern4, "abcd", /*matchOnNullInput=*/ false, true);
-        verifyPatternMatch(pattern4, "abcde", /*matchOnNullInput=*/ false, false);
-
-        String pattern5 = "abcd*e";
-        verifyPatternMatch(pattern5, "abcde", /*matchOnNullInput=*/ false, true);
-        verifyPatternMatch(pattern5, "abcdee", /*matchOnNullInput=*/ false, true);
-        verifyPatternMatch(pattern5, "abcdef", /*matchOnNullInput=*/ false, false);
-
-        String pattern6 = "";
-        verifyPatternMatch(pattern6, "", /*matchOnNullInput=*/ false, true);
-        verifyPatternMatch(pattern6, "ab", /*matchOnNullInput=*/ false, false);
-
-        String pattern7 = "*abcd*";
-        verifyPatternMatch(pattern7, "abcdabcdabcd", /*matchOnNullInput=*/ false, true);
-
-        String pattern8 = "a*a";
-        verifyPatternMatch(pattern8, "aa", /*matchOnNullInput=*/ false, true);
-        verifyPatternMatch(pattern8, "a", /*matchOnNullInput=*/ false, false);
-
-        String pattern9 = "abcd";
-        verifyPatternMatch(pattern9, "abcd", /*matchOnNullInput=*/ false, true);
-        verifyPatternMatch(pattern9, "a", /*matchOnNullInput=*/ false, false);
-
-        verifyPatternMatch("*aab", "aaaab", /*matchOnNullInput=*/ false, true);
-        verifyPatternMatch("a", "ab", /*matchOnNullInput=*/ false, false);
-
-        verifyPatternMatch("*", null, /*matchOnNullInput=*/ false, false);
-        verifyPatternMatch("*", null, /*matchOnNullInput=*/ true, true);
-    }
-
-    private void verifyPatternMatch(
-            String pattern, String input, boolean matchOnNullInput, boolean shouldMatch) {
-        if (shouldMatch) {
-            assertThat(
-                            SdkSandboxManagerService.doesInputMatchWildcardPattern(
-                                    pattern, input, matchOnNullInput))
-                    .isTrue();
-        } else {
-            assertThat(
-                            SdkSandboxManagerService.doesInputMatchWildcardPattern(
-                                    pattern, input, matchOnNullInput))
-                    .isFalse();
-        }
     }
 
     private ActivityInterceptorCallback.ActivityInterceptResult interceptActivityLunch(

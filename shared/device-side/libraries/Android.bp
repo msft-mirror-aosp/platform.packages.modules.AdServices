@@ -17,9 +17,9 @@ package {
 }
 
 // NOTE: currently there's just one library for everything (which in
-// reality is just BooleanFileDataStore), but it might be split into
-// multiple libraries in the feature (if it gets bigger and/or if
-// new classes adds external dependencies like proto support)
+// reality is just BooleanFileDataStore), but it might be better to
+// split into multiple libraries in the feature (if it gets bigger
+// and/or if new classes adds external dependencies like proto support)
 java_library {
     name: "adservices-shared-storage",
     min_sdk_version: "30",
@@ -65,5 +65,42 @@ java_library {
         "//packages/modules/ExtServices:__subpackages__",
         "//packages/modules/OnDevicePersonalization:__subpackages__",
     ],
-    apex_available: ["com.android.adservices", "com.android.ondevicepersonalization", "com.android.extservices"],
+    apex_available: ["com.android.adservices", "com.android.extservices", "com.android.ondevicepersonalization"],
+}
+
+// NOTE: currently there's just one library for everything (which for
+// now is just ApplicationContext), but it might be better to split
+// into multiple libraries in the feature (if it gets bigger and/or
+// if new classes adds external dependencies)
+java_library {
+    name: "adservices-shared-common",
+    min_sdk_version: "30",
+    sdk_version: "module_current",
+    srcs: [
+        "java/com/android/adservices/shared/common/*.java",
+    ],
+    libs: [
+        "framework-annotations-lib",
+        "jsr305", // for @ThreadSafe",
+    ],
+    apex_available: ["com.android.adservices", "com.android.extservices", "com.android.ondevicepersonalization"],
+}
+
+java_library {
+    name: "adservices-shared-testing",
+    min_sdk_version: "30",
+    sdk_version: "module_current",
+    srcs: [
+        "java/com/android/adservices/shared/testing/**/*.java",
+    ],
+    static_libs: [
+        "junit",
+        "truth",
+    ],
+    visibility: [
+        "//packages/modules/AdServices:__subpackages__",
+        "//packages/modules/ExtServices:__subpackages__",
+        "//packages/modules/OnDevicePersonalization:__subpackages__",
+    ],
+    apex_available: ["com.android.adservices", "com.android.extservices", "com.android.ondevicepersonalization"],
 }

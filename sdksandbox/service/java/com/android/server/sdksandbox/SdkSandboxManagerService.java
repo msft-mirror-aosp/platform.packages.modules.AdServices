@@ -29,7 +29,6 @@ import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
 
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__UNLOAD_SDK;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED;
-import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX;
 import static com.android.server.sdksandbox.SdkSandboxStorageManager.StorageDirInfo;
 import static com.android.server.wm.ActivityInterceptorCallback.MAINLINE_SDK_SANDBOX_ORDER_ID;
 
@@ -100,6 +99,7 @@ import com.android.server.LocalManagerRegistry;
 import com.android.server.SystemService;
 import com.android.server.am.ActivityManagerLocal;
 import com.android.server.pm.PackageManagerLocal;
+import com.android.server.sdksandbox.helpers.StringHelper;
 import com.android.server.sdksandbox.proto.Activity.ActivityAllowlists;
 import com.android.server.sdksandbox.proto.Activity.AllowedActivities;
 import com.android.server.sdksandbox.proto.BroadcastReceiver.AllowedBroadcastReceivers;
@@ -476,7 +476,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 }
             }
         }
-        sandboxLatencyInfo.setTimeSystemServerCalledSandbox(mInjector.getCurrentTime());
+        sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.getCurrentTime());
         logLatencies(sandboxLatencyInfo);
         return sandboxedSdks;
     }
@@ -556,22 +556,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     @Override
     public void addSdkSandboxProcessDeathCallback(
             String callingPackageName,
-            long timeAppCalledSystemServer,
+            SandboxLatencyInfo sandboxLatencyInfo,
             ISdkSandboxProcessDeathCallback callback) {
-        final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
+        sandboxLatencyInfo.setTimeSystemServerReceivedCallFromApp(mInjector.getCurrentTime());
 
-        final int callingUid = Binder.getCallingUid();
         final CallingInfo callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
-
-        SdkSandboxStatsLog.write(
-                SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__ADD_SDK_SANDBOX_LIFECYCLE_CALLBACK,
-                /*latency=*/ (int)
-                        (timeSystemServerReceivedCallFromApp - timeAppCalledSystemServer),
-                /*success=*/ true,
-                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER,
-                callingUid);
-
         synchronized (mLock) {
             if (mSandboxLifecycleCallbacks.containsKey(callingInfo)) {
                 mSandboxLifecycleCallbacks.get(callingInfo).register(callback);
@@ -586,15 +575,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         // addSdkSandboxProcessDeathCallback() can be called without calling loadSdk(). Register for
         // app death to make sure cleanup occurs.
         registerForAppDeath(callingInfo, callback.asBinder());
-
-        SdkSandboxStatsLog.write(
-                SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__ADD_SDK_SANDBOX_LIFECYCLE_CALLBACK,
-                /*latency=*/ (int)
-                        (mInjector.getCurrentTime() - timeSystemServerReceivedCallFromApp),
-                /*success=*/ true,
-                SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
-                callingUid);
+        sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.getCurrentTime());
+        logLatencies(sandboxLatencyInfo);
     }
 
     // Register a handler for app death using any binder object originating from the app. Returns
@@ -623,23 +605,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     @Override
     public void removeSdkSandboxProcessDeathCallback(
             String callingPackageName,
-            long timeAppCalledSystemServer,
+            SandboxLatencyInfo sandboxLatencyInfo,
             ISdkSandboxProcessDeathCallback callback) {
-        final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
+        sandboxLatencyInfo.setTimeSystemServerReceivedCallFromApp(mInjector.getCurrentTime());
 
-        final int callingUid = Binder.getCallingUid();
         final CallingInfo callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
-
-        SdkSandboxStatsLog.write(
-                SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                SdkSandboxStatsLog
-                        .SANDBOX_API_CALLED__METHOD__REMOVE_SDK_SANDBOX_LIFECYCLE_CALLBACK,
-                /*latency=*/ (int)
-                        (timeSystemServerReceivedCallFromApp - timeAppCalledSystemServer),
-                /*success=*/ true,
-                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER,
-                callingUid);
-
         synchronized (mLock) {
             RemoteCallbackList<ISdkSandboxProcessDeathCallback> sandboxLifecycleCallbacks =
                     mSandboxLifecycleCallbacks.get(callingInfo);
@@ -647,15 +617,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 sandboxLifecycleCallbacks.unregister(callback);
             }
         }
-        SdkSandboxStatsLog.write(
-                SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                SdkSandboxStatsLog
-                        .SANDBOX_API_CALLED__METHOD__REMOVE_SDK_SANDBOX_LIFECYCLE_CALLBACK,
-                /*latency=*/ (int)
-                        (mInjector.getCurrentTime() - timeSystemServerReceivedCallFromApp),
-                /*success=*/ true,
-                SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
-                callingUid);
+        sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.getCurrentTime());
+        logLatencies(sandboxLatencyInfo);
     }
 
     @Override
@@ -665,7 +628,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         final CallingInfo callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
         List<AppOwnedSdkSandboxInterface> appOwnedSdkSandboxInterfaces =
                 getRegisteredAppOwnedSdkSandboxInterfacesForApp(callingInfo);
-        sandboxLatencyInfo.setTimeSystemServerCalledSandbox(mInjector.getCurrentTime());
+        sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.getCurrentTime());
         logLatencies(sandboxLatencyInfo);
         return appOwnedSdkSandboxInterfaces;
     }
@@ -698,11 +661,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         boolean isRegistrationForAppDeathSuccessful =
                 registerForAppDeath(callingInfo, appOwnedSdkSandboxInterface.getInterface());
 
-        long timeSystemServerCallFinished = mInjector.getCurrentTime();
-        if (isRegistrationForAppDeathSuccessful) {
-            sandboxLatencyInfo.setTimeSystemServerCalledSandbox(timeSystemServerCallFinished);
-        } else {
-            sandboxLatencyInfo.setTimeFailedAtSystemServer(timeSystemServerCallFinished);
+        sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.getCurrentTime());
+        if (!isRegistrationForAppDeathSuccessful) {
             sandboxLatencyInfo.setSandboxStatus(
                     SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
         }
@@ -721,7 +681,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
 
-        sandboxLatencyInfo.setTimeSystemServerCalledSandbox(mInjector.getCurrentTime());
+        sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.getCurrentTime());
         logLatencies(sandboxLatencyInfo);
     }
 
@@ -804,7 +764,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         String errorMsg = loadSdkSession.getSdkProviderErrorIfExists();
         if (!TextUtils.isEmpty(errorMsg)) {
             Log.w(TAG, errorMsg);
-            sandboxLatencyInfo.setTimeFailedAtSystemServer(mInjector.getCurrentTime());
+            sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.getCurrentTime());
             sandboxLatencyInfo.setSandboxStatus(
                     SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
             loadSdkSession.handleLoadFailure(
@@ -828,7 +788,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             // If there was a previous load session and the status is loaded, this new load request
             // should fail.
             if (prevLoadSession != null && prevLoadSession.getStatus() == LoadSdkSession.LOADED) {
-                sandboxLatencyInfo.setTimeFailedAtSystemServer(mInjector.getCurrentTime());
+                sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.getCurrentTime());
                 sandboxLatencyInfo.setSandboxStatus(
                         SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
                 // TODO(b/296844050): only take LoadSdkException and SandboxLatencyInfo as
@@ -847,7 +807,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             // If there was an ongoing load session for this SDK, this new load request should fail.
             if (prevLoadSession != null
                     && prevLoadSession.getStatus() == LoadSdkSession.LOAD_PENDING) {
-                sandboxLatencyInfo.setTimeSystemServerCalledSandbox(mInjector.getCurrentTime());
+                sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.getCurrentTime());
                 sandboxLatencyInfo.setSandboxStatus(
                         SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
                 loadSdkSession.handleLoadFailure(
@@ -873,7 +833,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 // Hence, it is of no use for the call from sandbox.
                 mUidImportanceListener.startListening();
                 if (!registerForAppDeath(callingInfo, callback.asBinder())) {
-                    sandboxLatencyInfo.setTimeFailedAtSystemServer(mInjector.getCurrentTime());
+                    sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.getCurrentTime());
                     sandboxLatencyInfo.setSandboxStatus(
                             SandboxLatencyInfo
                                     .SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
@@ -1163,7 +1123,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     callingInfo + " requested surface package, but could not find SDK " + sdkName);
 
             final long timeSystemServerProcessedCall = mInjector.getCurrentTime();
-            sandboxLatencyInfo.setTimeFailedAtSystemServer(timeSystemServerProcessedCall);
+            sandboxLatencyInfo.setTimeSystemServerCallFinished(timeSystemServerProcessedCall);
             sandboxLatencyInfo.setTimeSystemServerCalledApp(timeSystemServerProcessedCall);
             sandboxLatencyInfo.setSandboxStatus(
                     SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
@@ -1429,6 +1389,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             case SandboxLatencyInfo.METHOD_GET_APP_OWNED_SDK_SANDBOX_INTERFACES:
                 return SdkSandboxStatsLog
                         .SANDBOX_API_CALLED__METHOD__GET_APP_OWNED_SDK_SANDBOX_INTERFACES;
+            case SandboxLatencyInfo.METHOD_ADD_SDK_SANDBOX_LIFECYCLE_CALLBACK:
+                return SdkSandboxStatsLog
+                        .SANDBOX_API_CALLED__METHOD__ADD_SDK_SANDBOX_LIFECYCLE_CALLBACK;
+            case SandboxLatencyInfo.METHOD_REMOVE_SDK_SANDBOX_LIFECYCLE_CALLBACK:
+                return SdkSandboxStatsLog
+                        .SANDBOX_API_CALLED__METHOD__REMOVE_SDK_SANDBOX_LIFECYCLE_CALLBACK;
             default:
                 return SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__METHOD_UNSPECIFIED;
         }
@@ -2700,17 +2666,17 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         for (int i = 0; i < allowedServices.getAllowedServicesCount(); i++) {
             AllowedService allowedService = allowedServices.getAllowedServices(i);
-            if (doesInputMatchWildcardPattern(
+            if (StringHelper.doesInputMatchWildcardPattern(
                             allowedService.getAction(), action, /*matchOnNullInput=*/ true)
-                    && doesInputMatchWildcardPattern(
+                    && StringHelper.doesInputMatchWildcardPattern(
                             allowedService.getPackageName(),
                             packageName,
                             /*matchOnNullInput=*/ true)
-                    && doesInputMatchWildcardPattern(
+                    && StringHelper.doesInputMatchWildcardPattern(
                             allowedService.getComponentClassName(),
                             componentClassName,
                             /*matchOnNullInput=*/ true)
-                    && doesInputMatchWildcardPattern(
+                    && StringHelper.doesInputMatchWildcardPattern(
                             allowedService.getComponentPackageName(),
                             componentPackageName,
                             /*matchOnNullInput=*/ true)) {
@@ -2718,75 +2684,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
         return false;
-    }
-
-    /**
-     * Checks if a given input string matches any of the given patterns. Each pattern can contain
-     * wildcards in the form of an asterisk. This wildcard should match 0 or more number of
-     * characters in the input string.
-     */
-    private static boolean doesInputMatchAnyWildcardPattern(
-            ArraySet<String> patterns, String input) {
-        for (int i = 0; i < patterns.size(); ++i) {
-            if (doesInputMatchWildcardPattern(
-                    patterns.valueAt(i), input, /*matchOnNullInput=*/ false)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Checks if a given input string matches the given pattern. The pattern can contain wildcards
-     * in the form of an asterisk. This wildcard should match 0 or more number of characters in the
-     * input string.
-     */
-    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
-    static boolean doesInputMatchWildcardPattern(
-            String pattern, String input, boolean matchOnNullInput) {
-        if (matchOnNullInput && (pattern != null && pattern.equals("*"))) {
-            return true;
-        }
-        if (pattern == null || input == null) {
-            return false;
-        }
-
-        /*
-         * We split the pattern by the wildcard. It is split with a non-negative limit, indicating
-         * that the pattern is applied as many times as possible e.g. if pattern = "*a*", the split
-         * would be ["","a",""].
-         */
-        // TODO(b/289197372): Optimize by splitting beforehand.
-        String[] patternSubstrings = pattern.split("\\*", -1);
-        int inputMatchStartIndex = 0;
-        for (int i = 0; i < patternSubstrings.length; ++i) {
-            if (i == 0) {
-                // Verify that the input string starts with the characters present before the first
-                // wildcard.
-                if (!input.startsWith(patternSubstrings[i])) {
-                    return false;
-                }
-                inputMatchStartIndex = patternSubstrings[i].length();
-            } else if (i == patternSubstrings.length - 1) {
-                // Verify that the input string (after the point where it's been matched so far)
-                // matches with the characters after the last wildcard.
-                if (!input.substring(inputMatchStartIndex).endsWith(patternSubstrings[i])) {
-                    return false;
-                }
-                inputMatchStartIndex = input.length();
-            } else {
-                // For patterns between the first and last wildcard, greedily check if the input
-                // (after the point where it's been matched so far) matches properly.
-                int substringIndex = input.indexOf(patternSubstrings[i], inputMatchStartIndex);
-                if (substringIndex == -1) {
-                    return false;
-                }
-                inputMatchStartIndex = substringIndex + patternSubstrings[i].length();
-            }
-        }
-
-        // Verify that the whole input has been matched.
-        return inputMatchStartIndex >= input.length();
     }
 
     private class LocalImpl implements SdkSandboxManagerLocal {
@@ -2848,7 +2745,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 return;
             }
 
-            if (doesInputMatchAnyWildcardPattern(getActivityAllowlist(), intent.getAction())) {
+            if (StringHelper.doesInputMatchAnyWildcardPattern(
+                    getActivityAllowlist(), intent.getAction())) {
                 return;
             }
             throw new SecurityException(
@@ -2877,7 +2775,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
             try {
                 return !mSdkSandboxSettingsListener.areRestrictionsEnforced()
-                        || doesInputMatchAnyWildcardPattern(
+                        || StringHelper.doesInputMatchAnyWildcardPattern(
                                 getContentProviderAllowlist(), providerInfo.authority);
             } finally {
                 Binder.restoreCallingIdentity(token);
@@ -2963,7 +2861,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     return onlyProtectedBroadcasts;
                 }
                 for (int i = 0; i < actionsCount; ++i) {
-                    if (!doesInputMatchAnyWildcardPattern(
+                    if (!StringHelper.doesInputMatchAnyWildcardPattern(
                             broadcastReceiverAllowlist, intentFilter.getAction(i))) {
                         return false;
                     }

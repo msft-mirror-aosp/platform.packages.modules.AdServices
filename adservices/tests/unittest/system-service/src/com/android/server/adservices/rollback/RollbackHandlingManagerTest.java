@@ -16,8 +16,8 @@
 
 package com.android.server.adservices.rollback;
 
-import static com.android.adservices.common.DumpHelper.assertDumpHasPrefix;
-import static com.android.adservices.common.DumpHelper.dump;
+import static com.android.adservices.shared.testing.common.DumpHelper.assertDumpHasPrefix;
+import static com.android.adservices.shared.testing.common.DumpHelper.dump;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.server.adservices.rollback.RollbackHandlingManager.DUMP_PREFIX;
 import static com.android.server.adservices.rollback.RollbackHandlingManager.STORAGE_XML_IDENTIFIER;

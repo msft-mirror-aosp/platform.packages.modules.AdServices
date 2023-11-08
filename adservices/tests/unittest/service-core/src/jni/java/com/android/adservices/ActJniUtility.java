@@ -16,10 +16,14 @@
 
 package com.android.adservices;
 
+import com.google.protobuf.InvalidProtocolBufferException;
+
 import private_join_and_compute.anonymous_counting_tokens.ClientPublicParameters;
 import private_join_and_compute.anonymous_counting_tokens.SchemeParameters;
 import private_join_and_compute.anonymous_counting_tokens.ServerPrivateParameters;
 import private_join_and_compute.anonymous_counting_tokens.ServerPublicParameters;
+import private_join_and_compute.anonymous_counting_tokens.TokensRequest;
+import private_join_and_compute.anonymous_counting_tokens.TokensResponse;
 
 public class ActJniUtility {
 
@@ -28,6 +32,13 @@ public class ActJniUtility {
     }
 
     private static native boolean checkClientParameters(
+            byte[] schemeParameters,
+            byte[] clientPublicParameters,
+            byte[] serverPublicParameters,
+            byte[] serverPrivateParameters);
+
+    private static native byte[] generateTokensResponse(
+            byte[] tokensRequest,
             byte[] schemeParameters,
             byte[] clientPublicParameters,
             byte[] serverPublicParameters,
@@ -49,5 +60,33 @@ public class ActJniUtility {
                 clientPublicParametersInBytes,
                 serverPublicParametersInBytes,
                 serverPrivateParametersInBytes);
+    }
+
+    /**
+     * A helper method to generate Token Response. In actual implementation, this will be generated
+     * by the sign server.
+     */
+    public static TokensResponse generateTokensResponse(
+            TokensRequest tokensRequestProto,
+            SchemeParameters schemeParametersProto,
+            ClientPublicParameters clientPublicParametersProto,
+            ServerPublicParameters serverPublicParametersProto,
+            ServerPrivateParameters serverPrivateParametersProto)
+            throws InvalidProtocolBufferException {
+        byte[] tokensRequestInBytes = tokensRequestProto.toByteArray();
+        byte[] schemeParametersInBytes = schemeParametersProto.toByteArray();
+        byte[] clientPublicParametersInBytes = clientPublicParametersProto.toByteArray();
+        byte[] serverPublicParametersInBytes = serverPublicParametersProto.toByteArray();
+        byte[] serverPrivateParametersInBytes = serverPrivateParametersProto.toByteArray();
+
+        byte[] tokensResponseInBytes =
+                generateTokensResponse(
+                        tokensRequestInBytes,
+                        schemeParametersInBytes,
+                        clientPublicParametersInBytes,
+                        serverPublicParametersInBytes,
+                        serverPrivateParametersInBytes);
+
+        return TokensResponse.parseFrom(tokensResponseInBytes);
     }
 }

@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-package com.android.adservices.errorlogging;
+package android.adservices.extdata;
 
-/** Interface for Adservices error logger. */
-public interface AdServicesErrorLogger
-        extends com.android.adservices.shared.errorlogging.AdServicesErrorLogger {}
+parcelable GetAdServicesExtDataResult;

@@ -173,10 +173,17 @@ public class AdServicesHttpsClient {
         urlConnection.setConnectTimeout(mConnectTimeoutMs);
         urlConnection.setReadTimeout(mReadTimeoutMs);
         // Setting true explicitly to follow redirects
-        if (WebAddresses.isLocalhost(Uri.parse(url.toString()))
-                && devContext.getDevOptionsEnabled()) {
-            LogUtil.v("Using unsafe HTTPS");
+        Uri uri = Uri.parse(url.toString());
+        if (WebAddresses.isLocalhost(uri) && devContext.getDevOptionsEnabled()) {
+            LogUtil.v("Using unsafe HTTPS for url ", url.toString());
             urlConnection.setSSLSocketFactory(getUnsafeSslSocketFactory());
+        } else if (WebAddresses.isLocalhost(uri)) {
+            LogUtil.v(
+                    String.format(
+                            "Using normal HTTPS without unsafe SSL socket factory for a localhost"
+                                    + " address, DevOptionsEnabled: %s, CallingPackageName: %s",
+                            devContext.getDevOptionsEnabled(),
+                            devContext.getCallingAppPackageName()));
         }
         urlConnection.setInstanceFollowRedirects(true);
         return urlConnection;

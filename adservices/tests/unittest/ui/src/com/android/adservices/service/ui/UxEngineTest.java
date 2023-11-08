@@ -19,6 +19,7 @@ package com.android.adservices.service.ui;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_RVC_NOTIFICATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_RVC_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.BETA_UX;
@@ -686,8 +687,11 @@ public class UxEngineTest {
         verify(mUxStatesManager).getFlag(KEY_U18_UX_ENABLED);
         verify(mConsentManager).isU18Account();
 
-        // RVC UX logic where flag is checked twice in RVC_UX and RvcPostOTAChannel.
-        verify(mUxStatesManager, times(2)).getFlag(KEY_RVC_UX_ENABLED);
+        // RVC UX logic where flag is checked once in RVC_UX.
+        verify(mUxStatesManager).getFlag(KEY_RVC_UX_ENABLED);
+
+        // RVC UX logic where flag is checked once in RvcPostOTAChannel.
+        verify(mUxStatesManager).getFlag(KEY_RVC_NOTIFICATION_ENABLED);
 
         // The UX can not be updated due to the fact that graduation channel is currently disabled.
         verify(mConsentManager, never()).setUx(any());
