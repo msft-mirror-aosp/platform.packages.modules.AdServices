@@ -3831,6 +3831,14 @@ public interface Flags {
         return DEFAULT_RVC_UX_ENABLED;
     }
 
+    /** Default RVC NOTIFICATION feature flag.. */
+    boolean DEFAULT_RVC_NOTIFICATION_ENABLED = false;
+
+    /** RVC Notification feature flag.. */
+    default boolean getEnableRvcNotification() {
+        return DEFAULT_RVC_NOTIFICATION_ENABLED;
+    }
+
     /** Default enableAdServices system API feature flag.. */
     boolean DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API = false;
 
@@ -4272,6 +4280,16 @@ public interface Flags {
      */
     default boolean getEnableAdservicesApiEnabled() {
         return DEFAULT_ENABLE_ADSERVICES_API_ENABLED;
+    }
+
+    /**
+     * Default value to determine whether AdServicesExtDataStorageService related APIs are enabled.
+     */
+    boolean DEFAULT_ENABLE_ADEXT_DATA_SERVICE_APIS = true;
+
+    /** Returns whether AdServicesExtDataStorageService related APIs are enabled. */
+    default boolean getEnableAdExtDataServiceApis() {
+        return DEFAULT_ENABLE_ADEXT_DATA_SERVICE_APIS;
     }
 
     /**

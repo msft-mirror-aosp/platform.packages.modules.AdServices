@@ -93,7 +93,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
     private static final long TIME_SYSTEM_SERVER_CALLS_SANDBOX = 9;
     private static final long TIME_FAILURE_HANDLED = 11;
     private static final long END_TIME_IN_SYSTEM_SERVER = 15;
-    private static final long TIME_SYSTEM_SERVER_CALLED_SANDBOX = 17;
+    private static final long TIME_SYSTEM_SERVER_CALL_FINISHED = 17;
     private static final long TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER = 18;
     private static final long TIME_SANDBOX_CALLED_SDK = 19;
     private static final long TIME_SDK_CALL_COMPLETED = 20;
@@ -169,7 +169,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
 
         mSdkSandboxService = Mockito.spy(FakeSdkSandboxService.class);
         mSdkSandboxService.setTimeValues(
-                TIME_SYSTEM_SERVER_CALLED_SANDBOX,
+                TIME_SYSTEM_SERVER_CALL_FINISHED,
                 TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER,
                 TIME_SANDBOX_CALLED_SDK,
                 TIME_SDK_CALL_COMPLETED,
@@ -316,7 +316,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
 
         final int systemServerAppToSandboxLatency =
                 (int)
-                        (TIME_SYSTEM_SERVER_CALLED_SANDBOX
+                        (TIME_SYSTEM_SERVER_CALL_FINISHED
                                 - TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP
                                 - (END_TIME_TO_LOAD_SANDBOX - START_TIME_TO_LOAD_SANDBOX));
         ExtendedMockito.verify(
@@ -346,7 +346,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
                                 SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
                                 (int)
                                         (TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER
-                                                - TIME_SYSTEM_SERVER_CALLED_SANDBOX),
+                                                - TIME_SYSTEM_SERVER_CALL_FINISHED),
                                 /*success=*/ true,
                                 SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_SANDBOX,
                                 mClientAppUid));
@@ -424,7 +424,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
                         START_TIME_TO_LOAD_SANDBOX,
                         END_TIME_TO_LOAD_SANDBOX,
-                        TIME_SYSTEM_SERVER_CALLED_SANDBOX,
+                        TIME_SYSTEM_SERVER_CALL_FINISHED,
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_SANDBOX,
                         TIME_SYSTEM_SERVER_CALLED_APP,
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
@@ -604,7 +604,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
         // 2. Call request package
         FakeRequestSurfacePackageCallbackBinder surfacePackageCallback =
                 new FakeRequestSurfacePackageCallbackBinder();
-        sandboxLatencyInfo.setTimeSystemServerCalledSandbox(TIME_SYSTEM_SERVER_CALLED_SANDBOX);
+        sandboxLatencyInfo.setTimeSystemServerCallFinished(TIME_SYSTEM_SERVER_CALL_FINISHED);
         mService.requestSurfacePackage(
                 TEST_PACKAGE,
                 SDK_NAME,
@@ -702,12 +702,12 @@ public class SdkSandboxStatsdMetricsUnitTest {
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
                         START_TIME_TO_LOAD_SANDBOX,
                         END_TIME_TO_LOAD_SANDBOX,
-                        TIME_SYSTEM_SERVER_CALLED_SANDBOX,
+                        TIME_SYSTEM_SERVER_CALL_FINISHED,
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_SANDBOX,
                         TIME_SYSTEM_SERVER_CALLED_APP,
                         // requestSurfacePackage timestamps
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
-                        TIME_SYSTEM_SERVER_CALLED_SANDBOX,
+                        TIME_SYSTEM_SERVER_CALL_FINISHED,
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_SANDBOX,
                         TIME_SYSTEM_SERVER_CALLED_APP);
         loadSdk(SDK_NAME);
@@ -753,7 +753,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
                                 SdkSandboxStatsLog
                                         .SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE,
                                 (int)
-                                        (TIME_SYSTEM_SERVER_CALLED_SANDBOX
+                                        (TIME_SYSTEM_SERVER_CALL_FINISHED
                                                 - TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP),
                                 /*success=*/ true,
                                 SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
@@ -767,7 +767,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
                                         .SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE,
                                 (int)
                                         (TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER
-                                                - TIME_SYSTEM_SERVER_CALLED_SANDBOX),
+                                                - TIME_SYSTEM_SERVER_CALL_FINISHED),
                                 /*success=*/ true,
                                 SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_SANDBOX,
                                 mClientAppUid));
@@ -960,7 +960,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
                         TIME_SYSTEM_SERVER_CALLED_APP,
                         // for unloadSdk
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
-                        TIME_SYSTEM_SERVER_CALLED_SANDBOX,
+                        TIME_SYSTEM_SERVER_CALL_FINISHED,
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_SANDBOX,
                         TIME_SYSTEM_SERVER_CALLED_APP);
 
@@ -984,7 +984,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
                                 SdkSandboxStatsLog.SANDBOX_API_CALLED,
                                 SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__UNLOAD_SDK,
                                 (int)
-                                        (TIME_SYSTEM_SERVER_CALLED_SANDBOX
+                                        (TIME_SYSTEM_SERVER_CALL_FINISHED
                                                 - TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP),
                                 /*success=*/ true,
                                 SdkSandboxStatsLog
@@ -1007,7 +1007,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
                         TIME_SYSTEM_SERVER_CALLED_APP,
                         // for unloadSdk
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
-                        TIME_SYSTEM_SERVER_CALLED_SANDBOX,
+                        TIME_SYSTEM_SERVER_CALL_FINISHED,
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_SANDBOX,
                         TIME_SYSTEM_SERVER_CALLED_APP,
                         TIME_SANDBOX_CALLED_SYSTEM_SERVER);
@@ -1023,7 +1023,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
                                 SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__UNLOAD_SDK,
                                 (int)
                                         (TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER
-                                                - TIME_SYSTEM_SERVER_CALLED_SANDBOX),
+                                                - TIME_SYSTEM_SERVER_CALL_FINISHED),
                                 /*success=*/ true,
                                 SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_SANDBOX,
                                 mClientAppUid));
