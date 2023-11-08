@@ -22,23 +22,14 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ObliviousHttpVectorFixtures {
-    private static final String SERVER_PUBLIC_KEY =
+public class ObliviousHttpTestFixtures {
+    public static final String SERVER_PUBLIC_KEY =
             "6d21cfe09fbea5122f9ebc2eb2a69fcc4f06408cd54aac934f012e76fcdcef62";
 
-    public static ObliviousHttpKeyConfig getKeyConfig(int keyIdentifier)
-            throws InvalidKeySpecException {
-        byte[] keyId = new byte[1];
-        keyId[0] = (byte) (keyIdentifier & 0xFF);
-        String keyConfigHex =
-                BaseEncoding.base16().lowerCase().encode(keyId)
-                        + "0020"
-                        + SERVER_PUBLIC_KEY
-                        + "000400010002";
-        return ObliviousHttpKeyConfig.fromSerializedKeyConfig(
-                BaseEncoding.base16().lowerCase().decode(keyConfigHex));
-    }
+    public static final String SERVER_PRIVATE_KEY =
+            "b77431ecfa8f4cfc30d6e467aafa06944dffe28cb9dd1409e33a3045f5adc8a1";
 
+    /** Returns OHTTP test vectors for client and gateway testing */
     public static List<OhttpTestVector> getTestVectors() throws InvalidKeySpecException {
         List<OhttpTestVector> testVectors = new ArrayList<>();
 
@@ -118,14 +109,14 @@ public class ObliviousHttpVectorFixtures {
     }
 
     public static class OhttpTestVector {
-        public int mKeyId;
-        public String mSeed;
-        public String mExpectedEnc;
-        public String mPlainText;
-        public String mRequestCipherText;
-        public String mResponsePlainText;
-        public String mResponseCipherText;
-        public ObliviousHttpKeyConfig mKeyConfig;
+        public int keyId;
+        public String seed;
+        public String expectedEnc;
+        public String plainText;
+        public String requestCipherText;
+        public String responsePlainText;
+        public String responseCipherText;
+        public ObliviousHttpKeyConfig keyConfig;
 
         public OhttpTestVector(
                 int keyId,
@@ -136,14 +127,27 @@ public class ObliviousHttpVectorFixtures {
                 String responsePlainText,
                 String responseCipherText,
                 ObliviousHttpKeyConfig keyConfig) {
-            this.mKeyId = keyId;
-            this.mSeed = seed;
-            this.mExpectedEnc = expectedEnc;
-            this.mPlainText = plainText;
-            this.mRequestCipherText = requestCipherText;
-            this.mResponsePlainText = responsePlainText;
-            this.mResponseCipherText = responseCipherText;
-            this.mKeyConfig = keyConfig;
+            this.keyId = keyId;
+            this.seed = seed;
+            this.expectedEnc = expectedEnc;
+            this.plainText = plainText;
+            this.requestCipherText = requestCipherText;
+            this.responsePlainText = responsePlainText;
+            this.responseCipherText = responseCipherText;
+            this.keyConfig = keyConfig;
         }
+    }
+
+    private static ObliviousHttpKeyConfig getKeyConfig(int keyIdentifier)
+            throws InvalidKeySpecException {
+        byte[] keyId = new byte[1];
+        keyId[0] = (byte) (keyIdentifier & 0xFF);
+        String keyConfigHex =
+                BaseEncoding.base16().lowerCase().encode(keyId)
+                        + "0020"
+                        + SERVER_PUBLIC_KEY
+                        + "000400010002";
+        return ObliviousHttpKeyConfig.fromSerializedKeyConfig(
+                BaseEncoding.base16().lowerCase().decode(keyConfigHex));
     }
 }
