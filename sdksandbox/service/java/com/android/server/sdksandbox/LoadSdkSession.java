@@ -230,7 +230,7 @@ class LoadSdkSession {
                     sandboxLatencyInfo);
         }
 
-        sandboxLatencyInfo.setTimeSystemServerCalledSandbox(mInjector.getCurrentTime());
+        sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.getCurrentTime());
         try {
             service.loadSdk(
                     mCallingInfo.getPackageName(),
@@ -335,7 +335,7 @@ class LoadSdkSession {
 
     void unload(long timeSystemServerReceivedCallFromApp) {
         final SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo();
-        sandboxLatencyInfo.setTimeSystemServerCalledSandbox(mInjector.getCurrentTime());
+        sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.getCurrentTime());
         IUnloadSdkCallback unloadCallback =
                 new IUnloadSdkCallback.Stub() {
                     @Override
@@ -385,7 +385,7 @@ class LoadSdkSession {
                 SdkSandboxStatsLog.SANDBOX_API_CALLED,
                 SANDBOX_API_CALLED__METHOD__UNLOAD_SDK,
                 (int)
-                        (sandboxLatencyInfo.getTimeSystemServerCalledSandbox()
+                        (sandboxLatencyInfo.getTimeSystemServerCallFinished()
                                 - timeSystemServerReceivedCallFromApp),
                 /*success=*/ true,
                 SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
@@ -414,7 +414,7 @@ class LoadSdkSession {
             mPendingRequestSurfacePackageCallbacks.add(callback);
 
             if (getStatus() != LOADED) {
-                sandboxLatencyInfo.setTimeFailedAtSystemServer(mInjector.getCurrentTime());
+                sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.getCurrentTime());
                 sandboxLatencyInfo.setSandboxStatus(
                         SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
                 handleSurfacePackageError(
@@ -612,7 +612,7 @@ class LoadSdkSession {
                 SandboxLatencyInfo sandboxLatencyInfo,
                 Bundle params,
                 IRequestSurfacePackageCallback callback) {
-            sandboxLatencyInfo.setTimeSystemServerCalledSandbox(mInjector.getCurrentTime());
+            sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.getCurrentTime());
             try {
                 synchronized (this) {
                     mManagerToSdkCallback.onSurfacePackageRequested(

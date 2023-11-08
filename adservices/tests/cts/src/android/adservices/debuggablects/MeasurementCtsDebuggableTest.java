@@ -109,7 +109,9 @@ public class MeasurementCtsDebuggableTest {
 
     @Rule(order = 1)
     public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests().setCompatModeFlags();
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
+                    .setCompatModeFlags()
+                    .setMeasurementTags();
 
     @BeforeClass
     public static void setupDevicePropertiesAndInitializeClient() throws Exception {
