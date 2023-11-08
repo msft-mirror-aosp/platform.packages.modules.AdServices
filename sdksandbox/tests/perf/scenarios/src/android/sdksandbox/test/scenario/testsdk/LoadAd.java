@@ -18,10 +18,8 @@ package android.sdksandbox.test.scenario.testsdk;
 
 import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
 
-import static com.google.common.truth.Truth.assertThat;
 
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.platform.test.scenario.annotation.Scenario;
 
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -43,7 +41,6 @@ public class LoadAd {
 
     private static final String CLIENT_APP = "com.google.android.libraries.internal.exampleclient";
     private static final String MEDIATION_ENABLED_KEY = "mediation_enabled";
-    private static final int WAIT_BEFORE_ASSERT_MS = 2000;
     private static final int WAIT_TIME_BEFORE_END_TEST_MS = 3000;
 
     private static final ClientAppUtils sClientAppUtils = new ClientAppUtils(CLIENT_APP);
@@ -63,9 +60,7 @@ public class LoadAd {
     @Test
     public void testLoadAd() throws Exception {
         sClientAppUtils.loadAd(sUiDevice);
-        SystemClock.sleep(WAIT_BEFORE_ASSERT_MS);
-        assertThat(sClientAppUtils.getLoadAdButton(sUiDevice).getText())
-                .isEqualTo(ClientAppUtils.AD_LOADED_BUTTON_TEXT);
-        SystemClock.sleep(WAIT_TIME_BEFORE_END_TEST_MS);
+        sClientAppUtils.assertAdLoaded(sUiDevice);
+        Thread.sleep(WAIT_TIME_BEFORE_END_TEST_MS);
     }
 }

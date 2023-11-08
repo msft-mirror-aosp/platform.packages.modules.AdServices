@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 #include "act_jni.h"
+#include "jni_util.h"
 #include <act/act_v0/act_v0.h>
 #include <act/act_v0/parameters.h>
+#include <act/util.pb.h>
 #include <vector>
 #include <google/protobuf/message_lite.h>
 
@@ -23,36 +25,8 @@ using namespace private_join_and_compute::anonymous_counting_tokens;
 
 
 const char* IllegalArgumentExceptionClass = "java/lang/IllegalArgumentException";
+const char* IllegalStateExceptionClass = "java/lang/IllegalStateException";
 
-bool BytesToCppProto(JNIEnv* env, google::protobuf::MessageLite* proto, jbyteArray input) {
-    bool parsed_ok = false;
-    const int size = env->GetArrayLength(input);
-    void* ptr = env->GetPrimitiveArrayCritical(input, nullptr);
-    if (ptr) {
-        parsed_ok = proto->ParseFromArray(static_cast<char*>(ptr), size);
-        env->ReleasePrimitiveArrayCritical(input, ptr, JNI_ABORT);
-    }
-    return parsed_ok;
-}
-
-jbyteArray SerializeProtoToJniByteArray(JNIEnv* env,
-                                        const google::protobuf::MessageLite& protobuf) {
-    const int size = protobuf.ByteSizeLong();
-    jbyteArray ret = env->NewByteArray(size);
-    if (ret == nullptr) {
-        return nullptr;
-    }
-
-    uint8_t* scoped_array = static_cast<uint8_t* >(env->GetPrimitiveArrayCritical(ret, nullptr));
-    protobuf.SerializeWithCachedSizesToArray(scoped_array);
-    env->ReleasePrimitiveArrayCritical(ret, scoped_array, 0);
-    return ret;
-}
-
-void ThrowJavaException(JNIEnv* env, const char* exception_class_name,
-                        const char* message) {
-    env->ThrowNew(env->FindClass(exception_class_name), message);
-}
 
 JNIEXPORT jbyteArray JNICALL Java_com_android_adservices_ActJni_generateClientParameters(
     JNIEnv *env,
@@ -61,14 +35,15 @@ JNIEXPORT jbyteArray JNICALL Java_com_android_adservices_ActJni_generateClientPa
     jbyteArray server_public_parameters_bytes
 ) {
     SchemeParameters scheme_parameter_proto;
-    if(!BytesToCppProto(env, &scheme_parameter_proto, scheme_parameter_bytes)) {
-        ThrowJavaException(
+    if(!jni_util::JniUtil::BytesToCppProto(env, &scheme_parameter_proto, scheme_parameter_bytes)) {
+        jni_util::JniUtil::ThrowJavaException(
                 env, IllegalArgumentExceptionClass, "Error while parsing SchemeParameters Proto");
         return nullptr;
     }
     ServerPublicParameters server_public_parameters_proto;
-    if(!BytesToCppProto(env, &server_public_parameters_proto, server_public_parameters_bytes)) {
-        ThrowJavaException(
+    if(!jni_util::JniUtil::BytesToCppProto(env, &server_public_parameters_proto,
+                                                                 server_public_parameters_bytes)) {
+        jni_util::JniUtil::ThrowJavaException(
                 env,
                 IllegalArgumentExceptionClass,
                 "Error while parsing ServerPublicParameters Proto");
@@ -83,14 +58,190 @@ JNIEXPORT jbyteArray JNICALL Java_com_android_adservices_ActJni_generateClientPa
     if(status_or.ok()) {
         client_parameters = std::move(status_or).value();
     } else {
-        ThrowJavaException(
+        jni_util::JniUtil::ThrowJavaException(
                     env, IllegalArgumentExceptionClass, status_or.status().ToString().c_str());
         return nullptr;
     }
-    jbyteArray client_parameters_in_bytes = SerializeProtoToJniByteArray(env, client_parameters);
+    jbyteArray client_parameters_in_bytes =
+                            jni_util::JniUtil::SerializeProtoToJniByteArray(env, client_parameters);
     return client_parameters_in_bytes;
 }
 
 
+JNIEXPORT jbyteArray JNICALL Java_com_android_adservices_ActJni_generateTokensRequest(
+    JNIEnv *env,
+    jclass,
+    jbyteArray messagesInBytes,
+    jbyteArray schemeParametersInBytes,
+    jbyteArray clientPublicParametersInBytes,
+    jbyteArray clientPrivateParametersInBytes,
+    jbyteArray serverPublicParametersInBytes
+) {
+    MessagesSet messagesProto;
+    if(!jni_util::JniUtil::BytesToCppProto(env, &messagesProto, messagesInBytes)) {
+        jni_util::JniUtil::ThrowJavaException(
+                env, IllegalArgumentExceptionClass, "Error parsing MessagesSet Proto");
+        return nullptr;
+    }
+    std::vector<std::string> messagesVector(messagesProto.message_size());
+    for(int i = 0; i < messagesProto.message_size(); i++) {
+        messagesVector[i] = messagesProto.message(i);
+    }
 
+    SchemeParameters schemeParametersProto;
+    if(!jni_util::JniUtil::BytesToCppProto(env, &schemeParametersProto, schemeParametersInBytes)) {
+        jni_util::JniUtil::ThrowJavaException(
+                env, IllegalArgumentExceptionClass, "Error parsing SchemeParameters Proto");
+        return nullptr;
+    }
+    ClientPublicParameters clientPublicParametersProto;
+    if(!jni_util::JniUtil::BytesToCppProto(env, &clientPublicParametersProto,
+                                                                clientPublicParametersInBytes)) {
+        jni_util::JniUtil::ThrowJavaException(
+            env, IllegalArgumentExceptionClass, "Error parsing ClientPublicParameters Proto");
+        return nullptr;
+    }
+    ClientPrivateParameters clientPrivateParametersProto;
+    if(!jni_util::JniUtil::BytesToCppProto(env, &clientPrivateParametersProto,
+                                                               clientPrivateParametersInBytes)) {
+        jni_util::JniUtil::ThrowJavaException(
+            env, IllegalArgumentExceptionClass, "Error parsing ClientPrivateParameters Proto");
+
+        return nullptr;
+    }
+    ServerPublicParameters serverPublicParametersProto;
+    if(!jni_util::JniUtil::BytesToCppProto(env, &serverPublicParametersProto,
+                                                                serverPublicParametersInBytes)) {
+        jni_util::JniUtil::ThrowJavaException(
+            env, IllegalArgumentExceptionClass, "Error parsing ServerPublicParameters Proto");
+        return nullptr;
+    }
+
+    std::unique_ptr<AnonymousCountingTokens> act = AnonymousCountingTokensV0::Create();
+    auto status_or = (act -> GenerateTokensRequest(
+                                              messagesVector,
+                                              schemeParametersProto,
+                                              clientPublicParametersProto,
+                                              clientPrivateParametersProto,
+                                              serverPublicParametersProto));
+    if (!status_or.ok()) {
+        jni_util::JniUtil::ThrowJavaException(
+                    env, IllegalStateExceptionClass, status_or.status().ToString().c_str());
+        return nullptr;
+    }
+
+    std::tuple<std::vector<std::string>, TokensRequest, TokensRequestPrivateState> response
+                                                                    = std::move(status_or).value();
+
+    std::vector<std::string> fingerprint_bytes = std::get<0>(response);
+    TokensRequest token_request_temp = std::get<1>(response);
+    TokensRequestPrivateState tokens_request_private_state_temp = std::get<2>(response);
+
+    GeneratedTokensRequestProto generated_tokens_request_proto;
+    for(auto& fingerprint: fingerprint_bytes) {
+        generated_tokens_request_proto.add_fingerprints_bytes(fingerprint);
+    }
+    TokensRequest* token_request = new TokensRequest(token_request_temp);
+    generated_tokens_request_proto.set_allocated_token_request(token_request);
+    TokensRequestPrivateState* tokens_request_private_state
+                            = new TokensRequestPrivateState(tokens_request_private_state_temp);
+    generated_tokens_request_proto
+                        .set_allocated_tokens_request_private_state(tokens_request_private_state);
+
+    return jni_util::JniUtil::SerializeProtoToJniByteArray(env, generated_tokens_request_proto);
+}
+
+JNIEXPORT jboolean JNICALL Java_com_android_adservices_ActJni_verifyTokensResponse(
+    JNIEnv *env,
+    jclass,
+    jbyteArray messagesInBytes,
+    jbyteArray tokenRequestInBytes,
+    jbyteArray tokensRequestPrivateStateInBytes,
+    jbyteArray tokensResponseInBytes,
+    jbyteArray schemeParametersInBytes,
+    jbyteArray clientPublicParametersInBytes,
+    jbyteArray clientPrivateParametersInBytes,
+    jbyteArray serverPublicParametersInBytes
+) {
+    MessagesSet messagesProto;
+    if(!jni_util::JniUtil::BytesToCppProto(env, &messagesProto, messagesInBytes)) {
+        jni_util::JniUtil::ThrowJavaException(
+                    env, IllegalArgumentExceptionClass, "Error parsing MessagesSet Proto");
+        return false;
+    }
+    std::vector<std::string> messagesVector(messagesProto.message_size());
+    for(int i = 0; i < messagesProto.message_size(); i++) {
+        messagesVector[i] = messagesProto.message(i);
+    }
+
+    TokensRequest tokenRequestProto;
+    if(!jni_util::JniUtil::BytesToCppProto(env, &tokenRequestProto, tokenRequestInBytes)) {
+        jni_util::JniUtil::ThrowJavaException(
+                    env, IllegalArgumentExceptionClass, "Error parsing TokensRequest Proto");
+        return false;
+    }
+
+    TokensRequestPrivateState tokensRequestPrivateStateProto;
+    if(!jni_util::JniUtil::BytesToCppProto(env, &tokensRequestPrivateStateProto,
+                                                              tokensRequestPrivateStateInBytes)) {
+        jni_util::JniUtil::ThrowJavaException(
+            env, IllegalArgumentExceptionClass, "Error parsing TokensRequestPrivateState Proto");
+        return false;
+    }
+
+    TokensResponse tokensResponseProto;
+    if(!jni_util::JniUtil::BytesToCppProto(env, &tokensResponseProto, tokensResponseInBytes)) {
+        jni_util::JniUtil::ThrowJavaException(
+            env, IllegalArgumentExceptionClass, "Error parsing TokensResponse Proto");
+        return false;
+    }
+
+    SchemeParameters schemeParametersProto;
+    if(!jni_util::JniUtil::BytesToCppProto(env, &schemeParametersProto, schemeParametersInBytes)) {
+        jni_util::JniUtil::ThrowJavaException(
+                    env, IllegalArgumentExceptionClass, "Error parsing SchemeParameters Proto");
+        return false;
+    }
+    ClientPublicParameters clientPublicParametersProto;
+    if(!jni_util::JniUtil::BytesToCppProto(env, &clientPublicParametersProto,
+                                                                clientPublicParametersInBytes)) {
+        jni_util::JniUtil::ThrowJavaException(
+            env, IllegalArgumentExceptionClass, "Error parsing ClientPublicParameters Proto");
+        return false;
+    }
+    ClientPrivateParameters clientPrivateParametersProto;
+    if(!jni_util::JniUtil::BytesToCppProto(env, &clientPrivateParametersProto,
+                                                                clientPublicParametersInBytes)) {
+        jni_util::JniUtil::ThrowJavaException(
+            env, IllegalArgumentExceptionClass, "Error parsing ClientPublicParameters Proto");
+        return false;
+    }
+    ServerPublicParameters serverPublicParametersProto;
+    if(!jni_util::JniUtil::BytesToCppProto(env, &serverPublicParametersProto,
+                                                                serverPublicParametersInBytes)) {
+        jni_util::JniUtil::ThrowJavaException(
+            env, IllegalArgumentExceptionClass, "Error parsing ClientPublicParameters Proto");
+        return false;
+    }
+
+    std::unique_ptr<AnonymousCountingTokens> act = AnonymousCountingTokensV0::Create();
+
+    auto status = (act -> VerifyTokensResponse(
+                                              messagesVector,
+                                              tokenRequestProto,
+                                              tokensRequestPrivateStateProto,
+                                              tokensResponseProto,
+                                              schemeParametersProto,
+                                              clientPublicParametersProto,
+                                              clientPrivateParametersProto,
+                                              serverPublicParametersProto));
+
+    if(status.ok()) {
+        return true;
+    } else {
+        jni_util::JniUtil::ThrowJavaException(
+                    env, IllegalStateExceptionClass, status.ToString().c_str());
+        return false;
+    }
+}
 

@@ -19,6 +19,8 @@ package com.android.adservices.service.measurement;
 import static android.view.MotionEvent.ACTION_BUTTON_PRESS;
 import static android.view.MotionEvent.obtain;
 
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+import static com.android.adservices.service.Flags.MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.measurement.reporting.AggregateReportSender.AGGREGATE_ATTRIBUTION_REPORT_URI_PATH;
 import static com.android.adservices.service.measurement.reporting.AggregateReportSender.DEBUG_AGGREGATE_ATTRIBUTION_REPORT_URI_PATH;
 import static com.android.adservices.service.measurement.reporting.DebugReportSender.DEBUG_REPORT_URI_PATH;
@@ -165,6 +167,7 @@ public abstract class E2ETest {
     }
 
     public interface TestFormatJsonMapping {
+        String DEFAULT_CONFIG_FILENAME = "default_config.json";
         String API_CONFIG_KEY = "api_config";
         String PH_FLAGS_OVERRIDE_KEY = "phflags_override";
         String TEST_INPUT_KEY = "input";
@@ -993,7 +996,7 @@ public abstract class E2ETest {
                     expiryTimes.add(sourceJson.getLong("expiry"));
                 } else {
                     expiryTimes.add(
-                            PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+                            MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
                 }
             }
         }
@@ -1014,10 +1017,10 @@ public abstract class E2ETest {
         Set<Long> expiryTimes = getExpiryTimesFrom(responseHeaders);
         for (Long expiry : expiryTimes) {
             long validExpiry = expiry;
-            if (expiry > PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS) {
-                validExpiry = PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
-            } else if (expiry < PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS) {
-                validExpiry = PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+            if (expiry > MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS) {
+                validExpiry = MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+            } else if (expiry < MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS) {
+                validExpiry = MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
             }
             if (isEventType) {
                 validExpiry = roundSecondsToWholeDays(validExpiry);
@@ -1053,6 +1056,10 @@ public abstract class E2ETest {
         List<Object[]> testCases = new ArrayList<>();
 
         for (int i = 0; i < inputStreams.size(); i++) {
+            String name = filenames[i];
+            if (name.equals(TestFormatJsonMapping.DEFAULT_CONFIG_FILENAME)) {
+                continue;
+            }
             int size = inputStreams.get(i).available();
             byte[] buffer = new byte[size];
             inputStreams.get(i).read(buffer);
@@ -1060,7 +1067,6 @@ public abstract class E2ETest {
             String json = new String(buffer, StandardCharsets.UTF_8);
 
             JSONObject testObj = new JSONObject(preprocessor.apply(json));
-            String name = filenames[i];
             JSONObject input = testObj.getJSONObject(TestFormatJsonMapping.TEST_INPUT_KEY);
             JSONObject output = testObj.getJSONObject(TestFormatJsonMapping.TEST_OUTPUT_KEY);
 

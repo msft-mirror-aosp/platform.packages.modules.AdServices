@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-package com.android.adservices.errorlogging;
+package android.adservices.extdata;
 
-/** Interface for Statsd Adservices logger to implement error logging in statsd. */
-public interface StatsdAdServicesErrorLogger {
-    /** Logs AdServices error/exceptions. */
-    void logAdServicesError(AdServicesErrorStats stats);
-}
+parcelable GetAdServicesExtDataResult;

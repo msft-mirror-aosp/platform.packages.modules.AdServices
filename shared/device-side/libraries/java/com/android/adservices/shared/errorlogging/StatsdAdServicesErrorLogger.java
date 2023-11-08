@@ -14,21 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.adservices.errorlogging;
+package com.android.adservices.shared.errorlogging;
 
-
-/** Interface for Adservices error logger. */
-public interface AdServicesErrorLogger {
-
-    /**
-     * Creates a {@link AdServicesErrorStats} value object and logs AdServices error/exceptions if
-     * flag enabled.
-     */
-    void logError(int errorCode, int ppapiName);
-
-    /**
-     * Creates a {@link AdServicesErrorStats} value object that contains exception information and
-     * logs AdServices error/exceptions if flag enabled.
-     */
-    void logErrorWithExceptionInfo(Throwable tr, int errorCode, int ppapiName);
+/** Interface for Statsd Adservices logger to implement error logging in statsd. */
+public interface StatsdAdServicesErrorLogger {
+    /** Logs AdServices error/exceptions. */
+    void logAdServicesError(AdServicesErrorStats stats);
 }

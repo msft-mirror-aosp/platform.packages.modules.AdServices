@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.errorlogging;
+package com.android.adservices.shared.errorlogging;
 
 import com.google.auto.value.AutoValue;
 

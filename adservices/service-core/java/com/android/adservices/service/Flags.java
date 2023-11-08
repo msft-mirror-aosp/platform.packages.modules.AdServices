@@ -1710,6 +1710,13 @@ public interface Flags {
         return CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
     }
 
+    boolean CONSENT_NOTIFIED_DEBUG_MODE = false;
+
+    /** Returns whether to suppress consent notified state. */
+    default boolean getConsentNotifiedDebugMode() {
+        return CONSENT_NOTIFIED_DEBUG_MODE;
+    }
+
     boolean CONSENT_MANAGER_DEBUG_MODE = false;
 
     default boolean getConsentManagerDebugMode() {
@@ -3824,6 +3831,14 @@ public interface Flags {
         return DEFAULT_RVC_UX_ENABLED;
     }
 
+    /** Default RVC NOTIFICATION feature flag.. */
+    boolean DEFAULT_RVC_NOTIFICATION_ENABLED = false;
+
+    /** RVC Notification feature flag.. */
+    default boolean getEnableRvcNotification() {
+        return DEFAULT_RVC_NOTIFICATION_ENABLED;
+    }
+
     /** Default enableAdServices system API feature flag.. */
     boolean DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API = false;
 
@@ -3936,6 +3951,76 @@ public interface Flags {
     /** Minimum time window after which reporting origin can be migrated */
     default long getMeasurementMinReportingOriginUpdateWindow() {
         return MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW;
+    }
+
+    float MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY = 0.0000208f;
+
+    /**
+     * {@link Source} Noise probability for 'Event' when both destinations (app and web) are
+     * available on the source and supports install attribution.
+     */
+    default float getMeasurementInstallAttrDualDestinationEventNoiseProbability() {
+        return MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY;
+    }
+
+    float MEASUREMENT_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY = 0.0170218f;
+
+    /**
+     * {@link Source} Noise probability for 'Navigation' when both destinations (app and web) are
+     * available on the source.
+     */
+    default float getMeasurementDualDestinationNavigationNoiseProbability() {
+        return MEASUREMENT_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
+    }
+
+    float MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY =
+            MEASUREMENT_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
+
+    /**
+     * {@link Source} Noise probability for 'Navigation' when both destinations (app and web) are
+     * available on the source and supports install attribution.
+     */
+    default float getMeasurementInstallAttrDualDestinationNavigationNoiseProbability() {
+        return MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
+    }
+
+    float MEASUREMENT_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY = 0.0000042f;
+
+    /**
+     * {@link Source} Noise probability for 'Event' when both destinations (app and web) are
+     * available on the source.
+     */
+    default float getMeasurementDualDestinationEventNoiseProbability() {
+        return MEASUREMENT_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY;
+    }
+
+    float MEASUREMENT_INSTALL_ATTR_EVENT_NOISE_PROBABILITY = 0.0000125f;
+
+    /** {@link Source} Noise probability for 'Event' which supports install attribution. */
+    default float getMeasurementInstallAttrEventNoiseProbability() {
+        return MEASUREMENT_INSTALL_ATTR_EVENT_NOISE_PROBABILITY;
+    }
+
+    float MEASUREMENT_EVENT_NOISE_PROBABILITY = 0.0000025f;
+
+    /** {@link Source} Noise probability for 'Event'. */
+    default float getMeasurementEventNoiseProbability() {
+        return MEASUREMENT_EVENT_NOISE_PROBABILITY;
+    }
+
+    float MEASUREMENT_NAVIGATION_NOISE_PROBABILITY = 0.0024263f;
+
+    /** {@link Source} Noise probability for 'Navigation'. */
+    default float getMeasurementNavigationNoiseProbability() {
+        return MEASUREMENT_NAVIGATION_NOISE_PROBABILITY;
+    }
+
+    float MEASUREMENT_INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY =
+            MEASUREMENT_NAVIGATION_NOISE_PROBABILITY;
+
+    /** {@link Source} Noise probability for 'Navigation' which supports install attribution. */
+    default float getMeasurementInstallAttrNavigationNoiseProbability() {
+        return MEASUREMENT_INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY;
     }
 
     boolean MEASUREMENT_ENABLE_PREINSTALL_CHECK = false;
@@ -4195,6 +4280,16 @@ public interface Flags {
      */
     default boolean getEnableAdservicesApiEnabled() {
         return DEFAULT_ENABLE_ADSERVICES_API_ENABLED;
+    }
+
+    /**
+     * Default value to determine whether AdServicesExtDataStorageService related APIs are enabled.
+     */
+    boolean DEFAULT_ENABLE_ADEXT_DATA_SERVICE_APIS = true;
+
+    /** Returns whether AdServicesExtDataStorageService related APIs are enabled. */
+    default boolean getEnableAdExtDataServiceApis() {
+        return DEFAULT_ENABLE_ADEXT_DATA_SERVICE_APIS;
     }
 
     /**

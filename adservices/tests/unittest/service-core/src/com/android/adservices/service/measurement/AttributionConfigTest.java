@@ -16,11 +16,14 @@
 
 package com.android.adservices.service.measurement;
 
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.when;
 
 import android.util.Pair;
 
@@ -31,6 +34,7 @@ import com.android.adservices.service.Flags;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -49,6 +53,11 @@ public final class AttributionConfigTest {
     private static final String SOURCE_AD_TECH = "AdTech1-Ads";
     @Mock private Flags mFlags;
 
+    @Before
+    public void setup() {
+        when(mFlags.getMeasurementMaxReportingRegisterSourceExpirationInSeconds())
+                .thenReturn(MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+    }
     @Test
     public void testCreation() throws Exception {
         AttributionConfig attributionConfig = createExample();
@@ -179,7 +188,6 @@ public final class AttributionConfigTest {
     public void serializeAsJson_success() throws JSONException {
         // Setup
         AttributionConfig attributionConfig = createExample();
-
         // Assertion
         assertEquals(
                 attributionConfig,
