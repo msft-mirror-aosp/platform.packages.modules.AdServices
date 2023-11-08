@@ -69,6 +69,7 @@ public class GaUxRvcPostOTAChannelTest {
         UiUtils.enableNotificationPermission();
         UiUtils.enableGa();
         UiUtils.enableRvc();
+        UiUtils.enableRvcNotification();
         UiUtils.disableNotificationFlowV2();
         UiUtils.disableOtaStrings();
 

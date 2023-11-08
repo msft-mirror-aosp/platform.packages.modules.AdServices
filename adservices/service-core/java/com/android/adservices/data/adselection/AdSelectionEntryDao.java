@@ -201,6 +201,36 @@ public abstract class AdSelectionEntryDao {
     public abstract DBAdSelectionEntry getAdSelectionEntityById(long adSelectionId);
 
     /**
+     * Get the {@link DBReportingComputationInfo} by its unique key ad_selection_id.
+     *
+     * @param adSelectionId which is the key to query the corresponding ad selection entry.
+     * @return an {@link DBReportingComputationInfo} if exists.
+     */
+    @Query(
+            "SELECT reporting_computation_info.ad_selection_id as ad_selection_id,"
+                + " reporting_computation_info.bidding_logic_uri as bidding_logic_uri,"
+                + " reporting_computation_info.buyer_decision_logic_js as buyer_decision_logic_js,"
+                + " reporting_computation_info.seller_contextual_signals as"
+                + " seller_contextual_signals, reporting_computation_info.buyer_contextual_signals"
+                + " as buyer_contextual_signals,"
+                + " reporting_computation_info.custom_audience_signals_owner as"
+                + " custom_audience_signals_owner,"
+                + " reporting_computation_info.custom_audience_signals_buyer as"
+                + " custom_audience_signals_buyer,"
+                + " reporting_computation_info.custom_audience_signals_name as"
+                + " custom_audience_signals_name,"
+                + " reporting_computation_info.custom_audience_signals_activation_time as"
+                + " custom_audience_signals_activation_time,"
+                + " reporting_computation_info.custom_audience_signals_expiration_time as"
+                + " custom_audience_signals_expiration_time,"
+                + " reporting_computation_info.custom_audience_signals_user_bidding_signals as"
+                + " custom_audience_signals_user_bidding_signals,"
+                + " reporting_computation_info.winning_ad_bid as winning_ad_bid,"
+                + " reporting_computation_info.winning_ad_render_uri as winning_ad_render_uri  FROM"
+                + " reporting_computation_info WHERE reporting_computation_info.ad_selection_id ="
+                + " :adSelectionId")
+    public abstract DBReportingComputationInfo getReportingComputationInfoById(long adSelectionId);
+    /**
      * Get the ad selection entries with a batch of ad_selection_ids.
      *
      * @param adSelectionIds are the list of keys to query the corresponding ad selection entries.
@@ -890,7 +920,8 @@ public abstract class AdSelectionEntryDao {
 
     /** Insert new {@link DBReportingComputationInfo} record. */
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    abstract void insertDBReportingComputationInfo(DBReportingComputationInfo dbAdSelectionResult);
+    public abstract void insertDBReportingComputationInfo(
+            DBReportingComputationInfo dbAdSelectionResult);
 
     /**
      * Insert a reporting URI record. Aborts if adselectionId already exists.

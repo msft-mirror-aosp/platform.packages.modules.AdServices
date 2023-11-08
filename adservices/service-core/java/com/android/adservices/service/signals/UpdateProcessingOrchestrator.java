@@ -27,6 +27,7 @@ import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEven
 import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
+import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -46,6 +47,10 @@ import java.util.stream.Collectors;
 /** Applies JSON signal updates to the DB. */
 public class UpdateProcessingOrchestrator {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+
+    @VisibleForTesting
+    public static final String COLLISION_ERROR =
+            "Updates JSON attempts to perform multiple operations on a single key";
 
     @NonNull private final ProtectedSignalsDao mProtectedSignalsDao;
     @NonNull private final UpdateProcessorSelector mUpdateProcessorSelector;
@@ -135,8 +140,7 @@ public class UpdateProcessingOrchestrator {
             combinedUpdates.getToAdd().addAll(output.getToAdd());
             combinedUpdates.getToRemove().addAll(output.getToRemove());
             if (!Collections.disjoint(combinedUpdates.getKeysTouched(), output.getKeysTouched())) {
-                throw new IllegalArgumentException(
-                        "Updates JSON attempts to perform multiple operations on a single key");
+                throw new IllegalArgumentException(COLLISION_ERROR);
             }
             combinedUpdates.getKeysTouched().addAll(output.getKeysTouched());
 

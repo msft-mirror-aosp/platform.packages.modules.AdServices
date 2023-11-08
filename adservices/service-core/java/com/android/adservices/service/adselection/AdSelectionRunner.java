@@ -43,6 +43,10 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBBuyerDecisionLogic;
+import com.android.adservices.data.adselection.DBReportingComputationInfo;
+import com.android.adservices.data.adselection.datahandlers.AdSelectionInitialization;
+import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBidAndUri;
+import com.android.adservices.data.adselection.datahandlers.WinningCustomAudience;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
@@ -136,6 +140,7 @@ public abstract class AdSelectionRunner {
     @NonNull private final AdCounterHistogramUpdater mAdCounterHistogramUpdater;
     private final int mCallerUid;
     @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
+    private final boolean mShouldUseUnifiedTables;
 
     /**
      * @param context service context
@@ -163,7 +168,8 @@ public abstract class AdSelectionRunner {
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
             @NonNull final DebugReporting debugReporting,
-            final int callerUid) {
+            final int callerUid,
+            boolean shouldUseUnifiedTables) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(adSelectionEntryDao);
@@ -195,6 +201,7 @@ public abstract class AdSelectionRunner {
         mCallerUid = callerUid;
         mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
         mDebugReporting = debugReporting;
+        mShouldUseUnifiedTables = shouldUseUnifiedTables;
     }
 
     @VisibleForTesting
@@ -215,7 +222,8 @@ public abstract class AdSelectionRunner {
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
-            @NonNull final DebugReporting debugReporting) {
+            @NonNull final DebugReporting debugReporting,
+            boolean shouldUseUnifiedTables) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(adSelectionEntryDao);
@@ -249,6 +257,7 @@ public abstract class AdSelectionRunner {
         mCallerUid = callerUid;
         mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
         mDebugReporting = debugReporting;
+        mShouldUseUnifiedTables = shouldUseUnifiedTables;
     }
 
     /**
@@ -512,7 +521,11 @@ public abstract class AdSelectionRunner {
                         AdSelectionOrchestrationResult,
                         Pair<DBAdSelection, AdSelectionOrchestrationResult>>
                 saveResultToPersistence =
-                        adSelectionAndJs -> persistAdSelection(adSelectionAndJs, callerPackageName);
+                        adSelectionAndJs ->
+                                persistAdSelection(
+                                        adSelectionAndJs,
+                                        callerPackageName,
+                                        adSelectionConfig.getSeller());
 
         ListenableFuture<Pair<DBAdSelection, AdSelectionOrchestrationResult>>
                 resultAfterPersistence =
@@ -598,7 +611,8 @@ public abstract class AdSelectionRunner {
     private ListenableFuture<Pair<DBAdSelection, AdSelectionOrchestrationResult>>
             persistAdSelection(
                     @NonNull AdSelectionOrchestrationResult adSelectionOrchestrationResult,
-                    @NonNull String callerPackageName) {
+                    @NonNull String callerPackageName,
+                    @NonNull AdTechIdentifier seller) {
         final int traceCookie = Tracing.beginAsyncSection(Tracing.PERSIST_AD_SELECTION);
         return mBackgroundExecutorService.submit(
                 () -> {
@@ -628,13 +642,68 @@ public abstract class AdSelectionRunner {
                                         + "continuing ad selection persistence");
                     }
 
-                    mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
-                    mAdSelectionEntryDao.persistBuyerDecisionLogic(
-                            new DBBuyerDecisionLogic.Builder()
-                                    .setBuyerDecisionLogicJs(
-                                            adSelectionOrchestrationResult.mBuyerDecisionLogicJs)
-                                    .setBiddingLogicUri(dbAdSelection.getBiddingLogicUri())
-                                    .build());
+                    if (mShouldUseUnifiedTables) {
+                        sLogger.d("Inserting into new AdSelection tables");
+                        AdSelectionInitialization adSelectionInitialization =
+                                AdSelectionInitialization.builder()
+                                        .setCreationInstant(dbAdSelection.getCreationTimestamp())
+                                        .setCallerPackageName(dbAdSelection.getCallerPackageName())
+                                        .setSeller(seller)
+                                        .build();
+                        mAdSelectionEntryDao.persistAdSelectionInitialization(
+                                adSelectionId, adSelectionInitialization);
+
+                        DBReportingComputationInfo reportingComputationInfo =
+                                DBReportingComputationInfo.builder()
+                                        .setAdSelectionId(adSelectionId)
+                                        .setBiddingLogicUri(dbAdSelection.getBiddingLogicUri())
+                                        .setBuyerDecisionLogicJs(
+                                                adSelectionOrchestrationResult
+                                                        .mBuyerDecisionLogicJs)
+                                        .setSellerContextualSignals(
+                                                dbAdSelection.getSellerContextualSignals())
+                                        .setBuyerContextualSignals(
+                                                dbAdSelection.getBuyerContextualSignals())
+                                        .setCustomAudienceSignals(
+                                                dbAdSelection.getCustomAudienceSignals())
+                                        .setWinningAdBid(dbAdSelection.getWinningAdBid())
+                                        .setWinningAdRenderUri(
+                                                dbAdSelection.getWinningAdRenderUri())
+                                        .build();
+                        mAdSelectionEntryDao.insertDBReportingComputationInfo(
+                                reportingComputationInfo);
+
+                        AdSelectionResultBidAndUri bidAndUri =
+                                AdSelectionResultBidAndUri.builder()
+                                        .setAdSelectionId(adSelectionId)
+                                        .setWinningAdBid(dbAdSelection.getWinningAdBid())
+                                        .setWinningAdRenderUri(
+                                                dbAdSelection.getWinningAdRenderUri())
+                                        .build();
+
+                        WinningCustomAudience winningCustomAudience =
+                                WinningCustomAudience.builder()
+                                        .setName(dbAdSelection.getCustomAudienceSignals().getName())
+                                        .setAdCounterKeys(dbAdSelection.getAdCounterIntKeys())
+                                        .setOwner(
+                                                dbAdSelection.getCustomAudienceSignals().getOwner())
+                                        .build();
+
+                        mAdSelectionEntryDao.persistAdSelectionResultForCustomAudience(
+                                adSelectionId,
+                                bidAndUri,
+                                dbAdSelection.getCustomAudienceSignals().getBuyer(),
+                                winningCustomAudience);
+                    } else {
+                        mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
+                        mAdSelectionEntryDao.persistBuyerDecisionLogic(
+                                new DBBuyerDecisionLogic.Builder()
+                                        .setBuyerDecisionLogicJs(
+                                                adSelectionOrchestrationResult
+                                                        .mBuyerDecisionLogicJs)
+                                        .setBiddingLogicUri(dbAdSelection.getBiddingLogicUri())
+                                        .build());
+                    }
                     mAdSelectionExecutionLogger.endPersistAdSelection();
                     Tracing.endAsyncSection(Tracing.PERSIST_AD_SELECTION, traceCookie);
                     return Pair.create(dbAdSelection, adSelectionOrchestrationResult);
