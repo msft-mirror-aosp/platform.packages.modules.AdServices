@@ -289,7 +289,8 @@ public class FrequencyCapFilteringE2ETest {
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdIdFetcher,
+                        false);
 
         mInputParams =
                 new UpdateAdCounterHistogramInput.Builder(
@@ -455,7 +456,8 @@ public class FrequencyCapFilteringE2ETest {
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdIdFetcher,
+                        false);
 
         UpdateAdCounterHistogramTestCallback callback = callUpdateAdCounterHistogram(mInputParams);
 
@@ -524,7 +526,8 @@ public class FrequencyCapFilteringE2ETest {
                             mConsentManagerMock,
                             mObliviousHttpEncryptor,
                             mAdSelectionDebugReportDao,
-                            mAdIdFetcher);
+                            mAdIdFetcher,
+                            false);
 
             UpdateAdCounterHistogramTestCallback callback =
                     callUpdateAdCounterHistogram(mInputParams);
@@ -769,7 +772,8 @@ public class FrequencyCapFilteringE2ETest {
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdIdFetcher,
+                        false);
 
         // Persist ad selections
         mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);
@@ -883,7 +887,8 @@ public class FrequencyCapFilteringE2ETest {
                         mConsentManagerMock,
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdIdFetcher,
+                        false);
 
         // Persist ad selections
         mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);

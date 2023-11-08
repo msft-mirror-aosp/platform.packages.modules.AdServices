@@ -46,7 +46,7 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
     private final ISdkSandboxManagerToSdkSandboxCallback mManagerToSdkCallback;
     private final CountDownLatch mLatch;
 
-    private long mTimeSystemServerCalledSandbox = -1;
+    private long mTimeSystemServerCallFinished = -1;
     private long mTimeSandboxReceivedCallFromSystemServer = -1;
     private long mTimeSandboxCalledSdk = -1;
     private long mTimeSdkCallCompleted = -1;
@@ -74,12 +74,12 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
     }
 
     public void setTimeValues(
-            long timeSystemServerCalledSandbox,
+            long timeSystemServerCallFinished,
             long timeSandboxReceivedCallFromSystemServer,
             long timeSandboxCalledSdk,
             long timeSdkCallCompleted,
             long timeSandboxCalledSystemServer) {
-        mTimeSystemServerCalledSandbox = timeSystemServerCalledSandbox;
+        mTimeSystemServerCallFinished = timeSystemServerCallFinished;
         mTimeSandboxReceivedCallFromSystemServer = timeSandboxReceivedCallFromSystemServer;
         mTimeSandboxCalledSdk = timeSandboxCalledSdk;
         mTimeSdkCallCompleted = timeSdkCallCompleted;
@@ -150,7 +150,7 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
 
     public void sendLoadSdkSuccessful() throws RemoteException {
         final SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo();
-        sandboxLatencyInfo.setTimeSystemServerCalledSandbox(mTimeSystemServerCalledSandbox);
+        sandboxLatencyInfo.setTimeSystemServerCallFinished(mTimeSystemServerCallFinished);
         mLoadSdkInSandboxCallback.onLoadSdkSuccess(
                 new SandboxedSdk(new Binder()), mManagerToSdkCallback, sandboxLatencyInfo);
     }
@@ -174,7 +174,7 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
     public void sendLoadSdkError() throws Exception {
         Class<?> clz = Class.forName("android.app.sdksandbox.LoadSdkException");
         final SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo();
-        sandboxLatencyInfo.setTimeSystemServerCalledSandbox(mTimeSystemServerCalledSandbox);
+        sandboxLatencyInfo.setTimeSystemServerCallFinished(mTimeSystemServerCallFinished);
         LoadSdkException exception =
                 (LoadSdkException)
                         clz.getConstructor(Integer.TYPE, String.class)
@@ -213,7 +213,7 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
     }
 
     private void setSandboxLatencyTimestamps(SandboxLatencyInfo sandboxLatencyInfo) {
-        sandboxLatencyInfo.setTimeSystemServerCalledSandbox(mTimeSystemServerCalledSandbox);
+        sandboxLatencyInfo.setTimeSystemServerCallFinished(mTimeSystemServerCallFinished);
         sandboxLatencyInfo.setTimeSandboxReceivedCallFromSystemServer(
                 mTimeSandboxReceivedCallFromSystemServer);
         sandboxLatencyInfo.setTimeSandboxCalledSdk(mTimeSandboxCalledSdk);

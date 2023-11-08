@@ -27,7 +27,6 @@ import static android.app.sdksandbox.SdkSandboxManager.REQUEST_SURFACE_PACKAGE_S
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE;
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
 
-import static com.android.sdksandbox.flags.Flags.sandboxActivitySdkBasedContext;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__UNLOAD_SDK;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX;
@@ -52,7 +51,6 @@ import android.app.sdksandbox.SandboxLatencyInfo;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.SharedPreferencesUpdate;
-import android.app.sdksandbox.sandboxactivity.SdkSandboxActivityAuthority;
 import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -480,7 +478,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 }
             }
         }
-        sandboxLatencyInfo.setTimeSystemServerCalledSandbox(mInjector.getCurrentTime());
+        sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.getCurrentTime());
         logLatencies(sandboxLatencyInfo);
         return sandboxedSdks;
     }
@@ -634,7 +632,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         final CallingInfo callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
         List<AppOwnedSdkSandboxInterface> appOwnedSdkSandboxInterfaces =
                 getRegisteredAppOwnedSdkSandboxInterfacesForApp(callingInfo);
-        sandboxLatencyInfo.setTimeSystemServerCalledSandbox(mInjector.getCurrentTime());
+        sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.getCurrentTime());
         logLatencies(sandboxLatencyInfo);
         return appOwnedSdkSandboxInterfaces;
     }
@@ -667,11 +665,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         boolean isRegistrationForAppDeathSuccessful =
                 registerForAppDeath(callingInfo, appOwnedSdkSandboxInterface.getInterface());
 
-        long timeSystemServerCallFinished = mInjector.getCurrentTime();
-        if (isRegistrationForAppDeathSuccessful) {
-            sandboxLatencyInfo.setTimeSystemServerCalledSandbox(timeSystemServerCallFinished);
-        } else {
-            sandboxLatencyInfo.setTimeFailedAtSystemServer(timeSystemServerCallFinished);
+        sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.getCurrentTime());
+        if (!isRegistrationForAppDeathSuccessful) {
             sandboxLatencyInfo.setSandboxStatus(
                     SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
         }
@@ -690,7 +685,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
 
-        sandboxLatencyInfo.setTimeSystemServerCalledSandbox(mInjector.getCurrentTime());
+        sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.getCurrentTime());
         logLatencies(sandboxLatencyInfo);
     }
 
@@ -773,7 +768,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         String errorMsg = loadSdkSession.getSdkProviderErrorIfExists();
         if (!TextUtils.isEmpty(errorMsg)) {
             Log.w(TAG, errorMsg);
-            sandboxLatencyInfo.setTimeFailedAtSystemServer(mInjector.getCurrentTime());
+            sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.getCurrentTime());
             sandboxLatencyInfo.setSandboxStatus(
                     SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
             loadSdkSession.handleLoadFailure(
@@ -797,7 +792,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             // If there was a previous load session and the status is loaded, this new load request
             // should fail.
             if (prevLoadSession != null && prevLoadSession.getStatus() == LoadSdkSession.LOADED) {
-                sandboxLatencyInfo.setTimeFailedAtSystemServer(mInjector.getCurrentTime());
+                sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.getCurrentTime());
                 sandboxLatencyInfo.setSandboxStatus(
                         SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
                 // TODO(b/296844050): only take LoadSdkException and SandboxLatencyInfo as
@@ -816,7 +811,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             // If there was an ongoing load session for this SDK, this new load request should fail.
             if (prevLoadSession != null
                     && prevLoadSession.getStatus() == LoadSdkSession.LOAD_PENDING) {
-                sandboxLatencyInfo.setTimeSystemServerCalledSandbox(mInjector.getCurrentTime());
+                sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.getCurrentTime());
                 sandboxLatencyInfo.setSandboxStatus(
                         SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
                 loadSdkSession.handleLoadFailure(
@@ -842,7 +837,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 // Hence, it is of no use for the call from sandbox.
                 mUidImportanceListener.startListening();
                 if (!registerForAppDeath(callingInfo, callback.asBinder())) {
-                    sandboxLatencyInfo.setTimeFailedAtSystemServer(mInjector.getCurrentTime());
+                    sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.getCurrentTime());
                     sandboxLatencyInfo.setSandboxStatus(
                             SandboxLatencyInfo
                                     .SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
@@ -1132,7 +1127,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     callingInfo + " requested surface package, but could not find SDK " + sdkName);
 
             final long timeSystemServerProcessedCall = mInjector.getCurrentTime();
-            sandboxLatencyInfo.setTimeFailedAtSystemServer(timeSystemServerProcessedCall);
+            sandboxLatencyInfo.setTimeSystemServerCallFinished(timeSystemServerProcessedCall);
             sandboxLatencyInfo.setTimeSystemServerCalledApp(timeSystemServerProcessedCall);
             sandboxLatencyInfo.setSandboxStatus(
                     SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
@@ -2507,8 +2502,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 == PackageManager.PERMISSION_GRANTED;
     }
 
-    // TODO(b/299109198): remove once the {@link SdkSandboxActivityAuthority#isSdkSandboxActivity}
-    // API is stable.
+    //TODO(b/299109198): refactor with the {@link Intent#isSandboxActivity}.
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
     boolean isSdkSandboxActivity(Intent intent) {
         if (intent == null) {
@@ -2569,11 +2563,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 return InterceptCase.NO_INTERCEPT;
             }
 
-            boolean isSdkSandboxActivity =
-                    (sandboxActivitySdkBasedContext())
-                            ? SdkSandboxActivityAuthority.isSdkSandboxActivity(mContext, intent)
-                            : isSdkSandboxActivity(intent);
-            if (isSdkSandboxActivity) {
+            if (isSdkSandboxActivity(intent)) {
                 final String sdkSandboxPackageName =
                         mContext.getPackageManager().getSdkSandboxPackageName();
                 // Only intercept if action and package are both defined and refer to the

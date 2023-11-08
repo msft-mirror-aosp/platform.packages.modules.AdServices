@@ -5815,6 +5815,71 @@ public final class AsyncSourceFetcherTest {
     }
 
     @Test
+    public void fetchSource_flexibleEventReportApiArithmeticException_noSourceGenerated()
+            throws Exception {
+        String triggerSpecsString =
+                "[{\"trigger_data\": ["
+                        + IntStream.range(1, 33)
+                                .boxed()
+                                .map(String::valueOf)
+                                .collect(Collectors.joining(","))
+                        + "],"
+                        + "\"event_report_windows\": { "
+                                + "\"start_time\": \"0\", "
+                                + "\"end_times\": ["
+                                        + IntStream.range(1, 6)
+                                                .mapToLong(TimeUnit.DAYS::toSeconds)
+                                                .boxed()
+                                                .map(String::valueOf)
+                                                .collect(Collectors.joining(","))
+                                + "]"
+                        + "},"
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": ["
+                                + IntStream.range(1, 21)
+                                        .boxed()
+                                        .map(String::valueOf)
+                                        .collect(Collectors.joining(","))
+                        + "]}]";
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{"
+                                                + "  \"destination\": \"android-app://com"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"install_attribution_window\": \"272800\","
+                                                + "  \"trigger_specs\": "
+                                                + triggerSpecsString + ","
+                                                + "  \"max_event_level_reports\": "
+                                                + "\"20\","
+                                                + "  \"post_install_exclusivity_window\": "
+                                                + "\"987654\""
+                                                + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
+        assertTrue(fetch.isEmpty());
+    }
+
+    @Test
     public void fetchSource_flexibleEventReportApiNonNumber_noSourceGenerated() throws Exception {
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, \"a\"],"
@@ -5832,6 +5897,9 @@ public final class AsyncSourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -5846,7 +5914,7 @@ public final class AsyncSourceFetcherTest {
                                                 + "  \"install_attribution_window\": \"272800\",\n"
                                                 + "  \"trigger_specs\": "
                                                 + triggerSpecsString
-                                                + "  \"max_bucket_increments\": "
+                                                + "  \"max_event_level_reports\": "
                                                 + "\"3\",\n"
                                                 + "  \"post_install_exclusivity_window\": "
                                                 + "\"987654\"\n"
@@ -5882,6 +5950,9 @@ public final class AsyncSourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -5896,7 +5967,7 @@ public final class AsyncSourceFetcherTest {
                                                 + "  \"install_attribution_window\": \"272800\",\n"
                                                 + "  \"trigger_specs\": "
                                                 + triggerSpecsString
-                                                + "  \"max_bucket_increments\": "
+                                                + "  \"max_event_level_reports\": "
                                                 + "\"3\",\n"
                                                 + "  \"post_install_exclusivity_window\": "
                                                 + "\"987654\"\n"
@@ -5932,6 +6003,9 @@ public final class AsyncSourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -5946,7 +6020,7 @@ public final class AsyncSourceFetcherTest {
                                                 + "  \"install_attribution_window\": \"272800\",\n"
                                                 + "  \"trigger_specs\": "
                                                 + triggerSpecsString
-                                                + "  \"max_bucket_increments\": "
+                                                + "  \"max_event_level_reports\": "
                                                 + "\"3\",\n"
                                                 + "  \"post_install_exclusivity_window\": "
                                                 + "\"987654\"\n"
@@ -5982,6 +6056,9 @@ public final class AsyncSourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -5996,7 +6073,7 @@ public final class AsyncSourceFetcherTest {
                                                 + "  \"install_attribution_window\": \"272800\",\n"
                                                 + "  \"trigger_specs\": "
                                                 + triggerSpecsString
-                                                + "  \"max_bucket_increments\": "
+                                                + "  \"max_event_level_reports\": "
                                                 + "\"3\",\n"
                                                 + "  \"post_install_exclusivity_window\": "
                                                 + "\"987654\"\n"
@@ -6044,6 +6121,9 @@ public final class AsyncSourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -6058,7 +6138,7 @@ public final class AsyncSourceFetcherTest {
                                                 + "  \"install_attribution_window\": \"272800\",\n"
                                                 + "  \"trigger_specs\": "
                                                 + triggerSpecsString
-                                                + "  \"max_bucket_increments\": "
+                                                + "  \"max_event_level_reports\": "
                                                 + "\"3\",\n"
                                                 + "  \"post_install_exclusivity_window\": "
                                                 + "\"987654\"\n"
@@ -6106,6 +6186,9 @@ public final class AsyncSourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -6120,7 +6203,7 @@ public final class AsyncSourceFetcherTest {
                                                 + "  \"install_attribution_window\": \"272800\",\n"
                                                 + "  \"trigger_specs\": "
                                                 + triggerSpecsString
-                                                + "  \"max_bucket_increments\": "
+                                                + "  \"max_event_level_reports\": "
                                                 + "\"3\",\n"
                                                 + "  \"post_install_exclusivity_window\": "
                                                 + "\"987654\"\n"
@@ -6326,6 +6409,9 @@ public final class AsyncSourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         doReturn(false).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -6340,7 +6426,7 @@ public final class AsyncSourceFetcherTest {
                                                 + "  \"install_attribution_window\": \"272800\",\n"
                                                 + "  \"trigger_specs\": "
                                                 + triggerSpecsString
-                                                + "  \"max_bucket_increments\": "
+                                                + "  \"max_event_level_reports\": "
                                                 + "\"3\",\n"
                                                 + "  \"post_install_exclusivity_window\": "
                                                 + "\"987654\"\n"
@@ -6378,6 +6464,9 @@ public final class AsyncSourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         doReturn(false).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -6392,7 +6481,7 @@ public final class AsyncSourceFetcherTest {
                                                 + "  \"install_attribution_window\": \"272800\",\n"
                                                 + "  \"trigger_specs\": "
                                                 + triggerSpecsString
-                                                + "  \"max_bucket_increments\": "
+                                                + "  \"max_event_level_reports\": "
                                                 + "\"3\",\n"
                                                 + "  \"post_install_exclusivity_window\": "
                                                 + "\"987654\"\n"
@@ -6444,6 +6533,9 @@ public final class AsyncSourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -6515,6 +6607,9 @@ public final class AsyncSourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(8).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -6585,7 +6680,9 @@ public final class AsyncSourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
         doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
