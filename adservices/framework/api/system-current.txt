@@ -88,7 +88,6 @@ package android.adservices.common {
     method public int describeContents();
     method public boolean isApiEnabled();
     method public boolean isSuccess();
-    method public void writeToParcel(@NonNull android.os.Parcel, int);
     field @NonNull public static final android.os.Parcelable.Creator<android.adservices.common.EnableAdServicesResponse> CREATOR;
   }
 
