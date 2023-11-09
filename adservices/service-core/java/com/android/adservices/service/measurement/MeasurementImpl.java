@@ -21,8 +21,6 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARG
 import static android.adservices.common.AdServicesStatusUtils.STATUS_IO_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_WIPEOUT;
-
 import android.adservices.adid.AdId;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.measurement.DeletionParam;
@@ -58,8 +56,6 @@ import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.registration.EnqueueAsyncRegistration;
 import com.android.adservices.service.measurement.util.Applications;
-import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.service.stats.MeasurementWipeoutStats;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -549,24 +545,11 @@ public final class MeasurementImpl {
             LoggerFactory.getMeasurementLogger()
                     .d("Rollback and deletion detected, deleting all measurement data.");
             mReadWriteLock.writeLock().lock();
-            boolean success;
             try {
-                success =
-                        mDatastoreManager.runInTransaction(
-                                (dao) -> dao.deleteAllMeasurementData(Collections.emptyList()));
+                mDatastoreManager.runInTransaction(
+                        (dao) -> dao.deleteAllMeasurementData(Collections.emptyList()));
             } finally {
                 mReadWriteLock.writeLock().unlock();
-            }
-            if (success) {
-                AdServicesLoggerImpl.getInstance()
-                        .logMeasurementWipeoutStats(
-                                new MeasurementWipeoutStats.Builder()
-                                        .setCode(AD_SERVICES_MEASUREMENT_WIPEOUT)
-                                        .setWipeoutType(
-                                                WipeoutStatus.WipeoutType.ROLLBACK_WIPEOUT_CAUSE
-                                                        .getValue())
-                                        .setSourceRegistrant("")
-                                        .build());
             }
         }
     }

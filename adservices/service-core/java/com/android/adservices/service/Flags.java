@@ -1710,13 +1710,6 @@ public interface Flags {
         return CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
     }
 
-    boolean CONSENT_NOTIFIED_DEBUG_MODE = false;
-
-    /** Returns whether to suppress consent notified state. */
-    default boolean getConsentNotifiedDebugMode() {
-        return CONSENT_NOTIFIED_DEBUG_MODE;
-    }
-
     boolean CONSENT_MANAGER_DEBUG_MODE = false;
 
     default boolean getConsentManagerDebugMode() {

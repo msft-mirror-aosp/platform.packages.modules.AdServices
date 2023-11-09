@@ -30,11 +30,7 @@ import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 
-/**
- * Resolves whether user consent has been provided or not to use the PPAPI. {@link
- * #isAllowed(Context)} will return true if consent notification was shown and opt-in occurred.
- * Opt-in can happen by default value as well based on the region.
- */
+/** Resolves whether user consent has been provided or not to use the PPAPI. */
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class UserConsentAccessResolver implements IAccessResolver {

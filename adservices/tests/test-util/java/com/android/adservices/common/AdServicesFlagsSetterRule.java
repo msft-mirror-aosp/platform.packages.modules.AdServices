@@ -90,7 +90,6 @@ public final class AdServicesFlagsSetterRule
                 .setMsmtApiAppAllowList(packageName)
                 .setMsmtWebContextClientAllowList(packageName)
                 .setConsentManagerDebugMode(true)
-                .setConsentNotifiedDebugMode(true)
                 .setOrCacheDebugSystemProperty(KEY_GLOBAL_KILL_SWITCH, false)
                 .setOrCacheDebugSystemProperty(KEY_MEASUREMENT_KILL_SWITCH, false)
                 .setOrCacheDebugSystemProperty(
