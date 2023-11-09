@@ -1413,6 +1413,17 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
     }
 
+    @Override
+    public void logSandboxActivityEvent(int method, int callResult, int latencyMillis) {
+        SdkSandboxStatsLog.write(
+                SdkSandboxStatsLog.SANDBOX_ACTIVITY_EVENT_OCCURRED,
+                method,
+                callResult,
+                latencyMillis,
+                Binder.getCallingUid(),
+                /*sdkUid=*/ -1);
+    }
+
     interface SandboxBindingCallback {
         void onBindingSuccessful(
                 ISdkSandboxService service,
