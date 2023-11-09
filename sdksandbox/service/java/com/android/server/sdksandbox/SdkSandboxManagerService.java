@@ -29,7 +29,6 @@ import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
 
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__UNLOAD_SDK;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED;
-import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX;
 import static com.android.server.sdksandbox.SdkSandboxStorageManager.StorageDirInfo;
 import static com.android.server.wm.ActivityInterceptorCallback.MAINLINE_SDK_SANDBOX_ORDER_ID;
 
@@ -523,22 +522,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     @Override
     public void addSdkSandboxProcessDeathCallback(
             String callingPackageName,
-            long timeAppCalledSystemServer,
+            SandboxLatencyInfo sandboxLatencyInfo,
             ISdkSandboxProcessDeathCallback callback) {
-        final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
+        sandboxLatencyInfo.setTimeSystemServerReceivedCallFromApp(mInjector.getCurrentTime());
 
-        final int callingUid = Binder.getCallingUid();
         final CallingInfo callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
-
-        SdkSandboxStatsLog.write(
-                SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__ADD_SDK_SANDBOX_LIFECYCLE_CALLBACK,
-                /*latency=*/ (int)
-                        (timeSystemServerReceivedCallFromApp - timeAppCalledSystemServer),
-                /*success=*/ true,
-                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER,
-                callingUid);
-
         synchronized (mLock) {
             if (mSandboxLifecycleCallbacks.containsKey(callingInfo)) {
                 mSandboxLifecycleCallbacks.get(callingInfo).register(callback);
@@ -553,15 +541,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         // addSdkSandboxProcessDeathCallback() can be called without calling loadSdk(). Register for
         // app death to make sure cleanup occurs.
         registerForAppDeath(callingInfo, callback.asBinder());
-
-        SdkSandboxStatsLog.write(
-                SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__ADD_SDK_SANDBOX_LIFECYCLE_CALLBACK,
-                /*latency=*/ (int)
-                        (mInjector.getCurrentTime() - timeSystemServerReceivedCallFromApp),
-                /*success=*/ true,
-                SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
-                callingUid);
+        sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.getCurrentTime());
+        logLatencies(sandboxLatencyInfo);
     }
 
     // Register a handler for app death using any binder object originating from the app. Returns
@@ -590,23 +571,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     @Override
     public void removeSdkSandboxProcessDeathCallback(
             String callingPackageName,
-            long timeAppCalledSystemServer,
+            SandboxLatencyInfo sandboxLatencyInfo,
             ISdkSandboxProcessDeathCallback callback) {
-        final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
+        sandboxLatencyInfo.setTimeSystemServerReceivedCallFromApp(mInjector.getCurrentTime());
 
-        final int callingUid = Binder.getCallingUid();
         final CallingInfo callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
-
-        SdkSandboxStatsLog.write(
-                SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                SdkSandboxStatsLog
-                        .SANDBOX_API_CALLED__METHOD__REMOVE_SDK_SANDBOX_LIFECYCLE_CALLBACK,
-                /*latency=*/ (int)
-                        (timeSystemServerReceivedCallFromApp - timeAppCalledSystemServer),
-                /*success=*/ true,
-                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER,
-                callingUid);
-
         synchronized (mLock) {
             RemoteCallbackList<ISdkSandboxProcessDeathCallback> sandboxLifecycleCallbacks =
                     mSandboxLifecycleCallbacks.get(callingInfo);
@@ -614,15 +583,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 sandboxLifecycleCallbacks.unregister(callback);
             }
         }
-        SdkSandboxStatsLog.write(
-                SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                SdkSandboxStatsLog
-                        .SANDBOX_API_CALLED__METHOD__REMOVE_SDK_SANDBOX_LIFECYCLE_CALLBACK,
-                /*latency=*/ (int)
-                        (mInjector.getCurrentTime() - timeSystemServerReceivedCallFromApp),
-                /*success=*/ true,
-                SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
-                callingUid);
+        sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.getCurrentTime());
+        logLatencies(sandboxLatencyInfo);
     }
 
     @Override
@@ -1393,6 +1355,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             case SandboxLatencyInfo.METHOD_GET_APP_OWNED_SDK_SANDBOX_INTERFACES:
                 return SdkSandboxStatsLog
                         .SANDBOX_API_CALLED__METHOD__GET_APP_OWNED_SDK_SANDBOX_INTERFACES;
+            case SandboxLatencyInfo.METHOD_ADD_SDK_SANDBOX_LIFECYCLE_CALLBACK:
+                return SdkSandboxStatsLog
+                        .SANDBOX_API_CALLED__METHOD__ADD_SDK_SANDBOX_LIFECYCLE_CALLBACK;
+            case SandboxLatencyInfo.METHOD_REMOVE_SDK_SANDBOX_LIFECYCLE_CALLBACK:
+                return SdkSandboxStatsLog
+                        .SANDBOX_API_CALLED__METHOD__REMOVE_SDK_SANDBOX_LIFECYCLE_CALLBACK;
             default:
                 return SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__METHOD_UNSPECIFIED;
         }
