@@ -91,6 +91,8 @@ abstract class AbstractDeviceSupportHelper {
         return isIt;
     }
 
+    protected abstract boolean isAdIdAvailable();
+
     protected abstract boolean hasPackageManagerFeature(String feature);
 
     protected abstract boolean isLowRamDeviceByDefault();
