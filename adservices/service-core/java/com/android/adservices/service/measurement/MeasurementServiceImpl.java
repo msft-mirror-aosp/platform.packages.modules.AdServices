@@ -64,7 +64,6 @@ import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.measurement.access.AppPackageAccessResolver;
-import com.android.adservices.service.measurement.access.ConsentNotifiedAccessResolver;
 import com.android.adservices.service.measurement.access.DevContextAccessResolver;
 import com.android.adservices.service.measurement.access.ForegroundEnforcementAccessResolver;
 import com.android.adservices.service.measurement.access.IAccessResolver;
@@ -191,7 +190,6 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             mFlags.getMsmtApiAppAllowList(),
                                             mFlags.getMsmtApiAppBlockList(),
                                             request.getAppPackageName()),
-                                    new ConsentNotifiedAccessResolver(mConsentManager, mFlags),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
                                     new DevContextAccessResolver(
@@ -254,7 +252,6 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             mFlags.getMsmtApiAppAllowList(),
                                             mFlags.getMsmtApiAppBlockList(),
                                             request.getAppPackageName()),
-                                    new ConsentNotifiedAccessResolver(mConsentManager, mFlags),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
                                     new AppPackageAccessResolver(
@@ -315,7 +312,6 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             mFlags.getMsmtApiAppAllowList(),
                                             mFlags.getMsmtApiAppBlockList(),
                                             request.getAppPackageName()),
-                                    new ConsentNotifiedAccessResolver(mConsentManager, mFlags),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(
                                             PermissionHelper.hasAttributionPermission(
@@ -380,7 +376,6 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             mFlags.getMsmtApiAppAllowList(),
                                             mFlags.getMsmtApiAppBlockList(),
                                             request.getAppPackageName()),
-                                    new ConsentNotifiedAccessResolver(mConsentManager, mFlags),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
                                     new DevContextAccessResolver(
@@ -496,8 +491,6 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                     List.of(
                                             new KillSwitchAccessResolver(
                                                     mFlags::getMeasurementApiStatusKillSwitch),
-                                            new ConsentNotifiedAccessResolver(
-                                                    mConsentManager, mFlags),
                                             new UserConsentAccessResolver(mConsentManager),
                                             new ForegroundEnforcementAccessResolver(
                                                     apiNameId,

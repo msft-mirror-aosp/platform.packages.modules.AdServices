@@ -34,12 +34,6 @@
         <option name="run-command"
                 value="device_config put adservices adid_kill_switch false" />
 
-        <!-- Override Consent notification to debug mode to grant user consent -->
-        <option name="run-command"
-                value="setprop debug.adservices.consent_notified_debug_mode true"/>
-        <option name="teardown-command"
-                value="setprop debug.adservices.consent_notified_debug_mode false"/>
-
         <!-- Override Consent Manager to debug mode to grant user consent -->
         <option name="run-command"
                 value="setprop debug.adservices.consent_manager_debug_mode true" />

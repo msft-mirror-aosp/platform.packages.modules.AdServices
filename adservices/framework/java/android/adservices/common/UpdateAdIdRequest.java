@@ -20,6 +20,7 @@ import android.adservices.FlagsConstants;
 import android.adservices.adid.AdId;
 import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
+import android.annotation.SystemApi;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -32,6 +33,7 @@ import java.util.Objects;
  * @hide
  */
 // TODO(b/300445889): Consider using codegen for Parcelable.
+@SystemApi
 @FlaggedApi(FlagsConstants.KEY_AD_ID_CACHE_ENABLED)
 public final class UpdateAdIdRequest implements Parcelable {
     private final String mAdId;

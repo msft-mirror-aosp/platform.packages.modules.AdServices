@@ -17,6 +17,7 @@
 package android.app.sdksandbox.sandboxactivity;
 
 import android.annotation.NonNull;
+import android.annotation.SystemApi;
 import android.app.sdksandbox.sdkprovider.SdkSandboxActivityRegistry;
 import android.content.Intent;
 import android.os.Build;
@@ -30,6 +31,7 @@ import com.android.internal.annotations.GuardedBy;
  *
  * @hide
  */
+@SystemApi(client = SystemApi.Client.MODULE_LIBRARIES)
 public abstract class ActivityContextInfoProvider {
     private static final Object sLock = new Object();
 

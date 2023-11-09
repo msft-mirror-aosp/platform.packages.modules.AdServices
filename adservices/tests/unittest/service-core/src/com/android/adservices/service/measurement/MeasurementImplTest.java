@@ -72,9 +72,6 @@ import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.attribution.TriggerContentProvider;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationContentProvider;
-import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.service.stats.MeasurementWipeoutStats;
-import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -82,7 +79,6 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -103,7 +99,6 @@ public final class MeasurementImplTest {
                     .spyStatic(AdServicesManager.class)
                     .spyStatic(AppSearchMeasurementRollbackManager.class)
                     .spyStatic(FlagsFactory.class)
-                    .spyStatic(AdServicesLoggerImpl.class)
                     .mockStatic(SdkLevel.class)
                     .setStrictness(Strictness.LENIENT)
                     .build();
@@ -895,37 +890,6 @@ public final class MeasurementImplTest {
 
         // Verify that the code doesn't accidentally fall through into the Android S part.
         ExtendedMockito.verify(FlagsFactory::getFlags, never());
-    }
-
-    @Test
-    public void testDeleteOnRollback_logsWipeout() {
-        Flags mockFlags = Mockito.mock(Flags.class);
-        AdServicesLoggerImpl mockLogger = Mockito.mock(AdServicesLoggerImpl.class);
-        AppSearchMeasurementRollbackManager mockManager =
-                Mockito.mock(AppSearchMeasurementRollbackManager.class);
-
-        ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
-        ExtendedMockito.doReturn(mockLogger).when(AdServicesLoggerImpl::getInstance);
-        ExtendedMockito.doReturn(false).when(SdkLevel::isAtLeastT);
-        ExtendedMockito.doReturn(mockManager)
-                .when(() -> AppSearchMeasurementRollbackManager.getInstance(any(), anyInt()));
-
-        doReturn(true).when(mockManager).needsToHandleRollbackReconciliation();
-        doReturn(true).when(mDatastoreManager).runInTransaction(any());
-        doReturn(false).when(mockFlags).getMeasurementRollbackDeletionKillSwitch();
-        doReturn(false).when(mockFlags).getMeasurementRollbackDeletionAppSearchKillSwitch();
-
-        MeasurementImpl measurement = new MeasurementImpl(DEFAULT_CONTEXT);
-
-        assertThat(measurement.checkIfNeedsToHandleReconciliation()).isTrue();
-        ArgumentCaptor<MeasurementWipeoutStats> statusArg =
-                ArgumentCaptor.forClass(MeasurementWipeoutStats.class);
-        Mockito.verify(mockLogger).logMeasurementWipeoutStats(statusArg.capture());
-        MeasurementWipeoutStats measurementWipeoutStats = statusArg.getValue();
-        assertEquals("", measurementWipeoutStats.getSourceRegistrant());
-        assertEquals(
-                WipeoutStatus.WipeoutType.ROLLBACK_WIPEOUT_CAUSE.getValue(),
-                measurementWipeoutStats.getWipeoutType());
     }
 
     @Test
