@@ -71,7 +71,6 @@ import android.provider.DeviceConfig;
 import android.util.ArrayMap;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.test.platform.app.InstrumentationRegistry;
 
@@ -79,7 +78,6 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSessionBuilder;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.sdksandbox.IComputeSdkStorageCallback;
-import com.android.sdksandbox.ISdkSandboxService;
 import com.android.sdksandbox.IUnloadSdkCallback;
 import com.android.server.LocalManagerRegistry;
 import com.android.server.SystemService.TargetUser;
@@ -88,6 +86,7 @@ import com.android.server.pm.PackageManagerLocal;
 import com.android.server.sdksandbox.SdkSandboxStorageManager.StorageDirInfo;
 import com.android.server.sdksandbox.proto.Services.AllowedService;
 import com.android.server.sdksandbox.proto.Services.AllowedServices;
+import com.android.server.sdksandbox.testutils.FakeSdkSandboxProvider;
 import com.android.server.wm.ActivityInterceptorCallback;
 import com.android.server.wm.ActivityInterceptorCallbackRegistry;
 
@@ -2876,110 +2875,6 @@ public class SdkSandboxManagerServiceUnitTest {
             sSdkSandboxSettingsListener.onPropertiesChanged(
                     new DeviceConfig.Properties(
                             DeviceConfig.NAMESPACE_ADSERVICES, Map.of(property, value)));
-        }
-    }
-
-    // TODO(b/300444716): turn FakeSdkSandboxProvider into a test utility class
-    /** Fake service provider that returns local instance of {@link SdkSandboxServiceProvider} */
-    private static class FakeSdkSandboxProvider implements SdkSandboxServiceProvider {
-        private FakeSdkSandboxService mSdkSandboxService;
-        private final ArrayMap<CallingInfo, ISdkSandboxService> mService = new ArrayMap<>();
-
-        // When set to true, this will fail the bindService call
-        private boolean mFailBinding = false;
-
-        private ServiceConnection mServiceConnection = null;
-
-        FakeSdkSandboxProvider(FakeSdkSandboxService service) {
-            mSdkSandboxService = service;
-        }
-
-        public void disableBinding() {
-            mFailBinding = true;
-        }
-
-        public FakeSdkSandboxService restartSandbox() {
-            mServiceConnection.onServiceDisconnected(null);
-
-            // Create a new sandbox service.
-            mSdkSandboxService = Mockito.spy(FakeSdkSandboxService.class);
-
-            // Call onServiceConnected() again with the new fake sandbox service.
-            mServiceConnection.onServiceConnected(null, mSdkSandboxService.asBinder());
-            return mSdkSandboxService;
-        }
-
-        @Override
-        public void bindService(CallingInfo callingInfo, ServiceConnection serviceConnection) {
-            if (mFailBinding) {
-                serviceConnection.onNullBinding(new ComponentName("random", "component"));
-                return;
-            }
-
-            if (mService.containsKey(callingInfo)) {
-                return;
-            }
-            mService.put(callingInfo, mSdkSandboxService);
-            serviceConnection.onServiceConnected(null, mSdkSandboxService.asBinder());
-            mServiceConnection = serviceConnection;
-        }
-
-        @Override
-        public void unbindService(CallingInfo callingInfo) {
-            mService.remove(callingInfo);
-        }
-
-        @Override
-        public void stopSandboxService(CallingInfo callingInfo) {
-            mService.remove(callingInfo);
-        }
-
-        @Nullable
-        @Override
-        public ISdkSandboxService getSdkSandboxServiceForApp(CallingInfo callingInfo) {
-            return mService.get(callingInfo);
-        }
-
-        @Override
-        public void onServiceConnected(
-                CallingInfo callingInfo, @NonNull ISdkSandboxService service) {
-            mService.put(callingInfo, service);
-        }
-
-        @Override
-        public void onServiceDisconnected(CallingInfo callingInfo) {
-            mService.put(callingInfo, null);
-        }
-
-        @Override
-        public void onAppDeath(CallingInfo callingInfo) {}
-
-        @Override
-        public void onSandboxDeath(CallingInfo callingInfo) {}
-
-        @Override
-        public boolean isSandboxBoundForApp(CallingInfo callingInfo) {
-            return false;
-        }
-
-        @Override
-        public int getSandboxStatusForApp(CallingInfo callingInfo) {
-            if (mService.containsKey(callingInfo)) {
-                return CREATED;
-            } else {
-                return NON_EXISTENT;
-            }
-        }
-
-        @Override
-        public void dump(PrintWriter writer) {
-            writer.println("FakeDump");
-        }
-
-        @NonNull
-        @Override
-        public String toSandboxProcessName(@NonNull CallingInfo callingInfo) {
-            return TEST_PACKAGE + SANDBOX_PROCESS_NAME_SUFFIX;
         }
     }
 
