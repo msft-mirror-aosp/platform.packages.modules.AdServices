@@ -18,7 +18,10 @@ package com.android.adservices.service.common;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockErrorLogUtilWithThrowable;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockErrorLogUtilWithoutThrowable;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
+import static com.android.adservices.service.common.AppManifestConfigMetricsLogger.dump;
 import static com.android.adservices.service.common.AppManifestConfigMetricsLogger.logUsage;
+import static com.android.adservices.service.common.AppManifestConfigMetricsLogger.PREFS_NAME;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
@@ -40,6 +43,9 @@ import com.android.adservices.common.SyncCallback;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.mockito.ExtendedMockitoExpectations.ErrorLogUtilCallback;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.shared.testing.common.DumpHelper;
 
 import com.google.common.truth.Expect;
 
@@ -48,6 +54,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -55,12 +62,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Pattern;
 
 public final class AppManifestConfigMetricsLoggerTest {
 
     private static final String TAG = AppManifestConfigMetricsLoggerTest.class.getSimpleName();
 
     private static final String PKG_NAME = "pkg.I.am";
+    private static final String PKG_NAME2 = "or.not";
 
     static final boolean APP_EXISTS = true;
     static final boolean APP_DOES_NOT_EXIST = false;
@@ -73,11 +82,15 @@ public final class AppManifestConfigMetricsLoggerTest {
 
     @Rule
     public final AdServicesExtendedMockitoRule extendedMockito =
-            new AdServicesExtendedMockitoRule.Builder(this).spyStatic(ErrorLogUtil.class).build();
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(ErrorLogUtil.class)
+                    .spyStatic(FlagsFactory.class)
+                    .build();
 
     @Rule public final Expect expect = Expect.create();
 
     @Mock private Context mMockContext;
+    @Mock private Flags mMockFlags;
 
     private final FakeSharedPreferences mPrefs = new FakeSharedPreferences();
 
@@ -86,6 +99,7 @@ public final class AppManifestConfigMetricsLoggerTest {
 
     @Before
     public void setExpectations() {
+        mockGetFlags(mMockFlags);
         when(mMockContext.getSharedPreferences(any(String.class), anyInt())).thenReturn(mPrefs);
         mErrorLogUtilWithThrowableCallback = mockErrorLogUtilWithThrowable();
         mErrorLogUtilWithoutThrowableCallback = mockErrorLogUtilWithoutThrowable();
@@ -275,8 +289,70 @@ public final class AppManifestConfigMetricsLoggerTest {
                 .isNotSameInstanceAs(currentThread);
     }
 
+    @Test
+    public void testDump_empty() throws Exception {
+        when(mMockFlags.getAppConfigReturnsEnabledByDefault()).thenReturn(true);
+        when(mMockContext.getDataDir()).thenReturn(new File("/la/la/land"));
+
+        String dump = DumpHelper.dump(pw -> AppManifestConfigMetricsLogger.dump(mMockContext, pw));
+
+        expect.withMessage("empty dump")
+                .that(dump)
+                .matches(
+                        Pattern.compile(
+                                ".*file:.*/la/la/land/"
+                                        + PREFS_NAME
+                                        + "\\.xml.*\n"
+                                        + ".*enabled by default: "
+                                        + true
+                                        + ".*\n"
+                                        + ".*0 entries:.*",
+                                Pattern.DOTALL));
+    }
+
+    @Test
+    public void testDump_multipleEntries() throws Exception {
+        logUsageAndWait(PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
+        logUsageAndWait(
+                PKG_NAME2, APP_DOES_NOT_EXIST, APP_DOES_NOT_HAVE_CONFIG, NOT_ENABLED_BY_DEFAULT);
+
+        String dump = DumpHelper.dump(pw -> AppManifestConfigMetricsLogger.dump(mMockContext, pw));
+
+        expect.withMessage("dump")
+                .that(dump)
+                .matches(
+                        Pattern.compile(
+                                ".*2 entries.*\n"
+                                        + ".*"
+                                        + PKG_NAME
+                                        + ":.*appExists="
+                                        + APP_EXISTS
+                                        + ".*appHasConfig="
+                                        + APP_HAS_CONFIG
+                                        + ".*enabledByDefault="
+                                        + ENABLED_BY_DEFAULT
+                                        + "\n"
+                                        + ".*"
+                                        + PKG_NAME2
+                                        + ":.*appExists="
+                                        + APP_DOES_NOT_EXIST
+                                        + ".*appHasConfig="
+                                        + APP_DOES_NOT_HAVE_CONFIG
+                                        + ".*enabledByDefault="
+                                        + NOT_ENABLED_BY_DEFAULT
+                                        + "\n",
+                                Pattern.DOTALL));
+    }
+
     // Needs to wait until the shared prefs is committed() as it happens in a separated thread
     private void logUsageAndWait(boolean appExists, boolean appHasConfig, boolean enabledByDefault)
+            throws InterruptedException {
+        logUsageAndWait(PKG_NAME, appExists, appHasConfig, enabledByDefault);
+    }
+
+    // Needs to wait until the shared prefs is committed() as it happens in a separated thread
+    private void logUsageAndWait(
+            String appName, boolean appExists, boolean appHasConfig, boolean enabledByDefault)
             throws InterruptedException {
         SyncOnSharedPreferenceChangeListener listener = new SyncOnSharedPreferenceChangeListener();
         mPrefs.registerOnSharedPreferenceChangeListener(listener);
@@ -289,7 +365,7 @@ public final class AppManifestConfigMetricsLoggerTest {
                         + ", enabledByDefault="
                         + enabledByDefault
                         + ")");
-        logUsage(mMockContext, PKG_NAME, appExists, appHasConfig, enabledByDefault);
+        logUsage(mMockContext, appName, appExists, appHasConfig, enabledByDefault);
         listener.assertResultReceived();
         // don't need to unregister, listener is just used once
     }

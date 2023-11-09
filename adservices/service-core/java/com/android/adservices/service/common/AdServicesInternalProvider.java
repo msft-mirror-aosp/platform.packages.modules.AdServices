@@ -15,6 +15,8 @@
  */
 package com.android.adservices.service.common;
 
+import android.content.Context;
+
 import com.android.adservices.shared.common.ApplicationContextProvider;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 
@@ -30,7 +32,11 @@ public final class AdServicesInternalProvider extends ApplicationContextProvider
     @Override
     public void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
         try {
-            writer.printf("ApplicationContextSingleton: %s\n", ApplicationContextSingleton.get());
+            Context appContext = ApplicationContextSingleton.get();
+            writer.printf("ApplicationContextSingleton: %s\n", appContext);
+            if (appContext != null) {
+                AppManifestConfigMetricsLogger.dump(appContext, writer);
+            }
         } catch (Exception e) {
             writer.printf("Failed to get ApplicationContextSingleton: %s\n", e);
         }

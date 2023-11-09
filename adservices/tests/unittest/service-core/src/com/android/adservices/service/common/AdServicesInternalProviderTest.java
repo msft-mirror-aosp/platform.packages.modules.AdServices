@@ -15,23 +15,36 @@
  */
 package com.android.adservices.service.common;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockDump;
 import static com.android.adservices.mockito.MockitoExpectations.setApplicationContextSingleton;
 import static com.android.adservices.shared.testing.common.DumpHelper.dump;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import static org.mockito.ArgumentMatchers.any;
+
 import android.content.Context;
 
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 public final class AdServicesInternalProviderTest {
+
+    @Rule
+    public final AdServicesExtendedMockitoRule extendedMockito =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(AppManifestConfigMetricsLogger.class)
+                    .build();
 
     private final AdServicesInternalProvider mProvider = new AdServicesInternalProvider();
 
     @Test
     public void testDump_appContextSingletonNotSet() throws Exception {
+        ApplicationContextSingleton.setForTests(/* context=*/ null);
+
         String dump = dump(pw -> mProvider.dump(/* fd= */ null, pw, /* args= */ null));
 
         assertWithMessage("content of dump()")
@@ -48,5 +61,19 @@ public final class AdServicesInternalProviderTest {
         assertWithMessage("content of dump()")
                 .that(dump)
                 .contains("ApplicationContextSingleton: " + appContext);
+    }
+
+    @Test
+    public void testDump_includesAppManifestConfigMetricsLogger() throws Exception {
+        setApplicationContextSingleton();
+        String amcmDump = "I dump, therefore I am";
+        mockDump(
+                () -> AppManifestConfigMetricsLogger.dump(any(), any()),
+                /* pwArgIndex= */ 1,
+                amcmDump);
+
+        String dump = dump(pw -> mProvider.dump(/* fd= */ null, pw, /* args= */ null));
+
+        assertWithMessage("content of dump()").that(dump).contains(amcmDump);
     }
 }
