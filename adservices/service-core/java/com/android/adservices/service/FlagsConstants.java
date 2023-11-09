@@ -428,6 +428,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING =
             "measurement_enable_aggregatable_report_payload_padding";
 
+    public static final String KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES =
+            "key_measurement_enable_session_stable_kill_switches";
+
     // FLEDGE Custom Audience keys
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT =
             "fledge_custom_audience_max_count";
