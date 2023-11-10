@@ -16,6 +16,11 @@
 
 package com.android.adservices.service.extdata;
 
+import static android.adservices.extdata.AdServicesExtDataParams.BOOLEAN_FALSE;
+import static android.adservices.extdata.AdServicesExtDataParams.BOOLEAN_TRUE;
+import static android.adservices.extdata.AdServicesExtDataParams.BOOLEAN_UNKNOWN;
+import static android.adservices.extdata.AdServicesExtDataParams.STATE_NO_MANUAL_INTERACTIONS_RECORDED;
+import static android.adservices.extdata.AdServicesExtDataParams.STATE_UNKNOWN;
 import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_IS_ADULT_ACCOUNT;
 import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_IS_MEASUREMENT_CONSENTED;
 import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_IS_NOTIFICATION_DISPLAYED;
@@ -23,9 +28,13 @@ import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_I
 import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_MANUAL_INTERACTION_WITH_CONSENT_STATUS;
 import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_MEASUREMENT_ROLLBACK_APEX_VERSION;
 
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+
+import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 
 import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.extdata.AdServicesExtDataParams;
@@ -33,34 +42,40 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 
-import org.junit.After;
-import org.junit.Assert;
+import com.google.common.truth.Expect;
+
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoSession;
 
 public class AdServicesExtDataStorageServiceManagerTest {
-    private static final long TIMEOUT = 5000L;
-    private static final int DEFAULT_NO_DATA_VALUE = -1;
-    private static final int MANUAL_INTERACTION_UNKNOWN_VALUE = 0;
+    private static final long TIMEOUT = 5_000L;
+    private static final long NO_APEX_VALUE = -1L;
     private static final AdServicesExtDataParams TEST_PARAMS =
             new AdServicesExtDataParams.Builder()
-                    .setNotificationDisplayed(1)
-                    .setMsmtConsent(0)
-                    .setIsU18Account(1)
-                    .setIsAdultAccount(0)
-                    .setManualInteractionWithConsentStatus(-1)
-                    .setMsmtRollbackApexVersion(-1)
+                    .setNotificationDisplayed(BOOLEAN_TRUE)
+                    .setMsmtConsent(BOOLEAN_FALSE)
+                    .setIsU18Account(BOOLEAN_TRUE)
+                    .setIsAdultAccount(BOOLEAN_FALSE)
+                    .setManualInteractionWithConsentStatus(STATE_NO_MANUAL_INTERACTIONS_RECORDED)
+                    .setMsmtRollbackApexVersion(NO_APEX_VALUE)
                     .build();
     private static final int[] TEST_FIELD_LIST = {
         FIELD_IS_MEASUREMENT_CONSENTED, FIELD_IS_NOTIFICATION_DISPLAYED
     };
+
+    @Rule
+    public final AdServicesExtendedMockitoRule extendedMockito =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(AdServicesExtDataStorageServiceWorker.class)
+                    .build();
+
+    @Rule public final Expect expect = Expect.create();
 
     private final Context mContext = spy(ApplicationProvider.getApplicationContext());
 
@@ -68,25 +83,13 @@ public class AdServicesExtDataStorageServiceManagerTest {
     @Captor private ArgumentCaptor<AdServicesExtDataParams> mParamsCaptor;
     @Captor private ArgumentCaptor<int[]> mFieldsCaptor;
 
-    private MockitoSession mMockitoSession;
     private AdServicesExtDataStorageServiceManager mManager;
 
     @Before
     public void setup() {
-        mMockitoSession =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(AdServicesExtDataStorageServiceWorker.class)
-                        .initMocks(this)
-                        .startMocking();
-
-        ExtendedMockito.doReturn(mMockWorker)
+        doReturn(mMockWorker)
                 .when(() -> AdServicesExtDataStorageServiceWorker.getInstance(mContext));
         mManager = AdServicesExtDataStorageServiceManager.getInstance(mContext);
-    }
-
-    @After
-    public void teardown() {
-        mMockitoSession.finishMocking();
     }
 
     @Test
@@ -94,12 +97,13 @@ public class AdServicesExtDataStorageServiceManagerTest {
         mockWorkerGetAdExtDataCall(TEST_PARAMS);
 
         AdServicesExtDataParams result = mManager.getAdServicesExtData();
-        Assert.assertEquals(0, result.getIsMeasurementConsented());
-        Assert.assertEquals(-1, result.getMeasurementRollbackApexVersion());
-        Assert.assertEquals(1, result.getIsU18Account());
-        Assert.assertEquals(0, result.getIsAdultAccount());
-        Assert.assertEquals(-1, result.getManualInteractionWithConsentStatus());
-        Assert.assertEquals(1, result.getIsNotificationDisplayed());
+        expect.that(result.getIsMeasurementConsented()).isEqualTo(BOOLEAN_FALSE);
+        expect.that(result.getMeasurementRollbackApexVersion()).isEqualTo(NO_APEX_VALUE);
+        expect.that(result.getIsU18Account()).isEqualTo(BOOLEAN_TRUE);
+        expect.that(result.getIsAdultAccount()).isEqualTo(BOOLEAN_FALSE);
+        expect.that(result.getManualInteractionWithConsentStatus())
+                .isEqualTo(STATE_NO_MANUAL_INTERACTIONS_RECORDED);
+        expect.that(result.getIsNotificationDisplayed()).isEqualTo(BOOLEAN_TRUE);
     }
 
     @Test
@@ -111,16 +115,15 @@ public class AdServicesExtDataStorageServiceManagerTest {
                             return null;
                         })
                 .when(mMockWorker)
-                .getAdServicesExtData(Mockito.any(AdServicesOutcomeReceiver.class));
+                .getAdServicesExtData(any());
 
         AdServicesExtDataParams result = mManager.getAdServicesExtData();
-        Assert.assertEquals(DEFAULT_NO_DATA_VALUE, result.getIsMeasurementConsented());
-        Assert.assertEquals(DEFAULT_NO_DATA_VALUE, result.getMeasurementRollbackApexVersion());
-        Assert.assertEquals(DEFAULT_NO_DATA_VALUE, result.getIsNotificationDisplayed());
-        Assert.assertEquals(DEFAULT_NO_DATA_VALUE, result.getIsU18Account());
-        Assert.assertEquals(DEFAULT_NO_DATA_VALUE, result.getIsAdultAccount());
-        Assert.assertEquals(
-                MANUAL_INTERACTION_UNKNOWN_VALUE, result.getManualInteractionWithConsentStatus());
+        expect.that(result.getIsMeasurementConsented()).isEqualTo(BOOLEAN_UNKNOWN);
+        expect.that(result.getMeasurementRollbackApexVersion()).isEqualTo(NO_APEX_VALUE);
+        expect.that(result.getIsU18Account()).isEqualTo(BOOLEAN_UNKNOWN);
+        expect.that(result.getIsAdultAccount()).isEqualTo(BOOLEAN_UNKNOWN);
+        expect.that(result.getManualInteractionWithConsentStatus()).isEqualTo(STATE_UNKNOWN);
+        expect.that(result.getIsNotificationDisplayed()).isEqualTo(BOOLEAN_UNKNOWN);
     }
 
     @Test
@@ -131,35 +134,30 @@ public class AdServicesExtDataStorageServiceManagerTest {
                             return null;
                         })
                 .when(mMockWorker)
-                .getAdServicesExtData(Mockito.any(AdServicesOutcomeReceiver.class));
+                .getAdServicesExtData(any());
 
         AdServicesExtDataParams result = mManager.getAdServicesExtData();
-        Assert.assertEquals(DEFAULT_NO_DATA_VALUE, result.getIsMeasurementConsented());
-        Assert.assertEquals(DEFAULT_NO_DATA_VALUE, result.getMeasurementRollbackApexVersion());
-        Assert.assertEquals(DEFAULT_NO_DATA_VALUE, result.getIsNotificationDisplayed());
-        Assert.assertEquals(DEFAULT_NO_DATA_VALUE, result.getIsU18Account());
-        Assert.assertEquals(DEFAULT_NO_DATA_VALUE, result.getIsAdultAccount());
-        Assert.assertEquals(
-                MANUAL_INTERACTION_UNKNOWN_VALUE, result.getManualInteractionWithConsentStatus());
+        expect.that(result.getIsMeasurementConsented()).isEqualTo(BOOLEAN_UNKNOWN);
+        expect.that(result.getMeasurementRollbackApexVersion()).isEqualTo(NO_APEX_VALUE);
+        expect.that(result.getIsU18Account()).isEqualTo(BOOLEAN_UNKNOWN);
+        expect.that(result.getIsAdultAccount()).isEqualTo(BOOLEAN_UNKNOWN);
+        expect.that(result.getManualInteractionWithConsentStatus()).isEqualTo(STATE_UNKNOWN);
+        expect.that(result.getIsNotificationDisplayed()).isEqualTo(BOOLEAN_UNKNOWN);
     }
 
     @Test
     public void testSetAdServicesExtData_emptyFieldList_returnEarly() {
-        Assert.assertTrue(mManager.setAdServicesExtData(TEST_PARAMS, new int[] {}));
-        Mockito.verifyZeroInteractions(mMockWorker);
+        expect.that(mManager.setAdServicesExtData(TEST_PARAMS, new int[] {})).isTrue();
+        verifyZeroInteractions(mMockWorker);
     }
 
     @Test
     public void testSetAdServicesExtData_onResultSet_returnsTrue() {
         mockWorkerSetAdExtDataCall();
 
-        Assert.assertTrue(mManager.setAdServicesExtData(TEST_PARAMS, TEST_FIELD_LIST));
+        expect.that(mManager.setAdServicesExtData(TEST_PARAMS, TEST_FIELD_LIST)).isTrue();
 
-        Mockito.verify(mMockWorker, times(1))
-                .setAdServicesExtData(
-                        Mockito.any(AdServicesExtDataParams.class),
-                        Mockito.any(int[].class),
-                        Mockito.any(AdServicesOutcomeReceiver.class));
+        verify(mMockWorker).setAdServicesExtData(any(), any(), any());
     }
 
     @Test
@@ -171,18 +169,11 @@ public class AdServicesExtDataStorageServiceManagerTest {
                             return null;
                         })
                 .when(mMockWorker)
-                .setAdServicesExtData(
-                        Mockito.any(AdServicesExtDataParams.class),
-                        Mockito.any(int[].class),
-                        Mockito.any(AdServicesOutcomeReceiver.class));
+                .setAdServicesExtData(any(), any(), any());
 
-        Assert.assertFalse(mManager.setAdServicesExtData(TEST_PARAMS, TEST_FIELD_LIST));
+        expect.that(mManager.setAdServicesExtData(TEST_PARAMS, TEST_FIELD_LIST)).isFalse();
 
-        Mockito.verify(mMockWorker, times(1))
-                .setAdServicesExtData(
-                        Mockito.any(AdServicesExtDataParams.class),
-                        Mockito.any(int[].class),
-                        Mockito.any(AdServicesOutcomeReceiver.class));
+        verify(mMockWorker).setAdServicesExtData(any(), any(), any());
     }
 
     @Test
@@ -193,174 +184,173 @@ public class AdServicesExtDataStorageServiceManagerTest {
                             return null;
                         })
                 .when(mMockWorker)
-                .setAdServicesExtData(
-                        Mockito.any(AdServicesExtDataParams.class),
-                        Mockito.any(int[].class),
-                        Mockito.any(AdServicesOutcomeReceiver.class));
+                .setAdServicesExtData(any(), any(), any());
 
-        Assert.assertFalse(mManager.setAdServicesExtData(TEST_PARAMS, TEST_FIELD_LIST));
+        expect.that(mManager.setAdServicesExtData(TEST_PARAMS, TEST_FIELD_LIST)).isFalse();
 
-        Mockito.verify(mMockWorker, times(1))
-                .setAdServicesExtData(
-                        Mockito.any(AdServicesExtDataParams.class),
-                        Mockito.any(int[].class),
-                        Mockito.any(AdServicesOutcomeReceiver.class));
+        verify(mMockWorker).setAdServicesExtData(any(), any(), any());
     }
 
     @Test
     public void testUpdateRequestToStr_emptyFields() {
-        Assert.assertEquals("{}", mManager.updateRequestToStr(TEST_PARAMS, new int[] {}));
+        expect.that(mManager.updateRequestToString(TEST_PARAMS, new int[] {})).isEqualTo("{}");
     }
 
     @Test
     public void testUpdateRequestToStr_nonEmptyFields() {
-        Assert.assertEquals(
-                "{MsmtConsent: 0,NotificationDisplayed: 1,}",
-                mManager.updateRequestToStr(TEST_PARAMS, TEST_FIELD_LIST));
+        expect.that(mManager.updateRequestToString(TEST_PARAMS, TEST_FIELD_LIST))
+                .isEqualTo("{MsmtConsent: 0,NotificationDisplayed: 1,}");
     }
 
     @Test
     public void testSetMsmtConsent_withFalse() {
         mockWorkerSetAdExtDataCall();
-        Assert.assertTrue(mManager.setMsmtConsent(false));
-        Assert.assertEquals(0, mParamsCaptor.getValue().getIsMeasurementConsented());
-        Assert.assertEquals(1, mFieldsCaptor.getValue().length);
-        Assert.assertEquals(FIELD_IS_MEASUREMENT_CONSENTED, mFieldsCaptor.getValue()[0]);
+        expect.that(mManager.setMsmtConsent(false)).isTrue();
+        expect.that(mParamsCaptor.getValue().getIsMeasurementConsented()).isEqualTo(BOOLEAN_FALSE);
+        expect.that(mFieldsCaptor.getValue())
+                .asList()
+                .containsExactly(FIELD_IS_MEASUREMENT_CONSENTED);
     }
 
     @Test
     public void testSetMsmtConsent_withTrue() {
         mockWorkerSetAdExtDataCall();
-        Assert.assertTrue(mManager.setMsmtConsent(true));
-        Assert.assertEquals(1, mParamsCaptor.getValue().getIsMeasurementConsented());
-        Assert.assertEquals(1, mFieldsCaptor.getValue().length);
-        Assert.assertEquals(FIELD_IS_MEASUREMENT_CONSENTED, mFieldsCaptor.getValue()[0]);
+        expect.that(mManager.setMsmtConsent(true)).isTrue();
+        expect.that(mParamsCaptor.getValue().getIsMeasurementConsented()).isEqualTo(BOOLEAN_TRUE);
+        expect.that(mFieldsCaptor.getValue())
+                .asList()
+                .containsExactly(FIELD_IS_MEASUREMENT_CONSENTED);
     }
 
     @Test
     public void testGetMsmtConsent_withZeroRetrieved_returnsFalse() {
         mockWorkerGetAdExtDataCall(TEST_PARAMS);
-        Assert.assertFalse(mManager.getMsmtConsent());
+        expect.that(mManager.getMsmtConsent()).isFalse();
     }
 
     @Test
     public void testGetMsmtConsent_withOneRetrieved_returnsTrue() {
         AdServicesExtDataParams params =
-                new AdServicesExtDataParams.Builder().setMsmtConsent(1).build();
+                new AdServicesExtDataParams.Builder().setMsmtConsent(BOOLEAN_TRUE).build();
         mockWorkerGetAdExtDataCall(params);
-        Assert.assertTrue(mManager.getMsmtConsent());
+        expect.that(mManager.getMsmtConsent()).isTrue();
     }
 
     @Test
     public void testGetManualInteractionWithConsentStatus() {
         mockWorkerGetAdExtDataCall(TEST_PARAMS);
-        Assert.assertEquals(-1, mManager.getManualInteractionWithConsentStatus());
+        expect.that(mManager.getManualInteractionWithConsentStatus())
+                .isEqualTo(STATE_NO_MANUAL_INTERACTIONS_RECORDED);
     }
 
     @Test
     public void testSetManualInteractionWithConsentStatus() {
         mockWorkerSetAdExtDataCall();
-        Assert.assertTrue(mManager.setManualInteractionWithConsentStatus(-1));
-        Assert.assertEquals(-1, mParamsCaptor.getValue().getManualInteractionWithConsentStatus());
-        Assert.assertEquals(1, mFieldsCaptor.getValue().length);
-        Assert.assertEquals(
-                FIELD_MANUAL_INTERACTION_WITH_CONSENT_STATUS, mFieldsCaptor.getValue()[0]);
+        expect.that(
+                        mManager.setManualInteractionWithConsentStatus(
+                                STATE_NO_MANUAL_INTERACTIONS_RECORDED))
+                .isTrue();
+        expect.that(mParamsCaptor.getValue().getManualInteractionWithConsentStatus())
+                .isEqualTo(STATE_NO_MANUAL_INTERACTIONS_RECORDED);
+        expect.that(mFieldsCaptor.getValue())
+                .asList()
+                .containsExactly(FIELD_MANUAL_INTERACTION_WITH_CONSENT_STATUS);
     }
 
     @Test
     public void testSetNotifDisplayed_withFalse() {
         mockWorkerSetAdExtDataCall();
-        Assert.assertTrue(mManager.setNotifDisplayed(false));
-        Assert.assertEquals(0, mParamsCaptor.getValue().getIsNotificationDisplayed());
-        Assert.assertEquals(1, mFieldsCaptor.getValue().length);
-        Assert.assertEquals(FIELD_IS_NOTIFICATION_DISPLAYED, mFieldsCaptor.getValue()[0]);
+        expect.that(mManager.setNotifDisplayed(false)).isTrue();
+        expect.that(mParamsCaptor.getValue().getIsNotificationDisplayed()).isEqualTo(BOOLEAN_FALSE);
+        expect.that(mFieldsCaptor.getValue())
+                .asList()
+                .containsExactly(FIELD_IS_NOTIFICATION_DISPLAYED);
     }
 
     @Test
     public void testSetNotifDisplayed_withTrue() {
         mockWorkerSetAdExtDataCall();
-        Assert.assertTrue(mManager.setNotifDisplayed(true));
-        Assert.assertEquals(1, mParamsCaptor.getValue().getIsNotificationDisplayed());
-        Assert.assertEquals(1, mFieldsCaptor.getValue().length);
-        Assert.assertEquals(FIELD_IS_NOTIFICATION_DISPLAYED, mFieldsCaptor.getValue()[0]);
+        expect.that(mManager.setNotifDisplayed(true)).isTrue();
+        expect.that(mParamsCaptor.getValue().getIsNotificationDisplayed()).isEqualTo(BOOLEAN_TRUE);
+        expect.that(mFieldsCaptor.getValue())
+                .asList()
+                .containsExactly(FIELD_IS_NOTIFICATION_DISPLAYED);
     }
 
     @Test
     public void testGetNotifDisplayed_withOneRetrieved_returnsTrue() {
         mockWorkerGetAdExtDataCall(TEST_PARAMS);
-        Assert.assertTrue(mManager.getNotifDisplayed());
+        expect.that(mManager.getNotifDisplayed()).isTrue();
     }
 
     @Test
     public void testGetNotifDisplayed_withZeroRetrieved_returnsFalse() {
         AdServicesExtDataParams params =
-                new AdServicesExtDataParams.Builder().setNotificationDisplayed(0).build();
+                new AdServicesExtDataParams.Builder()
+                        .setNotificationDisplayed(BOOLEAN_FALSE)
+                        .build();
         mockWorkerGetAdExtDataCall(params);
-        Assert.assertFalse(mManager.getNotifDisplayed());
+        expect.that(mManager.getNotifDisplayed()).isFalse();
     }
 
     @Test
     public void testSetIsAdultAccount_withFalse() {
         mockWorkerSetAdExtDataCall();
-        Assert.assertTrue(mManager.setIsAdultAccount(false));
-        Assert.assertEquals(0, mParamsCaptor.getValue().getIsAdultAccount());
-        Assert.assertEquals(1, mFieldsCaptor.getValue().length);
-        Assert.assertEquals(FIELD_IS_ADULT_ACCOUNT, mFieldsCaptor.getValue()[0]);
+        expect.that(mManager.setIsAdultAccount(false)).isTrue();
+        expect.that(mParamsCaptor.getValue().getIsAdultAccount()).isEqualTo(BOOLEAN_FALSE);
+        expect.that(mFieldsCaptor.getValue()).asList().containsExactly(FIELD_IS_ADULT_ACCOUNT);
     }
 
     @Test
     public void testSetIsAdultAccount_withTrue() {
         mockWorkerSetAdExtDataCall();
-        Assert.assertTrue(mManager.setIsAdultAccount(true));
-        Assert.assertEquals(1, mParamsCaptor.getValue().getIsAdultAccount());
-        Assert.assertEquals(1, mFieldsCaptor.getValue().length);
-        Assert.assertEquals(FIELD_IS_ADULT_ACCOUNT, mFieldsCaptor.getValue()[0]);
+        expect.that(mManager.setIsAdultAccount(true)).isTrue();
+        expect.that(mParamsCaptor.getValue().getIsAdultAccount()).isEqualTo(BOOLEAN_TRUE);
+        expect.that(mFieldsCaptor.getValue()).asList().containsExactly(FIELD_IS_ADULT_ACCOUNT);
     }
 
     @Test
     public void testGetIsAdultAccount_withZeroRetrieved_returnsFalse() {
         mockWorkerGetAdExtDataCall(TEST_PARAMS);
-        Assert.assertFalse(mManager.getIsAdultAccount());
+        expect.that(mManager.getIsAdultAccount()).isFalse();
     }
 
     @Test
     public void testGetIsAdultAccount_withOneRetrieved_returnsTrue() {
         AdServicesExtDataParams params =
-                new AdServicesExtDataParams.Builder().setIsAdultAccount(1).build();
+                new AdServicesExtDataParams.Builder().setIsAdultAccount(BOOLEAN_TRUE).build();
         mockWorkerGetAdExtDataCall(params);
-        Assert.assertTrue(mManager.getIsAdultAccount());
+        expect.that(mManager.getIsAdultAccount()).isTrue();
     }
 
     @Test
     public void testSetIsU18Account_withFalse() {
         mockWorkerSetAdExtDataCall();
-        Assert.assertTrue(mManager.setIsU18Account(false));
-        Assert.assertEquals(0, mParamsCaptor.getValue().getIsU18Account());
-        Assert.assertEquals(1, mFieldsCaptor.getValue().length);
-        Assert.assertEquals(FIELD_IS_U18_ACCOUNT, mFieldsCaptor.getValue()[0]);
+        expect.that(mManager.setIsU18Account(false)).isTrue();
+        expect.that(mParamsCaptor.getValue().getIsU18Account()).isEqualTo(BOOLEAN_FALSE);
+        expect.that(mFieldsCaptor.getValue()).asList().containsExactly(FIELD_IS_U18_ACCOUNT);
     }
 
     @Test
     public void testSetIsU18Account_withTrue() {
         mockWorkerSetAdExtDataCall();
-        Assert.assertTrue(mManager.setIsU18Account(true));
-        Assert.assertEquals(1, mParamsCaptor.getValue().getIsU18Account());
-        Assert.assertEquals(1, mFieldsCaptor.getValue().length);
-        Assert.assertEquals(FIELD_IS_U18_ACCOUNT, mFieldsCaptor.getValue()[0]);
+        expect.that(mManager.setIsU18Account(true)).isTrue();
+        expect.that(mParamsCaptor.getValue().getIsU18Account()).isEqualTo(BOOLEAN_TRUE);
+        expect.that(mFieldsCaptor.getValue()).asList().containsExactly(FIELD_IS_U18_ACCOUNT);
     }
 
     @Test
     public void testGetIsU18Account_withOneRetrieved_returnsTrue() {
         mockWorkerGetAdExtDataCall(TEST_PARAMS);
-        Assert.assertTrue(mManager.getIsU18Account());
+        expect.that(mManager.getIsU18Account()).isTrue();
     }
 
     @Test
     public void testGetIsU18Account_withZeroRetrieved_returnsFalse() {
         AdServicesExtDataParams params =
-                new AdServicesExtDataParams.Builder().setIsU18Account(0).build();
+                new AdServicesExtDataParams.Builder().setIsU18Account(BOOLEAN_FALSE).build();
         mockWorkerGetAdExtDataCall(params);
-        Assert.assertFalse(mManager.getIsU18Account());
+        expect.that(mManager.getIsU18Account()).isFalse();
     }
 
     @Test
@@ -368,24 +358,26 @@ public class AdServicesExtDataStorageServiceManagerTest {
         mockWorkerSetAdExtDataCall();
         mManager.clearAllDataAsync();
 
-        Assert.assertEquals(-1, mParamsCaptor.getValue().getIsNotificationDisplayed());
-        Assert.assertEquals(-1, mParamsCaptor.getValue().getIsMeasurementConsented());
-        Assert.assertEquals(-1, mParamsCaptor.getValue().getIsU18Account());
-        Assert.assertEquals(-1, mParamsCaptor.getValue().getIsAdultAccount());
-        Assert.assertEquals(0, mParamsCaptor.getValue().getManualInteractionWithConsentStatus());
-        Assert.assertEquals(-1L, mParamsCaptor.getValue().getMeasurementRollbackApexVersion());
+        expect.that(mParamsCaptor.getValue().getIsMeasurementConsented())
+                .isEqualTo(BOOLEAN_UNKNOWN);
+        expect.that(mParamsCaptor.getValue().getMeasurementRollbackApexVersion())
+                .isEqualTo(NO_APEX_VALUE);
+        expect.that(mParamsCaptor.getValue().getIsU18Account()).isEqualTo(BOOLEAN_UNKNOWN);
+        expect.that(mParamsCaptor.getValue().getIsAdultAccount()).isEqualTo(BOOLEAN_UNKNOWN);
+        expect.that(mParamsCaptor.getValue().getManualInteractionWithConsentStatus())
+                .isEqualTo(STATE_UNKNOWN);
+        expect.that(mParamsCaptor.getValue().getIsNotificationDisplayed())
+                .isEqualTo(BOOLEAN_UNKNOWN);
 
-        int[] expectedFields =
-                new int[] {
-                    FIELD_IS_NOTIFICATION_DISPLAYED,
-                    FIELD_IS_MEASUREMENT_CONSENTED,
-                    FIELD_IS_U18_ACCOUNT,
-                    FIELD_IS_ADULT_ACCOUNT,
-                    FIELD_MANUAL_INTERACTION_WITH_CONSENT_STATUS,
-                    FIELD_MEASUREMENT_ROLLBACK_APEX_VERSION
-                };
-        Assert.assertEquals(expectedFields.length, mFieldsCaptor.getValue().length);
-        Assert.assertArrayEquals(expectedFields, mFieldsCaptor.getValue());
+        expect.that(mFieldsCaptor.getValue())
+                .asList()
+                .containsExactly(
+                        FIELD_IS_NOTIFICATION_DISPLAYED,
+                        FIELD_IS_MEASUREMENT_CONSENTED,
+                        FIELD_IS_U18_ACCOUNT,
+                        FIELD_IS_ADULT_ACCOUNT,
+                        FIELD_MANUAL_INTERACTION_WITH_CONSENT_STATUS,
+                        FIELD_MEASUREMENT_ROLLBACK_APEX_VERSION);
     }
 
     private void mockWorkerGetAdExtDataCall(AdServicesExtDataParams params) {
@@ -396,7 +388,7 @@ public class AdServicesExtDataStorageServiceManagerTest {
                             return null;
                         })
                 .when(mMockWorker)
-                .getAdServicesExtData(Mockito.any(AdServicesOutcomeReceiver.class));
+                .getAdServicesExtData(any());
     }
 
     private void mockWorkerSetAdExtDataCall() {
@@ -407,9 +399,6 @@ public class AdServicesExtDataStorageServiceManagerTest {
                             return null;
                         })
                 .when(mMockWorker)
-                .setAdServicesExtData(
-                        mParamsCaptor.capture(),
-                        mFieldsCaptor.capture(),
-                        Mockito.any(AdServicesOutcomeReceiver.class));
+                .setAdServicesExtData(mParamsCaptor.capture(), mFieldsCaptor.capture(), any());
     }
 }
