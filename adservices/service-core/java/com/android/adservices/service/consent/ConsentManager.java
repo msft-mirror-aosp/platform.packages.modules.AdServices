@@ -1191,6 +1191,9 @@ public class ConsentManager {
                     == null) {
                 booleanFileDatastore.put(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, false);
             }
+            if (booleanFileDatastore.get(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED) == null) {
+                booleanFileDatastore.put(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED, false);
+            }
         } catch (IOException | IllegalArgumentException | NullPointerException e) {
             throw new RuntimeException("Failed to initialize the File Datastore!", e);
         }
@@ -1272,7 +1275,7 @@ public class ConsentManager {
 
     @VisibleForTesting
     boolean getConsentPerApiFromPpApi(AdServicesApiType apiType) {
-        return mDatastore.get(apiType.toPpApiDatastoreKey());
+        return Boolean.TRUE.equals(mDatastore.get(apiType.toPpApiDatastoreKey()));
     }
 
     // Set the aggregated consent so that after the rollback of the module
