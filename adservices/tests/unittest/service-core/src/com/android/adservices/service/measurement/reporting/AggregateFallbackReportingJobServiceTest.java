@@ -60,9 +60,7 @@ import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -152,8 +150,6 @@ public class AggregateFallbackReportingJobServiceTest {
 
     @Test
     public void onStartJob_killSwitchOff_withoutLogging() throws Exception {
-        // Temporarily, disable on R-.  b/303844934.
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
         runWithMocks(
                 () -> {
                     // Logging killswitch is on.
@@ -170,8 +166,6 @@ public class AggregateFallbackReportingJobServiceTest {
 
     @Test
     public void onStartJob_killSwitchOff_withLogging() throws Exception {
-        // Temporarily, disable on R-.  b/303844934.
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
         runWithMocks(
                 () -> {
                     // Logging killswitch is off.
