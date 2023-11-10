@@ -45,25 +45,20 @@ import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallbackBinder;
 import android.app.sdksandbox.testutils.FakeSdkSandboxProcessDeathCallbackBinder;
 import android.app.sdksandbox.testutils.FakeSdkSandboxService;
 import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.ServiceConnection;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Process;
 import android.os.RemoteException;
-import android.util.ArrayMap;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSessionBuilder;
 import com.android.modules.utils.build.SdkLevel;
-import com.android.sdksandbox.ISdkSandboxService;
 import com.android.sdksandbox.service.stats.SdkSandboxStatsLog;
+import com.android.server.sdksandbox.testutils.FakeSdkSandboxProvider;
 import com.android.server.wm.ActivityInterceptorCallback;
 import com.android.server.wm.ActivityInterceptorCallbackRegistry;
 
@@ -76,7 +71,6 @@ import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -591,7 +585,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
                                 SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
                                 (int) (TIME_FAILURE_HANDLED - START_TIME_TO_LOAD_SANDBOX),
                                 /*success=*/ false,
-                                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__LOAD_SANDBOX,
+                                SANDBOX_API_CALLED__STAGE__LOAD_SANDBOX,
                                 mClientAppUid));
     }
 
@@ -1407,102 +1401,6 @@ public class SdkSandboxStatsdMetricsUnitTest {
         sandboxLatencyInfo.setTimeSandboxReceivedCallFromSystemServer(
                 TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER);
         sandboxLatencyInfo.setTimeSandboxCalledSystemServer(TIME_SANDBOX_CALLED_SYSTEM_SERVER);
-    }
-
-    // TODO(b/300444716): turn FakeSdkSandboxProvider into a test utility class
-    /** Fake service provider that returns local instance of {@link SdkSandboxServiceProvider} */
-    private static class FakeSdkSandboxProvider implements SdkSandboxServiceProvider {
-        private FakeSdkSandboxService mSdkSandboxService;
-        private final ArrayMap<CallingInfo, ISdkSandboxService> mService = new ArrayMap<>();
-
-        // When set to true, this will fail the bindService call
-        private boolean mFailBinding = false;
-
-        FakeSdkSandboxProvider(FakeSdkSandboxService service) {
-            mSdkSandboxService = service;
-        }
-
-        public void disableBinding() {
-            mFailBinding = true;
-        }
-
-        @Override
-        public void bindService(CallingInfo callingInfo, ServiceConnection serviceConnection) {
-            if (mFailBinding) {
-                serviceConnection.onNullBinding(new ComponentName("random", "component"));
-                return;
-            }
-
-            if (mService.containsKey(callingInfo)) {
-                return;
-            }
-            mService.put(callingInfo, mSdkSandboxService);
-            serviceConnection.onServiceConnected(null, mSdkSandboxService.asBinder());
-        }
-
-        @Override
-        public void unbindService(CallingInfo callingInfo) {
-            mService.remove(callingInfo);
-        }
-
-        @Override
-        public void stopSandboxService(CallingInfo callingInfo) {
-            mService.remove(callingInfo);
-        }
-
-        @Nullable
-        @Override
-        public ISdkSandboxService getSdkSandboxServiceForApp(CallingInfo callingInfo) {
-            return mService.get(callingInfo);
-        }
-
-        @Override
-        public void onServiceConnected(
-                CallingInfo callingInfo, @NonNull ISdkSandboxService service) {
-            mService.put(callingInfo, service);
-        }
-
-        @Override
-        public void onServiceDisconnected(CallingInfo callingInfo) {
-            mService.put(callingInfo, null);
-        }
-
-        @Override
-        public void onAppDeath(CallingInfo callingInfo) {}
-
-        @Override
-        public void onSandboxDeath(CallingInfo callingInfo) {}
-
-        @Override
-        public boolean isSandboxBoundForApp(CallingInfo callingInfo) {
-            return false;
-        }
-
-        @Override
-        public int getSandboxStatusForApp(CallingInfo callingInfo) {
-            if (mService.containsKey(callingInfo)) {
-                return CREATED;
-            } else {
-                return NON_EXISTENT;
-            }
-        }
-
-        @Override
-        public void dump(PrintWriter writer) {
-            writer.println("FakeDump");
-        }
-
-        @NonNull
-        @Override
-        public String toSandboxProcessName(@NonNull CallingInfo callingInfo) {
-            return TEST_PACKAGE + SANDBOX_PROCESS_NAME_SUFFIX;
-        }
-
-        @NonNull
-        @Override
-        public String toSandboxProcessNameForInstrumentation(@NonNull CallingInfo callingInfo) {
-            return callingInfo.getPackageName() + SANDBOX_INSTR_PROCESS_NAME_SUFFIX;
-        }
     }
 
     public static class InjectorForTest extends SdkSandboxManagerService.Injector {
