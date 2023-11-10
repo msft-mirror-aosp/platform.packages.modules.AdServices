@@ -926,7 +926,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 adCounterHistogramLowerMaxTotalEventCount,
                                 adCounterHistogramAbsoluteMaxPerBuyerEventCount,
                                 adCounterHistogramLowerMaxPerBuyerEventCount,
-                                auctionServerEnabledForUpdateHistogram),
+                                auctionServerEnabledForUpdateHistogram,
+                                mShouldUseUnifiedTables),
                         mBackgroundExecutor,
                         // TODO(b/235841960): Use the same injected clock as AdSelectionRunner
                         //  after aligning on Clock usage
