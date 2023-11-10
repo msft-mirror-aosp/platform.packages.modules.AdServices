@@ -44,6 +44,7 @@ import com.android.adservices.service.common.BackgroundJobsManager;
 import com.android.adservices.service.common.ConsentNotificationJobService;
 import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.service.ui.data.UxStatesManager;
@@ -115,11 +116,16 @@ public class UxEngineTest {
         ExtendedMockito.doNothing().when(
                 () ->
                         BackgroundJobsManager.scheduleAllBackgroundJobs(any()));
+        ExtendedMockito.doNothing()
+                .when(() -> BackgroundJobsManager.scheduleMeasurementBackgroundJobs(any()));
         ExtendedMockito.doNothing().when(() -> UiStatsLogger.logEntryPointClicked(any()));
 
         doReturn(true).when(mUxStatesManager).getFlag(KEY_ADSERVICES_ENABLED);
         doReturn(true).when(mUxStatesManager).getFlag(KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManager)
+                .getConsent(any(AdServicesApiType.class));
 
         mUxEngine =
                 new UxEngine(
@@ -740,6 +746,10 @@ public class UxEngineTest {
         verify(mConsentManager)
                 .setEnrollmentChannel(
                         U18_UX, U18UxEnrollmentChannelCollection.U18_DETENTION_CHANNEL);
+        ExtendedMockito.verify(
+                () -> BackgroundJobsManager.scheduleAllBackgroundJobs(mContext), never());
+        ExtendedMockito.verify(
+                () -> BackgroundJobsManager.scheduleMeasurementBackgroundJobs(mContext));
     }
 
     // Test the flow in which user is eligible for U18 detention.
