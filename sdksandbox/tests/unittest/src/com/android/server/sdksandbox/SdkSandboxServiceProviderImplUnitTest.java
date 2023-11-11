@@ -19,12 +19,14 @@ package com.android.server.sdksandbox;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 import android.Manifest;
 import android.app.sdksandbox.testutils.FakeSdkSandboxService;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.os.IBinder;
 import android.os.Process;
 
@@ -215,12 +217,24 @@ public class SdkSandboxServiceProviderImplUnitTest {
     }
 
     @Test
-    public void testSandboxProcessNameForInstrumentation() {
-        String processName = "testprocess";
-
-        assertThat(mServiceProvider.toSandboxProcessNameForInstrumentation(processName))
+    public void testSandboxProcessNameForInstrumentation()
+            throws PackageManager.NameNotFoundException {
+        assertThat(mServiceProvider.toSandboxProcessNameForInstrumentation(mCallingInfo))
                 .isEqualTo(
-                        processName + SdkSandboxServiceProvider.SANDBOX_INSTR_PROCESS_NAME_SUFFIX);
+                        TEST_PACKAGE + SdkSandboxServiceProvider.SANDBOX_INSTR_PROCESS_NAME_SUFFIX);
+    }
+
+    @Test
+    public void testSandboxProcessName_nonExistentPackage() {
+        String nonExistingPackageName = "does.not.exist";
+        PackageManager.NameNotFoundException thrown =
+                assertThrows(
+                        PackageManager.NameNotFoundException.class,
+                        () ->
+                                mServiceProvider.toSandboxProcessName(
+                                        new CallingInfo(
+                                                mCallingInfo.getUid(), nonExistingPackageName)));
+        assertThat(thrown).hasMessageThat().isEqualTo(nonExistingPackageName);
     }
 
     private void bindService(CallingInfo callingInfo, FakeServiceConnection serviceConnection)

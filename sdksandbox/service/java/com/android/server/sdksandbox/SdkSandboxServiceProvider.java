@@ -20,6 +20,7 @@ import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 
 import com.android.sdksandbox.ISdkSandboxService;
 
@@ -78,7 +79,7 @@ public interface SdkSandboxServiceProvider {
      *
      * @param callingInfo app for which the sandbox kill is being requested.
      */
-    void stopSandboxService(CallingInfo callingInfo);
+    void stopSandboxService(CallingInfo callingInfo) throws PackageManager.NameNotFoundException;
 
     /**
      * Return {@link ISdkSandboxService} connected for {@code callingInfo} or otherwise {@code
@@ -138,17 +139,19 @@ public interface SdkSandboxServiceProvider {
     /**
      * Returns sandbox process name for the passed app package name.
      *
-     * @param packageName app package name.
+     * @param callingInfo app for which the sandbox status is being requested.
      */
     @NonNull
-    String toSandboxProcessName(@NonNull String packageName);
+    String toSandboxProcessName(@NonNull CallingInfo callingInfo)
+            throws PackageManager.NameNotFoundException;
 
     /**
      * Returns name of the sdk sandbox process that corresponds to the given client app.
      *
-     * @param packageName app package name.
+     * @param callingInfo app for which the sandbox status is being requested.
      * @return name of the sdk sandbox process to be instrumented
      */
     @NonNull
-    String toSandboxProcessNameForInstrumentation(@NonNull String packageName);
+    String toSandboxProcessNameForInstrumentation(@NonNull CallingInfo callingInfo)
+            throws PackageManager.NameNotFoundException;
 }
