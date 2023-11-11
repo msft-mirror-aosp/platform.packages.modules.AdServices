@@ -38,6 +38,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -87,6 +88,7 @@ import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.common.AppManifestConfigHelper;
+import com.android.adservices.service.common.AppManifestConfigMetricsLogger;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
@@ -280,7 +282,13 @@ public final class TopicsServiceImplTest {
                         .spyStatic(AllowLists.class)
                         .spyStatic(ErrorLogUtil.class)
                         .spyStatic(FlagsFactory.class)
+                        .spyStatic(AppManifestConfigMetricsLogger.class)
                         .startMocking();
+
+        // TODO(b/310270746): expectations below (and spying FlagsFactory,
+        // AppManifestConfigMetricsLogger, and possibly ErrorLogUtil) wouldn't be needed if thests
+        // mocked AppManifestConfigHelper.isAllowedTopicsAccess() directly (instead of mocking the
+        // contents of the app manifests)
 
         // Topics must call AppManifestConfigHelper to check if topics is enabled, whose behavior is
         // currently guarded by a flag
@@ -289,6 +297,14 @@ public final class TopicsServiceImplTest {
         // Similarly, AppManifestConfigHelper.isAllowedTopicsAccess() is failing to parse the XML
         // (which returns false), but logging the error on ErrorLogUtil, so we need to ignored that.
         doNothingOnErrorLogUtilError();
+        // And AppManifestConfigHelper calls AppManifestConfigMetricsLogger, which in turn does
+        // stuff in a bg thread - chances are the test is done by the time the thread runs,
+        // which could cause test failures (like lack of permission when calling Flags)
+        ExtendedMockito.doNothing()
+                .when(
+                        () ->
+                                AppManifestConfigMetricsLogger.logUsage(
+                                        any(), any(), anyBoolean(), anyBoolean(), anyBoolean()));
     }
 
     @After

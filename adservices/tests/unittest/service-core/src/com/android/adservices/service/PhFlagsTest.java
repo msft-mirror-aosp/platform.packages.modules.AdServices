@@ -52,6 +52,7 @@ import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE
 import static com.android.adservices.service.Flags.DEFAULT_CLASSIFIER_TYPE;
 import static com.android.adservices.service.Flags.DEFAULT_COMPUTE_VERSION_FROM_MAPPINGS_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
+import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ADEXT_DATA_SERVICE_APIS;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ADSERVICES_API_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API;
 import static com.android.adservices.service.Flags.DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED;
@@ -77,6 +78,7 @@ import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_PLATFORM_
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT;
 import static com.android.adservices.service.Flags.DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK;
+import static com.android.adservices.service.Flags.DEFAULT_RVC_NOTIFICATION_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_RVC_UX_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_U18_UX_ENABLED;
 import static com.android.adservices.service.Flags.DISABLE_FLEDGE_ENROLLMENT_CHECK;
@@ -85,6 +87,7 @@ import static com.android.adservices.service.Flags.DISABLE_TOPICS_ENROLLMENT_CHE
 import static com.android.adservices.service.Flags.DOWNLOADER_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DOWNLOADER_MAX_DOWNLOAD_THREADS;
 import static com.android.adservices.service.Flags.DOWNLOADER_READ_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.ENABLE_ADEXT_SERVICE_CONSENT_DATA;
 import static com.android.adservices.service.Flags.ENABLE_APPSEARCH_CONSENT_DATA;
 import static com.android.adservices.service.Flags.ENABLE_DATABASE_SCHEMA_VERSION_8;
 import static com.android.adservices.service.Flags.ENABLE_ENROLLMENT_TEST_SEED;
@@ -391,6 +394,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_VERBOSE_DEBUG_REP
 import static com.android.adservices.service.Flags.MSMT_API_APP_ALLOW_LIST;
 import static com.android.adservices.service.Flags.MSMT_API_APP_BLOCK_LIST;
 import static com.android.adservices.service.Flags.NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY;
+import static com.android.adservices.service.Flags.PPAPI_AND_ADEXT_SERVICE;
 import static com.android.adservices.service.Flags.PPAPI_AND_SYSTEM_SERVER;
 import static com.android.adservices.service.Flags.PPAPI_APP_ALLOW_LIST;
 import static com.android.adservices.service.Flags.PPAPI_APP_SIGNATURE_ALLOW_LIST;
@@ -461,6 +465,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_TOPICS_E
 import static com.android.adservices.service.FlagsConstants.KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_DOWNLOADER_MAX_DOWNLOAD_THREADS;
 import static com.android.adservices.service.FlagsConstants.KEY_DOWNLOADER_READ_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ADEXT_SERVICE_CONSENT_DATA;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ADSERVICES_API_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA;
@@ -787,6 +793,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNAL
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_RECORD_MANUAL_INTERACTION_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_RVC_NOTIFICATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_RVC_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND;
@@ -6794,9 +6801,16 @@ public class PhFlagsTest {
 
     @Test
     public void testDefaultConsentSourceOfTruth_isS() {
-        Assume.assumeFalse(SdkLevel.isAtLeastT());
-        // On T+, default is PPAPI_AND_SYSTEM_SERVER.
+        Assume.assumeTrue(SdkLevel.isAtLeastS() && !SdkLevel.isAtLeastT());
+        // On S, default is APPSEARCH_ONLY.
         assertThat(DEFAULT_CONSENT_SOURCE_OF_TRUTH).isEqualTo(APPSEARCH_ONLY);
+    }
+
+    @Test
+    public void testDefaultConsentSourceOfTruth_isR() {
+        Assume.assumeFalse(SdkLevel.isAtLeastS());
+        // On R, default is PPAPI_AND_ADEXT_SERVICE.
+        assertThat(DEFAULT_CONSENT_SOURCE_OF_TRUTH).isEqualTo(PPAPI_AND_ADEXT_SERVICE);
     }
 
     @Test
@@ -6822,9 +6836,16 @@ public class PhFlagsTest {
 
     @Test
     public void testDefaultBlockedTopicsConsentSourceOfTruth_isS() {
-        Assume.assumeFalse(SdkLevel.isAtLeastT());
-        // On T+, default is PPAPI_AND_SYSTEM_SERVER.
+        Assume.assumeTrue(SdkLevel.isAtLeastS() && !SdkLevel.isAtLeastT());
+        // On S, default is APPSEARCH_ONLY.
         assertThat(DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH).isEqualTo(APPSEARCH_ONLY);
+    }
+
+    @Test
+    public void testDefaultBlockedTopicsConsentSourceOfTruth_isR() {
+        Assume.assumeFalse(SdkLevel.isAtLeastS());
+        // On R, default is PPAPI_AND_ADEXT_SERVICE.
+        assertThat(DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH).isEqualTo(PPAPI_AND_ADEXT_SERVICE);
     }
 
     @Test
@@ -7076,11 +7097,20 @@ public class PhFlagsTest {
 
     @Test
     public void testDefaultEnableAppsearchConsentData_isS() {
-        Assume.assumeFalse(SdkLevel.isAtLeastT());
+        Assume.assumeTrue(SdkLevel.isAtLeastS() && !SdkLevel.isAtLeastT());
         // On S, default is true.
         assertWithMessage("%s on S", FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA)
                 .that(ENABLE_APPSEARCH_CONSENT_DATA)
                 .isTrue();
+    }
+
+    @Test
+    public void testDefaultEnableAppsearchConsentData_isR() {
+        Assume.assumeFalse(SdkLevel.isAtLeastS());
+        // On R, default is true.
+        assertWithMessage("%s on R", FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA)
+                .that(ENABLE_APPSEARCH_CONSENT_DATA)
+                .isFalse();
     }
 
     @Test
@@ -7103,6 +7133,40 @@ public class PhFlagsTest {
                 /* makeDefault */ false);
 
         assertThat(mPhFlags.getEnableAppsearchConsentData()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testDefaultEnableAdExtServiceConsentData_isAtLeastS() {
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
+        // On S+, default is false.
+        assertWithMessage("%s on S", KEY_ENABLE_ADEXT_SERVICE_CONSENT_DATA)
+                .that(ENABLE_ADEXT_SERVICE_CONSENT_DATA)
+                .isFalse();
+    }
+
+    @Test
+    public void testDefaultEnableAdExtServiceConsentData_isR() {
+        Assume.assumeFalse(SdkLevel.isAtLeastR());
+        // On R, default is true.
+        assertWithMessage("%s on R", KEY_ENABLE_ADEXT_SERVICE_CONSENT_DATA)
+                .that(ENABLE_ADEXT_SERVICE_CONSENT_DATA)
+                .isTrue();
+    }
+
+    @Test
+    public void testOverrideEnableAdExtServiceConsentData() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getEnableAdExtServiceConsentData())
+                .isEqualTo(ENABLE_ADEXT_SERVICE_CONSENT_DATA);
+
+        boolean phOverridingValue = !ENABLE_ADEXT_SERVICE_CONSENT_DATA;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENABLE_ADEXT_SERVICE_CONSENT_DATA,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getEnableAdExtServiceConsentData()).isEqualTo(phOverridingValue);
     }
 
     @Test
@@ -7309,6 +7373,46 @@ public class PhFlagsTest {
                 /* makeDefault */ false);
 
         assertThat(mPhFlags.getEnableRvcUx()).isEqualTo(expected);
+    }
+
+    @Test
+    public void testRvcNotificationEnabled_adServicesSystemApiTrue_rvcNotificationTrue() {
+        testRvcNotificationEnabled(true, true, true);
+    }
+
+    @Test
+    public void testRvcNotificationEnabled_adServicesSystemApiTrue_rvcNotificationFalse() {
+        testRvcNotificationEnabled(true, false, false);
+    }
+
+    @Test
+    public void testRvcNotificationEnabled_adServicesSystemApiFalse_rvcNotificationTrue() {
+        testRvcNotificationEnabled(false, true, false);
+    }
+
+    @Test
+    public void testRvcNotificationEnabled_adServicesSystemApiFalse_rvcNotificationFalse() {
+        testRvcNotificationEnabled(false, false, false);
+    }
+
+    private void testRvcNotificationEnabled(
+            boolean adServicesSystemApi, boolean phOverridingValue, boolean expected) {
+
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getEnableRvcNotification()).isEqualTo(DEFAULT_RVC_NOTIFICATION_ENABLED);
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENABLE_AD_SERVICES_SYSTEM_API,
+                Boolean.toString(adServicesSystemApi),
+                /* makeDefault */ false);
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_RVC_NOTIFICATION_ENABLED,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getEnableRvcNotification()).isEqualTo(expected);
     }
 
     @Test
@@ -9523,6 +9627,21 @@ public class PhFlagsTest {
                 /* makeDefault */ false);
 
         assertThat(mPhFlags.getAppConfigReturnsEnabledByDefault()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetEnableAdExtDataServiceApis() {
+        assertThat(mPhFlags.getEnableAdExtDataServiceApis())
+                .isEqualTo(DEFAULT_ENABLE_ADEXT_DATA_SERVICE_APIS);
+
+        boolean phOverridingValue = !DEFAULT_ENABLE_ADEXT_DATA_SERVICE_APIS;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENABLE_ADEXT_DATA_SERVICE_APIS,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getEnableAdExtDataServiceApis()).isEqualTo(phOverridingValue);
     }
 
     @Test
