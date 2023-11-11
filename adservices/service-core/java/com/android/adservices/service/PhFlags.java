@@ -5075,6 +5075,11 @@ public final class PhFlags implements Flags {
                         + getEnableAppsearchConsentData());
         writer.println(
                 "\t"
+                        + FlagsConstants.KEY_ENABLE_ADEXT_SERVICE_CONSENT_DATA
+                        + " = "
+                        + getEnableAdExtServiceConsentData());
+        writer.println(
+                "\t"
                         + FlagsConstants.ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED
                         + " = "
                         + getAdservicesConsentMigrationLoggingEnabled());
@@ -5351,6 +5356,15 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getEnableAdExtServiceConsentData() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_ENABLE_ADEXT_SERVICE_CONSENT_DATA,
+                /* defaultValue */ ENABLE_ADEXT_SERVICE_CONSENT_DATA);
+    }
+
+    @Override
     public ImmutableList<Integer> getGlobalBlockedTopicIds() {
         String defaultGlobalBlockedTopicIds =
                 TOPICS_GLOBAL_BLOCKED_TOPIC_IDS.stream()
@@ -5467,6 +5481,15 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getEnableRvcNotification() {
+        return getEnableAdServicesSystemApi()
+                && DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        /* flagName */ FlagsConstants.KEY_RVC_NOTIFICATION_ENABLED,
+                        /* defaultValue */ DEFAULT_RVC_NOTIFICATION_ENABLED);
+    }
+
+    @Override
     public boolean getEnableAdServicesSystemApi() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -5486,6 +5509,7 @@ public final class PhFlags implements Flags {
                 getRecordManualInteractionEnabled());
         uxMap.put(FlagsConstants.KEY_GA_UX_FEATURE_ENABLED, getGaUxFeatureEnabled());
         uxMap.put(FlagsConstants.KEY_RVC_UX_ENABLED, getEnableRvcUx());
+        uxMap.put(FlagsConstants.KEY_RVC_NOTIFICATION_ENABLED, getEnableRvcNotification());
         uxMap.put(
                 FlagsConstants.KEY_UI_OTA_STRINGS_FEATURE_ENABLED, getUiOtaStringsFeatureEnabled());
         uxMap.put(
@@ -6201,6 +6225,14 @@ public final class PhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT,
                 /* defaultValue */ Flags.APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT);
+    }
+
+    @Override
+    public boolean getEnableAdExtDataServiceApis() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS,
+                /* defaultValue */ DEFAULT_ENABLE_ADEXT_DATA_SERVICE_APIS);
     }
 
     @Override

@@ -133,20 +133,36 @@ public class AppManifestConfigHelper {
 
     @Nullable
     private static XmlResourceParser getXmlParser(
-            @NonNull Context context, @NonNull String appPackageName)
-            throws PackageManager.NameNotFoundException, XmlParseException, XmlPullParserException,
-                    IOException {
+            @NonNull Context context, @NonNull String appPackageName, boolean enabledByDefault)
+            throws NameNotFoundException, XmlParseException, XmlPullParserException, IOException {
+        boolean appExists = false;
+        boolean appHasConfig = false;
         // NOTE: resources is only used pre-S, but it must be called regardless to make sure the
         // app exists
-        Resources resources =
-                context.getPackageManager().getResourcesForApplication(appPackageName);
+        Resources resources = null;
+        try {
+            resources = context.getPackageManager().getResourcesForApplication(appPackageName);
+            appExists = true;
+        } catch (NameNotFoundException e) {
+            AppManifestConfigMetricsLogger.logUsage(
+                    context, appPackageName, appExists, appHasConfig, enabledByDefault);
+            throw e;
+        }
+
         Integer resId =
                 SdkLevel.isAtLeastS()
                         ? getAdServicesConfigResourceIdOnExistingPackageOnSPlus(
                                 context, appPackageName)
                         : getAdServicesConfigResourceIdOnRMinus(context, resources, appPackageName);
 
-        return resId == null ? null : resources.getXml(resId);
+        XmlResourceParser xmlResourceParser = null;
+        if (resId != null) {
+            xmlResourceParser = resources.getXml(resId);
+            appHasConfig = true;
+        }
+        AppManifestConfigMetricsLogger.logUsage(
+                context, appPackageName, appExists, appHasConfig, enabledByDefault);
+        return xmlResourceParser;
     }
 
     @Nullable
@@ -166,7 +182,7 @@ public class AppManifestConfigHelper {
     @Nullable
     private static Integer getAdServicesConfigResourceIdOnRMinus(
             @NonNull Context context, @NonNull Resources resources, @NonNull String appPackageName)
-            throws PackageManager.NameNotFoundException, XmlPullParserException, IOException {
+            throws NameNotFoundException, XmlPullParserException, IOException {
         // PackageManager::getProperty(..) API is only available on S+. For R-, we will need to load
         // app's manifest and parse. See go/rbp-manifest.
         AssetManager assetManager =
@@ -185,7 +201,7 @@ public class AppManifestConfigHelper {
         Objects.requireNonNull(enrollmentId);
         boolean enabledByDefault = FlagsFactory.getFlags().getAppConfigReturnsEnabledByDefault();
         try {
-            XmlResourceParser in = getXmlParser(context, appPackageName);
+            XmlResourceParser in = getXmlParser(context, appPackageName, enabledByDefault);
             if (in == null) {
                 LogUtil.v(
                         "%s: returning %b for app (%s) that doesn't have the AdServices XML config",
@@ -195,9 +211,9 @@ public class AppManifestConfigHelper {
             AppManifestConfig appManifestConfig =
                     AppManifestConfigParser.getConfig(in, enabledByDefault);
             return checker.isAllowedAccess(appManifestConfig);
-        } catch (PackageManager.NameNotFoundException e) {
-            LogUtil.v("Name not found while looking for manifest for app \"%s\"", appPackageName);
-            LogUtil.e(e, "App manifest parse failed: NameNotFound.");
+        } catch (NameNotFoundException e) {
+            LogUtil.v(
+                    "Name not found while looking for manifest for app %s: %s", appPackageName, e);
         } catch (Exception e) {
             LogUtil.e(e, "App manifest parse failed.");
             ErrorLogUtil.e(

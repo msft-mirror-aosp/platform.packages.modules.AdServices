@@ -114,3 +114,34 @@ package android.adservices.common {
 
 }
 
+package android.adservices.extdata {
+
+  @FlaggedApi(android.adservices.FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS) public final class AdServicesExtDataParams implements android.os.Parcelable {
+    ctor @FlaggedApi(android.adservices.FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS) public AdServicesExtDataParams(int, int, int, int, int, long);
+    method @FlaggedApi(android.adservices.FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS) public int describeContents();
+    method @FlaggedApi(android.adservices.FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS) public int getIsAdultAccount();
+    method @FlaggedApi(android.adservices.FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS) public int getIsMeasurementConsented();
+    method @FlaggedApi(android.adservices.FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS) public int getIsNotificationDisplayed();
+    method @FlaggedApi(android.adservices.FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS) public int getIsU18Account();
+    method @FlaggedApi(android.adservices.FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS) public int getManualInteractionWithConsentStatus();
+    method @FlaggedApi(android.adservices.FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS) public long getMeasurementRollbackApexVersion();
+    method @FlaggedApi(android.adservices.FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS) public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @FlaggedApi(android.adservices.FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS) @NonNull public static final android.os.Parcelable.Creator<android.adservices.extdata.AdServicesExtDataParams> CREATOR;
+  }
+
+  @FlaggedApi(android.adservices.FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS) public abstract class AdServicesExtDataStorageService extends android.app.Service {
+    ctor @FlaggedApi(android.adservices.FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS) public AdServicesExtDataStorageService();
+    method @FlaggedApi(android.adservices.FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS) @Nullable public final android.os.IBinder onBind(@Nullable android.content.Intent);
+    method @FlaggedApi(android.adservices.FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS) @NonNull public abstract android.adservices.extdata.AdServicesExtDataParams onGetAdServicesExtData();
+    method @FlaggedApi(android.adservices.FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS) public abstract void onPutAdServicesExtData(@NonNull android.adservices.extdata.AdServicesExtDataParams, @NonNull int[]);
+    field @FlaggedApi(android.adservices.FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS) public static final int FIELD_IS_ADULT_ACCOUNT = 3; // 0x3
+    field @FlaggedApi(android.adservices.FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS) public static final int FIELD_IS_MEASUREMENT_CONSENTED = 1; // 0x1
+    field @FlaggedApi(android.adservices.FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS) public static final int FIELD_IS_NOTIFICATION_DISPLAYED = 0; // 0x0
+    field @FlaggedApi(android.adservices.FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS) public static final int FIELD_IS_U18_ACCOUNT = 2; // 0x2
+    field @FlaggedApi(android.adservices.FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS) public static final int FIELD_MANUAL_INTERACTION_WITH_CONSENT_STATUS = 4; // 0x4
+    field @FlaggedApi(android.adservices.FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS) public static final int FIELD_MEASUREMENT_ROLLBACK_APEX_VERSION = 5; // 0x5
+    field @FlaggedApi(android.adservices.FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS) public static final String SERVICE_INTERFACE = "android.adservices.extdata.AdServicesExtDataStorageService";
+  }
+
+}
+
