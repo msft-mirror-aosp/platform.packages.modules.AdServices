@@ -15,6 +15,8 @@
  */
 package com.android.adservices.ohttp;
 
+import static org.junit.Assert.assertThrows;
+
 import com.google.common.io.BaseEncoding;
 
 import org.junit.Assert;
@@ -27,6 +29,10 @@ public class OhttpJniWrapperTest {
 
     private static final String SERVER_PUBLIC_KEY =
             "6d21cfe09fbea5122f9ebc2eb2a69fcc4f06408cd54aac934f012e76fcdcef62";
+
+    private static final String SERVER_PRIVATE_KEY =
+            "b77431ecfa8f4cfc30d6e467aafa06944dffe28cb9dd1409e33a3045f5adc8a1";
+
     private static final String KEM_SEED = "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww";
 
     private final OhttpJniWrapper mOhttpJniWrapper = OhttpJniWrapper.getInstance();
@@ -153,7 +159,7 @@ public class OhttpJniWrapperTest {
         byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes();
         byte[] keyBytes = BaseEncoding.base16().lowerCase().decode(SERVER_PUBLIC_KEY);
 
-        Assert.assertThrows(
+        assertThrows(
                 NullPointerException.class,
                 () ->
                         mOhttpJniWrapper.hpkeCtxSetupSenderWithSeed(
@@ -176,7 +182,7 @@ public class OhttpJniWrapperTest {
         byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes();
         byte[] keyBytes = null;
 
-        Assert.assertThrows(
+        assertThrows(
                 NullPointerException.class,
                 () ->
                         mOhttpJniWrapper.hpkeCtxSetupSenderWithSeed(
@@ -286,6 +292,91 @@ public class OhttpJniWrapperTest {
         Assert.assertEquals(
                 BaseEncoding.base16().lowerCase().encode(plainText),
                 "7465737420726573706f6e73652031");
+    }
+
+    @Test
+    public void gatewayDecrypt_incorrectKey_throwsError() throws Exception {
+        KemNativeRef kem = KemNativeRef.getHpkeKemDhkemX25519HkdfSha256Reference();
+        KdfNativeRef kdf = KdfNativeRef.getHpkeKdfHkdfSha256Reference();
+        AeadNativeRef aead = AeadNativeRef.getHpkeAeadAes256GcmReference();
+        HpkeContextNativeRef evpCtxSender = HpkeContextNativeRef.createHpkeContextReference();
+
+        byte[] seedBytes = KEM_SEED.getBytes(StandardCharsets.US_ASCII);
+        byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes();
+        byte[] keyBytes = BaseEncoding.base16().lowerCase().decode(SERVER_PUBLIC_KEY);
+        String plainText = "test request 1";
+        byte[] plainTextBytes = plainText.getBytes(StandardCharsets.US_ASCII);
+
+        mOhttpJniWrapper.hpkeCtxSetupSenderWithSeed(
+                evpCtxSender, kem, kdf, aead, keyBytes, recipientKeyInfoBytes, seedBytes);
+        HpkeEncryptResponse response =
+                mOhttpJniWrapper.hpkeEncrypt(
+                        evpCtxSender,
+                        kem,
+                        kdf,
+                        aead,
+                        keyBytes,
+                        recipientKeyInfoBytes,
+                        seedBytes,
+                        plainTextBytes,
+                        null);
+
+        byte[] privateKeyBytes = BaseEncoding.base16().lowerCase().decode("3b");
+
+        assertThrows(
+                IllegalStateException.class,
+                () ->
+                        mOhttpJniWrapper.gatewayDecrypt(
+                                kem,
+                                kdf,
+                                aead,
+                                OhttpGatewayPrivateKey.create(privateKeyBytes),
+                                response.encapsulatedSharedSecret(),
+                                RecipientKeyInfo.create(recipientKeyInfoBytes),
+                                response.cipherText()));
+    }
+
+    @Test
+    public void gatewayDecrypt_returnsCorrectResponse() throws Exception {
+        KemNativeRef kem = KemNativeRef.getHpkeKemDhkemX25519HkdfSha256Reference();
+        KdfNativeRef kdf = KdfNativeRef.getHpkeKdfHkdfSha256Reference();
+        AeadNativeRef aead = AeadNativeRef.getHpkeAeadAes256GcmReference();
+        HpkeContextNativeRef evpCtxSender = HpkeContextNativeRef.createHpkeContextReference();
+
+        byte[] seedBytes = KEM_SEED.getBytes(StandardCharsets.US_ASCII);
+        byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes();
+        byte[] keyBytes = BaseEncoding.base16().lowerCase().decode(SERVER_PUBLIC_KEY);
+        String plainText = "test request 1";
+        byte[] plainTextBytes = plainText.getBytes(StandardCharsets.US_ASCII);
+
+        mOhttpJniWrapper.hpkeCtxSetupSenderWithSeed(
+                evpCtxSender, kem, kdf, aead, keyBytes, recipientKeyInfoBytes, seedBytes);
+        HpkeEncryptResponse response =
+                mOhttpJniWrapper.hpkeEncrypt(
+                        evpCtxSender,
+                        kem,
+                        kdf,
+                        aead,
+                        keyBytes,
+                        recipientKeyInfoBytes,
+                        seedBytes,
+                        plainTextBytes,
+                        null);
+
+        byte[] privateKeyBytes = BaseEncoding.base16().lowerCase().decode(SERVER_PRIVATE_KEY);
+        GatewayDecryptResponse decryptResponse =
+                mOhttpJniWrapper.gatewayDecrypt(
+                        kem,
+                        kdf,
+                        aead,
+                        OhttpGatewayPrivateKey.create(privateKeyBytes),
+                        response.encapsulatedSharedSecret(),
+                        RecipientKeyInfo.create(recipientKeyInfoBytes),
+                        response.cipherText());
+
+        String unencryptedText = new String(decryptResponse.getBytes(), StandardCharsets.US_ASCII);
+
+        Assert.assertEquals(unencryptedText, plainText);
     }
 
     private HpkeContextNativeRef setupAndGetHpkeContext() throws Exception {

@@ -40,6 +40,12 @@ import java.util.concurrent.Executor;
  * personalized ads (formerly known as interest-based ads).
  */
 public class AdIdManager {
+    // The update-api tooling pulls a reference to FlagsConstants if the key is directly used in the
+    // annotation. However, it correctly pulls in the key value from class-local constants. So
+    // reading the value of the key into a local constant which is then used within the annotation.
+    private static final String FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED =
+            FlagsConstants.KEY_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED;
+
     /**
      * Service used for registering AdIdManager in the system service registry.
      *
@@ -109,14 +115,14 @@ public class AdIdManager {
     }
 
     /**
-     * Return the AdId.
+     * Return the AdId. For use on Android R or lower.
      *
      * @param executor The executor to run callback.
      * @param callback The callback that's called after adid are available or an error occurs.
      * @throws IllegalStateException if this API is not available.
      */
+    @FlaggedApi(FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED)
     @RequiresPermission(ACCESS_ADSERVICES_AD_ID)
-    @FlaggedApi(FlagsConstants.KEY_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED)
     @NonNull
     public void getAdId(
             @NonNull @CallbackExecutor Executor executor,

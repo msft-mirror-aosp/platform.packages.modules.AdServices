@@ -19,6 +19,7 @@ package com.android.adservices.service.ui;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_RVC_NOTIFICATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_RVC_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.BETA_UX;
@@ -43,6 +44,7 @@ import com.android.adservices.service.common.BackgroundJobsManager;
 import com.android.adservices.service.common.ConsentNotificationJobService;
 import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.service.ui.data.UxStatesManager;
@@ -114,11 +116,16 @@ public class UxEngineTest {
         ExtendedMockito.doNothing().when(
                 () ->
                         BackgroundJobsManager.scheduleAllBackgroundJobs(any()));
+        ExtendedMockito.doNothing()
+                .when(() -> BackgroundJobsManager.scheduleMeasurementBackgroundJobs(any()));
         ExtendedMockito.doNothing().when(() -> UiStatsLogger.logEntryPointClicked(any()));
 
         doReturn(true).when(mUxStatesManager).getFlag(KEY_ADSERVICES_ENABLED);
         doReturn(true).when(mUxStatesManager).getFlag(KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManager)
+                .getConsent(any(AdServicesApiType.class));
 
         mUxEngine =
                 new UxEngine(
@@ -686,8 +693,11 @@ public class UxEngineTest {
         verify(mUxStatesManager).getFlag(KEY_U18_UX_ENABLED);
         verify(mConsentManager).isU18Account();
 
-        // RVC UX logic where flag is checked twice in RVC_UX and RvcPostOTAChannel.
-        verify(mUxStatesManager, times(2)).getFlag(KEY_RVC_UX_ENABLED);
+        // RVC UX logic where flag is checked once in RVC_UX.
+        verify(mUxStatesManager).getFlag(KEY_RVC_UX_ENABLED);
+
+        // RVC UX logic where flag is checked once in RvcPostOTAChannel.
+        verify(mUxStatesManager).getFlag(KEY_RVC_NOTIFICATION_ENABLED);
 
         // The UX can not be updated due to the fact that graduation channel is currently disabled.
         verify(mConsentManager, never()).setUx(any());
@@ -736,6 +746,10 @@ public class UxEngineTest {
         verify(mConsentManager)
                 .setEnrollmentChannel(
                         U18_UX, U18UxEnrollmentChannelCollection.U18_DETENTION_CHANNEL);
+        ExtendedMockito.verify(
+                () -> BackgroundJobsManager.scheduleAllBackgroundJobs(mContext), never());
+        ExtendedMockito.verify(
+                () -> BackgroundJobsManager.scheduleMeasurementBackgroundJobs(mContext));
     }
 
     // Test the flow in which user is eligible for U18 detention.
