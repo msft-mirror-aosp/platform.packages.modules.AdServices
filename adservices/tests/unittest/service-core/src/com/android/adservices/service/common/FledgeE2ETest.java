@@ -1239,7 +1239,8 @@ public class FledgeE2ETest {
                         mConsentManagerMock,
                         mObliviousHttpEncryptorMock,
                         mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdIdFetcher,
+                        false);
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
@@ -1399,7 +1400,8 @@ public class FledgeE2ETest {
                         mConsentManagerMock,
                         mObliviousHttpEncryptorMock,
                         mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdIdFetcher,
+                        false);
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
@@ -4402,7 +4404,8 @@ public class FledgeE2ETest {
                         mConsentManagerMock,
                         mObliviousHttpEncryptorMock,
                         mAdSelectionDebugReportDao,
-                        mAdIdFetcher);
+                        mAdIdFetcher,
+                        false);
     }
 
     private AdSelectionTestCallback invokeRunAdSelection(

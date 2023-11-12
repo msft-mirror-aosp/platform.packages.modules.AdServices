@@ -744,8 +744,9 @@ public class AsyncSourceFetcher {
             LoggerFactory.getMeasurementLogger().d(e, "AsyncSourceFetcher: invalid JSON");
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.PARSING_ERROR);
             return Optional.empty();
-        } catch (IllegalArgumentException e) {
-            LoggerFactory.getMeasurementLogger().d(e, "AsyncSourceFetcher: illegal argument");
+        } catch (IllegalArgumentException | ArithmeticException e) {
+            LoggerFactory.getMeasurementLogger().d(e, "AsyncSourceFetcher: IllegalArgumentException"
+                    + " or ArithmeticException");
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
             return Optional.empty();
         }

@@ -210,6 +210,8 @@ public class TopicsWorker {
             List<Long> taxonomyVersions = new ArrayList<>(topics.size());
             List<Long> modelVersions = new ArrayList<>(topics.size());
             List<Integer> topicIds = new ArrayList<>(topics.size());
+            List<byte[]> encryptedTopics = new ArrayList<>(topics.size());
+            List<String> encryptionKeys = new ArrayList<>(topics.size());
 
             for (Topic topic : topics) {
                 taxonomyVersions.add(topic.getTaxonomyVersion());
@@ -223,6 +225,8 @@ public class TopicsWorker {
                             .setTaxonomyVersions(taxonomyVersions)
                             .setModelVersions(modelVersions)
                             .setTopics(topicIds)
+                            .setEncryptedTopics(encryptedTopics)
+                            .setEncryptionKeys(encryptionKeys)
                             .build();
             sLogger.v(
                     "The result of TopicsWorker.getTopics for %s, %s is %s",

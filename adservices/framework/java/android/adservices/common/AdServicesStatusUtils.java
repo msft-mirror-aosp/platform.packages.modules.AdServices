@@ -149,6 +149,13 @@ public class AdServicesStatusUtils {
      */
     public static final int STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET = 18;
 
+    /**
+     * Result code for Encryption related failures.
+     *
+     * <p>This error may be considered similar to {@link IllegalArgumentException}.
+     */
+    public static final int STATUS_ENCRYPTION_FAILURE = 19;
+
     /** The error message to be returned along with {@link IllegalStateException}. */
     public static final String ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE = "Service is not available.";
 
@@ -195,6 +202,8 @@ public class AdServicesStatusUtils {
     /** The error message to be returned along with {@link InvalidObjectException}. */
     public static final String INVALID_OBJECT_ERROR_MESSAGE =
             "The service received an invalid object from the server.";
+    /** The error message to be returned along with {@link IllegalArgumentException}. */
+    public static final String ENCRYPTION_FAILURE_MESSAGE = "Failed to encrypt responses.";
 
     /** Returns true for a successful status. */
     public static boolean isSuccess(@StatusCode int statusCode) {
@@ -205,6 +214,8 @@ public class AdServicesStatusUtils {
     @NonNull
     public static Exception asException(@StatusCode int statusCode) {
         switch (statusCode) {
+            case STATUS_ENCRYPTION_FAILURE:
+                return new IllegalArgumentException(ENCRYPTION_FAILURE_MESSAGE);
             case STATUS_INVALID_ARGUMENT:
                 return new IllegalArgumentException();
             case STATUS_IO_ERROR:
@@ -269,7 +280,8 @@ public class AdServicesStatusUtils {
                 STATUS_JS_SANDBOX_UNAVAILABLE,
                 STATUS_INVALID_OBJECT,
                 STATUS_SERVER_RATE_LIMIT_REACHED,
-                STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET
+                STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET,
+                STATUS_ENCRYPTION_FAILURE
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface StatusCode {}

@@ -35,6 +35,7 @@ public final class FlagsConstants {
     public static final int PPAPI_ONLY = 1;
     public static final int PPAPI_AND_SYSTEM_SERVER = 2;
     public static final int APPSEARCH_ONLY = 3;
+    public static final int PPAPI_AND_ADEXT_SERVICE = 4;
     public static final float ADID_REQUEST_PERMITS_PER_SECOND = 25;
 
     // **************************************************
@@ -924,6 +925,9 @@ public final class FlagsConstants {
 
     public static final String KEY_ENABLE_APPSEARCH_CONSENT_DATA = "enable_appsearch_consent_data";
 
+    public static final String KEY_ENABLE_ADEXT_SERVICE_CONSENT_DATA =
+            "enable_adext_service_consent_data";
+
     // Whether to call trusted servers for off device ad selection.
     public static final String KEY_OFF_DEVICE_AD_SELECTION_ENABLED =
             "enable_off_device_ad_selection";
@@ -1113,6 +1117,8 @@ public final class FlagsConstants {
 
     public static final String KEY_RVC_UX_ENABLED = "rvc_ux_enabled";
 
+    public static final String KEY_RVC_NOTIFICATION_ENABLED = "rvc_notification_enabled";
+
     public static final String KEY_ENABLE_AD_SERVICES_SYSTEM_API = "enable_ad_services_system_api";
 
     public static final String KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED =
@@ -1127,6 +1133,9 @@ public final class FlagsConstants {
 
     public static final String KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT =
             "app_config_returns_enabled_by_detault";
+
+    public static final String KEY_ENABLE_ADEXT_DATA_SERVICE_APIS =
+            "enable_adext_data_service_apis";
 
     public static final String KEY_ENABLE_ADSERVICES_API_ENABLED = "enable_adservices_api_enabled";
 

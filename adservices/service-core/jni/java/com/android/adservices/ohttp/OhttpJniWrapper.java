@@ -33,6 +33,7 @@ import java.util.Objects;
  * Mockito can not mock native methods. Hence, this class implements an interface {@link
  * IOhttpJniWrapper} that can be mocked.
  */
+// TODO(b/309107764) : Refactor this class to have a consistent style
 class OhttpJniWrapper implements IOhttpJniWrapper {
     private static OhttpJniWrapper sWrapper;
 
@@ -171,6 +172,33 @@ class OhttpJniWrapper implements IOhttpJniWrapper {
     }
 
     /**
+     * Provides the Ohttp gateway side decryption method
+     *
+     * <p>https://www.ietf.org/archive/id/draft-ietf-ohai-ohttp-03.html#section-4.1-10
+     */
+    public GatewayDecryptResponse gatewayDecrypt(
+            KemNativeRef kemNativeRef,
+            KdfNativeRef kdfNativeRef,
+            AeadNativeRef aeadNativeRef,
+            OhttpGatewayPrivateKey privateKey,
+            EncapsulatedSharedSecret encapsulatedSharedSecret,
+            RecipientKeyInfo recipientKeyInfo,
+            byte[] cipherText) {
+
+        byte[] decryptedBytes =
+                gatewayDecrypt(
+                        kemNativeRef.getAddress(),
+                        kdfNativeRef.getAddress(),
+                        aeadNativeRef.getAddress(),
+                        privateKey.getBytes(),
+                        encapsulatedSharedSecret.getBytes(),
+                        recipientKeyInfo.getBytes(),
+                        cipherText);
+
+        return GatewayDecryptResponse.create(decryptedBytes);
+    }
+
+    /**
      * Computes and returns a HKDF PseudoRandomKey (as specified by RFC 5869) from initial keying
      * material {@code secret} and {@code salt} using a digest method referenced by {@code
      * hkdfMessageDigestNativeRef}
@@ -252,6 +280,16 @@ class OhttpJniWrapper implements IOhttpJniWrapper {
             byte[] publicKey,
             @Nullable byte[] info,
             byte[] seed);
+
+    @Nullable
+    private native byte[] gatewayDecrypt(
+            long kemNativeRef,
+            long kdfNativeRef,
+            long aeadNativeRef,
+            byte[] privateKey,
+            byte[] enc,
+            byte[] info,
+            byte[] encryptedData);
 
     private native byte[] hpkeCtxSeal(long ctx, @Nullable byte[] plaintText, @Nullable byte[] aad);
 
