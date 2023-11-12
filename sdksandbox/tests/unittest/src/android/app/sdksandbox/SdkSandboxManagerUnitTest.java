@@ -23,6 +23,7 @@ import static android.app.sdksandbox.SdkSandboxManager.EXTRA_SURFACE_PACKAGE;
 import static android.app.sdksandbox.SdkSandboxManager.EXTRA_WIDTH_IN_PIXELS;
 import static android.app.sdksandbox.SdkSandboxManager.LOAD_SDK_NOT_FOUND;
 import static android.app.sdksandbox.SdkSandboxManager.REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR;
+import static android.app.sdksandbox.StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__START_SDK_SANDBOX_ACTIVITY;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -593,6 +594,22 @@ public class SdkSandboxManagerUnitTest {
                 .isNotNull();
         assertThat(params.getBinder(SdkSandboxManager.EXTRA_SANDBOXED_ACTIVITY_HANDLER))
                 .isEqualTo(token);
+    }
+
+    @Test
+    public void testStartSandboxActivity_logSandboxActivityEventCalled() throws Exception {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        Activity fromActivitySpy = Mockito.mock(Activity.class);
+        IBinder token = new Binder();
+        mSdkSandboxManager.startSdkSandboxActivity(fromActivitySpy, token);
+
+        Mockito.verify(mBinder, Mockito.times(1))
+                .logSandboxActivityEvent(
+                        Mockito.eq(
+                                SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__START_SDK_SANDBOX_ACTIVITY),
+                        Mockito.anyInt(),
+                        Mockito.anyInt());
     }
 
     private void ensureIllegalArgumentExceptionOnRequestSurfacePackage(

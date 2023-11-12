@@ -17,10 +17,12 @@
 package com.android.adservices.service;
 
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND_SERVICE;
+import static android.os.Build.VERSION.SDK_INT;
 
 import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.app.job.JobInfo;
+import android.os.Build;
 
 import androidx.annotation.Nullable;
 
@@ -1731,6 +1733,7 @@ public interface Flags {
                 PPAPI_ONLY,
                 PPAPI_AND_SYSTEM_SERVER,
                 APPSEARCH_ONLY,
+                PPAPI_AND_ADEXT_SERVICE,
             })
     @Retention(RetentionPolicy.SOURCE)
     @interface ConsentSourceOfTruth {}
@@ -1753,12 +1756,22 @@ public interface Flags {
     int APPSEARCH_ONLY = FlagsConstants.APPSEARCH_ONLY;
 
     /**
-     * Consent source of truth intended to be used by default. On S- devices, there is no AdServices
-     * code running in the system server, so the default for those is PPAPI_ONLY.
+     * Read and write data that need to be rollback-safe from AdServicesExtDataStorageService; rest
+     * can be handled by PPAPI_API only. This is intended to be used on Android R as AppSearch and
+     * system server are unavailable.
+     */
+    int PPAPI_AND_ADEXT_SERVICE = FlagsConstants.PPAPI_AND_ADEXT_SERVICE;
+
+    /**
+     * Consent source of truth intended to be used by default. On S devices, there is no AdServices
+     * code running in the system server, so the default is APPSEARCH_ONLY. On R devices, there is
+     * no system server and appseach, so the default is PPAPI_AND_ADEXT_SERVICE_ONLY.
      */
     @ConsentSourceOfTruth
     int DEFAULT_CONSENT_SOURCE_OF_TRUTH =
-            SdkLevel.isAtLeastT() ? PPAPI_AND_SYSTEM_SERVER : APPSEARCH_ONLY;
+            SdkLevel.isAtLeastT()
+                    ? PPAPI_AND_SYSTEM_SERVER
+                    : (SdkLevel.isAtLeastS() ? APPSEARCH_ONLY : PPAPI_AND_ADEXT_SERVICE);
 
     /** Returns the consent source of truth currently used for PPAPI. */
     @ConsentSourceOfTruth
@@ -1767,12 +1780,16 @@ public interface Flags {
     }
 
     /**
-     * Blocked topics source of truth intended to be used by default. On S- devices, there is no
-     * AdServices code running in the system server, so the default for those is PPAPI_ONLY.
+     * Blocked topics source of truth intended to be used by default. On S devices, there is no
+     * AdServices code running in the system server, so the default is APPSEARCH_ONLY. On R devices,
+     * there is no system server and appseach, so the default is PPAPI_ADEXT_SERVICE_ONLY. However,
+     * note that topics is not supported on R.
      */
     @ConsentSourceOfTruth
     int DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH =
-            SdkLevel.isAtLeastT() ? PPAPI_AND_SYSTEM_SERVER : APPSEARCH_ONLY;
+            SdkLevel.isAtLeastT()
+                    ? PPAPI_AND_SYSTEM_SERVER
+                    : (SdkLevel.isAtLeastS() ? APPSEARCH_ONLY : PPAPI_AND_ADEXT_SERVICE);
 
     /** Returns the blocked topics source of truth currently used for PPAPI */
     @ConsentSourceOfTruth
@@ -2468,11 +2485,27 @@ public interface Flags {
      * AppSearch is not considered as source of truth after OTA. This flag should be enabled for OTA
      * support of consent data on T+ devices.
      */
-    boolean ENABLE_APPSEARCH_CONSENT_DATA = !SdkLevel.isAtLeastT();
+    boolean ENABLE_APPSEARCH_CONSENT_DATA = SdkLevel.isAtLeastS() && !SdkLevel.isAtLeastT();
 
     /** @return value of enable appsearch consent data flag */
     default boolean getEnableAppsearchConsentData() {
         return ENABLE_APPSEARCH_CONSENT_DATA;
+    }
+
+    /**
+     * Enable AdServicesExtDataStorageService read for consent data feature flag. The default value
+     * on R devices is true as the consent source of truth is PPAPI_AND_ADEXT_SERVICE_ONLY. The
+     * default value on S+ devices is false which means AdServicesExtDataStorageService is not
+     * considered as source of truth after OTA. This flag should be enabled for OTA support of
+     * consent data on S devices.
+     */
+    boolean ENABLE_ADEXT_SERVICE_CONSENT_DATA = SDK_INT == Build.VERSION_CODES.R;
+
+    /**
+     * @return value of enable AdExt service consent data flag.
+     */
+    default boolean getEnableAdExtServiceConsentData() {
+        return ENABLE_ADEXT_SERVICE_CONSENT_DATA;
     }
 
     /*
@@ -2832,7 +2865,7 @@ public interface Flags {
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCES = true;
-    boolean MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH = true;
+    boolean MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH = false;
 
     /**
      * @return true if Measurement Delete Registrations API should require that the calling API is

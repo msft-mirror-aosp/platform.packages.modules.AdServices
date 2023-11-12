@@ -29,7 +29,6 @@ import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
 
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__UNLOAD_SDK;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED;
-import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX;
 import static com.android.server.sdksandbox.SdkSandboxStorageManager.StorageDirInfo;
 import static com.android.server.wm.ActivityInterceptorCallback.MAINLINE_SDK_SANDBOX_ORDER_ID;
 
@@ -506,11 +505,22 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                             return null;
                         }
                     }
-
-                    final String sandboxProcessName =
-                            this.mInjector
-                                    .getSdkSandboxServiceProvider()
-                                    .toSandboxProcessName(info.getCallingPackage());
+                    CallingInfo callingInfo =
+                            new CallingInfo(info.getCallingUid(), info.getCallingPackage());
+                    String sandboxProcessName = null;
+                    try {
+                        sandboxProcessName =
+                                this.mInjector
+                                        .getSdkSandboxServiceProvider()
+                                        .toSandboxProcessName(callingInfo);
+                    } catch (PackageManager.NameNotFoundException e) {
+                        Log.e(
+                                TAG,
+                                "registerSandboxActivityInterceptor failed for: "
+                                        + callingInfo.toString(),
+                                e);
+                        throw new SecurityException(e);
+                    }
                     final int sandboxUid = Process.toSdkSandboxUid(info.getCallingUid());
 
                     // Update process name and uid to match sandbox process for the calling app.
@@ -557,22 +567,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     @Override
     public void addSdkSandboxProcessDeathCallback(
             String callingPackageName,
-            long timeAppCalledSystemServer,
+            SandboxLatencyInfo sandboxLatencyInfo,
             ISdkSandboxProcessDeathCallback callback) {
-        final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
+        sandboxLatencyInfo.setTimeSystemServerReceivedCallFromApp(mInjector.getCurrentTime());
 
-        final int callingUid = Binder.getCallingUid();
         final CallingInfo callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
-
-        SdkSandboxStatsLog.write(
-                SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__ADD_SDK_SANDBOX_LIFECYCLE_CALLBACK,
-                /*latency=*/ (int)
-                        (timeSystemServerReceivedCallFromApp - timeAppCalledSystemServer),
-                /*success=*/ true,
-                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER,
-                callingUid);
-
         synchronized (mLock) {
             if (mSandboxLifecycleCallbacks.containsKey(callingInfo)) {
                 mSandboxLifecycleCallbacks.get(callingInfo).register(callback);
@@ -587,15 +586,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         // addSdkSandboxProcessDeathCallback() can be called without calling loadSdk(). Register for
         // app death to make sure cleanup occurs.
         registerForAppDeath(callingInfo, callback.asBinder());
-
-        SdkSandboxStatsLog.write(
-                SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__ADD_SDK_SANDBOX_LIFECYCLE_CALLBACK,
-                /*latency=*/ (int)
-                        (mInjector.getCurrentTime() - timeSystemServerReceivedCallFromApp),
-                /*success=*/ true,
-                SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
-                callingUid);
+        sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.getCurrentTime());
+        logLatencies(sandboxLatencyInfo);
     }
 
     // Register a handler for app death using any binder object originating from the app. Returns
@@ -624,23 +616,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     @Override
     public void removeSdkSandboxProcessDeathCallback(
             String callingPackageName,
-            long timeAppCalledSystemServer,
+            SandboxLatencyInfo sandboxLatencyInfo,
             ISdkSandboxProcessDeathCallback callback) {
-        final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
+        sandboxLatencyInfo.setTimeSystemServerReceivedCallFromApp(mInjector.getCurrentTime());
 
-        final int callingUid = Binder.getCallingUid();
         final CallingInfo callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
-
-        SdkSandboxStatsLog.write(
-                SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                SdkSandboxStatsLog
-                        .SANDBOX_API_CALLED__METHOD__REMOVE_SDK_SANDBOX_LIFECYCLE_CALLBACK,
-                /*latency=*/ (int)
-                        (timeSystemServerReceivedCallFromApp - timeAppCalledSystemServer),
-                /*success=*/ true,
-                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER,
-                callingUid);
-
         synchronized (mLock) {
             RemoteCallbackList<ISdkSandboxProcessDeathCallback> sandboxLifecycleCallbacks =
                     mSandboxLifecycleCallbacks.get(callingInfo);
@@ -648,15 +628,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 sandboxLifecycleCallbacks.unregister(callback);
             }
         }
-        SdkSandboxStatsLog.write(
-                SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                SdkSandboxStatsLog
-                        .SANDBOX_API_CALLED__METHOD__REMOVE_SDK_SANDBOX_LIFECYCLE_CALLBACK,
-                /*latency=*/ (int)
-                        (mInjector.getCurrentTime() - timeSystemServerReceivedCallFromApp),
-                /*success=*/ true,
-                SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
-                callingUid);
+        sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.getCurrentTime());
+        logLatencies(sandboxLatencyInfo);
     }
 
     @Override
@@ -1427,6 +1400,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             case SandboxLatencyInfo.METHOD_GET_APP_OWNED_SDK_SANDBOX_INTERFACES:
                 return SdkSandboxStatsLog
                         .SANDBOX_API_CALLED__METHOD__GET_APP_OWNED_SDK_SANDBOX_INTERFACES;
+            case SandboxLatencyInfo.METHOD_ADD_SDK_SANDBOX_LIFECYCLE_CALLBACK:
+                return SdkSandboxStatsLog
+                        .SANDBOX_API_CALLED__METHOD__ADD_SDK_SANDBOX_LIFECYCLE_CALLBACK;
+            case SandboxLatencyInfo.METHOD_REMOVE_SDK_SANDBOX_LIFECYCLE_CALLBACK:
+                return SdkSandboxStatsLog
+                        .SANDBOX_API_CALLED__METHOD__REMOVE_SDK_SANDBOX_LIFECYCLE_CALLBACK;
             default:
                 return SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__METHOD_UNSPECIFIED;
         }
@@ -1443,6 +1422,17 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     stage,
                     callingUid);
         }
+    }
+
+    @Override
+    public void logSandboxActivityEvent(int method, int callResult, int latencyMillis) {
+        SdkSandboxStatsLog.write(
+                SdkSandboxStatsLog.SANDBOX_ACTIVITY_EVENT_OCCURRED,
+                method,
+                callResult,
+                latencyMillis,
+                Binder.getCallingUid(),
+                /*sdkUid=*/ -1);
     }
 
     interface SandboxBindingCallback {
@@ -2182,7 +2172,16 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         // For T, we kill the sandbox by uid. For U, we kill a specific sandbox process.
         if (SdkLevel.isAtLeastU()) {
-            mServiceProvider.stopSandboxService(currentCallingInfo);
+            try {
+                mServiceProvider.stopSandboxService(currentCallingInfo);
+            } catch (PackageManager.NameNotFoundException e) {
+                // Just log the exception for the CallingUid for which package is not found to
+                // ensure other sandbox services are stopped
+                Log.e(
+                        TAG,
+                        "Failed to stop sandbox service for: " + currentCallingInfo.toString(),
+                        e);
+            }
         } else {
             // For apps with shared uid, unbind the sandboxes for all the remaining apps since we
             // kill the sandbox by uid.

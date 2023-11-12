@@ -35,6 +35,7 @@ public final class FlagsConstants {
     public static final int PPAPI_ONLY = 1;
     public static final int PPAPI_AND_SYSTEM_SERVER = 2;
     public static final int APPSEARCH_ONLY = 3;
+    public static final int PPAPI_AND_ADEXT_SERVICE = 4;
     public static final float ADID_REQUEST_PERMITS_PER_SECOND = 25;
 
     // **************************************************
@@ -923,6 +924,9 @@ public final class FlagsConstants {
     public static final String KEY_ENABLE_BACK_COMPAT = "enable_back_compat";
 
     public static final String KEY_ENABLE_APPSEARCH_CONSENT_DATA = "enable_appsearch_consent_data";
+
+    public static final String KEY_ENABLE_ADEXT_SERVICE_CONSENT_DATA =
+            "enable_adext_service_consent_data";
 
     // Whether to call trusted servers for off device ad selection.
     public static final String KEY_OFF_DEVICE_AD_SELECTION_ENABLED =

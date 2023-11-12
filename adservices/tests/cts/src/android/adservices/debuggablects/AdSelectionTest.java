@@ -32,6 +32,7 @@ import android.util.Log;
 
 import androidx.test.filters.FlakyTest;
 
+import com.android.adservices.common.RequiresAdIdAvailable;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Test;
@@ -274,6 +275,7 @@ public class AdSelectionTest extends FledgeScenarioTest {
     }
 
     /** Test that buyer and seller receive win and loss debug reports (Remarketing CUJ 164). */
+    @RequiresAdIdAvailable
     @FlakyTest(bugId = 300421625)
     @Test
     public void testAdSelection_withDebugReporting_happyPath() throws Exception {
@@ -327,6 +329,7 @@ public class AdSelectionTest extends FledgeScenarioTest {
      * Test that buyer and seller receive win and loss debug reports with reject reason (Remarketing
      * CUJ 170).
      */
+    @RequiresAdIdAvailable
     @FlakyTest(bugId = 301334790)
     @Test
     public void testAdSelection_withDebugReportingAndRejectReason_happyPath() throws Exception {
