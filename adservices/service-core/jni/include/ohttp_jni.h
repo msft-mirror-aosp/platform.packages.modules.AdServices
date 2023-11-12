@@ -95,6 +95,23 @@ Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeCtxSetupSenderWithSeed(
     jlong evpKdfRef, jlong evpAeadRef, jbyteArray publicKeyArray,
     jbyteArray infoArray, jbyteArray seedArray);
 
+
+/*
+ * Class:     OhttpJniWrapper
+ * Method:    hpkeCtxSetupReceiver
+ * Signature: (JJJ[B[B[B[B)[B
+ */
+JNIEXPORT jbyteArray JNICALL
+Java_com_android_adservices_ohttp_OhttpJniWrapper_gatewayDecrypt(
+    JNIEnv *env, jclass,
+    jlong evpKemRef,
+    jlong evpKdfRef,
+    jlong evpAeadRef,
+    jbyteArray privKeyArray,
+    jbyteArray encArray,
+    jbyteArray infoArray,
+    jbyteArray encryptedDataArray);
+
 /*
  * Class:     OhttpJniWrapper
  * Method:    hpkeCtxSeal

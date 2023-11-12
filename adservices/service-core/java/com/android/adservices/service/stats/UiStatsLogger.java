@@ -95,6 +95,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__ALREADY_ENROLLED_CHANNEL;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__CONSENT_NOTIFICATION_DEBUG_CHANNEL;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__FIRST_CONSENT_NOTIFICATION_CHANNEL;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__RVC_POST_OTA_NOTIFICATION_CHANNEL;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__RECONSENT_NOTIFICATION_CHANNEL;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__UNSPECIFIED_CHANNEL;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__UNSUPPORTED_CHANNEL;
@@ -122,6 +123,7 @@ import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.enrollment.collection.BetaUxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.enrollment.collection.GaUxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.enrollment.collection.RvcUxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.enrollment.collection.U18UxEnrollmentChannelCollection;
 
 /** Logger for UiStats. */
@@ -646,18 +648,23 @@ public class UiStatsLogger {
                 || enrollmentChannel
                         == BetaUxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL
                 || enrollmentChannel
-                        == U18UxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL) {
+                        == U18UxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL
+                || enrollmentChannel
+                        == RvcUxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL) {
             return AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__FIRST_CONSENT_NOTIFICATION_CHANNEL;
         } else if (enrollmentChannel
                         == GaUxEnrollmentChannelCollection.CONSENT_NOTIFICATION_DEBUG_CHANNEL
                 || enrollmentChannel
                         == BetaUxEnrollmentChannelCollection.CONSENT_NOTIFICATION_DEBUG_CHANNEL
                 || enrollmentChannel
-                        == U18UxEnrollmentChannelCollection.CONSENT_NOTIFICATION_DEBUG_CHANNEL) {
+                        == U18UxEnrollmentChannelCollection.CONSENT_NOTIFICATION_DEBUG_CHANNEL
+                || enrollmentChannel
+                        == RvcUxEnrollmentChannelCollection.CONSENT_NOTIFICATION_DEBUG_CHANNEL) {
             return AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__CONSENT_NOTIFICATION_DEBUG_CHANNEL;
         } else if (enrollmentChannel == GaUxEnrollmentChannelCollection.ALREADY_ENROLLED_CHANNEL
                 || enrollmentChannel == BetaUxEnrollmentChannelCollection.ALREADY_ENROLLED_CHANNEL
-                || enrollmentChannel == U18UxEnrollmentChannelCollection.ALREADY_ENROLLED_CHANNEL) {
+                || enrollmentChannel == U18UxEnrollmentChannelCollection.ALREADY_ENROLLED_CHANNEL
+                || enrollmentChannel == RvcUxEnrollmentChannelCollection.ALREADY_ENROLLED_CHANNEL) {
             return AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__ALREADY_ENROLLED_CHANNEL;
         } else if (enrollmentChannel
                 == GaUxEnrollmentChannelCollection.RECONSENT_NOTIFICATION_CHANNEL) {
@@ -666,6 +673,8 @@ public class UiStatsLogger {
             return AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__UNSPECIFIED_CHANNEL;
         } else if (enrollmentChannel == U18UxEnrollmentChannelCollection.U18_DETENTION_CHANNEL) {
             return AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__UNSPECIFIED_CHANNEL;
+        } else if (enrollmentChannel == GaUxEnrollmentChannelCollection.RVC_POST_OTA_CHANNEL) {
+            return AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__RVC_POST_OTA_NOTIFICATION_CHANNEL;
         }
         return AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__UNSUPPORTED_CHANNEL;
     }

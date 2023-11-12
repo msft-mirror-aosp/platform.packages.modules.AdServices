@@ -5075,6 +5075,11 @@ public final class PhFlags implements Flags {
                         + getEnableAppsearchConsentData());
         writer.println(
                 "\t"
+                        + FlagsConstants.KEY_ENABLE_ADEXT_SERVICE_CONSENT_DATA
+                        + " = "
+                        + getEnableAdExtServiceConsentData());
+        writer.println(
+                "\t"
                         + FlagsConstants.ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED
                         + " = "
                         + getAdservicesConsentMigrationLoggingEnabled());
@@ -5348,6 +5353,15 @@ public final class PhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA,
                 /* defaultValue */ ENABLE_APPSEARCH_CONSENT_DATA);
+    }
+
+    @Override
+    public boolean getEnableAdExtServiceConsentData() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_ENABLE_ADEXT_SERVICE_CONSENT_DATA,
+                /* defaultValue */ ENABLE_ADEXT_SERVICE_CONSENT_DATA);
     }
 
     @Override
