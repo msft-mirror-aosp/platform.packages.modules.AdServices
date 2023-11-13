@@ -2625,6 +2625,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getFledgeAuctionServerAdIdFetcherTimeoutMs() {
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS,
+                DEFAULT_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS);
+    }
+
+    @Override
     public boolean getFledgeAuctionServerAdRenderIdEnabled() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -4794,6 +4802,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING
                         + " = "
                         + getFledgeAuctionServerEnableDebugReporting());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS
+                        + " = "
+                        + getFledgeAuctionServerAdIdFetcherTimeoutMs());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION
