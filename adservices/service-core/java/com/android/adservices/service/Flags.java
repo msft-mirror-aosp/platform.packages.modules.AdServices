@@ -3156,8 +3156,10 @@ public interface Flags {
      *   <li>Consent per API (instead of aggregated one)
      *   <li>Separate page to control Measurement API
      * </ul>
+     *
+     * This flag is set default to true as beta deprecated.
      */
-    boolean GA_UX_FEATURE_ENABLED = false;
+    boolean GA_UX_FEATURE_ENABLED = true;
 
     /** Returns if the GA UX feature is enabled. */
     default boolean getGaUxFeatureEnabled() {
