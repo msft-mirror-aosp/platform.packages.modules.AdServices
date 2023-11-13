@@ -1710,6 +1710,13 @@ public interface Flags {
         return CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
     }
 
+    boolean CONSENT_NOTIFIED_DEBUG_MODE = false;
+
+    /** Returns whether to suppress consent notified state. */
+    default boolean getConsentNotifiedDebugMode() {
+        return CONSENT_NOTIFIED_DEBUG_MODE;
+    }
+
     boolean CONSENT_MANAGER_DEBUG_MODE = false;
 
     default boolean getConsentManagerDebugMode() {
@@ -2825,7 +2832,7 @@ public interface Flags {
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCES = true;
-    boolean MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH = true;
+    boolean MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH = false;
 
     /**
      * @return true if Measurement Delete Registrations API should require that the calling API is
