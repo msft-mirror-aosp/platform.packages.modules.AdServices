@@ -37,6 +37,7 @@ import androidx.test.filters.SmallTest;
 import com.android.adservices.MockRandom;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.data.topics.EncryptedTopic;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
@@ -57,6 +58,7 @@ import org.mockito.MockitoAnnotations;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -483,6 +485,71 @@ public final class EpochManagerTest {
                                     epoch, /* numberOfLookBackEpochs */ 1))
                     .isEmpty();
         }
+    }
+
+    @Test
+    public void testGarbageCollectOutdatedEpochData_encryptedTopicsTable() {
+        final long currentEpochId = 7L;
+        final int epochLookBackNumberForGarbageCollection = 3;
+
+        // Mock the flag to make test result deterministic
+        when(mMockFlag.getNumberOfEpochsToKeepInHistory())
+                .thenReturn(epochLookBackNumberForGarbageCollection);
+
+        EpochManager epochManager =
+                new EpochManager(
+                        mTopicsDao,
+                        mDbHelper,
+                        new Random(),
+                        mMockClassifier,
+                        mMockFlag,
+                        mMockClock,
+                        mClassifierManager);
+
+        final String app = "app";
+        final String sdk = "sdk";
+        final long epochId = 1L;
+        final int topicId = 1;
+        final int numberOfLookBackEpochs = 1;
+
+        Topic topic1 = Topic.create(topicId, TAXONOMY_VERSION, MODEL_VERSION);
+        EncryptedTopic encryptedTopic1 =
+                EncryptedTopic.create(
+                        topic1.toString().getBytes(StandardCharsets.UTF_8),
+                        "publicKey",
+                        "encapsulatedKey".getBytes(StandardCharsets.UTF_8));
+
+        // Handle ReturnedTopicContract
+        Map<Pair<String, String>, Topic> returnedAppSdkTopics = new HashMap<>();
+        returnedAppSdkTopics.put(Pair.create(app, sdk), topic1);
+
+        mTopicsDao.persistReturnedAppTopicsMap(epochId, returnedAppSdkTopics);
+        // Handle ReturnedEncryptedTopicContract
+        Map<Pair<String, String>, EncryptedTopic> encryptedTopics =
+                Map.of(Pair.create(app, sdk), encryptedTopic1);
+
+        mTopicsDao.persistReturnedAppEncryptedTopicsMap(epochId, encryptedTopics);
+
+        // When db flag is off for version 9.
+        when(mMockFlag.getEnableDatabaseSchemaVersion9()).thenReturn(false);
+        epochManager.garbageCollectOutdatedEpochData(7);
+        // Unencrypted table is cleared.
+        assertThat(mTopicsDao.retrieveReturnedTopics(epochId, numberOfLookBackEpochs)).isEmpty();
+        // Encrypted table is not cleared.
+        assertThat(
+                        mTopicsDao
+                                .retrieveReturnedEncryptedTopics(epochId, numberOfLookBackEpochs)
+                                .get(epochId))
+                .isEqualTo(encryptedTopics);
+
+        // When db flag is on for version 9.
+        when(mMockFlag.getEnableDatabaseSchemaVersion9()).thenReturn(true);
+        epochManager.garbageCollectOutdatedEpochData(currentEpochId);
+        // Unencrypted table is cleared.
+        assertThat(mTopicsDao.retrieveReturnedTopics(epochId, numberOfLookBackEpochs)).isEmpty();
+        // Encrypted table is cleared.
+        assertThat(mTopicsDao.retrieveReturnedEncryptedTopics(epochId, numberOfLookBackEpochs))
+                .isEmpty();
     }
 
     @Test
