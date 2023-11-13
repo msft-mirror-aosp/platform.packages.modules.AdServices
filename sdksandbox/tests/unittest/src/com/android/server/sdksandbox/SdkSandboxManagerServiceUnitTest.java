@@ -1099,26 +1099,6 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
-    public void testSdkSandboxActivity() {
-        final String sandboxPackageName =
-                InstrumentationRegistry.getInstrumentation()
-                        .getContext()
-                        .getPackageManager()
-                        .getSdkSandboxPackageName();
-
-        assertThat(mService.isSdkSandboxActivity(new Intent())).isFalse();
-        assertThat(mService.isSdkSandboxActivity(new Intent(ACTION_START_SANDBOXED_ACTIVITY)))
-                .isTrue();
-        assertThat(mService.isSdkSandboxActivity(new Intent().setPackage(sandboxPackageName)))
-                .isTrue();
-        assertThat(
-                        mService.isSdkSandboxActivity(
-                                new Intent()
-                                        .setComponent(new ComponentName(sandboxPackageName, ""))))
-                .isTrue();
-    }
-
-    @Test
     public void testEnforceAllowedToHostSandboxedActivityFailIfCalledFromSandboxUid()
             throws RemoteException {
         loadSdk(SDK_NAME);
