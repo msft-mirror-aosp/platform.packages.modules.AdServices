@@ -64,6 +64,7 @@ import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -433,7 +434,12 @@ public class DebugReportingFallbackJobServiceTest {
         // Validate
         assertFalse(result);
         // Allow background thread to execute
+        // TODO (b/298021244): replace sleep() with a better approach
         Thread.sleep(WAIT_IN_MILLIS);
+        if (!SdkLevel.isAtLeastT()) {
+            // Additional sleep for S- test flakiness
+            Thread.sleep(WAIT_IN_MILLIS);
+        }
         verify(mSpyService, times(1)).jobFinished(any(), eq(false));
         verify(mMockJobScheduler, times(1)).cancel(eq(MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID));
     }
@@ -450,7 +456,13 @@ public class DebugReportingFallbackJobServiceTest {
         // Validate
         assertTrue(result);
         // Allow background thread to execute
+        // TODO (b/298021244): replace sleep() with a better approach
         Thread.sleep(WAIT_IN_MILLIS);
+        if (!SdkLevel.isAtLeastT()) {
+            // Additional sleep for S- test flakiness
+            Thread.sleep(WAIT_IN_MILLIS);
+        }
+
         verify(mSpyService, times(1)).jobFinished(any(), anyBoolean());
         verify(mMockJobScheduler, never()).cancel(eq(MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID));
     }
