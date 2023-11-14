@@ -62,6 +62,7 @@ import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -446,7 +447,13 @@ public class AttributionJobServiceTest {
         // Validate
         assertFalse(result);
         // Allow background thread to execute
+        // TODO (b/298021244): replace sleep() with a better approach
         Thread.sleep(WAIT_IN_MILLIS);
+        if (!SdkLevel.isAtLeastT()) {
+            // Additional sleep for S- test flakiness
+            Thread.sleep(WAIT_IN_MILLIS);
+        }
+
         verify(mMockDatastoreManager, never()).runInTransactionWithResult(any());
         verify(mSpyService, times(1)).jobFinished(any(), eq(false));
         ExtendedMockito.verify(
@@ -467,7 +474,12 @@ public class AttributionJobServiceTest {
         // Validate
         assertTrue(result);
         // Allow background thread to execute
+        // TODO (b/298021244): replace sleep() with a better approach
         Thread.sleep(WAIT_IN_MILLIS);
+        if (!SdkLevel.isAtLeastT()) {
+            // Additional sleep for S- test flakiness
+            Thread.sleep(WAIT_IN_MILLIS);
+        }
         verify(mMockDatastoreManager, times(1)).runInTransactionWithResult(any());
         verify(mSpyService, times(1)).jobFinished(any(), anyBoolean());
         ExtendedMockito.verify(
