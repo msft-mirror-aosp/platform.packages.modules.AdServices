@@ -404,11 +404,7 @@ public class FledgeE2ETest {
                         .getAdSelectionDebugReportDao();
         mMockAdIdWorker = new MockAdIdWorker(new AdIdCacheManager(CONTEXT_SPY));
         mAdIdFetcher =
-                new AdIdFetcher(
-                        mMockAdIdWorker,
-                        mLightweightExecutorService,
-                        mScheduledExecutor,
-                        DEFAULT_FLAGS);
+                new AdIdFetcher(mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor);
         initClients(false, true, false, false);
 
         mRequestMatcherPrefixMatch = (a, b) -> !b.isEmpty() && a.startsWith(b);
@@ -4377,8 +4373,7 @@ public class FledgeE2ETest {
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, flags);
         mAdIdFetcher =
-                new AdIdFetcher(
-                        mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor, flags);
+                new AdIdFetcher(mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor);
         // Create an instance of AdSelection Service with real dependencies
         mAdSelectionService =
                 new AdSelectionServiceImpl(
