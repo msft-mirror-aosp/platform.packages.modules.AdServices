@@ -462,10 +462,6 @@ public class ConsentManager {
      *     revoked.
      */
     public AdServicesApiConsent getConsent(AdServicesApiType apiType) {
-        if (!mFlags.getGaUxFeatureEnabled()) {
-            throw new IllegalStateException("GA UX feature is disabled.");
-        }
-
         if (mFlags.getConsentManagerDebugMode()) {
             return AdServicesApiConsent.GIVEN;
         }
@@ -761,13 +757,7 @@ public class ConsentManager {
      */
     public boolean isFledgeConsentRevokedForApp(@NonNull String packageName)
             throws IllegalArgumentException {
-        // TODO(b/238464639): Implement API-specific consent for FLEDGE
-        AdServicesApiConsent consent;
-        if (!mFlags.getGaUxFeatureEnabled()) {
-            consent = getConsent();
-        } else {
-            consent = getConsent(AdServicesApiType.FLEDGE);
-        }
+        AdServicesApiConsent consent = getConsent(AdServicesApiType.FLEDGE);
 
         if (!consent.isGiven()) {
             return true;
@@ -824,13 +814,7 @@ public class ConsentManager {
      */
     public boolean isFledgeConsentRevokedForAppAfterSettingFledgeUse(@NonNull String packageName)
             throws IllegalArgumentException {
-        // TODO(b/238464639): Implement API-specific consent for FLEDGE
-        AdServicesApiConsent consent;
-        if (!mFlags.getGaUxFeatureEnabled()) {
-            consent = getConsent();
-        } else {
-            consent = getConsent(AdServicesApiType.FLEDGE);
-        }
+        AdServicesApiConsent consent = getConsent(AdServicesApiType.FLEDGE);
 
         if (!consent.isGiven()) {
             return true;
