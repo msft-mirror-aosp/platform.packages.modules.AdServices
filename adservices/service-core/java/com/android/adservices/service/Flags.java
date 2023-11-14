@@ -20,18 +20,14 @@ import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREG
 import static android.os.Build.VERSION.SDK_INT;
 
 import android.annotation.IntDef;
-import android.annotation.NonNull;
 import android.app.job.JobInfo;
 import android.os.Build;
-
-import androidx.annotation.Nullable;
 
 import com.android.adservices.cobalt.CobaltConstants;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
 
-import java.io.PrintWriter;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.HashMap;
@@ -44,7 +40,7 @@ import java.util.concurrent.TimeUnit;
  * migrate to Flag Codegen in the future. With that migration, the Flags.java file will be generated
  * from the GCL.
  */
-public interface Flags {
+public interface Flags extends CommonFlags {
     /** Topics Epoch Job Period. */
     long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
 
@@ -1633,9 +1629,6 @@ public interface Flags {
     default boolean getAdServicesErrorLoggingEnabled() {
         return ADSERVICES_ERROR_LOGGING_ENABLED;
     }
-
-    /** Dump some debug info for the flags */
-    default void dump(@NonNull PrintWriter writer, @Nullable String[] args) {}
 
     /**
      * The number of epoch to look back to do garbage collection for old epoch data. Assume current
