@@ -488,7 +488,7 @@ public class SdkSandboxTest {
         SANDBOX_LATENCY_INFO.setTimeSandboxReceivedCallFromSystemServer(
                 TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER);
 
-        Mockito.when(mInjector.getCurrentTime())
+        Mockito.when(mInjector.elapsedRealtime())
                 .thenReturn(
                         TIME_SANDBOX_CALLED_SDK,
                         TIME_SDK_CALL_COMPLETED,
@@ -531,7 +531,7 @@ public class SdkSandboxTest {
         SANDBOX_LATENCY_INFO.setTimeSandboxReceivedCallFromSystemServer(
                 TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER);
 
-        Mockito.when(mInjector.getCurrentTime())
+        Mockito.when(mInjector.elapsedRealtime())
                 .thenReturn(
                         // loadSdk mocks
                         TIME_SANDBOX_CALLED_SDK,
@@ -581,7 +581,7 @@ public class SdkSandboxTest {
 
     @Test
     public void testLatencyMetrics_requestSurfacePackage_success() throws Exception {
-        Mockito.when(mInjector.getCurrentTime())
+        Mockito.when(mInjector.elapsedRealtime())
                 .thenReturn(
                         // loadSdk mocks
                         TIME_SANDBOX_CALLED_SDK,
@@ -658,7 +658,7 @@ public class SdkSandboxTest {
                         null,
                         null,
                         false),
-                new InjectorForTest(mContext),
+                new SdkSandboxServiceImpl.Injector(mContext),
                 SANDBOX_LATENCY_INFO,
                 sdkHolderCallback);
         mCallback.assertLoadSdkIsSuccessful();
