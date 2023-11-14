@@ -1382,6 +1382,18 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 sandboxLatencyInfo.isSuccessfulAtSystemServerToApp(),
                 SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_APP,
                 callingUid);
+
+        int totalCallStage = SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__TOTAL;
+        if (method == SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK
+                && sandboxLatencyInfo.getLoadSandboxLatency() != -1) {
+            totalCallStage = SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__TOTAL_WITH_LOAD_SANDBOX;
+        }
+        logLatencyForStage(
+                method,
+                sandboxLatencyInfo.getTotalCallLatency(),
+                sandboxLatencyInfo.isTotalCallSuccessful(),
+                totalCallStage,
+                callingUid);
     }
 
     private int convertToStatsLogMethodCode(int method) {
