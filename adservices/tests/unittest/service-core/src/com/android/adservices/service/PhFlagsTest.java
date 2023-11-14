@@ -9679,6 +9679,40 @@ public class PhFlagsTest {
     }
 
     @Test
+    public void testGetMeasurementNullAggregateReportEnabled() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getMeasurementNullAggregateReportEnabled())
+                .isEqualTo(Flags.MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED);
+
+        boolean phOverridingValue = !Flags.MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getMeasurementNullAggregateReportEnabled())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetMeasurementNullAggregateReportRateIncludingSourceRegistrationTime() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getMeasurementNullAggReportRateInclSourceRegistrationTime())
+                .isEqualTo(Flags.MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME);
+
+        float phOverridingValue = .5f;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME,
+                Double.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getMeasurementNullAggReportRateInclSourceRegistrationTime())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
     public void testGetEnableAdservicesApiEnabled() {
         assertThat(mPhFlags.getEnableAdservicesApiEnabled())
                 .isEqualTo(DEFAULT_ENABLE_ADSERVICES_API_ENABLED);

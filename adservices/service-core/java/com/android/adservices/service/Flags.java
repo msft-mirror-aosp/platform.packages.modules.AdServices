@@ -1230,7 +1230,9 @@ public interface Flags extends CommonFlags {
 
     boolean FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED = false;
 
-    /** @return whether to call trusted servers for off device ad selection. */
+    /**
+     * @return whether to call trusted servers for off device ad selection.
+     */
     default boolean getAdSelectionOffDeviceEnabled() {
         return FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED;
     }
@@ -3855,6 +3857,24 @@ public interface Flags extends CommonFlags {
      */
     default boolean getMeasurementAggregateFallbackReportingJobPersisted() {
         return MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED;
+    }
+
+    /** Default value for Null Aggregate Report feature flag. */
+    boolean MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED = false;
+
+    /** Null Aggregate Report feature flag. */
+    default boolean getMeasurementNullAggregateReportEnabled() {
+        return MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED;
+    }
+
+    float MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME = .008f;
+
+    /**
+     * Returns the rate at which null aggregate reports are generated whenever an actual aggregate
+     * report is successfully generated.
+     */
+    default float getMeasurementNullAggReportRateInclSourceRegistrationTime() {
+        return MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME;
     }
 
     /** Default U18 UX feature flag.. */

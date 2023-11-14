@@ -443,6 +443,10 @@ class AttributionJobHandler {
             }
             AggregateReport aggregateReport = aggregateReportBuilder.build();
 
+            if (mFlags.getMeasurementNullAggregateReportEnabled()) {
+                generateNullAggregateReports(trigger, aggregateReport, measurementDao);
+            }
+
             finalizeAggregateReportCreation(
                     source, aggregateDeduplicationKeyOptional, aggregateReport, measurementDao);
             incrementAggregateReportCountBy(attributionStatus, 1);
@@ -460,6 +464,52 @@ class AttributionJobHandler {
                                     + " parse aggregate fields.");
             return TriggeringStatus.DROPPED;
         }
+    }
+
+    private void generateNullAggregateReports(
+            Trigger trigger, AggregateReport aggregateReport, IMeasurementDao measurementDao)
+            throws DatastoreException, JSONException {
+        long maxSourceExpiry =
+                mFlags.getMeasurementMaxReportingRegisterSourceExpirationInSeconds()
+                        * TimeUnit.SECONDS.toMillis(1);
+        maxSourceExpiry = roundDownToDay(maxSourceExpiry);
+        long roundedAttributedSourceTime =
+                roundDownToDay(aggregateReport.getSourceRegistrationTime());
+        float nullRate = mFlags.getMeasurementNullAggReportRateInclSourceRegistrationTime();
+        for (long daysInMillis = 0L;
+                daysInMillis <= maxSourceExpiry;
+                daysInMillis += TimeUnit.DAYS.toMillis(1)) {
+            long fakeSourceTime = trigger.getTriggerTime() - daysInMillis;
+            if (roundDownToDay(fakeSourceTime) == roundedAttributedSourceTime) {
+                continue;
+            }
+
+            if (Math.random() < nullRate) {
+                AggregateReport nullReport = getNullAggregateReport(trigger, fakeSourceTime);
+                measurementDao.insertAggregateReport(nullReport);
+            }
+        }
+    }
+
+    private AggregateReport getNullAggregateReport(Trigger trigger, long sourceTime)
+            throws JSONException {
+        AggregateReport.Builder nullReportBuilder =
+                new AggregateReport.Builder()
+                        .getNullAggregateReportBuilder(
+                                trigger, sourceTime, getAggregateReportDelay(), API_VERSION);
+
+        if (mFlags.getMeasurementEnableAggregatableReportPayloadPadding()) {
+            AggregateHistogramContribution paddingContribution =
+                    new AggregateHistogramContribution.Builder().setPaddingContribution().build();
+            List<AggregateHistogramContribution> contributions = new ArrayList<>();
+            contributions.add(paddingContribution);
+            AggregatePayloadGenerator generator = new AggregatePayloadGenerator(mFlags);
+            generator.padContributions(contributions, paddingContribution);
+            nullReportBuilder.setDebugCleartextPayload(
+                    AggregateReport.generateDebugPayload(contributions));
+        }
+
+        return nullReportBuilder.build();
     }
 
     private Optional<Pair<Source, List<Source>>> selectSourceToAttribute(

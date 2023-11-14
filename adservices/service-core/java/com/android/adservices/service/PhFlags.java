@@ -3808,6 +3808,17 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getMeasurementAggregateFallbackReportingJobPeriodMs());
         writer.println(
                 "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED
+                        + " = "
+                        + getMeasurementNullAggregateReportEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants
+                                .KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME
+                        + " = "
+                        + getMeasurementNullAggReportRateInclSourceRegistrationTime());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS
                         + " = "
                         + getMeasurementNetworkConnectTimeoutMs());
@@ -6248,6 +6259,25 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT,
                 /* defaultValue */ Flags.APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT);
+    }
+
+    @Override
+    public boolean getMeasurementNullAggregateReportEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED,
+                /* defaultValue */
+                MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED);
+    }
+
+    @Override
+    public float getMeasurementNullAggReportRateInclSourceRegistrationTime() {
+        return DeviceConfig.getFloat(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME,
+                /* defaultValue */
+                MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME);
     }
 
     @Override
