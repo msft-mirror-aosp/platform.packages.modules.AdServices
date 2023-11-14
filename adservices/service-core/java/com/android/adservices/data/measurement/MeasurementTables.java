@@ -239,6 +239,7 @@ public final class MeasurementTables {
         String DEDUP_KEY = "dedup_key";
         String REGISTRATION_ORIGIN = "registration_origin";
         String AGGREGATION_COORDINATOR_ORIGIN = "aggregation_coordinator_origin";
+        String IS_FAKE_REPORT = "is_fake_report";
     }
 
     /** Contract for aggregate encryption key. */
@@ -913,6 +914,8 @@ public final class MeasurementTables {
                     + " TEXT, "
                     + AggregateReport.AGGREGATION_COORDINATOR_ORIGIN
                     + " TEXT, "
+                    + AggregateReport.IS_FAKE_REPORT
+                    + " INTEGER, "
                     + "FOREIGN KEY ("
                     + AggregateReport.SOURCE_ID
                     + ") REFERENCES "
