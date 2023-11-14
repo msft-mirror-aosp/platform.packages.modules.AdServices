@@ -85,6 +85,7 @@ public interface IConsentStorage {
      *     revoked
      * @throws IOException if the operation fails
      */
+    @NonNull
     ImmutableList<String> getAppsWithRevokedConsent() throws IOException;
 
     /**
@@ -96,7 +97,8 @@ public interface IConsentStorage {
      * @return AdServicesApiConsent the consent
      * @throws IOException if the operation fails
      */
-    AdServicesApiConsent getConsent(AdServicesApiType apiType) throws IOException;
+    @NonNull
+    AdServicesApiConsent getConsent(@NonNull AdServicesApiType apiType) throws IOException;
 
     /**
      * Get the current privacy sandbox feature.
@@ -107,10 +109,12 @@ public interface IConsentStorage {
      * @return PrivacySandboxFeatureType privacy sandbox feature
      * @throws IOException if the operation fails
      */
+    @NonNull
     PrivacySandboxFeatureType getCurrentPrivacySandboxFeature() throws IOException;
 
     /** Set the current privacy sandbox feature. */
-    void setCurrentPrivacySandboxFeature(PrivacySandboxFeatureType featureType) throws IOException;
+    void setCurrentPrivacySandboxFeature(@NonNull PrivacySandboxFeatureType featureType)
+            throws IOException;
 
     /**
      * Retrieves the default AdId state.
@@ -124,15 +128,19 @@ public interface IConsentStorage {
      *
      * @return AdServicesApiConsent.
      */
+    @NonNull
     AdServicesApiConsent getDefaultConsent(AdServicesApiType apiType) throws IOException;
 
     /** Returns current enrollment channel. */
-    PrivacySandboxEnrollmentChannelCollection getEnrollmentChannel(PrivacySandboxUxCollection ux);
+    @NonNull
+    PrivacySandboxEnrollmentChannelCollection getEnrollmentChannel(
+            @NonNull PrivacySandboxUxCollection ux);
 
     /**
      * @return an {@link ImmutableList} of all known apps in the database that have not had user
      *     consent revoked
      */
+    @NonNull
     ImmutableList<String> getKnownAppsWithConsent() throws IOException;
 
     /**
@@ -143,6 +151,7 @@ public interface IConsentStorage {
     int getUserManualInteractionWithConsent() throws IOException;
 
     /** Returns current UX. */
+    @NonNull
     PrivacySandboxUxCollection getUx();
 
     /** Set the current UX to storage. */
@@ -160,12 +169,6 @@ public interface IConsentStorage {
     /** Set the AdultAccount bit to storage. */
     void setAdultAccount(boolean isAdultAccount) throws IOException;
 
-    /** Returns whether the isEntryPointEnabled bit is true. */
-    boolean isEntryPointEnabled();
-
-    /** Set the EntryPointEnabled bit to storage . */
-    void setEntryPointEnabled(boolean isEntryPointEnabled) throws IOException;
-
     /**
      * Returns whether a given application (identified by package name) has had user consent
      * revoked.
@@ -178,32 +181,17 @@ public interface IConsentStorage {
      */
     boolean isConsentRevokedForApp(@NonNull String packageName) throws IllegalArgumentException;
 
+    /** Returns whether the isEntryPointEnabled bit is true. */
+    boolean isEntryPointEnabled();
+
+    /** Set the EntryPointEnabled bit to storage . */
+    void setEntryPointEnabled(boolean isEntryPointEnabled) throws IOException;
+
     /** Returns whether the isU18Account bit is true. */
     boolean isU18Account();
 
     /** Set the U18Account bit to storage. */
     void setU18Account(boolean isU18Account) throws IOException;
-
-    /** Saves the default AdId state bit to data stores based on source of truth. */
-    void recordDefaultAdIdState(boolean defaultAdIdState) throws IOException;
-
-    /** Saves the PP API default consent of a user. */
-    void recordDefaultConsent(AdServicesApiType apiType, boolean defaultConsent) throws IOException;
-
-    /**
-     * Saves information to the storage that GA UX notification was displayed for the first time to
-     * the user.
-     */
-    void recordGaUxNotificationDisplayed(boolean wasGaUxDisplayed) throws IOException;
-
-    /**
-     * Saves information to the storage that notification was displayed for the first time to the
-     * user.
-     */
-    void recordNotificationDisplayed(boolean wasNotificationDisplayed) throws IOException;
-
-    /** Saves information to the storage that user interacted with consent manually. */
-    void recordUserManualInteractionWithConsent(int interaction) throws IOException;
 
     /**
      * Sets the consent for this user ID for this API type in AppSearch. If we do not get
@@ -212,7 +200,7 @@ public interface IConsentStorage {
      *
      * @throws IOException if the operation fails
      */
-    void setConsent(AdServicesApiType apiType, boolean isGiven) throws IOException;
+    void setConsent(@NonNull AdServicesApiType apiType, boolean isGiven) throws IOException;
 
     /**
      * Sets consent for a given installed application, identified by package name.
@@ -239,10 +227,33 @@ public interface IConsentStorage {
 
     /** Set the current enrollment channel to storage. */
     void setEnrollmentChannel(
-            PrivacySandboxUxCollection ux, PrivacySandboxEnrollmentChannelCollection channel);
+            @NonNull PrivacySandboxUxCollection ux,
+            @NonNull PrivacySandboxEnrollmentChannelCollection channel);
 
     /** Set the U18NotificationDisplayed bit to storage. */
     void setU18NotificationDisplayed(boolean wasU18NotificationDisplayed) throws IOException;
+
+    /** Saves the default AdId state bit to data stores based on source of truth. */
+    void recordDefaultAdIdState(boolean defaultAdIdState) throws IOException;
+
+    /** Saves the PP API default consent of a user. */
+    void recordDefaultConsent(@NonNull AdServicesApiType apiType, boolean defaultConsent)
+            throws IOException;
+
+    /**
+     * Saves information to the storage that GA UX notification was displayed for the first time to
+     * the user.
+     */
+    void recordGaUxNotificationDisplayed(boolean wasGaUxDisplayed) throws IOException;
+
+    /**
+     * Saves information to the storage that notification was displayed for the first time to the
+     * user.
+     */
+    void recordNotificationDisplayed(boolean wasNotificationDisplayed) throws IOException;
+
+    /** Saves information to the storage that user interacted with consent manually. */
+    void recordUserManualInteractionWithConsent(int interaction) throws IOException;
 
     /**
      * Retrieves if GA UX notification has been displayed.

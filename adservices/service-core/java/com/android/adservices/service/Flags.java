@@ -3156,8 +3156,10 @@ public interface Flags {
      *   <li>Consent per API (instead of aggregated one)
      *   <li>Separate page to control Measurement API
      * </ul>
+     *
+     * This flag is set default to true as beta deprecated.
      */
-    boolean GA_UX_FEATURE_ENABLED = false;
+    boolean GA_UX_FEATURE_ENABLED = true;
 
     /** Returns if the GA UX feature is enabled. */
     default boolean getGaUxFeatureEnabled() {
@@ -4140,6 +4142,16 @@ public interface Flags {
     /** @return if to enable database schema version 8. */
     default boolean getEnableDatabaseSchemaVersion8() {
         return ENABLE_DATABASE_SCHEMA_VERSION_8;
+    }
+
+    /** Whether to enable database schema version 9. */
+    boolean ENABLE_DATABASE_SCHEMA_VERSION_9 = false;
+
+    /**
+     * @return if to enable database schema version 9.
+     */
+    default boolean getEnableDatabaseSchemaVersion9() {
+        return ENABLE_DATABASE_SCHEMA_VERSION_9;
     }
 
     /** Flag to control which allow list in getMeasurementApiStatus. */

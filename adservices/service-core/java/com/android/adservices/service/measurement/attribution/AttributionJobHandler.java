@@ -604,15 +604,6 @@ class AttributionJobHandler {
             return TriggeringStatus.DROPPED;
         }
 
-        if (mEventReportWindowCalcDelegate.getReportingTime(
-                                source, trigger.getTriggerTime(), trigger.getDestinationType())
-                        == -1
-                && (source.getTriggerSpecs() == null || source.getTriggerSpecs().isEmpty())) {
-            mDebugReportApi.scheduleTriggerDebugReport(
-                    source, trigger, null, measurementDao, Type.TRIGGER_EVENT_REPORT_WINDOW_PASSED);
-            return TriggeringStatus.DROPPED;
-        }
-
         Optional<EventTrigger> matchingEventTrigger =
                 findFirstMatchingEventTrigger(source, trigger, measurementDao);
         if (!matchingEventTrigger.isPresent()) {
@@ -645,6 +636,15 @@ class AttributionJobHandler {
                         Type.TRIGGER_EVENT_DEDUPLICATED);
                 return TriggeringStatus.DROPPED;
             }
+        }
+
+        if (mEventReportWindowCalcDelegate.getReportingTime(
+                                source, trigger.getTriggerTime(), trigger.getDestinationType())
+                        == -1
+                && (source.getTriggerSpecs() == null || source.getTriggerSpecs().isEmpty())) {
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source, trigger, null, measurementDao, Type.TRIGGER_EVENT_REPORT_WINDOW_PASSED);
+            return TriggeringStatus.DROPPED;
         }
 
         int numReports =
