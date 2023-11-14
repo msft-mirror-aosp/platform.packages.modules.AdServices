@@ -112,6 +112,8 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.DBAdDataFixture;
+import com.android.adservices.common.SupportedByConditionRule;
+import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
@@ -140,7 +142,6 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
-import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -155,8 +156,8 @@ import com.google.common.util.concurrent.Futures;
 
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -284,13 +285,19 @@ public class OnDeviceAdSelectionRunnerTest {
 
     @Mock AdSelectionServiceFilter mAdSelectionServiceFilterMock;
 
+    // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
+    // availability depends on an external component (the system webview) being higher than a
+    // certain minimum version.
+    @Rule(order = 0)
+    public final SupportedByConditionRule webViewSupportsJSSandbox =
+            WebViewSupportUtil.createJSSandboxAvailableRule();
+
+    @Rule(order = 1)
+    public final SupportedByConditionRule webViewSupportsConfigurableHeapSize =
+            WebViewSupportUtil.createJSSandboxConfigurableHeapSizeRule(mContextSpy);
+
     @Before
     public void setUp() {
-        // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
-        // availability depends on an external component (the system webview) being higher than a
-        // certain minimum version. Marking that as an assumption that the test is making.
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
-
         // Initializing up here so object is spied
         mAdSelectionEntryDaoSpy =
                 Room.inMemoryDatabaseBuilder(mContextSpy, AdSelectionDatabase.class)
