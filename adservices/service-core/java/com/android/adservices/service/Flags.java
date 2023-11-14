@@ -1586,6 +1586,20 @@ public interface Flags {
         return FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING;
     }
 
+    long DEFAULT_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS = 20;
+
+    /**
+     * Returns configured timeout value for {@link
+     * com.android.adservices.service.adselection.AdIdFetcher} logic for server auctions.
+     *
+     * <p>The intended goal is to override this value for tests.
+     *
+     * @return Timeout in mills.
+     */
+    default long getFledgeAuctionServerAdIdFetcherTimeoutMs() {
+        return DEFAULT_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS;
+    }
+
     boolean FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED = false;
     long FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH = 12L;
 

@@ -637,6 +637,8 @@ public final class FlagsConstants {
             "fledge_auction_server_payload_format_version";
     public static final String KEY_FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING =
             "fledge_auction_server_enable_debug_reporting";
+    public static final String KEY_FLEDGE_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS =
+            "fledge_auction_server_ad_id_fetcher_timeout_ms";
     public static final String KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH =
             "fledge_auction_server_ad_render_id_max_length";
     public static final String KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED =
