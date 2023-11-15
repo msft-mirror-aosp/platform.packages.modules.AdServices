@@ -45,12 +45,14 @@ import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.common.BackgroundJobsManager;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
+import com.android.adservices.shared.testing.common.ApplicationContextSingletonRule;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -77,6 +79,9 @@ public class NotificationActivityUiAutomatorTest {
     // TODO(b/261216850): Migrate this NotificationActivity to non-mock test
     @Mock private Flags mMockFlags;
     @Mock private UxStatesManager mUxStatesManager;
+
+    @Rule
+    public final ApplicationContextSingletonRule appContext = new ApplicationContextSingletonRule();
 
     @Before
     public void setup() throws UiObjectNotFoundException, IOException {
