@@ -1586,6 +1586,20 @@ public interface Flags {
         return FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING;
     }
 
+    long DEFAULT_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS = 20;
+
+    /**
+     * Returns configured timeout value for {@link
+     * com.android.adservices.service.adselection.AdIdFetcher} logic for server auctions.
+     *
+     * <p>The intended goal is to override this value for tests.
+     *
+     * @return Timeout in mills.
+     */
+    default long getFledgeAuctionServerAdIdFetcherTimeoutMs() {
+        return DEFAULT_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS;
+    }
+
     boolean FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED = false;
     long FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH = 12L;
 
@@ -3156,8 +3170,10 @@ public interface Flags {
      *   <li>Consent per API (instead of aggregated one)
      *   <li>Separate page to control Measurement API
      * </ul>
+     *
+     * This flag is set default to true as beta deprecated.
      */
-    boolean GA_UX_FEATURE_ENABLED = false;
+    boolean GA_UX_FEATURE_ENABLED = true;
 
     /** Returns if the GA UX feature is enabled. */
     default boolean getGaUxFeatureEnabled() {
@@ -4140,6 +4156,16 @@ public interface Flags {
     /** @return if to enable database schema version 8. */
     default boolean getEnableDatabaseSchemaVersion8() {
         return ENABLE_DATABASE_SCHEMA_VERSION_8;
+    }
+
+    /** Whether to enable database schema version 9. */
+    boolean ENABLE_DATABASE_SCHEMA_VERSION_9 = false;
+
+    /**
+     * @return if to enable database schema version 9.
+     */
+    default boolean getEnableDatabaseSchemaVersion9() {
+        return ENABLE_DATABASE_SCHEMA_VERSION_9;
     }
 
     /** Flag to control which allow list in getMeasurementApiStatus. */

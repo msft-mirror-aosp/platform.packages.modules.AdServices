@@ -296,6 +296,10 @@ public class TopicsWorker {
         // Here we use Write lock to block Read during that computation time.
         mReadWriteLock.writeLock().lock();
         try {
+            // Do not clear encrypted topics table if the v9 db flag has not been ramped up.
+            if (!mFlags.getEnableDatabaseSchemaVersion9()) {
+                tablesToExclude.add(TopicsTables.ReturnedEncryptedTopicContract.TABLE);
+            }
             mCacheManager.clearAllTopicsData(tablesToExclude);
 
             // If clearing all Topics data, clear preserved blocked topics in system server.

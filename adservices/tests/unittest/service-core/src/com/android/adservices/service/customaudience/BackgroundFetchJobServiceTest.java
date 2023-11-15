@@ -268,7 +268,9 @@ public class BackgroundFetchJobServiceTest {
             throws ExecutionException, InterruptedException, TimeoutException {
         doReturn(mFlagsWithCustomAudienceServiceKillSwitchOff).when(FlagsFactory::getFlags);
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManagerMock)
+                .getConsent(AdServicesApiType.FLEDGE);
         doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
         doReturn(FluentFuture.from(immediateFuture(null)))
                 .when(mBgFWorkerMock)
@@ -630,6 +632,9 @@ public class BackgroundFetchJobServiceTest {
 
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManagerMock)
+                .getConsent(AdServicesApiType.FLEDGE);
         doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
         doReturn(FluentFuture.from(immediateFailedFuture(new TimeoutException("testing timeout"))))
                 .when(mBgFWorkerMock)

@@ -345,7 +345,10 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
         assertThat(processDump).contains(APP_PACKAGE + '\n');
         assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
 
-        int initialSandboxOomScoreAdj = getOomScoreAdj(SANDBOX_1_PROCESS_NAME);
+        int sandboxOomScoreAdj1 = getOomScoreAdj(SANDBOX_1_PROCESS_NAME);
+        int appOomScoreAdj1 = getOomScoreAdj(APP_PACKAGE);
+        // Verify that the sandbox process has lower priority than the app process.
+        assertThat(sandboxOomScoreAdj1).isAtLeast(appOomScoreAdj1);
 
         // Navigate to home screen to send both apps to the background.
         getDevice().executeShellCommand("input keyevent KEYCODE_HOME");
@@ -358,9 +361,30 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
         assertThat(processDump).contains(APP_PACKAGE + '\n');
         assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
 
-        int finalSandboxOomScoreAdj = getOomScoreAdj(SANDBOX_1_PROCESS_NAME);
+        int sandboxOomScoreAdj2 = getOomScoreAdj(SANDBOX_1_PROCESS_NAME);
+        int appOomScoreAdj2 = getOomScoreAdj(APP_PACKAGE);
         // The higher the oom adj score, the lower the priority of the process.
-        assertThat(finalSandboxOomScoreAdj).isGreaterThan(initialSandboxOomScoreAdj);
+        assertThat(sandboxOomScoreAdj2).isGreaterThan(sandboxOomScoreAdj1);
+        assertThat(appOomScoreAdj2).isGreaterThan(appOomScoreAdj1);
+
+        if (mDeviceSdkLevel.isDeviceAtLeastV()) {
+            assertThat(sandboxOomScoreAdj2).isAtLeast(appOomScoreAdj2);
+
+            // Start other apps to try to reduce the priority of the app.
+            startActivity(APP_2_PACKAGE, APP_2_ACTIVITY);
+            startActivity(APP_SHARED_PACKAGE, APP_SHARED_ACTIVITY);
+            Thread.sleep(2000);
+
+            processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
+            assertThat(processDump).contains(APP_PACKAGE + '\n');
+            assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
+
+            int sandboxOomScoreAdj3 = getOomScoreAdj(SANDBOX_1_PROCESS_NAME);
+            int appOomScoreAdj3 = getOomScoreAdj(APP_PACKAGE);
+            assertThat(appOomScoreAdj3).isAtLeast(appOomScoreAdj2);
+            assertThat(sandboxOomScoreAdj3).isAtLeast(sandboxOomScoreAdj2);
+            assertThat(sandboxOomScoreAdj3).isAtLeast(appOomScoreAdj3);
+        }
     }
 
     @Test

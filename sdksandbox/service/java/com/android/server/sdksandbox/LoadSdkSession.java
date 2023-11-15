@@ -230,7 +230,7 @@ class LoadSdkSession {
                     sandboxLatencyInfo);
         }
 
-        sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.getCurrentTime());
+        sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.elapsedRealtime());
         try {
             service.loadSdk(
                     mCallingInfo.getPackageName(),
@@ -264,7 +264,7 @@ class LoadSdkSession {
     }
 
     void handleLoadSuccess(SandboxLatencyInfo sandboxLatencyInfo) {
-        sandboxLatencyInfo.setTimeSystemServerCalledApp(mInjector.getCurrentTime());
+        sandboxLatencyInfo.setTimeSystemServerCalledApp(mInjector.elapsedRealtime());
 
         synchronized (mLock) {
             if (getStatus() == LOAD_PENDING) {
@@ -297,7 +297,7 @@ class LoadSdkSession {
             int stage,
             boolean successAtStage,
             SandboxLatencyInfo sandboxLatencyInfo) {
-        final long timeSystemServerCalledApp = mInjector.getCurrentTime();
+        final long timeSystemServerCalledApp = mInjector.elapsedRealtime();
         sandboxLatencyInfo.setTimeSystemServerCalledApp(timeSystemServerCalledApp);
         if (stage != SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED) {
             SdkSandboxStatsLog.write(
@@ -335,14 +335,14 @@ class LoadSdkSession {
 
     void unload(long timeSystemServerReceivedCallFromApp) {
         final SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo();
-        sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.getCurrentTime());
+        sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.elapsedRealtime());
         IUnloadSdkCallback unloadCallback =
                 new IUnloadSdkCallback.Stub() {
                     @Override
                     public void onUnloadSdk(SandboxLatencyInfo sandboxLatencyInfo) {
                         logLatencyMetricsForCallback(
                                 /*timeSystemServerReceivedCallFromSandbox=*/ mInjector
-                                        .getCurrentTime(),
+                                        .elapsedRealtime(),
                                 SANDBOX_API_CALLED__METHOD__UNLOAD_SDK,
                                 sandboxLatencyInfo);
                     }
@@ -414,7 +414,7 @@ class LoadSdkSession {
             mPendingRequestSurfacePackageCallbacks.add(callback);
 
             if (getStatus() != LOADED) {
-                sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.getCurrentTime());
+                sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.elapsedRealtime());
                 sandboxLatencyInfo.setSandboxStatus(
                         SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
                 handleSurfacePackageError(
@@ -438,7 +438,7 @@ class LoadSdkSession {
         synchronized (mLock) {
             mPendingRequestSurfacePackageCallbacks.remove(callback);
         }
-        sandboxLatencyInfo.setTimeSystemServerCalledApp(mInjector.getCurrentTime());
+        sandboxLatencyInfo.setTimeSystemServerCalledApp(mInjector.elapsedRealtime());
         try {
             callback.onSurfacePackageReady(
                     surfacePackage, surfacePackageId, params, sandboxLatencyInfo);
@@ -455,7 +455,7 @@ class LoadSdkSession {
         synchronized (mLock) {
             mPendingRequestSurfacePackageCallbacks.remove(callback);
         }
-        sandboxLatencyInfo.setTimeSystemServerCalledApp(mInjector.getCurrentTime());
+        sandboxLatencyInfo.setTimeSystemServerCalledApp(mInjector.elapsedRealtime());
         try {
             callback.onSurfacePackageError(errorCode, errorMsg, sandboxLatencyInfo);
         } catch (RemoteException e) {
@@ -535,7 +535,7 @@ class LoadSdkSession {
                 ISdkSandboxManagerToSdkSandboxCallback callback,
                 SandboxLatencyInfo sandboxLatencyInfo) {
             sandboxLatencyInfo.setTimeSystemServerReceivedCallFromSandbox(
-                    mInjector.getCurrentTime());
+                    mInjector.elapsedRealtime());
 
             synchronized (this) {
                 // Keep reference to callback so that manager service can
@@ -557,7 +557,7 @@ class LoadSdkSession {
         public void onLoadSdkError(
                 LoadSdkException exception, SandboxLatencyInfo sandboxLatencyInfo) {
             sandboxLatencyInfo.setTimeSystemServerReceivedCallFromSandbox(
-                    mInjector.getCurrentTime());
+                    mInjector.elapsedRealtime());
 
             if (exception.getLoadSdkErrorCode()
                     == ILoadSdkInSandboxCallback.LOAD_SDK_INSTANTIATION_ERROR) {
@@ -612,7 +612,7 @@ class LoadSdkSession {
                 SandboxLatencyInfo sandboxLatencyInfo,
                 Bundle params,
                 IRequestSurfacePackageCallback callback) {
-            sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.getCurrentTime());
+            sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.elapsedRealtime());
             try {
                 synchronized (this) {
                     mManagerToSdkCallback.onSurfacePackageRequested(
@@ -630,7 +630,7 @@ class LoadSdkSession {
                                         Bundle params,
                                         SandboxLatencyInfo sandboxLatencyInfo) {
                                     sandboxLatencyInfo.setTimeSystemServerReceivedCallFromSandbox(
-                                            mInjector.getCurrentTime());
+                                            mInjector.elapsedRealtime());
 
                                     LogUtil.d(TAG, "onSurfacePackageReady received");
 
@@ -648,7 +648,7 @@ class LoadSdkSession {
                                         String errorMsg,
                                         SandboxLatencyInfo sandboxLatencyInfo) {
                                     sandboxLatencyInfo.setTimeSystemServerReceivedCallFromSandbox(
-                                            mInjector.getCurrentTime());
+                                            mInjector.elapsedRealtime());
 
                                     int sdkSandboxManagerErrorCode =
                                             toSdkSandboxManagerRequestSurfacePackageErrorCode(
