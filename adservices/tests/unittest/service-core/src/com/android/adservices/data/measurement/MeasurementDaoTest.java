@@ -2997,6 +2997,9 @@ public class MeasurementDaoTest {
                             values.put(
                                     MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION,
                                     aggregateReport.getAttributionDestination().toString());
+                            values.put(
+                                    MeasurementTables.AggregateReport.IS_FAKE_REPORT,
+                                    aggregateReport.isFakeReport());
                             db.insert(MeasurementTables.AggregateReport.TABLE, null, values);
                         });
 
@@ -3022,6 +3025,23 @@ public class MeasurementDaoTest {
                 attributionDestinations4, EventSurfaceType.WEB, destination4ExpectedCounts);
         assertAggregateReportCount(
                 attributionDestinations5, EventSurfaceType.APP, destination5ExpectedCounts);
+    }
+
+    @Test
+    public void getAggregateReportById_fakeReport() {
+        AggregateReport ar11 =
+                AggregateReportFixture.getValidAggregateReportBuilder()
+                        .setId("11")
+                        .setIsFakeReport(true)
+                        .build();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        AbstractDbIntegrationTest.insertToDb(ar11, db);
+
+        Optional<AggregateReport> resOpt =
+                mDatastoreManager.runInTransactionWithResult((dao) -> dao.getAggregateReport("11"));
+        assertTrue(resOpt.isPresent());
+        AggregateReport res = resOpt.get();
+        assertTrue(res.isFakeReport());
     }
 
     @Test

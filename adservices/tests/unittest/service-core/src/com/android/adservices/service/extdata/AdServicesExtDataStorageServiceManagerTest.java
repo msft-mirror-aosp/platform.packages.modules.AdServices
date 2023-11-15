@@ -16,8 +16,11 @@
 
 package com.android.adservices.service.extdata;
 
+import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_IS_ADULT_ACCOUNT;
 import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_IS_MEASUREMENT_CONSENTED;
 import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_IS_NOTIFICATION_DISPLAYED;
+import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_IS_U18_ACCOUNT;
+import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_MANUAL_INTERACTION_WITH_CONSENT_STATUS;
 
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.spy;
@@ -35,6 +38,8 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
@@ -57,7 +62,10 @@ public class AdServicesExtDataStorageServiceManagerTest {
     };
 
     private final Context mContext = spy(ApplicationProvider.getApplicationContext());
+
     @Mock private AdServicesExtDataStorageServiceWorker mMockWorker;
+    @Captor private ArgumentCaptor<AdServicesExtDataParams> mParamsCaptor;
+    @Captor private ArgumentCaptor<int[]> mFieldsCaptor;
 
     private MockitoSession mMockitoSession;
     private AdServicesExtDataStorageServiceManager mManager;
@@ -82,14 +90,7 @@ public class AdServicesExtDataStorageServiceManagerTest {
 
     @Test
     public void testGetAdServicesExtData_onResultSet_returnsParams() {
-        doAnswer(
-                        (invocation) -> {
-                            ((AdServicesOutcomeReceiver) invocation.getArgument(0))
-                                    .onResult(TEST_PARAMS);
-                            return null;
-                        })
-                .when(mMockWorker)
-                .getAdServicesExtData(Mockito.any(AdServicesOutcomeReceiver.class));
+        mockWorkerGetAdExtDataCall(TEST_PARAMS);
 
         AdServicesExtDataParams result = mManager.getAdServicesExtData();
         Assert.assertEquals(0, result.getIsMeasurementConsented());
@@ -149,24 +150,14 @@ public class AdServicesExtDataStorageServiceManagerTest {
 
     @Test
     public void testSetAdServicesExtData_onResultSet_returnsTrue() {
-        doAnswer(
-                        (invocation) -> {
-                            ((AdServicesOutcomeReceiver) invocation.getArgument(2))
-                                    .onResult(invocation.getArgument(0));
-                            return null;
-                        })
-                .when(mMockWorker)
-                .setAdServicesExtData(
-                        Mockito.any(AdServicesExtDataParams.class),
-                        Mockito.any(),
-                        Mockito.any(AdServicesOutcomeReceiver.class));
+        mockWorkerSetAdExtDataCall();
 
         Assert.assertTrue(mManager.setAdServicesExtData(TEST_PARAMS, TEST_FIELD_LIST));
 
         Mockito.verify(mMockWorker, times(1))
                 .setAdServicesExtData(
                         Mockito.any(AdServicesExtDataParams.class),
-                        Mockito.any(),
+                        Mockito.any(int[].class),
                         Mockito.any(AdServicesOutcomeReceiver.class));
     }
 
@@ -181,7 +172,7 @@ public class AdServicesExtDataStorageServiceManagerTest {
                 .when(mMockWorker)
                 .setAdServicesExtData(
                         Mockito.any(AdServicesExtDataParams.class),
-                        Mockito.any(),
+                        Mockito.any(int[].class),
                         Mockito.any(AdServicesOutcomeReceiver.class));
 
         Assert.assertFalse(mManager.setAdServicesExtData(TEST_PARAMS, TEST_FIELD_LIST));
@@ -189,7 +180,7 @@ public class AdServicesExtDataStorageServiceManagerTest {
         Mockito.verify(mMockWorker, times(1))
                 .setAdServicesExtData(
                         Mockito.any(AdServicesExtDataParams.class),
-                        Mockito.any(),
+                        Mockito.any(int[].class),
                         Mockito.any(AdServicesOutcomeReceiver.class));
     }
 
@@ -203,7 +194,7 @@ public class AdServicesExtDataStorageServiceManagerTest {
                 .when(mMockWorker)
                 .setAdServicesExtData(
                         Mockito.any(AdServicesExtDataParams.class),
-                        Mockito.any(),
+                        Mockito.any(int[].class),
                         Mockito.any(AdServicesOutcomeReceiver.class));
 
         Assert.assertFalse(mManager.setAdServicesExtData(TEST_PARAMS, TEST_FIELD_LIST));
@@ -211,7 +202,7 @@ public class AdServicesExtDataStorageServiceManagerTest {
         Mockito.verify(mMockWorker, times(1))
                 .setAdServicesExtData(
                         Mockito.any(AdServicesExtDataParams.class),
-                        Mockito.any(),
+                        Mockito.any(int[].class),
                         Mockito.any(AdServicesOutcomeReceiver.class));
     }
 
@@ -225,5 +216,174 @@ public class AdServicesExtDataStorageServiceManagerTest {
         Assert.assertEquals(
                 "{MsmtConsent: 0,NotificationDisplayed: 1,}",
                 mManager.updateRequestToStr(TEST_PARAMS, TEST_FIELD_LIST));
+    }
+
+    @Test
+    public void testSetMsmtConsent_withFalse() {
+        mockWorkerSetAdExtDataCall();
+        Assert.assertTrue(mManager.setMsmtConsent(false));
+        Assert.assertEquals(0, mParamsCaptor.getValue().getIsMeasurementConsented());
+        Assert.assertEquals(1, mFieldsCaptor.getValue().length);
+        Assert.assertEquals(FIELD_IS_MEASUREMENT_CONSENTED, mFieldsCaptor.getValue()[0]);
+    }
+
+    @Test
+    public void testSetMsmtConsent_withTrue() {
+        mockWorkerSetAdExtDataCall();
+        Assert.assertTrue(mManager.setMsmtConsent(true));
+        Assert.assertEquals(1, mParamsCaptor.getValue().getIsMeasurementConsented());
+        Assert.assertEquals(1, mFieldsCaptor.getValue().length);
+        Assert.assertEquals(FIELD_IS_MEASUREMENT_CONSENTED, mFieldsCaptor.getValue()[0]);
+    }
+
+    @Test
+    public void testGetMsmtConsent_withZeroRetrieved_returnsFalse() {
+        mockWorkerGetAdExtDataCall(TEST_PARAMS);
+        Assert.assertFalse(mManager.getMsmtConsent());
+    }
+
+    @Test
+    public void testGetMsmtConsent_withOneRetrieved_returnsTrue() {
+        AdServicesExtDataParams params =
+                new AdServicesExtDataParams.Builder().setMsmtConsent(1).build();
+        mockWorkerGetAdExtDataCall(params);
+        Assert.assertTrue(mManager.getMsmtConsent());
+    }
+
+    @Test
+    public void testGetManualInteractionWithConsentStatus() {
+        mockWorkerGetAdExtDataCall(TEST_PARAMS);
+        Assert.assertEquals(-1, mManager.getManualInteractionWithConsentStatus());
+    }
+
+    @Test
+    public void testSetManualInteractionWithConsentStatus() {
+        mockWorkerSetAdExtDataCall();
+        Assert.assertTrue(mManager.setManualInteractionWithConsentStatus(-1));
+        Assert.assertEquals(-1, mParamsCaptor.getValue().getManualInteractionWithConsentStatus());
+        Assert.assertEquals(1, mFieldsCaptor.getValue().length);
+        Assert.assertEquals(
+                FIELD_MANUAL_INTERACTION_WITH_CONSENT_STATUS, mFieldsCaptor.getValue()[0]);
+    }
+
+    @Test
+    public void testSetNotifDisplayed_withFalse() {
+        mockWorkerSetAdExtDataCall();
+        Assert.assertTrue(mManager.setNotifDisplayed(false));
+        Assert.assertEquals(0, mParamsCaptor.getValue().getIsNotificationDisplayed());
+        Assert.assertEquals(1, mFieldsCaptor.getValue().length);
+        Assert.assertEquals(FIELD_IS_NOTIFICATION_DISPLAYED, mFieldsCaptor.getValue()[0]);
+    }
+
+    @Test
+    public void testSetNotifDisplayed_withTrue() {
+        mockWorkerSetAdExtDataCall();
+        Assert.assertTrue(mManager.setNotifDisplayed(true));
+        Assert.assertEquals(1, mParamsCaptor.getValue().getIsNotificationDisplayed());
+        Assert.assertEquals(1, mFieldsCaptor.getValue().length);
+        Assert.assertEquals(FIELD_IS_NOTIFICATION_DISPLAYED, mFieldsCaptor.getValue()[0]);
+    }
+
+    @Test
+    public void testGetNotifDisplayed_withOneRetrieved_returnsTrue() {
+        mockWorkerGetAdExtDataCall(TEST_PARAMS);
+        Assert.assertTrue(mManager.getNotifDisplayed());
+    }
+
+    @Test
+    public void testGetNotifDisplayed_withZeroRetrieved_returnsFalse() {
+        AdServicesExtDataParams params =
+                new AdServicesExtDataParams.Builder().setNotificationDisplayed(0).build();
+        mockWorkerGetAdExtDataCall(params);
+        Assert.assertFalse(mManager.getNotifDisplayed());
+    }
+
+    @Test
+    public void testSetIsAdultAccount_withFalse() {
+        mockWorkerSetAdExtDataCall();
+        Assert.assertTrue(mManager.setIsAdultAccount(false));
+        Assert.assertEquals(0, mParamsCaptor.getValue().getIsAdultAccount());
+        Assert.assertEquals(1, mFieldsCaptor.getValue().length);
+        Assert.assertEquals(FIELD_IS_ADULT_ACCOUNT, mFieldsCaptor.getValue()[0]);
+    }
+
+    @Test
+    public void testSetIsAdultAccount_withTrue() {
+        mockWorkerSetAdExtDataCall();
+        Assert.assertTrue(mManager.setIsAdultAccount(true));
+        Assert.assertEquals(1, mParamsCaptor.getValue().getIsAdultAccount());
+        Assert.assertEquals(1, mFieldsCaptor.getValue().length);
+        Assert.assertEquals(FIELD_IS_ADULT_ACCOUNT, mFieldsCaptor.getValue()[0]);
+    }
+
+    @Test
+    public void testGetIsAdultAccount_withZeroRetrieved_returnsFalse() {
+        mockWorkerGetAdExtDataCall(TEST_PARAMS);
+        Assert.assertFalse(mManager.getIsAdultAccount());
+    }
+
+    @Test
+    public void testGetIsAdultAccount_withOneRetrieved_returnsTrue() {
+        AdServicesExtDataParams params =
+                new AdServicesExtDataParams.Builder().setIsAdultAccount(1).build();
+        mockWorkerGetAdExtDataCall(params);
+        Assert.assertTrue(mManager.getIsAdultAccount());
+    }
+
+    @Test
+    public void testSetIsU18Account_withFalse() {
+        mockWorkerSetAdExtDataCall();
+        Assert.assertTrue(mManager.setIsU18Account(false));
+        Assert.assertEquals(0, mParamsCaptor.getValue().getIsU18Account());
+        Assert.assertEquals(1, mFieldsCaptor.getValue().length);
+        Assert.assertEquals(FIELD_IS_U18_ACCOUNT, mFieldsCaptor.getValue()[0]);
+    }
+
+    @Test
+    public void testSetIsU18Account_withTrue() {
+        mockWorkerSetAdExtDataCall();
+        Assert.assertTrue(mManager.setIsU18Account(true));
+        Assert.assertEquals(1, mParamsCaptor.getValue().getIsU18Account());
+        Assert.assertEquals(1, mFieldsCaptor.getValue().length);
+        Assert.assertEquals(FIELD_IS_U18_ACCOUNT, mFieldsCaptor.getValue()[0]);
+    }
+
+    @Test
+    public void testGetIsU18Account_withOneRetrieved_returnsTrue() {
+        mockWorkerGetAdExtDataCall(TEST_PARAMS);
+        Assert.assertTrue(mManager.getIsU18Account());
+    }
+
+    @Test
+    public void testGetIsU18Account_withZeroRetrieved_returnsFalse() {
+        AdServicesExtDataParams params =
+                new AdServicesExtDataParams.Builder().setIsU18Account(0).build();
+        mockWorkerGetAdExtDataCall(params);
+        Assert.assertFalse(mManager.getIsU18Account());
+    }
+
+    private void mockWorkerGetAdExtDataCall(AdServicesExtDataParams params) {
+        doAnswer(
+                        (invocation) -> {
+                            ((AdServicesOutcomeReceiver) invocation.getArgument(0))
+                                    .onResult(params);
+                            return null;
+                        })
+                .when(mMockWorker)
+                .getAdServicesExtData(Mockito.any(AdServicesOutcomeReceiver.class));
+    }
+
+    private void mockWorkerSetAdExtDataCall() {
+        doAnswer(
+                        (invocation) -> {
+                            ((AdServicesOutcomeReceiver) invocation.getArgument(2))
+                                    .onResult(invocation.getArgument(0));
+                            return null;
+                        })
+                .when(mMockWorker)
+                .setAdServicesExtData(
+                        mParamsCaptor.capture(),
+                        mFieldsCaptor.capture(),
+                        Mockito.any(AdServicesOutcomeReceiver.class));
     }
 }

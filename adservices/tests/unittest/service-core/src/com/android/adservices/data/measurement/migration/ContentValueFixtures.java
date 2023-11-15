@@ -293,6 +293,9 @@ public class ContentValueFixtures {
         // Added in V20
         public static final Uri AGGREGATION_COORDINATOR_ORIGIN =
                 ContentValueFixtures.AGGREGATION_COORDINATOR_ORIGIN;
+
+        // Added in V27
+        public static final int IS_FAKE_REPORT = 0;
     }
 
     public static class AggregateEncryptionKeyValues {
@@ -531,7 +534,8 @@ public class ContentValueFixtures {
         source.put(MeasurementTables.SourceContract.EVENT_ID, SourceValues.EVENT_ID);
         source.put(MeasurementTables.SourceContract.PUBLISHER, SourceValues.PUBLISHER);
         source.put(MeasurementTables.SourceContract.PUBLISHER_TYPE, SourceValues.PUBLISHER_TYPE);
-        source.put(MeasurementTablesDeprecated.SourceContract.APP_DESTINATION,
+        source.put(
+                MeasurementTablesDeprecated.SourceContract.APP_DESTINATION,
                 SourceValues.APP_DESTINATION);
         source.put(MeasurementTables.SourceContract.ENROLLMENT_ID, SourceValues.ENROLLMENT_ID);
         source.put(MeasurementTables.SourceContract.EVENT_TIME, SourceValues.EVENT_TIME);
@@ -1329,6 +1333,14 @@ public class ContentValueFixtures {
         values.put(
                 MeasurementTables.AggregateReport.AGGREGATION_COORDINATOR_ORIGIN,
                 AggregateReportValues.AGGREGATION_COORDINATOR_ORIGIN.toString());
+        return values;
+    }
+
+    public static ContentValues generateAggregateReportContentValuesV27() {
+        ContentValues values = generateAggregateReportContentValuesV20();
+        values.put(
+                MeasurementTables.AggregateReport.IS_FAKE_REPORT,
+                AggregateReportValues.IS_FAKE_REPORT);
         return values;
     }
 

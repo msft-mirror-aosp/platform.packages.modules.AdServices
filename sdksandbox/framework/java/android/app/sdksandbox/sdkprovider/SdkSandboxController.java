@@ -37,6 +37,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
+import android.os.SystemClock;
 
 import androidx.annotation.RequiresApi;
 
@@ -166,7 +167,7 @@ public class SdkSandboxController {
                     .loadSdk(
                             ((SandboxedSdkContext) mContext).getClientPackageName(),
                             sdkName,
-                            System.currentTimeMillis(),
+                            SystemClock.elapsedRealtime(),
                             params,
                             callbackProxy);
         } catch (RemoteException e) {
