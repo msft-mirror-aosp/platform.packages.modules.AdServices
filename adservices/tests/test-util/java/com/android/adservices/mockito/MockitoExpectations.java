@@ -23,18 +23,35 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.app.job.JobParameters;
+import android.content.Context;
 
 import com.android.adservices.service.Flags;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 
 import org.mockito.verification.VerificationMode;
 
 /** Provides Mockito expectation for common calls. */
 public final class MockitoExpectations {
+
+    /**
+     * Not a expectation itself, but it sets a mock as the application context on {@link
+     * ApplicationContextSingleton}, and returns it.
+     */
+    public static Context setApplicationContextSingleton() {
+        Context context = mock(Context.class);
+        when(context.getApplicationContext()).thenReturn(context);
+
+        ApplicationContextSingleton.setForTests(context);
+
+        return context;
+    }
+
     /**
      * Verifies {@link AdservicesJobServiceLogger#logExecutionStats(int, long, int, int)} was called
      * with the expected values, using Mockito's {@link VerificationMode} to set the number of times
