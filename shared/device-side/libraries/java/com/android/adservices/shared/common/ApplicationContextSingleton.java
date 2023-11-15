@@ -97,10 +97,25 @@ public final class ApplicationContextSingleton {
         }
     }
 
+    // TODO(b/285300419): make it package protected so it's only accessed by rule
+    /**
+     * Gets the application context, returning {@code null} if it's not set yet.
+     *
+     * <p>Should only be used on unit tests - production code should call {@link #get()} instead.
+     */
+    @VisibleForTesting
+    public static Context getForTests() {
+        Context context = sContext.get();
+        Log.i(TAG, "getForTests(): returning " + context);
+        return context;
+    }
+
+    // TODO(b/285300419): make it package protected so it's only accessed by rule
     /**
      * Sets the application context singleton as the given {@code context}, without doing any check.
      *
-     * <p>Should only be used on unit tests.
+     * <p>Should only be used on unit tests - production code should call {@link #set(Context)
+     * instead.
      */
     @VisibleForTesting
     public static void setForTests(Context context) {

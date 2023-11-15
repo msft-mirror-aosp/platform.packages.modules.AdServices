@@ -94,6 +94,8 @@ java_library {
         "java/com/android/adservices/shared/testing/**/*.java",
     ],
     static_libs: [
+        "adservices-shared-common",
+        "androidx.test.core",
         "junit",
         "truth",
     ],
