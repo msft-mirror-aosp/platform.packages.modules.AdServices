@@ -617,16 +617,15 @@ public class SourceTest {
                         .build();
 
         assertNotNull(source.getAggregatableAttributionSource().orElse(null));
-        assertNotNull(
-                source.getAggregatableAttributionSource().orElse(null).getAggregatableSource());
-        assertNotNull(source.getAggregatableAttributionSource().orElse(null).getFilterMap());
+        assertNotNull(source.getAggregatableAttributionSource().get().getAggregatableSource());
+        assertNotNull(source.getAggregatableAttributionSource().get().getFilterMap());
         assertEquals(
                 aggregatableSource,
-                source.getAggregatableAttributionSource().orElse(null).getAggregatableSource());
+                source.getAggregatableAttributionSource().get().getAggregatableSource());
         assertEquals(
                 filterMap,
                 source.getAggregatableAttributionSource()
-                        .orElse(null)
+                        .get()
                         .getFilterMap()
                         .getAttributionFilterMap());
     }
