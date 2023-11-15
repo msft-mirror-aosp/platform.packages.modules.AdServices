@@ -104,7 +104,7 @@ public class AdServicesCommonService extends Service {
             LogUtil.w(
                     "Using dump to call AdServicesShellCommandHandler - should NOT happen on"
                             + " production");
-            new AdServicesShellCommandHandler(/* context= */ this, fd).run(realArgs);
+            new AdServicesShellCommandHandler(/* context= */ this, pw).run(realArgs);
             return;
         }
         super.dump(fd, pw, args);

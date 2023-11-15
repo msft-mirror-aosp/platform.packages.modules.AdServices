@@ -17,9 +17,11 @@
 package com.android.adservices.common;
 
 import static com.android.adservices.common.AdServicesShellCommandHandler.CMD_ECHO;
+import static com.android.adservices.common.AdServicesShellCommandHandler.CMD_HELP;
 import static com.android.adservices.common.AdServicesShellCommandHandler.CMD_IS_ALLOWED_ATTRIBUTION_ACCESS;
 import static com.android.adservices.common.AdServicesShellCommandHandler.CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS;
 import static com.android.adservices.common.AdServicesShellCommandHandler.CMD_IS_ALLOWED_TOPICS_ACCESS;
+import static com.android.adservices.common.AdServicesShellCommandHandler.CMD_SHORT_HELP;
 import static com.android.adservices.common.AdServicesShellCommandHandler.ERROR_EMPTY_COMMAND;
 import static com.android.adservices.common.AdServicesShellCommandHandler.ERROR_TEMPLATE_INVALID_ARGS;
 import static com.android.adservices.common.AdServicesShellCommandHandler.HELP_ECHO;
@@ -28,13 +30,10 @@ import static com.android.adservices.common.AdServicesShellCommandHandler.HELP_I
 import static com.android.adservices.common.AdServicesShellCommandHandler.HELP_IS_ALLOWED_TOPICS_ACCESS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
-import static com.google.common.truth.Truth.assertWithMessage;
-
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.mock;
 
 import android.content.Context;
-import android.os.Binder;
 
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.common.AppManifestConfigHelper;
@@ -44,7 +43,6 @@ import com.google.common.truth.Expect;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.FileDescriptor;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -71,10 +69,12 @@ public final class AdServicesShellCommandHandlerTest {
     public void testInvalidConstructor() throws Exception {
         assertThrows(
                 NullPointerException.class,
-                () -> new AdServicesShellCommandHandler(mCmd.context, (FileDescriptor) null));
+                () -> new AdServicesShellCommandHandler(mCmd.context, (PrintWriter) null));
         assertThrows(
                 NullPointerException.class,
-                () -> new AdServicesShellCommandHandler(/* context= */ null, FileDescriptor.out));
+                () ->
+                        new AdServicesShellCommandHandler(
+                                /* context= */ null, mock(PrintWriter.class)));
     }
 
     @Test
@@ -84,42 +84,15 @@ public final class AdServicesShellCommandHandlerTest {
     }
 
     @Test
-    public void testExec() throws Exception {
-        assertThrows(
-                UnsupportedOperationException.class,
-                () ->
-                        mCmd.cmd.exec(
-                                new Binder(),
-                                FileDescriptor.in,
-                                FileDescriptor.out,
-                                FileDescriptor.err,
-                                /* args= */ (String[]) null));
-    }
-
-    @Test
-    public void testErrWriterIsSameAsOutWriter() throws Exception {
-        PrintWriter outWriter = mCmd.cmd.getOutPrintWriter();
-
-        assertWithMessage("err").that(mCmd.cmd.getErrPrintWriter()).isSameInstanceAs(outWriter);
-    }
-
-    @Test
-    public void testOnHelp() throws Exception {
-        mCmd.cmd.onHelp();
-
-        assertHelpContents(mCmd.getOut());
-    }
-
-    @Test
     public void testRunHelp() throws Exception {
-        String result = mCmd.runInvalid("help");
+        String result = mCmd.runInvalid(CMD_HELP);
 
         assertHelpContents(result);
     }
 
     @Test
     public void testRunHelpShort() throws Exception {
-        String result = mCmd.runInvalid("-h");
+        String result = mCmd.runInvalid(CMD_SHORT_HELP);
 
         assertHelpContents(result);
     }
@@ -128,7 +101,7 @@ public final class AdServicesShellCommandHandlerTest {
     public void testRun_noCommand() throws Exception {
         String result = mCmd.runInvalid("");
 
-        expect.withMessage("result of '%s'").that(result).isEqualTo(ERROR_EMPTY_COMMAND);
+        expect.withMessage("result of ''").that(result).isEqualTo(ERROR_EMPTY_COMMAND + "\n");
     }
 
     @Test
@@ -328,7 +301,7 @@ public final class AdServicesShellCommandHandlerTest {
 
         public final Context context = mock(Context.class);
         public final AdServicesShellCommandHandler cmd =
-                new AdServicesShellCommandHandler(context, () -> mOut);
+                new AdServicesShellCommandHandler(context, mOut);
 
         private boolean mOutCalled;
 
