@@ -6052,6 +6052,7 @@ public class AttributionJobHandlerTest {
                     report.getAggregationCoordinatorOrigin());
         }
         assertTrue(report.isFakeReport());
+        assertEquals(trigger.getId(), report.getTriggerId());
         assertEquals(trigger.getTriggerTime() - timeOffset, report.getSourceRegistrationTime());
     }
 
