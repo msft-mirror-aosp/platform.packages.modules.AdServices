@@ -17,19 +17,17 @@
 package com.android.adservices.service;
 
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND_SERVICE;
+import static android.os.Build.VERSION.SDK_INT;
 
 import android.annotation.IntDef;
-import android.annotation.NonNull;
 import android.app.job.JobInfo;
-
-import androidx.annotation.Nullable;
+import android.os.Build;
 
 import com.android.adservices.cobalt.CobaltConstants;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
 
-import java.io.PrintWriter;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.HashMap;
@@ -42,7 +40,7 @@ import java.util.concurrent.TimeUnit;
  * migrate to Flag Codegen in the future. With that migration, the Flags.java file will be generated
  * from the GCL.
  */
-public interface Flags {
+public interface Flags extends CommonFlags {
     /** Topics Epoch Job Period. */
     long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
 
@@ -1232,7 +1230,9 @@ public interface Flags {
 
     boolean FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED = false;
 
-    /** @return whether to call trusted servers for off device ad selection. */
+    /**
+     * @return whether to call trusted servers for off device ad selection.
+     */
     default boolean getAdSelectionOffDeviceEnabled() {
         return FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED;
     }
@@ -1584,6 +1584,20 @@ public interface Flags {
         return FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING;
     }
 
+    long DEFAULT_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS = 20;
+
+    /**
+     * Returns configured timeout value for {@link
+     * com.android.adservices.service.adselection.AdIdFetcher} logic for server auctions.
+     *
+     * <p>The intended goal is to override this value for tests.
+     *
+     * @return Timeout in mills.
+     */
+    default long getFledgeAuctionServerAdIdFetcherTimeoutMs() {
+        return DEFAULT_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS;
+    }
+
     boolean FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED = false;
     long FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH = 12L;
 
@@ -1617,9 +1631,6 @@ public interface Flags {
     default boolean getAdServicesErrorLoggingEnabled() {
         return ADSERVICES_ERROR_LOGGING_ENABLED;
     }
-
-    /** Dump some debug info for the flags */
-    default void dump(@NonNull PrintWriter writer, @Nullable String[] args) {}
 
     /**
      * The number of epoch to look back to do garbage collection for old epoch data. Assume current
@@ -1731,6 +1742,7 @@ public interface Flags {
                 PPAPI_ONLY,
                 PPAPI_AND_SYSTEM_SERVER,
                 APPSEARCH_ONLY,
+                PPAPI_AND_ADEXT_SERVICE,
             })
     @Retention(RetentionPolicy.SOURCE)
     @interface ConsentSourceOfTruth {}
@@ -1753,12 +1765,22 @@ public interface Flags {
     int APPSEARCH_ONLY = FlagsConstants.APPSEARCH_ONLY;
 
     /**
-     * Consent source of truth intended to be used by default. On S- devices, there is no AdServices
-     * code running in the system server, so the default for those is PPAPI_ONLY.
+     * Read and write data that need to be rollback-safe from AdServicesExtDataStorageService; rest
+     * can be handled by PPAPI_API only. This is intended to be used on Android R as AppSearch and
+     * system server are unavailable.
+     */
+    int PPAPI_AND_ADEXT_SERVICE = FlagsConstants.PPAPI_AND_ADEXT_SERVICE;
+
+    /**
+     * Consent source of truth intended to be used by default. On S devices, there is no AdServices
+     * code running in the system server, so the default is APPSEARCH_ONLY. On R devices, there is
+     * no system server and appseach, so the default is PPAPI_AND_ADEXT_SERVICE_ONLY.
      */
     @ConsentSourceOfTruth
     int DEFAULT_CONSENT_SOURCE_OF_TRUTH =
-            SdkLevel.isAtLeastT() ? PPAPI_AND_SYSTEM_SERVER : APPSEARCH_ONLY;
+            SdkLevel.isAtLeastT()
+                    ? PPAPI_AND_SYSTEM_SERVER
+                    : (SdkLevel.isAtLeastS() ? APPSEARCH_ONLY : PPAPI_AND_ADEXT_SERVICE);
 
     /** Returns the consent source of truth currently used for PPAPI. */
     @ConsentSourceOfTruth
@@ -1767,12 +1789,16 @@ public interface Flags {
     }
 
     /**
-     * Blocked topics source of truth intended to be used by default. On S- devices, there is no
-     * AdServices code running in the system server, so the default for those is PPAPI_ONLY.
+     * Blocked topics source of truth intended to be used by default. On S devices, there is no
+     * AdServices code running in the system server, so the default is APPSEARCH_ONLY. On R devices,
+     * there is no system server and appseach, so the default is PPAPI_ADEXT_SERVICE_ONLY. However,
+     * note that topics is not supported on R.
      */
     @ConsentSourceOfTruth
     int DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH =
-            SdkLevel.isAtLeastT() ? PPAPI_AND_SYSTEM_SERVER : APPSEARCH_ONLY;
+            SdkLevel.isAtLeastT()
+                    ? PPAPI_AND_SYSTEM_SERVER
+                    : (SdkLevel.isAtLeastS() ? APPSEARCH_ONLY : PPAPI_AND_ADEXT_SERVICE);
 
     /** Returns the blocked topics source of truth currently used for PPAPI */
     @ConsentSourceOfTruth
@@ -2237,6 +2263,18 @@ public interface Flags {
                 || MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
     }
 
+    /** Flag for storing Measurement Rollback data in External Storage for Android R. */
+    boolean MEASUREMENT_ROLLBACK_DELETION_R_ENABLED = !SdkLevel.isAtLeastS();
+
+    /**
+     * Returns whether storing Measurement rollback deletion handling data in AdServices external
+     * storage is enabled. Rollback deletion handling on Android R will be disabled if this value is
+     * false.
+     */
+    default boolean getMeasurementRollbackDeletionREnabled() {
+        return MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
+    }
+
     /**
      * Kill Switch for storing Measurement Rollback data in App Search for Android S. The default
      * value is false which means storing the rollback handling data in App Search is enabled. This
@@ -2468,11 +2506,27 @@ public interface Flags {
      * AppSearch is not considered as source of truth after OTA. This flag should be enabled for OTA
      * support of consent data on T+ devices.
      */
-    boolean ENABLE_APPSEARCH_CONSENT_DATA = !SdkLevel.isAtLeastT();
+    boolean ENABLE_APPSEARCH_CONSENT_DATA = SdkLevel.isAtLeastS() && !SdkLevel.isAtLeastT();
 
     /** @return value of enable appsearch consent data flag */
     default boolean getEnableAppsearchConsentData() {
         return ENABLE_APPSEARCH_CONSENT_DATA;
+    }
+
+    /**
+     * Enable AdServicesExtDataStorageService read for consent data feature flag. The default value
+     * on R devices is true as the consent source of truth is PPAPI_AND_ADEXT_SERVICE_ONLY. The
+     * default value on S+ devices is false which means AdServicesExtDataStorageService is not
+     * considered as source of truth after OTA. This flag should be enabled for OTA support of
+     * consent data on S devices.
+     */
+    boolean ENABLE_ADEXT_SERVICE_CONSENT_DATA = SDK_INT == Build.VERSION_CODES.R;
+
+    /**
+     * @return value of enable AdExt service consent data flag.
+     */
+    default boolean getEnableAdExtServiceConsentData() {
+        return ENABLE_ADEXT_SERVICE_CONSENT_DATA;
     }
 
     /*
@@ -2832,7 +2886,7 @@ public interface Flags {
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCES = true;
-    boolean MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH = true;
+    boolean MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH = false;
 
     /**
      * @return true if Measurement Delete Registrations API should require that the calling API is
@@ -3123,8 +3177,10 @@ public interface Flags {
      *   <li>Consent per API (instead of aggregated one)
      *   <li>Separate page to control Measurement API
      * </ul>
+     *
+     * This flag is set default to true as beta deprecated.
      */
-    boolean GA_UX_FEATURE_ENABLED = false;
+    boolean GA_UX_FEATURE_ENABLED = true;
 
     /** Returns if the GA UX feature is enabled. */
     default boolean getGaUxFeatureEnabled() {
@@ -3815,6 +3871,24 @@ public interface Flags {
         return MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED;
     }
 
+    /** Default value for Null Aggregate Report feature flag. */
+    boolean MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED = false;
+
+    /** Null Aggregate Report feature flag. */
+    default boolean getMeasurementNullAggregateReportEnabled() {
+        return MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED;
+    }
+
+    float MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME = .008f;
+
+    /**
+     * Returns the rate at which null aggregate reports are generated whenever an actual aggregate
+     * report is successfully generated.
+     */
+    default float getMeasurementNullAggReportRateInclSourceRegistrationTime() {
+        return MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME;
+    }
+
     /** Default U18 UX feature flag.. */
     boolean DEFAULT_U18_UX_ENABLED = false;
 
@@ -4107,6 +4181,16 @@ public interface Flags {
     /** @return if to enable database schema version 8. */
     default boolean getEnableDatabaseSchemaVersion8() {
         return ENABLE_DATABASE_SCHEMA_VERSION_8;
+    }
+
+    /** Whether to enable database schema version 9. */
+    boolean ENABLE_DATABASE_SCHEMA_VERSION_9 = false;
+
+    /**
+     * @return if to enable database schema version 9.
+     */
+    default boolean getEnableDatabaseSchemaVersion9() {
+        return ENABLE_DATABASE_SCHEMA_VERSION_9;
     }
 
     /** Flag to control which allow list in getMeasurementApiStatus. */

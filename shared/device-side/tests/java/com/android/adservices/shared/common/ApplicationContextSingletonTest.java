@@ -42,7 +42,7 @@ public final class ApplicationContextSingletonTest {
     @Before
     @After
     public void resetState() {
-        ApplicationContextSingleton.resetForTests();
+        ApplicationContextSingleton.setForTests(/* context= */ null);
     }
 
     @Test
@@ -101,7 +101,16 @@ public final class ApplicationContextSingletonTest {
                 .isSameInstanceAs(mAppContext);
     }
 
-    private void mockAppContext(Context context, Context appContext) {
+    @Test
+    public void testSetForTests() {
+        ApplicationContextSingleton.setForTests(mContext);
+
+        assertWithMessage("get()")
+                .that(ApplicationContextSingleton.get())
+                .isSameInstanceAs(mAppContext);
+    }
+
+    static void mockAppContext(Context context, Context appContext) {
         when(context.getApplicationContext()).thenReturn(appContext);
     }
 }

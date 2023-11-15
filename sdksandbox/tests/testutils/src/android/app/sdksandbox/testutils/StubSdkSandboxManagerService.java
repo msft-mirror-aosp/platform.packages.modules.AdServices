@@ -113,6 +113,9 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
     public void logLatencies(SandboxLatencyInfo sandboxLatencyInfo) {}
 
     @Override
+    public void logSandboxActivityEvent(int method, int callResult, int latencyMillis) {}
+
+    @Override
     public IBinder getAdServicesManager() {
         return mAdServicesManager;
     }

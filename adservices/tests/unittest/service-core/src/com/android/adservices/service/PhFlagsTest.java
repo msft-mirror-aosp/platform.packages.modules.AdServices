@@ -16,6 +16,7 @@
 
 package com.android.adservices.service;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastS;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastT;
 import static com.android.adservices.service.Flags.ADID_KILL_SWITCH;
 import static com.android.adservices.service.Flags.ADID_REQUEST_PERMITS_PER_SECOND;
@@ -48,6 +49,7 @@ import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_CONSENT_MI
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_ENABLEMENT_CHECK_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_VERSION_MAPPINGS;
 import static com.android.adservices.service.Flags.DEFAULT_AD_ID_FETCHER_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.DEFAULT_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_CLASSIFIER_TYPE;
 import static com.android.adservices.service.Flags.DEFAULT_COMPUTE_VERSION_FROM_MAPPINGS_ENABLED;
@@ -87,8 +89,10 @@ import static com.android.adservices.service.Flags.DISABLE_TOPICS_ENROLLMENT_CHE
 import static com.android.adservices.service.Flags.DOWNLOADER_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DOWNLOADER_MAX_DOWNLOAD_THREADS;
 import static com.android.adservices.service.Flags.DOWNLOADER_READ_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.ENABLE_ADEXT_SERVICE_CONSENT_DATA;
 import static com.android.adservices.service.Flags.ENABLE_APPSEARCH_CONSENT_DATA;
 import static com.android.adservices.service.Flags.ENABLE_DATABASE_SCHEMA_VERSION_8;
+import static com.android.adservices.service.Flags.ENABLE_DATABASE_SCHEMA_VERSION_9;
 import static com.android.adservices.service.Flags.ENABLE_ENROLLMENT_TEST_SEED;
 import static com.android.adservices.service.Flags.ENABLE_LOGGED_TOPIC;
 import static com.android.adservices.service.Flags.ENCRYPTION_KEY_JOB_PERIOD_MS;
@@ -383,6 +387,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_REGISTER_WEB_TRIG
 import static com.android.adservices.service.Flags.MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
+import static com.android.adservices.service.Flags.MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
 import static com.android.adservices.service.Flags.MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE;
@@ -393,6 +398,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_VERBOSE_DEBUG_REP
 import static com.android.adservices.service.Flags.MSMT_API_APP_ALLOW_LIST;
 import static com.android.adservices.service.Flags.MSMT_API_APP_BLOCK_LIST;
 import static com.android.adservices.service.Flags.NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY;
+import static com.android.adservices.service.Flags.PPAPI_AND_ADEXT_SERVICE;
 import static com.android.adservices.service.Flags.PPAPI_AND_SYSTEM_SERVER;
 import static com.android.adservices.service.Flags.PPAPI_APP_ALLOW_LIST;
 import static com.android.adservices.service.Flags.PPAPI_APP_SIGNATURE_ALLOW_LIST;
@@ -464,12 +470,14 @@ import static com.android.adservices.service.FlagsConstants.KEY_DOWNLOADER_CONNE
 import static com.android.adservices.service.FlagsConstants.KEY_DOWNLOADER_MAX_DOWNLOAD_THREADS;
 import static com.android.adservices.service.FlagsConstants.KEY_DOWNLOADER_READ_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ADEXT_SERVICE_CONSENT_DATA;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ADSERVICES_API_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_BACK_COMPAT;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_COMPUTE_VERSION_FROM_MAPPINGS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_DATABASE_SCHEMA_VERSION_8;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_DATABASE_SCHEMA_VERSION_9;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_LOGGED_TOPIC;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS;
@@ -504,6 +512,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECT
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_TIMEOUT_MS;
@@ -768,6 +777,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGI
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE;
@@ -1573,6 +1583,21 @@ public class PhFlagsTest {
                 false);
 
         assertThat(mPhFlags.getFledgeAuctionServerAdRenderIdEnabled()).isEqualTo(overrideValue);
+    }
+
+    @Test
+    public void testGetFledgeAuctionServerAdIdFetchTimeoutMs() {
+        long defaultValue = FlagsFactory.getFlags().getFledgeAuctionServerAdIdFetcherTimeoutMs();
+        assertThat(defaultValue).isEqualTo(DEFAULT_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS);
+
+        long overrideValue = 2 * defaultValue;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS,
+                Long.toString(overrideValue),
+                false);
+
+        assertThat(mPhFlags.getFledgeAuctionServerAdIdFetcherTimeoutMs()).isEqualTo(overrideValue);
     }
 
     @Test
@@ -6798,9 +6823,16 @@ public class PhFlagsTest {
 
     @Test
     public void testDefaultConsentSourceOfTruth_isS() {
-        Assume.assumeFalse(SdkLevel.isAtLeastT());
-        // On T+, default is PPAPI_AND_SYSTEM_SERVER.
+        Assume.assumeTrue(SdkLevel.isAtLeastS() && !SdkLevel.isAtLeastT());
+        // On S, default is APPSEARCH_ONLY.
         assertThat(DEFAULT_CONSENT_SOURCE_OF_TRUTH).isEqualTo(APPSEARCH_ONLY);
+    }
+
+    @Test
+    public void testDefaultConsentSourceOfTruth_isR() {
+        Assume.assumeFalse(SdkLevel.isAtLeastS());
+        // On R, default is PPAPI_AND_ADEXT_SERVICE.
+        assertThat(DEFAULT_CONSENT_SOURCE_OF_TRUTH).isEqualTo(PPAPI_AND_ADEXT_SERVICE);
     }
 
     @Test
@@ -6826,9 +6858,16 @@ public class PhFlagsTest {
 
     @Test
     public void testDefaultBlockedTopicsConsentSourceOfTruth_isS() {
-        Assume.assumeFalse(SdkLevel.isAtLeastT());
-        // On T+, default is PPAPI_AND_SYSTEM_SERVER.
+        Assume.assumeTrue(SdkLevel.isAtLeastS() && !SdkLevel.isAtLeastT());
+        // On S, default is APPSEARCH_ONLY.
         assertThat(DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH).isEqualTo(APPSEARCH_ONLY);
+    }
+
+    @Test
+    public void testDefaultBlockedTopicsConsentSourceOfTruth_isR() {
+        Assume.assumeFalse(SdkLevel.isAtLeastS());
+        // On R, default is PPAPI_AND_ADEXT_SERVICE.
+        assertThat(DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH).isEqualTo(PPAPI_AND_ADEXT_SERVICE);
     }
 
     @Test
@@ -7080,11 +7119,20 @@ public class PhFlagsTest {
 
     @Test
     public void testDefaultEnableAppsearchConsentData_isS() {
-        Assume.assumeFalse(SdkLevel.isAtLeastT());
+        Assume.assumeTrue(SdkLevel.isAtLeastS() && !SdkLevel.isAtLeastT());
         // On S, default is true.
         assertWithMessage("%s on S", FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA)
                 .that(ENABLE_APPSEARCH_CONSENT_DATA)
                 .isTrue();
+    }
+
+    @Test
+    public void testDefaultEnableAppsearchConsentData_isR() {
+        Assume.assumeFalse(SdkLevel.isAtLeastS());
+        // On R, default is true.
+        assertWithMessage("%s on R", FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA)
+                .that(ENABLE_APPSEARCH_CONSENT_DATA)
+                .isFalse();
     }
 
     @Test
@@ -7107,6 +7155,40 @@ public class PhFlagsTest {
                 /* makeDefault */ false);
 
         assertThat(mPhFlags.getEnableAppsearchConsentData()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testDefaultEnableAdExtServiceConsentData_isAtLeastS() {
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
+        // On S+, default is false.
+        assertWithMessage("%s on S", KEY_ENABLE_ADEXT_SERVICE_CONSENT_DATA)
+                .that(ENABLE_ADEXT_SERVICE_CONSENT_DATA)
+                .isFalse();
+    }
+
+    @Test
+    public void testDefaultEnableAdExtServiceConsentData_isR() {
+        Assume.assumeFalse(SdkLevel.isAtLeastR());
+        // On R, default is true.
+        assertWithMessage("%s on R", KEY_ENABLE_ADEXT_SERVICE_CONSENT_DATA)
+                .that(ENABLE_ADEXT_SERVICE_CONSENT_DATA)
+                .isTrue();
+    }
+
+    @Test
+    public void testOverrideEnableAdExtServiceConsentData() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getEnableAdExtServiceConsentData())
+                .isEqualTo(ENABLE_ADEXT_SERVICE_CONSENT_DATA);
+
+        boolean phOverridingValue = !ENABLE_ADEXT_SERVICE_CONSENT_DATA;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENABLE_ADEXT_SERVICE_CONSENT_DATA,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getEnableAdExtServiceConsentData()).isEqualTo(phOverridingValue);
     }
 
     @Test
@@ -7202,6 +7284,33 @@ public class PhFlagsTest {
 
         assertThat(mPhFlags.getMeasurementRollbackDeletionAppSearchKillSwitch())
                 .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetMeasurementRollbackDeletionREnabled() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENABLE_BACK_COMPAT,
+                Boolean.toString(true),
+                /* makeDefault */ false);
+        mockIsAtLeastT(false);
+        mockIsAtLeastS(false);
+
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getMeasurementRollbackDeletionREnabled())
+                .isEqualTo(MEASUREMENT_ROLLBACK_DELETION_R_ENABLED);
+
+        boolean phOverridingValue = !MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_ROLLBACK_DELETION_R_ENABLED,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getMeasurementRollbackDeletionREnabled()).isEqualTo(phOverridingValue);
     }
 
     @Test
@@ -9255,6 +9364,21 @@ public class PhFlagsTest {
     }
 
     @Test
+    public void testGetEnableDatabaseSchemaVersion9() {
+        assertThat(mPhFlags.getEnableDatabaseSchemaVersion9())
+                .isEqualTo(ENABLE_DATABASE_SCHEMA_VERSION_9);
+
+        boolean phOverridingValue = !ENABLE_DATABASE_SCHEMA_VERSION_9;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENABLE_DATABASE_SCHEMA_VERSION_9,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getEnableDatabaseSchemaVersion9()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
     public void testGetMsmtEnableApiStatusAllowListCheck() {
         assertThat(mPhFlags.getMsmtEnableApiStatusAllowListCheck())
                 .isEqualTo(MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK);
@@ -9582,6 +9706,40 @@ public class PhFlagsTest {
                 /* makeDefault */ false);
 
         assertThat(mPhFlags.getEnableAdExtDataServiceApis()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetMeasurementNullAggregateReportEnabled() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getMeasurementNullAggregateReportEnabled())
+                .isEqualTo(Flags.MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED);
+
+        boolean phOverridingValue = !Flags.MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getMeasurementNullAggregateReportEnabled())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetMeasurementNullAggregateReportRateIncludingSourceRegistrationTime() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getMeasurementNullAggReportRateInclSourceRegistrationTime())
+                .isEqualTo(Flags.MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME);
+
+        float phOverridingValue = .5f;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME,
+                Double.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getMeasurementNullAggReportRateInclSourceRegistrationTime())
+                .isEqualTo(phOverridingValue);
     }
 
     @Test

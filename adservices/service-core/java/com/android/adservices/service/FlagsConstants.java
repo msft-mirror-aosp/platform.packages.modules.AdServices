@@ -35,6 +35,7 @@ public final class FlagsConstants {
     public static final int PPAPI_ONLY = 1;
     public static final int PPAPI_AND_SYSTEM_SERVER = 2;
     public static final int APPSEARCH_ONLY = 3;
+    public static final int PPAPI_AND_ADEXT_SERVICE = 4;
     public static final float ADID_REQUEST_PERMITS_PER_SECOND = 25;
 
     // **************************************************
@@ -130,10 +131,19 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_AGGREGATION_COORDINATOR_PATH =
             "measurement_aggregation_coordinator_path";
+
     public static final String KEY_MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS =
             "measurement_aggregate_main_reporting_job_period_ms";
+
     public static final String KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS =
             "measurement_aggregate_fallback_reporting_job_period_ms";
+
+    public static final String KEY_MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED =
+            "measurement_null_aggregate_report_enabled";
+
+    public static final String KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME =
+            "measurement_null_agg_report_rate_incl_source_registration_time";
+
     public static final String KEY_MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS =
             "measurement_network_connect_timeout_ms";
     public static final String KEY_MEASUREMENT_NETWORK_READ_TIMEOUT_MS =
@@ -636,6 +646,8 @@ public final class FlagsConstants {
             "fledge_auction_server_payload_format_version";
     public static final String KEY_FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING =
             "fledge_auction_server_enable_debug_reporting";
+    public static final String KEY_FLEDGE_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS =
+            "fledge_auction_server_ad_id_fetcher_timeout_ms";
     public static final String KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH =
             "fledge_auction_server_ad_render_id_max_length";
     public static final String KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED =
@@ -734,6 +746,8 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH =
             "measurement_rollback_deletion_app_search_kill_switch";
+    public static final String KEY_MEASUREMENT_ROLLBACK_DELETION_R_ENABLED =
+            "measurement_rollback_deletion_r_enabled";
     public static final String KEY_TOPICS_KILL_SWITCH = "topics_kill_switch";
     public static final String KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH =
             "topics_on_device_classifier_kill_switch";
@@ -924,6 +938,9 @@ public final class FlagsConstants {
 
     public static final String KEY_ENABLE_APPSEARCH_CONSENT_DATA = "enable_appsearch_consent_data";
 
+    public static final String KEY_ENABLE_ADEXT_SERVICE_CONSENT_DATA =
+            "enable_adext_service_consent_data";
+
     // Whether to call trusted servers for off device ad selection.
     public static final String KEY_OFF_DEVICE_AD_SELECTION_ENABLED =
             "enable_off_device_ad_selection";
@@ -1103,6 +1120,8 @@ public final class FlagsConstants {
     // Database Schema Version Flags
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 =
             "enable_database_schema_version_8";
+    public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_9 =
+            "enable_database_schema_version_9";
 
     public static final String KEY_EU_NOTIF_FLOW_CHANGE_ENABLED = "eu_notif_flow_change_enabled";
 
