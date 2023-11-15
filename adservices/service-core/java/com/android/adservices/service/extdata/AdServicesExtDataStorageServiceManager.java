@@ -29,6 +29,8 @@ import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_I
 import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_MANUAL_INTERACTION_WITH_CONSENT_STATUS;
 import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_MEASUREMENT_ROLLBACK_APEX_VERSION;
 
+import static com.android.adservices.service.measurement.rollback.MeasurementRollbackCompatManager.APEX_VERSION_WHEN_NOT_FOUND;
+
 import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.extdata.AdServicesExtDataParams;
 import android.adservices.extdata.AdServicesExtDataStorageService;
@@ -54,9 +56,6 @@ public class AdServicesExtDataStorageServiceManager {
     // 2000 ms writes). An additional 100 ms buffer is added for delays such as binder latency.
     private static final long READ_OPERATION_TIMEOUT_MS = 600L;
     private static final long WRITE_OPERATION_TIMEOUT_MS = 2100L;
-    // TODO (b/303513097): Reference the variable directly from AppSearchMeasurementRollbackManager
-    //  when it's supported on R to avoid lint error.
-    private static final long APEX_VERSION_WHEN_NOT_FOUND = -1L;
 
     private final AdServicesExtDataStorageServiceWorker mDataWorker;
 
@@ -91,7 +90,7 @@ public class AdServicesExtDataStorageServiceManager {
         AtomicLong apexVersion = new AtomicLong();
 
         mDataWorker.getAdServicesExtData(
-                new AdServicesOutcomeReceiver<AdServicesExtDataParams, Exception>() {
+                new AdServicesOutcomeReceiver<>() {
                     @Override
                     public void onResult(AdServicesExtDataParams result) {
                         notifDisplayed.set(result.getIsNotificationDisplayed());
@@ -164,7 +163,7 @@ public class AdServicesExtDataStorageServiceManager {
         mDataWorker.setAdServicesExtData(
                 params,
                 fieldsToUpdate,
-                new AdServicesOutcomeReceiver<AdServicesExtDataParams, Exception>() {
+                new AdServicesOutcomeReceiver<>() {
                     @Override
                     public void onResult(AdServicesExtDataParams result) {
                         LogUtil.d(

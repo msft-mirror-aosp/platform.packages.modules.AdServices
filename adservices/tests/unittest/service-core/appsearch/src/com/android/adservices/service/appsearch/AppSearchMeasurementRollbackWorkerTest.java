@@ -31,6 +31,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import android.app.adservices.AdServicesManager;
 import android.content.Context;
+import android.util.Pair;
 
 import androidx.appsearch.app.AppSearchBatchResult;
 import androidx.appsearch.app.AppSearchSession;
@@ -181,11 +182,11 @@ public class AppSearchMeasurementRollbackWorkerTest {
                                 AppSearchDao.readAppSearchSessionData(
                                         any(), any(), any(), any(), any(), any()));
 
-        AppSearchMeasurementRollbackDao dao =
+        Pair<Long, String> dao =
                 mWorker.getAdServicesDeletionRollbackMetadata(
                         AdServicesManager.MEASUREMENT_DELETION);
         assertThat(dao).isNotNull();
-        assertThat(dao.getApexVersion()).isEqualTo(APEX_VERSION);
+        assertThat(dao.first).isEqualTo(APEX_VERSION);
         verify(
                 () ->
                         AppSearchDao.readAppSearchSessionData(
@@ -205,7 +206,7 @@ public class AppSearchMeasurementRollbackWorkerTest {
                                 AppSearchDao.readAppSearchSessionData(
                                         any(), any(), any(), any(), any(), any()));
 
-        AppSearchMeasurementRollbackDao dao =
+        Pair<Long, String> dao =
                 mWorker.getAdServicesDeletionRollbackMetadata(
                         AdServicesManager.MEASUREMENT_DELETION);
         assertThat(dao).isNull();
