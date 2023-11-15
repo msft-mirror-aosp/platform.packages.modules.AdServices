@@ -48,6 +48,7 @@ public final class ApplicationContextSingletonTest {
     @Test
     public void testGet_notSet() {
         assertThrows(IllegalStateException.class, () -> ApplicationContextSingleton.get());
+        assertWithMessage("getForTests()").that(ApplicationContextSingleton.getForTests()).isNull();
     }
 
     @Test
@@ -107,7 +108,7 @@ public final class ApplicationContextSingletonTest {
 
         assertWithMessage("get()")
                 .that(ApplicationContextSingleton.get())
-                .isSameInstanceAs(mAppContext);
+                .isSameInstanceAs(mContext);
     }
 
     static void mockAppContext(Context context, Context appContext) {
