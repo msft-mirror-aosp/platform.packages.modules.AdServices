@@ -236,7 +236,6 @@ public final class TopicsServiceImplTest {
                         .build();
 
         DbTestUtil.deleteTable(TopicsTables.BlockedTopicsContract.TABLE);
-        when(mConsentManager.getConsent()).thenReturn(AdServicesApiConsent.GIVEN);
         when(mConsentManager.getConsent(AdServicesApiType.TOPICS))
                 .thenReturn(AdServicesApiConsent.GIVEN);
         when(mMockSdkContext.getPackageManager()).thenReturn(mPackageManager);
@@ -337,17 +336,7 @@ public final class TopicsServiceImplTest {
     }
 
     @Test
-    public void checkNoUserConsent() throws InterruptedException {
-        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(false);
-        mockGetCallingUidOrThrow(MY_UID);
-        when(mConsentManager.getConsent()).thenReturn(AdServicesApiConsent.REVOKED);
-        invokeGetTopicsAndVerifyError(
-                mSpyContext, STATUS_USER_CONSENT_REVOKED, /* checkLoggingStatus */ true);
-    }
-
-    @Test
     public void checkNoUserConsent_gaUxFeatureEnabled() throws InterruptedException {
-        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         mockGetCallingUidOrThrow(MY_UID);
         when(mConsentManager.getConsent(AdServicesApiType.TOPICS))
                 .thenReturn(AdServicesApiConsent.REVOKED);
@@ -627,7 +616,6 @@ public final class TopicsServiceImplTest {
     @Test
     public void getTopicsGaUx() throws Exception {
         mockGetCallingUidOrThrow(MY_UID);
-        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         runGetTopics(createTestTopicsServiceImplInstance());
     }
 
@@ -667,7 +655,6 @@ public final class TopicsServiceImplTest {
         // block topic1
         mBlockedTopicsManager.blockTopic(topics.get(0));
 
-        when(mConsentManager.getConsent()).thenReturn(AdServicesApiConsent.GIVEN);
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
 
@@ -721,7 +708,6 @@ public final class TopicsServiceImplTest {
             mBlockedTopicsManager.blockTopic(topic);
         }
 
-        when(mConsentManager.getConsent()).thenReturn(AdServicesApiConsent.GIVEN);
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
 
@@ -758,7 +744,6 @@ public final class TopicsServiceImplTest {
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
 
-        when(mConsentManager.getConsent()).thenReturn(AdServicesApiConsent.GIVEN);
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
 
@@ -800,7 +785,6 @@ public final class TopicsServiceImplTest {
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
 
-        when(mConsentManager.getConsent()).thenReturn(AdServicesApiConsent.GIVEN);
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
 
@@ -885,7 +869,6 @@ public final class TopicsServiceImplTest {
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
 
-        when(mConsentManager.getConsent()).thenReturn(AdServicesApiConsent.GIVEN);
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
 
@@ -919,7 +902,6 @@ public final class TopicsServiceImplTest {
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
 
-        when(mConsentManager.getConsent()).thenReturn(AdServicesApiConsent.GIVEN);
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
 
@@ -982,7 +964,6 @@ public final class TopicsServiceImplTest {
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
 
-        when(mConsentManager.getConsent()).thenReturn(AdServicesApiConsent.GIVEN);
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
 
