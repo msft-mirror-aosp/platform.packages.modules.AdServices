@@ -176,6 +176,7 @@ android_library {
         "adservices-shared-error-logging",
         "adservices-shared-storage",
         "modules-utils-build",
+        "modules-utils-shell-command-handler",
     ],
     jarjar_rules: "jarjar-rules.txt",
     apex_available: ["com.android.adservices", "com.android.extservices"],
