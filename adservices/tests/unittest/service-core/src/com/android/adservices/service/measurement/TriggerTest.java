@@ -515,9 +515,9 @@ public class TriggerTest {
                         .getTriggerData()
                         .get(0)
                         .getXNetworkData()
-                        .orElse(null)
+                        .get()
                         .getKeyOffset()
-                        .orElse(null)
+                        .get()
                         .getValue()
                         .longValue(),
                 10L);
@@ -533,9 +533,9 @@ public class TriggerTest {
                         .getTriggerData()
                         .get(0)
                         .getXNetworkData()
-                        .orElse(null)
+                        .get()
                         .getKeyOffset()
-                        .orElse(null)
+                        .get()
                         .getValue()
                         .longValue(),
                 10L);

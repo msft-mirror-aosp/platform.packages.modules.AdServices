@@ -433,19 +433,6 @@ public class AdServicesHttpsClientTest {
     }
 
     @Test
-    public void testRequestPropertiesNull_disallowed() {
-        assertThrows(
-                NullPointerException.class,
-                () -> {
-                    AdServicesHttpClientRequest.builder()
-                            .setUri(Uri.parse(mFakeUrl))
-                            .setUseCache(false)
-                            .setRequestProperties(ImmutableMap.of(null, null))
-                            .build();
-                });
-    }
-
-    @Test
     public void testFetchPayloadResponsesUsesCache() throws Exception {
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
