@@ -22,8 +22,10 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
+import com.android.adservices.data.adselection.DBAdSelectionEntry;
 import com.android.adservices.data.adselection.DBAdSelectionInitialization;
 import com.android.adservices.data.adselection.DBAdSelectionResult;
+import com.android.adservices.data.adselection.DBReportingComputationInfo;
 import com.android.adservices.data.adselection.DBReportingData;
 import com.android.adservices.data.adselection.DBWinningCustomAudience;
 import com.android.adservices.data.adselection.datahandlers.AdSelectionInitialization;
@@ -122,6 +124,31 @@ public class DataHandlersFixture {
                             CustomAudienceSignalsFixture.aCustomAudienceSignals())
                     .setWinningBid(WIN_BID_1)
                     .setWinningRenderUri(WIN_RENDER_URI_1)
+                    .build();
+
+    public static DBAdSelectionEntry DB_AD_SELECTION_ENTRY =
+            new DBAdSelectionEntry.Builder()
+                    .setAdSelectionId(AD_SELECTION_ID_1)
+                    .setSellerContextualSignals(SELLER_SIGNALS.toString())
+                    .setBiddingLogicUri(BUYER_1_BASE_URI)
+                    .setWinningAdBid(WIN_BID_1)
+                    .setCustomAudienceSignals(CustomAudienceSignalsFixture.aCustomAudienceSignals())
+                    .setCreationTimestamp(CREATION_INSTANT_1)
+                    .setBuyerContextualSignals(BUYER_SIGNALS.toString())
+                    .setBuyerDecisionLogicJs(DUMMY_DECISION_LOGIC_JS)
+                    .setWinningAdRenderUri(WIN_RENDER_URI_1)
+                    .build();
+
+    public static DBReportingComputationInfo DB_REPORTING_COMPUTATION_INFO =
+            DBReportingComputationInfo.builder()
+                    .setAdSelectionId(AD_SELECTION_ID_1)
+                    .setSellerContextualSignals(SELLER_SIGNALS.toString())
+                    .setBiddingLogicUri(BUYER_1_BASE_URI)
+                    .setWinningAdBid(WIN_BID_1)
+                    .setCustomAudienceSignals(CustomAudienceSignalsFixture.aCustomAudienceSignals())
+                    .setBuyerContextualSignals(BUYER_SIGNALS.toString())
+                    .setBuyerDecisionLogicJs(DUMMY_DECISION_LOGIC_JS)
+                    .setWinningAdRenderUri(WIN_RENDER_URI_1)
                     .build();
     public static ReportingData REPORTING_DATA_WITH_URIS =
             getReportingData(BUYER_REPORTING_URI_1, SELLER_REPORTING_URI_1);
