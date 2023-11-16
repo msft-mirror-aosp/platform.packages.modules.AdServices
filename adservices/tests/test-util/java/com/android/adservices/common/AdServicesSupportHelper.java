@@ -17,8 +17,6 @@ package com.android.adservices.common;
 
 import static com.android.compatibility.common.util.ShellIdentityUtils.invokeStaticMethodWithShellPermissions;
 
-import android.adservices.adid.AdId;
-import android.adservices.adid.AdIdCompatibleManager;
 import android.app.ActivityManager;
 import android.content.Context;
 
@@ -26,17 +24,11 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.service.PhFlags;
 
-import com.google.common.util.concurrent.MoreExecutors;
-
-import java.util.Objects;
-
 // TODO(b/297248322): move this class to sideless as the logic is duplicated on hostside
-
 /** Helper to check if AdServices is supported / enabled in a device. */
 public final class AdServicesSupportHelper extends AbstractDeviceSupportHelper {
 
     private static final AdServicesSupportHelper sInstance = new AdServicesSupportHelper();
-    public static final int AD_ID_FETCH_TIMEOUT_MS = 5000;
 
     private final Context mContext;
 
@@ -50,36 +42,6 @@ public final class AdServicesSupportHelper extends AbstractDeviceSupportHelper {
         boolean value = invokeStaticMethodWithShellPermissions(() -> flags.getGlobalKillSwitch());
         sInstance.mLog.v("getGlobalKillSwitch(): %b", value);
         return value;
-    }
-
-    @Override
-    protected boolean isAdIdAvailable() {
-        AdIdCompatibleManager adIdCompatibleManager;
-        AdServicesOutcomeReceiverForTests<AdId> callback =
-                new AdServicesOutcomeReceiverForTests<>();
-        try {
-            adIdCompatibleManager = new AdIdCompatibleManager(mContext);
-            adIdCompatibleManager.getAdId(MoreExecutors.directExecutor(), callback);
-        } catch (IllegalStateException e) {
-            mLog.e(e, "isAdIdAvailable(): IllegalStateException detected in AdId manager.");
-            return false;
-        }
-
-        boolean isAdIdAvailable;
-        try {
-            AdId result = callback.assertSuccess();
-            isAdIdAvailable =
-                    !Objects.isNull(result)
-                            && !result.isLimitAdTrackingEnabled()
-                            && !result.getAdId().equals(AdId.ZERO_OUT);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            mLog.e(e, "isAdIdAvailable(): failed to get AdId due to InterruptedException.");
-            isAdIdAvailable = false;
-        }
-
-        mLog.v("isAdIdAvailable(): %b", isAdIdAvailable);
-        return isAdIdAvailable;
     }
 
     @Override
