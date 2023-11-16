@@ -34,7 +34,7 @@
         android:text="@string/start_app_video"
         android:textAllCaps="false" />
 
-    <VideoView
+    <androidx.media3.ui.PlayerView
         android:id="@+id/app_video"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
