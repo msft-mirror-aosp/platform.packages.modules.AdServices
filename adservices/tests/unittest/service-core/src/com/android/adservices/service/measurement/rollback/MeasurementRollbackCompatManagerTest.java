@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.appsearch;
+package com.android.adservices.service.measurement.rollback;
 
+import static com.android.adservices.service.measurement.rollback.MeasurementRollbackCompatManager.APEX_VERSION_WHEN_NOT_FOUND;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.mock;
@@ -37,67 +38,44 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.UserHandle;
+import android.util.Pair;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @SmallTest
-public class AppSearchMeasurementRollbackManagerTest {
+public class MeasurementRollbackCompatManagerTest {
     private static final int UID = 100;
     private static final long CURRENT_APEX_VERSION = 1000;
     private static final String EXTSERVICES_PACKAGE_NAME = "com.google.android.extservices";
 
     private final Context mContext = spy(ApplicationProvider.getApplicationContext());
 
-    @Mock private AppSearchMeasurementRollbackWorker mWorker;
+    @Mock private MeasurementRollbackWorker<String> mWorker;
 
-    private MockitoSession mMockitoSession;
+    private MeasurementRollbackCompatManager mManager;
 
-    private AppSearchMeasurementRollbackManager mManager;
+    @Rule
+    public final AdServicesExtendedMockitoRule mockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .mockStatic(UserHandle.class)
+                    .setStrictness(Strictness.WARN)
+                    .build();
 
     @Before
     public void setup() {
-        mMockitoSession =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(UserHandle.class)
-                        .mockStatic(AppSearchMeasurementRollbackWorker.class)
-                        .initMocks(this)
-                        .startMocking();
-
-        // Mock the user handle to return the fake user id
-        UserHandle mockUserHandle = mock(UserHandle.class);
-        doReturn(mockUserHandle).when(() -> UserHandle.getUserHandleForUid(anyInt()));
-        doReturn(UID).when(mockUserHandle).getIdentifier();
-
-        // Mock the worker instance
-        doReturn(mWorker)
-                .when(
-                        () ->
-                                AppSearchMeasurementRollbackWorker.getInstance(
-                                        mContext, Integer.toString(UID)));
-
-        // Mock the current apex version computation
-        mockApexVersion();
-
-        // Instantiate the manager class after all the dependencies are mocked.
-        mManager =
-                AppSearchMeasurementRollbackManager.getInstance(
-                        mContext, AdServicesManager.MEASUREMENT_DELETION);
-    }
-
-    @After
-    public void teardown() {
-        mMockitoSession.finishMocking();
+        createManager(CURRENT_APEX_VERSION);
     }
 
     @Test
@@ -110,12 +88,8 @@ public class AppSearchMeasurementRollbackManagerTest {
     }
 
     @Test
-    public void testRecordAdServicesDeletionOccurred_noApex() {
-        // Mock so that no apex matches the suffix.
-        mockApexVersion(List.of());
-        mManager =
-                AppSearchMeasurementRollbackManager.getInstance(
-                        mContext, AdServicesManager.MEASUREMENT_DELETION);
+    public void testRecordAdServicesDeletionOccurred_noCurrentApex() {
+        createManager(APEX_VERSION_WHEN_NOT_FOUND);
 
         mManager.recordAdServicesDeletionOccurred();
         verify(mWorker, never()).recordAdServicesDeletionOccurred(anyInt(), anyLong());
@@ -136,28 +110,31 @@ public class AppSearchMeasurementRollbackManagerTest {
     public void testNeedsToHandleRollbackReconciliation_StoredDataNull() {
         doReturn(null).when(mWorker).getAdServicesDeletionRollbackMetadata(anyInt());
         assertThat(mManager.needsToHandleRollbackReconciliation()).isFalse();
+        verify(mWorker).getAdServicesDeletionRollbackMetadata(anyInt());
         verify(mWorker, never()).clearAdServicesDeletionOccurred(anyString());
         verifyNoMoreInteractions(mWorker);
     }
 
     @Test
     public void testNeedsToHandleRollbackReconciliation_StoredVersionLower() {
-        AppSearchMeasurementRollbackDao mockDao = mock(AppSearchMeasurementRollbackDao.class);
-        doReturn(CURRENT_APEX_VERSION - 1).when(mockDao).getApexVersion();
-        doReturn(mockDao).when(mWorker).getAdServicesDeletionRollbackMetadata(anyInt());
+        doReturn(Pair.create(CURRENT_APEX_VERSION - 1, "test"))
+                .when(mWorker)
+                .getAdServicesDeletionRollbackMetadata(anyInt());
 
         assertThat(mManager.needsToHandleRollbackReconciliation()).isFalse();
+        verify(mWorker).getAdServicesDeletionRollbackMetadata(anyInt());
         verify(mWorker, never()).clearAdServicesDeletionOccurred(anyString());
         verifyNoMoreInteractions(mWorker);
     }
 
     @Test
     public void testNeedsToHandleRollbackReconciliation_StoredVersionEqual() {
-        AppSearchMeasurementRollbackDao mockDao = mock(AppSearchMeasurementRollbackDao.class);
-        doReturn(CURRENT_APEX_VERSION).when(mockDao).getApexVersion();
-        doReturn(mockDao).when(mWorker).getAdServicesDeletionRollbackMetadata(anyInt());
+        doReturn(Pair.create(CURRENT_APEX_VERSION, "test"))
+                .when(mWorker)
+                .getAdServicesDeletionRollbackMetadata(anyInt());
 
         assertThat(mManager.needsToHandleRollbackReconciliation()).isFalse();
+        verify(mWorker).getAdServicesDeletionRollbackMetadata(anyInt());
         verify(mWorker, never()).clearAdServicesDeletionOccurred(anyString());
         verifyNoMoreInteractions(mWorker);
     }
@@ -165,24 +142,19 @@ public class AppSearchMeasurementRollbackManagerTest {
     @Test
     public void testNeedsToHandleRollbackReconciliation_StoredVersionHigher() {
         String mockRowId = "mock_row_id";
-
-        AppSearchMeasurementRollbackDao mockDao = mock(AppSearchMeasurementRollbackDao.class);
-        doReturn(CURRENT_APEX_VERSION + 1).when(mockDao).getApexVersion();
-        doReturn(mockRowId).when(mockDao).getId();
-        doReturn(mockDao).when(mWorker).getAdServicesDeletionRollbackMetadata(anyInt());
+        doReturn(Pair.create(CURRENT_APEX_VERSION + 1, mockRowId))
+                .when(mWorker)
+                .getAdServicesDeletionRollbackMetadata(anyInt());
 
         assertThat(mManager.needsToHandleRollbackReconciliation()).isTrue();
+        verify(mWorker).getAdServicesDeletionRollbackMetadata(anyInt());
         verify(mWorker).clearAdServicesDeletionOccurred(eq(mockRowId));
         verifyNoMoreInteractions(mWorker);
     }
 
     @Test
-    public void testNeedsToHandleRollbackReconciliation_noApex() {
-        // Mock so that no apex matches the suffix.
-        mockApexVersion(List.of());
-        mManager =
-                AppSearchMeasurementRollbackManager.getInstance(
-                        mContext, AdServicesManager.MEASUREMENT_DELETION);
+    public void testNeedsToHandleRollbackReconciliation_noCurrentApex() {
+        createManager(APEX_VERSION_WHEN_NOT_FOUND);
 
         assertThat(mManager.needsToHandleRollbackReconciliation()).isFalse();
         verify(mWorker, never()).clearAdServicesDeletionOccurred(any());
@@ -199,19 +171,48 @@ public class AppSearchMeasurementRollbackManagerTest {
         assertThat(mManager.needsToHandleRollbackReconciliation()).isFalse();
     }
 
-    private void mockApexVersion() {
-        PackageInfo info1 = new PackageInfo();
-        info1.packageName = EXTSERVICES_PACKAGE_NAME;
-        info1.setLongVersionCode(CURRENT_APEX_VERSION);
-        info1.isApex = true;
-        mockApexVersion(List.of(info1));
+    @Test
+    public void testComputeApexVersion_noMatch() {
+        mockApexVersion("test");
+        long apex = MeasurementRollbackCompatManager.computeApexVersion(mContext);
+        assertThat(apex).isEqualTo(APEX_VERSION_WHEN_NOT_FOUND);
     }
 
-    private void mockApexVersion(List<PackageInfo> packagesToReturn) {
+    @Test
+    public void testComputeApexVersion_someMatch() {
+        mockApexVersion("test", EXTSERVICES_PACKAGE_NAME);
+        long apex = MeasurementRollbackCompatManager.computeApexVersion(mContext);
+        assertThat(apex).isEqualTo(CURRENT_APEX_VERSION + 1);
+    }
+
+    @Test
+    public void testGetUserId() {
+        // Mock the user handle to return the fake user id
+        UserHandle mockUserHandle = mock(UserHandle.class);
+        doReturn(mockUserHandle).when(() -> UserHandle.getUserHandleForUid(anyInt()));
+        doReturn(UID).when(mockUserHandle).getIdentifier();
+
+        assertThat(MeasurementRollbackCompatManager.getUserId()).isEqualTo(Integer.toString(UID));
+    }
+
+    private void createManager(long currentApexVersion) {
+        mManager =
+                new MeasurementRollbackCompatManager(
+                        currentApexVersion, AdServicesManager.MEASUREMENT_DELETION, mWorker);
+    }
+
+    private void mockApexVersion(String... packageNames) {
+        List<PackageInfo> list = new ArrayList<>();
+        for (int i = 0; i < packageNames.length; i++) {
+            PackageInfo info = new PackageInfo();
+            info.packageName = packageNames[i];
+            info.setLongVersionCode(CURRENT_APEX_VERSION + i);
+            info.isApex = true;
+            list.add(info);
+        }
+
         PackageManager packageManager = mock(PackageManager.class);
         doReturn(packageManager).when(mContext).getPackageManager();
-        doReturn(packagesToReturn)
-                .when(packageManager)
-                .getInstalledPackages(PackageManager.MATCH_APEX);
+        doReturn(list).when(packageManager).getInstalledPackages(PackageManager.MATCH_APEX);
     }
 }

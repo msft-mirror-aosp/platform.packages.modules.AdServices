@@ -20,18 +20,14 @@ import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREG
 import static android.os.Build.VERSION.SDK_INT;
 
 import android.annotation.IntDef;
-import android.annotation.NonNull;
 import android.app.job.JobInfo;
 import android.os.Build;
-
-import androidx.annotation.Nullable;
 
 import com.android.adservices.cobalt.CobaltConstants;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
 
-import java.io.PrintWriter;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.HashMap;
@@ -44,7 +40,7 @@ import java.util.concurrent.TimeUnit;
  * migrate to Flag Codegen in the future. With that migration, the Flags.java file will be generated
  * from the GCL.
  */
-public interface Flags {
+public interface Flags extends CommonFlags {
     /** Topics Epoch Job Period. */
     long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
 
@@ -1234,7 +1230,9 @@ public interface Flags {
 
     boolean FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED = false;
 
-    /** @return whether to call trusted servers for off device ad selection. */
+    /**
+     * @return whether to call trusted servers for off device ad selection.
+     */
     default boolean getAdSelectionOffDeviceEnabled() {
         return FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED;
     }
@@ -1633,9 +1631,6 @@ public interface Flags {
     default boolean getAdServicesErrorLoggingEnabled() {
         return ADSERVICES_ERROR_LOGGING_ENABLED;
     }
-
-    /** Dump some debug info for the flags */
-    default void dump(@NonNull PrintWriter writer, @Nullable String[] args) {}
 
     /**
      * The number of epoch to look back to do garbage collection for old epoch data. Assume current
@@ -2266,6 +2261,18 @@ public interface Flags {
         return getGlobalKillSwitch()
                 || getMeasurementKillSwitch()
                 || MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
+    }
+
+    /** Flag for storing Measurement Rollback data in External Storage for Android R. */
+    boolean MEASUREMENT_ROLLBACK_DELETION_R_ENABLED = !SdkLevel.isAtLeastS();
+
+    /**
+     * Returns whether storing Measurement rollback deletion handling data in AdServices external
+     * storage is enabled. Rollback deletion handling on Android R will be disabled if this value is
+     * false.
+     */
+    default boolean getMeasurementRollbackDeletionREnabled() {
+        return MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
     }
 
     /**
@@ -3862,6 +3869,24 @@ public interface Flags {
      */
     default boolean getMeasurementAggregateFallbackReportingJobPersisted() {
         return MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED;
+    }
+
+    /** Default value for Null Aggregate Report feature flag. */
+    boolean MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED = false;
+
+    /** Null Aggregate Report feature flag. */
+    default boolean getMeasurementNullAggregateReportEnabled() {
+        return MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED;
+    }
+
+    float MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME = .008f;
+
+    /**
+     * Returns the rate at which null aggregate reports are generated whenever an actual aggregate
+     * report is successfully generated.
+     */
+    default float getMeasurementNullAggReportRateInclSourceRegistrationTime() {
+        return MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME;
     }
 
     /** Default U18 UX feature flag.. */

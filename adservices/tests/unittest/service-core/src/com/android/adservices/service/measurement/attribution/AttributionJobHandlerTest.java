@@ -17,8 +17,10 @@
 package com.android.adservices.service.measurement.attribution;
 
 import static com.android.adservices.service.Flags.MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -46,6 +48,7 @@ import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
+import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.AttributionConfig;
 import com.android.adservices.service.measurement.EventReport;
@@ -84,9 +87,11 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Unit test for {@link AttributionJobHandler}
@@ -201,6 +206,7 @@ public class AttributionJobHandlerTest {
                 .thenReturn(Flags.MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION);
         when(mFlags.getMeasurementMaxAggregateReportsPerDestination())
                 .thenReturn(Flags.MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION);
+        when(mFlags.getMeasurementNullAggReportRateInclSourceRegistrationTime()).thenReturn(0f);
     }
 
     @Test
@@ -706,6 +712,246 @@ public class AttributionJobHandlerTest {
 
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
+    }
+
+    @Test
+    public void shouldDoSimpleAttributionWithNullReports()
+            throws DatastoreException, JSONException {
+        JSONArray triggerDatas = new JSONArray();
+        JSONObject jsonObject1 = new JSONObject();
+        jsonObject1.put("key_piece", "0x400");
+        jsonObject1.put("source_keys", new JSONArray(Arrays.asList("campaignCounts")));
+        JSONObject jsonObject2 = new JSONObject();
+        jsonObject2.put("key_piece", "0xA80");
+        jsonObject2.put("source_keys", new JSONArray(Arrays.asList("geoValue", "noMatch")));
+        triggerDatas.put(jsonObject1);
+        triggerDatas.put(jsonObject2);
+
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setTriggerTime(TRIGGER_TIME)
+                        .setStatus(Trigger.Status.PENDING)
+                        .setEventTriggers(
+                                "[\n"
+                                        + "{\n"
+                                        + "  \"trigger_data\": \"5\",\n"
+                                        + "  \"priority\": \"123\",\n"
+                                        + "  \"deduplication_key\": \"1\"\n"
+                                        + "}"
+                                        + "]\n")
+                        .setAggregateTriggerData(triggerDatas.toString())
+                        .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
+                        .build();
+
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("sourceId1")
+                        .setEventTime(SOURCE_TIME)
+                        .setExpiryTime(EXPIRY_TIME)
+                        .setAggregatableReportWindow(TRIGGER_TIME + 1L)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setAggregateSource(
+                                "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
+                        .setFilterData("{\"product\":[\"1234\",\"2345\"]}")
+                        .build();
+
+        AggregateReport expectedAggregateReport =
+                new AggregateReport.Builder()
+                        .setApiVersion("0.1")
+                        .setAttributionDestination(trigger.getAttributionDestination())
+                        .setDebugCleartextPayload(
+                                "{\"operation\":\"histogram\","
+                                        + "\"data\":[{\"bucket\":\"1369\",\"value\":32768},"
+                                        + "{\"bucket\":\"2693\",\"value\":1644}]}")
+                        .setEnrollmentId(source.getEnrollmentId())
+                        .setPublisher(source.getRegistrant())
+                        .setSourceId(source.getId())
+                        .setTriggerId(trigger.getId())
+                        .setRegistrationOrigin(REGISTRATION_URI)
+                        .setSourceRegistrationTime(roundDownToDay(source.getEventTime()))
+                        .setAggregateAttributionData(
+                                new AggregateAttributionData.Builder()
+                                        .setContributions(
+                                                Arrays.asList(
+                                                        new AggregateHistogramContribution.Builder()
+                                                                .setKey(new BigInteger("1369"))
+                                                                .setValue(32768)
+                                                                .build(),
+                                                        new AggregateHistogramContribution.Builder()
+                                                                .setKey(new BigInteger("2693"))
+                                                                .setValue(1644)
+                                                                .build()))
+                                        .build())
+                        .setIsFakeReport(false)
+                        .build();
+
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
+        when(mMeasurementDao.getSourceDestinations(source.getId()))
+                .thenReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()));
+        when(mFlags.getMeasurementMaxReportingRegisterSourceExpirationInSeconds())
+                .thenReturn(MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+        when(mFlags.getMeasurementNullAggregateReportEnabled()).thenReturn(true);
+        when(mFlags.getMeasurementNullAggReportRateInclSourceRegistrationTime()).thenReturn(1.0f);
+
+        mHandler.performPendingAttributions();
+
+        ArgumentCaptor<AggregateReport> aggregateReportCaptor =
+                ArgumentCaptor.forClass(AggregateReport.class);
+        // There is a chance to create a null report for each day between 0 and max expiry,
+        // except for the day that the source actually occurred.
+        long invocations =
+                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS
+                        / TimeUnit.DAYS.toSeconds(1);
+        invocations++; // The real report will also be inserted.
+        verify(mMeasurementDao, times((int) invocations))
+                .insertAggregateReport(aggregateReportCaptor.capture());
+        List<AggregateReport> reports = aggregateReportCaptor.getAllValues();
+
+        List<AggregateReport> fakeReports =
+                reports.stream()
+                        .filter(AggregateReport::isFakeReport)
+                        .sorted(
+                                Comparator.comparing(AggregateReport::getSourceRegistrationTime)
+                                        .reversed())
+                        .collect(Collectors.toList());
+
+        for (int i = 0; i < fakeReports.size(); i++) {
+            // i + 1 because the first attempt at creating a null report is skipped since the
+            // fakeSourceTime would be equal to the actual source registration time.
+            assertNullAggregateReport(
+                    fakeReports.get(i), trigger, (i + 1) * TimeUnit.DAYS.toMillis(1));
+        }
+
+        AggregateReport trueReport =
+                reports.stream().filter(r -> !r.isFakeReport()).findFirst().get();
+        assertAggregateReportsEqual(expectedAggregateReport, trueReport);
+    }
+
+    @Test
+    public void shouldDoSimpleAttributionWithNullReports_triggerOnLastPossibleDay()
+            throws DatastoreException, JSONException {
+        JSONArray triggerDatas = new JSONArray();
+        JSONObject jsonObject1 = new JSONObject();
+        jsonObject1.put("key_piece", "0x400");
+        jsonObject1.put("source_keys", new JSONArray(Arrays.asList("campaignCounts")));
+        JSONObject jsonObject2 = new JSONObject();
+        jsonObject2.put("key_piece", "0xA80");
+        jsonObject2.put("source_keys", new JSONArray(Arrays.asList("geoValue", "noMatch")));
+        triggerDatas.put(jsonObject1);
+        triggerDatas.put(jsonObject2);
+
+        // Add one day because attribution is eligible from 0 to max days, inclusive.
+        long maxDays =
+                (MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS
+                                + TimeUnit.DAYS.toSeconds(1))
+                        * TimeUnit.SECONDS.toMillis(1);
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setTriggerTime(roundDownToDay(SOURCE_TIME) + maxDays - 1)
+                        .setStatus(Trigger.Status.PENDING)
+                        .setEventTriggers(
+                                "[\n"
+                                        + "{\n"
+                                        + "  \"trigger_data\": \"5\",\n"
+                                        + "  \"priority\": \"123\",\n"
+                                        + "  \"deduplication_key\": \"1\"\n"
+                                        + "}"
+                                        + "]\n")
+                        .setAggregateTriggerData(triggerDatas.toString())
+                        .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
+                        .build();
+
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("sourceId1")
+                        .setEventTime(SOURCE_TIME)
+                        .setExpiryTime(EXPIRY_TIME)
+                        .setAggregatableReportWindow(roundDownToDay(SOURCE_TIME) + maxDays)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setAggregateSource(
+                                "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
+                        .setFilterData("{\"product\":[\"1234\",\"2345\"]}")
+                        .build();
+
+        AggregateReport expectedAggregateReport =
+                new AggregateReport.Builder()
+                        .setApiVersion("0.1")
+                        .setAttributionDestination(trigger.getAttributionDestination())
+                        .setDebugCleartextPayload(
+                                "{\"operation\":\"histogram\","
+                                        + "\"data\":[{\"bucket\":\"1369\",\"value\":32768},"
+                                        + "{\"bucket\":\"2693\",\"value\":1644}]}")
+                        .setEnrollmentId(source.getEnrollmentId())
+                        .setPublisher(source.getRegistrant())
+                        .setSourceId(source.getId())
+                        .setTriggerId(trigger.getId())
+                        .setRegistrationOrigin(REGISTRATION_URI)
+                        .setAggregateAttributionData(
+                                new AggregateAttributionData.Builder()
+                                        .setContributions(
+                                                Arrays.asList(
+                                                        new AggregateHistogramContribution.Builder()
+                                                                .setKey(new BigInteger("1369"))
+                                                                .setValue(32768)
+                                                                .build(),
+                                                        new AggregateHistogramContribution.Builder()
+                                                                .setKey(new BigInteger("2693"))
+                                                                .setValue(1644)
+                                                                .build()))
+                                        .build())
+                        .setIsFakeReport(false)
+                        .build();
+
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
+        when(mMeasurementDao.getSourceDestinations(source.getId()))
+                .thenReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()));
+        when(mFlags.getMeasurementMaxReportingRegisterSourceExpirationInSeconds())
+                .thenReturn(MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+        when(mFlags.getMeasurementNullAggregateReportEnabled()).thenReturn(true);
+        when(mFlags.getMeasurementNullAggReportRateInclSourceRegistrationTime()).thenReturn(1.0f);
+
+        mHandler.performPendingAttributions();
+
+        ArgumentCaptor<AggregateReport> aggregateReportCaptor =
+                ArgumentCaptor.forClass(AggregateReport.class);
+        // There is a chance to create a null report for each day between 0 and max expiry
+        long invocations =
+                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS
+                        / TimeUnit.DAYS.toSeconds(1);
+        invocations++; // The real report will also be inserted.
+        verify(mMeasurementDao, times((int) invocations))
+                .insertAggregateReport(aggregateReportCaptor.capture());
+        List<AggregateReport> reports = aggregateReportCaptor.getAllValues();
+
+        List<AggregateReport> fakeReports =
+                reports.stream()
+                        .filter(AggregateReport::isFakeReport)
+                        .sorted(
+                                Comparator.comparing(AggregateReport::getSourceRegistrationTime)
+                                        .reversed())
+                        .collect(Collectors.toList());
+
+        for (int i = 0; i < fakeReports.size(); i++) {
+            assertNullAggregateReport(fakeReports.get(i), trigger, i * TimeUnit.DAYS.toMillis(1));
+        }
+
+        AggregateReport trueReport =
+                reports.stream().filter(r -> !r.isFakeReport()).findFirst().get();
+        assertAggregateReportsEqual(expectedAggregateReport, trueReport);
     }
 
     @Test
@@ -5777,6 +6023,38 @@ public class AttributionJobHandlerTest {
         return filterSet;
     }
 
+    private void assertNullAggregateReport(
+            AggregateReport report, Trigger trigger, long timeOffset) {
+        assertEquals(trigger.getRegistrationOrigin(), report.getRegistrationOrigin());
+        assertEquals(trigger.getAttributionDestination(), report.getAttributionDestination());
+
+        long lowerBound = trigger.getTriggerTime() + PrivacyParams.AGGREGATE_REPORT_MIN_DELAY;
+        // Add slightly more delay to upper bound to account for execution.
+        long upperBound =
+                trigger.getTriggerTime()
+                        + PrivacyParams.AGGREGATE_REPORT_MIN_DELAY
+                        + PrivacyParams.AGGREGATE_REPORT_DELAY_SPAN
+                        + 1000L;
+
+        assertTrue(
+                report.getScheduledReportTime() > lowerBound
+                        && report.getScheduledReportTime() < upperBound);
+
+        assertNull(report.getSourceDebugKey());
+        assertEquals(trigger.getDebugKey(), report.getTriggerDebugKey());
+        if (trigger.getAggregationCoordinatorOrigin() == null) {
+            assertEquals(
+                    Uri.parse(AdServicesConfig.getMeasurementDefaultAggregationCoordinatorOrigin()),
+                    report.getAggregationCoordinatorOrigin());
+        } else {
+            assertEquals(
+                    trigger.getAggregationCoordinatorOrigin(),
+                    report.getAggregationCoordinatorOrigin());
+        }
+        assertTrue(report.isFakeReport());
+        assertEquals(trigger.getTriggerTime() - timeOffset, report.getSourceRegistrationTime());
+    }
+
     private void assertAggregateReportsEqual(
             AggregateReport expectedReport, AggregateReport actualReport) {
         // Avoids checking report time because there is randomization
@@ -5796,6 +6074,7 @@ public class AttributionJobHandlerTest {
         assertEquals(expectedReport.getSourceDebugKey(), actualReport.getSourceDebugKey());
         assertEquals(expectedReport.getTriggerDebugKey(), actualReport.getTriggerDebugKey());
         assertEquals(expectedReport.getRegistrationOrigin(), actualReport.getRegistrationOrigin());
+        assertEquals(expectedReport.isFakeReport(), actualReport.isFakeReport());
     }
 
     private static Trigger getAggregateTrigger() throws JSONException {
@@ -5865,5 +6144,9 @@ public class AttributionJobHandlerTest {
         } catch (JSONException ignored) {
             return null;
         }
+    }
+
+    private static long roundDownToDay(long timestamp) {
+        return Math.floorDiv(timestamp, TimeUnit.DAYS.toMillis(1)) * TimeUnit.DAYS.toMillis(1);
     }
 }

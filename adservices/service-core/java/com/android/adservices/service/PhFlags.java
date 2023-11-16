@@ -79,7 +79,7 @@ import java.util.stream.Collectors;
 
 /** Flags Implementation that delegates to DeviceConfig. */
 // TODO(b/228037065): Add validation logics for Feature flags read from PH.
-public final class PhFlags implements Flags {
+public final class PhFlags extends CommonPhFlags implements Flags {
 
     private static final PhFlags sSingleton = new PhFlags();
 
@@ -1871,6 +1871,19 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementRollbackDeletionREnabled() {
+        String flagName = FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
+        return !getGlobalKillSwitch()
+                && !getMeasurementKillSwitch()
+                && SystemProperties.getBoolean(
+                        getSystemPropertyName(flagName),
+                        /* def= */ DeviceConfig.getBoolean(
+                                FlagsConstants.NAMESPACE_ADSERVICES,
+                                flagName,
+                                MEASUREMENT_ROLLBACK_DELETION_R_ENABLED));
+    }
+
+    @Override
     public String getMeasurementDebugJoinKeyEnrollmentAllowlist() {
         return DeviceConfig.getString(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -3477,6 +3490,8 @@ public final class PhFlags implements Flags {
 
     @Override
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
+        super.dump(writer, args); // common flags
+
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED
@@ -3804,6 +3819,17 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS
                         + " = "
                         + getMeasurementAggregateFallbackReportingJobPeriodMs());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED
+                        + " = "
+                        + getMeasurementNullAggregateReportEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants
+                                .KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME
+                        + " = "
+                        + getMeasurementNullAggReportRateInclSourceRegistrationTime());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS
@@ -6246,6 +6272,25 @@ public final class PhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT,
                 /* defaultValue */ Flags.APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT);
+    }
+
+    @Override
+    public boolean getMeasurementNullAggregateReportEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED,
+                /* defaultValue */
+                MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED);
+    }
+
+    @Override
+    public float getMeasurementNullAggReportRateInclSourceRegistrationTime() {
+        return DeviceConfig.getFloat(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME,
+                /* defaultValue */
+                MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME);
     }
 
     @Override
