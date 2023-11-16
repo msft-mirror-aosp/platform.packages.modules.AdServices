@@ -89,13 +89,6 @@ public abstract class AbstractAdServicesDeviceSupportedRule implements TestRule 
         return isLowRamDevice;
     }
 
-    /** Checks whether the device has an Ad Id implementation. */
-    public final boolean isAdIdAvailable() {
-        boolean isAdIdAvailable = mDeviceSupportHelper.isAdIdAvailable();
-        mLog.v("isAdIdAvailable(): %b", isAdIdAvailable);
-        return isAdIdAvailable;
-    }
-
     @Override
     public Statement apply(Statement base, Description description) {
         if (!description.isTest()) {
@@ -111,23 +104,10 @@ public abstract class AbstractAdServicesDeviceSupportedRule implements TestRule 
                 boolean isLowRamDevice = isLowRamDevice();
                 RequiresLowRamDevice requiresLowRamDevice =
                         description.getAnnotation(RequiresLowRamDevice.class);
-                RequiresAdIdAvailable requiresAdIdAvailable =
-                        description.getAnnotation(RequiresAdIdAvailable.class);
-                // isAdIdAvailable is an expensive operation, so only check if necessary.
-                Boolean isAdIdAvailable = false;
-                if (requiresAdIdAvailable != null) {
-                    isAdIdAvailable = isAdIdAvailable();
-                }
                 mLog.d(
                         "apply(): testName=%s, isDeviceSupported=%b, isLowRamDevice=%b,"
-                                + " requiresLowRamDevice=%b, requiresAdIdAvailable=%b,"
-                                + " isAdIdAvailable=%s",
-                        testName,
-                        isDeviceSupported,
-                        isLowRamDevice,
-                        requiresLowRamDevice,
-                        requiresAdIdAvailable,
-                        isAdIdAvailable);
+                                + " requiresLowRamDevice=%s",
+                        testName, isDeviceSupported, isLowRamDevice, requiresLowRamDevice);
 
                 if (!isDeviceSupported && requiresLowRamDevice == null) {
                     // Low-ram devices is a sub-set of unsupported, hence we cannot skip it right
@@ -138,10 +118,6 @@ public abstract class AbstractAdServicesDeviceSupportedRule implements TestRule 
                 if (!isLowRamDevice && requiresLowRamDevice != null) {
                     throw new AssumptionViolatedException(
                             "Test annotated with @RequiresLowRamDevice and device is not");
-                }
-                if (!isAdIdAvailable && requiresAdIdAvailable != null) {
-                    throw new AssumptionViolatedException(
-                            "Test annotated with @RequiresAdIdAvailable and device does not");
                 }
 
                 base.evaluate();
