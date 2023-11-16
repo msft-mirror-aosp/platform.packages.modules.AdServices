@@ -34,7 +34,6 @@ import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.modules.utils.build.SdkLevel;
-import com.android.server.LocalManagerRegistry;
 
 import com.google.common.truth.Expect;
 
@@ -53,21 +52,6 @@ import java.util.Objects;
 public final class ExtendedMockitoExpectations {
 
     private static final String TAG = ExtendedMockitoExpectations.class.getSimpleName();
-
-    /**
-     * Mocks a call to {@link LocalManagerRegistry#getManager(Class)}, returning the given {@code
-     * manager}.
-     */
-    public static <T> void mockGetLocalManager(Class<T> managerClass, T manager) {
-        Log.v(TAG, "mockGetLocalManager(" + managerClass + ", " + manager + ")");
-        doReturn(manager).when(() -> LocalManagerRegistry.getManager(managerClass));
-    }
-
-    /** Mocks a call to {@link LocalManagerRegistry#getManager(Class)}, returning {@code null}. */
-    public static void mockGetLocalManagerNotFound(Class<?> managerClass) {
-        Log.v(TAG, "mockGetLocalManagerNotFound(" + managerClass + ")");
-        doReturn(null).when(() -> LocalManagerRegistry.getManager(managerClass));
-    }
 
     /** Mocks a call to {@link SdkLevel#isAtLeastR()}, returning {@code isIt}. */
     public static void mockIsAtLeastR(boolean isIt) {
