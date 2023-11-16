@@ -44,6 +44,7 @@ import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Assume;
@@ -77,6 +78,8 @@ public class SettingsRvcUxSelectorUiAutomatorTest {
 
     @Before
     public void setup() {
+        // This test is only enabled on R.
+        Assume.assumeTrue(SdkLevel.isAtLeastR() && !SdkLevel.isAtLeastS());
         Assume.assumeTrue(ApkTestUtil.isDeviceSupported());
 
         // Initialize UiDevice instance
