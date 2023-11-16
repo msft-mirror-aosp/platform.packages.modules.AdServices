@@ -941,6 +941,9 @@ public final class FlagsConstants {
     public static final String KEY_ENABLE_ADEXT_SERVICE_CONSENT_DATA =
             "enable_adext_service_consent_data";
 
+    public static final String KEY_ENABLE_ADEXT_SERVICE_TO_APPSEARCH_MIGRATION =
+            "enable_adext_service_to_appsearch_migration";
+
     // Whether to call trusted servers for off device ad selection.
     public static final String KEY_OFF_DEVICE_AD_SELECTION_ENABLED =
             "enable_off_device_ad_selection";
