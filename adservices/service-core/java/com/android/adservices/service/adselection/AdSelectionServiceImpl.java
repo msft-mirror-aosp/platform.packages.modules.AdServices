@@ -842,7 +842,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                             mAdSelectionServiceFilter,
                             mFledgeAuthorizationFilter,
                             mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
-                            callingUid);
+                            callingUid,
+                            mShouldUseUnifiedTables);
             reporter.reportImpression(requestParams, callback);
         }
     }
