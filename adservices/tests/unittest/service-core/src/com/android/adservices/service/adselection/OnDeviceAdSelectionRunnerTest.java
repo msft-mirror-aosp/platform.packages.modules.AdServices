@@ -89,8 +89,8 @@ import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.AdSelectionResponse;
-import android.adservices.adselection.ContextualAds;
-import android.adservices.adselection.ContextualAdsFixture;
+import android.adservices.adselection.SignedContextualAds;
+import android.adservices.adselection.SignedContextualAdsFixture;
 import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdFilters;
 import android.adservices.common.AdSelectionSignals;
@@ -2973,12 +2973,13 @@ public class OnDeviceAdSelectionRunnerTest {
 
     @Test
     public void testCreateAdSelectionResult_Contextual_Enabled() throws AdServicesException {
+        Map<AdTechIdentifier, SignedContextualAds> signedContextualAdsMap = createContextualAds();
         AdSelectionConfig adSelectionConfig =
                 mAdSelectionConfigBuilder
                         .build()
                         .cloneToBuilder()
                         .setCustomAudienceBuyers(Collections.EMPTY_LIST)
-                        .setBuyerContextualAds(createContextualAds())
+                        .setBuyerSignedContextualAds(signedContextualAdsMap)
                         .build();
 
         final Flags flags =
@@ -3037,13 +3038,12 @@ public class OnDeviceAdSelectionRunnerTest {
                         eq(Collections.EMPTY_LIST), mAdSelectionConfigArgumentCaptor.capture());
         assertEquals(
                 "The contextual ads should have reached scoring as is",
-                createContextualAds(),
-                mAdSelectionConfigArgumentCaptor.getValue().getBuyerContextualAds());
+                signedContextualAdsMap,
+                mAdSelectionConfigArgumentCaptor.getValue().getBuyerSignedContextualAds());
     }
 
     @Test
-    public void testCreateAdSelectionResult_Contextual_DisabledAndSkipped()
-            throws ExecutionException, InterruptedException, TimeoutException, AdServicesException {
+    public void testCreateAdSelectionResult_Contextual_DisabledAndSkipped() {
         when(mClockSpy.instant()).thenReturn(Clock.systemUTC().instant());
         AdSelectionConfig adSelectionConfig =
                 mAdSelectionConfigBuilder
@@ -3051,7 +3051,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         .cloneToBuilder()
                         .setCustomAudienceBuyers(Collections.EMPTY_LIST)
                         // Despite populating Contextual Ads, they will be removed
-                        .setBuyerContextualAds(createContextualAds())
+                        .setBuyerSignedContextualAds(createContextualAds())
                         .build();
         final Flags flags =
                 new OnDeviceAdSelectionRunnerTestFlags() {
@@ -3113,14 +3113,14 @@ public class OnDeviceAdSelectionRunnerTest {
     @Test
     public void testCreateAdSelectionResult_Contextual_AppInstallFiltered()
             throws AdServicesException {
-        Map<AdTechIdentifier, ContextualAds> contextualAdsMap = createContextualAds();
+        Map<AdTechIdentifier, SignedContextualAds> contextualAdsMap = createContextualAds();
 
         AdSelectionConfig adSelectionConfig =
                 mAdSelectionConfigBuilder
                         .build()
                         .cloneToBuilder()
                         .setCustomAudienceBuyers(Collections.EMPTY_LIST)
-                        .setBuyerContextualAds(contextualAdsMap)
+                        .setBuyerSignedContextualAds(contextualAdsMap)
                         .build();
 
         final Flags flags =
@@ -3171,7 +3171,7 @@ public class OnDeviceAdSelectionRunnerTest {
                 .thenReturn(contextualAdsMap.get(CommonFixture.VALID_BUYER_1));
         when(mMockAdFilterer.filterContextualAds(contextualAdsMap.get(CommonFixture.VALID_BUYER_2)))
                 .thenReturn(
-                        new ContextualAds.Builder()
+                        SignedContextualAdsFixture.aSignedContextualAdBuilder()
                                 .setBuyer(CommonFixture.VALID_BUYER_2)
                                 .setDecisionLogicUri(
                                         contextualAdsMap
@@ -3188,7 +3188,7 @@ public class OnDeviceAdSelectionRunnerTest {
                 contextualAdsMap.get(CommonFixture.VALID_BUYER_1).getAdsWithBid(),
                 mAdSelectionConfigArgumentCaptor
                         .getValue()
-                        .getBuyerContextualAds()
+                        .getBuyerSignedContextualAds()
                         .get(CommonFixture.VALID_BUYER_1)
                         .getAdsWithBid());
         assertEquals(
@@ -3196,7 +3196,7 @@ public class OnDeviceAdSelectionRunnerTest {
                 Collections.EMPTY_LIST,
                 mAdSelectionConfigArgumentCaptor
                         .getValue()
-                        .getBuyerContextualAds()
+                        .getBuyerSignedContextualAds()
                         .get(CommonFixture.VALID_BUYER_2)
                         .getAdsWithBid());
     }
@@ -3826,20 +3826,21 @@ public class OnDeviceAdSelectionRunnerTest {
         }
     }
 
-    private Map<AdTechIdentifier, ContextualAds> createContextualAds() {
-        Map<AdTechIdentifier, ContextualAds> buyerContextualAds = new HashMap<>();
+    private Map<AdTechIdentifier, SignedContextualAds> createContextualAds() {
+        Map<AdTechIdentifier, SignedContextualAds> buyerContextualAds = new HashMap<>();
 
         AdTechIdentifier buyer1 = CommonFixture.VALID_BUYER_1;
-        ContextualAds contextualAds1 =
-                ContextualAdsFixture.generateContextualAds(
+        SignedContextualAds contextualAds1 =
+                SignedContextualAdsFixture.generateSignedContextualAds(
                                 buyer1, ImmutableList.of(100.0, 200.0, 300.0))
                         .setDecisionLogicUri(
                                 CommonFixture.getUri(BUYER_1, BUYER_BIDDING_LOGIC_URI_PATH))
                         .build();
 
         AdTechIdentifier buyer2 = CommonFixture.VALID_BUYER_2;
-        ContextualAds contextualAds2 =
-                ContextualAdsFixture.generateContextualAds(buyer2, ImmutableList.of(400.0, 500.0))
+        SignedContextualAds contextualAds2 =
+                SignedContextualAdsFixture.generateSignedContextualAds(
+                                buyer2, ImmutableList.of(400.0, 500.0))
                         .setDecisionLogicUri(
                                 CommonFixture.getUri(BUYER_2, BUYER_BIDDING_LOGIC_URI_PATH))
                         .build();
