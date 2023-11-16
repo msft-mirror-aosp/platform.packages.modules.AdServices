@@ -36,7 +36,6 @@ public final class ApplicationContextSingleton {
 
     // TODO(b/280460130): use adservice helpers for tag name / logging methods
     private static final String TAG = "AppContextSingleton";
-    private static final boolean VERBOSE = Log.isLoggable(TAG, Log.VERBOSE);
 
     @VisibleForTesting
     public static final String ERROR_MESSAGE_SET_NOT_CALLED = "set() not called yet";
@@ -77,9 +76,7 @@ public final class ApplicationContextSingleton {
 
         // Set if it's not set yet
         if (sContext.compareAndSet(null, appContext)) {
-            if (VERBOSE) {
-                Log.v(TAG, "Set singleton context as " + appContext);
-            }
+            Log.i(TAG, "Set singleton context as " + appContext);
             return;
         }
 
