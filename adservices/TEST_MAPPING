@@ -471,6 +471,15 @@
       ]
     },
     {
+      // Install com.google.android.extservices.apex and run CtsAdExtServicesExtDataStorageServiceTest.
+      "name": "CtsAdExtServicesExtDataStorageServiceTest[com.google.android.extservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
       // Install com.google.android.adservices.apex and run CtsAppSetIdEndToEndTest.
       "name": "CtsAppSetIdEndToEndTest[com.google.android.adservices.apex]",
       "options": [
@@ -751,6 +760,14 @@
     },
     {
       "name": "CtsAdIdEndToEndTest",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "CtsAdServicesExtDataStorageServiceTest",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"

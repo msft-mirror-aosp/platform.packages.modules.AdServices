@@ -790,21 +790,19 @@ public class SourceTest {
         assertNotNull(source.getAggregatableAttributionSource(trigger, mFlags).orElse(null));
         assertNotNull(
                 source.getAggregatableAttributionSource(trigger, mFlags)
-                        .orElse(null)
+                        .get()
                         .getAggregatableSource());
         assertNotNull(
-                source.getAggregatableAttributionSource(trigger, mFlags)
-                        .orElse(null)
-                        .getFilterMap());
+                source.getAggregatableAttributionSource(trigger, mFlags).get().getFilterMap());
         assertEquals(
                 aggregatableSource,
                 source.getAggregatableAttributionSource(trigger, mFlags)
-                        .orElse(null)
+                        .get()
                         .getAggregatableSource());
         assertEquals(
                 filterMap,
                 source.getAggregatableAttributionSource(trigger, mFlags)
-                        .orElse(null)
+                        .get()
                         .getFilterMap()
                         .getAttributionFilterMap());
     }
