@@ -310,13 +310,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             PackageManager pm = mContext.getPackageManager();
             Intent serviceIntent = new Intent(AdServicesCommon.ACTION_TOPICS_SERVICE);
             List<ResolveInfo> resolveInfos =
-                    pm.queryIntentServicesAsUser(
+                    pm.queryIntentServices(
                             serviceIntent,
                             PackageManager.GET_SERVICES
                                     | PackageManager.MATCH_SYSTEM_ONLY
                                     | PackageManager.MATCH_DIRECT_BOOT_AWARE
-                                    | PackageManager.MATCH_DIRECT_BOOT_UNAWARE,
-                            UserHandle.SYSTEM);
+                                    | PackageManager.MATCH_DIRECT_BOOT_UNAWARE);
             ServiceInfo serviceInfo =
                     AdServicesCommon.resolveAdServicesService(
                             resolveInfos, serviceIntent.getAction());
