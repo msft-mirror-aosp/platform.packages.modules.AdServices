@@ -16,15 +16,18 @@
 package com.android.adservices.common;
 
 import android.annotation.Nullable;
+import android.content.Context;
 import android.os.Binder;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.BasicShellCommandHandler;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.Supplier;
 
@@ -42,34 +45,70 @@ public final class AdServicesShellCommandHandler extends BasicShellCommandHandle
     @VisibleForTesting static final String CMD_ECHO = "echo";
 
     @VisibleForTesting
+    static final String CMD_IS_ALLOWED_ATTRIBUTION_ACCESS = "is-allowed-attribution-access";
+
+    @VisibleForTesting
+    static final String CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS =
+            "is-allowed-custom-audiences-access";
+
+    @VisibleForTesting
+    static final String CMD_IS_ALLOWED_TOPICS_ACCESS = "is-allowed-topics-access";
+
+    @VisibleForTesting
     static final String HELP_ECHO =
-            CMD_ECHO + " <message> - prints the given message (useful to check cmd is working)";
+            CMD_ECHO + " <message> - prints the given message (useful to check cmd is working).";
+
+    @VisibleForTesting
+    static final String HELP_IS_ALLOWED_ATTRIBUTION_ACCESS =
+            CMD_IS_ALLOWED_ATTRIBUTION_ACCESS
+                    + " <package_name> <enrollment_id> - checks if the given enrollment id is"
+                    + " allowed to use the Attribution APIs in the given app.";
+
+    @VisibleForTesting
+    static final String HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS =
+            CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS
+                    + " <package_name> <enrollment_id> - checks if the given enrollment id is"
+                    + " allowed to use the Custom Audience APIs in the given app.";
+
+    @VisibleForTesting
+    static final String HELP_IS_ALLOWED_TOPICS_ACCESS =
+            CMD_IS_ALLOWED_TOPICS_ACCESS
+                    + " <package_name> <enrollment_id> <using_sdk_sandbox>- checks if the given"
+                    + " enrollment id is allowed to use the Topics APIs in the given app, when"
+                    + " using SDK sandbox or not.";
 
     @VisibleForTesting
     static final String ERROR_EMPTY_COMMAND = "Must provide a non-empty command\n";
 
-    @VisibleForTesting static final String ERROR_ECHO_EMPTY = "Must provide a non-empty message\n";
-
     @VisibleForTesting
-    static final String ERROR_ECHO_HIGHLANDER = "Echo args: There can be only one!\n";
+    static final String ERROR_TEMPLATE_INVALID_ARGS = "Invalid cmd (%s). Syntax: %s";
 
     private static final int RESULT_OK = 0;
     private static final int RESULT_GENERIC_ERROR = -1;
 
+    private final Context mContext;
     private final FileDescriptor mFd;
 
     // Used only on tests (otherwise it would be hard to get content of FileDescriptor)
     @Nullable private final Supplier<PrintWriter> mSupplier;
 
-    public AdServicesShellCommandHandler(FileDescriptor fd) {
-        mFd = Objects.requireNonNull(fd, "fd cannot be null");
-        mSupplier = null;
+    public AdServicesShellCommandHandler(Context context, FileDescriptor fd) {
+        this(context, Objects.requireNonNull(fd, "fd cannot be null"), /* supplier= */ null);
     }
 
     @VisibleForTesting
-    AdServicesShellCommandHandler(Supplier<PrintWriter> supplier) {
-        mFd = FileDescriptor.out;
-        mSupplier = Objects.requireNonNull(supplier, "fd cannot be null");
+    AdServicesShellCommandHandler(Context context, Supplier<PrintWriter> supplier) {
+        this(
+                context,
+                FileDescriptor.out,
+                Objects.requireNonNull(supplier, "supplier cannot be null"));
+    }
+
+    private AdServicesShellCommandHandler(
+            Context context, FileDescriptor fd, Supplier<PrintWriter> supplier) {
+        mContext = Objects.requireNonNull(context, "context cannot be null");
+        mFd = fd;
+        mSupplier = supplier;
     }
 
     @Override
@@ -109,14 +148,21 @@ public final class AdServicesShellCommandHandler extends BasicShellCommandHandle
         PrintWriter pw = getOutPrintWriter();
 
         pw.println(HELP_ECHO);
+        pw.println(HELP_IS_ALLOWED_ATTRIBUTION_ACCESS);
+        pw.println(HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS);
+        pw.println(HELP_IS_ALLOWED_TOPICS_ACCESS);
     }
 
     @Override
     public int onCommand(String cmd) {
         Log.d(TAG, "onCommand: " + cmd);
         switch (cmd) {
-            case "echo":
+            case CMD_ECHO:
                 return runEcho();
+            case CMD_IS_ALLOWED_ATTRIBUTION_ACCESS:
+            case CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS:
+            case CMD_IS_ALLOWED_TOPICS_ACCESS:
+                return runIsAllowedApiAccess(cmd);
             case "":
                 getOutPrintWriter().print(ERROR_EMPTY_COMMAND);
                 return RESULT_GENERIC_ERROR;
@@ -126,20 +172,126 @@ public final class AdServicesShellCommandHandler extends BasicShellCommandHandle
     }
 
     private int runEcho() {
-        PrintWriter pw = getOutPrintWriter();
-        String message = getNextArg();
-
-        if (TextUtils.isEmpty(message)) {
-            pw.print(ERROR_ECHO_EMPTY);
-            return RESULT_GENERIC_ERROR;
+        if (!hasExactNumberOfArgs(1)) {
+            return invalidArgsError(HELP_ECHO);
         }
-        if (!TextUtils.isEmpty(getNextArg())) {
-            pw.print(ERROR_ECHO_HIGHLANDER);
-            return RESULT_GENERIC_ERROR;
+        String message = getNextArg();
+        if (TextUtils.isEmpty(message)) {
+            return invalidArgsError(HELP_ECHO);
         }
 
         Log.i(TAG, "runEcho: message='" + message + "'");
-        pw.println(message);
+        getOutPrintWriter().println(message);
         return RESULT_OK;
+    }
+
+    private int runIsAllowedApiAccess(String cmd) {
+        int expectedArgs = 2; // first 2 args are common for all of them
+        String helpMsg = null;
+        switch (cmd) {
+            case CMD_IS_ALLOWED_ATTRIBUTION_ACCESS:
+                helpMsg = HELP_IS_ALLOWED_ATTRIBUTION_ACCESS;
+                break;
+            case CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS:
+                helpMsg = HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS;
+                break;
+            case CMD_IS_ALLOWED_TOPICS_ACCESS:
+                expectedArgs = 3;
+                helpMsg = HELP_IS_ALLOWED_TOPICS_ACCESS;
+                break;
+        }
+        if (!hasExactNumberOfArgs(expectedArgs)) {
+            return invalidArgsError(helpMsg);
+        }
+        String pkgName = getNextArg();
+        if (TextUtils.isEmpty(pkgName)) {
+            return invalidArgsError(helpMsg);
+        }
+        String enrollmentId = getNextArg();
+        if (TextUtils.isEmpty(enrollmentId)) {
+            return invalidArgsError(helpMsg);
+        }
+
+        boolean isValid = false;
+        switch (cmd) {
+            case CMD_IS_ALLOWED_ATTRIBUTION_ACCESS:
+                isValid =
+                        AppManifestConfigHelper.isAllowedAttributionAccess(
+                                mContext, pkgName, enrollmentId);
+                Log.i(
+                        TAG,
+                        "isAllowedAttributionAccess("
+                                + pkgName
+                                + ", "
+                                + enrollmentId
+                                + ": "
+                                + isValid);
+                break;
+            case CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS:
+                isValid =
+                        AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
+                                mContext, pkgName, enrollmentId);
+                Log.i(
+                        TAG,
+                        "isAllowedCustomAudiencesAccess("
+                                + pkgName
+                                + ", "
+                                + enrollmentId
+                                + ": "
+                                + isValid);
+                break;
+            case CMD_IS_ALLOWED_TOPICS_ACCESS:
+                Boolean usesSdkSandbox = getNextBooleanArg();
+                if (usesSdkSandbox == null) {
+                    return invalidArgsError(HELP_IS_ALLOWED_TOPICS_ACCESS);
+                }
+                isValid =
+                        AppManifestConfigHelper.isAllowedTopicsAccess(
+                                mContext, usesSdkSandbox, pkgName, enrollmentId);
+                Log.i(
+                        TAG,
+                        "isAllowedTopicAccess("
+                                + pkgName
+                                + ", "
+                                + usesSdkSandbox
+                                + ", "
+                                + enrollmentId
+                                + ": "
+                                + isValid);
+                break;
+        }
+        getOutPrintWriter().println(isValid);
+        return RESULT_OK;
+    }
+
+    private boolean hasExactNumberOfArgs(int expected) {
+        return getAllArgs().length == expected + 1; // adds +1 for the cmd itself
+    }
+
+    @Nullable
+    private Boolean getNextBooleanArg() {
+        String arg = getNextArg();
+        if (TextUtils.isEmpty(arg)) {
+            return null;
+        }
+        // Boolean.parse returns false when it's invalid
+        switch (arg.trim().toLowerCase()) {
+            case "true":
+                return Boolean.TRUE;
+            case "false":
+                return Boolean.FALSE;
+            default:
+                return null;
+        }
+    }
+
+    private int invalidArgsError(String syntax) {
+        getOutPrintWriter()
+                .println(
+                        String.format(
+                                ERROR_TEMPLATE_INVALID_ARGS,
+                                Arrays.toString(getAllArgs()),
+                                syntax));
+        return RESULT_GENERIC_ERROR;
     }
 }
