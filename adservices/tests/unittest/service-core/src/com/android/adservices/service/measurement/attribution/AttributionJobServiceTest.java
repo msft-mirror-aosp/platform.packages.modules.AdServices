@@ -16,7 +16,12 @@
 
 package com.android.adservices.service.measurement.attribution;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
+import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
+import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
+import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
+import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
+import static com.android.adservices.mockito.MockitoExpectations.verifyJobFinishedLogged;
+import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ATTRIBUTION_JOB;
 
 import static org.junit.Assert.assertFalse;
@@ -45,6 +50,7 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.Flags;
@@ -105,15 +111,11 @@ public class AttributionJobServiceTest {
     public void onStartJob_killSwitchOn_withoutLogging() throws Exception {
         runWithMocks(
                 () -> {
-                    // Logging killswitch is on.
-                    Mockito.doReturn(true).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
 
                     onStartJob_killSwitchOn();
 
-                    // Verify logging methods are not invoked.
-                    verify(mSpyLogger, never()).persistJobExecutionData(anyInt(), anyLong());
-                    verify(mSpyLogger, never())
-                            .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+                    verifyLoggingNotHappened(mSpyLogger);
                 });
     }
 
@@ -121,20 +123,12 @@ public class AttributionJobServiceTest {
     public void onStartJob_killSwitchOn_withLogging() throws Exception {
         runWithMocks(
                 () -> {
-                    // Logging killswitch is off.
-                    Mockito.doReturn(false).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
+                    JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
 
                     onStartJob_killSwitchOn();
 
-                    // Verify logging methods are invoked.
-                    verify(mSpyLogger).persistJobExecutionData(anyInt(), anyLong());
-                    verify(mSpyLogger)
-                            .logExecutionStats(
-                                    anyInt(),
-                                    anyLong(),
-                                    eq(
-                                            AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON),
-                                    anyInt());
+                    verifyBackgroundJobsSkipLogged(mSpyLogger, callback);
                 });
     }
 
@@ -142,15 +136,11 @@ public class AttributionJobServiceTest {
     public void onStartJob_killSwitchOff_withoutLogging() throws Exception {
         runWithMocks(
                 () -> {
-                    // Logging killswitch is on.
-                    Mockito.doReturn(true).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
 
                     onStartJob_killSwitchOff();
 
-                    // Verify logging methods are not invoked.
-                    verify(mSpyLogger, never()).persistJobExecutionData(anyInt(), anyLong());
-                    verify(mSpyLogger, never())
-                            .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+                    verifyLoggingNotHappened(mSpyLogger);
                 });
     }
 
@@ -158,14 +148,14 @@ public class AttributionJobServiceTest {
     public void onStartJob_killSwitchOff_withLogging() throws Exception {
         runWithMocks(
                 () -> {
-                    // Logging killswitch is off.
-                    Mockito.doReturn(false).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
+                    JobServiceLoggingCallback onStartJobCallback =
+                            syncPersistJobExecutionData(mSpyLogger);
+                    JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
 
                     onStartJob_killSwitchOff();
 
-                    // Verify logging methods are invoked.
-                    verify(mSpyLogger).persistJobExecutionData(anyInt(), anyLong());
-                    verify(mSpyLogger).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+                    verifyJobFinishedLogged(mSpyLogger, onStartJobCallback, onJobDoneCallback);
                 });
     }
 
@@ -211,15 +201,12 @@ public class AttributionJobServiceTest {
     public void onStartJob_shouldDisableJobTrue_withoutLogging() throws Exception {
         runWithMocks(
                 () -> {
-                    // Logging killswitch is on.
                     ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-                    Mockito.doReturn(true).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
 
                     onStartJob_shouldDisableJobTrue();
 
-                    // Verify logging method is not invoked.
-                    verify(mSpyLogger, never())
-                            .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+                    verifyLoggingNotHappened(mSpyLogger);
                 });
     }
 
@@ -227,16 +214,14 @@ public class AttributionJobServiceTest {
     public void onStartJob_shouldDisableJobTrue_withLoggingEnabled() throws Exception {
         runWithMocks(
                 () -> {
-                    // Logging killswitch is off.
                     ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-                    Mockito.doReturn(false).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
 
                     onStartJob_shouldDisableJobTrue();
 
                     // Verify logging has not happened even though logging is enabled because this
                     // field is not logged
-                    verify(mSpyLogger, never())
-                            .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+                    verifyLoggingNotHappened(mSpyLogger);
                 });
     }
 
@@ -257,8 +242,7 @@ public class AttributionJobServiceTest {
                             .getPendingJob(eq(MEASUREMENT_ATTRIBUTION_JOB_ID));
 
                     // Execute
-                    AttributionJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule = */ false);
+                    AttributionJobService.scheduleIfNeeded(mockContext, /* forceSchedule= */ false);
 
                     // Validate
                     ExtendedMockito.verify(
@@ -298,8 +282,7 @@ public class AttributionJobServiceTest {
                             .getPendingJob(eq(MEASUREMENT_ATTRIBUTION_JOB_ID));
 
                     // Execute
-                    AttributionJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule = */ false);
+                    AttributionJobService.scheduleIfNeeded(mockContext, /* forceSchedule= */ false);
 
                     // Validate
                     ExtendedMockito.verify(
@@ -340,8 +323,7 @@ public class AttributionJobServiceTest {
                             .getPendingJob(eq(MEASUREMENT_ATTRIBUTION_JOB_ID));
 
                     // Execute
-                    AttributionJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule = */ false);
+                    AttributionJobService.scheduleIfNeeded(mockContext, /* forceSchedule= */ false);
 
                     // Validate
                     ExtendedMockito.verify(() -> AttributionJobService.schedule(any(), any()));
@@ -368,7 +350,7 @@ public class AttributionJobServiceTest {
                             .getPendingJob(eq(MEASUREMENT_ATTRIBUTION_JOB_ID));
 
                     // Execute
-                    AttributionJobService.scheduleIfNeeded(mockContext, /* forceSchedule = */ true);
+                    AttributionJobService.scheduleIfNeeded(mockContext, /* forceSchedule= */ true);
 
                     // Validate
                     ExtendedMockito.verify(
@@ -390,7 +372,8 @@ public class AttributionJobServiceTest {
                     doReturn(mMockJobScheduler)
                             .when(mockContext)
                             .getSystemService(JobScheduler.class);
-                    doReturn(/* noJobInfo = */ null)
+                    // Mock the JobScheduler to have no pending job.
+                    doReturn(null)
                             .when(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_ATTRIBUTION_JOB_ID));
 

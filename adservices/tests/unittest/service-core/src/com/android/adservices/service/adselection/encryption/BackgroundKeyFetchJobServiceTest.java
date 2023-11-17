@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection.encryption;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdservicesJobServiceLogger;
+import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
 import static com.android.adservices.spe.AdservicesJobInfo.FLEDGE_AD_SELECTION_ENCRYPTION_KEY_FETCH_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doCallRealMethod;
@@ -31,13 +33,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
@@ -55,7 +53,6 @@ import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -67,7 +64,6 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.Spy;
 import org.mockito.quality.Strictness;
@@ -126,14 +122,7 @@ public class BackgroundKeyFetchJobServiceTest {
                 "Job already scheduled before setup!",
                 JOB_SCHEDULER.getPendingJob(FLEDGE_AD_SELECTION_ENCRYPTION_KEY_FETCH_JOB_ID));
 
-        // Mock AdservicesJobServiceLogger to not actually log the stats to server
-        mSpyLogger =
-                spy(new AdservicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mMockStatsdLogger));
-        Mockito.doNothing()
-                .when(mSpyLogger)
-                .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
-        ExtendedMockito.doReturn(mSpyLogger)
-                .when(() -> AdservicesJobServiceLogger.getInstance(any(Context.class)));
+        mSpyLogger = mockAdservicesJobServiceLogger(CONTEXT, mMockStatsdLogger);
     }
 
     @After
@@ -209,10 +198,10 @@ public class BackgroundKeyFetchJobServiceTest {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
         doAnswer(
-                unusedInvocation -> {
-                    jobFinishedCountDown.countDown();
-                    return null;
-                })
+                        unusedInvocation -> {
+                            jobFinishedCountDown.countDown();
+                            return null;
+                        })
                 .when(mBgFJobServiceSpy)
                 .jobFinished(mJobParametersMock, false);
 
@@ -229,7 +218,7 @@ public class BackgroundKeyFetchJobServiceTest {
     public void testOnStartJobUpdateSuccessdd()
             throws InterruptedException, ExecutionException, TimeoutException {
         Flags flagsWithEnabledBgFGaUxDisabledWithoutLogging =
-                new BackgroundKeyFetchJobServiceTest.FlagsWithEnabledBgFGaUxEnabled();
+                new BackgroundKeyFetchJobServiceTest.FlagsWithEnabledBgFGaUxEnabledWithoutLogging();
         doReturn(flagsWithEnabledBgFGaUxDisabledWithoutLogging).when(FlagsFactory::getFlags);
 
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
@@ -241,10 +230,10 @@ public class BackgroundKeyFetchJobServiceTest {
                 .when(mBgFWorkerMock)
                 .runBackgroundKeyFetch();
         doAnswer(
-                unusedInvocation -> {
-                    jobFinishedCountDown.countDown();
-                    return null;
-                })
+                        unusedInvocation -> {
+                            jobFinishedCountDown.countDown();
+                            return null;
+                        })
                 .when(mBgFJobServiceSpy)
                 .jobFinished(mJobParametersMock, false);
 
@@ -255,9 +244,8 @@ public class BackgroundKeyFetchJobServiceTest {
         verify(mBgFWorkerMock).runBackgroundKeyFetch();
         verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(BackgroundKeyFetchWorker.class));
-        // Verify logging methods are invoked.
-        verify(mSpyLogger).recordOnStartJob(anyInt());
-        verify(mSpyLogger).recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
+
+        verifyLoggingNotHappened(mSpyLogger);
     }
 
     @Test
@@ -275,10 +263,10 @@ public class BackgroundKeyFetchJobServiceTest {
                 .when(mBgFWorkerMock)
                 .runBackgroundKeyFetch();
         doAnswer(
-                unusedInvocation -> {
-                    jobFinishedCountDown.countDown();
-                    return null;
-                })
+                        unusedInvocation -> {
+                            jobFinishedCountDown.countDown();
+                            return null;
+                        })
                 .when(mBgFJobServiceSpy)
                 .jobFinished(mJobParametersMock, false);
 
@@ -306,10 +294,10 @@ public class BackgroundKeyFetchJobServiceTest {
                 .when(mBgFWorkerMock)
                 .runBackgroundKeyFetch();
         doAnswer(
-                unusedInvocation -> {
-                    jobFinishedCountDown.countDown();
-                    return null;
-                })
+                        unusedInvocation -> {
+                            jobFinishedCountDown.countDown();
+                            return null;
+                        })
                 .when(mBgFJobServiceSpy)
                 .jobFinished(mJobParametersMock, false);
 
@@ -483,6 +471,14 @@ public class BackgroundKeyFetchJobServiceTest {
         @Override
         public boolean getFledgeAuctionServerKillSwitch() {
             return false;
+        }
+    }
+
+    private static class FlagsWithEnabledBgFGaUxEnabledWithoutLogging
+            extends FlagsWithEnabledBgFGaUxEnabled {
+        @Override
+        public boolean getBackgroundJobsLoggingKillSwitch() {
+            return true;
         }
     }
 

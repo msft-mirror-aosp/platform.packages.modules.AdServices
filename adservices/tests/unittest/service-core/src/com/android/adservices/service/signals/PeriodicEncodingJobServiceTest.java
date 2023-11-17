@@ -16,9 +16,16 @@
 
 package com.android.adservices.service.signals;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdservicesJobServiceLogger;
+import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
+import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
+import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
+import static com.android.adservices.mockito.MockitoExpectations.verifyJobFinishedLogged;
+import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
+import static com.android.adservices.mockito.MockitoExpectations.verifyOnStartJobLogged;
+import static com.android.adservices.mockito.MockitoExpectations.verifyOnStopJobLogged;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__FAILED_WITHOUT_RETRY;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_USER_CONSENT_REVOKED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL;
 import static com.android.adservices.spe.AdservicesJobInfo.PERIODIC_SIGNALS_ENCODING_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doCallRealMethod;
@@ -38,7 +45,6 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
@@ -50,13 +56,13 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -68,7 +74,6 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.Spy;
 import org.mockito.quality.Strictness;
@@ -120,14 +125,7 @@ public class PeriodicEncodingJobServiceTest {
                 "Job already scheduled before setup!",
                 JOB_SCHEDULER.getPendingJob(PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID));
 
-        // Mock AdservicesJobServiceLogger to not actually log the stats to server
-        mSpyLogger =
-                spy(new AdservicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mMockStatsdLogger));
-        Mockito.doNothing()
-                .when(mSpyLogger)
-                .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
-        ExtendedMockito.doReturn(mSpyLogger)
-                .when(() -> AdservicesJobServiceLogger.getInstance(any(Context.class)));
+        mSpyLogger = mockAdservicesJobServiceLogger(CONTEXT, mMockStatsdLogger);
     }
 
     @After
@@ -171,13 +169,11 @@ public class PeriodicEncodingJobServiceTest {
 
         testOnStartJobFlagDisabled();
 
-        // Verify logging methods are not invoked.
-        verify(mSpyLogger, never()).persistJobExecutionData(anyInt(), anyLong());
-        verify(mSpyLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verifyLoggingNotHappened(mSpyLogger);
     }
 
     @Test
-    public void testOnStartJobFlagDisabled_withLogging() {
+    public void testOnStartJobFlagDisabled_withLogging() throws InterruptedException {
         Flags flagsWithPeriodicEncodingDisabledWithLogging =
                 new Flags() {
                     @Override
@@ -208,12 +204,11 @@ public class PeriodicEncodingJobServiceTest {
                     }
                 };
         doReturn(flagsWithPeriodicEncodingDisabledWithLogging).when(FlagsFactory::getFlags);
+        JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
 
         testOnStartJobFlagDisabled();
 
-        // Verify logging methods are invoked.
-        verify(mSpyLogger).persistJobExecutionData(anyInt(), anyLong());
-        verify(mSpyLogger).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verifyBackgroundJobsSkipLogged(mSpyLogger, callback);
     }
 
     @Test
@@ -237,8 +232,8 @@ public class PeriodicEncodingJobServiceTest {
         // Schedule the job to assert after starting that the scheduled job has been cancelled
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
-                        PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID,
-                        new ComponentName(CONTEXT, PeriodicEncodingJobService.class))
+                                PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID,
+                                new ComponentName(CONTEXT, PeriodicEncodingJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -270,13 +265,11 @@ public class PeriodicEncodingJobServiceTest {
 
         testOnStartJobConsentRevokedGaUxEnabled();
 
-        // Verify logging methods are not invoked.
-        verify(mSpyLogger, never()).persistJobExecutionData(anyInt(), anyLong());
-        verify(mSpyLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verifyLoggingNotHappened(mSpyLogger);
     }
 
     @Test
-    public void testOnStartJobConsentRevokedGaUxEnabled_withLogging() {
+    public void testOnStartJobConsentRevokedGaUxEnabled_withLogging() throws InterruptedException {
         Flags flagsWithGaUxEnabledLoggingEnabled =
                 new Flags() {
                     @Override
@@ -305,10 +298,12 @@ public class PeriodicEncodingJobServiceTest {
                     }
                 };
         doReturn(flagsWithGaUxEnabledLoggingEnabled).when(FlagsFactory::getFlags);
+        JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
 
         testOnStartJobConsentRevokedGaUxEnabled();
 
         // Verify logging has happened
+        callback.assertLoggingFinished();
         verify(mSpyLogger)
                 .logExecutionStats(
                         anyInt(),
@@ -339,8 +334,8 @@ public class PeriodicEncodingJobServiceTest {
         // Schedule the job to assert after starting that the scheduled job has been cancelled
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
-                        PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID,
-                        new ComponentName(CONTEXT, PeriodicEncodingJobService.class))
+                                PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID,
+                                new ComponentName(CONTEXT, PeriodicEncodingJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -391,10 +386,10 @@ public class PeriodicEncodingJobServiceTest {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
         doAnswer(
-                unusedInvocation -> {
-                    jobFinishedCountDown.countDown();
-                    return null;
-                })
+                        unusedInvocation -> {
+                            jobFinishedCountDown.countDown();
+                            return null;
+                        })
                 .when(mEncodingJobServiceSpy)
                 .jobFinished(mJobParametersMock, false);
 
@@ -437,18 +432,12 @@ public class PeriodicEncodingJobServiceTest {
                     }
                 };
         doReturn(flagsWithLogging).when(FlagsFactory::getFlags);
+        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mSpyLogger);
+        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
 
         testOnStartJobUpdateSuccess();
 
-        // Verify logging methods are invoked.
-        verify(mSpyLogger).persistJobExecutionData(anyInt(), anyLong());
-        verify(mSpyLogger)
-                .logExecutionStats(
-                        anyInt(),
-                        anyLong(),
-                        eq(
-                                AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL),
-                        anyInt());
+        verifyJobFinishedLogged(mSpyLogger, onStartJobCallback, onJobDoneCallback);
     }
 
     @Test
@@ -484,8 +473,7 @@ public class PeriodicEncodingJobServiceTest {
 
         testOnStartJobUpdateTimeoutHandled();
 
-        // Verify logging method is not invoked.
-        verify(mSpyLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verifyLoggingNotHappened(mSpyLogger);
     }
 
     @Test
@@ -518,11 +506,13 @@ public class PeriodicEncodingJobServiceTest {
                     }
                 };
         doReturn(flagsWithLogging).when(FlagsFactory::getFlags);
+        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mSpyLogger);
+        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
 
         testOnStartJobUpdateTimeoutHandled();
 
-        // Verify logging methods are invoked.
-        verify(mSpyLogger).persistJobExecutionData(anyInt(), anyLong());
+        verifyOnStartJobLogged(mSpyLogger, onStartJobCallback);
+        onJobDoneCallback.assertLoggingFinished();
         verify(mSpyLogger)
                 .logExecutionStats(
                         anyInt(),
@@ -564,15 +554,15 @@ public class PeriodicEncodingJobServiceTest {
         doReturn(mPeriodicEncodingJobWorker)
                 .when(() -> PeriodicEncodingJobWorker.getInstance(any()));
         doReturn(
-                FluentFuture.from(
-                        immediateFailedFuture(new InterruptedException("testing timeout"))))
+                        FluentFuture.from(
+                                immediateFailedFuture(new InterruptedException("testing timeout"))))
                 .when(mPeriodicEncodingJobWorker)
                 .encodeProtectedSignals();
         doAnswer(
-                unusedInvocation -> {
-                    jobFinishedCountDown.countDown();
-                    return null;
-                })
+                        unusedInvocation -> {
+                            jobFinishedCountDown.countDown();
+                            return null;
+                        })
                 .when(mEncodingJobServiceSpy)
                 .jobFinished(mJobParametersMock, false);
 
@@ -618,16 +608,16 @@ public class PeriodicEncodingJobServiceTest {
                 .when(() -> PeriodicEncodingJobWorker.getInstance(any()));
 
         doReturn(
-                FluentFuture.from(
-                        immediateFailedFuture(
-                                new ExecutionException("testing timeout", null))))
+                        FluentFuture.from(
+                                immediateFailedFuture(
+                                        new ExecutionException("testing timeout", null))))
                 .when(mPeriodicEncodingJobWorker)
                 .encodeProtectedSignals();
         doAnswer(
-                unusedInvocation -> {
-                    jobFinishedCountDown.countDown();
-                    return null;
-                })
+                        unusedInvocation -> {
+                            jobFinishedCountDown.countDown();
+                            return null;
+                        })
                 .when(mEncodingJobServiceSpy)
                 .jobFinished(mJobParametersMock, false);
         doReturn(JOB_SCHEDULER).when(mEncodingJobServiceSpy).getSystemService(JobScheduler.class);
@@ -658,13 +648,11 @@ public class PeriodicEncodingJobServiceTest {
         assertTrue(mEncodingJobServiceSpy.onStopJob(mJobParametersMock));
         verify(mPeriodicEncodingJobWorker).stopWork();
 
-        // Verify logging methods are not invoked.
-        verify(mSpyLogger, never()).persistJobExecutionData(anyInt(), anyLong());
-        verify(mSpyLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verifyLoggingNotHappened(mSpyLogger);
     }
 
     @Test
-    public void testOnStopJob_withLogging() {
+    public void testOnStopJob_withLogging() throws InterruptedException {
         Flags flagsWithLogging =
                 new Flags() {
                     @Override
@@ -673,6 +661,7 @@ public class PeriodicEncodingJobServiceTest {
                     }
                 };
         doReturn(flagsWithLogging).when(FlagsFactory::getFlags);
+        JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
 
         doReturn(mPeriodicEncodingJobWorker)
                 .when(() -> PeriodicEncodingJobWorker.getInstance(any()));
@@ -680,8 +669,7 @@ public class PeriodicEncodingJobServiceTest {
         assertTrue(mEncodingJobServiceSpy.onStopJob(mJobParametersMock));
         verify(mPeriodicEncodingJobWorker).stopWork();
 
-        // Verify logging methods are invoked.
-        verify(mSpyLogger).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verifyOnStopJobLogged(mSpyLogger, callback);
     }
 
     @Test
@@ -777,8 +765,8 @@ public class PeriodicEncodingJobServiceTest {
                 };
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
-                        PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID,
-                        new ComponentName(CONTEXT, PeriodicEncodingJobService.class))
+                                PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID,
+                                new ComponentName(CONTEXT, PeriodicEncodingJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -819,8 +807,8 @@ public class PeriodicEncodingJobServiceTest {
                 };
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
-                        PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID,
-                        new ComponentName(CONTEXT, PeriodicEncodingJobService.class))
+                                PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID,
+                                new ComponentName(CONTEXT, PeriodicEncodingJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -868,8 +856,7 @@ public class PeriodicEncodingJobServiceTest {
 
         testOnStartJobShouldDisableJobTrue();
 
-        // Verify logging method is not invoked.
-        verify(mSpyLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verifyLoggingNotHappened(mSpyLogger);
     }
 
     @Test
@@ -887,7 +874,7 @@ public class PeriodicEncodingJobServiceTest {
 
         // Verify logging has not happened even though logging is enabled because this field is not
         // logged
-        verify(mSpyLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verifyLoggingNotHappened(mSpyLogger);
     }
 
     private void testOnStartJobUpdateTimeoutHandled() throws InterruptedException {
@@ -901,10 +888,10 @@ public class PeriodicEncodingJobServiceTest {
                 .when(mPeriodicEncodingJobWorker)
                 .encodeProtectedSignals();
         doAnswer(
-                unusedInvocation -> {
-                    jobFinishedCountDown.countDown();
-                    return null;
-                })
+                        unusedInvocation -> {
+                            jobFinishedCountDown.countDown();
+                            return null;
+                        })
                 .when(mEncodingJobServiceSpy)
                 .jobFinished(mJobParametersMock, false);
 
@@ -929,8 +916,8 @@ public class PeriodicEncodingJobServiceTest {
         // Schedule the job to assert after starting that the scheduled job has been cancelled
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
-                        PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID,
-                        new ComponentName(CONTEXT, PeriodicEncodingJobService.class))
+                                PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID,
+                                new ComponentName(CONTEXT, PeriodicEncodingJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -957,10 +944,10 @@ public class PeriodicEncodingJobServiceTest {
                 .when(mPeriodicEncodingJobWorker)
                 .encodeProtectedSignals();
         doAnswer(
-                unusedInvocation -> {
-                    jobFinishedCountDown.countDown();
-                    return null;
-                })
+                        unusedInvocation -> {
+                            jobFinishedCountDown.countDown();
+                            return null;
+                        })
                 .when(mEncodingJobServiceSpy)
                 .jobFinished(mJobParametersMock, false);
 
@@ -980,8 +967,8 @@ public class PeriodicEncodingJobServiceTest {
         // Schedule the job to assert after starting that the scheduled job has been cancelled
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
-                        PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID,
-                        new ComponentName(CONTEXT, PeriodicEncodingJobService.class))
+                                PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID,
+                                new ComponentName(CONTEXT, PeriodicEncodingJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -1006,8 +993,8 @@ public class PeriodicEncodingJobServiceTest {
         // Schedule the job to assert after starting that the scheduled job has been cancelled
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
-                        PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID,
-                        new ComponentName(CONTEXT, PeriodicEncodingJobService.class))
+                                PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID,
+                                new ComponentName(CONTEXT, PeriodicEncodingJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
