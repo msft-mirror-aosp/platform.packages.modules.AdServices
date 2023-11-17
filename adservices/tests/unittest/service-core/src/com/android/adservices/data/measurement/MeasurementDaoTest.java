@@ -881,7 +881,7 @@ public class MeasurementDaoTest {
                     assertEquals(
                             Integer.valueOf(3),
                             measurementDao
-                                    .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+                                    .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                                             publisher,
                                             EventSurfaceType.APP,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -895,7 +895,7 @@ public class MeasurementDaoTest {
                     assertEquals(
                             Integer.valueOf(3),
                             measurementDao
-                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                    .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                                             publisher,
                                             EventSurfaceType.APP,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -954,7 +954,7 @@ public class MeasurementDaoTest {
                     assertEquals(
                             Integer.valueOf(3),
                             measurementDao
-                                    .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+                                    .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                                             publisher,
                                             EventSurfaceType.APP,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -968,7 +968,7 @@ public class MeasurementDaoTest {
                     assertEquals(
                             Integer.valueOf(3),
                             measurementDao
-                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                    .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                                             publisher,
                                             EventSurfaceType.APP,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -1013,7 +1013,7 @@ public class MeasurementDaoTest {
                     assertEquals(
                             Integer.valueOf(0),
                             measurementDao
-                                    .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+                                    .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                                             publisher,
                                             EventSurfaceType.APP,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -1027,7 +1027,7 @@ public class MeasurementDaoTest {
                     assertEquals(
                             Integer.valueOf(3),
                             measurementDao
-                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                    .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                                             publisher,
                                             EventSurfaceType.APP,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -1091,7 +1091,7 @@ public class MeasurementDaoTest {
                         Source.Status.ACTIVE);
         List<Source> ignoredSources =
                 getSourcesWithDifferentDestinations(
-                        10,
+                        6,
                         true,
                         true,
                         5000000000L,
@@ -1118,9 +1118,9 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
-                            Integer.valueOf(3),
+                            Integer.valueOf(5),
                             measurementDao
-                                    .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+                                    .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                                             publisher,
                                             EventSurfaceType.APP,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -1134,7 +1134,7 @@ public class MeasurementDaoTest {
                     assertEquals(
                             Integer.valueOf(9),
                             measurementDao
-                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                    .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                                             publisher,
                                             EventSurfaceType.APP,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -1145,7 +1145,7 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
-                            Integer.valueOf(3),
+                            Integer.valueOf(5),
                             measurementDao
                                     .countDistinctDestinationsPerPublisherPerRateLimitWindow(
                                             publisher,
@@ -1199,7 +1199,7 @@ public class MeasurementDaoTest {
                         Source.Status.ACTIVE);
         List<Source> ignoredSources =
                 getSourcesWithDifferentDestinations(
-                        10,
+                        6,
                         true,
                         true,
                         5000000000L,
@@ -1228,7 +1228,7 @@ public class MeasurementDaoTest {
                     assertEquals(
                             Integer.valueOf(0),
                             measurementDao
-                                    .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+                                    .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                                             publisher,
                                             EventSurfaceType.APP,
                                             "unmatched-enrollment-id",
@@ -1242,7 +1242,7 @@ public class MeasurementDaoTest {
                     assertEquals(
                             Integer.valueOf(0),
                             measurementDao
-                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                    .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                                             publisher,
                                             EventSurfaceType.APP,
                                             "unmatched-enrollment-id",
@@ -1253,7 +1253,7 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
-                            Integer.valueOf(3),
+                            Integer.valueOf(5),
                             measurementDao
                                     .countDistinctDestinationsPerPublisherPerRateLimitWindow(
                                             publisher,
@@ -1306,7 +1306,7 @@ public class MeasurementDaoTest {
                         Source.Status.ACTIVE);
         List<Source> ignoredSources =
                 getSourcesWithDifferentDestinations(
-                        10,
+                        6,
                         true,
                         true,
                         5000000000L,
@@ -1333,9 +1333,9 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
-                            Integer.valueOf(3),
+                            Integer.valueOf(5),
                             measurementDao
-                                    .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+                                    .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                                             publisher,
                                             EventSurfaceType.WEB,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -1349,7 +1349,7 @@ public class MeasurementDaoTest {
                     assertEquals(
                             Integer.valueOf(9),
                             measurementDao
-                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                    .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                                             publisher,
                                             EventSurfaceType.WEB,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -1360,7 +1360,7 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
-                            Integer.valueOf(3),
+                            Integer.valueOf(5),
                             measurementDao
                                     .countDistinctDestinationsPerPublisherPerRateLimitWindow(
                                             publisher,
@@ -1378,7 +1378,7 @@ public class MeasurementDaoTest {
         Uri publisherAsSuffix = WebUtil.validUri("https://prefix-publisher.test");
         List<Source> activeSourcesWithAppAndWebDestinations =
                 getSourcesWithDifferentDestinations(
-                        4,
+                        8,
                         true,
                         true,
                         4500000000L,
@@ -1423,7 +1423,7 @@ public class MeasurementDaoTest {
                         Source.Status.ACTIVE);
         List<Source> ignoredSources =
                 getSourcesWithDifferentDestinations(
-                        10,
+                        5,
                         true,
                         true,
                         5000000000L,
@@ -1453,9 +1453,9 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
-                            Integer.valueOf(2),
+                            Integer.valueOf(4),
                             measurementDao
-                                    .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+                                    .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                                             publisher,
                                             EventSurfaceType.WEB,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -1467,9 +1467,9 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
-                            Integer.valueOf(3),
+                            Integer.valueOf(4),
                             measurementDao
-                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                    .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                                             publisher,
                                             EventSurfaceType.WEB,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -1480,7 +1480,7 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
-                            Integer.valueOf(2),
+                            Integer.valueOf(4),
                             measurementDao
                                     .countDistinctDestinationsPerPublisherPerRateLimitWindow(
                                             publisher,
@@ -1534,7 +1534,7 @@ public class MeasurementDaoTest {
                         Source.Status.ACTIVE);
         List<Source> ignoredSources =
                 getSourcesWithDifferentDestinations(
-                        10,
+                        6,
                         true,
                         true,
                         5000000000L,
@@ -1561,9 +1561,9 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
-                            Integer.valueOf(2),
+                            Integer.valueOf(5),
                             measurementDao
-                                    .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+                                    .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                                             publisher,
                                             EventSurfaceType.WEB,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -1577,7 +1577,7 @@ public class MeasurementDaoTest {
                     assertEquals(
                             Integer.valueOf(9),
                             measurementDao
-                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                    .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                                             publisher,
                                             EventSurfaceType.WEB,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -1588,7 +1588,7 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
-                            Integer.valueOf(2),
+                            Integer.valueOf(5),
                             measurementDao
                                     .countDistinctDestinationsPerPublisherPerRateLimitWindow(
                                             publisher,
@@ -1642,7 +1642,7 @@ public class MeasurementDaoTest {
                         Source.Status.ACTIVE);
         List<Source> ignoredSources =
                 getSourcesWithDifferentDestinations(
-                        10,
+                        4,
                         true,
                         true,
                         5000000000L,
@@ -1669,9 +1669,9 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
-                            Integer.valueOf(1),
+                            Integer.valueOf(2),
                             measurementDao
-                                    .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+                                    .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                                             publisher,
                                             EventSurfaceType.WEB,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -1685,7 +1685,7 @@ public class MeasurementDaoTest {
                     assertEquals(
                             Integer.valueOf(8),
                             measurementDao
-                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                    .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                                             publisher,
                                             EventSurfaceType.WEB,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -1696,7 +1696,7 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
-                            Integer.valueOf(1),
+                            Integer.valueOf(2),
                             measurementDao
                                     .countDistinctDestinationsPerPublisherPerRateLimitWindow(
                                             publisher,
