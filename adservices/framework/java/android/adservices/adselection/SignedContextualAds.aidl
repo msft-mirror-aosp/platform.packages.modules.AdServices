@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.adservices.common;
+package android.adservices.adselection;
 
-import android.adservices.common.AdServicesOutcomeReceiver;
-
-/** Stub implementation of {@link AdServicesOutcomeReceiver} for tests. */
-public final class AdServicesOutcomeReceiverForTests<T> extends ExceptionFailureSyncCallback<T>
-        implements AdServicesOutcomeReceiver<T, Exception> {}
+/**
+ * This defines the SignedContextualAds class, ads that are used for the contextual auction path in
+ * ad selection and reporting
+ */
+parcelable SignedContextualAds;

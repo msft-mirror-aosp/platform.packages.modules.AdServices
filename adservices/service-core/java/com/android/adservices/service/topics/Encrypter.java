@@ -14,12 +14,17 @@
  * limitations under the License.
  */
 
-package android.adservices.adselection;
+package com.android.adservices.service.topics;
 
-/**
- * This defines the ContextualAds class, ads that are used for the contextual auction path in
- * ad selection and reporting
- *
- * @hide
- */
-parcelable ContextualAds;
+/** Interface for algorithms to encrypt Topics data. */
+public interface Encrypter {
+    /**
+     * Encrypt {@code plainText} to cipher text {@code byte[]}.
+     *
+     * @param publicKey the public key used for encryption
+     * @param plainText the plain text string to encrypt
+     * @param contextInfo additional context info used for encryption
+     * @return the encrypted ciphertext
+     */
+    byte[] encrypt(byte[] publicKey, byte[] plainText, byte[] contextInfo);
+}

@@ -101,7 +101,7 @@ public abstract class FledgeScenarioTest extends ForegroundDebuggableCtsTest {
     public final SupportedByConditionRule devOptionsEnabled =
             DevContextUtils.createDevOptionsAvailableRule(sContext, TAG);
 
-    @Rule(order = 1)
+    @Rule(order = 4)
     public final AdServicesDeviceSupportedRule deviceSupported =
             new AdServicesDeviceSupportedRule();
 
@@ -113,7 +113,7 @@ public abstract class FledgeScenarioTest extends ForegroundDebuggableCtsTest {
     public final SupportedByConditionRule webViewSupportsConfigurableHeapSize =
             WebViewSupportUtil.createJSSandboxConfigurableHeapSizeRule(CONTEXT);
 
-    @Rule(order = 4)
+    @Rule(order = 1)
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
                     .setCompatModeFlags()

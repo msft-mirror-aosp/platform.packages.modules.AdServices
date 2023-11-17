@@ -91,6 +91,7 @@ public final class FlagsConstants {
     public static final String KEY_GLOBAL_BLOCKED_TOPIC_IDS = "topics_global_blocked_topic_ids";
     public static final String KEY_TOPICS_DISABLE_DIRECT_APP_CALLS =
             "topics_disable_direct_app_calls";
+    public static final String KEY_TOPICS_ENABLE_ENCRYPTION = "topics_enable_encryption";
 
     // Topics classifier keys
     public static final String KEY_CLASSIFIER_TYPE = "classifier_type";
@@ -940,6 +941,9 @@ public final class FlagsConstants {
 
     public static final String KEY_ENABLE_ADEXT_SERVICE_CONSENT_DATA =
             "enable_adext_service_consent_data";
+
+    public static final String KEY_ENABLE_ADEXT_SERVICE_TO_APPSEARCH_MIGRATION =
+            "enable_adext_service_to_appsearch_migration";
 
     // Whether to call trusted servers for off device ad selection.
     public static final String KEY_OFF_DEVICE_AD_SELECTION_ENABLED =

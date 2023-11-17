@@ -81,10 +81,10 @@ import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.AdSelectionResponse;
-import android.adservices.adselection.ContextualAds;
-import android.adservices.adselection.ContextualAdsFixture;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
+import android.adservices.adselection.SignedContextualAds;
+import android.adservices.adselection.SignedContextualAdsFixture;
 import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
@@ -2877,7 +2877,7 @@ public class AdSelectionE2ETest {
                                 mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
-                        .setBuyerContextualAds(createContextualAds())
+                        .setBuyerSignedContextualAds(createContextualAds())
                         .build();
 
         mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -2971,7 +2971,7 @@ public class AdSelectionE2ETest {
                                 mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
-                        .setBuyerContextualAds(createContextualAds())
+                        .setBuyerSignedContextualAds(createContextualAds())
                         .build();
 
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -3145,7 +3145,7 @@ public class AdSelectionE2ETest {
                                 mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
-                        .setBuyerContextualAds(createContextualAds())
+                        .setBuyerSignedContextualAds(createContextualAds())
                         .build();
 
         mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -3261,7 +3261,7 @@ public class AdSelectionE2ETest {
                                 mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
-                        .setBuyerContextualAds(createContextualAds())
+                        .setBuyerSignedContextualAds(createContextualAds())
                         .build();
 
         mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -3330,7 +3330,7 @@ public class AdSelectionE2ETest {
                                 mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
-                        .setBuyerContextualAds(createContextualAds())
+                        .setBuyerSignedContextualAds(createContextualAds())
                         .build();
 
         mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -3418,7 +3418,7 @@ public class AdSelectionE2ETest {
                         .setCustomAudienceBuyers(Collections.emptyList())
                         .setSeller(mSeller)
                         .setDecisionLogicUri(prebuiltUri)
-                        .setBuyerContextualAds(createContextualAds())
+                        .setBuyerSignedContextualAds(createContextualAds())
                         .setTrustedScoringSignalsUri(Uri.EMPTY)
                         .build();
 
@@ -3497,7 +3497,7 @@ public class AdSelectionE2ETest {
                                 mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
-                        .setBuyerContextualAds(createContextualAds())
+                        .setBuyerSignedContextualAds(createContextualAds())
                         .build();
 
         mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -7681,8 +7681,8 @@ public class AdSelectionE2ETest {
                 adCost);
     }
 
-    private Map<AdTechIdentifier, ContextualAds> createContextualAds() {
-        Map<AdTechIdentifier, ContextualAds> buyerContextualAds = new HashMap<>();
+    private Map<AdTechIdentifier, SignedContextualAds> createContextualAds() {
+        Map<AdTechIdentifier, SignedContextualAds> buyerContextualAds = new HashMap<>();
 
         // In order to meet ETLd+1 requirements creating Contextual ads with MockWebserver's host
         AdTechIdentifier buyer2 =
@@ -7690,8 +7690,8 @@ public class AdSelectionE2ETest {
                         mMockWebServerRule
                                 .uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2)
                                 .getHost());
-        ContextualAds contextualAds2 =
-                ContextualAdsFixture.generateContextualAds(
+        SignedContextualAds contextualAds2 =
+                SignedContextualAdsFixture.generateSignedContextualAds(
                                 buyer2, ImmutableList.of(100.0, 200.0, 300.0, 400.0, 500.0))
                         .setDecisionLogicUri(
                                 mMockWebServerRule.uriForPath(

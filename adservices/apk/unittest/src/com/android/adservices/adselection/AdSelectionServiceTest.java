@@ -52,11 +52,6 @@ import org.mockito.MockitoSession;
 
 /** Unit test for {@link AdSelectionService} */
 public class AdSelectionServiceTest {
-
-    private final Flags mFlagsWithAdSelectionSwitchOnGaUxDisabled =
-            new FlagsWithKillSwitchOnGaUxDisabled();
-    private final Flags mFlagsWithAdSelectionSwitchOffGaUxDisabled =
-            new FlagsWithKillSwitchOffGaUxDisabled();
     private final Flags mFlagsWithAdSelectionSwitchOnGaUxEnabled =
             new FlagsWithKillSwitchOnGaUxEnabled();
     private final Flags mFlagsWithAdSelectionSwitchOffGaUxEnabled =
@@ -84,45 +79,6 @@ public class AdSelectionServiceTest {
     @After
     public void teardown() {
         mStaticMockSession.finishMocking();
-    }
-
-    @Test
-    public void testBindableAdSelectionServiceKillSwitchOnGaUxDisabled() {
-        AdSelectionService adSelectionService =
-                new AdSelectionService(mFlagsWithAdSelectionSwitchOnGaUxDisabled);
-        adSelectionService.onCreate();
-        IBinder binder = adSelectionService.onBind(getIntentForAdSelectionService());
-        assertNull(binder);
-
-        verify(mConsentManagerMock, never()).getConsent();
-        verify(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()), never());
-    }
-
-    @Test
-    public void testBindableAdSelectionServiceKillSwitchOffGaUxDisabled() {
-        doReturn(mMockAdSelectionServiceImpl)
-                .when(() -> AdSelectionServiceImpl.create(any(Context.class)));
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any(Context.class)));
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-        ExtendedMockito.doReturn(true)
-                .when(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
-        doReturn(true).when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
-        doReturn(true).when(() -> MaintenanceJobService.scheduleIfNeeded(any(), anyBoolean()));
-
-        AdSelectionService adSelectionServiceSpy =
-                new AdSelectionService(mFlagsWithAdSelectionSwitchOffGaUxDisabled);
-
-        spyOn(adSelectionServiceSpy);
-        doReturn(mPackageManagerMock).when(adSelectionServiceSpy).getPackageManager();
-
-        adSelectionServiceSpy.onCreate();
-        IBinder binder = adSelectionServiceSpy.onBind(getIntentForAdSelectionService());
-        assertNotNull(binder);
-
-        verify(mConsentManagerMock).getConsent();
-        verify(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
-        verify(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
-        verify(() -> MaintenanceJobService.scheduleIfNeeded(any(), anyBoolean()));
     }
 
     /**
@@ -177,30 +133,6 @@ public class AdSelectionServiceTest {
 
     private Intent getIntentForAdSelectionService() {
         return new Intent(ApplicationProvider.getApplicationContext(), AdSelectionService.class);
-    }
-
-    private static class FlagsWithKillSwitchOnGaUxDisabled implements Flags {
-        @Override
-        public boolean getFledgeSelectAdsKillSwitch() {
-            return true;
-        }
-
-        @Override
-        public boolean getGaUxFeatureEnabled() {
-            return false;
-        }
-    }
-
-    private static class FlagsWithKillSwitchOffGaUxDisabled implements Flags {
-        @Override
-        public boolean getFledgeSelectAdsKillSwitch() {
-            return false;
-        }
-
-        @Override
-        public boolean getGaUxFeatureEnabled() {
-            return false;
-        }
     }
 
     private static class FlagsWithKillSwitchOnGaUxEnabled implements Flags {

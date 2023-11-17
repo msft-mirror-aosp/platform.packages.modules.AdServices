@@ -183,7 +183,9 @@ public class BackgroundFetchJobServiceTest {
             throws ExecutionException, InterruptedException, TimeoutException {
         doReturn(mFlagsWithEnabledBgFGaUxDisabled).when(FlagsFactory::getFlags);
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
-        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent();
+        doReturn(AdServicesApiConsent.REVOKED)
+                .when(mConsentManagerMock)
+                .getConsent(AdServicesApiType.FLEDGE);
         doReturn(JOB_SCHEDULER).when(mBgFJobServiceSpy).getSystemService(JobScheduler.class);
         doNothing().when(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
 
@@ -364,7 +366,9 @@ public class BackgroundFetchJobServiceTest {
 
         doReturn(mFlagsWithEnabledBgFGaUxDisabled).when(FlagsFactory::getFlags);
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManagerMock)
+                .getConsent(AdServicesApiType.FLEDGE);
         doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
         doReturn(
                         FluentFuture.from(
@@ -394,7 +398,9 @@ public class BackgroundFetchJobServiceTest {
 
         doReturn(mFlagsWithEnabledBgFGaUxDisabled).when(FlagsFactory::getFlags);
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManagerMock)
+                .getConsent(AdServicesApiType.FLEDGE);
         doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
         doReturn(
                         FluentFuture.from(
@@ -605,7 +611,9 @@ public class BackgroundFetchJobServiceTest {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManagerMock)
+                .getConsent(AdServicesApiType.FLEDGE);
         doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
         doReturn(FluentFuture.from(immediateFuture(null)))
                 .when(mBgFWorkerMock)
@@ -631,7 +639,9 @@ public class BackgroundFetchJobServiceTest {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManagerMock)
+                .getConsent(AdServicesApiType.FLEDGE);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);

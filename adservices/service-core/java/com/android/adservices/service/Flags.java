@@ -100,6 +100,14 @@ public interface Flags extends CommonFlags {
         return TOPICS_DISABLE_DIRECT_APP_CALLS;
     }
 
+    /** Flag to enable encrypted Topics feature for Topics API. */
+    boolean TOPICS_ENABLE_ENCRYPTION = false;
+
+    /** Returns the feature flag to enable encryption for Topics API. */
+    default boolean getTopicsEnableEncryption() {
+        return TOPICS_ENABLE_ENCRYPTION;
+    }
+
     /**
      * Returns the number of epochs to look back when deciding if a caller has observed a topic
      * before.
@@ -2527,6 +2535,20 @@ public interface Flags extends CommonFlags {
      */
     default boolean getEnableAdExtServiceConsentData() {
         return ENABLE_ADEXT_SERVICE_CONSENT_DATA;
+    }
+
+    /**
+     * Enables data migration from AdServicesExtDataStorageService to AppSearch upon OTA to Android
+     * S. As a result this flag is only true on Android S.
+     */
+    boolean ENABLE_ADEXT_SERVICE_TO_APPSEARCH_MIGRATION =
+            SdkLevel.isAtLeastS() && !SdkLevel.isAtLeastT();
+
+    /**
+     * @return value of enable AdExt service to AppSearch migration flag.
+     */
+    default boolean getEnableAdExtServiceToAppSearchMigration() {
+        return ENABLE_ADEXT_SERVICE_TO_APPSEARCH_MIGRATION;
     }
 
     /*

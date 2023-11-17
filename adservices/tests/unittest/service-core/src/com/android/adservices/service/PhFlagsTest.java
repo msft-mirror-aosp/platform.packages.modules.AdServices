@@ -90,6 +90,7 @@ import static com.android.adservices.service.Flags.DOWNLOADER_CONNECTION_TIMEOUT
 import static com.android.adservices.service.Flags.DOWNLOADER_MAX_DOWNLOAD_THREADS;
 import static com.android.adservices.service.Flags.DOWNLOADER_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.ENABLE_ADEXT_SERVICE_CONSENT_DATA;
+import static com.android.adservices.service.Flags.ENABLE_ADEXT_SERVICE_TO_APPSEARCH_MIGRATION;
 import static com.android.adservices.service.Flags.ENABLE_APPSEARCH_CONSENT_DATA;
 import static com.android.adservices.service.Flags.ENABLE_DATABASE_SCHEMA_VERSION_8;
 import static com.android.adservices.service.Flags.ENABLE_DATABASE_SCHEMA_VERSION_9;
@@ -418,6 +419,7 @@ import static com.android.adservices.service.Flags.TOPICS_API_APP_REQUEST_PERMIT
 import static com.android.adservices.service.Flags.TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.TOPICS_COBALT_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.TOPICS_DISABLE_DIRECT_APP_CALLS;
+import static com.android.adservices.service.Flags.TOPICS_ENABLE_ENCRYPTION;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.TOPICS_KILL_SWITCH;
@@ -471,6 +473,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_DOWNLOADER_MAX_D
 import static com.android.adservices.service.FlagsConstants.KEY_DOWNLOADER_READ_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ADEXT_SERVICE_CONSENT_DATA;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ADEXT_SERVICE_TO_APPSEARCH_MIGRATION;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ADSERVICES_API_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA;
@@ -807,6 +810,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_API_APP_R
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_COBALT_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_DISABLE_DIRECT_APP_CALLS;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_ENABLE_ENCRYPTION;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_KILL_SWITCH;
@@ -1059,6 +1063,21 @@ public class PhFlagsTest {
                 /* makeDefault */ false);
 
         assertThat(mPhFlags.getTopicsDisableDirectAppCalls()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetTopicsEnableEncryption() {
+        assertThat(mPhFlags.getTopicsEnableEncryption()).isEqualTo(TOPICS_ENABLE_ENCRYPTION);
+
+        // Now overriding with the value from PH.
+        boolean phOverridingValue = !TOPICS_ENABLE_ENCRYPTION;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_TOPICS_ENABLE_ENCRYPTION,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getTopicsEnableEncryption()).isEqualTo(phOverridingValue);
     }
 
     @Test
@@ -7189,6 +7208,23 @@ public class PhFlagsTest {
                 /* makeDefault */ false);
 
         assertThat(mPhFlags.getEnableAdExtServiceConsentData()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testOverrideEnableAdExtServiceToAppSearchMigration() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getEnableAdExtServiceToAppSearchMigration())
+                .isEqualTo(ENABLE_ADEXT_SERVICE_TO_APPSEARCH_MIGRATION);
+
+        boolean phOverridingValue = !ENABLE_ADEXT_SERVICE_TO_APPSEARCH_MIGRATION;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENABLE_ADEXT_SERVICE_TO_APPSEARCH_MIGRATION,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getEnableAdExtServiceToAppSearchMigration())
+                .isEqualTo(phOverridingValue);
     }
 
     @Test
