@@ -127,9 +127,7 @@ public class BlockedTopicsManager {
                 boolean enableAppSearchConsent =
                         FlagsFactory.getFlags().getEnableAppsearchConsentData();
                 AppSearchConsentManager appSearchConsentManager =
-                        enableAppSearchConsent
-                                ? AppSearchConsentManager.getInstance(context)
-                                : null;
+                        enableAppSearchConsent ? AppSearchConsentManager.getInstance() : null;
 
                 sSingleton =
                         new BlockedTopicsManager(
