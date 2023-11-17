@@ -231,6 +231,17 @@ public class UiUtils {
         ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
     }
 
+    /** Set flag consent_manager_ota_debug_mode to true in tests */
+    public static void setConsentManagerOtaDebugMode() {
+        ShellUtils.runShellCommand(
+                "device_config put adservices consent_manager_ota_debug_mode true");
+    }
+
+    /** Set flag consent_manager_debug_mode to false in tests */
+    public static void resetConsentManagerDebugMode() {
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode false");
+    }
+
     public static void enableNotificationPermission() {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()

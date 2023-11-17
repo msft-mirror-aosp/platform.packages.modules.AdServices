@@ -58,6 +58,10 @@ public class SettingsPages {
             case U18_UX:
                 enterU18ConsentPage(context, device);
                 flipConsent(device, isOptin, flipConsent);
+                break;
+            case RVC_UX:
+                enterU18ConsentPage(context, device);
+                flipConsent(device, isOptin, flipConsent);
         }
     }
 

@@ -1740,6 +1740,20 @@ public interface Flags extends CommonFlags {
         return CONSENT_MANAGER_DEBUG_MODE;
     }
 
+    boolean DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE = false;
+
+    /** When enabled, the device is treated as OTA device. */
+    default boolean getConsentManagerOTADebugMode() {
+        return DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE;
+    }
+
+    boolean DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK = false;
+
+    /** When enabled, perform age check in rvc post ota notification channel. */
+    default boolean getRvcPostOtaNotifAgeCheck() {
+        return DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK;
+    }
+
     /** Available sources of truth to get consent for PPAPI. */
     @IntDef(
             flag = true,
