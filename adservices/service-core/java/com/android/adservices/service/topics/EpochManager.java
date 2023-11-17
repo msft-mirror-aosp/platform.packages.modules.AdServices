@@ -28,7 +28,6 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.DbHelper;
-import com.android.adservices.data.topics.EncryptedTopic;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
@@ -48,7 +47,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 
@@ -117,7 +115,6 @@ public class EpochManager {
     // Use Clock.SYSTEM_CLOCK except in unit tests, which pass in a local instance of Clock to mock.
     private final Clock mClock;
     private final ClassifierManager mClassifierManager;
-    private final EncryptionManager mEncryptionManager;
 
     @VisibleForTesting
     EpochManager(
@@ -127,8 +124,7 @@ public class EpochManager {
             @NonNull Classifier classifier,
             Flags flags,
             @NonNull Clock clock,
-            @NonNull ClassifierManager classifierManager,
-            @NonNull EncryptionManager encryptionManager) {
+            @NonNull ClassifierManager classifierManager) {
         mTopicsDao = topicsDao;
         mDbHelper = dbHelper;
         mRandom = random;
@@ -136,7 +132,6 @@ public class EpochManager {
         mFlags = flags;
         mClock = clock;
         mClassifierManager = classifierManager;
-        mEncryptionManager = encryptionManager;
     }
 
     /** Returns an instance of the EpochManager given a context. */
@@ -152,8 +147,7 @@ public class EpochManager {
                                 ClassifierManager.getInstance(context),
                                 FlagsFactory.getFlags(),
                                 Clock.SYSTEM_CLOCK,
-                                ClassifierManager.getInstance(context),
-                                EncryptionManager.getInstance(context));
+                                ClassifierManager.getInstance(context));
             }
             return sSingleton;
         }
@@ -254,16 +248,6 @@ public class EpochManager {
 
             // And persist the map to DB so that we can reuse later.
             mTopicsDao.persistReturnedAppTopicsMap(currentEpochId, returnedAppSdkTopics);
-
-            // Encrypt and store encrypted topics if the feature is enabled and the version 9 db
-            // is available.
-            if (mFlags.getTopicsEnableEncryption() && mFlags.getEnableDatabaseSchemaVersion9()) {
-                // encryptedTopicMapTopics = Map<Pair<App, Sdk>, EncryptedTopic>
-                Map<Pair<String, String>, EncryptedTopic> encryptedTopicMapTopics =
-                        encryptTopicsMap(returnedAppSdkTopics);
-                mTopicsDao.persistReturnedAppEncryptedTopicsMap(
-                        currentEpochId, encryptedTopicMapTopics);
-            }
 
             // Mark the transaction successful.
             db.setTransactionSuccessful();
@@ -394,27 +378,6 @@ public class EpochManager {
         }
 
         return callersCanLearnMap;
-    }
-
-    // Encrypts Topic to corresponding EncryptedTopic.
-    // Map<Pair<App, Sdk>, EncryptedTopic>
-    private Map<Pair<String, String>, EncryptedTopic> encryptTopicsMap(
-            Map<Pair<String, String>, Topic> unencryptedMap) {
-        Map<Pair<String, String>, EncryptedTopic> encryptedTopicMap = new HashMap<>();
-        for (Map.Entry<Pair<String, String>, Topic> entry : unencryptedMap.entrySet()) {
-            Optional<EncryptedTopic> optionalEncryptedTopic =
-                    mEncryptionManager.encryptTopic(
-                            /* Topic */ entry.getValue(), /* sdkName */ entry.getKey().second);
-            if (optionalEncryptedTopic.isPresent()) {
-                encryptedTopicMap.put(entry.getKey(), optionalEncryptedTopic.get());
-            } else {
-                sLogger.d(
-                        "Failed to encrypt %s for (%s, %s) caller.",
-                        entry.getValue(), entry.getKey().first, entry.getKey().second);
-                // TODO(b/310699530): Add CEL here to Topics encryption
-            }
-        }
-        return encryptedTopicMap;
     }
 
     // Inputs:

@@ -100,14 +100,6 @@ public interface Flags extends CommonFlags {
         return TOPICS_DISABLE_DIRECT_APP_CALLS;
     }
 
-    /** Flag to enable encrypted Topics feature for Topics API. */
-    boolean TOPICS_ENABLE_ENCRYPTION = false;
-
-    /** Returns the feature flag to enable encryption for Topics API. */
-    default boolean getTopicsEnableEncryption() {
-        return TOPICS_ENABLE_ENCRYPTION;
-    }
-
     /**
      * Returns the number of epochs to look back when deciding if a caller has observed a topic
      * before.
