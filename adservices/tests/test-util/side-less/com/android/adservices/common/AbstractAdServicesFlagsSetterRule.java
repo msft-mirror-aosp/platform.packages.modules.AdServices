@@ -220,6 +220,22 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         return setFlag(FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH, value);
     }
 
+    /**
+     * Overrides flag used by {@link
+     * com.android.adservices.service.PhFlags#getEnforceForegroundStatusForTopics()}.
+     */
+    public T setTopicsEnforceForeground(boolean value) {
+        return setFlag(FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_TOPICS, value);
+    }
+
+    /**
+     * Overrides flag used by {@link
+     * com.android.adservices.service.PhFlags#getTopicsDisableDirectAppCalls()}.
+     */
+    public T setTopicsDisableDirectAppCall(boolean value) {
+        return setFlag(FlagsConstants.KEY_TOPICS_DISABLE_DIRECT_APP_CALLS, value);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // NOTE: DO NOT add new setXyz() methods, unless they need non-trivial logic. Instead, let    //
     // your test call setFlags(flagName) (statically import FlagsConstant.flagName), which will   //
