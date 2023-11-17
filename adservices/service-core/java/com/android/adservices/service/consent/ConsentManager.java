@@ -240,6 +240,23 @@ public class ConsentManager {
                                 statsdAdServicesLogger);
                     }
 
+                    AdServicesExtDataStorageServiceManager adServicesExtDataManager = null;
+                    // Flag enable_adext_service_consent_data is true on R and S+ only when
+                    // we want to use AdServicesExtDataStorageService to write to or read from.
+                    boolean enableAdExtServiceConsentData =
+                            FlagsFactory.getFlags().getEnableAdExtServiceConsentData();
+                    if (enableAdExtServiceConsentData) {
+                        adServicesExtDataManager =
+                                AdServicesExtDataStorageServiceManager.getInstance(context);
+                        if (FlagsFactory.getFlags().getEnableAdExtServiceToAppSearchMigration()) {
+                            ConsentMigrationUtils.handleConsentMigrationToAppSearchIfNeeded(
+                                    context,
+                                    datastore,
+                                    appSearchConsentManager,
+                                    adServicesExtDataManager);
+                        }
+                    }
+
                     // Attempt to migrate consent data from PPAPI to System server if needed.
                     handleConsentMigrationIfNeeded(
                             context,
@@ -248,15 +265,6 @@ public class ConsentManager {
                             statsdAdServicesLogger,
                             consentSourceOfTruth);
 
-                    AdServicesExtDataStorageServiceManager adServicesExtDataManager = null;
-                    // Flag enable_adext_service_consent_data is true on R and S only when
-                    // we want to use AdServicesExtDataStorageService to write to or read from.
-                    boolean enableAdExtServiceConsentData =
-                            FlagsFactory.getFlags().getEnableAdExtServiceConsentData();
-                    if (enableAdExtServiceConsentData) {
-                        adServicesExtDataManager =
-                                AdServicesExtDataStorageServiceManager.getInstance(context);
-                    }
                     sConsentManager =
                             new ConsentManager(
                                     TopicsWorker.getInstance(context),
@@ -462,10 +470,6 @@ public class ConsentManager {
      *     revoked.
      */
     public AdServicesApiConsent getConsent(AdServicesApiType apiType) {
-        if (!mFlags.getGaUxFeatureEnabled()) {
-            throw new IllegalStateException("GA UX feature is disabled.");
-        }
-
         if (mFlags.getConsentManagerDebugMode()) {
             return AdServicesApiConsent.GIVEN;
         }
@@ -761,13 +765,7 @@ public class ConsentManager {
      */
     public boolean isFledgeConsentRevokedForApp(@NonNull String packageName)
             throws IllegalArgumentException {
-        // TODO(b/238464639): Implement API-specific consent for FLEDGE
-        AdServicesApiConsent consent;
-        if (!mFlags.getGaUxFeatureEnabled()) {
-            consent = getConsent();
-        } else {
-            consent = getConsent(AdServicesApiType.FLEDGE);
-        }
+        AdServicesApiConsent consent = getConsent(AdServicesApiType.FLEDGE);
 
         if (!consent.isGiven()) {
             return true;
@@ -824,13 +822,7 @@ public class ConsentManager {
      */
     public boolean isFledgeConsentRevokedForAppAfterSettingFledgeUse(@NonNull String packageName)
             throws IllegalArgumentException {
-        // TODO(b/238464639): Implement API-specific consent for FLEDGE
-        AdServicesApiConsent consent;
-        if (!mFlags.getGaUxFeatureEnabled()) {
-            consent = getConsent();
-        } else {
-            consent = getConsent(AdServicesApiType.FLEDGE);
-        }
+        AdServicesApiConsent consent = getConsent(AdServicesApiType.FLEDGE);
 
         if (!consent.isGiven()) {
             return true;
@@ -963,8 +955,7 @@ public class ConsentManager {
                     // Beta UX.
                     throw new IllegalStateException(
                             getAdExtExceptionMessage(
-                                    /* illegalAction= */ "store if beta notification was"
-                                            + " displayed"));
+                                    /* illegalAction= */ "store if beta notif was displayed"));
                 },
                 /* errorLogger= */ null);
     }

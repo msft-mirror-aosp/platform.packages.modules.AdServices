@@ -506,6 +506,7 @@ public class AggregateReport {
             mAttributionReport.mSourceDebugKey = null;
             mAttributionReport.mTriggerDebugKey = trigger.getDebugKey();
             mAttributionReport.mIsFakeReport = true;
+            mAttributionReport.mTriggerId = trigger.getId();
 
             if (trigger.getAggregationCoordinatorOrigin() != null) {
                 mAttributionReport.mAggregationCoordinatorOrigin =

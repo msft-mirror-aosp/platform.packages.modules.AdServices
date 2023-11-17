@@ -838,113 +838,6 @@ public class ConsentManagerTest {
     }
 
     @Test
-    public void testIsFledgeConsentRevokedForAppWithFullApiConsentGaUxDisabled_ppApiOnly()
-            throws IOException, PackageManager.NameNotFoundException {
-        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(false);
-        mConsentManager.enable(mContextSpy);
-        assertTrue(mConsentManager.getConsent().isGiven());
-
-        verify(() -> UiStatsLogger.logOptInSelected(mContextSpy));
-
-        mockGetPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
-        mockGetPackageUid(AppConsentDaoFixture.APP20_PACKAGE_NAME, AppConsentDaoFixture.APP20_UID);
-        mockGetPackageUid(AppConsentDaoFixture.APP30_PACKAGE_NAME, AppConsentDaoFixture.APP30_UID);
-
-        mDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
-        mDatastore.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
-
-        assertFalse(
-                mConsentManager.isFledgeConsentRevokedForApp(
-                        AppConsentDaoFixture.APP10_PACKAGE_NAME));
-        assertTrue(
-                mConsentManager.isFledgeConsentRevokedForApp(
-                        AppConsentDaoFixture.APP20_PACKAGE_NAME));
-        assertFalse(
-                mConsentManager.isFledgeConsentRevokedForApp(
-                        AppConsentDaoFixture.APP30_PACKAGE_NAME));
-    }
-
-    @Test
-    public void testIsFledgeConsentRevokedForAppWithFullApiConsentGaUxDisabled_systemServerOnly()
-            throws PackageManager.NameNotFoundException, RemoteException {
-        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(false);
-        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
-        mConsentManager = getConsentManagerByConsentSourceOfTruth(consentSourceOfTruth);
-        doReturn(ConsentParcel.createGivenConsent(ConsentParcel.ALL_API))
-                .when(mMockIAdServicesManager)
-                .getConsent(ConsentParcel.ALL_API);
-
-        assertTrue(mConsentManager.getConsent().isGiven());
-
-        mockGetPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
-        mockGetPackageUid(AppConsentDaoFixture.APP20_PACKAGE_NAME, AppConsentDaoFixture.APP20_UID);
-        mockGetPackageUid(AppConsentDaoFixture.APP30_PACKAGE_NAME, AppConsentDaoFixture.APP30_UID);
-
-        doReturn(false)
-                .when(mMockIAdServicesManager)
-                .isConsentRevokedForApp(
-                        AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
-        doReturn(true)
-                .when(mMockIAdServicesManager)
-                .isConsentRevokedForApp(
-                        AppConsentDaoFixture.APP20_PACKAGE_NAME, AppConsentDaoFixture.APP20_UID);
-        doReturn(false)
-                .when(mMockIAdServicesManager)
-                .isConsentRevokedForApp(
-                        AppConsentDaoFixture.APP30_PACKAGE_NAME, AppConsentDaoFixture.APP30_UID);
-
-        assertFalse(
-                mConsentManager.isFledgeConsentRevokedForApp(
-                        AppConsentDaoFixture.APP10_PACKAGE_NAME));
-        assertTrue(
-                mConsentManager.isFledgeConsentRevokedForApp(
-                        AppConsentDaoFixture.APP20_PACKAGE_NAME));
-        assertFalse(
-                mConsentManager.isFledgeConsentRevokedForApp(
-                        AppConsentDaoFixture.APP30_PACKAGE_NAME));
-    }
-
-    @Test
-    public void
-            testIsFledgeConsentRevokedForAppWithFullApiConsentGaUxDisabled_ppApiAndSystemServer()
-                    throws PackageManager.NameNotFoundException, RemoteException {
-        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(false);
-        int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
-        mConsentManager = getConsentManagerByConsentSourceOfTruth(consentSourceOfTruth);
-        doReturn(ConsentParcel.createGivenConsent(ConsentParcel.ALL_API))
-                .when(mMockIAdServicesManager)
-                .getConsent(ConsentParcel.ALL_API);
-
-        assertTrue(mConsentManager.getConsent().isGiven());
-        mockGetPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
-        mockGetPackageUid(AppConsentDaoFixture.APP20_PACKAGE_NAME, AppConsentDaoFixture.APP20_UID);
-        mockGetPackageUid(AppConsentDaoFixture.APP30_PACKAGE_NAME, AppConsentDaoFixture.APP30_UID);
-
-        doReturn(false)
-                .when(mMockIAdServicesManager)
-                .isConsentRevokedForApp(
-                        AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
-        doReturn(true)
-                .when(mMockIAdServicesManager)
-                .isConsentRevokedForApp(
-                        AppConsentDaoFixture.APP20_PACKAGE_NAME, AppConsentDaoFixture.APP20_UID);
-        doReturn(false)
-                .when(mMockIAdServicesManager)
-                .isConsentRevokedForApp(
-                        AppConsentDaoFixture.APP30_PACKAGE_NAME, AppConsentDaoFixture.APP30_UID);
-
-        assertFalse(
-                mConsentManager.isFledgeConsentRevokedForApp(
-                        AppConsentDaoFixture.APP10_PACKAGE_NAME));
-        assertTrue(
-                mConsentManager.isFledgeConsentRevokedForApp(
-                        AppConsentDaoFixture.APP20_PACKAGE_NAME));
-        assertFalse(
-                mConsentManager.isFledgeConsentRevokedForApp(
-                        AppConsentDaoFixture.APP30_PACKAGE_NAME));
-    }
-
-    @Test
     public void testIsFledgeConsentRevokedForAppWithFullApiConsentGaUxEnabled_ppApiOnly()
             throws IOException, PackageManager.NameNotFoundException {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
@@ -1089,62 +982,6 @@ public class ConsentManagerTest {
     }
 
     @Test
-    public void testIsFledgeConsentRevokedForAppWithoutPrivacySandboxConsentGaUxDisabled_ppApiOnly()
-            throws PackageManager.NameNotFoundException {
-        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(false);
-        mConsentManager.disable(mContextSpy);
-        assertFalse(mConsentManager.getConsent().isGiven());
-
-        verify(() -> UiStatsLogger.logOptOutSelected(mContextSpy));
-
-        mockGetPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
-        mockGetPackageUid(AppConsentDaoFixture.APP20_PACKAGE_NAME, AppConsentDaoFixture.APP20_UID);
-
-        assertTrue(
-                mConsentManager.isFledgeConsentRevokedForApp(
-                        AppConsentDaoFixture.APP10_PACKAGE_NAME));
-        assertTrue(
-                mConsentManager.isFledgeConsentRevokedForApp(
-                        AppConsentDaoFixture.APP20_PACKAGE_NAME));
-    }
-
-    @Test
-    public void testIsFledgeConsentRevokedForAppWithoutPrivacySandboxConsentGaUxDisabled_sysServer()
-            throws RemoteException {
-        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(false);
-        mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.SYSTEM_SERVER_ONLY);
-        doReturn(ConsentParcel.createRevokedConsent(ConsentParcel.ALL_API))
-                .when(mMockIAdServicesManager)
-                .getConsent(ConsentParcel.ALL_API);
-        assertFalse(mConsentManager.getConsent().isGiven());
-
-        assertTrue(
-                mConsentManager.isFledgeConsentRevokedForApp(
-                        AppConsentDaoFixture.APP10_PACKAGE_NAME));
-        assertTrue(
-                mConsentManager.isFledgeConsentRevokedForApp(
-                        AppConsentDaoFixture.APP20_PACKAGE_NAME));
-    }
-
-    @Test
-    public void testIsFledgeConsentRevokedForAppWithoutPrivacySandboxConsentGaUxDisabled_bothSrc()
-            throws RemoteException {
-        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(false);
-        mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_AND_SYSTEM_SERVER);
-        doReturn(ConsentParcel.createRevokedConsent(ConsentParcel.ALL_API))
-                .when(mMockIAdServicesManager)
-                .getConsent(ConsentParcel.ALL_API);
-        assertFalse(mConsentManager.getConsent().isGiven());
-
-        assertTrue(
-                mConsentManager.isFledgeConsentRevokedForApp(
-                        AppConsentDaoFixture.APP10_PACKAGE_NAME));
-        assertTrue(
-                mConsentManager.isFledgeConsentRevokedForApp(
-                        AppConsentDaoFixture.APP20_PACKAGE_NAME));
-    }
-
-    @Test
     public void testIsFledgeConsentRevokedForAppWithoutPrivacySandboxConsentGaUxEnabled_ppApiOnly()
             throws PackageManager.NameNotFoundException {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
@@ -1199,60 +1036,6 @@ public class ConsentManagerTest {
                 mConsentManager.isFledgeConsentRevokedForApp(
                         AppConsentDaoFixture.APP20_PACKAGE_NAME));
     }
-
-    @Test
-    public void testIsFledgeConsentRevokedForNotFoundAppGaUxDisabledThrows_ppApiOnly()
-            throws PackageManager.NameNotFoundException {
-        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(false);
-        mConsentManager.enable(mContextSpy);
-        assertTrue(mConsentManager.getConsent().isGiven());
-
-        verify(() -> UiStatsLogger.logOptInSelected(mContextSpy));
-
-        mockThrowExceptionOnGetPackageUid(AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME);
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        mConsentManager.isFledgeConsentRevokedForApp(
-                                AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME));
-    }
-
-    @Test
-    public void testIsFledgeConsentRevokedForNotFoundAppGaUxDisabledThrows_systemServerOnly()
-            throws PackageManager.NameNotFoundException, RemoteException {
-        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(false);
-        mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.SYSTEM_SERVER_ONLY);
-        doReturn(ConsentParcel.createGivenConsent(ConsentParcel.ALL_API))
-                .when(mMockIAdServicesManager)
-                .getConsent(ConsentParcel.ALL_API);
-        assertTrue(mConsentManager.getConsent().isGiven());
-
-        mockThrowExceptionOnGetPackageUid(AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME);
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        mConsentManager.isFledgeConsentRevokedForApp(
-                                AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME));
-    }
-
-    @Test
-    public void testIsFledgeConsentRevokedForNotFoundAppGaUxDisabledThrows_ppApiAndSystemServer()
-            throws PackageManager.NameNotFoundException, RemoteException {
-        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(false);
-        mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_AND_SYSTEM_SERVER);
-        doReturn(ConsentParcel.createGivenConsent(ConsentParcel.ALL_API))
-                .when(mMockIAdServicesManager)
-                .getConsent(ConsentParcel.ALL_API);
-        assertTrue(mConsentManager.getConsent().isGiven());
-
-        mockThrowExceptionOnGetPackageUid(AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME);
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        mConsentManager.isFledgeConsentRevokedForApp(
-                                AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME));
-    }
-
     @Test
     public void testIsFledgeConsentRevokedForNotFoundAppGaUxEnabledThrows_ppApiOnly()
             throws PackageManager.NameNotFoundException {
@@ -1304,131 +1087,6 @@ public class ConsentManagerTest {
                 () ->
                         mConsentManager.isFledgeConsentRevokedForApp(
                                 AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME));
-    }
-
-    @Test
-    public void
-            testIsFledgeConsentRevokedForAppAfterSetFledgeUseWithFullApiConsentGaUxDisabled_ppApi()
-                    throws IOException, PackageManager.NameNotFoundException {
-        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(false);
-        mConsentManager.enable(mContextSpy);
-        assertTrue(mConsentManager.getConsent().isGiven());
-
-        verify(() -> UiStatsLogger.logOptInSelected(mContextSpy));
-
-        mockGetPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
-        mockGetPackageUid(AppConsentDaoFixture.APP20_PACKAGE_NAME, AppConsentDaoFixture.APP20_UID);
-        mockGetPackageUid(AppConsentDaoFixture.APP30_PACKAGE_NAME, AppConsentDaoFixture.APP30_UID);
-
-        mDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
-        mDatastore.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
-
-        assertFalse(
-                mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                        AppConsentDaoFixture.APP10_PACKAGE_NAME));
-        assertTrue(
-                mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                        AppConsentDaoFixture.APP20_PACKAGE_NAME));
-        assertFalse(
-                mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                        AppConsentDaoFixture.APP30_PACKAGE_NAME));
-    }
-
-    @Test
-    public void
-            testIsFledgeConsentRevokedForAppAfterSetFledgeUseWithFullApiConsentGaUxDisabled_sysSer()
-                    throws PackageManager.NameNotFoundException, RemoteException {
-        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(false);
-        mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.SYSTEM_SERVER_ONLY);
-        doReturn(ConsentParcel.createGivenConsent(ConsentParcel.ALL_API))
-                .when(mMockIAdServicesManager)
-                .getConsent(ConsentParcel.ALL_API);
-        assertTrue(mConsentManager.getConsent().isGiven());
-
-        mockGetPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
-        mockGetPackageUid(AppConsentDaoFixture.APP20_PACKAGE_NAME, AppConsentDaoFixture.APP20_UID);
-        mockGetPackageUid(AppConsentDaoFixture.APP30_PACKAGE_NAME, AppConsentDaoFixture.APP30_UID);
-
-        doReturn(false)
-                .when(mMockIAdServicesManager)
-                .setConsentForAppIfNew(
-                        AppConsentDaoFixture.APP10_PACKAGE_NAME,
-                        AppConsentDaoFixture.APP10_UID,
-                        false);
-        doReturn(true)
-                .when(mMockIAdServicesManager)
-                .setConsentForAppIfNew(
-                        AppConsentDaoFixture.APP20_PACKAGE_NAME,
-                        AppConsentDaoFixture.APP20_UID,
-                        false);
-        doReturn(false)
-                .when(mMockIAdServicesManager)
-                .setConsentForAppIfNew(
-                        AppConsentDaoFixture.APP30_PACKAGE_NAME,
-                        AppConsentDaoFixture.APP30_UID,
-                        false);
-
-        assertFalse(
-                mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                        AppConsentDaoFixture.APP10_PACKAGE_NAME));
-        assertTrue(
-                mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                        AppConsentDaoFixture.APP20_PACKAGE_NAME));
-        assertFalse(
-                mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                        AppConsentDaoFixture.APP30_PACKAGE_NAME));
-    }
-
-    @Test
-    public void
-            testIsFledgeConsentRevokedForAppAfterSetFledgeUseWithFullApiConsentGaUxDisabled_both()
-                    throws PackageManager.NameNotFoundException, RemoteException {
-        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(false);
-        mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_AND_SYSTEM_SERVER);
-        doReturn(ConsentParcel.createGivenConsent(ConsentParcel.ALL_API))
-                .when(mMockIAdServicesManager)
-                .getConsent(ConsentParcel.ALL_API);
-        assertTrue(mConsentManager.getConsent().isGiven());
-
-        mockGetPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
-        mockGetPackageUid(AppConsentDaoFixture.APP20_PACKAGE_NAME, AppConsentDaoFixture.APP20_UID);
-        mockGetPackageUid(AppConsentDaoFixture.APP30_PACKAGE_NAME, AppConsentDaoFixture.APP30_UID);
-
-        doReturn(false)
-                .when(mMockIAdServicesManager)
-                .setConsentForAppIfNew(
-                        AppConsentDaoFixture.APP10_PACKAGE_NAME,
-                        AppConsentDaoFixture.APP10_UID,
-                        false);
-        doReturn(true)
-                .when(mMockIAdServicesManager)
-                .setConsentForAppIfNew(
-                        AppConsentDaoFixture.APP20_PACKAGE_NAME,
-                        AppConsentDaoFixture.APP20_UID,
-                        false);
-        doReturn(false)
-                .when(mMockIAdServicesManager)
-                .setConsentForAppIfNew(
-                        AppConsentDaoFixture.APP30_PACKAGE_NAME,
-                        AppConsentDaoFixture.APP30_UID,
-                        false);
-
-        assertFalse(
-                mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                        AppConsentDaoFixture.APP10_PACKAGE_NAME));
-        assertTrue(
-                mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                        AppConsentDaoFixture.APP20_PACKAGE_NAME));
-        assertFalse(
-                mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                        AppConsentDaoFixture.APP30_PACKAGE_NAME));
-    }
-
-    // AppSearch test for isFledgeConsentRevokedForAppAfterSettingFledgeUse with GA UX disabled.
-    @Test
-    public void testIsFledgeConsentRevokedForAppAfterSetFledgeUseWithFullApiConsentGaUxDisabled_as()
-            throws Exception {
-        runTestIsFledgeConsentRevokedForAppAfterSetFledgeUseWithFullApiConsentAppSearch(false);
     }
 
     // AppSearch test for isFledgeConsentRevokedForAppAfterSettingFledgeUse with GA UX enabled.
@@ -1587,65 +1245,6 @@ public class ConsentManagerTest {
 
     @Test
     public void
-            testIsFledgeConsentRevokedForAppSetFledgeUseNoPrivacySandboxConsentGaUxDisabled_ppApi()
-                    throws PackageManager.NameNotFoundException {
-        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(false);
-        mConsentManager.disable(mContextSpy);
-        assertFalse(mConsentManager.getConsent().isGiven());
-
-        verify(() -> UiStatsLogger.logOptOutSelected(mContextSpy));
-
-        mockGetPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
-        mockGetPackageUid(AppConsentDaoFixture.APP20_PACKAGE_NAME, AppConsentDaoFixture.APP20_UID);
-
-        assertTrue(
-                mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                        AppConsentDaoFixture.APP10_PACKAGE_NAME));
-        assertTrue(
-                mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                        AppConsentDaoFixture.APP20_PACKAGE_NAME));
-    }
-
-    @Test
-    public void
-            testIsFledgeConsentRevokedForAppSetFledgeUseNoPrivacySandboxConsentGaUxDisabled_sysSer()
-                    throws RemoteException {
-        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(false);
-        mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.SYSTEM_SERVER_ONLY);
-        doReturn(ConsentParcel.createRevokedConsent(ConsentParcel.ALL_API))
-                .when(mMockIAdServicesManager)
-                .getConsent(ConsentParcel.ALL_API);
-        assertFalse(mConsentManager.getConsent().isGiven());
-
-        assertTrue(
-                mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                        AppConsentDaoFixture.APP10_PACKAGE_NAME));
-        assertTrue(
-                mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                        AppConsentDaoFixture.APP20_PACKAGE_NAME));
-    }
-
-    @Test
-    public void
-            testIsFledgeConsentRevokedForAppSetFledgeUseNoPrivacySandboxConsentGaUxDisabled_both()
-                    throws RemoteException {
-        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(false);
-        mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_AND_SYSTEM_SERVER);
-        doReturn(ConsentParcel.createRevokedConsent(ConsentParcel.ALL_API))
-                .when(mMockIAdServicesManager)
-                .getConsent(ConsentParcel.ALL_API);
-        assertFalse(mConsentManager.getConsent().isGiven());
-
-        assertTrue(
-                mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                        AppConsentDaoFixture.APP10_PACKAGE_NAME));
-        assertTrue(
-                mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                        AppConsentDaoFixture.APP20_PACKAGE_NAME));
-    }
-
-    @Test
-    public void
             testIsFledgeConsentRevokedForAppSetFledgeUseNoPrivacySandboxConsentGaUxEnabled_ppApi()
                     throws PackageManager.NameNotFoundException {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
@@ -1705,11 +1304,10 @@ public class ConsentManagerTest {
     @Test
     public void testIsFledgeConsentRevokedForAppAfterSettingFledgeUseThrows_ppApiOnly()
             throws PackageManager.NameNotFoundException {
-        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(false);
-        mConsentManager.enable(mContextSpy);
-        assertTrue(mConsentManager.getConsent().isGiven());
+        mConsentManager.enable(mContextSpy, AdServicesApiType.FLEDGE);
+        assertTrue(mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven());
 
-        verify(() -> UiStatsLogger.logOptInSelected(mContextSpy));
+        verify(() -> UiStatsLogger.logOptInSelected(mContextSpy, AdServicesApiType.FLEDGE));
 
         mockThrowExceptionOnGetPackageUid(AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME);
         assertThrows(
@@ -1722,12 +1320,11 @@ public class ConsentManagerTest {
     @Test
     public void testIsFledgeConsentRevokedForAppAfterSettingFledgeUseThrows_systemServerOnly()
             throws PackageManager.NameNotFoundException, RemoteException {
-        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(false);
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.SYSTEM_SERVER_ONLY);
-        doReturn(ConsentParcel.createGivenConsent(ConsentParcel.ALL_API))
+        doReturn(ConsentParcel.createGivenConsent(ConsentParcel.FLEDGE))
                 .when(mMockIAdServicesManager)
-                .getConsent(ConsentParcel.ALL_API);
-        assertTrue(mConsentManager.getConsent().isGiven());
+                .getConsent(ConsentParcel.FLEDGE);
+        assertTrue(mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven());
 
         mockThrowExceptionOnGetPackageUid(AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME);
         assertThrows(
@@ -1740,12 +1337,11 @@ public class ConsentManagerTest {
     @Test
     public void testIsFledgeConsentRevokedForAppAfterSettingFledgeUseThrows_ppApiAndSystemServer()
             throws PackageManager.NameNotFoundException, RemoteException {
-        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(false);
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_AND_SYSTEM_SERVER);
-        doReturn(ConsentParcel.createGivenConsent(ConsentParcel.ALL_API))
+        doReturn(ConsentParcel.createGivenConsent(ConsentParcel.FLEDGE))
                 .when(mMockIAdServicesManager)
-                .getConsent(ConsentParcel.ALL_API);
-        assertTrue(mConsentManager.getConsent().isGiven());
+                .getConsent(ConsentParcel.FLEDGE);
+        assertTrue(mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven());
 
         mockThrowExceptionOnGetPackageUid(AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME);
         assertThrows(
@@ -2016,10 +1612,10 @@ public class ConsentManagerTest {
 
     @Test
     public void testSetConsentForApp_ppApiOnly() throws Exception {
-        mConsentManager.enable(mContextSpy);
-        assertTrue(mConsentManager.getConsent().isGiven());
+        mConsentManager.enable(mContextSpy, AdServicesApiType.FLEDGE);
+        assertTrue(mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven());
 
-        verify(() -> UiStatsLogger.logOptInSelected(mContextSpy));
+        verify(() -> UiStatsLogger.logOptInSelected(mContextSpy, AdServicesApiType.FLEDGE));
 
         mockGetPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
 
@@ -2041,10 +1637,10 @@ public class ConsentManagerTest {
     @Test
     public void testSetConsentForApp_systemServerOnly() throws Exception {
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.SYSTEM_SERVER_ONLY);
-        doReturn(ConsentParcel.createGivenConsent(ConsentParcel.ALL_API))
+        doReturn(ConsentParcel.createGivenConsent(ConsentParcel.FLEDGE))
                 .when(mMockIAdServicesManager)
-                .getConsent(ConsentParcel.ALL_API);
-        assertTrue(mConsentManager.getConsent().isGiven());
+                .getConsent(ConsentParcel.FLEDGE);
+        assertTrue(mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven());
 
         mockGetPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
 
@@ -2070,10 +1666,10 @@ public class ConsentManagerTest {
     @Test
     public void testSetConsentForApp_ppApiAndSystemServer() throws Exception {
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_AND_SYSTEM_SERVER);
-        doReturn(ConsentParcel.createGivenConsent(ConsentParcel.ALL_API))
+        doReturn(ConsentParcel.createGivenConsent(ConsentParcel.FLEDGE))
                 .when(mMockIAdServicesManager)
-                .getConsent(ConsentParcel.ALL_API);
-        assertTrue(mConsentManager.getConsent().isGiven());
+                .getConsent(ConsentParcel.FLEDGE);
+        assertTrue(mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven());
 
         mockGetPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
 

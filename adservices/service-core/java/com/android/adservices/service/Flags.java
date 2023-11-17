@@ -2529,6 +2529,20 @@ public interface Flags extends CommonFlags {
         return ENABLE_ADEXT_SERVICE_CONSENT_DATA;
     }
 
+    /**
+     * Enables data migration from AdServicesExtDataStorageService to AppSearch upon OTA to Android
+     * S. As a result this flag is only true on Android S.
+     */
+    boolean ENABLE_ADEXT_SERVICE_TO_APPSEARCH_MIGRATION =
+            SdkLevel.isAtLeastS() && !SdkLevel.isAtLeastT();
+
+    /**
+     * @return value of enable AdExt service to AppSearch migration flag.
+     */
+    default boolean getEnableAdExtServiceToAppSearchMigration() {
+        return ENABLE_ADEXT_SERVICE_TO_APPSEARCH_MIGRATION;
+    }
+
     /*
      * The allow-list for PP APIs. This list has the list of app package names that we allow
      * using PP APIs.
