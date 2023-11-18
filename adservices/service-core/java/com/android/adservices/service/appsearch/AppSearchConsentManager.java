@@ -41,6 +41,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.topics.BlockedTopicsManager;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -73,9 +74,9 @@ public class AppSearchConsentManager {
     }
 
     /** Returns an instance of AppSearchConsentManager. */
-    public static AppSearchConsentManager getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context);
-        return new AppSearchConsentManager(context, AppSearchConsentWorker.getInstance(context));
+    public static AppSearchConsentManager getInstance() {
+        return new AppSearchConsentManager(
+                ApplicationContextSingleton.get(), AppSearchConsentWorker.getInstance());
     }
 
     /**

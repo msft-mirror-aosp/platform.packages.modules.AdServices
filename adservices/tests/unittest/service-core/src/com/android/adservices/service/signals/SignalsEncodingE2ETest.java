@@ -44,6 +44,8 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.SupportedByConditionRule;
+import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -71,7 +73,6 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.js.IsolateSettings;
-import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -85,7 +86,6 @@ import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.RecordedRequest;
 
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -111,7 +111,19 @@ public class SignalsEncodingE2ETest {
 
     @Spy private final Context mContextSpy = ApplicationProvider.getApplicationContext();
 
-    @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
+    // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
+    // availability depends on an external component (the system webview) being higher than a
+    // certain minimum version.
+    @Rule(order = 0)
+    public final SupportedByConditionRule webViewSupportsJSSandbox =
+            WebViewSupportUtil.createJSSandboxAvailableRule();
+
+    @Rule(order = 1)
+    public final SupportedByConditionRule webViewSupportsConfigurableHeapSize =
+            WebViewSupportUtil.createJSSandboxConfigurableHeapSizeRule(mContextSpy);
+
+    @Rule(order = 2)
+    public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
@@ -153,8 +165,6 @@ public class SignalsEncodingE2ETest {
 
     @Before
     public void setup() {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
-
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .mockStatic(PeriodicEncodingJobService.class)

@@ -36,7 +36,9 @@ public final class ApplicationContextSingleton {
 
     // TODO(b/280460130): use adservice helpers for tag name / logging methods
     private static final String TAG = "AppContextSingleton";
-    private static final boolean VERBOSE = Log.isLoggable(TAG, Log.VERBOSE);
+
+    @VisibleForTesting
+    public static final String ERROR_MESSAGE_SET_NOT_CALLED = "set() not called yet";
 
     private static final AtomicReference<Context> sContext = new AtomicReference<>();
 
@@ -47,10 +49,10 @@ public final class ApplicationContextSingleton {
      */
     public static Context get() {
         Context context = sContext.get();
-        // TODO(b/303886367): use Precondtions.checkState
+        // TODO(b/303886367): use Preconditions.checkState()
         if (context == null) {
-            // TODO(b/285300419): log to CEL
-            throw new IllegalStateException("set() not called yet");
+            // TODO(b/309169907): log to CEL
+            throw new IllegalStateException(ERROR_MESSAGE_SET_NOT_CALLED);
         }
         return context;
     }
@@ -66,7 +68,7 @@ public final class ApplicationContextSingleton {
     public static void set(Context context) {
         Context appContext =
                 Objects.requireNonNull(context, "context cannot be null").getApplicationContext();
-        // TODO(b/303886367): use Precondtions.checkIllegalArgument
+        // TODO(b/303886367): use Preconditions.checkIllegalArgument()
         if (appContext == null) {
             throw new IllegalArgumentException(
                     "Context (" + context + ") does not have an application context");
@@ -74,16 +76,14 @@ public final class ApplicationContextSingleton {
 
         // Set if it's not set yet
         if (sContext.compareAndSet(null, appContext)) {
-            if (VERBOSE) {
-                Log.v(TAG, "Set singleton context as " + appContext);
-            }
+            Log.i(TAG, "Set singleton context as " + appContext);
             return;
         }
 
         // Otherwise, check it's the same.
         Context currentAppContext = sContext.get();
         if (currentAppContext != appContext) {
-            // TODO(b/285300419): log to CEL
+            // TODO(b/309169907): log to CEL
             throw new IllegalStateException(
                     "Trying to set app context as "
                             + appContext
@@ -94,11 +94,30 @@ public final class ApplicationContextSingleton {
         }
     }
 
+    // TODO(b/285300419): make it package protected so it's only accessed by rule
+    /**
+     * Gets the application context, returning {@code null} if it's not set yet.
+     *
+     * <p>Should only be used on unit tests - production code should call {@link #get()} instead.
+     */
     @VisibleForTesting
-    static void resetForTests() {
-        Log.i(TAG, "resetForTests)");
+    public static Context getForTests() {
+        Context context = sContext.get();
+        Log.i(TAG, "getForTests(): returning " + context);
+        return context;
+    }
 
-        sContext.set(null);
+    // TODO(b/285300419): make it package protected so it's only accessed by rule
+    /**
+     * Sets the application context singleton as the given {@code context}, without doing any check.
+     *
+     * <p>Should only be used on unit tests - production code should call {@link #set(Context)
+     * instead.
+     */
+    @VisibleForTesting
+    public static void setForTests(Context context) {
+        Log.i(TAG, "setForTests(): from " + sContext.get() + " to " + context);
+        sContext.set(context);
     }
 
     private ApplicationContextSingleton() {
