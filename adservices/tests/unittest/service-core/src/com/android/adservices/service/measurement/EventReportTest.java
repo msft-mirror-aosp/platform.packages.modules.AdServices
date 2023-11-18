@@ -75,6 +75,8 @@ public final class EventReportTest {
     private static final UnsignedLong TRIGGER_DATA = new UnsignedLong(4L);
     private static final UnsignedLong SOURCE_DEBUG_KEY = new UnsignedLong(237865L);
     private static final UnsignedLong TRIGGER_DEBUG_KEY = new UnsignedLong(928762L);
+    private static final List<UnsignedLong> TRIGGER_DEBUG_KEYS = List.of(
+            new UnsignedLong(928762L), new UnsignedLong("9223372036854775809"));
     private static final String SOURCE_ID = UUID.randomUUID().toString();
     private static final String TRIGGER_ID = UUID.randomUUID().toString();
     private static final Uri REGISTRATION_ORIGIN =
@@ -147,6 +149,7 @@ public final class EventReportTest {
         assertEquals(Source.SourceType.NAVIGATION, eventReport.getSourceType());
         assertEquals(SOURCE_DEBUG_KEY, eventReport.getSourceDebugKey());
         assertEquals(TRIGGER_DEBUG_KEY, eventReport.getTriggerDebugKey());
+        assertEquals(TRIGGER_DEBUG_KEYS, eventReport.getTriggerDebugKeys());
         assertEquals(SOURCE_ID, eventReport.getSourceId());
         assertEquals(TRIGGER_ID, eventReport.getTriggerId());
         assertEquals(REGISTRATION_ORIGIN, eventReport.getRegistrationOrigin());
@@ -201,6 +204,31 @@ public final class EventReportTest {
     }
 
     @Test
+    public void creationSuccessMultipleTriggerDebugKeys() {
+        EventReport eventReport = createExampleMultipleTriggerDebugKeys();
+        assertEquals("1", eventReport.getId());
+        assertEquals(new UnsignedLong(21L), eventReport.getSourceEventId());
+        assertEquals("enrollment-id", eventReport.getEnrollmentId());
+        assertEquals("https://bar.test",
+                eventReport.getAttributionDestinations().get(0).toString());
+        assertEquals(1000L, eventReport.getTriggerTime());
+        assertEquals(new UnsignedLong(8L), eventReport.getTriggerData());
+        assertEquals(2L, eventReport.getTriggerPriority());
+        assertEquals(100L, eventReport.getTriggerValue());
+        assertEquals(new UnsignedLong(3L), eventReport.getTriggerDedupKey());
+        assertEquals(2000L, eventReport.getReportTime());
+        assertEquals(EventReport.Status.PENDING, eventReport.getStatus());
+        assertEquals(EventReport.DebugReportStatus.PENDING, eventReport.getDebugReportStatus());
+        assertEquals(Source.SourceType.NAVIGATION, eventReport.getSourceType());
+        assertNull(eventReport.getSourceDebugKey());
+        assertNull(eventReport.getTriggerDebugKey());
+        assertEquals(TRIGGER_DEBUG_KEYS, eventReport.getTriggerDebugKeys());
+        assertEquals(SOURCE_ID, eventReport.getSourceId());
+        assertEquals(TRIGGER_ID, eventReport.getTriggerId());
+        assertEquals(REGISTRATION_ORIGIN, eventReport.getRegistrationOrigin());
+    }
+
+    @Test
     public void defaults_success() {
         EventReport eventReport = new EventReport.Builder().build();
         assertNull(eventReport.getId());
@@ -218,6 +246,7 @@ public final class EventReportTest {
         assertNull(eventReport.getSourceType());
         assertNull(eventReport.getSourceDebugKey());
         assertNull(eventReport.getTriggerDebugKey());
+        assertEquals(Collections.emptyList(), eventReport.getTriggerDebugKeys());
         assertNull(eventReport.getSourceId());
         assertNull(eventReport.getTriggerId());
         assertNull(eventReport.getRegistrationOrigin());
@@ -860,6 +889,7 @@ public final class EventReportTest {
                 .setSourceType(Source.SourceType.NAVIGATION)
                 .setSourceDebugKey(SOURCE_DEBUG_KEY)
                 .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                .setTriggerDebugKeys(TRIGGER_DEBUG_KEYS)
                 .setSourceId(SOURCE_ID)
                 .setTriggerId(TRIGGER_ID)
                 .setRegistrationOrigin(REGISTRATION_ORIGIN)
@@ -883,6 +913,28 @@ public final class EventReportTest {
                 .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
                 .setSourceType(Source.SourceType.NAVIGATION)
                 .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                .setSourceId(SOURCE_ID)
+                .setTriggerId(TRIGGER_ID)
+                .setRegistrationOrigin(REGISTRATION_ORIGIN)
+                .build();
+    }
+
+    private EventReport createExampleMultipleTriggerDebugKeys() {
+        return new EventReport.Builder()
+                .setId("1")
+                .setSourceEventId(new UnsignedLong(21L))
+                .setEnrollmentId("enrollment-id")
+                .setAttributionDestinations(List.of(Uri.parse("https://bar.test")))
+                .setTriggerTime(1000L)
+                .setTriggerData(new UnsignedLong(8L))
+                .setTriggerPriority(2L)
+                .setTriggerValue(100L)
+                .setTriggerDedupKey(new UnsignedLong(3L))
+                .setReportTime(2000L)
+                .setStatus(EventReport.Status.PENDING)
+                .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
+                .setSourceType(Source.SourceType.NAVIGATION)
+                .setTriggerDebugKeys(TRIGGER_DEBUG_KEYS)
                 .setSourceId(SOURCE_ID)
                 .setTriggerId(TRIGGER_ID)
                 .setRegistrationOrigin(REGISTRATION_ORIGIN)

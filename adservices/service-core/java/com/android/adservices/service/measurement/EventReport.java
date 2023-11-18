@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableMultiset;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -54,6 +55,7 @@ public class EventReport {
     private Source.SourceType mSourceType;
     @Nullable private UnsignedLong mSourceDebugKey;
     @Nullable private UnsignedLong mTriggerDebugKey;
+    @NonNull private List<UnsignedLong> mTriggerDebugKeys;
     private String mSourceId;
     private String mTriggerId;
     private Uri mRegistrationOrigin;
@@ -83,6 +85,7 @@ public class EventReport {
 
     private EventReport() {
         mTriggerDedupKey = null;
+        mTriggerDebugKeys = new ArrayList<>();
     }
 
     @Override
@@ -107,6 +110,7 @@ public class EventReport {
                 && mRandomizedTriggerRate == eventReport.mRandomizedTriggerRate
                 && Objects.equals(mSourceDebugKey, eventReport.mSourceDebugKey)
                 && Objects.equals(mTriggerDebugKey, eventReport.mTriggerDebugKey)
+                && Objects.equals(mTriggerDebugKeys, eventReport.mTriggerDebugKeys)
                 && Objects.equals(mSourceId, eventReport.mSourceId)
                 && Objects.equals(mTriggerId, eventReport.mTriggerId)
                 && Objects.equals(mRegistrationOrigin, eventReport.mRegistrationOrigin)
@@ -131,6 +135,7 @@ public class EventReport {
                 mRandomizedTriggerRate,
                 mSourceDebugKey,
                 mTriggerDebugKey,
+                mTriggerDebugKeys,
                 mSourceId,
                 mTriggerId,
                 mRegistrationOrigin,
@@ -233,6 +238,12 @@ public class EventReport {
     @Nullable
     public UnsignedLong getTriggerDebugKey() {
         return mTriggerDebugKey;
+    }
+
+    /** Trigger Debug Keys */
+    @NonNull
+    public List<UnsignedLong> getTriggerDebugKeys() {
+        return mTriggerDebugKeys;
     }
 
     /** Source ID */
@@ -379,6 +390,12 @@ public class EventReport {
         /** See {@link EventReport#getTriggerDebugKey()}} */
         public Builder setTriggerDebugKey(UnsignedLong triggerDebugKey) {
             mBuilding.mTriggerDebugKey = triggerDebugKey;
+            return this;
+        }
+
+        /** See {@link EventReport#getTriggerDebugKeys()}} */
+        public Builder setTriggerDebugKeys(List<UnsignedLong> triggerDebugKeys) {
+            mBuilding.mTriggerDebugKeys = triggerDebugKeys;
             return this;
         }
 
