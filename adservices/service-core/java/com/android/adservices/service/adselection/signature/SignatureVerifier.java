@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.topics;
+package com.android.adservices.service.adselection.signature;
 
-/** Interface for algorithms to encrypt Topics data. */
-public interface Encrypter {
+/** Interface for a cryptographic signature verifier */
+public interface SignatureVerifier {
+
     /**
-     * Encrypt {@code plainText} to cipher text {@code byte[]}.
+     * Verifies a given signature against the given {@code publicKey} and the serialized {@code
+     * data}
      *
-     * @param publicKey the public key used for encryption
-     * @param plainText the plain text string to encrypt
-     * @param contextInfo additional context info used for encryption
-     * @return the encrypted ciphertext
+     * @param publicKey public key paired with the private key used to sign the data
+     * @param data serialized representation of the data
+     * @param signature signature to verify
      */
-    byte[] encrypt(byte[] publicKey, byte[] plainText, byte[] contextInfo);
+    boolean verify(byte[] publicKey, byte[] data, byte[] signature);
 }
