@@ -20,8 +20,8 @@ import android.annotation.NonNull;
 import android.net.Uri;
 
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.measurement.ReportSpec;
 import com.android.adservices.service.measurement.Source;
+import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.internal.annotations.VisibleForTesting;
@@ -83,8 +83,8 @@ public class SourceNoiseHandler {
         }
 
         List<Source.FakeReport> fakeReports;
-        ReportSpec flexEventReportSpec = source.getFlexEventReportSpec();
-        if (flexEventReportSpec == null) {
+        TriggerSpecs triggerSpecs = source.getTriggerSpecs();
+        if (triggerSpecs == null) {
             if (isVtcDualDestinationModeWithPostInstallEnabled(source)) {
                 // Source is 'EVENT' type, both app and web destination are set and install
                 // exclusivity
@@ -116,19 +116,19 @@ public class SourceNoiseHandler {
             int destinationTypeMultiplier = getDestinationTypeMultiplier(source);
             List<int[]> fakeReportConfigs =
                     ImpressionNoiseUtil.selectFlexEventReportRandomStateAndGenerateReportConfigs(
-                            flexEventReportSpec, destinationTypeMultiplier, rand);
+                            triggerSpecs, destinationTypeMultiplier, rand);
             fakeReports =
                     fakeReportConfigs.stream()
                             .map(
                                     reportConfig ->
                                             new Source.FakeReport(
-                                                    flexEventReportSpec.getTriggerDataValue(
+                                                    triggerSpecs.getTriggerDataFromIndex(
                                                             reportConfig[0]),
                                                     mEventReportWindowCalcDelegate
                                                             .getReportingTimeForNoisingFlexEventApi(
                                                                     reportConfig[1],
                                                                     reportConfig[0],
-                                                                    flexEventReportSpec),
+                                                                    triggerSpecs),
                                                     resolveFakeReportDestinations(
                                                             source, reportConfig[2])))
                             .collect(Collectors.toList());

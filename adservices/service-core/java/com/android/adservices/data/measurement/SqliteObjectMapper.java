@@ -191,7 +191,9 @@ public class SqliteObjectMapper {
                 MeasurementTables.SourceContract.COARSE_EVENT_REPORT_DESTINATIONS,
                 builder::setCoarseEventReportDestinations);
         setTextColumn(
-                cursor, MeasurementTables.SourceContract.TRIGGER_SPECS, builder::setTriggerSpecs);
+                cursor,
+                MeasurementTables.SourceContract.TRIGGER_SPECS,
+                builder::setTriggerSpecsString);
         setIntColumn(
                 cursor,
                 MeasurementTables.SourceContract.MAX_EVENT_LEVEL_REPORTS,

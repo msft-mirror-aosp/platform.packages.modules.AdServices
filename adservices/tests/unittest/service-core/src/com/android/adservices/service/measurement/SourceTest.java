@@ -121,7 +121,7 @@ public class SourceTest {
         String debugJoinKey = "SAMPLE_DEBUG_JOIN_KEY";
         String debugAppAdId = "SAMPLE_DEBUG_APP_ADID";
         String debugWebAdId = "SAMPLE_DEBUG_WEB_ADID";
-        ReportSpec reportSpec = SourceFixture.getValidReportSpecValueSum();
+        TriggerSpecs triggerSpecs = SourceFixture.getValidTriggerSpecsValueSum();
         assertEquals(
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -166,11 +166,11 @@ public class SourceTest {
                         .setCoarseEventReportDestinations(true)
                         .setSharedDebugKey(SHARED_DEBUG_KEY_1)
                         .setAttributedTriggers(ATTRIBUTED_TRIGGERS)
-                        .setFlexEventReportSpec(reportSpec)
-                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJson())
-                        .setMaxEventLevelReports(reportSpec.getMaxReports())
+                        .setTriggerSpecs(triggerSpecs)
+                        .setTriggerSpecsString(triggerSpecs.encodeToJson())
+                        .setMaxEventLevelReports(triggerSpecs.getMaxReports())
                         .setEventAttributionStatus(null)
-                        .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
+                        .setPrivacyParameters(triggerSpecs.encodePrivacyParametersToJSONString())
                         .setDropSourceIfInstalled(true)
                         .build(),
                 new Source.Builder()
@@ -216,11 +216,11 @@ public class SourceTest {
                         .setCoarseEventReportDestinations(true)
                         .setSharedDebugKey(SHARED_DEBUG_KEY_1)
                         .setAttributedTriggers(ATTRIBUTED_TRIGGERS)
-                        .setFlexEventReportSpec(reportSpec)
-                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJson())
-                        .setMaxEventLevelReports(reportSpec.getMaxReports())
+                        .setTriggerSpecs(triggerSpecs)
+                        .setTriggerSpecsString(triggerSpecs.encodeToJson())
+                        .setMaxEventLevelReports(triggerSpecs.getMaxReports())
                         .setEventAttributionStatus(null)
-                        .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
+                        .setPrivacyParameters(triggerSpecs.encodePrivacyParametersToJSONString())
                         .setDropSourceIfInstalled(true)
                         .build());
     }
@@ -449,18 +449,18 @@ public class SourceTest {
                         .setAttributedTriggers(new ArrayList<>())
                         .build());
 
-        ReportSpec reportSpecValueSumBased =
-                new ReportSpec(
-                        SourceFixture.getTriggerSpecValueSumEncodedJSONValidBaseline(),
-                        "5",
+        TriggerSpecs triggerSpecsValueSumBased =
+                new TriggerSpecs(
+                        SourceFixture.getTriggerSpecValueSumArrayValidBaseline(),
+                        5,
                         null);
-        ReportSpec reportSpecCountBased = SourceFixture.getValidReportSpecCountBased();
+        TriggerSpecs triggerSpecsCountBased = SourceFixture.getValidTriggerSpecsCountBased();
         assertNotEquals(
                 SourceFixture.getMinimalValidSourceBuilder()
-                        .setTriggerSpecs(reportSpecValueSumBased.encodeTriggerSpecsToJson())
+                        .setTriggerSpecsString(triggerSpecsValueSumBased.encodeToJson())
                         .build(),
                 SourceFixture.getMinimalValidSourceBuilder()
-                        .setTriggerSpecs(reportSpecCountBased.encodeTriggerSpecsToJson())
+                        .setTriggerSpecsString(triggerSpecsCountBased.encodeToJson())
                         .build());
         assertNotEquals(
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -479,11 +479,11 @@ public class SourceTest {
         assertNotEquals(
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setPrivacyParameters(
-                                reportSpecValueSumBased.encodePrivacyParametersToJSONString())
+                                triggerSpecsValueSumBased.encodePrivacyParametersToJSONString())
                         .build(),
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setPrivacyParameters(
-                                reportSpecCountBased.encodePrivacyParametersToJSONString())
+                                triggerSpecsCountBased.encodePrivacyParametersToJSONString())
                         .build());
         assertNotEquals(
                 SourceFixture.getMinimalValidSourceBuilder().setDropSourceIfInstalled(true).build(),
@@ -1213,24 +1213,25 @@ public class SourceTest {
     }
 
     @Test
-    public void reportSpecs_encodingDecoding_equal() throws JSONException {
+    public void triggerSpecs_encodingDecoding_equal() throws JSONException {
         // Setup
         Source validSource = SourceFixture.getValidSourceWithFlexEventReport();
-        ReportSpec originalReportSpec = validSource.getFlexEventReportSpec();
-        String encodedTriggerSpecs = originalReportSpec.encodeTriggerSpecsToJson();
-        String encodeddMaxReports = Integer.toString(originalReportSpec.getMaxReports());
-        String encodedPrivacyParameters = originalReportSpec.encodePrivacyParametersToJSONString();
-        ReportSpec reportSpec =
-                new ReportSpec(
+        TriggerSpecs originalTriggerSpecs = validSource.getTriggerSpecs();
+        String encodedTriggerSpecs = originalTriggerSpecs.encodeToJson();
+        String encodeddMaxReports = Integer.toString(originalTriggerSpecs.getMaxReports());
+        String encodedPrivacyParameters =
+                originalTriggerSpecs.encodePrivacyParametersToJSONString();
+        TriggerSpecs triggerSpecs =
+                new TriggerSpecs(
                         encodedTriggerSpecs,
                         encodeddMaxReports,
                         validSource,
                         encodedPrivacyParameters);
 
         // Assertion
-        assertEquals(originalReportSpec.getMaxReports(), reportSpec.getMaxReports());
-        assertArrayEquals(originalReportSpec.getTriggerSpecs(), reportSpec.getTriggerSpecs());
-        assertEquals(originalReportSpec, reportSpec);
+        assertEquals(originalTriggerSpecs.getMaxReports(), triggerSpecs.getMaxReports());
+        assertArrayEquals(originalTriggerSpecs.getTriggerSpecs(), triggerSpecs.getTriggerSpecs());
+        assertEquals(originalTriggerSpecs, triggerSpecs);
     }
 
     private void assertInvalidSourceArguments(
@@ -1320,6 +1321,8 @@ public class SourceTest {
                         + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(7))
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [1]}]\n";
+        TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
+        int maxEventLevelReports = 3;
         Source testSource =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
@@ -1333,9 +1336,9 @@ public class SourceTest {
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setDebugKey(new UnsignedLong(47823478789L))
-                        .setTriggerSpecs(triggerSpecsString)
-                        .setMaxEventLevelReports(3)
-                        .buildInitialFlexEventReportSpec(flags)
+                        .setMaxEventLevelReports(maxEventLevelReports)
+                        .setTriggerSpecs(new TriggerSpecs(
+                                triggerSpecsArray, maxEventLevelReports, null))
                         .build();
         assertTrue(testSource.isFlexEventApiValueValid(flags));
     }
@@ -1363,6 +1366,8 @@ public class SourceTest {
                                 TimeUnit.DAYS.toMillis(30))
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}]\n";
+        TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
+        int maxEventLevelReports = 3;
         Source testSource =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
@@ -1376,9 +1381,9 @@ public class SourceTest {
                         .setSourceType(Source.SourceType.EVENT)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setDebugKey(new UnsignedLong(47823478789L))
-                        .setTriggerSpecs(triggerSpecsString)
                         .setMaxEventLevelReports(3)
-                        .buildInitialFlexEventReportSpec(flags)
+                        .setTriggerSpecs(new TriggerSpecs(
+                                triggerSpecsArray, maxEventLevelReports, null))
                         .build();
         assertFalse(testSource.isFlexEventApiValueValid(flags));
     }
@@ -1406,6 +1411,8 @@ public class SourceTest {
                                 TimeUnit.DAYS.toMillis(30))
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}]\n";
+        TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
+        int maxEventLevelReports = 3;
         Source testSource =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
@@ -1419,15 +1426,15 @@ public class SourceTest {
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setDebugKey(new UnsignedLong(47823478789L))
-                        .setTriggerSpecs(triggerSpecsString)
-                        .setMaxEventLevelReports(3)
-                        .buildInitialFlexEventReportSpec(flags)
+                        .setMaxEventLevelReports(maxEventLevelReports)
+                        .setTriggerSpecs(new TriggerSpecs(
+                                triggerSpecsArray, maxEventLevelReports, null))
                         .build();
         assertTrue(testSource.isFlexEventApiValueValid(flags));
     }
 
     @Test
-    public void buildFlexibleEventReportApi_validParams_pass() throws JSONException {
+    public void buildTriggerSpecs_validParams_pass() throws JSONException {
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3],"
                         + "\"event_report_windows\": { "
@@ -1441,19 +1448,19 @@ public class SourceTest {
                         + "\"summary_buckets\": [1, 2, 3, 4]}]";
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
-                        .setTriggerSpecs(triggerSpecsString)
+                        .setTriggerSpecsString(triggerSpecsString)
                         .setMaxEventLevelReports(3)
                         .setPrivacyParameters("{\"flip_probability\" :0.0024}")
                         .build();
-        source.buildFlexibleEventReportApi();
+        source.buildTriggerSpecs();
         // Assertion
         assertEquals(
-                source.getFlexEventReportSpec(),
-                new ReportSpec(triggerSpecsString, "3", source, "{\"flip_probability\":0.0024}"));
+                source.getTriggerSpecs(),
+                new TriggerSpecs(triggerSpecsString, "3", source, "{\"flip_probability\":0.0024}"));
     }
 
     @Test
-    public void buildFlexibleEventReportApi_invalidParamsSyntaxError_throws() throws JSONException {
+    public void buildTriggerSpecs_invalidParamsSyntaxError_throws() throws JSONException {
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3,"
                         + "\"event_report_windows\": { "
@@ -1467,67 +1474,13 @@ public class SourceTest {
                         + "\"summary_buckets\": [1, 2, 3, 4]}]";
         Source testSource =
                 SourceFixture.getMinimalValidSourceBuilder()
-                        .setTriggerSpecs(triggerSpecsString)
+                        .setTriggerSpecsString(triggerSpecsString)
                         .setMaxEventLevelReports(3)
                         .setPrivacyParameters("{\"flip_probability\" :0.0024}")
                         .build();
 
         // Assertion
-        assertThrows(JSONException.class, () -> testSource.buildFlexibleEventReportApi());
-    }
-
-    @Test
-    public void buildInitialFlexEventReportSpec_validParams_pass() throws JSONException {
-        Flags flags = mock(Flags.class);
-        doReturn(2).when(flags).getMeasurementVtcConfigurableMaxEventReportsCount();
-        String triggerSpecsString =
-                "[{\"trigger_data\": [1, 2, 3],"
-                        + "\"event_report_windows\": { "
-                        + "\"start_time\": \"0\", "
-                        + String.format(
-                                "\"end_times\": [%s, %s, %s]}, ",
-                                TimeUnit.DAYS.toMillis(2),
-                                TimeUnit.DAYS.toMillis(7),
-                                TimeUnit.DAYS.toMillis(30))
-                        + "\"summary_window_operator\": \"count\", "
-                        + "\"summary_buckets\": [1, 2, 3, 4]}]";
-        Source testSource =
-                SourceFixture.getMinimalValidSourceBuilder()
-                        .setTriggerSpecs(triggerSpecsString)
-                        .setMaxEventLevelReports(3)
-                        .buildInitialFlexEventReportSpec(flags)
-                        .build();
-        // Assertion
-        assertEquals(
-                testSource.getFlexEventReportSpec(),
-                new ReportSpec(triggerSpecsString, "3", null));
-    }
-
-    @Test
-    public void buildInitialFlexEventReportSpec_invalidParamsSyntaxError_throws() {
-        Flags flags = mock(Flags.class);
-        doReturn(2).when(flags).getMeasurementVtcConfigurableMaxEventReportsCount();
-        String triggerSpecsString =
-                "[{\"trigger_data\": [1, 2, 3,"
-                        + "\"event_report_windows\": { "
-                        + "\"start_time\": \"0\", "
-                        + String.format(
-                                "\"end_times\": [%s, %s, %s]}, ",
-                                TimeUnit.DAYS.toMillis(2),
-                                TimeUnit.DAYS.toMillis(7),
-                                TimeUnit.DAYS.toMillis(30))
-                        + "\"summary_window_operator\": \"count\", "
-                        + "\"summary_buckets\": [1, 2, 3, 4]}]";
-        Source.Builder testSourceBuilder =
-                SourceFixture.getMinimalValidSourceBuilder()
-                        .setTriggerSpecs(triggerSpecsString)
-                        .setMaxEventLevelReports(3)
-                        .setPrivacyParameters("{\"flip_probability\" :0.0024}");
-
-        // Assertion
-        assertThrows(
-                JSONException.class,
-                () -> testSourceBuilder.buildInitialFlexEventReportSpec(flags));
+        assertThrows(JSONException.class, () -> testSource.buildTriggerSpecs());
     }
 
     @Test
@@ -1555,12 +1508,14 @@ public class SourceTest {
     }
 
     @Test
-    public void getOrDefaultEventReportWindows() {
+    public void getOrDefaultEventReportWindows() throws JSONException {
         Flags flags = mock(Flags.class);
-        // AdTech Windows
+        JSONObject windowsObj = new JSONObject("{'start_time': '2000000', 'end_times': "
+                + "[3600000, 86400000, 172000000]}");
+        // Provided Windows
         List<Pair<Long, Long>> eventReportWindows =
                 Source.getOrDefaultEventReportWindows(
-                        "{'start_time': '2000000', 'end_times': [3600000, 86400000, 172000000]}",
+                        windowsObj,
                         Source.SourceType.EVENT,
                         8640000,
                         flags);
