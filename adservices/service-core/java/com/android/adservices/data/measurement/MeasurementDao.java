@@ -45,7 +45,6 @@ import com.android.adservices.service.measurement.registration.AsyncRegistration
 import com.android.adservices.service.measurement.reporting.DebugReport;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.UnsignedLong;
-import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
 
@@ -54,6 +53,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -463,13 +463,13 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.SourceContract.COARSE_EVENT_REPORT_DESTINATIONS,
                 source.getCoarseEventReportDestinations());
-        if (source.getFlexEventReportSpec() != null) {
+        if (source.getTriggerSpecs() != null) {
             values.put(
                     MeasurementTables.SourceContract.TRIGGER_SPECS,
-                    source.getFlexEventReportSpec().encodeTriggerSpecsToJson());
+                    source.getTriggerSpecs().encodeToJson());
             values.put(
                     MeasurementTables.SourceContract.PRIVACY_PARAMETERS,
-                    source.getFlexEventReportSpec().encodePrivacyParametersToJSONString());
+                    source.getTriggerSpecs().encodePrivacyParametersToJSONString());
         }
         values.put(
                 MeasurementTables.SourceContract.MAX_EVENT_LEVEL_REPORTS,
@@ -652,7 +652,7 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public void updateTriggerStatus(List<String> triggerIds, @Trigger.Status int status)
+    public void updateTriggerStatus(Collection<String> triggerIds, @Trigger.Status int status)
             throws DatastoreException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.TriggerContract.STATUS, status);
@@ -675,7 +675,7 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public void updateSourceStatus(@NonNull List<String> sourceIds, @Source.Status int status)
+    public void updateSourceStatus(@NonNull Collection<String> sourceIds, @Source.Status int status)
             throws DatastoreException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.SourceContract.STATUS, status);
@@ -1624,7 +1624,7 @@ class MeasurementDao implements IMeasurementDao {
 
     @Override
     public List<AggregateReport> fetchMatchingAggregateReports(
-            @NonNull List<String> sourceIds, @NonNull List<String> triggerIds)
+            @NonNull Collection<String> sourceIds, @NonNull Collection<String> triggerIds)
             throws DatastoreException {
         return fetchRecordsMatchingWithParameters(
                 MeasurementTables.AggregateReport.TABLE,
@@ -1637,7 +1637,7 @@ class MeasurementDao implements IMeasurementDao {
 
     @Override
     public List<EventReport> fetchMatchingEventReports(
-            @NonNull List<String> sourceIds, @NonNull List<String> triggerIds)
+            @NonNull Collection<String> sourceIds, @NonNull Collection<String> triggerIds)
             throws DatastoreException {
         return fetchRecordsMatchingWithParameters(
                 MeasurementTables.EventReportContract.TABLE,
@@ -1649,17 +1649,25 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public List<String> fetchMatchingSourcesFlexibleEventApi(@NonNull List<String> triggerIds)
+    public Set<String> fetchFlexSourceIdsFor(@NonNull Collection<String> triggerIds)
             throws DatastoreException {
-        List<String> sourceIds = new ArrayList<>();
+        Set<String> sourceIds = new HashSet<>();
         if (triggerIds.isEmpty()) {
-            return new ArrayList<>();
+            return new HashSet<>();
         }
-        String unionQuery =
-                generateUnionQueryFromTriggerIds(
-                        triggerIds,
-                        MeasurementTables.SourceContract.TABLE,
-                        MeasurementTables.SourceContract.EVENT_ATTRIBUTION_STATUS);
+
+        List<String> queries = triggerIds.stream().map(
+                triggerId ->
+                        "SELECT * FROM " + MeasurementTables.SourceContract.TABLE
+                                + " WHERE "
+                                    + MeasurementTables.SourceContract.TRIGGER_SPECS
+                                    + " IS NOT NULL"
+                                + " AND "
+                                    + MeasurementTables.SourceContract.EVENT_ATTRIBUTION_STATUS
+                                    + " LIKE '%\"" + triggerId  + "\"%'")
+                .collect(Collectors.toList());
+
+        String unionQuery = String.join(" UNION ", queries);
 
         try (Cursor cursor =
                 mSQLTransaction
@@ -1679,24 +1687,6 @@ class MeasurementDao implements IMeasurementDao {
             }
         }
         return sourceIds;
-    }
-
-    @VisibleForTesting
-    public static String generateUnionQueryFromTriggerIds(
-            List<String> triggerIds, String tableName, String columnName) {
-        List<String> queries =
-                triggerIds.stream()
-                        .map(
-                                triggerId ->
-                                        "SELECT * FROM "
-                                                + tableName
-                                                + " WHERE "
-                                                + String.format(
-                                                        "%1$s LIKE '%2$s'",
-                                                        columnName,
-                                                        String.format("%%\"%s\"%%", triggerId)))
-                        .collect(Collectors.toList());
-        return String.join(" UNION ", queries);
     }
 
     private String getUriValueList(List<Uri> uriList) {
@@ -1919,7 +1909,7 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public List<String> fetchMatchingTriggers(
+    public Set<String> fetchMatchingTriggers(
             @NonNull Uri registrant,
             @NonNull Instant start,
             @NonNull Instant end,
@@ -1941,7 +1931,8 @@ class MeasurementDao implements IMeasurementDao {
         Function<String, String> timeMatcher = getTimeMatcher(cappedStart, cappedEnd);
 
         final SQLiteDatabase db = mSQLTransaction.getDatabase();
-        ImmutableList.Builder<String> triggerIds = new ImmutableList.Builder<>();
+        // Mutable set, as the caller may add trigger IDs from flex sources.
+        Set<String> triggerIds = new HashSet<>();
         try (Cursor cursor =
                 db.query(
                         MeasurementTables.TriggerContract.TABLE,
@@ -1962,7 +1953,7 @@ class MeasurementDao implements IMeasurementDao {
             }
         }
 
-        return triggerIds.build();
+        return triggerIds;
     }
 
     @Override
@@ -2497,7 +2488,7 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public void deleteSources(@NonNull List<String> sourceIds) throws DatastoreException {
+    public void deleteSources(@NonNull Collection<String> sourceIds) throws DatastoreException {
         deleteRecordsColumnBased(
                 sourceIds,
                 MeasurementTables.SourceContract.TABLE,
@@ -2505,7 +2496,7 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public void deleteTriggers(@NonNull List<String> triggerIds) throws DatastoreException {
+    public void deleteTriggers(@NonNull Collection<String> triggerIds) throws DatastoreException {
         deleteRecordsColumnBased(
                 triggerIds,
                 MeasurementTables.TriggerContract.TABLE,
@@ -2522,7 +2513,7 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     private void deleteRecordsColumnBased(
-            List<String> columnValues, String tableName, String columnName)
+            Collection<String> columnValues, String tableName, String columnName)
             throws DatastoreException {
         long rows =
                 mSQLTransaction
@@ -3061,9 +3052,9 @@ class MeasurementDao implements IMeasurementDao {
     private <T> List<T> fetchRecordsMatchingWithParameters(
             String tableName,
             String sourceColumnName,
-            List<String> sourceIds,
+            Collection<String> sourceIds,
             String triggerColumnName,
-            List<String> triggerIds,
+            Collection<String> triggerIds,
             Function<Cursor, T> sqlMapperFunction)
             throws DatastoreException {
         List<T> reports = new ArrayList<>();

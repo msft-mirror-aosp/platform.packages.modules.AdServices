@@ -215,7 +215,7 @@ public interface IMeasurementDao {
      * @param status status to apply
      * @throws DatastoreException database transaction related issues
      */
-    void updateTriggerStatus(@NonNull List<String> triggerIds, @Trigger.Status int status)
+    void updateTriggerStatus(@NonNull Collection<String> triggerIds, @Trigger.Status int status)
             throws DatastoreException;
 
     /**
@@ -245,7 +245,7 @@ public interface IMeasurementDao {
      * @param sourceIds list of sources.
      * @param status value to be set
      */
-    void updateSourceStatus(@NonNull List<String> sourceIds, @Source.Status int status)
+    void updateSourceStatus(@NonNull Collection<String> sourceIds, @Source.Status int status)
             throws DatastoreException;
 
     /**
@@ -466,7 +466,7 @@ public interface IMeasurementDao {
      * @param sourceIds source IDs to match
      * @throws DatastoreException database transaction issues
      */
-    void deleteSources(@NonNull List<String> sourceIds) throws DatastoreException;
+    void deleteSources(@NonNull Collection<String> sourceIds) throws DatastoreException;
 
     /**
      * Delete records from trigger table that match provided trigger IDs.
@@ -474,7 +474,7 @@ public interface IMeasurementDao {
      * @param triggerIds trigger IDs to match
      * @throws DatastoreException database transaction issues
      */
-    void deleteTriggers(@NonNull List<String> triggerIds) throws DatastoreException;
+    void deleteTriggers(@NonNull Collection<String> triggerIds) throws DatastoreException;
 
     /**
      * Delete records from async registration table that match provided async registration IDs.
@@ -553,7 +553,7 @@ public interface IMeasurementDao {
      * @param triggerIds triggers to be matched with aggregate reports
      */
     List<AggregateReport> fetchMatchingAggregateReports(
-            @NonNull List<String> sourceIds, @NonNull List<String> triggerIds)
+            @NonNull Collection<String> sourceIds, @NonNull Collection<String> triggerIds)
             throws DatastoreException;
 
     /**
@@ -565,7 +565,7 @@ public interface IMeasurementDao {
      * @param triggerIds triggers to be matched with event reports
      */
     List<EventReport> fetchMatchingEventReports(
-            @NonNull List<String> sourceIds, @NonNull List<String> triggerIds)
+            @NonNull Collection<String> sourceIds, @NonNull Collection<String> triggerIds)
             throws DatastoreException;
 
     /**
@@ -575,7 +575,7 @@ public interface IMeasurementDao {
      * @return the list of sourced ids
      * @throws DatastoreException throw DatastoreException
      */
-    List<String> fetchMatchingSourcesFlexibleEventApi(@NonNull List<String> triggerIds)
+    Set<String> fetchFlexSourceIdsFor(@NonNull Collection<String> triggerIds)
             throws DatastoreException;
 
     /**
@@ -625,7 +625,7 @@ public interface IMeasurementDao {
      * @return list of trigger IDs
      * @throws DatastoreException database transaction level issues
      */
-    List<String> fetchMatchingTriggers(
+    Set<String> fetchMatchingTriggers(
             @NonNull Uri registrant,
             @NonNull Instant start,
             @NonNull Instant end,
