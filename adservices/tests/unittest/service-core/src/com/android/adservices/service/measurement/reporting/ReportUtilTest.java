@@ -22,6 +22,8 @@ import static org.junit.Assert.assertThrows;
 import android.net.Uri;
 import android.util.Pair;
 
+import com.android.adservices.service.measurement.util.UnsignedLong;
+
 import org.json.JSONArray;
 import org.junit.Test;
 
@@ -31,6 +33,8 @@ public class ReportUtilTest {
     private static final String DESTINATION_1 = "https://destination-1.test";
     private static final String DESTINATION_2 = "https://destination-2.test";
     private static final String DESTINATION_3 = "https://destination-3.test";
+    private static final List<UnsignedLong> UNSIGNED_LONGS = List.of(
+            new UnsignedLong("1234"), new UnsignedLong("9223372036854775809"));
 
     @Test
     public void serializeAttributionDestinations_emptyList_throwsIllegalArgument() {
@@ -54,6 +58,13 @@ public class ReportUtilTest {
                         Uri.parse(DESTINATION_1));
         JSONArray expected = new JSONArray(List.of(DESTINATION_1, DESTINATION_2, DESTINATION_3));
         assertEquals(expected, ReportUtil.serializeAttributionDestinations(unordered));
+    }
+
+    @Test
+    public void serializeUnsignedLongs_returnsJSONArray() {
+        JSONArray serialized = ReportUtil.serializeUnsignedLongs(UNSIGNED_LONGS);
+        assertEquals(UNSIGNED_LONGS.get(0).toString(), serialized.optString(0));
+        assertEquals(UNSIGNED_LONGS.get(1).toString(), serialized.optString(1));
     }
 
     @Test

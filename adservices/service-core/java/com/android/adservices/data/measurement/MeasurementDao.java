@@ -995,6 +995,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.EventReportContract.TRIGGER_DEBUG_KEY,
                 getNullableUnsignedLong(eventReport.getTriggerDebugKey()));
+        values.put(
+                MeasurementTables.EventReportContract.TRIGGER_DEBUG_KEYS,
+                listToCommaSeparatedString(eventReport.getTriggerDebugKeys()));
         values.put(MeasurementTables.EventReportContract.SOURCE_ID, eventReport.getSourceId());
         values.put(MeasurementTables.EventReportContract.TRIGGER_ID, eventReport.getTriggerId());
         values.put(
@@ -1020,7 +1023,7 @@ class MeasurementDao implements IMeasurementDao {
         ContentValues values = new ContentValues();
         values.put(
                 MeasurementTables.SourceContract.EVENT_REPORT_DEDUP_KEYS,
-                listToCommaSeparatedString((source.getEventReportDedupKeys())));
+                listToCommaSeparatedString(source.getEventReportDedupKeys()));
         long rows =
                 mSQLTransaction
                         .getDatabase()
