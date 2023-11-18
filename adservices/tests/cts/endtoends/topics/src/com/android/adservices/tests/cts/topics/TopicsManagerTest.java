@@ -27,7 +27,6 @@ import android.adservices.topics.Topic;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdServicesSupportRule;
 import com.android.adservices.common.AdservicesTestHelper;
@@ -129,7 +128,6 @@ public class TopicsManagerTest {
     }
 
     @Test
-    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_testTopicsKillSwitch() throws Exception {
         // Override Topics kill switch to disable Topics API.
         overrideTopicsKillSwitch(true);
@@ -159,14 +157,12 @@ public class TopicsManagerTest {
     }
 
     @Test
-    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runDefaultClassifier_usingGetMethodToCreateManager()
             throws Exception {
         testTopicsManager_runDefaultClassifier(/* useGetMethodToCreateManager */ true);
     }
 
     @Test
-    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runDefaultClassifier() throws Exception {
         testTopicsManager_runDefaultClassifier(/* useGetMethodToCreateManager */ false);
     }
@@ -237,14 +233,12 @@ public class TopicsManagerTest {
     }
 
     @Test
-    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runOnDeviceClassifier_usingGetMethodToCreateManager()
             throws Exception {
         testTopicsManager_runOnDeviceClassifier(true);
     }
 
     @Test
-    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runOnDeviceClassifier() throws Exception {
         testTopicsManager_runOnDeviceClassifier(false);
     }

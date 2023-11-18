@@ -42,12 +42,7 @@
     },
     {
       // Install com.google.android.adservices.apex and run CtsAdServicesEndToEndTests.
-      "name": "CtsAdServicesEndToEndTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesEndToEndTests[com.google.android.adservices.apex]"
     },
     {
       "name": "CtsAdServicesEndToEndTestMeasurement[com.google.android.adservices.apex]"
