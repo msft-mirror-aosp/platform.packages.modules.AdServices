@@ -27,18 +27,34 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public final class WebViewSupportUtil {
+    /**
+     * @return instance of SupportedByConditionRule which checks if Javascript Sandbox is available
+     */
     public static SupportedByConditionRule createJSSandboxAvailableRule() {
         return new SupportedByConditionRule(
                 "WebView does not support JS Sandbox",
                 JSScriptEngine.AvailabilityChecker::isJSSandboxAvailable);
     }
 
+    /**
+     * @return instance of SupportedByConditionRule which checks if Javascript Sandbox supports
+     *     setting configurable max heap size
+     */
     public static SupportedByConditionRule createJSSandboxConfigurableHeapSizeRule(
             Context context) {
         Objects.requireNonNull(context);
         return new SupportedByConditionRule(
                 "JS Sandbox does not support configurable heap size",
                 () -> WebViewSupportUtil.isConfigurableHeapSizeSupported(context));
+    }
+
+    /**
+     * @return a boolean to indicate if Javascript sandbox is supported for Fledge.
+     */
+    public static boolean isJSSandboxAvailableForFledge(Context context)
+            throws ExecutionException, InterruptedException, TimeoutException {
+        return JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable()
+                && isConfigurableHeapSizeSupported(context);
     }
 
     private static boolean isConfigurableHeapSizeSupported(Context context)

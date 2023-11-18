@@ -103,7 +103,9 @@ public class TopicsServiceTest {
             ExtendedMockito.doReturn(mMockConsentManager)
                     .when(() -> ConsentManager.getInstance(any(Context.class)));
             doReturn(true).when(mMockAdServicesApiConsent).isGiven();
-            doReturn(mMockAdServicesApiConsent).when(mMockConsentManager).getConsent();
+            doReturn(mMockAdServicesApiConsent)
+                    .when(mMockConsentManager)
+                    .getConsent(AdServicesApiType.TOPICS);
 
             ExtendedMockito.doReturn(true)
                     .when(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
@@ -147,7 +149,6 @@ public class TopicsServiceTest {
         try {
             // Killswitch is on.
             doReturn(true).when(mMockFlags).getTopicsKillSwitch();
-            doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
 
             // Mock static method FlagsFactory.getFlags() to return Mock Flags.
             ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
@@ -186,7 +187,6 @@ public class TopicsServiceTest {
         try {
             // Killswitch is off.
             doReturn(false).when(mMockFlags).getTopicsKillSwitch();
-            doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
 
             // Mock static method FlagsFactory.getFlags() to return Mock Flags.
             ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
