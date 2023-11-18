@@ -29,10 +29,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * This is a static class meant to help with tests that involve creating an {@link ContextualAds}.
+ * This is a static class meant to help with tests that involve creating an {@link
+ * SignedContextualAds}.
  */
-public class ContextualAdsFixture {
-
+public class SignedContextualAdsFixture {
+    public static final byte[] PLACEHOLDER_SIGNATURE = new byte[] {0, 0};
     public static final AdTechIdentifier BUYER = CommonFixture.VALID_BUYER_1;
     public static final AdTechIdentifier BUYER_2 = CommonFixture.VALID_BUYER_2;
 
@@ -50,16 +51,17 @@ public class ContextualAdsFixture {
     public static final List<AdWithBid> ADS_WITH_BID =
             ImmutableList.of(AD_WITH_BID_1, AD_WITH_BID_2);
 
-    public static ContextualAds.Builder aContextualAdBuilder() {
-        return new ContextualAds.Builder()
+    public static SignedContextualAds.Builder aSignedContextualAdBuilder() {
+        return new SignedContextualAds.Builder()
                 .setBuyer(BUYER)
                 .setDecisionLogicUri(DECISION_LOGIC_URI)
-                .setAdsWithBid(ADS_WITH_BID);
+                .setAdsWithBid(ADS_WITH_BID)
+                .setSignature(PLACEHOLDER_SIGNATURE);
     }
 
-    public static ContextualAds.Builder generateContextualAds(
+    public static SignedContextualAds.Builder generateSignedContextualAds(
             AdTechIdentifier buyer, List<Double> bids) {
-        return new ContextualAds.Builder()
+        return new SignedContextualAds.Builder()
                 .setBuyer(buyer)
                 .setDecisionLogicUri(CommonFixture.getUri(buyer, DECISION_LOGIC_FRAGMENT))
                 .setAdsWithBid(
@@ -70,22 +72,23 @@ public class ContextualAdsFixture {
                                                         AdDataFixture.getValidFilterAdDataByBuyer(
                                                                 buyer, bid.intValue()),
                                                         bid))
-                                .collect(Collectors.toList()));
+                                .collect(Collectors.toList()))
+                .setSignature(PLACEHOLDER_SIGNATURE);
     }
 
-    public static ContextualAds aContextualAd() {
-        return aContextualAdBuilder().build();
+    public static SignedContextualAds aSignedContextualAd() {
+        return aSignedContextualAdBuilder().build();
     }
 
-    public static ContextualAds aContextualAd(AdTechIdentifier buyer) {
-        return aContextualAdBuilder().setBuyer(buyer).build();
+    public static SignedContextualAds aSignedContextualAd(AdTechIdentifier buyer) {
+        return aSignedContextualAdBuilder().setBuyer(buyer).build();
     }
 
-    public static ImmutableMap<AdTechIdentifier, ContextualAds> getBuyerContextualAdsMap() {
+    public static ImmutableMap<AdTechIdentifier, SignedContextualAds> getBuyerContextualAdsMap() {
         return ImmutableMap.of(
                 CommonFixture.VALID_BUYER_1,
-                aContextualAd(CommonFixture.VALID_BUYER_1),
+                aSignedContextualAd(CommonFixture.VALID_BUYER_1),
                 CommonFixture.VALID_BUYER_2,
-                aContextualAd(CommonFixture.VALID_BUYER_2));
+                aSignedContextualAd(CommonFixture.VALID_BUYER_2));
     }
 }

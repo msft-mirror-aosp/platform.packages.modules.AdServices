@@ -230,7 +230,7 @@ public class ConsentManager {
                     boolean enableAppsearchConsentData =
                             FlagsFactory.getFlags().getEnableAppsearchConsentData();
                     if (enableAppsearchConsentData) {
-                        appSearchConsentManager = AppSearchConsentManager.getInstance(context);
+                        appSearchConsentManager = AppSearchConsentManager.getInstance();
                         handleConsentMigrationFromAppSearchIfNeeded(
                                 context,
                                 datastore,

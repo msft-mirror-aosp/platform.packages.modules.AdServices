@@ -74,6 +74,8 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.SupportedByConditionRule;
+import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.adselection.AdCost;
@@ -365,7 +367,18 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
             new AdServicesDeviceSupportedRule();
 
+    // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
+    // availability depends on an external component (the system webview) being higher than a
+    // certain minimum version.
     @Rule(order = 1)
+    public final SupportedByConditionRule webViewSupportsJSSandbox =
+            WebViewSupportUtil.createJSSandboxAvailableRule();
+
+    @Rule(order = 2)
+    public final SupportedByConditionRule webViewSupportsConfigurableHeapSize =
+            WebViewSupportUtil.createJSSandboxConfigurableHeapSizeRule(sContext);
+
+    @Rule(order = 3)
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
                     .setCompatModeFlags()

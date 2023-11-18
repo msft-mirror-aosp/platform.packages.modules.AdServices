@@ -27,6 +27,7 @@ import static android.app.sdksandbox.SdkSandboxManager.REQUEST_SURFACE_PACKAGE_S
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE;
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
 
+import static com.android.sdksandbox.flags.Flags.sandboxActivitySdkBasedContext;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__UNLOAD_SDK;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED;
 import static com.android.server.sdksandbox.SdkSandboxStorageManager.StorageDirInfo;
@@ -50,6 +51,7 @@ import android.app.sdksandbox.SandboxLatencyInfo;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.SharedPreferencesUpdate;
+import android.app.sdksandbox.sandboxactivity.SdkSandboxActivityAuthority;
 import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -311,13 +313,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             PackageManager pm = mContext.getPackageManager();
             Intent serviceIntent = new Intent(AdServicesCommon.ACTION_TOPICS_SERVICE);
             List<ResolveInfo> resolveInfos =
-                    pm.queryIntentServicesAsUser(
+                    pm.queryIntentServices(
                             serviceIntent,
                             PackageManager.GET_SERVICES
                                     | PackageManager.MATCH_SYSTEM_ONLY
                                     | PackageManager.MATCH_DIRECT_BOOT_AWARE
-                                    | PackageManager.MATCH_DIRECT_BOOT_UNAWARE,
-                            UserHandle.SYSTEM);
+                                    | PackageManager.MATCH_DIRECT_BOOT_UNAWARE);
             ServiceInfo serviceInfo =
                     AdServicesCommon.resolveAdServicesService(
                             resolveInfos, serviceIntent.getAction());
@@ -2491,7 +2492,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 == PackageManager.PERMISSION_GRANTED;
     }
 
-    //TODO(b/299109198): refactor with the {@link Intent#isSandboxActivity}.
+    // TODO(b/299109198): remove once the {@link SdkSandboxActivityAuthority#isSdkSandboxActivity}
+    // API is stable.
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
     boolean isSdkSandboxActivity(Intent intent) {
         if (intent == null) {
@@ -2552,7 +2554,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 return InterceptCase.NO_INTERCEPT;
             }
 
-            if (isSdkSandboxActivity(intent)) {
+            boolean isSdkSandboxActivity =
+                    (sandboxActivitySdkBasedContext())
+                            ? SdkSandboxActivityAuthority.isSdkSandboxActivity(mContext, intent)
+                            : isSdkSandboxActivity(intent);
+            if (isSdkSandboxActivity) {
                 final String sdkSandboxPackageName =
                         mContext.getPackageManager().getSdkSandboxPackageName();
                 // Only intercept if action and package are both defined and refer to the

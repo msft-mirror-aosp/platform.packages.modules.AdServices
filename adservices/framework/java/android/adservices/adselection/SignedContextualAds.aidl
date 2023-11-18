@@ -17,9 +17,7 @@
 package android.adservices.adselection;
 
 /**
- * This defines the ContextualAds class, ads that are used for the contextual auction path in
+ * This defines the SignedContextualAds class, ads that are used for the contextual auction path in
  * ad selection and reporting
- *
- * @hide
  */
-parcelable ContextualAds;
+parcelable SignedContextualAds;
