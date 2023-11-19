@@ -319,7 +319,7 @@ public class Combinatorics {
     }
 
     /**
-     * Generate fake report set given a report specification and the rank order number
+     * Generate fake report set given a trigger specification and the rank order number
      *
      * @param totalCap total_cap
      * @param perTypeNumWindowList per type number of window list

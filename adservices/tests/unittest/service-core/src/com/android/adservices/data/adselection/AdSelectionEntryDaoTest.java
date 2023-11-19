@@ -19,6 +19,7 @@ package com.android.adservices.data.adselection;
 import static android.adservices.adselection.DataHandlersFixture.AD_SELECTION_INITIALIZATION_1;
 import static android.adservices.adselection.DataHandlersFixture.DB_AD_SELECTION_INITIALIZATION_1;
 import static android.adservices.adselection.DataHandlersFixture.TEST_PACKAGE_NAME_1;
+import static android.adservices.adselection.DataHandlersFixture.WINNING_CUSTOM_AUDIENCE_ALL_FIELDS_SET;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -1380,7 +1381,7 @@ public class AdSelectionEntryDaoTest {
     }
 
     @Test
-    public void testGetMissingAdSelectionHistogramInfo() {
+    public void testGetMissingAdSelectionHistogramInfoOnDeviceTables() {
         assertThat(
                         mAdSelectionEntryDao.getAdSelectionHistogramInfoInOnDeviceTable(
                                 DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getAdSelectionId(),
@@ -1389,7 +1390,25 @@ public class AdSelectionEntryDaoTest {
     }
 
     @Test
-    public void testGetAdSelectionHistogramInfoWithNullAdCounterKeys() {
+    public void testGetMissingAdSelectionHistogramInfoWithUnifiedTables() {
+        assertThat(
+                        mAdSelectionEntryDao.getAdSelectionHistogramInfoFromUnifiedTable(
+                                DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getAdSelectionId(),
+                                DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getCallerPackageName()))
+                .isNull();
+    }
+
+    @Test
+    public void testGetMissingAdSelectionHistogramInfo() {
+        assertThat(
+                        mAdSelectionEntryDao.getAdSelectionHistogramInfo(
+                                DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getAdSelectionId(),
+                                DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getCallerPackageName()))
+                .isNull();
+    }
+
+    @Test
+    public void testGetAdSelectionHistogramInfoInOnDeviceTableWithNullAdCounterKeys() {
         mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_1);
         assertThat(
                         mAdSelectionEntryDao.doesAdSelectionIdExist(
@@ -1407,7 +1426,113 @@ public class AdSelectionEntryDaoTest {
     }
 
     @Test
-    public void testGetAdSelectionHistogramInfo() {
+    public void testGetAdSelectionHistogramInfoWithNullAdCounterKeys() {
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_1);
+        assertThat(
+                        mAdSelectionEntryDao.doesAdSelectionIdExist(
+                                DB_AD_SELECTION_1.getAdSelectionId()))
+                .isTrue();
+
+        DBAdSelectionHistogramInfo histogramInfo1 =
+                mAdSelectionEntryDao.getAdSelectionHistogramInfo(
+                        DB_AD_SELECTION_1.getAdSelectionId(),
+                        DB_AD_SELECTION_1.getCallerPackageName());
+        assertThat(histogramInfo1).isNotNull();
+        assertThat(histogramInfo1.getBuyer())
+                .isEqualTo(DB_AD_SELECTION_1.getCustomAudienceSignals().getBuyer());
+        assertThat(histogramInfo1.getAdCounterKeys()).isNull();
+
+        mAdSelectionEntryDao.persistAdSelectionInitialization(
+                AD_SELECTION_ID_2, AD_SELECTION_INITIALIZATION_1);
+        assertThat(
+                        mAdSelectionEntryDao.doesAdSelectionIdExistInInitializationTable(
+                                AD_SELECTION_ID_2))
+                .isTrue();
+
+        mAdSelectionEntryDao.persistAdSelectionResultForCustomAudience(
+                AD_SELECTION_ID_2,
+                DataHandlersFixture.AD_SELECTION_RESULT_1,
+                DataHandlersFixture.BUYER_1,
+                DataHandlersFixture.WINNING_CUSTOM_AUDIENCE_ONLY_NAME);
+
+        assertThat(mAdSelectionEntryDao.getDBAdSelectionResultForId(AD_SELECTION_ID_2)).isNotNull();
+
+        DBAdSelectionHistogramInfo histogramInfo2 =
+                mAdSelectionEntryDao.getAdSelectionHistogramInfo(
+                        AD_SELECTION_ID_2, AD_SELECTION_INITIALIZATION_1.getCallerPackageName());
+        assertThat(histogramInfo2).isNotNull();
+        assertThat(histogramInfo2.getBuyer()).isEqualTo(DataHandlersFixture.BUYER_1);
+        assertThat(histogramInfo2.getAdCounterKeys()).isNull();
+    }
+
+    @Test
+    public void testGetAdSelectionHistogramInfoWithUnifiedTablesNullAdCounterKeys() {
+        mAdSelectionEntryDao.persistAdSelectionInitialization(
+                AD_SELECTION_ID_1, AD_SELECTION_INITIALIZATION_1);
+        assertThat(
+                        mAdSelectionEntryDao.doesAdSelectionIdExistInInitializationTable(
+                                AD_SELECTION_ID_1))
+                .isTrue();
+
+        mAdSelectionEntryDao.persistAdSelectionResultForCustomAudience(
+                AD_SELECTION_ID_1,
+                DataHandlersFixture.AD_SELECTION_RESULT_1,
+                DataHandlersFixture.BUYER_1,
+                DataHandlersFixture.WINNING_CUSTOM_AUDIENCE_ONLY_NAME);
+
+        assertThat(mAdSelectionEntryDao.getDBAdSelectionResultForId(AD_SELECTION_ID_1)).isNotNull();
+
+        DBAdSelectionHistogramInfo histogramInfo =
+                mAdSelectionEntryDao.getAdSelectionHistogramInfoFromUnifiedTable(
+                        AD_SELECTION_ID_1, AD_SELECTION_INITIALIZATION_1.getCallerPackageName());
+        assertThat(histogramInfo).isNotNull();
+        assertThat(histogramInfo.getBuyer()).isEqualTo(DataHandlersFixture.BUYER_1);
+        assertThat(histogramInfo.getAdCounterKeys()).isNull();
+    }
+
+    @Test
+    public void testGetAdSelectionHistogramInfoWithUnifiedTables() {
+        mAdSelectionEntryDao.persistAdSelectionInitialization(
+                AD_SELECTION_ID_1, AD_SELECTION_INITIALIZATION_1);
+        assertThat(
+                        mAdSelectionEntryDao.doesAdSelectionIdExistInInitializationTable(
+                                AD_SELECTION_ID_1))
+                .isTrue();
+
+        mAdSelectionEntryDao.persistAdSelectionResultForCustomAudience(
+                AD_SELECTION_ID_1,
+                DataHandlersFixture.AD_SELECTION_RESULT_1,
+                DataHandlersFixture.BUYER_1,
+                DataHandlersFixture.WINNING_CUSTOM_AUDIENCE_ALL_FIELDS_SET);
+
+        assertThat(mAdSelectionEntryDao.getDBAdSelectionResultForId(AD_SELECTION_ID_1)).isNotNull();
+
+        DBAdSelectionHistogramInfo histogramInfo =
+                mAdSelectionEntryDao.getAdSelectionHistogramInfoFromUnifiedTable(
+                        AD_SELECTION_ID_1, AD_SELECTION_INITIALIZATION_1.getCallerPackageName());
+        assertThat(histogramInfo).isNotNull();
+        assertThat(histogramInfo.getBuyer()).isEqualTo(DataHandlersFixture.BUYER_1);
+        assertThat(histogramInfo.getAdCounterKeys())
+                .isEqualTo(WINNING_CUSTOM_AUDIENCE_ALL_FIELDS_SET.getAdCounterKeys());
+    }
+
+    @Test
+    public void testGetAdSelectionHistogramInfoWithUnifiedTablesDoesNotReadFromLegacyTables() {
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_1);
+        assertThat(
+                        mAdSelectionEntryDao.doesAdSelectionIdExist(
+                                DB_AD_SELECTION_1.getAdSelectionId()))
+                .isTrue();
+
+        DBAdSelectionHistogramInfo histogramInfo =
+                mAdSelectionEntryDao.getAdSelectionHistogramInfoFromUnifiedTable(
+                        DB_AD_SELECTION_1.getAdSelectionId(),
+                        DB_AD_SELECTION_1.getCallerPackageName());
+        assertThat(histogramInfo).isNull();
+    }
+
+    @Test
+    public void testGetAdSelectionHistogramInfoInOnDeviceTable() {
         mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_WITH_AD_COUNTER_KEYS);
         assertThat(
                         mAdSelectionEntryDao.doesAdSelectionIdExist(
@@ -1426,6 +1551,51 @@ public class AdSelectionEntryDaoTest {
         assertThat(histogramInfo.getAdCounterKeys())
                 .containsExactlyElementsIn(
                         DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getAdCounterIntKeys());
+    }
+
+    @Test
+    public void testGetAdSelectionHistogramInfo() {
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_WITH_AD_COUNTER_KEYS);
+        assertThat(
+                        mAdSelectionEntryDao.doesAdSelectionIdExist(
+                                DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getAdSelectionId()))
+                .isTrue();
+
+        DBAdSelectionHistogramInfo histogramInfo1 =
+                mAdSelectionEntryDao.getAdSelectionHistogramInfo(
+                        DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getAdSelectionId(),
+                        DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getCallerPackageName());
+        assertThat(histogramInfo1).isNotNull();
+        assertThat(histogramInfo1.getBuyer())
+                .isEqualTo(
+                        DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getCustomAudienceSignals().getBuyer());
+        assertThat(histogramInfo1.getAdCounterKeys()).isNotNull();
+        assertThat(histogramInfo1.getAdCounterKeys())
+                .containsExactlyElementsIn(
+                        DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getAdCounterIntKeys());
+
+        mAdSelectionEntryDao.persistAdSelectionInitialization(
+                AD_SELECTION_ID_2, AD_SELECTION_INITIALIZATION_1);
+        assertThat(
+                        mAdSelectionEntryDao.doesAdSelectionIdExistInInitializationTable(
+                                AD_SELECTION_ID_2))
+                .isTrue();
+
+        mAdSelectionEntryDao.persistAdSelectionResultForCustomAudience(
+                AD_SELECTION_ID_2,
+                DataHandlersFixture.AD_SELECTION_RESULT_2,
+                DataHandlersFixture.BUYER_1,
+                DataHandlersFixture.WINNING_CUSTOM_AUDIENCE_ALL_FIELDS_SET);
+
+        assertThat(mAdSelectionEntryDao.getDBAdSelectionResultForId(AD_SELECTION_ID_2)).isNotNull();
+
+        DBAdSelectionHistogramInfo histogramInfo2 =
+                mAdSelectionEntryDao.getAdSelectionHistogramInfo(
+                        AD_SELECTION_ID_2, AD_SELECTION_INITIALIZATION_1.getCallerPackageName());
+        assertThat(histogramInfo2).isNotNull();
+        assertThat(histogramInfo2.getBuyer()).isEqualTo(DataHandlersFixture.BUYER_1);
+        assertThat(histogramInfo2.getAdCounterKeys())
+                .isEqualTo(WINNING_CUSTOM_AUDIENCE_ALL_FIELDS_SET.getAdCounterKeys());
     }
 
     @Test

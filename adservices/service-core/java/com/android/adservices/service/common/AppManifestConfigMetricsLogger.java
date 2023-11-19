@@ -26,16 +26,23 @@ import android.content.SharedPreferences.Editor;
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.internal.annotations.VisibleForTesting;
 
+import java.io.File;
+import java.io.PrintWriter;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 
+// NOTE: public because of dump()
 /** Class used to log metrics of how apps are using the app config on manifest. */
-@VisibleForTesting // TODO(b/310270746): remove public when TopicsServiceImplTest is refactored
 public final class AppManifestConfigMetricsLogger {
 
-    private static final String PREFS_NAME = "AppManifestConfigMetricsLogger";
+    @VisibleForTesting
+    static final String PREFS_NAME =
+            FileCompatUtils.getAdservicesFilename("AppManifestConfigMetricsLogger");
 
     private static final int NOT_SET = -1;
     private static final int FLAG_APP_EXISTS = 0x1;
@@ -70,7 +77,6 @@ public final class AppManifestConfigMetricsLogger {
             boolean appExists,
             boolean appHasConfig,
             boolean enabledByDefault) {
-        String name = FileCompatUtils.getAdservicesFilename(PREFS_NAME);
         try {
             int newValue =
                     (appExists ? FLAG_APP_EXISTS : 0)
@@ -81,8 +87,7 @@ public final class AppManifestConfigMetricsLogger {
                             + " hasConfig=%b], enabledByDefault=%b, newValue=%d",
                     packageName, appExists, appHasConfig, enabledByDefault, newValue);
 
-            @SuppressWarnings("NewAdServicesFile") // name already calls FileCompatUtils
-            SharedPreferences prefs = context.getSharedPreferences(name, Context.MODE_PRIVATE);
+            SharedPreferences prefs = getPrefs(context);
             String key = packageName;
 
             int currentValue = prefs.getInt(key, NOT_SET);
@@ -105,7 +110,12 @@ public final class AppManifestConfigMetricsLogger {
                 LogUtil.e(
                         "logUsage(ctx, file=%s, app=%s, appExist=%b, appHasConfig=%b,"
                                 + " enabledByDefault=%b, newValue=%d): failed to commit",
-                        name, packageName, appExists, appHasConfig, enabledByDefault, newValue);
+                        PREFS_NAME,
+                        packageName,
+                        appExists,
+                        appHasConfig,
+                        enabledByDefault,
+                        newValue);
                 ErrorLogUtil.e(
                         AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
                         AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
@@ -115,7 +125,7 @@ public final class AppManifestConfigMetricsLogger {
                     e,
                     "logUsage(ctx, file=%s, app=%s, appExist=%b, appHasConfig=%b,"
                             + " enabledByDefault=%b) failed",
-                    name,
+                    PREFS_NAME,
                     packageName,
                     appExists,
                     appHasConfig,
@@ -125,6 +135,47 @@ public final class AppManifestConfigMetricsLogger {
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_EXCEPTION,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
         }
+    }
+
+    /** Dumps the internal state. */
+    public static void dump(Context context, PrintWriter pw) {
+        pw.println("AppManifestConfigMetricsLogger");
+
+        String prefix = "  ";
+        @SuppressWarnings("NewAdServicesFile") // PREFS_NAME already called FileCompatUtils
+        String path = new File(context.getDataDir(), PREFS_NAME).getAbsolutePath();
+        pw.printf("%sPreferences file: %s.xml\n", prefix, path);
+
+        boolean flagEnabledByDefault =
+                FlagsFactory.getFlags().getAppConfigReturnsEnabledByDefault();
+        pw.printf("%s(Currently) enabled by default: %b\n", prefix, flagEnabledByDefault);
+
+        SharedPreferences prefs = getPrefs(context);
+        Map<String, ?> appPrefs = prefs.getAll();
+        pw.printf("%s%d entries:\n", prefix, appPrefs.size());
+
+        String prefix2 = prefix + "  ";
+        for (Entry<String, ?> pref : appPrefs.entrySet()) {
+            String app = pref.getKey();
+            Object value = pref.getValue();
+            if (value instanceof Integer) {
+                int flags = (Integer) value;
+                boolean appExists = (flags & FLAG_APP_EXISTS) != 0;
+                boolean appHasConfig = (flags & FLAG_APP_HAS_CONFIG) != 0;
+                boolean enabledByDefault = (flags & FLAG_ENABLED_BY_DEFAULT) != 0;
+                pw.printf(
+                        "%s%s: rawValue=%d, appExists=%b, appHasConfig=%b, enabledByDefault=%b\n",
+                        prefix2, app, flags, appExists, appHasConfig, enabledByDefault);
+            } else {
+                // Shouldn't happen
+                pw.printf("  %s: unexpected value %s (class %s):\n", app, value, value.getClass());
+            }
+        }
+    }
+
+    @SuppressWarnings("NewAdServicesFile") // PREFS_NAME already called FileCompatUtils
+    private static SharedPreferences getPrefs(Context context) {
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
     }
 
     private AppManifestConfigMetricsLogger() {

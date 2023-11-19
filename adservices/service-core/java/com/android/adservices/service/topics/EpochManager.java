@@ -483,6 +483,14 @@ public class EpochManager {
                     tableColumnPair.first, tableColumnPair.second, epochToDeleteFrom);
         }
 
+        if (mFlags.getEnableDatabaseSchemaVersion9()) {
+            // Delete data from ReturnedEncryptedTopic table.
+            mTopicsDao.deleteDataOfOldEpochs(
+                    TopicsTables.ReturnedEncryptedTopicContract.TABLE,
+                    TopicsTables.ReturnedEncryptedTopicContract.EPOCH_ID,
+                    epochToDeleteFrom);
+        }
+
         // In app installation, we need to assign topics to newly installed app-sdk caller. In order
         // to check topic learnability of the sdk, CallerCanLearnTopicsContract needs to persist
         // numberOfLookBackEpochs more epochs. For example, assume current epoch is T. In app

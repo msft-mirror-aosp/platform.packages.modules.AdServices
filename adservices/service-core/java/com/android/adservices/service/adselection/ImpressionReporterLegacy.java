@@ -43,8 +43,8 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
-import com.android.adservices.data.adselection.DBAdSelectionEntry;
 import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
+import com.android.adservices.data.adselection.datahandlers.ReportingComputationData;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
@@ -117,6 +117,7 @@ public class ImpressionReporterLegacy {
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
     @NonNull private final FrequencyCapAdDataValidator mFrequencyCapAdDataValidator;
     @NonNull private final DevContext mDevContext;
+    @NonNull private final ReportingComputationHelper mReportingComputationHelper;
 
     public ImpressionReporterLegacy(
             @NonNull Context context,
@@ -132,7 +133,8 @@ public class ImpressionReporterLegacy {
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final FledgeAuthorizationFilter fledgeAuthorizationFilter,
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
-            final int callerUid) {
+            final int callerUid,
+            boolean shouldUseUnifiedTables) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(lightweightExecutor);
         Objects.requireNonNull(backgroundExecutor);
@@ -197,6 +199,15 @@ public class ImpressionReporterLegacy {
                         mDevContext);
         mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
+        if (shouldUseUnifiedTables) {
+            sLogger.d("Using unified tables");
+            mReportingComputationHelper =
+                    new ReportingComputationHelperUnifiedTablesEnabled(mAdSelectionEntryDao);
+        } else {
+            sLogger.d("Using legacy tables");
+            mReportingComputationHelper =
+                    new ReportingComputationHelperUnifiedTablesDisabled(mAdSelectionEntryDao);
+        }
     }
 
     /** Invokes the onFailure function from the callback and handles the exception. */
@@ -423,7 +434,8 @@ public class ImpressionReporterLegacy {
         // Validate buyer uri if it exists
         if (!Objects.isNull(reportingUris.buyerReportingUri)) {
             CustomAudienceSignals customAudienceSignals =
-                    Objects.requireNonNull(ctx.mDBAdSelectionEntry.getCustomAudienceSignals());
+                    Objects.requireNonNull(
+                            ctx.mReportingComputationData.getWinningCustomAudienceSignals());
 
             AdTechUriValidator buyerValidator =
                     new AdTechUriValidator(
@@ -468,7 +480,7 @@ public class ImpressionReporterLegacy {
 
     private FluentFuture<Pair<ReportingUris, ReportingContext>> computeReportingUris(
             long adSelectionId, AdSelectionConfig adSelectionConfig, String callerPackageName) {
-        return fetchAdSelectionEntry(adSelectionId, callerPackageName)
+        return fetchReportingComputationInfo(adSelectionId, callerPackageName)
                 .transformAsync(
                         dbAdSelectionEntry -> {
                             sLogger.v(
@@ -476,9 +488,12 @@ public class ImpressionReporterLegacy {
                                             + dbAdSelectionEntry.getBuyerDecisionLogicJs());
                             sLogger.v(
                                     "DecisionLogicUri from db entry: "
-                                            + dbAdSelectionEntry.getBiddingLogicUri().toString());
+                                            + dbAdSelectionEntry
+                                                    .getBuyerDecisionLogicUri()
+                                                    .toString());
                             ReportingContext ctx = new ReportingContext();
-                            ctx.mDBAdSelectionEntry = dbAdSelectionEntry;
+                            ctx.mAdSelectionId = adSelectionId;
+                            ctx.mReportingComputationData = dbAdSelectionEntry;
                             ctx.mAdSelectionConfig = adSelectionConfig;
                             return fetchSellerDecisionLogic(ctx);
                         },
@@ -506,7 +521,7 @@ public class ImpressionReporterLegacy {
                         mLightweightExecutorService);
     }
 
-    private FluentFuture<DBAdSelectionEntry> fetchAdSelectionEntry(
+    private FluentFuture<ReportingComputationData> fetchReportingComputationInfo(
             long adSelectionId, String callerPackageName) {
         sLogger.v(
                 "Fetching ad selection entry ID %d for caller \"%s\"",
@@ -515,14 +530,16 @@ public class ImpressionReporterLegacy {
                 mBackgroundExecutorService.submit(
                         () -> {
                             Preconditions.checkArgument(
-                                    mAdSelectionEntryDao.doesAdSelectionIdExist(adSelectionId),
+                                    mReportingComputationHelper.doesAdSelectionIdExist(
+                                            adSelectionId),
                                     UNABLE_TO_FIND_AD_SELECTION_WITH_GIVEN_ID);
                             Preconditions.checkArgument(
-                                    mAdSelectionEntryDao
-                                            .doesAdSelectionMatchingCallerPackageNameExistInOnDeviceTable(
+                                    mReportingComputationHelper
+                                            .doesAdSelectionMatchingCallerPackageNameExist(
                                                     adSelectionId, callerPackageName),
                                     CALLER_PACKAGE_NAME_MISMATCH);
-                            return mAdSelectionEntryDao.getAdSelectionEntityById(adSelectionId);
+                            return mReportingComputationHelper.getReportingComputation(
+                                    adSelectionId);
                         }));
     }
 
@@ -551,16 +568,17 @@ public class ImpressionReporterLegacy {
 
     private FluentFuture<String> fetchBuyerDecisionLogic(
             ReportingContext ctx, CustomAudienceSignals customAudienceSignals) {
-        if (!ctx.mDBAdSelectionEntry.getBuyerDecisionLogicJs().isEmpty()) {
+        if (!ctx.mReportingComputationData.getBuyerDecisionLogicJs().isEmpty()) {
             sLogger.v(
                     "Buyer decision logic fetched during ad selection. No need to fetch it again.");
             return FluentFuture.from(
-                    Futures.immediateFuture(ctx.mDBAdSelectionEntry.getBuyerDecisionLogicJs()));
+                    Futures.immediateFuture(
+                            ctx.mReportingComputationData.getBuyerDecisionLogicJs()));
         }
         sLogger.v("Fetching buyer script");
         AdServicesHttpClientRequest request =
                 AdServicesHttpClientRequest.builder()
-                        .setUri(ctx.mDBAdSelectionEntry.getBiddingLogicUri())
+                        .setUri(ctx.mReportingComputationData.getBuyerDecisionLogicUri())
                         .setUseCache(mFlags.getFledgeHttpJsCachingEnabled())
                         .setDevContext(mDevContext)
                         .build();
@@ -577,21 +595,22 @@ public class ImpressionReporterLegacy {
             invokeSellerScript(String decisionLogicJs, ReportingContext ctx) {
         sLogger.v("Invoking seller script");
         try {
-            String sellerContextualSignals;
+            AdSelectionSignals sellerContextualSignals;
 
-            if (Objects.isNull(ctx.mDBAdSelectionEntry.getSellerContextualSignals())) {
-                sellerContextualSignals = "{}";
+            if (Objects.isNull(ctx.mReportingComputationData.getSellerContextualSignals())) {
+                sellerContextualSignals = AdSelectionSignals.EMPTY;
             } else {
-                sellerContextualSignals = ctx.mDBAdSelectionEntry.getSellerContextualSignals();
+                sellerContextualSignals =
+                        ctx.mReportingComputationData.getSellerContextualSignals();
             }
 
             return FluentFuture.from(
                             mJsEngine.reportResult(
                                     decisionLogicJs,
                                     ctx.mAdSelectionConfig,
-                                    ctx.mDBAdSelectionEntry.getWinningAdRenderUri(),
-                                    ctx.mDBAdSelectionEntry.getWinningAdBid(),
-                                    AdSelectionSignals.fromString(sellerContextualSignals)))
+                                    ctx.mReportingComputationData.getWinningRenderUri(),
+                                    ctx.mReportingComputationData.getWinningBid(),
+                                    sellerContextualSignals))
                     .transform(
                             sellerResult -> Pair.create(sellerResult, ctx),
                             mLightweightExecutorService);
@@ -604,11 +623,12 @@ public class ImpressionReporterLegacy {
             ReportImpressionScriptEngine.SellerReportingResult sellerReportingResult,
             ReportingContext ctx) {
         sLogger.v("Invoking buyer script");
-        sLogger.v("buyer JS: " + ctx.mDBAdSelectionEntry.getBuyerDecisionLogicJs());
-        sLogger.v("Buyer JS Uri: " + ctx.mDBAdSelectionEntry.getBiddingLogicUri());
+        sLogger.v("buyer JS: " + ctx.mReportingComputationData.getBuyerDecisionLogicJs());
+        sLogger.v("Buyer JS Uri: " + ctx.mReportingComputationData.getBuyerDecisionLogicUri());
 
         final CustomAudienceSignals customAudienceSignals =
-                Objects.requireNonNull(ctx.mDBAdSelectionEntry.getCustomAudienceSignals());
+                Objects.requireNonNull(
+                        ctx.mReportingComputationData.getWinningCustomAudienceSignals());
 
         AdSelectionSignals signals =
                 Optional.ofNullable(
@@ -625,8 +645,7 @@ public class ImpressionReporterLegacy {
                                     ctx.mAdSelectionConfig.getAdSelectionSignals(),
                                     signals,
                                     sellerReportingResult.getSignalsForBuyer(),
-                                    AdSelectionSignals.fromString(
-                                            ctx.mDBAdSelectionEntry.getBuyerContextualSignals()),
+                                    ctx.mReportingComputationData.getBuyerContextualSignals(),
                                     customAudienceSignals))
                     .transform(
                             buyerReportingResult ->
@@ -640,7 +659,7 @@ public class ImpressionReporterLegacy {
         } catch (InterruptedException | ExecutionException e) {
             throw new IllegalStateException(
                     "Error while fetching buyer script from uri: "
-                            + ctx.mDBAdSelectionEntry.getBiddingLogicUri());
+                            + ctx.mReportingComputationData.getBuyerDecisionLogicUri());
         }
     }
 
@@ -659,8 +678,9 @@ public class ImpressionReporterLegacy {
     }
 
     private static class ReportingContext {
+        long mAdSelectionId;
         @NonNull AdSelectionConfig mAdSelectionConfig;
-        @NonNull DBAdSelectionEntry mDBAdSelectionEntry;
+        @NonNull ReportingComputationData mReportingComputationData;
     }
 
     private static final class ReportingUris {
@@ -724,7 +744,7 @@ public class ImpressionReporterLegacy {
                                 commitRegisteredAdInteractionsToDatabase(
                                         sellerReportingResult.getInteractionReportingUris(),
                                         sellerValidator,
-                                        ctx.mDBAdSelectionEntry.getAdSelectionId(),
+                                        ctx.mAdSelectionId,
                                         FLAG_REPORTING_DESTINATION_SELLER);
                                 return Pair.create(sellerReportingResult, ctx);
                             }));
@@ -745,7 +765,8 @@ public class ImpressionReporterLegacy {
             }
 
             CustomAudienceSignals customAudienceSignals =
-                    Objects.requireNonNull(ctx.mDBAdSelectionEntry.getCustomAudienceSignals());
+                    Objects.requireNonNull(
+                            ctx.mReportingComputationData.getWinningCustomAudienceSignals());
 
             AdTechUriValidator buyerValidator =
                     new AdTechUriValidator(
@@ -761,7 +782,7 @@ public class ImpressionReporterLegacy {
                                         reportingResults.mBuyerReportingResult
                                                 .getInteractionReportingUris(),
                                         buyerValidator,
-                                        ctx.mDBAdSelectionEntry.getAdSelectionId(),
+                                        ctx.mAdSelectionId,
                                         FLAG_REPORTING_DESTINATION_BUYER);
                                 return Pair.create(
                                         new ReportingUris(

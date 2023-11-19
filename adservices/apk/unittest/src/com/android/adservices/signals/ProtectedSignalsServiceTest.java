@@ -106,32 +106,6 @@ public class ProtectedSignalsServiceTest {
         verify(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()), never());
     }
 
-    /** Test whether the service is bindable when the kill switch is off with the GA UX flag on. */
-    @Test
-    public void testBindableProtectedSignalsServiceKillSwitchOffGaUxDisabled() {
-        doReturn(mMockProtectedSignalsServiceImpl)
-                .when(() -> ProtectedSignalsServiceImpl.create(any(Context.class)));
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any(Context.class)));
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-        ExtendedMockito.doReturn(true)
-                .when(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
-        doReturn(true).when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
-
-        ProtectedSignalsService protectedSignalsServiceSpy =
-                new ProtectedSignalsService(mFlagsWithKillSwitchOffGaUxDisabled);
-
-        spyOn(protectedSignalsServiceSpy);
-        doReturn(mPackageManagerMock).when(protectedSignalsServiceSpy).getPackageManager();
-
-        protectedSignalsServiceSpy.onCreate();
-        IBinder binder = protectedSignalsServiceSpy.onBind(getIntentForProtectedSignalsService());
-        assertNotNull(binder);
-
-        verify(mConsentManagerMock).getConsent();
-        verify(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
-        verify(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
-    }
-
     /**
      * Test whether the service is not bindable when the kill switch is on with the GA UX flag on.
      */

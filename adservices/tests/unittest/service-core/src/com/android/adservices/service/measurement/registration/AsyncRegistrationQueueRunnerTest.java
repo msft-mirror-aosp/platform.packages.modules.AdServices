@@ -69,6 +69,9 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.TriggerFixture;
+import com.android.adservices.service.measurement.TriggerSpec;
+import com.android.adservices.service.measurement.TriggerSpecs;
+import com.android.adservices.service.measurement.TriggerSpecsUtil;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
@@ -2736,6 +2739,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 TimeUnit.DAYS.toMillis(30))
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}]\n";
+        TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
+        int maxEventLevelReports = 2;
         Source testSource =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
@@ -2753,9 +2758,9 @@ public class AsyncRegistrationQueueRunnerTest {
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setDebugKey(new UnsignedLong(47823478789L))
-                        .setTriggerSpecs(triggerSpecsString)
-                        .setMaxEventLevelReports(2)
-                        .buildInitialFlexEventReportSpec(mFlags)
+                        .setMaxEventLevelReports(maxEventLevelReports)
+                        .setTriggerSpecs(new TriggerSpecs(
+                                triggerSpecsArray, maxEventLevelReports, null))
                         .build();
 
         // setup
@@ -2803,6 +2808,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 TimeUnit.DAYS.toMillis(30))
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3, 4]}]\n";
+        TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
+        int maxEventLevelReports = 3;
         Source testSource =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
@@ -2820,9 +2827,9 @@ public class AsyncRegistrationQueueRunnerTest {
                         .setSourceType(Source.SourceType.EVENT)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setDebugKey(new UnsignedLong(47823478789L))
-                        .setTriggerSpecs(triggerSpecsString)
-                        .setMaxEventLevelReports(3)
-                        .buildInitialFlexEventReportSpec(mFlags)
+                        .setMaxEventLevelReports(maxEventLevelReports)
+                        .setTriggerSpecs(new TriggerSpecs(
+                                triggerSpecsArray, maxEventLevelReports, null))
                         .build();
 
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
@@ -2979,6 +2986,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 TimeUnit.DAYS.toMillis(30))
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3, 5, 6]}]\n";
+        TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
+        int maxEventLevelReports = 4;
         Source testSource =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
@@ -2996,9 +3005,9 @@ public class AsyncRegistrationQueueRunnerTest {
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setDebugKey(new UnsignedLong(47823478789L))
-                        .setTriggerSpecs(triggerSpecsString)
-                        .setMaxEventLevelReports(4)
-                        .buildInitialFlexEventReportSpec(mFlags)
+                        .setMaxEventLevelReports(maxEventLevelReports)
+                        .setTriggerSpecs(new TriggerSpecs(
+                                triggerSpecsArray, maxEventLevelReports, null))
                         .build();
 
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
@@ -3045,6 +3054,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 TimeUnit.DAYS.toMillis(30))
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}]\n";
+        TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
+        int maxEventLevelReports = 3;
         Source testSource =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
@@ -3062,9 +3073,9 @@ public class AsyncRegistrationQueueRunnerTest {
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setDebugKey(new UnsignedLong(47823478789L))
-                        .setTriggerSpecs(triggerSpecsString)
-                        .setMaxEventLevelReports(3)
-                        .buildInitialFlexEventReportSpec(mFlags)
+                        .setMaxEventLevelReports(maxEventLevelReports)
+                        .setTriggerSpecs(new TriggerSpecs(
+                                triggerSpecsArray, maxEventLevelReports, null))
                         .build();
 
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
@@ -3107,6 +3118,8 @@ public class AsyncRegistrationQueueRunnerTest {
                         + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(7))
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [1]}]\n";
+        TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
+        int maxEventLevelReports = 1;
         Source testSource =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
@@ -3124,9 +3137,9 @@ public class AsyncRegistrationQueueRunnerTest {
                         .setSourceType(Source.SourceType.EVENT)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setDebugKey(new UnsignedLong(47823478789L))
-                        .setTriggerSpecs(triggerSpecsString)
-                        .setMaxEventLevelReports(1)
-                        .buildInitialFlexEventReportSpec(mFlags)
+                        .setMaxEventLevelReports(maxEventLevelReports)
+                        .setTriggerSpecs(new TriggerSpecs(
+                                triggerSpecsArray, maxEventLevelReports, null))
                         .build();
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();

@@ -81,10 +81,10 @@ import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.AdSelectionResponse;
-import android.adservices.adselection.ContextualAds;
-import android.adservices.adselection.ContextualAdsFixture;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
+import android.adservices.adselection.SignedContextualAds;
+import android.adservices.adselection.SignedContextualAdsFixture;
 import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
@@ -109,6 +109,9 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.SupportedByConditionRule;
+import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
@@ -167,7 +170,6 @@ import com.google.mockwebserver.RecordedRequest;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -593,7 +595,20 @@ public class AdSelectionE2ETest {
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
     private Flags mFlags = new AdSelectionE2ETestFlags();
 
-    @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
+    // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
+    // availability depends on an external component (the system webview) being higher than a
+    // certain minimum version.
+    @Rule(order = 1)
+    public final AdServicesDeviceSupportedRule deviceSupported =
+            new AdServicesDeviceSupportedRule();
+
+    @Rule(order = 2)
+    public final SupportedByConditionRule webViewSupportsJSSandbox =
+            WebViewSupportUtil.createJSSandboxAvailableRule();
+
+    @Rule(order = 3)
+    public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
+
     // Mocking DevContextFilter to test behavior with and without override api authorization
     @Mock DevContextFilter mDevContextFilter;
     @Mock CallerMetadata mMockCallerMetadata;
@@ -638,11 +653,6 @@ public class AdSelectionE2ETest {
 
     @Before
     public void setUp() throws Exception {
-        // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
-        // availability depends on an external component (the system webview) being higher than a
-        // certain minimum version. Marking that as an assumption that the test is making.
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
-
         mAdSelectionEntryDaoSpy =
                 Room.inMemoryDatabaseBuilder(mContext, AdSelectionDatabase.class)
                         .build()
@@ -695,8 +705,7 @@ public class AdSelectionE2ETest {
                         .getAdSelectionDebugReportDao();
         mMockAdIdWorker = new MockAdIdWorker(new AdIdCacheManager(mContext));
         mAdIdFetcher =
-                new AdIdFetcher(
-                        mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor, mFlags);
+                new AdIdFetcher(mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor);
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
@@ -2878,7 +2887,7 @@ public class AdSelectionE2ETest {
                                 mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
-                        .setBuyerContextualAds(createContextualAds())
+                        .setBuyerSignedContextualAds(createContextualAds())
                         .build();
 
         mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -2972,7 +2981,7 @@ public class AdSelectionE2ETest {
                                 mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
-                        .setBuyerContextualAds(createContextualAds())
+                        .setBuyerSignedContextualAds(createContextualAds())
                         .build();
 
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -3146,7 +3155,7 @@ public class AdSelectionE2ETest {
                                 mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
-                        .setBuyerContextualAds(createContextualAds())
+                        .setBuyerSignedContextualAds(createContextualAds())
                         .build();
 
         mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -3262,7 +3271,7 @@ public class AdSelectionE2ETest {
                                 mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
-                        .setBuyerContextualAds(createContextualAds())
+                        .setBuyerSignedContextualAds(createContextualAds())
                         .build();
 
         mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -3331,7 +3340,7 @@ public class AdSelectionE2ETest {
                                 mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
-                        .setBuyerContextualAds(createContextualAds())
+                        .setBuyerSignedContextualAds(createContextualAds())
                         .build();
 
         mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -3419,7 +3428,7 @@ public class AdSelectionE2ETest {
                         .setCustomAudienceBuyers(Collections.emptyList())
                         .setSeller(mSeller)
                         .setDecisionLogicUri(prebuiltUri)
-                        .setBuyerContextualAds(createContextualAds())
+                        .setBuyerSignedContextualAds(createContextualAds())
                         .setTrustedScoringSignalsUri(Uri.EMPTY)
                         .build();
 
@@ -3498,7 +3507,7 @@ public class AdSelectionE2ETest {
                                 mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
-                        .setBuyerContextualAds(createContextualAds())
+                        .setBuyerSignedContextualAds(createContextualAds())
                         .build();
 
         mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -7682,8 +7691,8 @@ public class AdSelectionE2ETest {
                 adCost);
     }
 
-    private Map<AdTechIdentifier, ContextualAds> createContextualAds() {
-        Map<AdTechIdentifier, ContextualAds> buyerContextualAds = new HashMap<>();
+    private Map<AdTechIdentifier, SignedContextualAds> createContextualAds() {
+        Map<AdTechIdentifier, SignedContextualAds> buyerContextualAds = new HashMap<>();
 
         // In order to meet ETLd+1 requirements creating Contextual ads with MockWebserver's host
         AdTechIdentifier buyer2 =
@@ -7691,8 +7700,8 @@ public class AdSelectionE2ETest {
                         mMockWebServerRule
                                 .uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2)
                                 .getHost());
-        ContextualAds contextualAds2 =
-                ContextualAdsFixture.generateContextualAds(
+        SignedContextualAds contextualAds2 =
+                SignedContextualAdsFixture.generateSignedContextualAds(
                                 buyer2, ImmutableList.of(100.0, 200.0, 300.0, 400.0, 500.0))
                         .setDecisionLogicUri(
                                 mMockWebServerRule.uriForPath(

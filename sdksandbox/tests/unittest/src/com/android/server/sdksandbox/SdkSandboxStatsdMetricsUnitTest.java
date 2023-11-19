@@ -276,7 +276,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
     public void testLatencyMetrics_LoadSdk_WithLatencies() throws Exception {
         disableNetworkPermissionChecks();
         disableForegroundCheck();
-        Mockito.when(mInjector.getCurrentTime())
+        Mockito.when(mInjector.elapsedRealtime())
                 .thenReturn(
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
                         START_TIME_TO_LOAD_SANDBOX,
@@ -414,7 +414,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
         disableNetworkPermissionChecks();
         disableForegroundCheck();
 
-        Mockito.when(mInjector.getCurrentTime())
+        Mockito.when(mInjector.elapsedRealtime())
                 .thenReturn(
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
                         START_TIME_TO_LOAD_SANDBOX,
@@ -464,7 +464,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
         disableNetworkPermissionChecks();
         disableForegroundCheck();
 
-        Mockito.when(mInjector.getCurrentTime())
+        Mockito.when(mInjector.elapsedRealtime())
                 .thenReturn(
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
                         TIME_FAILURE_HANDLED,
@@ -522,7 +522,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
                 .when(binder)
                 .linkToDeath(Mockito.any(), Mockito.anyInt());
 
-        Mockito.when(mInjector.getCurrentTime())
+        Mockito.when(mInjector.elapsedRealtime())
                 .thenReturn(
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
                         TIME_FAILURE_HANDLED,
@@ -566,7 +566,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
 
         sProvider.disableBinding();
 
-        Mockito.when(mInjector.getCurrentTime())
+        Mockito.when(mInjector.elapsedRealtime())
                 .thenReturn(
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
                         START_TIME_TO_LOAD_SANDBOX,
@@ -691,7 +691,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
     public void testLatencyMetrics_RequestSurfacePackage_WithLatencies() throws Exception {
         SandboxLatencyInfo sandboxLatencyInfo =
                 new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_REQUEST_SURFACE_PACKAGE);
-        Mockito.when(mInjector.getCurrentTime())
+        Mockito.when(mInjector.elapsedRealtime())
                 .thenReturn(
                         // loadSdk timestamps
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
@@ -824,7 +824,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
             testLatencyMetrics_systemServerAppToSandbox_RequestSurfacePackage_sandboxNotLoaded() {
         disableForegroundCheck();
 
-        Mockito.when(mInjector.getCurrentTime())
+        Mockito.when(mInjector.elapsedRealtime())
                 .thenReturn(TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP, TIME_FAILURE_HANDLED);
 
         SandboxLatencyInfo sandboxLatencyInfo =
@@ -862,7 +862,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
         SandboxLatencyInfo sandboxLatencyInfo =
                 new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_GET_SANDBOXED_SDKS);
         // TODO(b/242149555): Update tests to use fake for getting time series.
-        Mockito.when(mInjector.getCurrentTime())
+        Mockito.when(mInjector.elapsedRealtime())
                 .thenReturn(TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP, END_TIME_IN_SYSTEM_SERVER);
 
         sandboxLatencyInfo.setTimeAppCalledSystemServer(TIME_APP_CALLED_SYSTEM_SERVER);
@@ -897,7 +897,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
     public void testLatencyMetrics_SyncDataFromClient() {
         SandboxLatencyInfo sandboxLatencyInfo =
                 new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_SYNC_DATA_FROM_CLIENT);
-        Mockito.when(mInjector.getCurrentTime())
+        Mockito.when(mInjector.elapsedRealtime())
                 .thenReturn(TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP);
 
         sandboxLatencyInfo.setTimeAppCalledSystemServer(TIME_APP_CALLED_SYSTEM_SERVER);
@@ -944,7 +944,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
     public void testLatencyMetrics_systemServer_unloadSdk() throws Exception {
         disableKillUid();
 
-        Mockito.when(mInjector.getCurrentTime())
+        Mockito.when(mInjector.elapsedRealtime())
                 .thenReturn(
                         // for loadSdk
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
@@ -991,7 +991,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
     public void testLatencyMetrics_SystemServer_UnloadSdk_WithSandboxLatencies() throws Exception {
         disableKillUid();
 
-        Mockito.when(mInjector.getCurrentTime())
+        Mockito.when(mInjector.elapsedRealtime())
                 .thenReturn(
                         // for loadSdk
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
@@ -1077,7 +1077,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
         final SandboxLatencyInfo sandboxLatencyInfo =
                 new SandboxLatencyInfo(
                         SandboxLatencyInfo.METHOD_ADD_SDK_SANDBOX_LIFECYCLE_CALLBACK);
-        Mockito.when(mInjector.getCurrentTime())
+        Mockito.when(mInjector.elapsedRealtime())
                 .thenReturn(
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
                         TIME_SYSTEM_SERVER_COMPLETED_EXECUTION);
@@ -1119,7 +1119,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
         final SandboxLatencyInfo sandboxLatencyInfo =
                 new SandboxLatencyInfo(
                         SandboxLatencyInfo.METHOD_REMOVE_SDK_SANDBOX_LIFECYCLE_CALLBACK);
-        Mockito.when(mInjector.getCurrentTime())
+        Mockito.when(mInjector.elapsedRealtime())
                 .thenReturn(
                         // for addSdkSandboxLifecycleCallback
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
@@ -1169,7 +1169,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
         SandboxLatencyInfo sandboxLatencyInfo =
                 new SandboxLatencyInfo(
                         SandboxLatencyInfo.METHOD_REGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE);
-        Mockito.when(mInjector.getCurrentTime())
+        Mockito.when(mInjector.elapsedRealtime())
                 .thenReturn(
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
                         TIME_SYSTEM_SERVER_CALLS_SANDBOX);
@@ -1223,7 +1223,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
                 .when(binder)
                 .linkToDeath(Mockito.any(), Mockito.anyInt());
 
-        Mockito.when(mInjector.getCurrentTime())
+        Mockito.when(mInjector.elapsedRealtime())
                 .thenReturn(TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP, TIME_FAILURE_HANDLED);
 
         mService.registerAppOwnedSdkSandboxInterface(
@@ -1254,7 +1254,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
         SandboxLatencyInfo sandboxLatencyInfo =
                 new SandboxLatencyInfo(
                         SandboxLatencyInfo.METHOD_UNREGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE);
-        Mockito.when(mInjector.getCurrentTime())
+        Mockito.when(mInjector.elapsedRealtime())
                 .thenReturn(
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
                         TIME_SYSTEM_SERVER_CALLS_SANDBOX);
@@ -1295,7 +1295,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
         SandboxLatencyInfo sandboxLatencyInfo =
                 new SandboxLatencyInfo(
                         SandboxLatencyInfo.METHOD_GET_APP_OWNED_SDK_SANDBOX_INTERFACES);
-        Mockito.when(mInjector.getCurrentTime())
+        Mockito.when(mInjector.elapsedRealtime())
                 .thenReturn(
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
                         TIME_SYSTEM_SERVER_CALLS_SANDBOX);
@@ -1409,13 +1409,14 @@ public class SdkSandboxStatsdMetricsUnitTest {
             super(spyContext);
         }
 
+
         @Override
         public SdkSandboxServiceProvider getSdkSandboxServiceProvider() {
             return sProvider;
         }
 
         @Override
-        public long getCurrentTime() {
+        public long elapsedRealtime() {
             return TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP;
         }
     }

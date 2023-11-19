@@ -158,8 +158,8 @@ public final class SdkSandboxManager {
     private TimeProvider mTimeProvider;
 
     static class TimeProvider {
-        long getCurrentTime() {
-            return System.currentTimeMillis();
+        long elapsedRealtime() {
+            return SystemClock.elapsedRealtime();
         }
     }
 
@@ -323,7 +323,7 @@ public final class SdkSandboxManager {
             SandboxLatencyInfo sandboxLatencyInfo =
                     new SandboxLatencyInfo(
                             SandboxLatencyInfo.METHOD_ADD_SDK_SANDBOX_LIFECYCLE_CALLBACK);
-            sandboxLatencyInfo.setTimeAppCalledSystemServer(System.currentTimeMillis());
+            sandboxLatencyInfo.setTimeAppCalledSystemServer(mTimeProvider.elapsedRealtime());
             try {
                 mService.addSdkSandboxProcessDeathCallback(
                         mContext.getPackageName(), sandboxLatencyInfo, callbackProxy);
@@ -355,7 +355,8 @@ public final class SdkSandboxManager {
                             new SandboxLatencyInfo(
                                     SandboxLatencyInfo
                                             .METHOD_REMOVE_SDK_SANDBOX_LIFECYCLE_CALLBACK);
-                    sandboxLatencyInfo.setTimeAppCalledSystemServer(System.currentTimeMillis());
+                    sandboxLatencyInfo.setTimeAppCalledSystemServer(
+                            mTimeProvider.elapsedRealtime());
                     try {
                         mService.removeSdkSandboxProcessDeathCallback(
                                 mContext.getPackageName(), sandboxLatencyInfo, callbackProxy);
@@ -383,7 +384,7 @@ public final class SdkSandboxManager {
         SandboxLatencyInfo sandboxLatencyInfo =
                 new SandboxLatencyInfo(
                         SandboxLatencyInfo.METHOD_REGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE);
-        sandboxLatencyInfo.setTimeAppCalledSystemServer(mTimeProvider.getCurrentTime());
+        sandboxLatencyInfo.setTimeAppCalledSystemServer(mTimeProvider.elapsedRealtime());
         try {
             mService.registerAppOwnedSdkSandboxInterface(
                     mContext.getPackageName(), appOwnedSdkSandboxInterface, sandboxLatencyInfo);
@@ -401,7 +402,7 @@ public final class SdkSandboxManager {
         SandboxLatencyInfo sandboxLatencyInfo =
                 new SandboxLatencyInfo(
                         SandboxLatencyInfo.METHOD_UNREGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE);
-        sandboxLatencyInfo.setTimeAppCalledSystemServer(mTimeProvider.getCurrentTime());
+        sandboxLatencyInfo.setTimeAppCalledSystemServer(mTimeProvider.elapsedRealtime());
         try {
             mService.unregisterAppOwnedSdkSandboxInterface(
                     mContext.getPackageName(), name, sandboxLatencyInfo);
@@ -420,7 +421,7 @@ public final class SdkSandboxManager {
         SandboxLatencyInfo sandboxLatencyInfo =
                 new SandboxLatencyInfo(
                         SandboxLatencyInfo.METHOD_GET_APP_OWNED_SDK_SANDBOX_INTERFACES);
-        sandboxLatencyInfo.setTimeAppCalledSystemServer(mTimeProvider.getCurrentTime());
+        sandboxLatencyInfo.setTimeAppCalledSystemServer(mTimeProvider.elapsedRealtime());
         try {
             return mService.getAppOwnedSdkSandboxInterfaces(
                     mContext.getPackageName(), sandboxLatencyInfo);
@@ -475,7 +476,7 @@ public final class SdkSandboxManager {
         // TODO(b/297352617): add timeAppCalledSystemServer to the constructor.
         SandboxLatencyInfo sandboxLatencyInfo =
                 new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_LOAD_SDK);
-        sandboxLatencyInfo.setTimeAppCalledSystemServer(System.currentTimeMillis());
+        sandboxLatencyInfo.setTimeAppCalledSystemServer(mTimeProvider.elapsedRealtime());
         try {
             mService.loadSdk(
                     mContext.getPackageName(),
@@ -497,7 +498,7 @@ public final class SdkSandboxManager {
     public @NonNull List<SandboxedSdk> getSandboxedSdks() {
         SandboxLatencyInfo sandboxLatencyInfo =
                 new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_GET_SANDBOXED_SDKS);
-        sandboxLatencyInfo.setTimeAppCalledSystemServer(System.currentTimeMillis());
+        sandboxLatencyInfo.setTimeAppCalledSystemServer(mTimeProvider.elapsedRealtime());
         try {
             return mService.getSandboxedSdks(mContext.getPackageName(), sandboxLatencyInfo);
         } catch (RemoteException e) {
@@ -523,7 +524,7 @@ public final class SdkSandboxManager {
             mService.unloadSdk(
                     mContext.getPackageName(),
                     sdkName,
-                    /*timeAppCalledSystemServer=*/ System.currentTimeMillis());
+                    /*timeAppCalledSystemServer=*/ mTimeProvider.elapsedRealtime());
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
@@ -605,7 +606,7 @@ public final class SdkSandboxManager {
 
             SandboxLatencyInfo sandboxLatencyInfo =
                     new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_REQUEST_SURFACE_PACKAGE);
-            sandboxLatencyInfo.setTimeAppCalledSystemServer(System.currentTimeMillis());
+            sandboxLatencyInfo.setTimeAppCalledSystemServer(mTimeProvider.elapsedRealtime());
 
             final RequestSurfacePackageReceiverProxy callbackProxy =
                     new RequestSurfacePackageReceiverProxy(callbackExecutor, receiver, mService);
@@ -807,7 +808,8 @@ public final class SdkSandboxManager {
         }
 
         private void logLatencies(SandboxLatencyInfo sandboxLatencyInfo) {
-            sandboxLatencyInfo.setTimeAppReceivedCallFromSystemServer(System.currentTimeMillis());
+            sandboxLatencyInfo.setTimeAppReceivedCallFromSystemServer(
+                    SystemClock.elapsedRealtime());
             try {
                 mService.logLatencies(sandboxLatencyInfo);
             } catch (RemoteException e) {
@@ -861,7 +863,8 @@ public final class SdkSandboxManager {
         }
 
         private void logLatencies(SandboxLatencyInfo sandboxLatencyInfo) {
-            sandboxLatencyInfo.setTimeAppReceivedCallFromSystemServer(System.currentTimeMillis());
+            sandboxLatencyInfo.setTimeAppReceivedCallFromSystemServer(
+                    SystemClock.elapsedRealtime());
             try {
                 mService.logLatencies(sandboxLatencyInfo);
             } catch (RemoteException e) {

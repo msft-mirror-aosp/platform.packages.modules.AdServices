@@ -55,11 +55,13 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.topics.BlockedTopicsManager;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+import com.android.adservices.shared.testing.common.ApplicationContextSingletonRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -91,6 +93,9 @@ public class AppSearchConsentManagerTest {
     private static final Topic TOPIC2 = Topic.create(12, 12, 12);
     private static final Topic TOPIC3 = Topic.create(123, 123, 123);
 
+    @Rule
+    public final ApplicationContextSingletonRule appContext = new ApplicationContextSingletonRule();
+
     @Before
     public void setup() {
         mStaticMockSession =
@@ -103,9 +108,9 @@ public class AppSearchConsentManagerTest {
                         .initMocks(this)
                         .startMocking();
         ExtendedMockito.doReturn(mAppSearchConsentWorker)
-                .when(() -> AppSearchConsentWorker.getInstance(mContext));
+                .when(() -> AppSearchConsentWorker.getInstance());
         ExtendedMockito.doReturn(mFlags).when(() -> FlagsFactory.getFlags());
-        mAppSearchConsentManager = AppSearchConsentManager.getInstance(mContext);
+        mAppSearchConsentManager = AppSearchConsentManager.getInstance();
         ApplicationInfo app1 = new ApplicationInfo();
         app1.packageName = PACKAGE_NAME1;
         ApplicationInfo app2 = new ApplicationInfo();
