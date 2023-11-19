@@ -17,31 +17,34 @@ package com.android.adservices.common;
 
 import android.annotation.Nullable;
 import android.content.Context;
-import android.os.Binder;
 import android.text.TextUtils;
 import android.util.Log;
 
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.internal.annotations.VisibleForTesting;
-import com.android.modules.utils.BasicShellCommandHandler;
 
-import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Objects;
-import java.util.function.Supplier;
 
 // TODO(b/308009734): STOPSHIP - document that it's up to each command implementation to check about
 // caller's permission, whether device is userdebug, etc...
+
+// TODO(b/308009734): arg parsing logic mostly copied from on BasicShellCommandHandler, it might be
+// worth to refactor it once the handler is called by both system_server and service.
 /**
  * Service-side version of {@code cmd adservices_manager}.
  *
  * <p>By convention, methods implementing commands should be prefixed with {@code run}.
  */
-public final class AdServicesShellCommandHandler extends BasicShellCommandHandler {
+public final class AdServicesShellCommandHandler {
 
-    private static final String TAG = AdServicesShellCommandHandler.class.getSimpleName();
+    // TODO(b/280460130): use adservice helpers for tag name / logging methods
+    private static final String TAG = "AdServicesShellCmd";
+    private static final boolean DEBUG = Log.isLoggable(TAG, Log.DEBUG);
 
+    @VisibleForTesting static final String CMD_SHORT_HELP = "-h";
+    @VisibleForTesting static final String CMD_HELP = "help";
     @VisibleForTesting static final String CMD_ECHO = "echo";
 
     @VisibleForTesting
@@ -77,8 +80,7 @@ public final class AdServicesShellCommandHandler extends BasicShellCommandHandle
                     + " enrollment id is allowed to use the Topics APIs in the given app, when"
                     + " using SDK sandbox or not.";
 
-    @VisibleForTesting
-    static final String ERROR_EMPTY_COMMAND = "Must provide a non-empty command\n";
+    @VisibleForTesting static final String ERROR_EMPTY_COMMAND = "Must provide a non-empty command";
 
     @VisibleForTesting
     static final String ERROR_TEMPLATE_INVALID_ARGS = "Invalid cmd (%s). Syntax: %s";
@@ -87,38 +89,15 @@ public final class AdServicesShellCommandHandler extends BasicShellCommandHandle
     private static final int RESULT_GENERIC_ERROR = -1;
 
     private final Context mContext;
-    private final FileDescriptor mFd;
+    private final PrintWriter mOut;
 
-    // Used only on tests (otherwise it would be hard to get content of FileDescriptor)
-    @Nullable private final Supplier<PrintWriter> mSupplier;
+    private String[] mArgs;
+    private int mArgPos;
+    private String mCurArgData;
 
-    public AdServicesShellCommandHandler(Context context, FileDescriptor fd) {
-        this(context, Objects.requireNonNull(fd, "fd cannot be null"), /* supplier= */ null);
-    }
-
-    @VisibleForTesting
-    AdServicesShellCommandHandler(Context context, Supplier<PrintWriter> supplier) {
-        this(
-                context,
-                FileDescriptor.out,
-                Objects.requireNonNull(supplier, "supplier cannot be null"));
-    }
-
-    private AdServicesShellCommandHandler(
-            Context context, FileDescriptor fd, Supplier<PrintWriter> supplier) {
+    public AdServicesShellCommandHandler(Context context, PrintWriter out) {
         mContext = Objects.requireNonNull(context, "context cannot be null");
-        mFd = fd;
-        mSupplier = supplier;
-    }
-
-    @Override
-    public PrintWriter getOutPrintWriter() {
-        if (mSupplier != null) {
-            PrintWriter supplied = mSupplier.get();
-            Log.i(TAG, "getOutPrintWriter(): returning supplied object: " + supplied);
-            return supplied;
-        }
-        return super.getOutPrintWriter();
+        mOut = Objects.requireNonNull(out, "out cannot be null");
     }
 
     /** Runs the given command ({@code args[0]}) and optional arguments */
@@ -129,45 +108,109 @@ public final class AdServicesShellCommandHandler extends BasicShellCommandHandle
             throw new IllegalArgumentException(
                     "must have at least one argument (the command itself)");
         }
+        if (DEBUG) {
+            Log.d(TAG, "run(): " + Arrays.toString(args));
+        }
+        mArgs = args;
+        String cmd = getNextArg();
 
-        return super.exec(/* target= */ null, /* in= */ null, /* out= */ mFd, /* err= */ mFd, args);
+        int res = RESULT_GENERIC_ERROR;
+        try {
+            res = onCommand(cmd);
+            if (DEBUG) {
+                Log.d(TAG, "Executed command " + cmd);
+            }
+        } catch (Throwable e) {
+            // TODO(b/308009734): need to test this
+            mOut.printf("Exception occurred while executing %s\n", Arrays.toString(mArgs));
+            e.printStackTrace(mOut);
+        } finally {
+            if (DEBUG) {
+                Log.d(TAG, "Flushing output");
+            }
+            mOut.flush();
+        }
+        if (DEBUG) {
+            Log.d(TAG, "Sending command result: " + res);
+        }
+        return res;
     }
 
-    @Override
-    public int exec(
-            Binder target,
-            FileDescriptor in,
-            FileDescriptor out,
-            FileDescriptor err,
-            String[] args) {
-        throw new UnsupportedOperationException("not exposed");
+    /******************
+     * Helper methods *
+     ******************/
+
+    @Nullable
+    private String getNextArg() {
+        if (mArgs == null) {
+            throw new IllegalStateException("INTERNAL ERROR: getNextArg() called before run()");
+        }
+        if (mCurArgData != null) {
+            String arg = mCurArgData;
+            mCurArgData = null;
+            return arg;
+        } else if (mArgPos < mArgs.length) {
+            return mArgs[mArgPos++];
+        } else {
+            return null;
+        }
     }
 
-    @Override
-    public void onHelp() {
-        PrintWriter pw = getOutPrintWriter();
-
-        pw.println(HELP_ECHO);
-        pw.println(HELP_IS_ALLOWED_ATTRIBUTION_ACCESS);
-        pw.println(HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS);
-        pw.println(HELP_IS_ALLOWED_TOPICS_ACCESS);
+    private boolean hasExactNumberOfArgs(int expected) {
+        return mArgs.length == expected + 1; // adds +1 for the cmd itself
     }
 
-    @Override
-    public int onCommand(String cmd) {
-        Log.d(TAG, "onCommand: " + cmd);
+    @Nullable
+    private Boolean getNextBooleanArg() {
+        String arg = getNextArg();
+        if (TextUtils.isEmpty(arg)) {
+            return null;
+        }
+        // Boolean.parse returns false when it's invalid
+        switch (arg.trim().toLowerCase()) {
+            case "true":
+                return Boolean.TRUE;
+            case "false":
+                return Boolean.FALSE;
+            default:
+                return null;
+        }
+    }
+
+    private int invalidArgsError(String syntax) {
+        mOut.println(String.format(ERROR_TEMPLATE_INVALID_ARGS, Arrays.toString(mArgs), syntax));
+        return RESULT_GENERIC_ERROR;
+    }
+
+    /****************************************************************************
+     * Commands - for each new one, add onHelp(), onCommand(), and runCommand() *
+     ****************************************************************************/
+
+    private void onHelp() {
+        mOut.println(HELP_ECHO);
+        mOut.println(HELP_IS_ALLOWED_ATTRIBUTION_ACCESS);
+        mOut.println(HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS);
+        mOut.println(HELP_IS_ALLOWED_TOPICS_ACCESS);
+    }
+
+    private int onCommand(String cmd) {
         switch (cmd) {
+            case CMD_SHORT_HELP:
+            case CMD_HELP:
+                onHelp();
+                return RESULT_GENERIC_ERROR;
+            case "":
+                mOut.println(ERROR_EMPTY_COMMAND);
+                return RESULT_GENERIC_ERROR;
             case CMD_ECHO:
                 return runEcho();
             case CMD_IS_ALLOWED_ATTRIBUTION_ACCESS:
             case CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS:
             case CMD_IS_ALLOWED_TOPICS_ACCESS:
                 return runIsAllowedApiAccess(cmd);
-            case "":
-                getOutPrintWriter().print(ERROR_EMPTY_COMMAND);
-                return RESULT_GENERIC_ERROR;
             default:
-                return handleDefaultCommands(cmd);
+                mOut.printf("Unknown command: %s\n", cmd);
+                return RESULT_GENERIC_ERROR;
         }
     }
 
@@ -181,7 +224,7 @@ public final class AdServicesShellCommandHandler extends BasicShellCommandHandle
         }
 
         Log.i(TAG, "runEcho: message='" + message + "'");
-        getOutPrintWriter().println(message);
+        mOut.println(message);
         return RESULT_OK;
     }
 
@@ -260,38 +303,7 @@ public final class AdServicesShellCommandHandler extends BasicShellCommandHandle
                                 + isValid);
                 break;
         }
-        getOutPrintWriter().println(isValid);
+        mOut.println(isValid);
         return RESULT_OK;
-    }
-
-    private boolean hasExactNumberOfArgs(int expected) {
-        return getAllArgs().length == expected + 1; // adds +1 for the cmd itself
-    }
-
-    @Nullable
-    private Boolean getNextBooleanArg() {
-        String arg = getNextArg();
-        if (TextUtils.isEmpty(arg)) {
-            return null;
-        }
-        // Boolean.parse returns false when it's invalid
-        switch (arg.trim().toLowerCase()) {
-            case "true":
-                return Boolean.TRUE;
-            case "false":
-                return Boolean.FALSE;
-            default:
-                return null;
-        }
-    }
-
-    private int invalidArgsError(String syntax) {
-        getOutPrintWriter()
-                .println(
-                        String.format(
-                                ERROR_TEMPLATE_INVALID_ARGS,
-                                Arrays.toString(getAllArgs()),
-                                syntax));
-        return RESULT_GENERIC_ERROR;
     }
 }

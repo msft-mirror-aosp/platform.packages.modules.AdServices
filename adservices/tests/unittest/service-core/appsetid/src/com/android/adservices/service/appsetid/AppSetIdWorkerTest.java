@@ -24,9 +24,10 @@ import android.adservices.appsetid.IGetAppSetIdProviderCallback;
 import android.annotation.NonNull;
 import android.os.RemoteException;
 
-import androidx.test.core.app.ApplicationProvider;
+import com.android.adservices.shared.testing.common.ApplicationContextSingletonRule;
 
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -39,15 +40,16 @@ public class AppSetIdWorkerTest {
 
     private static final String DEFAULT_APP_SET_ID = "00000000-0000-0000-0000-000000000000";
 
+    @Rule
+    public final ApplicationContextSingletonRule appContext = new ApplicationContextSingletonRule();
+
     @Test
     public void testGetAppSetIdOnResult() throws Exception {
         mTestSuccess = true;
 
         CompletableFuture<GetAppSetIdResult> future = new CompletableFuture<>();
 
-        AppSetIdWorker spyWorker =
-                Mockito.spy(
-                        AppSetIdWorker.getInstance(ApplicationProvider.getApplicationContext()));
+        AppSetIdWorker spyWorker = Mockito.spy(AppSetIdWorker.getInstance());
         Mockito.doReturn(mInterface).when(spyWorker).getService();
 
         spyWorker.getAppSetId(
@@ -77,9 +79,7 @@ public class AppSetIdWorkerTest {
 
         CompletableFuture<Integer> future = new CompletableFuture<>();
 
-        AppSetIdWorker spyWorker =
-                Mockito.spy(
-                        AppSetIdWorker.getInstance(ApplicationProvider.getApplicationContext()));
+        AppSetIdWorker spyWorker = Mockito.spy(AppSetIdWorker.getInstance());
         Mockito.doReturn(mInterface).when(spyWorker).getService();
 
         spyWorker.getAppSetId(

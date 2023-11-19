@@ -65,7 +65,7 @@ public final class ApplicationContextSingletonRuleTest {
     public void testDefaultConstructorSetsNonNullContext() throws Throwable {
         ApplicationContextSingletonRule rule = new ApplicationContextSingletonRule();
 
-        evaluate(
+        runTestWithRule(
                 rule,
                 () ->
                         expect.withMessage("ApplicationContextSingleton.get() during test")
@@ -80,7 +80,7 @@ public final class ApplicationContextSingletonRuleTest {
         ApplicationContextSingleton.setForTests(contextBefore);
         ApplicationContextSingletonRule rule = new ApplicationContextSingletonRule(ruleContext);
 
-        evaluate(
+        runTestWithRule(
                 rule,
                 () -> {
                     expect.withMessage("ApplicationContextSingleton.get() during test")
@@ -109,7 +109,7 @@ public final class ApplicationContextSingletonRuleTest {
                 assertThrows(
                         RuntimeException.class,
                         () ->
-                                evaluate(
+                                runTestWithRule(
                                         rule,
                                         () -> {
                                             expect.withMessage(
@@ -135,7 +135,7 @@ public final class ApplicationContextSingletonRuleTest {
         Context setContext = mock(Context.class, "setContext");
         ApplicationContextSingletonRule rule = new ApplicationContextSingletonRule(ruleContext);
 
-        evaluate(
+        runTestWithRule(
                 rule,
                 () -> {
                     rule.set(setContext);
@@ -148,9 +148,9 @@ public final class ApplicationContextSingletonRuleTest {
                 });
     }
 
-    private void evaluate(ApplicationContextSingletonRule rule, Runnable assertions)
+    private void runTestWithRule(ApplicationContextSingletonRule rule, Runnable test)
             throws Throwable {
-        RunnableStatement statement = new RunnableStatement(assertions);
+        RunnableStatement statement = new RunnableStatement(test);
         rule.apply(statement, newTestMethod()).evaluate();
         statement.assertEvaluated();
     }
@@ -192,12 +192,6 @@ public final class ApplicationContextSingletonRuleTest {
         public void assertEvaluated() {
             if (!mEvaluated) {
                 throw new AssertionError("test statement was not evaluated");
-            }
-        }
-
-        public void assertNotEvaluated() {
-            if (mEvaluated) {
-                throw new AssertionError("test statement was evaluated");
             }
         }
     }
