@@ -196,6 +196,7 @@ public final class MeasurementTables {
         String RANDOMIZED_TRIGGER_RATE = "randomized_trigger_rate";
         String SOURCE_DEBUG_KEY = "source_debug_key";
         String TRIGGER_DEBUG_KEY = "trigger_debug_key";
+        String TRIGGER_DEBUG_KEYS = "trigger_debug_keys";
         String SOURCE_ID = "source_id";
         String TRIGGER_ID = "trigger_id";
         String REGISTRATION_ORIGIN = "registration_origin";
@@ -730,6 +731,8 @@ public final class MeasurementTables {
                     + " TEXT, "
                     + EventReportContract.TRIGGER_SUMMARY_BUCKET
                     + " TEXT, "
+                    + EventReportContract.TRIGGER_DEBUG_KEYS
+                    + " TEXT, "
                     + "FOREIGN KEY ("
                     + EventReportContract.SOURCE_ID
                     + ") REFERENCES "
@@ -997,6 +1000,7 @@ public final class MeasurementTables {
                     + DebugReportContract.REGISTRANT
                     + " TEXT "
                     + ")";
+
     public static final String CREATE_TABLE_XNA_IGNORED_SOURCES_V6 =
             "CREATE TABLE "
                     + XnaIgnoredSourcesContract.TABLE

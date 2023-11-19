@@ -16,11 +16,11 @@
 
 package com.android.adservices.service.measurement;
 
-import com.android.adservices.service.measurement.util.UnsignedLong;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThrows;
+
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -41,6 +41,7 @@ public class AttributedTriggerTest {
     private static final long TRIGGER_TIME2 = 1689564817010L;
     private static final UnsignedLong DEDUP_KEY1 = new UnsignedLong("453");
     private static final UnsignedLong DEDUP_KEY2 = new UnsignedLong("357");
+    private static final long CONTRIBUTION = 50L;
 
     @Test
     public void equals_pass() {
@@ -279,12 +280,41 @@ public class AttributedTriggerTest {
                         TRIGGER_TIME1,
                         DEDUP_KEY1);
 
+        attributedTrigger.addContribution(CONTRIBUTION);
+        assertEquals(CONTRIBUTION, attributedTrigger.getContribution());
         assertEquals(TRIGGER_ID1, attributedTrigger.getTriggerId());
         assertEquals(PRIORITY1, attributedTrigger.getPriority());
         assertEquals(TRIGGER_DATA1, attributedTrigger.getTriggerData());
         assertEquals(VALUE1, attributedTrigger.getValue());
         assertEquals(TRIGGER_TIME1, attributedTrigger.getTriggerTime());
         assertEquals(DEDUP_KEY1, attributedTrigger.getDedupKey());
+    }
+
+    @Test
+    public void remainingValue() {
+        AttributedTrigger attributedTrigger1 =
+                new AttributedTrigger(
+                        TRIGGER_ID1,
+                        PRIORITY1,
+                        TRIGGER_DATA1,
+                        VALUE1,
+                        TRIGGER_TIME1,
+                        DEDUP_KEY1);
+
+        attributedTrigger1.addContribution(CONTRIBUTION);
+        assertEquals(-45L, attributedTrigger1.remainingValue());
+
+        AttributedTrigger attributedTrigger2 =
+                new AttributedTrigger(
+                        TRIGGER_ID2,
+                        PRIORITY2,
+                        TRIGGER_DATA2,
+                        VALUE2,
+                        TRIGGER_TIME2,
+                        DEDUP_KEY2);
+
+        attributedTrigger2.addContribution(CONTRIBUTION);
+        assertEquals(16L, attributedTrigger2.remainingValue());
     }
 
     @Test
