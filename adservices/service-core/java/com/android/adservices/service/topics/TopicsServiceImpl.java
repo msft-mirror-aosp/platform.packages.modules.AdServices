@@ -321,12 +321,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             return resultCode;
         }
 
-        AdServicesApiConsent userConsent;
-        if (mFlags.getGaUxFeatureEnabled()) {
-            userConsent = mConsentManager.getConsent(AdServicesApiType.TOPICS);
-        } else {
-            userConsent = mConsentManager.getConsent();
-        }
+        AdServicesApiConsent userConsent = mConsentManager.getConsent(AdServicesApiType.TOPICS);
 
         if (!userConsent.isGiven()) {
             sLogger.v("STATUS_USER_CONSENT_REVOKED: User consent revoked");

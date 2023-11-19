@@ -39,6 +39,7 @@ import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.data.topics.migration.ITopicsDbMigrator;
 import com.android.adservices.data.topics.migration.TopicsDbMigratorV7;
 import com.android.adservices.data.topics.migration.TopicsDbMigratorV8;
+import com.android.adservices.data.topics.migration.TopicsDbMigratorV9;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.FileCompatUtils;
@@ -58,10 +59,12 @@ import java.util.stream.Stream;
  * get the same reference.
  */
 public class DbHelper extends SQLiteOpenHelper {
+    // Version 9: Add new table ReturnedEncryptedTopic, guarded by feature flag.
+    public static final int DATABASE_VERSION_V9 = 9;
     // Version 8: Add logged_topic to ReturnedTopic table for Topics API, guarded by feature flag.
     public static final int DATABASE_VERSION_V8 = 8;
 
-    public static final int DATABASE_VERSION = 7;
+    public static final int DATABASE_VERSION_7 = 7;
 
     private static final String DATABASE_NAME =
             FileCompatUtils.getAdservicesFilename("adservices.db");
@@ -217,16 +220,19 @@ public class DbHelper extends SQLiteOpenHelper {
     @VisibleForTesting
     public List<ITopicsDbMigrator> topicsGetOrderedDbMigrators() {
         return ImmutableList.of(
-                new TopicsDbMigratorV7(),
-                new TopicsDbMigratorV8());
+                new TopicsDbMigratorV7(), new TopicsDbMigratorV8(), new TopicsDbMigratorV9());
     }
 
     // Get the database version to create. It may be different as DATABASE_VERSION, depending
     // on Flags status.
     @VisibleForTesting
     static int getDatabaseVersionToCreate() {
-        return FlagsFactory.getFlags().getEnableDatabaseSchemaVersion8()
-                ? DATABASE_VERSION_V8
-                : DATABASE_VERSION;
+        if (FlagsFactory.getFlags().getEnableDatabaseSchemaVersion9()) {
+            return DATABASE_VERSION_V9;
+        } else if (FlagsFactory.getFlags().getEnableDatabaseSchemaVersion8()) {
+            return DATABASE_VERSION_V8;
+        } else {
+            return DATABASE_VERSION_7;
+        }
     }
 }

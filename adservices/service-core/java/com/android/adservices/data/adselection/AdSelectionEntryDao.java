@@ -386,6 +386,26 @@ public abstract class AdSelectionEntryDao {
             long adSelectionId, @NonNull String callerPackageName);
 
     /**
+     * Gets the {@link DBAdSelectionHistogramInfo} representing the histogram information associated
+     * with a given ad selection. Only fetches data from the unified tables, not {@code
+     * ad_selection}
+     *
+     * @return a {@link DBAdSelectionHistogramInfo} containing the histogram info associated with
+     *     the ad selection, or {@code null} if no match is found
+     */
+    @Query(
+            "SELECT winning_buyer AS custom_audience_signals_buyer, "
+                    + "winning_custom_audience_ad_counter_int_keys AS ad_counter_int_keys "
+                    + "FROM ad_selection_result results "
+                    + "JOIN ad_selection_initialization init "
+                    + "ON results.ad_selection_id = init.ad_selection_id "
+                    + "WHERE init.ad_selection_id = :adSelectionId "
+                    + "AND init.caller_package_name = :callerPackageName")
+    @Nullable
+    public abstract DBAdSelectionHistogramInfo getAdSelectionHistogramInfoFromUnifiedTable(
+            long adSelectionId, @NonNull String callerPackageName);
+
+    /**
      * Clean up expired adSelection entries if it is older than the given timestamp. If
      * creation_timestamp < expirationTime, the ad selection entry will be removed from the
      * ad_selection table.

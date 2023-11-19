@@ -85,8 +85,7 @@ public class AdIdServiceTest {
             // Mock static method FlagsFactory.getFlags() to return Mock Flags.
             ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
-            ExtendedMockito.doReturn(mMockAdIdWorker)
-                    .when(() -> AdIdWorker.getInstance(any(Context.class)));
+            ExtendedMockito.doReturn(mMockAdIdWorker).when(() -> AdIdWorker.getInstance());
 
             AdIdService spyAdIdService = spy(new AdIdService());
             doReturn(mMockPackageManager).when(spyAdIdService).getPackageManager();

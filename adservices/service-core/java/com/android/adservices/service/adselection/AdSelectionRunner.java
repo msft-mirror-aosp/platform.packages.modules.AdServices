@@ -23,7 +23,7 @@ import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.AdSelectionResponse;
-import android.adservices.adselection.ContextualAds;
+import android.adservices.adselection.SignedContextualAds;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
@@ -564,7 +564,7 @@ public abstract class AdSelectionRunner {
                 () -> {
                     boolean atLeastOnePresent =
                             !(adSelectionConfig.getCustomAudienceBuyers().isEmpty()
-                                    && adSelectionConfig.getBuyerContextualAds().isEmpty());
+                                    && adSelectionConfig.getBuyerSignedContextualAds().isEmpty());
 
                     Preconditions.checkArgument(
                             atLeastOnePresent, ERROR_NO_BUYERS_OR_CONTEXTUAL_ADS_AVAILABLE);
@@ -577,7 +577,7 @@ public abstract class AdSelectionRunner {
                                     mClock.instant(),
                                     mFlags.getFledgeCustomAudienceActiveTimeWindowInMs());
                     if ((buyerCustomAudience == null || buyerCustomAudience.isEmpty())
-                            && adSelectionConfig.getBuyerContextualAds().isEmpty()) {
+                            && adSelectionConfig.getBuyerSignedContextualAds().isEmpty()) {
                         IllegalStateException exception =
                                 new IllegalStateException(ERROR_NO_CA_AND_CONTEXTUAL_ADS_AVAILABLE);
                         mAdSelectionExecutionLogger.endBiddingProcess(
@@ -726,16 +726,16 @@ public abstract class AdSelectionRunner {
 
     private AdSelectionConfig getAdSelectionConfigFilterContextualAds(
             AdSelectionConfig adSelectionConfig) {
-        Map<AdTechIdentifier, ContextualAds> filteredContextualAdsMap = new HashMap<>();
+        Map<AdTechIdentifier, SignedContextualAds> filteredContextualAdsMap = new HashMap<>();
         sLogger.v("Filtering contextual ads in Ad Selection Config");
-        for (Map.Entry<AdTechIdentifier, ContextualAds> entry :
-                adSelectionConfig.getBuyerContextualAds().entrySet()) {
+        for (Map.Entry<AdTechIdentifier, SignedContextualAds> entry :
+                adSelectionConfig.getBuyerSignedContextualAds().entrySet()) {
             filteredContextualAdsMap.put(
                     entry.getKey(), mAdFilterer.filterContextualAds(entry.getValue()));
         }
         return adSelectionConfig
                 .cloneToBuilder()
-                .setBuyerContextualAds(filteredContextualAdsMap)
+                .setBuyerSignedContextualAds(filteredContextualAdsMap)
                 .build();
     }
 
@@ -744,7 +744,7 @@ public abstract class AdSelectionRunner {
         sLogger.v("Emptying contextual ads in Ad Selection Config");
         return adSelectionConfig
                 .cloneToBuilder()
-                .setBuyerContextualAds(Collections.EMPTY_MAP)
+                .setBuyerSignedContextualAds(Collections.EMPTY_MAP)
                 .build();
     }
 

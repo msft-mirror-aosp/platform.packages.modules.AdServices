@@ -533,6 +533,7 @@ public class DbState {
                         Uri.parse(
                                 rJSON.optString(
                                         "aggregation_coordinator_origin", "https://test.test")))
+                .setIsFakeReport(rJSON.optBoolean("isFakeReport", false))
                 .build();
     }
 

@@ -19,6 +19,7 @@ package com.android.adservices.download;
 import static com.android.adservices.service.enrollment.EnrollmentUtil.BUILD_ID;
 import static com.android.adservices.service.enrollment.EnrollmentUtil.ENROLLMENT_SHARED_PREF;
 import static com.android.adservices.service.enrollment.EnrollmentUtil.FILE_GROUP_STATUS;
+import static com.android.adservices.service.stats.AdServicesEncryptionKeyFetchedStats.FetchJobType.MDD_DOWNLOAD_JOB;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_INSERT_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__LOAD_MDD_FILE_GROUP_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE;
@@ -91,7 +92,7 @@ public class EnrollmentDataDownloadManager {
                 flags,
                 AdServicesLoggerImpl.getInstance(),
                 EnrollmentUtil.getInstance(context),
-                new EncryptionKeyFetcher());
+                new EncryptionKeyFetcher(MDD_DOWNLOAD_JOB));
     }
 
     @VisibleForTesting
@@ -121,7 +122,7 @@ public class EnrollmentDataDownloadManager {
                                     FlagsFactory.getFlags(),
                                     AdServicesLoggerImpl.getInstance(),
                                     EnrollmentUtil.getInstance(context),
-                                    new EncryptionKeyFetcher());
+                                    new EncryptionKeyFetcher(MDD_DOWNLOAD_JOB));
                 }
             }
         }

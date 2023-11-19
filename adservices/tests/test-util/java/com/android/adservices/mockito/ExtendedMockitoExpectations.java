@@ -34,12 +34,12 @@ import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.modules.utils.build.SdkLevel;
-import com.android.server.LocalManagerRegistry;
 
 import com.google.common.truth.Expect;
 
 import org.mockito.verification.VerificationMode;
 
+import java.io.PrintWriter;
 import java.util.Objects;
 
 /**
@@ -52,21 +52,6 @@ import java.util.Objects;
 public final class ExtendedMockitoExpectations {
 
     private static final String TAG = ExtendedMockitoExpectations.class.getSimpleName();
-
-    /**
-     * Mocks a call to {@link LocalManagerRegistry#getManager(Class)}, returning the given {@code
-     * manager}.
-     */
-    public static <T> void mockGetLocalManager(Class<T> managerClass, T manager) {
-        Log.v(TAG, "mockGetLocalManager(" + managerClass + ", " + manager + ")");
-        doReturn(manager).when(() -> LocalManagerRegistry.getManager(managerClass));
-    }
-
-    /** Mocks a call to {@link LocalManagerRegistry#getManager(Class)}, returning {@code null}. */
-    public static void mockGetLocalManagerNotFound(Class<?> managerClass) {
-        Log.v(TAG, "mockGetLocalManagerNotFound(" + managerClass + ")");
-        doReturn(null).when(() -> LocalManagerRegistry.getManager(managerClass));
-    }
 
     /** Mocks a call to {@link SdkLevel#isAtLeastR()}, returning {@code isIt}. */
     public static void mockIsAtLeastR(boolean isIt) {
@@ -160,6 +145,24 @@ public final class ExtendedMockitoExpectations {
      */
     public static void mockGetFlags(Flags mockedFlags) {
         doReturn(mockedFlags).when(FlagsFactory::getFlags);
+    }
+
+    /**
+     * Mocks a call to a method that dumps something into a {@link PrintWriter}.
+     *
+     * @param runnable invocation that will call dump passing a {@link PrintWriter}. Typically a
+     *     static method, using {@code any()} to represent the {@link PrintWriter} reference.
+     * @param pwArgIndex index of the {@link PrintWriter}
+     * @param dump value to be {@code println}'ed into the {@link PrintWriter}.
+     */
+    public static void mockDump(Runnable invocation, int pwArgIndex, String dump) {
+        doAnswer(
+                        (inv) -> {
+                            PrintWriter pw = (PrintWriter) inv.getArgument(1);
+                            pw.println(dump);
+                            return null;
+                        })
+                .when(() -> invocation.run());
     }
 
     /**

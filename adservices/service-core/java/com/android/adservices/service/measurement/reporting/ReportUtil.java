@@ -21,6 +21,8 @@ import android.annotation.Nullable;
 import android.net.Uri;
 import android.util.Pair;
 
+import com.android.adservices.service.measurement.util.UnsignedLong;
+
 import org.json.JSONArray;
 
 import java.util.ArrayList;
@@ -51,6 +53,18 @@ public class ReportUtil {
             return new JSONArray(
                     sortedDestinations.stream().map(Uri::toString).collect(Collectors.toList()));
         }
+    }
+
+    /**
+     * Prepares a list of {@code UnsignedLong}s for report JSON.
+     *
+     * @param unsignedLongs a list of {@code UnsignedLong}s
+     * @return a JSONArray
+     */
+    @Nullable
+    public static JSONArray serializeUnsignedLongs(@NonNull List<UnsignedLong> unsignedLongs) {
+        return new JSONArray(
+                unsignedLongs.stream().map(UnsignedLong::toString).collect(Collectors.toList()));
     }
 
     /**
