@@ -33,13 +33,6 @@ final class AdServicesHostSideSupportHelper extends AbstractDeviceSupportHelper 
     }
 
     @Override
-    protected boolean isAdIdAvailable() {
-        // TODO(b/309580964): Implement this at a future date.
-        mLog.w("isAdIdAvailable() detection is not available host-side.");
-        return false;
-    }
-
-    @Override
     protected boolean isLowRamDeviceByDefault() {
         return "true".equals(call(device -> device.getProperty("ro.config.low_ram")));
     }

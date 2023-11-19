@@ -96,7 +96,7 @@ public class Source {
     @Nullable private String mParentId;
     @Nullable private String mDebugJoinKey;
     @Nullable private List<AttributedTrigger> mAttributedTriggers;
-    @Nullable private ReportSpec mFlexEventReportSpec;
+    @Nullable private TriggerSpecs mTriggerSpecs;
     @Nullable private String mTriggerSpecsString;
     @Nullable private Integer mMaxEventLevelReports;
     @Nullable private String mEventAttributionStatusString;
@@ -147,7 +147,7 @@ public class Source {
      */
     @Nullable
     public static List<Pair<Long, Long>> getOrDefaultEventReportWindows(
-            @Nullable String eventReportWindows,
+            @Nullable JSONObject eventReportWindows,
             @NonNull SourceType sourceType,
             long expiryDelta,
             @NonNull Flags flags) {
@@ -370,6 +370,17 @@ public class Source {
     }
 
     /**
+     * @return all the attributed trigger IDs
+     */
+    public List<String> getAttributedTriggerIds() {
+        List<String> result = new ArrayList<>();
+        for (AttributedTrigger attributedTrigger : mAttributedTriggers) {
+            result.add(attributedTrigger.getTriggerId());
+        }
+        return result;
+    }
+
+    /**
      * @return the JSON encoded current trigger status
      */
     @NonNull
@@ -394,11 +405,11 @@ public class Source {
     }
 
     /**
-     * @return the flex event report specifications
+     * @return the flex event trigger specification
      */
     @Nullable
-    public ReportSpec getFlexEventReportSpec() {
-        return mFlexEventReportSpec;
+    public TriggerSpecs getTriggerSpecs() {
+        return mTriggerSpecs;
     }
 
     @Override
@@ -445,7 +456,7 @@ public class Source {
                 && Objects.equals(mRegistrationOrigin, source.mRegistrationOrigin)
                 && mCoarseEventReportDestinations == source.mCoarseEventReportDestinations
                 && Objects.equals(mAttributedTriggers, source.mAttributedTriggers)
-                && Objects.equals(mFlexEventReportSpec, source.mFlexEventReportSpec)
+                && Objects.equals(mTriggerSpecs, source.mTriggerSpecs)
                 && Objects.equals(mTriggerSpecsString, source.mTriggerSpecsString)
                 && Objects.equals(mMaxEventLevelReports, source.mMaxEventLevelReports)
                 && Objects.equals(
@@ -492,7 +503,7 @@ public class Source {
                 mRegistrationOrigin,
                 mDebugJoinKey,
                 mAttributedTriggers,
-                mFlexEventReportSpec,
+                mTriggerSpecs,
                 mTriggerSpecsString,
                 mMaxEventLevelReports,
                 mEventAttributionStatusString,
@@ -696,7 +707,7 @@ public class Source {
      */
     public boolean isFlexEventApiValueValid(Flags flags) {
         if (!flags.getMeasurementFlexibleEventReportingApiEnabled()
-                || mFlexEventReportSpec == null) {
+                || mTriggerSpecs == null) {
             return true;
         }
         double informationGainThreshold =
@@ -704,7 +715,7 @@ public class Source {
                         ? flags.getMeasurementFlexApiMaxInformationGainEvent()
                         : flags.getMeasurementFlexApiMaxInformationGainNavigation();
 
-        if (mFlexEventReportSpec.getInformationGain() > informationGainThreshold) {
+        if (mTriggerSpecs.getInformationGain() > informationGainThreshold) {
             return false;
         }
         return true;
@@ -872,7 +883,7 @@ public class Source {
     }
 
     /** Returns trigger specs */
-    public String getTriggerSpecs() {
+    public String getTriggerSpecsString() {
         return mTriggerSpecsString;
     }
 
@@ -1080,12 +1091,12 @@ public class Source {
         }
     }
 
-    /** Build the flexible event report API from the raw string */
-    public void buildFlexibleEventReportApi() throws JSONException {
+    /** Build the trigger specs from the raw string */
+    public void buildTriggerSpecs() throws JSONException {
         buildAttributedTriggers();
-        if (mFlexEventReportSpec == null) {
-            mFlexEventReportSpec =
-                    new ReportSpec(
+        if (mTriggerSpecs == null) {
+            mTriggerSpecs =
+                    new TriggerSpecs(
                             mTriggerSpecsString,
                             getOrDefaultMaxEventLevelReports(
                                     mSourceType, mMaxEventLevelReports, FlagsFactory.getFlags()),
@@ -1151,7 +1162,7 @@ public class Source {
             builder.setDebugAdId(copyFrom.mDebugAdId);
             builder.setRegistrationOrigin(copyFrom.mRegistrationOrigin);
             builder.setAttributedTriggers(copyFrom.mAttributedTriggers);
-            builder.setFlexEventReportSpec(copyFrom.mFlexEventReportSpec);
+            builder.setTriggerSpecs(copyFrom.mTriggerSpecs);
             builder.setCoarseEventReportDestinations(copyFrom.mCoarseEventReportDestinations);
             builder.setSharedDebugKey(copyFrom.mSharedDebugKey);
             builder.setDropSourceIfInstalled(copyFrom.mDropSourceIfInstalled);
@@ -1447,26 +1458,10 @@ public class Source {
             return this;
         }
 
-        /** See {@link Source#getFlexEventReportSpec()} */
+        /** See {@link Source#getTriggerSpecs()} */
         @NonNull
-        public Builder setFlexEventReportSpec(@Nullable ReportSpec flexEventReportSpec) {
-            mBuilding.mFlexEventReportSpec = flexEventReportSpec;
-            return this;
-        }
-
-        /** See {@link Source#getFlexEventReportSpec()} */
-        @NonNull
-        public Builder buildInitialFlexEventReportSpec(@NonNull Flags flags) throws JSONException {
-            // TODO(b/290100712): Refactor to remove this method
-            if (mBuilding.mTriggerSpecsString == null || mBuilding.mTriggerSpecsString.isEmpty()) {
-                return this;
-            }
-            mBuilding.mFlexEventReportSpec =
-                    new ReportSpec(
-                            mBuilding.mTriggerSpecsString,
-                            getOrDefaultMaxEventLevelReports(
-                                    mBuilding.mSourceType, mBuilding.mMaxEventLevelReports, flags),
-                            null);
+        public Builder setTriggerSpecs(@Nullable TriggerSpecs triggerSpecs) {
+            mBuilding.mTriggerSpecs = triggerSpecs;
             return this;
         }
 
@@ -1477,10 +1472,10 @@ public class Source {
             return this;
         }
 
-        /** See {@link Source#getTriggerSpecs()} */
+        /** See {@link Source#getTriggerSpecsString()} */
         @NonNull
-        public Builder setTriggerSpecs(@Nullable String triggerSpecs) {
-            mBuilding.mTriggerSpecsString = triggerSpecs;
+        public Builder setTriggerSpecsString(@Nullable String triggerSpecsString) {
+            mBuilding.mTriggerSpecsString = triggerSpecsString;
             return this;
         }
 

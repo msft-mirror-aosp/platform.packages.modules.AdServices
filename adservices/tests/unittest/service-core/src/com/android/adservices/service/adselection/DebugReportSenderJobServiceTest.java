@@ -235,7 +235,9 @@ public class DebugReportSenderJobServiceTest {
     public void testOnStartJobGaUxFlagDisabled() {
         doReturn(mFlagsWithGaUxDisabled).when(FlagsFactory::getFlags);
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
-        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent();
+        doReturn(AdServicesApiConsent.REVOKED)
+                .when(mConsentManagerMock)
+                .getConsent(AdServicesApiType.FLEDGE);
         doReturn(JOB_SCHEDULER)
                 .when(mDebugReportSenderJobService)
                 .getSystemService(JobScheduler.class);
@@ -263,7 +265,9 @@ public class DebugReportSenderJobServiceTest {
     public void testOnStartJobConsentRevokedGaUxDisabled() {
         doReturn(mFlagsWithGaUxDisabled).when(FlagsFactory::getFlags);
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
-        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent();
+        doReturn(AdServicesApiConsent.REVOKED)
+                .when(mConsentManagerMock)
+                .getConsent(AdServicesApiType.FLEDGE);
         doReturn(JOB_SCHEDULER)
                 .when(mDebugReportSenderJobService)
                 .getSystemService(JobScheduler.class);
@@ -412,7 +416,9 @@ public class DebugReportSenderJobServiceTest {
 
         doReturn(mFlagsWithGaUxDisabled).when(FlagsFactory::getFlags);
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManagerMock)
+                .getConsent(AdServicesApiType.FLEDGE);
         doReturn(mDebugReportSenderWorker).when(() -> DebugReportSenderWorker.getInstance(any()));
         doReturn(
                 FluentFuture.from(
@@ -443,7 +449,9 @@ public class DebugReportSenderJobServiceTest {
 
         doReturn(mFlagsWithGaUxDisabled).when(FlagsFactory::getFlags);
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManagerMock)
+                .getConsent(AdServicesApiType.FLEDGE);
         doReturn(mDebugReportSenderWorker).when(() -> DebugReportSenderWorker.getInstance(any()));
         doReturn(
                 FluentFuture.from(
@@ -574,7 +582,9 @@ public class DebugReportSenderJobServiceTest {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManagerMock)
+                .getConsent(AdServicesApiType.FLEDGE);
         doReturn(mDebugReportSenderWorker).when(() -> DebugReportSenderWorker.getInstance(any()));
         doReturn(FluentFuture.from(immediateFuture(null)))
                 .when(mDebugReportSenderWorker)
@@ -629,7 +639,9 @@ public class DebugReportSenderJobServiceTest {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManagerMock)
+                .getConsent(AdServicesApiType.FLEDGE);
         doReturn(mDebugReportSenderWorker).when(() -> DebugReportSenderWorker.getInstance(any()));
         doReturn(FluentFuture.from(immediateFailedFuture(new TimeoutException("testing timeout"))))
                 .when(mDebugReportSenderWorker)

@@ -184,4 +184,17 @@ public class AdServicesLoggerImpl implements AdServicesLogger {
                 mQueryParameter,
                 mErrorCause);
     }
+
+    /** Logs encryption key fetch stats. */
+    @Override
+    public void logEncryptionKeyFetchedStats(AdServicesEncryptionKeyFetchedStats stats) {
+        mStatsdAdServicesLogger.logEncryptionKeyFetchedStats(stats);
+    }
+
+    /** Logs encryption key datastore transaction ended stats. */
+    @Override
+    public void logEncryptionKeyDbTransactionEndedStats(
+            AdServicesEncryptionKeyDbTransactionEndedStats stats) {
+        mStatsdAdServicesLogger.logEncryptionKeyDbTransactionEndedStats(stats);
+    }
 }

@@ -5587,23 +5587,23 @@ public final class AsyncSourceFetcherTest {
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
+        assertNull(result.getTriggerSpecsString());
         assertNotNull(result.getTriggerSpecs());
-        assertNotNull(result.getFlexEventReportSpec());
-        assertEquals(3, result.getFlexEventReportSpec().getMaxReports());
+        assertEquals(3, result.getTriggerSpecs().getMaxReports());
         assertEquals(
                 1L,
-                result.getFlexEventReportSpec()
+                result.getTriggerSpecs()
                         .getTriggerSpecs()[0]
                         .getTriggerData()
                         .get(0)
                         .getValue()
                         .longValue());
         assertEquals(
-                3, result.getFlexEventReportSpec().getTriggerSpecs()[0].getTriggerData().size());
-        assertEquals(1, result.getFlexEventReportSpec().getTriggerSpecs().length);
+                3, result.getTriggerSpecs().getTriggerSpecs()[0].getTriggerData().size());
+        assertEquals(1, result.getTriggerSpecs().getTriggerSpecs().length);
         assertEquals(
                 3,
-                result.getFlexEventReportSpec()
+                result.getTriggerSpecs()
                         .getTriggerSpecs()[0]
                         .getEventReportWindowsEnd()
                         .size());
@@ -5661,14 +5661,14 @@ public final class AsyncSourceFetcherTest {
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
+        assertNull(result.getTriggerSpecsString());
         assertNotNull(result.getTriggerSpecs());
-        assertNotNull(result.getFlexEventReportSpec());
         assertEquals(
                 List.of(
                         Long.valueOf(TimeUnit.SECONDS.toMillis(TimeUnit.HOURS.toSeconds(1))),
                         Long.valueOf(TimeUnit.SECONDS.toMillis(TimeUnit.DAYS.toSeconds(7))),
                         Long.valueOf(TimeUnit.SECONDS.toMillis(expiry))),
-                result.getFlexEventReportSpec()
+                result.getTriggerSpecs()
                         .getTriggerSpecs()[0]
                         .getEventReportWindowsEnd());
     }
@@ -5722,12 +5722,12 @@ public final class AsyncSourceFetcherTest {
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
+        assertNull(result.getTriggerSpecsString());
         assertNotNull(result.getTriggerSpecs());
-        assertNotNull(result.getFlexEventReportSpec());
         assertEquals(
                 List.of(
                         Long.valueOf(TimeUnit.SECONDS.toMillis(TimeUnit.HOURS.toSeconds(1)))),
-                result.getFlexEventReportSpec()
+                result.getTriggerSpecs()
                         .getTriggerSpecs()[0]
                         .getEventReportWindowsEnd());
     }
@@ -5792,23 +5792,23 @@ public final class AsyncSourceFetcherTest {
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
+        assertNull(result.getTriggerSpecsString());
         assertNotNull(result.getTriggerSpecs());
-        assertNotNull(result.getFlexEventReportSpec());
-        assertEquals(3, result.getFlexEventReportSpec().getMaxReports());
+        assertEquals(3, result.getTriggerSpecs().getMaxReports());
         assertEquals(
                 1L,
-                result.getFlexEventReportSpec()
+                result.getTriggerSpecs()
                         .getTriggerSpecs()[0]
                         .getTriggerData()
                         .get(0)
                         .getValue()
                         .longValue());
         assertEquals(
-                3, result.getFlexEventReportSpec().getTriggerSpecs()[0].getTriggerData().size());
-        assertEquals(1, result.getFlexEventReportSpec().getTriggerSpecs().length);
+                3, result.getTriggerSpecs().getTriggerSpecs()[0].getTriggerData().size());
+        assertEquals(1, result.getTriggerSpecs().getTriggerSpecs().length);
         assertEquals(
                 3,
-                result.getFlexEventReportSpec()
+                result.getTriggerSpecs()
                         .getTriggerSpecs()[0]
                         .getEventReportWindowsEnd()
                         .size());
@@ -6283,23 +6283,23 @@ public final class AsyncSourceFetcherTest {
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
+        assertNull(result.getTriggerSpecsString());
         assertNotNull(result.getTriggerSpecs());
-        assertNotNull(result.getFlexEventReportSpec());
-        assertEquals(4, result.getFlexEventReportSpec().getMaxReports());
+        assertEquals(4, result.getTriggerSpecs().getMaxReports());
         assertEquals(
                 1L,
-                result.getFlexEventReportSpec()
+                result.getTriggerSpecs()
                         .getTriggerSpecs()[0]
                         .getTriggerData()
                         .get(0)
                         .getValue()
                         .longValue());
         assertEquals(
-                8, result.getFlexEventReportSpec().getTriggerSpecs()[0].getTriggerData().size());
-        assertEquals(1, result.getFlexEventReportSpec().getTriggerSpecs().length);
+                8, result.getTriggerSpecs().getTriggerSpecs()[0].getTriggerData().size());
+        assertEquals(1, result.getTriggerSpecs().getTriggerSpecs().length);
         assertEquals(
                 4,
-                result.getFlexEventReportSpec()
+                result.getTriggerSpecs()
                         .getTriggerSpecs()[0]
                         .getEventReportWindowsEnd()
                         .size());
@@ -6369,23 +6369,23 @@ public final class AsyncSourceFetcherTest {
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
+        assertNull(result.getTriggerSpecsString());
         assertNotNull(result.getTriggerSpecs());
-        assertNotNull(result.getFlexEventReportSpec());
-        assertEquals(4, result.getFlexEventReportSpec().getMaxReports());
+        assertEquals(4, result.getTriggerSpecs().getMaxReports());
         assertEquals(
                 1L,
-                result.getFlexEventReportSpec()
+                result.getTriggerSpecs()
                         .getTriggerSpecs()[0]
                         .getTriggerData()
                         .get(0)
                         .getValue()
                         .longValue());
         assertEquals(
-                8, result.getFlexEventReportSpec().getTriggerSpecs()[0].getTriggerData().size());
-        assertEquals(1, result.getFlexEventReportSpec().getTriggerSpecs().length);
+                8, result.getTriggerSpecs().getTriggerSpecs()[0].getTriggerData().size());
+        assertEquals(1, result.getTriggerSpecs().getTriggerSpecs().length);
         assertEquals(
                 4,
-                result.getFlexEventReportSpec()
+                result.getTriggerSpecs()
                         .getTriggerSpecs()[0]
                         .getEventReportWindowsEnd()
                         .size());
@@ -6441,8 +6441,8 @@ public final class AsyncSourceFetcherTest {
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
+        assertNull(result.getTriggerSpecsString());
         assertNull(result.getTriggerSpecs());
-        assertNull(result.getFlexEventReportSpec());
     }
 
     @Test
@@ -6499,8 +6499,8 @@ public final class AsyncSourceFetcherTest {
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
+        assertNull(result.getTriggerSpecsString());
         assertNull(result.getTriggerSpecs());
-        assertNull(result.getFlexEventReportSpec());
     }
 
     @Test

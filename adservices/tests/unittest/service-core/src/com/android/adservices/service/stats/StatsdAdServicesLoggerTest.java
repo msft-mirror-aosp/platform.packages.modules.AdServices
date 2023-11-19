@@ -16,7 +16,14 @@
 
 package com.android.adservices.service.stats;
 
+import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.DbTransactionStatus.INSERT_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.DbTransactionType.WRITE_TRANSACTION_TYPE;
+import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.MethodName.INSERT_KEY;
+import static com.android.adservices.service.stats.AdServicesEncryptionKeyFetchedStats.FetchJobType.ENCRYPTION_KEY_DAILY_FETCH_JOB;
+import static com.android.adservices.service.stats.AdServicesEncryptionKeyFetchedStats.FetchStatus.IO_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_CONSENT_MIGRATED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENCRYPTION_KEY_DB_TRANSACTION_ENDED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENCRYPTION_KEY_FETCHED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_DATA_STORED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_FAILED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_FILE_DOWNLOADED;
@@ -930,6 +937,83 @@ public class StatsdAdServicesLoggerTest {
                                 eq(inputEventDelayMs),
                                 eq(validDelayWindowMs),
                                 eq("")); // App package name not in allow list.
+
+        ExtendedMockito.verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void logEncryptionKeyFetchedStats_success() {
+        final String enrollmentId = "enrollmentId";
+        final String companyId = "companyId";
+        final String encryptionKeyUrl = "https://www.adtech1.com/.well-known/encryption-keys";
+
+        AdServicesEncryptionKeyFetchedStats stats =
+                AdServicesEncryptionKeyFetchedStats.builder()
+                        .setFetchJobType(ENCRYPTION_KEY_DAILY_FETCH_JOB)
+                        .setFetchStatus(IO_EXCEPTION)
+                        .setIsFirstTimeFetch(false)
+                        .setAdtechEnrollmentId(enrollmentId)
+                        .setCompanyId(companyId)
+                        .setEncryptionKeyUrl(encryptionKeyUrl)
+                        .build();
+
+        ExtendedMockito.doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyBoolean(),
+                                        anyString(),
+                                        anyString(),
+                                        anyString()));
+
+        // Invoke logging call.
+        mLogger.logEncryptionKeyFetchedStats(stats);
+
+        // Verify only compat logging took place
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_ENCRYPTION_KEY_FETCHED),
+                                eq(ENCRYPTION_KEY_DAILY_FETCH_JOB.getValue()),
+                                eq(IO_EXCEPTION.getValue()),
+                                eq(false),
+                                eq(enrollmentId),
+                                eq(companyId),
+                                eq(encryptionKeyUrl));
+
+        ExtendedMockito.verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void logEncryptionKeyDbTransactionEndedStats_success() {
+        AdServicesEncryptionKeyDbTransactionEndedStats stats =
+                AdServicesEncryptionKeyDbTransactionEndedStats.builder()
+                        .setDbTransactionType(WRITE_TRANSACTION_TYPE)
+                        .setDbTransactionStatus(INSERT_EXCEPTION)
+                        .setMethodName(INSERT_KEY)
+                        .build();
+
+        ExtendedMockito.doNothing()
+                .when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt(), anyInt()));
+
+        // Invoke logging call.
+        mLogger.logEncryptionKeyDbTransactionEndedStats(stats);
+
+        // Verify only compat logging took place
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_ENCRYPTION_KEY_DB_TRANSACTION_ENDED),
+                                eq(WRITE_TRANSACTION_TYPE.getValue()),
+                                eq(INSERT_EXCEPTION.getValue()),
+                                eq(INSERT_KEY.getValue()));
 
         ExtendedMockito.verify(writeInvocation);
 
