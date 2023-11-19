@@ -54,12 +54,14 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.Clock;
+import com.android.adservices.shared.testing.common.ApplicationContextSingletonRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
@@ -100,13 +102,14 @@ public class AppSetIdServiceImplTest {
     @Mock private AppSetIdServiceImpl mAppSetIdServiceImpl;
     @Mock private AppImportanceFilter mMockAppImportanceFilter;
 
+    @Rule
+    public final ApplicationContextSingletonRule appContext = new ApplicationContextSingletonRule();
+
     @Before
     public void setup() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        mAppSetIdWorker =
-                Mockito.spy(
-                        AppSetIdWorker.getInstance(ApplicationProvider.getApplicationContext()));
+        mAppSetIdWorker = Mockito.spy(AppSetIdWorker.getInstance());
         Mockito.doReturn(null).when(mAppSetIdWorker).getService();
 
         when(mClock.elapsedRealtime()).thenReturn(150L, 200L);

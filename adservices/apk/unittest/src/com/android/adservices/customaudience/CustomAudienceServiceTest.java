@@ -51,11 +51,6 @@ import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
 public class CustomAudienceServiceTest {
-
-    private final Flags mFlagsWithAdSelectionSwitchOnGaUxDisabled =
-            new FlagsWithKillSwitchOnGaUxDisabled();
-    private final Flags mFlagsWithAdSelectionSwitchOffGaUxDisabled =
-            new FlagsWithKillSwitchOffGaUxDisabled();
     private final Flags mFlagsWithAdSelectionSwitchOnGaUxEnabled =
             new FlagsWithKillSwitchOnGaUxEnabled();
     private final Flags mFlagsWithAdSelectionSwitchOffGaUxEnabled =
@@ -83,43 +78,6 @@ public class CustomAudienceServiceTest {
     @After
     public void teardown() {
         mStaticMockSession.finishMocking();
-    }
-
-    @Test
-    public void testBindableCustomAudienceServiceKillSwitchOnGaUxDisabled() {
-        CustomAudienceService customAudienceService =
-                new CustomAudienceService(mFlagsWithAdSelectionSwitchOnGaUxDisabled);
-        customAudienceService.onCreate();
-        IBinder binder = customAudienceService.onBind(getIntentForCustomAudienceService());
-        assertNull(binder);
-
-        verify(mConsentManagerMock, never()).getConsent();
-        verify(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()), never());
-    }
-
-    @Test
-    public void testBindableCustomAudienceServiceKillSwitchOffGaUxDisabled() {
-        doReturn(mMockCustomAudienceServiceImpl)
-                .when(() -> CustomAudienceServiceImpl.create(any(Context.class)));
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any(Context.class)));
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-        ExtendedMockito.doReturn(true)
-                .when(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
-        doReturn(true).when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
-
-        CustomAudienceService customAudienceServiceSpy =
-                new CustomAudienceService(mFlagsWithAdSelectionSwitchOffGaUxDisabled);
-
-        spyOn(customAudienceServiceSpy);
-        doReturn(mPackageManagerMock).when(customAudienceServiceSpy).getPackageManager();
-
-        customAudienceServiceSpy.onCreate();
-        IBinder binder = customAudienceServiceSpy.onBind(getIntentForCustomAudienceService());
-        assertNotNull(binder);
-
-        verify(mConsentManagerMock).getConsent();
-        verify(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
-        verify(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
     }
 
     /**
@@ -172,30 +130,6 @@ public class CustomAudienceServiceTest {
 
     private Intent getIntentForCustomAudienceService() {
         return new Intent(ApplicationProvider.getApplicationContext(), CustomAudienceService.class);
-    }
-
-    private static class FlagsWithKillSwitchOnGaUxDisabled implements Flags {
-        @Override
-        public boolean getFledgeCustomAudienceServiceKillSwitch() {
-            return true;
-        }
-
-        @Override
-        public boolean getGaUxFeatureEnabled() {
-            return false;
-        }
-    }
-
-    private static class FlagsWithKillSwitchOffGaUxDisabled implements Flags {
-        @Override
-        public boolean getFledgeCustomAudienceServiceKillSwitch() {
-            return false;
-        }
-
-        @Override
-        public boolean getGaUxFeatureEnabled() {
-            return false;
-        }
     }
 
     private static class FlagsWithKillSwitchOnGaUxEnabled implements Flags {
