@@ -56,7 +56,7 @@ public final class TestAnnotations {
     }
 
     @AutoAnnotation
-    public static RequiresSdkLevelAtLeastS sdkLevelAtLeastS2(String reason) {
+    public static RequiresSdkLevelAtLeastS2 sdkLevelAtLeastS2(String reason) {
         return new AutoAnnotation_TestAnnotations_sdkLevelAtLeastS2(reason);
     }
 
