@@ -16,8 +16,12 @@
 
 package com.android.adservices.common;
 
+import android.os.Build;
+
 import com.android.internal.annotations.VisibleForTesting;
-import com.android.modules.utils.build.SdkLevel;
+
+import java.util.Objects;
+import java.util.function.Supplier;
 
 /**
  * Device-side version of {@link AbstractSdkLevelSupportedRule}.
@@ -26,9 +30,15 @@ import com.android.modules.utils.build.SdkLevel;
  */
 public final class SdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
 
-    @VisibleForTesting
+    @Nullable private Supplier<AndroidSdkLevel> mDeviceLevelSupplier;
+
     SdkLevelSupportRule(AndroidSdkLevel level) {
         super(AndroidLogger.getInstance(), level);
+    }
+
+    @VisibleForTesting
+    void setDeviceLevelSupplier(Supplier<AndroidSdkLevel> levelSupplier) {
+        mDeviceLevelSupplier = Objects.requireNonNull(levelSupplier);
     }
 
     /**
@@ -75,22 +85,12 @@ public final class SdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
     }
 
     @Override
-    public boolean isAtLeastR() {
-        return SdkLevel.isAtLeastR();
-    }
-
-    @Override
-    public boolean isAtLeastS() {
-        return SdkLevel.isAtLeastS();
-    }
-
-    @Override
-    public boolean isAtLeastT() {
-        return SdkLevel.isAtLeastT();
-    }
-
-    @Override
-    public boolean isAtLeastU() {
-        return SdkLevel.isAtLeastU();
+    public AndroidSdkLevel getDeviceApiLevel() {
+        if (mDeviceLevelSupplier != null) {
+            AndroidSdkLevel level = mDeviceLevelSupplier.get();
+            mLog.d("getDeviceApiLevel(): returning %s as set by supplier", level);
+            return level;
+        }
+        return AndroidSdkLevel.forLevel(Build.VERSION.SDK_INT);
     }
 }
