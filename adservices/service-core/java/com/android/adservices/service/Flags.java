@@ -4411,4 +4411,18 @@ public interface Flags extends CommonFlags {
     default boolean getAdservicesEnablementCheckEnabled() {
         return DEFAULT_ADSERVICES_ENABLEMENT_CHECK_ENABLED;
     }
+
+    /**
+     * Enable AdServicesExtDataStorageServiceProxy read for consent data feature flag. Its meant to
+     * enable the proxy service for testing when the actual service is unavailable The default value
+     * is false.
+     */
+    boolean DEFAULT_ENABLE_ADEXT_SERVICE_DEBUG_PROXY = false;
+
+    /**
+     * @return value of enable AdExt service proxy.
+     */
+    default boolean getEnableAdExtServiceDebugProxy() {
+        return DEFAULT_ENABLE_ADEXT_SERVICE_DEBUG_PROXY;
+    }
 }

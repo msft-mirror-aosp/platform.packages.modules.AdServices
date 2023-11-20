@@ -1156,6 +1156,9 @@ public final class FlagsConstants {
     public static final String KEY_ENABLE_ADEXT_DATA_SERVICE_APIS =
             "enable_adext_data_service_apis";
 
+    public static final String KEY_ENABLE_ADEXT_DATA_SERVICE_DEBUG_PROXY =
+            "enable_adext_data_service_debug_proxy";
+
     public static final String KEY_ENABLE_ADSERVICES_API_ENABLED = "enable_adservices_api_enabled";
 
     public static final String KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED =
