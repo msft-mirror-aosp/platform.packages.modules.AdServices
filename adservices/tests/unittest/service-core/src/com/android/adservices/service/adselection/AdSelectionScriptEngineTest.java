@@ -74,6 +74,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -1474,10 +1475,10 @@ public class AdSelectionScriptEngineTest {
         // Logger calls come after the callback is returned
         CountDownLatch loggerLatch = new CountDownLatch(1);
         doAnswer(
-                unusedInvocation -> {
-                    loggerLatch.countDown();
-                    return null;
-                })
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
                 .when(mAdSelectionExecutionLoggerMock)
                 .endScoreAds();
         final List<ScoreAdResult> results =
@@ -1505,10 +1506,10 @@ public class AdSelectionScriptEngineTest {
                         CUSTOM_AUDIENCE_SIGNALS_LIST);
         loggerLatch.await();
         assertThat(
-                results.stream()
-                        .map(ScoreAdResult::getSellerRejectReason)
-                        .filter(Objects::nonNull)
-                        .collect(Collectors.toList()))
+                        results.stream()
+                                .map(ScoreAdResult::getSellerRejectReason)
+                                .filter(Objects::nonNull)
+                                .collect(Collectors.toList()))
                 .containsExactly("hello", "world");
         verify(mAdSelectionExecutionLoggerMock).startScoreAds();
         verify(mAdSelectionExecutionLoggerMock).endScoreAds();
@@ -1520,10 +1521,10 @@ public class AdSelectionScriptEngineTest {
         // Logger calls come after the callback is returned
         CountDownLatch loggerLatch = new CountDownLatch(1);
         doAnswer(
-                unusedInvocation -> {
-                    loggerLatch.countDown();
-                    return null;
-                })
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
                 .when(mAdSelectionExecutionLoggerMock)
                 .endScoreAds();
         final List<ScoreAdResult> results =
@@ -1545,10 +1546,10 @@ public class AdSelectionScriptEngineTest {
                         CUSTOM_AUDIENCE_SIGNALS_LIST);
         loggerLatch.await();
         assertThat(
-                results.stream()
-                        .map(ScoreAdResult::getSellerRejectReason)
-                        .filter(Objects::nonNull)
-                        .collect(Collectors.toList()))
+                        results.stream()
+                                .map(ScoreAdResult::getSellerRejectReason)
+                                .filter(Objects::nonNull)
+                                .collect(Collectors.toList()))
                 .containsExactly("", "");
         verify(mAdSelectionExecutionLoggerMock).startScoreAds();
         verify(mAdSelectionExecutionLoggerMock).endScoreAds();
@@ -1651,17 +1652,19 @@ public class AdSelectionScriptEngineTest {
         Map<String, List<ProtectedSignal>> rawSignalsMap =
                 ProtectedSignalsFixture.generateMapOfProtectedSignals(seeds, 20);
 
+        byte[] expectedResult = new byte[] {0x0A, (byte) 0xB1};
+        String encodedResult = Base64.getEncoder().encodeToString(expectedResult);
         String encodeSignalsJS =
                 "function encodeSignals(signals, maxSize) {\n"
-                        + "    return {'status' : 0, 'results' : signals.length};\n"
+                        + "  return {'status': 0, 'results': new Uint8Array([0x0A, 0xB1])};\n"
                         + "}\n";
-        ListenableFuture<String> jsOutcome =
+        ListenableFuture<byte[]> jsOutcome =
                 mAdSelectionScriptEngine.encodeSignals(encodeSignalsJS, rawSignalsMap, 10);
-        String result = jsOutcome.get(5, TimeUnit.SECONDS);
+        byte[] result = jsOutcome.get(5, TimeUnit.SECONDS);
 
-        Assert.assertEquals(
+        Assert.assertArrayEquals(
                 "The result expected is the size of keys in the input signals",
-                String.valueOf(seeds.size()),
+                expectedResult,
                 result);
     }
 
@@ -1670,13 +1673,13 @@ public class AdSelectionScriptEngineTest {
             throws ExecutionException, InterruptedException, TimeoutException {
         String encodeSignalsJS =
                 "function encodeSignals(signals, maxSize) {\n"
-                        + "    return {'status' : 0, 'results' : signals.length};\n"
+                        + "    return {'status' : 0, 'results' : new Uint8Array()};\n"
                         + "}\n";
-        ListenableFuture<String> jsOutcome =
+        ListenableFuture<byte[]> jsOutcome =
                 mAdSelectionScriptEngine.encodeSignals(encodeSignalsJS, Collections.EMPTY_MAP, 10);
-        String result = jsOutcome.get(5, TimeUnit.SECONDS);
+        byte[] result = jsOutcome.get(5, TimeUnit.SECONDS);
 
-        Assert.assertEquals("The result should have been empty", "", result);
+        Assert.assertTrue("The result should have been empty", result.length == 0);
     }
 
     @Test
