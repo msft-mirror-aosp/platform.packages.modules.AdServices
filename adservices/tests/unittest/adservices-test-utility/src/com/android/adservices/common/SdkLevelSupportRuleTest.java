@@ -15,23 +15,25 @@
  */
 package com.android.adservices.common;
 
-import android.util.Log;
 
 import com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel;
 
-public final class SdkLevelSupportRuleTest
-        extends AbstractSdkLevelSupportedRuleTestCase<SdkLevelSupportRule> {
+public final class SdkLevelSupportRuleTest extends AbstractSdkLevelSupportedRuleTest {
 
-    private static final String TAG = SdkLevelSupportRuleTest.class.getSimpleName();
-
-    @Override
-    protected SdkLevelSupportRule newRuleForAtLeast(AndroidSdkLevel level) {
-        return new SdkLevelSupportRule(level);
+    public SdkLevelSupportRuleTest() {
+        super(AndroidLogger.getInstance());
     }
 
     @Override
-    protected void setDeviceSdkLevel(SdkLevelSupportRule rule, AndroidSdkLevel level) {
-        Log.v(TAG, "setDeviceSdkLevel(" + rule + ", " + level + ")");
-        rule.setDeviceLevelSupplier(() -> level);
+    protected SdkLevelSupportRule newRuleForDeviceLevelAndRuleAtLeastLevel(AndroidSdkLevel level) {
+        return newRule(level, level);
+    }
+
+    @Override
+    protected SdkLevelSupportRule newRule(AndroidSdkLevel ruleLevel, AndroidSdkLevel deviceLevel) {
+        SdkLevelSupportRule rule = new SdkLevelSupportRule(ruleLevel);
+        mLog.v("newRule(%s, %s): returning %s", ruleLevel, deviceLevel, rule);
+        rule.setDeviceLevelSupplier(() -> deviceLevel);
+        return rule;
     }
 }
