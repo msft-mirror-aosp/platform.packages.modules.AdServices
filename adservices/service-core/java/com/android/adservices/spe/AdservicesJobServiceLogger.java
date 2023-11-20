@@ -16,6 +16,7 @@
 
 package com.android.adservices.spe;
 
+import static com.android.adservices.service.FlagsConstants.MAX_PERCENTAGE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__FAILED_WITHOUT_RETRY;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__FAILED_WITH_RETRY;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__HALTED_FOR_UNKNOWN_REASON;
@@ -49,6 +50,7 @@ import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.util.concurrent.MoreExecutors;
 
+import java.util.Random;
 import java.util.concurrent.Executor;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -62,6 +64,7 @@ public final class AdservicesJobServiceLogger {
     // start and the end of an execution.
     private static final Executor sLoggingExecutor =
             MoreExecutors.newSequentialExecutor(AdServicesExecutors.getBackgroundExecutor());
+    private static final Random sRandom = new Random();
 
     private static volatile AdservicesJobServiceLogger sSingleton;
 
@@ -302,6 +305,11 @@ public final class AdservicesJobServiceLogger {
             long executionPeriodMs,
             int resultCode,
             int stopReason) {
+        if (!shouldLog()) {
+            LogUtil.v("This background job logging isn't selected for sampling logging, skip...");
+            return;
+        }
+
         long executionPeriodMinute = executionPeriodMs / MILLISECONDS_PER_MINUTE;
 
         ExecutionReportedStats stats =
@@ -448,5 +456,13 @@ public final class AdservicesJobServiceLogger {
         }
 
         return intValue;
+    }
+
+    // Make a random draw to determine if a logging event should be uploaded t0 the logging server.
+    @VisibleForTesting
+    boolean shouldLog() {
+        int loggingRatio = FlagsFactory.getFlags().getBackgroundJobSamplingLoggingRate();
+
+        return sRandom.nextInt(MAX_PERCENTAGE) < loggingRatio;
     }
 }
