@@ -108,7 +108,7 @@ public class MeasurementActivityActionDelegate extends BaseActionDelegate {
                                 }
                                 break;
                             case RESET_MEASUREMENT:
-                                UiStatsLogger.logResetMeasurementSelected(mActivity);
+                                UiStatsLogger.logResetMeasurementSelected();
                                 mMeasurementViewModel.resetMeasurement();
                                 Toast.makeText(
                                                 mActivity,

@@ -33,6 +33,7 @@ android_test {
         "compatibility-device-util-axt",
         "adservices-service-core",
         "adservices-assets",
+        "adservices-shared-testing", // TODO(b/285014040): needed for ApplicationContextSingletonRule, can be removed once classes extend AdServicesUnitTestCase
         "adservices-test-utility",
         "adservices-ui-test-utility",
         "androidx.fragment_fragment",
@@ -84,6 +85,7 @@ android_test {
         "compatibility-device-util-axt",
         "adservices-service-core",
         "adservices-assets",
+        "adservices-shared-testing", // TODO(b/285014040): needed for ApplicationContextSingletonRule, can be removed once classes extend AdServicesUnitTestCase
         "adservices-test-utility",
         "adservices-ui-test-utility",
         "androidx.fragment_fragment",
@@ -132,6 +134,7 @@ android_test {
         "compatibility-device-util-axt",
         "adservices-service-core",
         "adservices-assets",
+        "adservices-shared-testing", // TODO(b/285014040): needed for ApplicationContextSingletonRule, can be removed once classes extend AdServicesUnitTestCase
         "adservices-test-utility",
         "adservices-ui-test-utility",
         "androidx.fragment_fragment",
@@ -178,6 +181,7 @@ android_test {
     static_libs: [
         "adservices-assets",
         "adservices-service-core",
+        "adservices-shared-testing", // TODO(b/285014040): needed for ApplicationContextSingletonRule, can be removed once classes extend AdServicesUnitTestCase
         "adservices-test-utility",
         "adservices-ui-test-utility",
         "androidx.fragment_fragment",

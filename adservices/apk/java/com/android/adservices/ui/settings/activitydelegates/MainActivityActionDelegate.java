@@ -186,16 +186,16 @@ public class MainActivityActionDelegate extends BaseActionDelegate {
                                 }
                                 break;
                             case DISPLAY_APPS_FRAGMENT:
-                                UiStatsLogger.logManageAppsSelected(mActivity);
+                                UiStatsLogger.logManageAppsSelected();
                                 mActivity.startActivity(new Intent(mActivity, AppsActivity.class));
                                 break;
                             case DISPLAY_TOPICS_FRAGMENT:
-                                UiStatsLogger.logManageTopicsSelected(mActivity);
+                                UiStatsLogger.logManageTopicsSelected();
                                 mActivity.startActivity(
                                         new Intent(mActivity, TopicsActivity.class));
                                 break;
                             case DISPLAY_MEASUREMENT_FRAGMENT:
-                                UiStatsLogger.logManageMeasurementSelected(mActivity);
+                                UiStatsLogger.logManageMeasurementSelected();
                                 mActivity.startActivity(
                                         new Intent(mActivity, MeasurementActivity.class));
                                 break;

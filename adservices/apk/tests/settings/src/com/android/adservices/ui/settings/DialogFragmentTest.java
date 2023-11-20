@@ -49,6 +49,7 @@ import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.App;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.shared.testing.common.ApplicationContextSingletonRule;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -57,6 +58,7 @@ import com.google.common.collect.ImmutableList;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -77,6 +79,9 @@ public class DialogFragmentTest {
     private MockitoSession mStaticMockSession;
     private ConsentManager mConsentManager;
     @Mock Flags mMockFlags;
+
+    @Rule
+    public final ApplicationContextSingletonRule appContext = new ApplicationContextSingletonRule();
 
     @Before
     public void setup() throws UiObjectNotFoundException, IOException {

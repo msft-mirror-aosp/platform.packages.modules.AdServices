@@ -63,7 +63,7 @@ public class BlockedTopicsActionDelegate {
                     }
                     try {
                         if (event == BlockedTopicsViewModelUiEvent.RESTORE_TOPIC) {
-                            UiStatsLogger.logUnblockTopicSelected(mBlockedTopicsActivity);
+                            UiStatsLogger.logUnblockTopicSelected();
                             mBlockedTopicsViewModel.restoreTopicConsent(topic);
                             if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
                                 if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
