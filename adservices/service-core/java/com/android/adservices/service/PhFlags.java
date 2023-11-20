@@ -5134,6 +5134,12 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + FlagsConstants.KEY_ENABLE_ADEXT_SERVICE_CONSENT_DATA
                         + " = "
                         + getEnableAdExtServiceConsentData());
+
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_DEBUG_PROXY
+                        + " = "
+                        + getEnableAdExtServiceDebugProxy());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_ENABLE_ADEXT_SERVICE_TO_APPSEARCH_MIGRATION
@@ -5431,6 +5437,17 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_ENABLE_ADEXT_SERVICE_TO_APPSEARCH_MIGRATION,
                 /* defaultValue */ ENABLE_ADEXT_SERVICE_TO_APPSEARCH_MIGRATION);
+    }
+
+    @Override
+    public boolean getEnableAdExtServiceDebugProxy() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_DEBUG_PROXY),
+                DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        /* flagName */ FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_DEBUG_PROXY,
+                        /* defaultValue */ DEFAULT_ENABLE_ADEXT_SERVICE_DEBUG_PROXY));
     }
 
     @Override
