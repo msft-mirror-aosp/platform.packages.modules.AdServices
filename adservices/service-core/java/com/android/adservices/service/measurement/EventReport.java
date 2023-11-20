@@ -494,7 +494,8 @@ public class EventReport {
                 @NonNull AttributedTrigger attributedTrigger,
                 long reportTime,
                 @NonNull Pair<Long, Long> triggerSummaryBucket,
-                @NonNull Pair<UnsignedLong, UnsignedLong> debugKeyPair,
+                @Nullable UnsignedLong sourceDebugKey,
+                @NonNull List<UnsignedLong> debugKeys,
                 @NonNull EventReportWindowCalcDelegate eventReportWindowCalcDelegate,
                 @NonNull SourceNoiseHandler sourceNoiseHandler,
                 List<Uri> eventReportDestinations) {
@@ -504,10 +505,10 @@ public class EventReport {
             mBuilding.mStatus = Status.PENDING;
             mBuilding.mAttributionDestinations = eventReportDestinations;
             mBuilding.mSourceType = source.getSourceType();
-            mBuilding.mSourceDebugKey = debugKeyPair.first;
-            mBuilding.mTriggerDebugKey = debugKeyPair.second;
+            mBuilding.mSourceDebugKey = sourceDebugKey;
+            mBuilding.mTriggerDebugKeys = debugKeys;
             mBuilding.mDebugReportStatus = DebugReportStatus.NONE;
-            if (mBuilding.mSourceDebugKey != null && mBuilding.mTriggerDebugKey != null) {
+            if (mBuilding.mSourceDebugKey != null && debugKeys.size() > 0) {
                 mBuilding.mDebugReportStatus = DebugReportStatus.PENDING;
             }
             mBuilding.mSourceId = source.getId();

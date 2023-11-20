@@ -9963,7 +9963,9 @@ public class MeasurementDaoTest {
                         eventReport.getTriggerData(),
                         eventReport.getTriggerValue(),
                         eventReport.getTriggerTime(),
-                        eventReport.getTriggerDedupKey()));
+                        eventReport.getTriggerDedupKey(),
+                        eventReport.getTriggerDebugKey(),
+                        false));
     }
 
     private static void insertAttributedTrigger(List<AttributedTrigger> attributedTriggers,
