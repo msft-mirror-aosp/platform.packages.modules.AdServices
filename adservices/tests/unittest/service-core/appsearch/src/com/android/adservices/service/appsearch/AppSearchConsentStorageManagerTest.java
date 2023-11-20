@@ -39,6 +39,7 @@ import android.content.pm.ApplicationInfo;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.AdServicesCommon;
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.data.common.BooleanFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.topics.Topic;
@@ -54,13 +55,11 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.topics.BlockedTopicsManager;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
-import com.android.adservices.shared.testing.common.ApplicationContextSingletonRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -72,7 +71,8 @@ import java.io.IOException;
 import java.util.List;
 
 @SmallTest
-public class AppSearchConsentStorageManagerTest {
+public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
+
     private MockitoSession mStaticMockSession;
     @Mock private AppSearchConsentWorker mAppSearchConsentWorker;
     @Mock private Flags mFlags;
@@ -90,9 +90,6 @@ public class AppSearchConsentStorageManagerTest {
     private static final Topic TOPIC1 = Topic.create(1, 1, 1);
     private static final Topic TOPIC2 = Topic.create(12, 12, 12);
     private static final Topic TOPIC3 = Topic.create(123, 123, 123);
-
-    @Rule
-    public final ApplicationContextSingletonRule appContext = new ApplicationContextSingletonRule();
 
     @Before
     public void setup() {
