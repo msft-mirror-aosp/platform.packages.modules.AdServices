@@ -17,10 +17,17 @@
 package com.android.adservices.service.topics;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
+import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
+import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
+import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
+import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
+import static com.android.adservices.mockito.MockitoExpectations.verifyJobFinishedLogged;
+import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
+import static com.android.adservices.mockito.MockitoExpectations.verifyOnStopJobLogged;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 import static com.android.adservices.spe.AdservicesJobInfo.TOPICS_EPOCH_JOB;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.staticMockMarker;
 
@@ -29,14 +36,12 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -44,6 +49,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
+import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
 import android.os.SystemClock;
@@ -51,12 +57,14 @@ import android.os.SystemClock;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.FlakyTest;
 
+import com.android.adservices.common.JobServiceCallback;
+import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.mockito.ExtendedMockitoExpectations;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
-import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -67,7 +75,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.quality.Strictness;
 
@@ -78,6 +85,8 @@ public class EpochJobServiceTest {
     private static final long EPOCH_JOB_PERIOD_MS = 10_000L;
     private static final long AWAIT_JOB_TIMEOUT_MS = 5_000L;
     private static final long EPOCH_JOB_FLEX_MS = 1_000L;
+    // Set a minimum delay of 1 hour so scheduled jobs don't run immediately
+    private static final long MINIMUM_SCHEDULING_DELAY_MS = 60L * 60L * 1000L;
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final JobScheduler JOB_SCHEDULER = CONTEXT.getSystemService(JobScheduler.class);
     private static final Flags TEST_FLAGS = FlagsFactory.getFlagsForTest();
@@ -122,14 +131,9 @@ public class EpochJobServiceTest {
                 .when(mSpyEpochJobService)
                 .getSystemService(JobScheduler.class);
 
-        // Mock AdservicesJobServiceLogger to not actually log the stats to server
         mSpyLogger =
-                spy(new AdservicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mMockStatsdLogger));
-        Mockito.doNothing()
-                .when(mSpyLogger)
-                .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
-        ExtendedMockito.doReturn(mSpyLogger)
-                .when(() -> AdservicesJobServiceLogger.getInstance(any(Context.class)));
+                ExtendedMockitoExpectations.mockAdservicesJobServiceLogger(
+                        CONTEXT, mMockStatsdLogger);
     }
 
     @After
@@ -138,41 +142,33 @@ public class EpochJobServiceTest {
     }
 
     @Test
-    public void testOnStartJob_killSwitchOff_withoutLogging() {
-        // Logging killswitch is on.
-        Mockito.doReturn(true).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+    public void testOnStartJob_killSwitchOff_withoutLogging() throws InterruptedException {
+        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
 
         testOnStartJob_killSwitchOff();
 
-        // Verify logging methods are not invoked.
-        verify(mSpyLogger, never()).persistJobExecutionData(anyInt(), anyLong());
-        verify(mSpyLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verifyLoggingNotHappened(mSpyLogger);
     }
 
     @Test
-    public void testOnStartJob_killSwitchOff_withLogging() {
-        // Logging killswitch is off.
-        Mockito.doReturn(false).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+    public void testOnStartJob_killSwitchOff_withLogging() throws InterruptedException {
+        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
+        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mSpyLogger);
+        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
 
         testOnStartJob_killSwitchOff();
 
-        // Verify logging methods are invoked.
-        verify(mSpyLogger, atLeastOnce()).persistJobExecutionData(anyInt(), anyLong());
-        verify(mSpyLogger, atLeastOnce())
-                .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verifyJobFinishedLogged(mSpyLogger, onStartJobCallback, onJobDoneCallback);
     }
 
     @Test
     public void testOnStartJob_killSwitchOn_withoutLogging() {
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
-        // Logging killswitch is on.
-        Mockito.doReturn(true).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
 
         testOnStartJob_killSwitchOn();
 
-        // Verify logging methods are not invoked.
-        verify(mSpyLogger, never()).persistJobExecutionData(anyInt(), anyLong());
-        verify(mSpyLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verifyLoggingNotHappened(mSpyLogger);
         ExtendedMockito.verify(
                 () -> {
                     ErrorLogUtil.e(
@@ -182,22 +178,14 @@ public class EpochJobServiceTest {
     }
 
     @Test
-    public void testOnStartJob_killSwitchOn_withLogging() {
+    public void testOnStartJob_killSwitchOn_withLogging() throws InterruptedException {
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
-        // Logging killswitch is off.
-        Mockito.doReturn(false).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
+        JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
 
         testOnStartJob_killSwitchOn();
 
-        // Verify logging methods are invoked.
-        verify(mSpyLogger).persistJobExecutionData(anyInt(), anyLong());
-        verify(mSpyLogger)
-                .logExecutionStats(
-                        anyInt(),
-                        anyLong(),
-                        eq(
-                                AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON),
-                        anyInt());
+        verifyBackgroundJobsSkipLogged(mSpyLogger, callback);
         ExtendedMockito.verify(
                 () -> {
                     ErrorLogUtil.e(
@@ -208,50 +196,43 @@ public class EpochJobServiceTest {
 
     @Test
     public void testOnStartJob_shouldDisableJobTrue_withoutLogging() {
-        // Logging killswitch is on.
-        Mockito.doReturn(true).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
 
         testOnStartJob_shouldDisableJobTrue();
 
-        // Verify logging method is not invoked.
-        verify(mSpyLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verifyLoggingNotHappened(mSpyLogger);
     }
 
     @Test
     @FlakyTest(bugId = 298886083)
     public void testOnStartJob_shouldDisableJobTrue_withLoggingEnabled()
             throws InterruptedException {
-        // Logging killswitch is off.
-        Mockito.doReturn(false).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
 
         testOnStartJob_shouldDisableJobTrue();
 
         // Verify logging has not happened even though logging is enabled because this field is not
         // logged
-        verify(mSpyLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verifyLoggingNotHappened(mSpyLogger);
     }
 
     @Test
     public void testOnStopJob_withoutLogging() {
-        // Logging killswitch is on.
-        Mockito.doReturn(true).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
 
         testOnStopJob();
 
-        // Verify logging methods are not invoked.
-        verify(mSpyLogger, never()).persistJobExecutionData(anyInt(), anyLong());
-        verify(mSpyLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verifyLoggingNotHappened(mSpyLogger);
     }
 
     @Test
-    public void testOnStopJob_withLogging() {
-        // Logging killswitch is off.
-        Mockito.doReturn(false).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+    public void testOnStopJob_withLogging() throws InterruptedException {
+        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
+        JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
 
         testOnStopJob();
 
-        // Verify logging methods are invoked.
-        verify(mSpyLogger).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verifyOnStopJobLogged(mSpyLogger, callback);
     }
 
     @Test
@@ -346,7 +327,7 @@ public class EpochJobServiceTest {
         assertThat(argumentCaptor.getValue().isPersisted()).isTrue();
     }
 
-    private void testOnStartJob_killSwitchOff() {
+    private void testOnStartJob_killSwitchOff() throws InterruptedException {
         final TopicsWorker topicsWorker =
                 new TopicsWorker(
                         mMockEpochManager,
@@ -365,33 +346,22 @@ public class EpochJobServiceTest {
         ExtendedMockito.doReturn(topicsWorker)
                 .when(() -> TopicsWorker.getInstance(any(Context.class)));
 
-        mSpyEpochJobService.onStartJob(mMockJobParameters);
-
-        // Allow some time for async job to execute before running any assertions.
-        SystemClock.sleep(AWAIT_JOB_TIMEOUT_MS);
-
         // Schedule the job to assert after starting that the scheduled job has been started
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
-                        TOPICS_EPOCH_JOB_ID,
-                        new ComponentName(CONTEXT, EpochJobService.class))
-                        .setRequiresCharging(true)
-                        .setPeriodic(EPOCH_JOB_PERIOD_MS, EPOCH_JOB_FLEX_MS)
-                        .setPersisted(true)
+                                TOPICS_EPOCH_JOB_ID,
+                                new ComponentName(CONTEXT, EpochJobService.class))
+                        .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
         assertThat(JOB_SCHEDULER.getPendingJob(TOPICS_EPOCH_JOB_ID)).isNotNull();
 
+        JobServiceCallback callback = createJobFinishedCallback(mSpyEpochJobService);
+
         // Now verify that when the Job starts, it will schedule itself.
         assertThat(mSpyEpochJobService.onStartJob(mMockJobParameters)).isTrue();
-        // When killSwitch is off, and we reach OnSuccess() which executes on separate thread
-        // interferes with other tests and sometimes we hit "android.permission
-        // .READ_DEVICE_CONFIG" error.
-        SystemClock.sleep(AWAIT_JOB_TIMEOUT_MS);
 
-        assertThat(JOB_SCHEDULER.getPendingJob(TOPICS_EPOCH_JOB_ID)).isNotNull();
-
-        verify(mSpyEpochJobService, times(2)).jobFinished(mMockJobParameters, false);
+        callback.assertJobFinished();
     }
 
     private void testOnStartJob_killSwitchOn() {
@@ -464,5 +434,19 @@ public class EpochJobServiceTest {
     private void testOnStopJob() {
         // Verify nothing throws
         mSpyEpochJobService.onStopJob(mMockJobParameters);
+    }
+
+    private JobServiceCallback createJobFinishedCallback(JobService jobService) {
+        JobServiceCallback callback = new JobServiceCallback();
+
+        doAnswer(
+                        unusedInvocation -> {
+                            callback.onJobFinished();
+                            return null;
+                        })
+                .when(jobService)
+                .jobFinished(any(), anyBoolean());
+
+        return callback;
     }
 }
