@@ -21,6 +21,7 @@ import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_I
 import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_IS_NOTIFICATION_DISPLAYED;
 import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_IS_U18_ACCOUNT;
 import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_MANUAL_INTERACTION_WITH_CONSENT_STATUS;
+import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_MEASUREMENT_ROLLBACK_APEX_VERSION;
 
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.spy;
@@ -360,6 +361,31 @@ public class AdServicesExtDataStorageServiceManagerTest {
                 new AdServicesExtDataParams.Builder().setIsU18Account(0).build();
         mockWorkerGetAdExtDataCall(params);
         Assert.assertFalse(mManager.getIsU18Account());
+    }
+
+    @Test
+    public void testClearAllDataAsync() {
+        mockWorkerSetAdExtDataCall();
+        mManager.clearAllDataAsync();
+
+        Assert.assertEquals(-1, mParamsCaptor.getValue().getIsNotificationDisplayed());
+        Assert.assertEquals(-1, mParamsCaptor.getValue().getIsMeasurementConsented());
+        Assert.assertEquals(-1, mParamsCaptor.getValue().getIsU18Account());
+        Assert.assertEquals(-1, mParamsCaptor.getValue().getIsAdultAccount());
+        Assert.assertEquals(0, mParamsCaptor.getValue().getManualInteractionWithConsentStatus());
+        Assert.assertEquals(-1L, mParamsCaptor.getValue().getMeasurementRollbackApexVersion());
+
+        int[] expectedFields =
+                new int[] {
+                    FIELD_IS_NOTIFICATION_DISPLAYED,
+                    FIELD_IS_MEASUREMENT_CONSENTED,
+                    FIELD_IS_U18_ACCOUNT,
+                    FIELD_IS_ADULT_ACCOUNT,
+                    FIELD_MANUAL_INTERACTION_WITH_CONSENT_STATUS,
+                    FIELD_MEASUREMENT_ROLLBACK_APEX_VERSION
+                };
+        Assert.assertEquals(expectedFields.length, mFieldsCaptor.getValue().length);
+        Assert.assertArrayEquals(expectedFields, mFieldsCaptor.getValue());
     }
 
     private void mockWorkerGetAdExtDataCall(AdServicesExtDataParams params) {
