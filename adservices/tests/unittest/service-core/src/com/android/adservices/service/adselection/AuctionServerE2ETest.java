@@ -696,7 +696,7 @@ public class AuctionServerE2ETest {
 
     @Test
     public void testAuctionServerResult_usedInWaterfallMediation_success() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailableForFledge(mContext));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         doReturn(mFlags).when(FlagsFactory::getFlags);
 
         Dispatcher dispatcher =
@@ -910,7 +910,7 @@ public class AuctionServerE2ETest {
     @Test
     public void testReportImpression_serverAuction_impressionAndInteractionReporting()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailableForFledge(mContext));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         doReturn(mFlags).when(FlagsFactory::getFlags);
 
         CountDownLatch reportImpressionCountDownLatch = new CountDownLatch(4);
@@ -1054,7 +1054,7 @@ public class AuctionServerE2ETest {
     @Test
     public void testReportImpression_serverAuction_sellerReportingFailure_noExceptionThrown()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailableForFledge(mContext));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         doReturn(mFlags).when(FlagsFactory::getFlags);
 
         CountDownLatch reportImpressionCountDownLatch = new CountDownLatch(2);
@@ -1160,7 +1160,7 @@ public class AuctionServerE2ETest {
     @Test
     public void testReportImpression_serverAuction_buyerReportingFailure_noExceptionThrown()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailableForFledge(mContext));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         doReturn(mFlags).when(FlagsFactory::getFlags);
 
         CountDownLatch reportImpressionCountDownLatch = new CountDownLatch(2);
