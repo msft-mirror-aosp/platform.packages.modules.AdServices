@@ -26,7 +26,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.os.Bundle;
-import android.os.UserHandle;
 
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -79,13 +78,12 @@ public class CtsSmallModuleTests extends SandboxKillerBeforeTest {
         // On small module, TOPIC_SERVICE is unavailable
         Intent serviceIntent = new Intent("android.adservices.TOPICS_SERVICE");
         List<ResolveInfo> resolvedInfos =
-                pm.queryIntentServicesAsUser(
+                pm.queryIntentServices(
                         serviceIntent,
                         PackageManager.GET_SERVICES
                                 | PackageManager.MATCH_SYSTEM_ONLY
                                 | PackageManager.MATCH_DIRECT_BOOT_AWARE
-                                | PackageManager.MATCH_DIRECT_BOOT_UNAWARE,
-                        UserHandle.SYSTEM);
+                                | PackageManager.MATCH_DIRECT_BOOT_UNAWARE);
 
         boolean serviceFound = resolvedInfos != null && !resolvedInfos.isEmpty();
 
