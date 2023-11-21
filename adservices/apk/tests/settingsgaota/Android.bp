@@ -31,7 +31,6 @@ android_test {
         "adservices-service-core",
         "adservices-assets",
         "adservices-test-utility",
-        "adservices-shared-testing", // TODO(b/285014040): needed for ApplicationContextSingletonRule, can be removed once classes extend AdServicesUnitTestCase
         "adservices-ui-test-utility",
         "androidx.fragment_fragment",
         "androidx.test.espresso.contrib",
@@ -80,7 +79,6 @@ android_test {
         "adservices-service-core",
         "adservices-assets",
         "adservices-test-utility",
-        "adservices-shared-testing", // TODO(b/285014040): needed for ApplicationContextSingletonRule, can be removed once classes extend AdServicesUnitTestCase
         "adservices-ui-test-utility",
         "androidx.fragment_fragment",
         "androidx.test.espresso.contrib",
