@@ -67,8 +67,10 @@ android_library {
         "framework-adservices-lib",
         "framework-annotations-lib",
         "framework-configinfrastructure",
+        "junit",
     ],
     static_libs: [
+        "adservices-shared-testing",
         "androidx.test.runner",
         "compatibility-device-util-axt",
         "modules-utils-preconditions",
