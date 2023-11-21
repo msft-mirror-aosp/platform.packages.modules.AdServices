@@ -17,6 +17,8 @@ package com.android.adservices.common;
 
 import com.android.adservices.shared.testing.common.ApplicationContextSingletonRule;
 
+import com.google.common.truth.Expect;
+
 import org.junit.Rule;
 
 /**
@@ -39,4 +41,10 @@ public abstract class AdServicesUnitTestCase {
 
     @Rule(order = 5)
     public final ApplicationContextSingletonRule appContext = new ApplicationContextSingletonRule();
+
+    @Rule(order = 6)
+    public final ProcessLifeguardRule processLifeguard = new ProcessLifeguardRule();
+
+    @Rule(order = 7)
+    public final Expect expect = Expect.create();
 }

@@ -59,8 +59,8 @@ import android.os.PersistableBundle;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.JobServiceCallback;
-import com.android.adservices.common.ProcessLifeguardRule;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
@@ -82,7 +82,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /** Unit tests for {@link com.android.adservices.download.MddJobService} */
-public class MddJobServiceTest {
+public final class MddJobServiceTest extends AdServicesUnitTestCase {
+
     private static final int JOB_SCHEDULED_WAIT_TIME_MS = 1_000;
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final JobScheduler JOB_SCHEDULER = CONTEXT.getSystemService(JobScheduler.class);
@@ -110,7 +111,7 @@ public class MddJobServiceTest {
     private final ExecutorService mExecutorService = Executors.newSingleThreadExecutor();
     private AdservicesJobServiceLogger mLogger;
 
-    @Rule(order = 0)
+    @Rule
     public final AdServicesExtendedMockitoRule mAdServicesExtendedMockitoRule =
             new AdServicesExtendedMockitoRule.Builder(this)
                     .spyStatic(MddJobService.class)
@@ -120,9 +121,6 @@ public class MddJobServiceTest {
                     .spyStatic(AdservicesJobServiceLogger.class)
                     .mockStatic(ServiceCompatUtils.class)
                     .build();
-
-    @Rule(order = 1)
-    public final ProcessLifeguardRule processLifeguard = new ProcessLifeguardRule();
 
     @Before
     public void setup() {
