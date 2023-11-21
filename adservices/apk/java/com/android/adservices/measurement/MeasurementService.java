@@ -98,13 +98,9 @@ public class MeasurementService extends Service {
     }
 
     private boolean hasUserConsent() {
-        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
-            return ConsentManager.getInstance(this)
-                    .getConsent(AdServicesApiType.MEASUREMENTS)
-                    .isGiven();
-        } else {
-            return ConsentManager.getInstance(this).getConsent().isGiven();
-        }
+        return ConsentManager.getInstance(this)
+                .getConsent(AdServicesApiType.MEASUREMENTS)
+                .isGiven();
     }
 
     private void schedulePeriodicJobsIfNeeded() {

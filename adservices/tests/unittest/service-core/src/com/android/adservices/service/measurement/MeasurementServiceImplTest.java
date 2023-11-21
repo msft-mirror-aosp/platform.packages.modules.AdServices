@@ -76,6 +76,7 @@ import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.PermissionHelper;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
@@ -2023,7 +2024,7 @@ public final class MeasurementServiceImplTest {
     private void updateConsentDenied(boolean denied) {
         final AdServicesApiConsent apiConsent =
                 denied ? AdServicesApiConsent.REVOKED : AdServicesApiConsent.GIVEN;
-        when(mMockConsentManager.getConsent()).thenReturn(apiConsent);
+        when(mMockConsentManager.getConsent(AdServicesApiType.MEASUREMENTS)).thenReturn(apiConsent);
     }
 
     private void updateThrottlerDenied(boolean denied) {
