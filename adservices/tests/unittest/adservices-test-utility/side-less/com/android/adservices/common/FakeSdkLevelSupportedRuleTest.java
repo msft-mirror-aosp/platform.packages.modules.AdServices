@@ -15,11 +15,6 @@
  */
 package com.android.adservices.common;
 
-import static com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel.R;
-import static com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel.S;
-import static com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel.T;
-import static com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel.U;
-
 import com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel;
 
 /**
@@ -44,7 +39,7 @@ public final class FakeSdkLevelSupportedRuleTest
     }
 
     @Override
-    protected void setDeviceSdkLevel(AndroidSdkLevel level) {
+    protected void setDeviceSdkLevel(FakeSdkLevelSupportedRule rule, AndroidSdkLevel level) {
         sLog.v("setDeviceSdkLevel(%s)", level);
         mDeviceLevel = level;
     }
@@ -56,23 +51,8 @@ public final class FakeSdkLevelSupportedRuleTest
         }
 
         @Override
-        public boolean isAtLeastR() throws Exception {
-            return mDeviceLevel.isAtLeast(R);
-        }
-
-        @Override
-        public boolean isAtLeastS() throws Exception {
-            return mDeviceLevel.isAtLeast(S);
-        }
-
-        @Override
-        public boolean isAtLeastT() throws Exception {
-            return mDeviceLevel.isAtLeast(T);
-        }
-
-        @Override
-        public boolean isAtLeastU() throws Exception {
-            return mDeviceLevel.isAtLeast(U);
+        public AndroidSdkLevel getDeviceApiLevel() {
+            return mDeviceLevel;
         }
     }
 }

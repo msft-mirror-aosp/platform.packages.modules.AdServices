@@ -15,27 +15,14 @@
  */
 package com.android.adservices.common;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastR;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastS;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastT;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastU;
-
 import android.util.Log;
 
 import com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
-import com.android.modules.utils.build.SdkLevel;
-
-import org.junit.Rule;
 
 public final class SdkLevelSupportRuleTest
         extends AbstractSdkLevelSupportedRuleTestCase<SdkLevelSupportRule> {
 
     private static final String TAG = SdkLevelSupportRuleTest.class.getSimpleName();
-
-    @Rule
-    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder().spyStatic(SdkLevel.class).build();
 
     @Override
     protected SdkLevelSupportRule newRuleForAtLeast(AndroidSdkLevel level) {
@@ -43,39 +30,8 @@ public final class SdkLevelSupportRuleTest
     }
 
     @Override
-    protected void setDeviceSdkLevel(AndroidSdkLevel level) {
-        Log.v(TAG, "setDeviceSdkLevel(" + level + ")");
-        switch (level) {
-                // TODO(b/295321663): this combination of mockIsAtLeastX() is hacky, need to
-                // refactor
-                // the rule to use SDK ints directly
-            case R:
-                mockIsAtLeastR(true);
-                mockIsAtLeastS(false);
-                mockIsAtLeastT(false);
-                mockIsAtLeastU(false);
-                return;
-            case S:
-                mockIsAtLeastR(true);
-                mockIsAtLeastS(true);
-                mockIsAtLeastT(false);
-                mockIsAtLeastU(false);
-                return;
-            case T:
-                mockIsAtLeastR(true);
-                mockIsAtLeastS(true);
-                mockIsAtLeastT(true);
-                mockIsAtLeastU(false);
-                return;
-            case U:
-                mockIsAtLeastR(true);
-                mockIsAtLeastS(true);
-                mockIsAtLeastT(true);
-                mockIsAtLeastU(true);
-                return;
-            default:
-                throw new UnsupportedOperationException(
-                        "mocking level " + level + " not implemented yet");
-        }
+    protected void setDeviceSdkLevel(SdkLevelSupportRule rule, AndroidSdkLevel level) {
+        Log.v(TAG, "setDeviceSdkLevel(" + rule + ", " + level + ")");
+        rule.setDeviceLevelSupplier(() -> level);
     }
 }

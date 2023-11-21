@@ -57,6 +57,26 @@ public class AdServicesExtDataStorageServiceManager {
     private static final long READ_OPERATION_TIMEOUT_MS = 600L;
     private static final long WRITE_OPERATION_TIMEOUT_MS = 2100L;
 
+    private static final AdServicesExtDataParams DEFAULT_PARAMS =
+            new AdServicesExtDataParams.Builder()
+                    .setNotificationDisplayed(BOOLEAN_UNKNOWN)
+                    .setMsmtConsent(BOOLEAN_UNKNOWN)
+                    .setIsU18Account(BOOLEAN_UNKNOWN)
+                    .setIsAdultAccount(BOOLEAN_UNKNOWN)
+                    .setManualInteractionWithConsentStatus(STATE_UNKNOWN)
+                    .setMsmtRollbackApexVersion(APEX_VERSION_WHEN_NOT_FOUND)
+                    .build();
+
+    private static final int[] ALL_FIELDS =
+            new int[] {
+                FIELD_IS_NOTIFICATION_DISPLAYED,
+                FIELD_IS_MEASUREMENT_CONSENTED,
+                FIELD_IS_U18_ACCOUNT,
+                FIELD_IS_ADULT_ACCOUNT,
+                FIELD_MANUAL_INTERACTION_WITH_CONSENT_STATUS,
+                FIELD_MEASUREMENT_ROLLBACK_APEX_VERSION
+            };
+
     private final AdServicesExtDataStorageServiceWorker mDataWorker;
 
     private AdServicesExtDataStorageServiceManager(
@@ -117,7 +137,7 @@ public class AdServicesExtDataStorageServiceManager {
             timedOut = !latch.await(READ_OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
             if (timedOut) {
                 LogUtil.e("Getting AdExt data timed out! Returning default values.");
-                params = constructDefaultParams();
+                params = DEFAULT_PARAMS;
             } else {
                 params =
                         isSuccess.get()
@@ -128,11 +148,11 @@ public class AdServicesExtDataStorageServiceManager {
                                         isAdultAccount.get(),
                                         manualInteractionWithConsentStatus.get(),
                                         apexVersion.get())
-                                : constructDefaultParams();
+                                : DEFAULT_PARAMS;
             }
         } catch (Exception e) {
             LogUtil.e(e, "Error when awaiting latch! Returning default values.");
-            params = constructDefaultParams();
+            params = DEFAULT_PARAMS;
         }
 
         LogUtil.d("Returned AdExt data: " + params);
@@ -294,6 +314,28 @@ public class AdServicesExtDataStorageServiceManager {
         return getAdServicesExtData().getIsAdultAccount() == BOOLEAN_TRUE;
     }
 
+    /**
+     * Sets all AdExt data values to their respective default values to indicate data clearance in a
+     * non-blocking manner.
+     */
+    public void clearAllDataAsync() {
+        mDataWorker.setAdServicesExtData(
+                DEFAULT_PARAMS,
+                ALL_FIELDS,
+                new AdServicesOutcomeReceiver<AdServicesExtDataParams, Exception>() {
+                    @Override
+                    public void onResult(AdServicesExtDataParams result) {
+                        LogUtil.d("Cleared AdExt Data.");
+                    }
+
+                    @Override
+                    public void onError(@NonNull Exception e) {
+                        // TODO (b/301163895) Add logging to capture deletion failure.
+                        LogUtil.e(e, "Exception when clearing AdExt data!");
+                    }
+                });
+    }
+
     private AdServicesExtDataParams constructParams(
             int notifDisplayed,
             int msmtConsent,
@@ -308,17 +350,6 @@ public class AdServicesExtDataStorageServiceManager {
                 .setIsAdultAccount(isAdultAccount)
                 .setManualInteractionWithConsentStatus(manualInteractionStatus)
                 .setMsmtRollbackApexVersion(msmtApex)
-                .build();
-    }
-
-    private AdServicesExtDataParams constructDefaultParams() {
-        return new AdServicesExtDataParams.Builder()
-                .setNotificationDisplayed(BOOLEAN_UNKNOWN)
-                .setMsmtConsent(BOOLEAN_UNKNOWN)
-                .setIsU18Account(BOOLEAN_UNKNOWN)
-                .setIsAdultAccount(BOOLEAN_UNKNOWN)
-                .setManualInteractionWithConsentStatus(STATE_UNKNOWN)
-                .setMsmtRollbackApexVersion(APEX_VERSION_WHEN_NOT_FOUND)
                 .build();
     }
 

@@ -60,7 +60,7 @@ public abstract class AbstractSdkLevelSupportedRuleTestCase<
     @Test
     public void testRuleIsAtLeastMethods_deviceIsR() throws Exception {
         RULE rule = newRuleForAtLeast(ANY);
-        setDeviceSdkLevel(R);
+        setDeviceSdkLevel(rule, R);
 
         expect.withMessage("rule.atLeastR()").that(rule.isAtLeastR()).isTrue();
         expect.withMessage("rule.atLeastS()").that(rule.isAtLeastS()).isFalse();
@@ -71,7 +71,7 @@ public abstract class AbstractSdkLevelSupportedRuleTestCase<
     @Test
     public void testRuleIsAtLeastMethods_deviceIsS() throws Exception {
         RULE rule = newRuleForAtLeast(ANY);
-        setDeviceSdkLevel(S);
+        setDeviceSdkLevel(rule, S);
 
         expect.withMessage("rule.atLeastR()").that(rule.isAtLeastR()).isTrue();
         expect.withMessage("rule.atLeastS()").that(rule.isAtLeastS()).isTrue();
@@ -82,7 +82,7 @@ public abstract class AbstractSdkLevelSupportedRuleTestCase<
     @Test
     public void testRuleIsAtLeastMethods_deviceIsT() throws Exception {
         RULE rule = newRuleForAtLeast(ANY);
-        setDeviceSdkLevel(T);
+        setDeviceSdkLevel(rule, T);
 
         expect.withMessage("rule.atLeastR()").that(rule.isAtLeastR()).isTrue();
         expect.withMessage("rule.atLeastS()").that(rule.isAtLeastS()).isTrue();
@@ -93,7 +93,7 @@ public abstract class AbstractSdkLevelSupportedRuleTestCase<
     @Test
     public void testRuleIsAtLeastMethods_deviceIsU() throws Exception {
         RULE rule = newRuleForAtLeast(ANY);
-        setDeviceSdkLevel(U);
+        setDeviceSdkLevel(rule, U);
 
         expect.withMessage("rule.atLeastR()").that(rule.isAtLeastR()).isTrue();
         expect.withMessage("rule.atLeastS()").that(rule.isAtLeastS()).isTrue();
@@ -266,7 +266,7 @@ public abstract class AbstractSdkLevelSupportedRuleTestCase<
 
     protected abstract RULE newRuleForAtLeast(AndroidSdkLevel level);
 
-    protected abstract void setDeviceSdkLevel(AndroidSdkLevel level);
+    protected abstract void setDeviceSdkLevel(RULE rule, AndroidSdkLevel level);
 
     // NOTE: eventually there will be releases X, Y, Z, but other names would make these methods
     // even longer than what they already are
@@ -274,7 +274,7 @@ public abstract class AbstractSdkLevelSupportedRuleTestCase<
     private void testRanWhenRuleIsAtLeastXAndDeviceIsY(
             AndroidSdkLevel ruleLevel, AndroidSdkLevel deviceLevel) throws Throwable {
         RULE rule = newRuleForAtLeast(ruleLevel);
-        setDeviceSdkLevel(deviceLevel);
+        setDeviceSdkLevel(rule, deviceLevel);
         Description testMethod = newTestMethod();
 
         try {
@@ -290,7 +290,7 @@ public abstract class AbstractSdkLevelSupportedRuleTestCase<
             AndroidSdkLevel ruleLevel, AndroidSdkLevel deviceLevel, AndroidSdkLevel annotationLevel)
             throws Throwable {
         RULE rule = newRuleForAtLeast(ruleLevel);
-        setDeviceSdkLevel(deviceLevel);
+        setDeviceSdkLevel(rule, deviceLevel);
         Description testMethod = newTestMethod(newAnnotationForAtLeast(annotationLevel, REASON));
 
         try {
@@ -306,7 +306,7 @@ public abstract class AbstractSdkLevelSupportedRuleTestCase<
     private void testSkippedWhenRuleIsAtLeastXAndDeviceIsY(
             AndroidSdkLevel ruleLevel, AndroidSdkLevel deviceLevel) {
         RULE rule = newRuleForAtLeast(ruleLevel);
-        setDeviceSdkLevel(deviceLevel);
+        setDeviceSdkLevel(rule, deviceLevel);
         Description testMethod = newTestMethod();
 
         AssumptionViolatedException e =
@@ -327,7 +327,7 @@ public abstract class AbstractSdkLevelSupportedRuleTestCase<
             AndroidSdkLevel deviceLevel,
             AndroidSdkLevel annotationLevel) {
         RULE rule = newRuleForAtLeast(ruleLevel);
-        setDeviceSdkLevel(deviceLevel);
+        setDeviceSdkLevel(rule, deviceLevel);
         Description testMethod = newTestMethod(newAnnotationForAtLeast(annotationLevel, REASON));
 
         AssumptionViolatedException e =

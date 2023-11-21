@@ -84,6 +84,9 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
                     case S:
                         skip = !isAtLeastS();
                         break;
+                    case S2:
+                        skip = !isAtLeastS2();
+                        break;
                     case U:
                         skip = !isAtLeastU();
                         break;
@@ -147,6 +150,11 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
         if (atLeastS != null) {
             return new MinimumLevelRequired(AndroidSdkLevel.S, atLeastS.reason());
         }
+        RequiresSdkLevelAtLeastS2 atLeastS2 =
+                description.getAnnotation(RequiresSdkLevelAtLeastS2.class);
+        if (atLeastS2 != null) {
+            return new MinimumLevelRequired(AndroidSdkLevel.S2, atLeastS2.reason());
+        }
         RequiresSdkLevelAtLeastR atLeastR =
                 description.getAnnotation(RequiresSdkLevelAtLeastR.class);
         if (atLeastR != null) {
@@ -171,23 +179,40 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
         }
     }
 
+    /** Gets the device API level. */
+    public abstract AndroidSdkLevel getDeviceApiLevel();
+
     /** Gets whether the device supports at least Android {@code R}. */
-    public abstract boolean isAtLeastR() throws Exception;
+    public final boolean isAtLeastR() {
+        return getDeviceApiLevel().isAtLeast(AndroidSdkLevel.R);
+    }
 
     /** Gets whether the device supports at least Android {@code S}. */
-    public abstract boolean isAtLeastS() throws Exception;
+    public final boolean isAtLeastS() {
+        return getDeviceApiLevel().isAtLeast(AndroidSdkLevel.S);
+    }
+
+    /** Gets whether the device supports at least Android {@code SC_V2}. */
+    public final boolean isAtLeastS2() {
+        return getDeviceApiLevel().isAtLeast(AndroidSdkLevel.S2);
+    }
 
     /** Gets whether the device supports at least Android {@code T}. */
-    public abstract boolean isAtLeastT() throws Exception;
+    public final boolean isAtLeastT() {
+        return getDeviceApiLevel().isAtLeast(AndroidSdkLevel.T);
+    }
 
     /** Gets whether the device supports at least Android {@code U}. */
-    public abstract boolean isAtLeastU() throws Exception;
+    public final boolean isAtLeastU() {
+        return getDeviceApiLevel().isAtLeast(AndroidSdkLevel.U);
+    }
 
     // NOTE: calling it AndroidSdkLevel to avoid conflict with SdkLevel
     protected enum AndroidSdkLevel {
         ANY(Integer.MIN_VALUE),
         R(30),
         S(31),
+        S2(32),
         T(33),
         U(34);
 
@@ -203,6 +228,22 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
 
         int getLevel() {
             return mLevel;
+        }
+
+        public static AndroidSdkLevel forLevel(int level) {
+            switch (level) {
+                case 30:
+                    return R;
+                case 31:
+                    return S;
+                case 32:
+                    return S2;
+                case 33:
+                    return T;
+                case 34:
+                    return U;
+            }
+            throw new IllegalArgumentException("Unsupported level: " + level);
         }
     }
 }
