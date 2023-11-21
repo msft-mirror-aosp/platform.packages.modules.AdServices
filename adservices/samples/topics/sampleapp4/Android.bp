@@ -29,6 +29,7 @@ android_app {
     optional_uses_libs: ["android.ext.adservices"],
     static_libs: [
         "adservices-clients",
+        "adservices-service-core",
         "androidx.appcompat_appcompat",
         "androidx-constraintlayout_constraintlayout",
         "com.google.android.material_material",
@@ -38,7 +39,9 @@ android_app {
     dex_preopt: {
         enabled: false,
     },
-    resource_dirs: ["res"],
+    jni_libs: [
+        "libhpke_jni",
+    ],
     platform_apis: true,
     min_sdk_version: "30",
 }
