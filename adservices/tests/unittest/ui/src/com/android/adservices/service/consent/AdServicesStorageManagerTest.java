@@ -76,7 +76,7 @@ public class AdServicesStorageManagerTest {
 
     @Mock private PackageManager mPackageManager;
 
-    private class ListMatcherIgnoreOrder implements ArgumentMatcher<List<String>> {
+    private static class ListMatcherIgnoreOrder implements ArgumentMatcher<List<String>> {
         @NonNull private final List<String> mStrings;
 
         private ListMatcherIgnoreOrder(@NonNull List<String> strings) {
