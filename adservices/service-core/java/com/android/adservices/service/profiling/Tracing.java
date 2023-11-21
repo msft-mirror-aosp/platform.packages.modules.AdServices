@@ -66,6 +66,9 @@ public final class Tracing {
             "BuyerInputGenerator#getCompressedBuyerInputs";
     public static final String AUCTION_SERVER_GZIP_COMPRESS =
             "AuctionServerDataCompressorGzip#compress";
+    public static final String FORMAT_PAYLOAD_V0 = "AuctionServerPayloadFormatterV0#apply";
+    public static final String FORMAT_PAYLOAD_EXCESSIVE_MAX_SIZE =
+            "AuctionServerPayloadFormatterExcessiveMaxSize#apply";
     public static final String CREATE_BUYER_INPUTS = "BuyerInputGenerator#createBuyerInputs";
     public static final String CREATE_GET_AD_SELECTION_DATA_PAYLOAD =
             "GetAdSelectionDataRunner#createPayload";
