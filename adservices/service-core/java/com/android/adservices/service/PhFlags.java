@@ -51,6 +51,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVEN
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
+import static com.android.adservices.service.FlagsConstants.MAX_PERCENTAGE;
 
 import static java.lang.Float.parseFloat;
 
@@ -145,8 +146,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                                 /* flagName */ FlagsConstants
                                         .KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC,
                                 /* defaultValue */ TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC));
-        if (topicsPercentageForRandomTopic < 0
-                || topicsPercentageForRandomTopic > FlagsConstants.MAX_PERCENTAGE) {
+        if (topicsPercentageForRandomTopic < 0 || topicsPercentageForRandomTopic > MAX_PERCENTAGE) {
             throw new IllegalArgumentException(
                     "topicsPercentageForRandomTopic should be between 0 and 100");
         }
@@ -6199,7 +6199,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                                 FlagsConstants.NAMESPACE_ADSERVICES,
                                 /* flagName */ FlagsConstants
                                         .KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH,
-                        /* defaultValue */ MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH));
+                                /* defaultValue */ MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH));
     }
 
     @Override
@@ -6213,12 +6213,12 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants
-                                .KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH),
+                                        .KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH),
                         /* defaultValue */ DeviceConfig.getBoolean(
                                 FlagsConstants.NAMESPACE_ADSERVICES,
                                 /* flagName */ FlagsConstants
-                                .KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH,
-                /* defaultValue */ MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH));
+                                        .KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH,
+                                /* defaultValue */ MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH));
     }
 
     @Override
@@ -6354,5 +6354,21 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED,
                 /* defaultValue */ DEFAULT_ADSERVICES_ENABLEMENT_CHECK_ENABLED);
+    }
+
+    @Override
+    public int getBackgroundJobSamplingLoggingRate() {
+        int loggingRatio =
+                DeviceConfig.getInt(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        /* flagName */ FlagsConstants.KEY_BACKGROUND_JOB_SAMPLING_LOGGING_RATE,
+                        /* defaultValue */ DEFAULT_BACKGROUND_JOB_SAMPLING_LOGGING_RATE);
+
+        if (loggingRatio < 0 || loggingRatio > MAX_PERCENTAGE) {
+            throw new IllegalArgumentException(
+                    "BackgroundJobSamplingLoggingRatio should be in the range of [0, 100]");
+        }
+
+        return loggingRatio;
     }
 }
