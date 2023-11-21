@@ -288,13 +288,10 @@ public class OnDeviceAdSelectionRunnerTest {
     // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
     // availability depends on an external component (the system webview) being higher than a
     // certain minimum version.
-    @Rule(order = 0)
-    public final SupportedByConditionRule webViewSupportsJSSandbox =
-            WebViewSupportUtil.createJSSandboxAvailableRule();
-
     @Rule(order = 1)
-    public final SupportedByConditionRule webViewSupportsConfigurableHeapSize =
-            WebViewSupportUtil.createJSSandboxConfigurableHeapSizeRule(mContextSpy);
+    public final SupportedByConditionRule webViewSupportsJSSandbox =
+            WebViewSupportUtil.createJSSandboxAvailableRule(
+                    ApplicationProvider.getApplicationContext());
 
     @Before
     public void setUp() {
