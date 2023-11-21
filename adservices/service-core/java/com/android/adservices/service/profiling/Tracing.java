@@ -64,6 +64,8 @@ public final class Tracing {
     public static final String GET_BUYERS_PS = "BuyerInputGenerator#getBuyersProtectedSignals";
     public static final String GET_COMPRESSED_BUYERS_INPUTS =
             "BuyerInputGenerator#getCompressedBuyerInputs";
+    public static final String AUCTION_SERVER_GZIP_COMPRESS =
+            "AuctionServerDataCompressorGzip#compress";
     public static final String CREATE_BUYER_INPUTS = "BuyerInputGenerator#createBuyerInputs";
     public static final String ORCHESTRATE_GET_AD_SELECTION_DATA =
             "GetAdSelectionDataRunner#orchestrateGetAdSelectionDataRunner";
