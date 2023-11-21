@@ -28,7 +28,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
-import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.extdata.AdServicesExtDataParams;
 import android.adservices.extdata.GetAdServicesExtDataResult;
 import android.adservices.extdata.IAdServicesExtDataStorageService;
@@ -37,7 +36,7 @@ import android.os.RemoteException;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.ExceptionFailureSyncCallback;
+import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
 
 import com.google.common.truth.Expect;
 
@@ -188,15 +187,5 @@ public class AdServicesExtDataStorageServiceWorkerTest {
                 }
             }
         };
-    }
-
-    // TODO (b/312271238): Create a common AdServicesOutcomeReceiverForTests and consolidate all
-    //  usages.
-    private static final class AdServicesOutcomeReceiverForTests<T>
-            extends ExceptionFailureSyncCallback<T>
-            implements AdServicesOutcomeReceiver<T, Exception> {
-        AdServicesOutcomeReceiverForTests() {
-            super();
-        }
     }
 }
