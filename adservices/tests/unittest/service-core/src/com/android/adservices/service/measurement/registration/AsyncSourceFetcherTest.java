@@ -53,6 +53,7 @@ import android.view.MotionEvent.PointerProperties;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
@@ -100,7 +101,8 @@ import javax.net.ssl.HttpsURLConnection;
 
 /** Unit tests for {@link AsyncSourceFetcher} */
 @RunWith(Parameterized.class)
-public final class AsyncSourceFetcherTest {
+public final class AsyncSourceFetcherTest extends AdServicesUnitTestCase {
+
     private static final String ANDROID_APP_SCHEME = "android-app";
     private static final String ANDROID_APP_SCHEME_URI_PREFIX = ANDROID_APP_SCHEME + "://";
     private static final String DEFAULT_REGISTRATION =
@@ -179,18 +181,20 @@ public final class AsyncSourceFetcherTest {
         mAraParsingAlignmentV1Enabled = araParsingAlignmentV1Enabled;
     }
 
-    @Rule
-    public ExternalResource externalResource = new ExternalResource() {
-        protected void before() throws Throwable {
-            setup();
-        }
+    @Rule(order = 11)
+    public ExternalResource externalResource =
+            new ExternalResource() {
+                protected void before() throws Throwable {
+                    setup();
+                }
 
-        protected void after() {
-            try {
-                cleanup();
-            } catch (InterruptedException ignored) { }
-        }
-    };
+                protected void after() {
+                    try {
+                        cleanup();
+                    } catch (InterruptedException ignored) {
+                    }
+                }
+            };
 
     public void setup() {
         MockitoAnnotations.initMocks(this);

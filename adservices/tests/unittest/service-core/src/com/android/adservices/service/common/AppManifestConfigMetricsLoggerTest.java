@@ -38,6 +38,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.util.Log;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.Nullable;
 import com.android.adservices.common.SyncCallback;
 import com.android.adservices.errorlogging.ErrorLogUtil;
@@ -47,7 +48,6 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.testing.common.DumpHelper;
 
-import com.google.common.truth.Expect;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -64,9 +64,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
-public final class AppManifestConfigMetricsLoggerTest {
-
-    private static final String TAG = AppManifestConfigMetricsLoggerTest.class.getSimpleName();
+public final class AppManifestConfigMetricsLoggerTest extends AdServicesUnitTestCase {
 
     private static final String PKG_NAME = "pkg.I.am";
     private static final String PKG_NAME2 = "or.not";
@@ -87,8 +85,6 @@ public final class AppManifestConfigMetricsLoggerTest {
                     .spyStatic(FlagsFactory.class)
                     .build();
 
-    @Rule public final Expect expect = Expect.create();
-
     @Mock private Context mMockContext;
     @Mock private Flags mMockFlags;
 
@@ -99,6 +95,7 @@ public final class AppManifestConfigMetricsLoggerTest {
 
     @Before
     public void setExpectations() {
+        appContext.set(mMockContext);
         mockGetFlags(mMockFlags);
         when(mMockContext.getSharedPreferences(any(String.class), anyInt())).thenReturn(mPrefs);
         mErrorLogUtilWithThrowableCallback = mockErrorLogUtilWithThrowable();
@@ -111,16 +108,6 @@ public final class AppManifestConfigMetricsLoggerTest {
                 NullPointerException.class,
                 () ->
                         logUsage(
-                                /* context= */ null,
-                                PKG_NAME,
-                                APP_EXISTS,
-                                APP_HAS_CONFIG,
-                                ENABLED_BY_DEFAULT));
-        assertThrows(
-                NullPointerException.class,
-                () ->
-                        logUsage(
-                                mMockContext,
                                 /* packageName= */ null,
                                 APP_EXISTS,
                                 APP_HAS_CONFIG,
@@ -143,7 +130,7 @@ public final class AppManifestConfigMetricsLoggerTest {
 
         // 2nd time should not call edit
         mPrefs.onEditThrows(); // will throw if edit() is called
-        logUsage(mMockContext, PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
+        logUsage(PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
 
         Map<String, ?> allProps = mPrefs.getAll();
         assertWithMessage("allProps").that(allProps).hasSize(1);
@@ -168,7 +155,7 @@ public final class AppManifestConfigMetricsLoggerTest {
     private void callOnceWithAllTrueThenSecondWith(
             boolean appExists, boolean appHasConfig, boolean enabledByDefault) throws Exception {
         Log.i(
-                TAG,
+                mTag,
                 "callOnceWithAllTrueThenSecondWith(appExists="
                         + appExists
                         + ", appHasConfig="
@@ -186,7 +173,7 @@ public final class AppManifestConfigMetricsLoggerTest {
 
         // 1st call
         Log.d(
-                TAG,
+                mTag,
                 "1st call: appExists="
                         + APP_EXISTS
                         + ", appHasConfig="
@@ -194,7 +181,7 @@ public final class AppManifestConfigMetricsLoggerTest {
                         + ", enabledByDefault="
                         + ENABLED_BY_DEFAULT
                         + ")");
-        logUsage(mMockContext, PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
+        logUsage(PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
         listener.assertReceived();
 
         int valueBefore = prefs.getInt(PKG_NAME, -1);
@@ -207,7 +194,7 @@ public final class AppManifestConfigMetricsLoggerTest {
 
         // 2nd call
         Log.d(
-                TAG,
+                mTag,
                 "2nd call: appExists="
                         + appExists
                         + ", appHasConfig="
@@ -218,7 +205,7 @@ public final class AppManifestConfigMetricsLoggerTest {
         SyncOnSharedPreferenceChangeListener listener2 = new SyncOnSharedPreferenceChangeListener();
         listener2 = new SyncOnSharedPreferenceChangeListener();
         prefs.registerOnSharedPreferenceChangeListener(listener2);
-        logUsage(mMockContext, PKG_NAME, appExists, appHasConfig, enabledByDefault);
+        logUsage(PKG_NAME, appExists, appHasConfig, enabledByDefault);
         listener2.assertReceived();
 
         Map<String, ?> allProps = prefs.getAll();
@@ -246,7 +233,7 @@ public final class AppManifestConfigMetricsLoggerTest {
 
         when(mMockContext.getSharedPreferences(any(String.class), anyInt())).thenThrow(exception);
 
-        logUsage(mMockContext, PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
+        logUsage(PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
 
         mErrorLogUtilWithThrowableCallback.assertReceived(
                 expect,
@@ -259,7 +246,7 @@ public final class AppManifestConfigMetricsLoggerTest {
     public void testLogUsage_commitFailed() throws Exception {
         mPrefs.onCommitReturns(/* result= */ false);
 
-        logUsage(mMockContext, PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
+        logUsage(PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
 
         Map<String, ?> allProps = mPrefs.getAll();
         assertWithMessage("allProps").that(allProps).isEmpty();
@@ -282,7 +269,7 @@ public final class AppManifestConfigMetricsLoggerTest {
                             return mPrefs;
                         });
 
-        logUsage(mMockContext, PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
+        logUsage(PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
 
         assertWithMessage("execution thread")
                 .that(executionThread.get())
@@ -357,7 +344,7 @@ public final class AppManifestConfigMetricsLoggerTest {
         SyncOnSharedPreferenceChangeListener listener = new SyncOnSharedPreferenceChangeListener();
         mPrefs.registerOnSharedPreferenceChangeListener(listener);
         Log.v(
-                TAG,
+                mTag,
                 "logUsageAndWait(appExists="
                         + appExists
                         + ", appHasConfig="
@@ -365,7 +352,7 @@ public final class AppManifestConfigMetricsLoggerTest {
                         + ", enabledByDefault="
                         + enabledByDefault
                         + ")");
-        logUsage(mMockContext, appName, appExists, appHasConfig, enabledByDefault);
+        logUsage(appName, appExists, appHasConfig, enabledByDefault);
         listener.assertResultReceived();
         // don't need to unregister, listener is just used once
     }

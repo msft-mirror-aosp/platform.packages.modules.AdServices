@@ -32,6 +32,8 @@ import org.junit.Rule;
  */
 public abstract class AdServicesUnitTestCase {
 
+    protected final String mTag = getClass().getSimpleName();
+
     // TODO(b/285014040, 295269584: add rule with order 0 for SdkLevelSupportRule.forAtLeastS(),
     // once that rule supports per-class annotation
 
