@@ -1678,6 +1678,12 @@ public interface Flags extends CommonFlags {
         return CONSENT_MANAGER_LAZY_ENABLE_MODE;
     }
 
+    boolean CONSENT_ALREADY_INTERACTED_FIX_ENABLE = true;
+
+    default boolean getConsentAlreadyInteractedEnableMode() {
+        return CONSENT_ALREADY_INTERACTED_FIX_ENABLE;
+    }
+
     long CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS =
             /* hours */ 9 * /* minutes */ 60 * /* seconds */ 60 * /* milliseconds */ 1000; // 9 AM
 
