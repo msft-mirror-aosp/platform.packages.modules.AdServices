@@ -23,6 +23,7 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 // TODO(b/295269584): move to module-utils?
@@ -244,6 +245,101 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
                     return U;
             }
             throw new IllegalArgumentException("Unsupported level: " + level);
+        }
+    }
+
+    /** Represents a range of Android API levels. */
+    static final class AndroidSdkRange {
+        static final int NO_MIN = Integer.MIN_VALUE;
+        static final int NO_MAX = Integer.MAX_VALUE;
+
+        private final int mMinLevel;
+        private final int mMaxLevel;
+
+        private AndroidSdkRange(int minLevel, int maxLevel) {
+            if (minLevel > maxLevel || minLevel == NO_MAX || maxLevel == NO_MIN) {
+                throw new IllegalArgumentException(
+                        "maxLevel ("
+                                + maxLevel
+                                + ") must equal or higher than minLevel ("
+                                + minLevel
+                                + ")");
+            }
+            mMinLevel = minLevel;
+            mMaxLevel = maxLevel;
+        }
+
+        public static AndroidSdkRange forAtLeast(int level) {
+            return new AndroidSdkRange(/* minLevel= */ level, NO_MAX);
+        }
+
+        public static AndroidSdkRange forAtMost(int level) {
+            return new AndroidSdkRange(NO_MIN, /* maxLevel= */ level);
+        }
+
+        public static AndroidSdkRange forRange(int minLevel, int maxLevel) {
+            return new AndroidSdkRange(minLevel, maxLevel);
+        }
+
+        public static AndroidSdkRange forExactly(int level) {
+            return new AndroidSdkRange(/* minLevel= */ level, /* maxLevel= */ level);
+        }
+
+        public static AndroidSdkRange forAnyLevel() {
+            return new AndroidSdkRange(NO_MIN, NO_MAX);
+        }
+
+        public boolean isInRange(int level) {
+            return level >= mMinLevel && level <= mMaxLevel;
+        }
+
+        protected static AndroidSdkRange merge(AndroidSdkRange... ranges) {
+            Objects.requireNonNull(ranges, "ranges cannot be null");
+            if (ranges.length == 0) {
+                throw new IllegalArgumentException("ranges cannot be empty");
+            }
+            int minRange = NO_MIN;
+            int maxRange = NO_MAX;
+            for (AndroidSdkRange range : ranges) {
+                if (range == null) {
+                    throw new IllegalArgumentException(
+                            "ranges cannot have null range: " + Arrays.toString(ranges));
+                }
+                minRange = Math.max(minRange, range.mMinLevel);
+                maxRange = Math.min(maxRange, range.mMaxLevel);
+            }
+            return forRange(minRange, maxRange);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(mMaxLevel, mMinLevel);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (obj == null) return false;
+            if (getClass() != obj.getClass()) return false;
+            AndroidSdkRange other = (AndroidSdkRange) obj;
+            return mMaxLevel == other.mMaxLevel && mMinLevel == other.mMinLevel;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder builder = new StringBuilder("AndroidSdkRange[minLevel=");
+            if (mMinLevel == NO_MIN) {
+                builder.append("OPEN");
+            } else {
+                builder.append(mMinLevel);
+            }
+            builder.append(", maxLevel=");
+            if (mMaxLevel == NO_MAX) {
+                builder.append("OPEN");
+            } else {
+                builder.append(mMaxLevel);
+            }
+            return builder.append(']').toString();
         }
     }
 }
