@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
 /**
  * A class wrapper for the trigger specification from the input argument during source registration
@@ -214,8 +215,11 @@ public class TriggerSpec {
             }
         }
 
-        public Builder(JSONObject jsonObject, long defaultStart, List<Long> defaultWindowEnds)
-                throws JSONException, IllegalArgumentException {
+        public Builder(
+                JSONObject jsonObject,
+                long defaultStart,
+                List<Long> defaultWindowEnds,
+                int maxEventLevelReports) throws JSONException, IllegalArgumentException {
             mBuilding = new TriggerSpec();
             mBuilding.mSummaryWindowOperator = SummaryOperatorType.COUNT;
             mBuilding.mEventReportWindowsStart = defaultStart;
@@ -253,10 +257,17 @@ public class TriggerSpec {
                                         .toUpperCase()));
             }
             if (!jsonObject.isNull(TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_BUCKETS)) {
-                this.setSummaryBuckets(
+                List<Long> summaryBuckets =
                         getLongListFromJSON(
                                 jsonObject,
-                                TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_BUCKETS));
+                                TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_BUCKETS);
+                this.setSummaryBuckets(summaryBuckets.subList(
+                        0, Math.min(summaryBuckets.size(), maxEventLevelReports + 1)));
+            } else {
+                this.setSummaryBuckets(
+                        LongStream.range(1, maxEventLevelReports + 2)
+                                .boxed()
+                                .collect(Collectors.toList()));
             }
         }
 
