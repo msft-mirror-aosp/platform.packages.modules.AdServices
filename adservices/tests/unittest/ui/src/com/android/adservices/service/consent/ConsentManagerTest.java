@@ -4405,17 +4405,17 @@ public final class ConsentManagerTest {
                 getSpiedConsentManagerForMigrationTesting(
                         /* isGiven */ false, consentSourceOfTruth);
 
-        doReturn(false).when(mAdServicesExtDataManagerMock).getNotifDisplayed();
+        doReturn(false).when(mAdServicesExtDataManagerMock).getNotificationDisplayed();
         assertThat(spyConsentManager.wasU18NotificationDisplayed()).isFalse();
-        verify(mAdServicesExtDataManagerMock).getNotifDisplayed();
+        verify(mAdServicesExtDataManagerMock).getNotificationDisplayed();
 
-        doReturn(true).when(mAdServicesExtDataManagerMock).getNotifDisplayed();
+        doReturn(true).when(mAdServicesExtDataManagerMock).getNotificationDisplayed();
         spyConsentManager.setU18NotificationDisplayed(true);
 
         assertThat(spyConsentManager.wasU18NotificationDisplayed()).isTrue();
 
-        verify(mAdServicesExtDataManagerMock, times(2)).getNotifDisplayed();
-        verify(mAdServicesExtDataManagerMock).setNotifDisplayed(anyBoolean());
+        verify(mAdServicesExtDataManagerMock, times(2)).getNotificationDisplayed();
+        verify(mAdServicesExtDataManagerMock).setNotificationDisplayed(anyBoolean());
     }
 
     @Test
