@@ -28,6 +28,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.FileCompatUtils;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.io.File;
@@ -52,19 +53,16 @@ public final class AppManifestConfigMetricsLogger {
     /** Logs the app usage. */
     @VisibleForTesting // TODO(b/310270746): remove public when TopicsServiceImplTest is refactored
     public static void logUsage(
-            Context context,
             String packageName,
             boolean appExists,
             boolean appHasConfig,
             boolean enabledByDefault) {
-        Objects.requireNonNull(context, "context cannot be null");
         Objects.requireNonNull(packageName, "packageName cannot be null");
 
         AdServicesExecutors.getBackgroundExecutor()
                 .execute(
                         () ->
                                 handleLogUsage(
-                                        context,
                                         packageName,
                                         appExists,
                                         appHasConfig,
@@ -72,11 +70,11 @@ public final class AppManifestConfigMetricsLogger {
     }
 
     private static void handleLogUsage(
-            Context context,
             String packageName,
             boolean appExists,
             boolean appHasConfig,
             boolean enabledByDefault) {
+        Context context = ApplicationContextSingleton.get();
         try {
             int newValue =
                     (appExists ? FLAG_APP_EXISTS : 0)
