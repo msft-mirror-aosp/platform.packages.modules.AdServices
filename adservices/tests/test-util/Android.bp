@@ -42,17 +42,6 @@ filegroup {
     ],
 }
 
-filegroup {
-    name: "adservices-mockito-sources",
-    srcs: [
-        "java/com/android/adservices/mockito/*.java",
-    ],
-    path: "java",
-    visibility: [
-        "//packages/modules/AdServices:__subpackages__",
-    ],
-}
-
 android_library {
     name: "adservices-test-utility",
     sdk_version: "module_current",
@@ -78,6 +67,29 @@ android_library {
     apex_available: ["com.android.adservices", "com.android.extservices"],
 }
 
+android_library {
+    name: "adservices-test-mockito-expectations",
+    sdk_version: "module_current",
+    min_sdk_version: "30",
+    srcs: [
+        "java/com/android/adservices/mockito/*MockitoExpectations.java",
+        ":adservices-service-core-phflags-sources",
+    ],
+    libs: [
+        "framework-adservices-lib",
+        "framework-annotations-lib",
+        "framework-configinfrastructure",
+    ],
+    static_libs: [
+        "adservices-service-core",
+        "adservices-shared-testing",
+        "adservices-test-utility",
+        "mockito-target-extended-minus-junit4",
+        "truth",
+    ],
+    apex_available: ["com.android.adservices", "com.android.extservices"],
+}
+
 java_library_host {
     name: "adservices-host-side-test-utility",
     srcs: [
@@ -90,19 +102,27 @@ java_library_host {
     ],
 }
 
+filegroup {
+    name: "adservices-extended-mockito-rule-sources",
+    srcs: [
+        "java/com/android/adservices/mockito/AdServicesExtendedMockitoRule.java",
+    ],
+    path: "java",
+    visibility: [
+        "//packages/modules/AdServices:__subpackages__",
+    ],
+}
+
 java_defaults {
     name: "adservices-extended-mockito-defaults",
     srcs: [
-        ":adservices-mockito-sources",
+        ":adservices-extended-mockito-rule-sources",
     ],
     defaults: [
         "modules-utils-testable-device-config-defaults",
     ],
     static_libs: [
          "adservices-service-core",
-    ],
-    libs: [
-        "services.core.unboosted", // For LocalManagerRegistry on ExtendedMockitoExpectations
     ],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",
