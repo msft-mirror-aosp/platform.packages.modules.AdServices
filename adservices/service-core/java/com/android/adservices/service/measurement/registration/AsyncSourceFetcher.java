@@ -399,9 +399,11 @@ public class AsyncSourceFetcher {
         if (mFlags.getMeasurementFlexLiteAPIEnabled()
                 || mFlags.getMeasurementFlexibleEventReportingApiEnabled()) {
             if (!json.isNull(SourceHeaderContract.MAX_EVENT_LEVEL_REPORTS)) {
+                Object maxEventLevelReportsObj = json.get(
+                        SourceHeaderContract.MAX_EVENT_LEVEL_REPORTS);
                 maxEventLevelReports =
                         json.getInt(SourceHeaderContract.MAX_EVENT_LEVEL_REPORTS);
-                if (maxEventLevelReports < 0
+                if (!is64BitInteger(maxEventLevelReportsObj) || maxEventLevelReports < 0
                         || maxEventLevelReports > mFlags.getMeasurementFlexApiMaxEventReports()) {
                     return false;
                 }
@@ -435,12 +437,19 @@ public class AsyncSourceFetcher {
                 && !json.isNull(SourceHeaderContract.TRIGGER_SPECS)) {
             String triggerSpecString = json.getString(SourceHeaderContract.TRIGGER_SPECS);
 
+            final int finalMaxEventLevelReports =
+                    Source.getOrDefaultMaxEventLevelReports(
+                            asyncRegistration.getSourceType(),
+                            maxEventLevelReports,
+                            mFlags);
+
             Optional<TriggerSpec[]> maybeTriggerSpecArray =
                     getValidTriggerSpecs(
                             triggerSpecString,
                             eventReportWindows,
                             expiry,
-                            asyncRegistration.getSourceType());
+                            asyncRegistration.getSourceType(),
+                            finalMaxEventLevelReports);
 
             if (!maybeTriggerSpecArray.isPresent()) {
                 LoggerFactory.getMeasurementLogger().d("Invalid Trigger Spec format");
@@ -450,10 +459,7 @@ public class AsyncSourceFetcher {
             builder.setTriggerSpecs(
                     new TriggerSpecs(
                             maybeTriggerSpecArray.get(),
-                            Source.getOrDefaultMaxEventLevelReports(
-                                    asyncRegistration.getSourceType(),
-                                    maxEventLevelReports,
-                                    mFlags),
+                            finalMaxEventLevelReports,
                             null));
         }
 
@@ -470,8 +476,12 @@ public class AsyncSourceFetcher {
         return true;
     }
 
-    private Optional<TriggerSpec[]> getValidTriggerSpecs(String triggerSpecString,
-            JSONObject eventReportWindows, long expiry, Source.SourceType sourceType) {
+    private Optional<TriggerSpec[]> getValidTriggerSpecs(
+            String triggerSpecString,
+            JSONObject eventReportWindows,
+            long expiry,
+            Source.SourceType sourceType,
+            int maxEventLevelReports) {
         List<Pair<Long, Long>> parsedEventReportWindows = Source.getOrDefaultEventReportWindows(
                 eventReportWindows, sourceType, expiry, mFlags);
         long defaultStart = parsedEventReportWindows.get(0).first;
@@ -487,7 +497,8 @@ public class AsyncSourceFetcher {
                         expiry,
                         defaultStart,
                         defaultEnds,
-                        triggerDataSet);
+                        triggerDataSet,
+                        maxEventLevelReports);
                 if (!maybeTriggerSpec.isPresent()) {
                     return Optional.empty();
                 }
@@ -509,7 +520,8 @@ public class AsyncSourceFetcher {
             long expiry,
             long defaultStart,
             List<Long> defaultEnds,
-            Set<UnsignedLong> triggerDataSet) throws JSONException {
+            Set<UnsignedLong> triggerDataSet,
+            int maxEventLevelReports) throws JSONException {
         List<UnsignedLong> triggerDataList =
                 TriggerSpec.getTriggerDataArrayFromJSON(
                         triggerSpecJson, TriggerSpecs.FlexEventReportJsonKeys.TRIGGER_DATA);
@@ -565,7 +577,11 @@ public class AsyncSourceFetcher {
         }
 
         return Optional.of(
-              new TriggerSpec.Builder(triggerSpecJson, defaultStart, defaultEnds).build());
+              new TriggerSpec.Builder(
+                      triggerSpecJson,
+                      defaultStart,
+                      defaultEnds,
+                      maxEventLevelReports).build());
     }
 
     private Optional<JSONObject> getValidEventReportWindows(JSONObject jsonReportWindows,
@@ -573,6 +589,10 @@ public class AsyncSourceFetcher {
         // Start time in seconds
         long startTime = 0;
         if (!jsonReportWindows.isNull(TriggerSpecs.FlexEventReportJsonKeys.START_TIME)) {
+            if (!is64BitInteger(jsonReportWindows.get(
+                    TriggerSpecs.FlexEventReportJsonKeys.START_TIME))) {
+                return Optional.empty();
+            }
             // We continue to use startTime in seconds for validation but convert it to milliseconds
             // for the return JSONObject.
             startTime =
@@ -854,6 +874,10 @@ public class AsyncSourceFetcher {
             }
         }
         return true;
+    }
+
+    private static boolean is64BitInteger(Object obj) {
+        return (obj instanceof Integer) || (obj instanceof Long);
     }
 
     private static long roundSecondsToWholeDays(long seconds) {
