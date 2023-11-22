@@ -18,30 +18,27 @@ package com.android.adservices.service.appsetid;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
+import static org.junit.Assert.fail;
+
 import android.adservices.appsetid.GetAppSetIdResult;
 import android.adservices.appsetid.IGetAppSetIdCallback;
 import android.adservices.appsetid.IGetAppSetIdProviderCallback;
 import android.annotation.NonNull;
 import android.os.RemoteException;
 
-import com.android.adservices.shared.testing.common.ApplicationContextSingletonRule;
+import com.android.adservices.common.AdServicesUnitTestCase;
 
-import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mockito;
 
 import java.util.concurrent.CompletableFuture;
 
 /** Unit test for {@link com.android.adservices.service.appsetid.AppSetIdWorker}. */
-public class AppSetIdWorkerTest {
+public final class AppSetIdWorkerTest extends AdServicesUnitTestCase {
 
     private boolean mTestSuccess;
 
     private static final String DEFAULT_APP_SET_ID = "00000000-0000-0000-0000-000000000000";
-
-    @Rule
-    public final ApplicationContextSingletonRule appContext = new ApplicationContextSingletonRule();
 
     @Test
     public void testGetAppSetIdOnResult() throws Exception {
@@ -64,13 +61,15 @@ public class AppSetIdWorkerTest {
                     @Override
                     public void onError(int resultCode) {
                         // should never be called.
-                        Assert.fail();
+                        fail();
                     }
                 });
 
         GetAppSetIdResult result = future.get();
-        Assert.assertEquals(DEFAULT_APP_SET_ID, result.getAppSetId());
-        Assert.assertEquals(1, result.getAppSetIdScope());
+        expect.withMessage("getAppSetId()")
+                .that(result.getAppSetId())
+                .isEqualTo(DEFAULT_APP_SET_ID);
+        expect.withMessage("getAppSetIdScope()").that(result.getAppSetIdScope()).isEqualTo(1);
     }
 
     @Test
@@ -89,7 +88,7 @@ public class AppSetIdWorkerTest {
                     @Override
                     public void onResult(GetAppSetIdResult resultParcel) {
                         // should never be called.
-                        Assert.fail();
+                        fail();
                     }
 
                     @Override
@@ -99,7 +98,7 @@ public class AppSetIdWorkerTest {
                 });
 
         int result = future.get();
-        Assert.assertEquals(/* INTERNAL_STATE_ERROR */ 1, result);
+        expect.withMessage("result").that(result).isEqualTo(1); // INTERNAL_STATE_ERROR
     }
 
     private final android.adservices.appsetid.IAppSetIdProviderService mInterface =

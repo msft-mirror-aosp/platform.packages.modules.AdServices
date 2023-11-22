@@ -33,6 +33,9 @@ import java.util.Objects;
 @Immutable
 @AutoValue
 public abstract class EncryptedTopic {
+
+    private static final byte[] EMPTY_BYTE_ARRAY = new byte[] {};
+    private static final String EMPTY_STRING = "";
     /**
      * @return byte array containing encrypted Topic object.
      */
@@ -49,6 +52,10 @@ public abstract class EncryptedTopic {
      */
     @SuppressWarnings("mutable")
     public abstract byte[] getEncapsulatedKey();
+
+    public static EncryptedTopic getDefaultInstance() {
+        return create(EMPTY_BYTE_ARRAY, EMPTY_STRING, EMPTY_BYTE_ARRAY);
+    }
 
     /**
      * @return generic builder

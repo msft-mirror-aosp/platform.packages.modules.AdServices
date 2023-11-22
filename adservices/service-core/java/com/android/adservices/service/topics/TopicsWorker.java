@@ -28,6 +28,8 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.data.topics.CombinedTopic;
+import com.android.adservices.data.topics.EncryptedTopic;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
@@ -200,23 +202,32 @@ public class TopicsWorker {
 
         mReadWriteLock.readLock().lock();
         try {
-            List<Topic> topics =
+            List<CombinedTopic> combinedTopics =
                     mCacheManager.getTopics(
                             mFlags.getTopicsNumberOfLookBackEpochs(),
                             mEpochManager.getCurrentEpochId(),
                             app,
                             sdk);
 
-            List<Long> taxonomyVersions = new ArrayList<>(topics.size());
-            List<Long> modelVersions = new ArrayList<>(topics.size());
-            List<Integer> topicIds = new ArrayList<>(topics.size());
-            List<byte[]> encryptedTopics = new ArrayList<>(topics.size());
-            List<String> encryptionKeys = new ArrayList<>(topics.size());
+            List<Long> taxonomyVersions = new ArrayList<>(combinedTopics.size());
+            List<Long> modelVersions = new ArrayList<>(combinedTopics.size());
+            List<Integer> topicIds = new ArrayList<>(combinedTopics.size());
+            List<byte[]> encryptedTopics = new ArrayList<>(combinedTopics.size());
+            List<String> keyIdentifiers = new ArrayList<>(combinedTopics.size());
+            List<byte[]> encapsulatedKeys = new ArrayList<>(combinedTopics.size());
 
-            for (Topic topic : topics) {
-                taxonomyVersions.add(topic.getTaxonomyVersion());
-                modelVersions.add(topic.getModelVersion());
-                topicIds.add(topic.getTopic());
+            for (CombinedTopic combinedTopic : combinedTopics) {
+                taxonomyVersions.add(combinedTopic.getTopic().getTaxonomyVersion());
+                modelVersions.add(combinedTopic.getTopic().getModelVersion());
+                topicIds.add(combinedTopic.getTopic().getTopic());
+
+                if (!combinedTopic
+                        .getEncryptedTopic()
+                        .equals(EncryptedTopic.getDefaultInstance())) {
+                    encryptedTopics.add(combinedTopic.getEncryptedTopic().getEncryptedTopic());
+                    keyIdentifiers.add(combinedTopic.getEncryptedTopic().getKeyIdentifier());
+                    encapsulatedKeys.add(combinedTopic.getEncryptedTopic().getEncapsulatedKey());
+                }
             }
 
             GetTopicsResult result =
@@ -226,7 +237,8 @@ public class TopicsWorker {
                             .setModelVersions(modelVersions)
                             .setTopics(topicIds)
                             .setEncryptedTopics(encryptedTopics)
-                            .setEncryptionKeys(encryptionKeys)
+                            .setEncryptionKeys(keyIdentifiers)
+                            .setEncapsulatedKeys(encapsulatedKeys)
                             .build();
             sLogger.v(
                     "The result of TopicsWorker.getTopics for %s, %s is %s",
