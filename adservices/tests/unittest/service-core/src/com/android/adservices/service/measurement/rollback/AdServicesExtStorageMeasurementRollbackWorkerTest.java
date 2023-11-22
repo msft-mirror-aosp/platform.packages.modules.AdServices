@@ -16,14 +16,15 @@
 
 package com.android.adservices.service.measurement.rollback;
 
-import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_MEASUREMENT_ROLLBACK_APEX_VERSION;
 import static android.app.adservices.AdServicesManager.MEASUREMENT_DELETION;
 
 import static com.android.adservices.service.measurement.rollback.MeasurementRollbackCompatManager.APEX_VERSION_WHEN_NOT_FOUND;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.adservices.extdata.AdServicesExtDataParams;
+import static org.mockito.Mockito.verify;
+
 import android.util.Pair;
 
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
@@ -33,7 +34,6 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
 public class AdServicesExtStorageMeasurementRollbackWorkerTest {
@@ -57,69 +57,31 @@ public class AdServicesExtStorageMeasurementRollbackWorkerTest {
     @Test
     public void testRecordAdServicesDeletionOccurred() {
         mWorker.recordAdServicesDeletionOccurred(MEASUREMENT_DELETION, CURRENT_APEX_VERSION);
-
-        ArgumentCaptor<AdServicesExtDataParams> paramsCaptor =
-                ArgumentCaptor.forClass(AdServicesExtDataParams.class);
-        ArgumentCaptor<int[]> fieldsCaptor = ArgumentCaptor.forClass(int[].class);
-        ExtendedMockito.verify(mStorageManager)
-                .setAdServicesExtData(paramsCaptor.capture(), fieldsCaptor.capture());
-
-        assertThat(paramsCaptor.getValue().getMeasurementRollbackApexVersion())
-                .isEqualTo(CURRENT_APEX_VERSION);
-        assertThat(fieldsCaptor.getValue())
-                .asList()
-                .containsExactly(FIELD_MEASUREMENT_ROLLBACK_APEX_VERSION);
+        verify(mStorageManager).setMeasurementRollbackApexVersion(eq(CURRENT_APEX_VERSION));
     }
 
     @Test
     public void testClearAdServicesDeletionOccurred() {
         mWorker.clearAdServicesDeletionOccurred(null);
-
-        ArgumentCaptor<AdServicesExtDataParams> paramsCaptor =
-                ArgumentCaptor.forClass(AdServicesExtDataParams.class);
-        ArgumentCaptor<int[]> fieldsCaptor = ArgumentCaptor.forClass(int[].class);
-        ExtendedMockito.verify(mStorageManager)
-                .setAdServicesExtData(paramsCaptor.capture(), fieldsCaptor.capture());
-
-        assertThat(paramsCaptor.getValue().getMeasurementRollbackApexVersion())
-                .isEqualTo(APEX_VERSION_WHEN_NOT_FOUND);
-        assertThat(fieldsCaptor.getValue())
-                .asList()
-                .containsExactly(FIELD_MEASUREMENT_ROLLBACK_APEX_VERSION);
+        verify(mStorageManager).setMeasurementRollbackApexVersion(APEX_VERSION_WHEN_NOT_FOUND);
     }
 
     @Test
     public void testGetAdServicesDeletionRollbackMetadata() {
-        AdServicesExtDataParams params =
-                new AdServicesExtDataParams.Builder()
-                        .setMsmtRollbackApexVersion(CURRENT_APEX_VERSION - 1)
-                        .build();
-        ExtendedMockito.doReturn(params).when(mStorageManager).getAdServicesExtData();
-
+        ExtendedMockito.doReturn(CURRENT_APEX_VERSION - 1)
+                .when(mStorageManager)
+                .getMeasurementRollbackApexVersion();
         Pair<Long, Void> data = mWorker.getAdServicesDeletionRollbackMetadata(MEASUREMENT_DELETION);
-
+        assertThat(data).isNotNull();
         assertThat(data.first).isEqualTo(CURRENT_APEX_VERSION - 1);
     }
 
     @Test
     public void testGetAdServicesDeletionRollbackMetadataIfNoDataPresent() {
-        AdServicesExtDataParams params =
-                new AdServicesExtDataParams.Builder()
-                        .setMsmtRollbackApexVersion(APEX_VERSION_WHEN_NOT_FOUND)
-                        .build();
-        ExtendedMockito.doReturn(params).when(mStorageManager).getAdServicesExtData();
-
+        ExtendedMockito.doReturn(APEX_VERSION_WHEN_NOT_FOUND)
+                .when(mStorageManager)
+                .getMeasurementRollbackApexVersion();
         Pair<Long, Void> data = mWorker.getAdServicesDeletionRollbackMetadata(MEASUREMENT_DELETION);
-
-        assertThat(data).isNull();
-    }
-
-    @Test
-    public void testGetAdServicesDeletionRollbackMetadataIfReturnedParamsNull() {
-        ExtendedMockito.doReturn(null).when(mStorageManager).getAdServicesExtData();
-
-        Pair<Long, Void> data = mWorker.getAdServicesDeletionRollbackMetadata(MEASUREMENT_DELETION);
-
         assertThat(data).isNull();
     }
 }

@@ -102,7 +102,7 @@ public final class AdServicesExtDataStorageServiceManager {
         CountDownLatch latch = new CountDownLatch(1);
 
         AtomicBoolean isSuccess = new AtomicBoolean();
-        AtomicInteger notifDisplayed = new AtomicInteger();
+        AtomicInteger notificationDisplayed = new AtomicInteger();
         AtomicInteger msmtConsent = new AtomicInteger();
         AtomicInteger isU18Account = new AtomicInteger();
         AtomicInteger isAdultAccount = new AtomicInteger();
@@ -113,7 +113,7 @@ public final class AdServicesExtDataStorageServiceManager {
                 new AdServicesOutcomeReceiver<>() {
                     @Override
                     public void onResult(AdServicesExtDataParams result) {
-                        notifDisplayed.set(result.getIsNotificationDisplayed());
+                        notificationDisplayed.set(result.getIsNotificationDisplayed());
                         msmtConsent.set(result.getIsMeasurementConsented());
                         isU18Account.set(result.getIsU18Account());
                         isAdultAccount.set(result.getIsAdultAccount());
@@ -142,7 +142,7 @@ public final class AdServicesExtDataStorageServiceManager {
                 params =
                         isSuccess.get()
                                 ? constructParams(
-                                        notifDisplayed.get(),
+                                        notificationDisplayed.get(),
                                         msmtConsent.get(),
                                         isU18Account.get(),
                                         isAdultAccount.get(),
@@ -262,7 +262,7 @@ public final class AdServicesExtDataStorageServiceManager {
      *
      * @return true if update was successful; false otherwise.
      */
-    public boolean setNotifDisplayed(boolean isGiven) {
+    public boolean setNotificationDisplayed(boolean isGiven) {
         return setAdServicesExtData(
                 new AdServicesExtDataParams.Builder()
                         .setNotificationDisplayed(isGiven ? BOOLEAN_TRUE : BOOLEAN_FALSE)
@@ -274,7 +274,7 @@ public final class AdServicesExtDataStorageServiceManager {
      * Retrieves the stored consent bit for notification displayed, converted into boolean. -1 (no
      * data) is considered false.
      */
-    public boolean getNotifDisplayed() {
+    public boolean getNotificationDisplayed() {
         return getAdServicesExtData().getIsNotificationDisplayed() == BOOLEAN_TRUE;
     }
 
@@ -315,6 +315,29 @@ public final class AdServicesExtDataStorageServiceManager {
     }
 
     /**
+     * Sets the apex version when a measurement deletion event occurred, for rollback purposes
+     *
+     * @param apexVersion the version of the ExtServices apex that was running
+     * @return {@code true} if successful, {@code false} otherwise.
+     */
+    public boolean setMeasurementRollbackApexVersion(long apexVersion) {
+        return setAdServicesExtData(
+                new AdServicesExtDataParams.Builder()
+                        .setMsmtRollbackApexVersion(apexVersion)
+                        .build(),
+                new int[] {FIELD_MEASUREMENT_ROLLBACK_APEX_VERSION});
+    }
+
+    /**
+     * Returns the saved ExtServices apex version that had a measurement deletion event, if any
+     *
+     * @return the saved apex version if present, -1 otherwise.
+     */
+    public long getMeasurementRollbackApexVersion() {
+        return getAdServicesExtData().getMeasurementRollbackApexVersion();
+    }
+
+    /**
      * Sets all AdExt data values to their respective default values to indicate data clearance in a
      * non-blocking manner.
      */
@@ -322,7 +345,7 @@ public final class AdServicesExtDataStorageServiceManager {
         mDataWorker.setAdServicesExtData(
                 DEFAULT_PARAMS,
                 ALL_FIELDS,
-                new AdServicesOutcomeReceiver<AdServicesExtDataParams, Exception>() {
+                new AdServicesOutcomeReceiver<>() {
                     @Override
                     public void onResult(AdServicesExtDataParams result) {
                         LogUtil.d("Cleared AdExt Data.");
@@ -337,14 +360,14 @@ public final class AdServicesExtDataStorageServiceManager {
     }
 
     private AdServicesExtDataParams constructParams(
-            int notifDisplayed,
+            int notificationDisplayed,
             int msmtConsent,
             int isU18Account,
             int isAdultAccount,
             int manualInteractionStatus,
             long msmtApex) {
         return new AdServicesExtDataParams.Builder()
-                .setNotificationDisplayed(notifDisplayed)
+                .setNotificationDisplayed(notificationDisplayed)
                 .setMsmtConsent(msmtConsent)
                 .setIsU18Account(isU18Account)
                 .setIsAdultAccount(isAdultAccount)
