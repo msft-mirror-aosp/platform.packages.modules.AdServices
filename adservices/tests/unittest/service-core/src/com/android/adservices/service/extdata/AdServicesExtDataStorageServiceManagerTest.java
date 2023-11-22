@@ -260,7 +260,7 @@ public class AdServicesExtDataStorageServiceManagerTest {
     @Test
     public void testSetNotifDisplayed_withFalse() {
         mockWorkerSetAdExtDataCall();
-        expect.that(mManager.setNotifDisplayed(false)).isTrue();
+        expect.that(mManager.setNotificationDisplayed(false)).isTrue();
         expect.that(mParamsCaptor.getValue().getIsNotificationDisplayed()).isEqualTo(BOOLEAN_FALSE);
         expect.that(mFieldsCaptor.getValue())
                 .asList()
@@ -270,7 +270,7 @@ public class AdServicesExtDataStorageServiceManagerTest {
     @Test
     public void testSetNotifDisplayed_withTrue() {
         mockWorkerSetAdExtDataCall();
-        expect.that(mManager.setNotifDisplayed(true)).isTrue();
+        expect.that(mManager.setNotificationDisplayed(true)).isTrue();
         expect.that(mParamsCaptor.getValue().getIsNotificationDisplayed()).isEqualTo(BOOLEAN_TRUE);
         expect.that(mFieldsCaptor.getValue())
                 .asList()
@@ -280,7 +280,7 @@ public class AdServicesExtDataStorageServiceManagerTest {
     @Test
     public void testGetNotifDisplayed_withOneRetrieved_returnsTrue() {
         mockWorkerGetAdExtDataCall(TEST_PARAMS);
-        expect.that(mManager.getNotifDisplayed()).isTrue();
+        expect.that(mManager.getNotificationDisplayed()).isTrue();
     }
 
     @Test
@@ -290,7 +290,7 @@ public class AdServicesExtDataStorageServiceManagerTest {
                         .setNotificationDisplayed(BOOLEAN_FALSE)
                         .build();
         mockWorkerGetAdExtDataCall(params);
-        expect.that(mManager.getNotifDisplayed()).isFalse();
+        expect.that(mManager.getNotificationDisplayed()).isFalse();
     }
 
     @Test
@@ -351,6 +351,43 @@ public class AdServicesExtDataStorageServiceManagerTest {
                 new AdServicesExtDataParams.Builder().setIsU18Account(BOOLEAN_FALSE).build();
         mockWorkerGetAdExtDataCall(params);
         expect.that(mManager.getIsU18Account()).isFalse();
+    }
+
+    @Test
+    public void testSetMeasurementRollbackApexVersion_withValue() {
+        mockWorkerSetAdExtDataCall();
+        long apex = 1000L;
+        expect.that(mManager.setMeasurementRollbackApexVersion(apex)).isTrue();
+        expect.that(mParamsCaptor.getValue().getMeasurementRollbackApexVersion()).isEqualTo(apex);
+        expect.that(mFieldsCaptor.getValue())
+                .asList()
+                .containsExactly(FIELD_MEASUREMENT_ROLLBACK_APEX_VERSION);
+    }
+
+    @Test
+    public void testSetMeasurementRollbackApexVersion_withNotFoundValue() {
+        mockWorkerSetAdExtDataCall();
+        expect.that(mManager.setMeasurementRollbackApexVersion(NO_APEX_VALUE)).isTrue();
+        expect.that(mParamsCaptor.getValue().getMeasurementRollbackApexVersion())
+                .isEqualTo(NO_APEX_VALUE);
+        expect.that(mFieldsCaptor.getValue())
+                .asList()
+                .containsExactly(FIELD_MEASUREMENT_ROLLBACK_APEX_VERSION);
+    }
+
+    @Test
+    public void testGetMeasurementRollbackApexVersion_noData() {
+        mockWorkerGetAdExtDataCall(TEST_PARAMS);
+        expect.that(mManager.getMeasurementRollbackApexVersion()).isEqualTo(NO_APEX_VALUE);
+    }
+
+    @Test
+    public void testGetMeasurementRollbackApexVersion_dataPresent() {
+        long apex = 1000L;
+        AdServicesExtDataParams params =
+                new AdServicesExtDataParams.Builder().setMsmtRollbackApexVersion(apex).build();
+        mockWorkerGetAdExtDataCall(params);
+        expect.that(mManager.getMeasurementRollbackApexVersion()).isEqualTo(apex);
     }
 
     @Test

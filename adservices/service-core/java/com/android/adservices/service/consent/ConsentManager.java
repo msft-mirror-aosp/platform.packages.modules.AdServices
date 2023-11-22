@@ -2037,7 +2037,7 @@ public class ConsentManager {
                 () -> mAdServicesManager.wasU18NotificationDisplayed(),
                 () -> mAppSearchConsentManager.wasU18NotificationDisplayed(),
                 () -> // On Android R only U18 notification is allowed to be displayed.
-                mAdExtDataManager.getNotifDisplayed(),
+                mAdExtDataManager.getNotificationDisplayed(),
                 /* errorLogger= */ null);
     }
 
@@ -2053,7 +2053,7 @@ public class ConsentManager {
                         mAppSearchConsentManager.setU18NotificationDisplayed(
                                 wasU18NotificationDisplayed),
                 () -> // On Android R only U18 notification is allowed to be displayed.
-                mAdExtDataManager.setNotifDisplayed(wasU18NotificationDisplayed),
+                mAdExtDataManager.setNotificationDisplayed(wasU18NotificationDisplayed),
                 /* errorLogger= */ null);
     }
 
