@@ -51,7 +51,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * This class manages the interface to read and write data required on Android R through {@link
  * AdServicesExtDataStorageService}.
  */
-public class AdServicesExtDataStorageServiceManager {
+public final class AdServicesExtDataStorageServiceManager {
     // Conservative timeouts based on what's used for AppSearch operations (500 ms for reads,
     // 2000 ms writes). An additional 100 ms buffer is added for delays such as binder latency.
     private static final long READ_OPERATION_TIMEOUT_MS = 600L;
@@ -155,7 +155,7 @@ public class AdServicesExtDataStorageServiceManager {
             params = DEFAULT_PARAMS;
         }
 
-        LogUtil.d("Returned AdExt data: " + params);
+        LogUtil.d("Returned AdExt data: %s", params);
         return params;
     }
 
@@ -187,8 +187,8 @@ public class AdServicesExtDataStorageServiceManager {
                     @Override
                     public void onResult(AdServicesExtDataParams result) {
                         LogUtil.d(
-                                "Updated AdExt Data: "
-                                        + updateRequestToStr(params, fieldsToUpdate));
+                                "Updated AdExt Data: %s",
+                                updateRequestToString(params, fieldsToUpdate));
                         isSuccess.set(true);
                         latch.countDown();
                     }
@@ -355,7 +355,7 @@ public class AdServicesExtDataStorageServiceManager {
 
     /** Converts AdExt data to be updated into readable string, used for debug logging. */
     @VisibleForTesting
-    String updateRequestToStr(AdServicesExtDataParams params, int[] fieldsToUpdate) {
+    String updateRequestToString(AdServicesExtDataParams params, int[] fieldsToUpdate) {
         StringBuilder sb = new StringBuilder("{");
         for (int fieldId : fieldsToUpdate) {
             switch (fieldId) {
@@ -382,12 +382,11 @@ public class AdServicesExtDataStorageServiceManager {
                     break;
                 default:
                     // Handle gracefully because this is only used for debugging.
-                    LogUtil.e("Invalid AdExt data field Id detected: " + fieldId);
+                    LogUtil.e("Invalid AdExt data field Id detected: %d", fieldId);
                     sb.append("INVALID_FIELD_ID: ").append(fieldId);
             }
             sb.append(",");
         }
-        sb.append("}");
-        return sb.toString();
+        return sb.append("}").toString();
     }
 }

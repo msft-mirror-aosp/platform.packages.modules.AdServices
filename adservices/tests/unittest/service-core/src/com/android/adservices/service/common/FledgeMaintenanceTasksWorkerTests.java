@@ -140,6 +140,54 @@ public class FledgeMaintenanceTasksWorkerTests {
     }
 
     @Test
+    public void
+            testClearExpiredAdSelectionData_serverAuctionDisabled_unifiedTablesEnabled_ClearsUnifiedTables() {
+        Flags flagsWithAuctionServerDisabled =
+                new Flags() {
+                    @Override
+                    public boolean getFledgeAuctionServerEnabled() {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean getFledgeEventLevelDebugReportingEnabled() {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean getFledgeOnDeviceAuctionShouldUseUnifiedTables() {
+                        return true;
+                    }
+                };
+        FledgeMaintenanceTasksWorker mFledgeMaintenanceTasksWorkerWithAuctionDisabled =
+                new FledgeMaintenanceTasksWorker(
+                        flagsWithAuctionServerDisabled,
+                        mAdSelectionEntryDaoMock,
+                        mFrequencyCapDaoMock,
+                        mEnrollmentDaoMock,
+                        mEncryptionContextDaoMock,
+                        mAdSelectionDebugReportDaoMock,
+                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI);
+
+        mFledgeMaintenanceTasksWorkerWithAuctionDisabled.clearExpiredAdSelectionData();
+
+        Instant expectedExpirationTime =
+                CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(
+                        flagsWithAuctionServerDisabled.getAdSelectionExpirationWindowS());
+        verify(mAdSelectionEntryDaoMock).removeExpiredAdSelection(eq(expectedExpirationTime));
+        verify(mAdSelectionEntryDaoMock).removeExpiredBuyerDecisionLogic();
+        verify(mAdSelectionEntryDaoMock).removeExpiredRegisteredAdInteractions();
+        verify(mAdSelectionEntryDaoMock)
+                .removeExpiredAdSelectionInitializations(eq(expectedExpirationTime));
+        verify(mEncryptionContextDaoMock, never())
+                .removeExpiredEncryptionContext(eq(expectedExpirationTime));
+        verifyNoMoreInteractions(mAdSelectionEntryDaoMock);
+        verify(mAdSelectionDebugReportDaoMock, never())
+                .deleteDebugReportsBeforeTime(expectedExpirationTime);
+        verifyNoMoreInteractions(mAdSelectionDebugReportDaoMock);
+    }
+
+    @Test
     public void testClearExpiredFrequencyCapHistogramData_adFilteringEnabled_doesMaintenance() {
         final class FlagsWithAdFilteringFeatureEnabled implements Flags {
             @Override

@@ -50,8 +50,8 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.JobServiceCallback;
-import com.android.adservices.common.ProcessLifeguardRule;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
@@ -71,7 +71,7 @@ import org.mockito.Spy;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public final class CobaltJobServiceTest {
+public final class CobaltJobServiceTest extends AdServicesUnitTestCase {
     private static final int JOB_SCHEDULED_WAIT_TIME_MS = 5_000;
     private static final long JOB_INTERVAL_MS = 21_600_000L;
     private static final long JOB_FLEX_MS = 2_000_000L;
@@ -88,7 +88,7 @@ public final class CobaltJobServiceTest {
     private final ExecutorService mExecutorService = Executors.newSingleThreadExecutor();
     private AdservicesJobServiceLogger mLogger;
 
-    @Rule(order = 0)
+    @Rule
     public final AdServicesExtendedMockitoRule mAdServicesExtendedMockitoRule =
             new AdServicesExtendedMockitoRule.Builder(this)
                     .spyStatic(CobaltJobService.class)
@@ -97,9 +97,6 @@ public final class CobaltJobServiceTest {
                     .spyStatic(AdservicesJobServiceLogger.class)
                     .mockStatic(ServiceCompatUtils.class)
                     .build();
-
-    @Rule(order = 1)
-    public final ProcessLifeguardRule processLifeguard = new ProcessLifeguardRule();
 
     @Before
     public void setup() {

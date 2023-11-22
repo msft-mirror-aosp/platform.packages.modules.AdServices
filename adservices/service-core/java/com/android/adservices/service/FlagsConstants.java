@@ -1097,14 +1097,14 @@ public final class FlagsConstants {
 
     public static final String
             KEY_MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY =
-            "measurement_install_attr_dual_destination_event_noise_probability";
+                    "measurement_install_attr_dual_destination_event_noise_probability";
 
     public static final String KEY_MEASUREMENT_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY =
             "measurement_dual_destination_navigation_noise_probability";
 
     public static final String
             KEY_MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY =
-            "measurement_install_attr_dual_destination_navigation_noise_probability";
+                    "measurement_install_attr_dual_destination_navigation_noise_probability";
 
     public static final String KEY_MEASUREMENT_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY =
             "measurement_dual_destination_event_noise_probability";
@@ -1156,8 +1156,14 @@ public final class FlagsConstants {
     public static final String KEY_ENABLE_ADEXT_DATA_SERVICE_APIS =
             "enable_adext_data_service_apis";
 
+    public static final String KEY_ENABLE_ADEXT_DATA_SERVICE_DEBUG_PROXY =
+            "enable_adext_data_service_debug_proxy";
+
     public static final String KEY_ENABLE_ADSERVICES_API_ENABLED = "enable_adservices_api_enabled";
 
     public static final String KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED =
             "adservices_enablement_check_enabled";
+
+    public static final String KEY_BACKGROUND_JOB_SAMPLING_LOGGING_RATE =
+            "key_background_job_sampling_logging_rate";
 }

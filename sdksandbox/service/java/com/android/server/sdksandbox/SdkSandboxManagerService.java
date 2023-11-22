@@ -295,38 +295,31 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         private final Context mContext;
         private SdkSandboxManagerLocal mLocalManager;
         private final SdkSandboxServiceProvider mServiceProvider;
-        private boolean mAdServicePackageNameResolved;
-        private @Nullable String mAdServicesPackageName;
+        private final @Nullable String mAdServicesPackageName;
 
         Injector(Context context) {
             mContext = context;
             mServiceProvider = new SdkSandboxServiceProviderImpl(mContext);
+            mAdServicesPackageName = resolveAdServicesPackage(mContext);
         }
 
         private static final boolean IS_EMULATOR =
                 SystemProperties.getBoolean("ro.boot.qemu", false);
 
-        void resolveAdServicesPackage() {
-            if (mAdServicePackageNameResolved) {
-                return;
-            }
-            PackageManager pm = mContext.getPackageManager();
+        private static String resolveAdServicesPackage(Context context) {
+            PackageManager pm = context.getPackageManager();
             Intent serviceIntent = new Intent(AdServicesCommon.ACTION_TOPICS_SERVICE);
             List<ResolveInfo> resolveInfos =
-                    pm.queryIntentServicesAsUser(
+                    pm.queryIntentServices(
                             serviceIntent,
                             PackageManager.GET_SERVICES
                                     | PackageManager.MATCH_SYSTEM_ONLY
                                     | PackageManager.MATCH_DIRECT_BOOT_AWARE
-                                    | PackageManager.MATCH_DIRECT_BOOT_UNAWARE,
-                            UserHandle.SYSTEM);
+                                    | PackageManager.MATCH_DIRECT_BOOT_UNAWARE);
             ServiceInfo serviceInfo =
                     AdServicesCommon.resolveAdServicesService(
                             resolveInfos, serviceIntent.getAction());
-            if (serviceInfo != null) {
-                mAdServicesPackageName = serviceInfo.packageName;
-            }
-            mAdServicePackageNameResolved = true;
+            return serviceInfo != null ? serviceInfo.packageName : null;
         }
 
         long elapsedRealtime() {
@@ -367,12 +360,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
 
         String getAdServicesPackageName() {
-            resolveAdServicesPackage();
             return mAdServicesPackageName;
         }
 
         boolean isAdServiceApkPresent() {
-            resolveAdServicesPackage();
             return mAdServicesPackageName != null;
         }
     }
@@ -406,8 +397,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         if (SdkLevel.isAtLeastU()) {
             registerSandboxActivityInterceptor();
         }
-
-        injector.resolveAdServicesPackage();
     }
 
     private void registerBroadcastReceivers() {

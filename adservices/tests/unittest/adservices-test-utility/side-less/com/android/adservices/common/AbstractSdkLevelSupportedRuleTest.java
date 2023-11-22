@@ -18,6 +18,7 @@ package com.android.adservices.common;
 import static com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel.ANY;
 import static com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel.R;
 import static com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel.S;
+import static com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel.S2;
 import static com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel.T;
 import static com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel.U;
 import static com.android.adservices.common.TestAnnotations.newAnnotationForAtLeast;
@@ -25,6 +26,7 @@ import static com.android.adservices.common.TestAnnotations.newAnnotationForAtLe
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel;
+import com.android.adservices.common.Logger.RealLogger;
 
 import com.google.common.truth.Expect;
 import com.google.common.truth.StringSubject;
@@ -35,16 +37,17 @@ import org.junit.Test;
 import org.junit.runner.Description;
 
 import java.lang.annotation.Annotation;
+import java.util.Objects;
 
 // TODO(b/295321663): provide host-side implementation
 /**
  * Test case for {@link AbstractSdkLevelSupportedRule} implementations.
  *
- * @param <RULE> rule implementation. NOTE: cannot be {@code T} or {@code R} as it would overshadow
- *     the statically imported constants.
+ * <p>By default, it uses a {@link FakeSdkLevelSupportedRule bogus rule} so it can be run by IDEs,\
+ * but subclasses should implement {@link #newRule(AndroidSdkLevel, AndroidSdkLevel)} and {@link
+ * #newRuleForDeviceLevelAndRuleAtLeastLevel(AndroidSdkLevel)}.
  */
-public abstract class AbstractSdkLevelSupportedRuleTestCase<
-        RULE extends AbstractSdkLevelSupportedRule> {
+public class AbstractSdkLevelSupportedRuleTest {
 
     // Not a real test (i.e., it doesn't exist on this class), but it's passed to Description
     private static final String TEST_METHOD_BEING_EXECUTED = "testAmI..OrNot";
@@ -53,50 +56,71 @@ public abstract class AbstractSdkLevelSupportedRuleTestCase<
 
     private final SimpleStatement mBaseStatement = new SimpleStatement();
 
+    protected final Logger mLog;
+
     @Rule public final Expect expect = Expect.create();
+
+    public AbstractSdkLevelSupportedRuleTest() {
+        this(StandardStreamsLogger.getInstance());
+    }
+
+    protected AbstractSdkLevelSupportedRuleTest(RealLogger realLogger) {
+        mLog = new Logger(Objects.requireNonNull(realLogger), getClass());
+    }
 
     // NOTE: the testRuleIsAtLeastMethods... refers to the device SDK, not the rule's
 
     @Test
     public void testRuleIsAtLeastMethods_deviceIsR() throws Exception {
-        RULE rule = newRuleForAtLeast(ANY);
-        setDeviceSdkLevel(rule, R);
+        var rule = newRule(/* ruleLevel= */ ANY, /* deviceLevel= */ R);
 
         expect.withMessage("rule.atLeastR()").that(rule.isAtLeastR()).isTrue();
         expect.withMessage("rule.atLeastS()").that(rule.isAtLeastS()).isFalse();
+        expect.withMessage("rule.atLeastS2()").that(rule.isAtLeastS2()).isFalse();
         expect.withMessage("rule.atLeastT()").that(rule.isAtLeastT()).isFalse();
         expect.withMessage("rule.atLeastU()").that(rule.isAtLeastU()).isFalse();
     }
 
     @Test
     public void testRuleIsAtLeastMethods_deviceIsS() throws Exception {
-        RULE rule = newRuleForAtLeast(ANY);
-        setDeviceSdkLevel(rule, S);
+        var rule = newRule(/* ruleLevel= */ ANY, /* deviceLevel= */ S);
 
         expect.withMessage("rule.atLeastR()").that(rule.isAtLeastR()).isTrue();
         expect.withMessage("rule.atLeastS()").that(rule.isAtLeastS()).isTrue();
+        expect.withMessage("rule.atLeastS2()").that(rule.isAtLeastS2()).isFalse();
+        expect.withMessage("rule.atLeastT()").that(rule.isAtLeastT()).isFalse();
+        expect.withMessage("rule.atLeastU()").that(rule.isAtLeastU()).isFalse();
+    }
+
+    @Test
+    public void testRuleIsAtLeastMethods_deviceIsS2() throws Exception {
+        var rule = newRule(/* ruleLevel= */ ANY, /* deviceLevel= */ S2);
+
+        expect.withMessage("rule.atLeastR()").that(rule.isAtLeastR()).isTrue();
+        expect.withMessage("rule.atLeastS()").that(rule.isAtLeastS()).isTrue();
+        expect.withMessage("rule.atLeastS2()").that(rule.isAtLeastS2()).isTrue();
         expect.withMessage("rule.atLeastT()").that(rule.isAtLeastT()).isFalse();
         expect.withMessage("rule.atLeastU()").that(rule.isAtLeastU()).isFalse();
     }
 
     @Test
     public void testRuleIsAtLeastMethods_deviceIsT() throws Exception {
-        RULE rule = newRuleForAtLeast(ANY);
-        setDeviceSdkLevel(rule, T);
+        var rule = newRule(/* ruleLevel= */ ANY, /* deviceLevel= */ T);
 
         expect.withMessage("rule.atLeastR()").that(rule.isAtLeastR()).isTrue();
         expect.withMessage("rule.atLeastS()").that(rule.isAtLeastS()).isTrue();
+        expect.withMessage("rule.atLeastS2()").that(rule.isAtLeastS2()).isTrue();
         expect.withMessage("rule.atLeastT()").that(rule.isAtLeastT()).isTrue();
         expect.withMessage("rule.atLeastU()").that(rule.isAtLeastU()).isFalse();
     }
 
     @Test
     public void testRuleIsAtLeastMethods_deviceIsU() throws Exception {
-        RULE rule = newRuleForAtLeast(ANY);
-        setDeviceSdkLevel(rule, U);
+        var rule = newRule(/* ruleLevel= */ ANY, /* deviceLevel= */ U);
 
         expect.withMessage("rule.atLeastR()").that(rule.isAtLeastR()).isTrue();
         expect.withMessage("rule.atLeastS()").that(rule.isAtLeastS()).isTrue();
+        expect.withMessage("rule.atLeastS2()").that(rule.isAtLeastS2()).isTrue();
         expect.withMessage("rule.atLeastT()").that(rule.isAtLeastT()).isTrue();
         expect.withMessage("rule.atLeastU()").that(rule.isAtLeastU()).isTrue();
     }
@@ -112,6 +136,11 @@ public abstract class AbstractSdkLevelSupportedRuleTestCase<
     @Test
     public void testRuleIsAtLeastAny_deviceIsS_runs() throws Throwable {
         testRanWhenRuleIsAtLeastXAndDeviceIsY(/* ruleLevel= */ ANY, /* deviceLevel= */ S);
+    }
+
+    @Test
+    public void testRuleIsAtLeastAny_deviceIsS2_runs() throws Throwable {
+        testRanWhenRuleIsAtLeastXAndDeviceIsY(/* ruleLevel= */ ANY, /* deviceLevel= */ S2);
     }
 
     @Test
@@ -173,6 +202,11 @@ public abstract class AbstractSdkLevelSupportedRuleTestCase<
     }
 
     @Test
+    public void testRuleIsAtLeastS_deviceIsS2_runs() throws Throwable {
+        testRanWhenRuleIsAtLeastXAndDeviceIsY(/* ruleLevel= */ S, /* deviceLevel= */ S2);
+    }
+
+    @Test
     public void testRuleIsAtLeastS_deviceIsS_testAnnotatedWithT_skips() throws Throwable {
         testSkippedWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithZ(
                 /* ruleLevel= */ S, /* deviceLevel= */ S, /* annotationLevel=*/ T);
@@ -198,6 +232,52 @@ public abstract class AbstractSdkLevelSupportedRuleTestCase<
     public void testRuleIsAtLeastS_deviceIsS_testAnnotatedWithS_runs() throws Throwable {
         testRanWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithZ(
                 /* ruleLevel= */ S, /* deviceLevel= */ S, /* annotationLevel=*/ S);
+    }
+
+    /*
+     * Tests for rule constructed for at least S2.
+     */
+    @Test
+    public void testRuleIsAtLeastS2_deviceIsR_skips() throws Throwable {
+        testSkippedWhenRuleIsAtLeastXAndDeviceIsY(/* ruleLevel= */ S2, /* deviceLevel= */ R);
+    }
+
+    @Test
+    public void testRuleIsAtLeastS2_deviceIsS_skips() throws Throwable {
+        testSkippedWhenRuleIsAtLeastXAndDeviceIsY(/* ruleLevel= */ S2, /* deviceLevel= */ S);
+    }
+
+    @Test
+    public void testRuleIsAtLeastS2_deviceIsS2_runs() throws Throwable {
+        testRanWhenRuleIsAtLeastXAndDeviceIsY(/* ruleLevel= */ S2, /* deviceLevel= */ S2);
+    }
+
+    @Test
+    public void testRuleIsAtLeastS2_deviceIsS2_testAnnotatedWithT_skips() throws Throwable {
+        testSkippedWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithZ(
+                /* ruleLevel= */ S2, /* deviceLevel= */ S2, /* annotationLevel=*/ T);
+    }
+
+    @Test
+    public void testRuleIsAtLeastS2_deviceIsS2_testAnnotatedWithU_skips() throws Throwable {
+        testSkippedWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithZ(
+                /* ruleLevel= */ S2, /* deviceLevel= */ S2, /* annotationLevel=*/ U);
+    }
+
+    @Test
+    public void testRuleIsAtLeastS2_deviceIsT_runs() throws Throwable {
+        testRanWhenRuleIsAtLeastXAndDeviceIsY(/* ruleLevel= */ S2, /* deviceLevel= */ T);
+    }
+
+    @Test
+    public void testRuleIsAtLeastS2_deviceIsU_runs() throws Throwable {
+        testRanWhenRuleIsAtLeastXAndDeviceIsY(/* ruleLevel= */ S2, /* deviceLevel= */ U);
+    }
+
+    @Test
+    public void testRuleIsAtLeastS2_deviceIsS2_testAnnotatedWithS2_runs() throws Throwable {
+        testRanWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithZ(
+                /* ruleLevel= */ S2, /* deviceLevel= */ S2, /* annotationLevel=*/ S2);
     }
 
     /*
@@ -264,17 +344,30 @@ public abstract class AbstractSdkLevelSupportedRuleTestCase<
                 /* ruleLevel= */ U, /* deviceLevel= */ U, /* annotationLevel=*/ U);
     }
 
-    protected abstract RULE newRuleForAtLeast(AndroidSdkLevel level);
+    /**
+     * Creates a rule that is constructed for at least {@code level} and also mocks that rule's
+     * {@link AbstractSdkLevelSupportedRule#getDeviceApiLevel()} to return {@code level}.
+     */
+    protected AbstractSdkLevelSupportedRule newRuleForDeviceLevelAndRuleAtLeastLevel(
+            AndroidSdkLevel level) {
+        return new FakeSdkLevelSupportedRule(/* ruleLevel= */ level, /* deviceLevel= */ level);
+    }
 
-    protected abstract void setDeviceSdkLevel(RULE rule, AndroidSdkLevel level);
+    /**
+     * Creates a rule that is constructed for at least {@code ruleLevel} and also mocks that rule's
+     * {@link AbstractSdkLevelSupportedRule#getDeviceApiLevel()} to return {@code deviceLevel}.
+     */
+    protected AbstractSdkLevelSupportedRule newRule(
+            AndroidSdkLevel ruleLevel, AndroidSdkLevel deviceLevel) {
+        return new FakeSdkLevelSupportedRule(ruleLevel, deviceLevel);
+    }
 
     // NOTE: eventually there will be releases X, Y, Z, but other names would make these methods
     // even longer than what they already are
 
     private void testRanWhenRuleIsAtLeastXAndDeviceIsY(
             AndroidSdkLevel ruleLevel, AndroidSdkLevel deviceLevel) throws Throwable {
-        RULE rule = newRuleForAtLeast(ruleLevel);
-        setDeviceSdkLevel(rule, deviceLevel);
+        var rule = newRuleForDeviceLevelAndRuleAtLeastLevel(ruleLevel);
         Description testMethod = newTestMethod();
 
         try {
@@ -289,8 +382,7 @@ public abstract class AbstractSdkLevelSupportedRuleTestCase<
     private void testRanWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithZ(
             AndroidSdkLevel ruleLevel, AndroidSdkLevel deviceLevel, AndroidSdkLevel annotationLevel)
             throws Throwable {
-        RULE rule = newRuleForAtLeast(ruleLevel);
-        setDeviceSdkLevel(rule, deviceLevel);
+        var rule = newRuleForDeviceLevelAndRuleAtLeastLevel(ruleLevel);
         Description testMethod = newTestMethod(newAnnotationForAtLeast(annotationLevel, REASON));
 
         try {
@@ -305,8 +397,7 @@ public abstract class AbstractSdkLevelSupportedRuleTestCase<
 
     private void testSkippedWhenRuleIsAtLeastXAndDeviceIsY(
             AndroidSdkLevel ruleLevel, AndroidSdkLevel deviceLevel) {
-        RULE rule = newRuleForAtLeast(ruleLevel);
-        setDeviceSdkLevel(rule, deviceLevel);
+        var rule = newRule(ruleLevel, deviceLevel);
         Description testMethod = newTestMethod();
 
         AssumptionViolatedException e =
@@ -326,8 +417,7 @@ public abstract class AbstractSdkLevelSupportedRuleTestCase<
             AndroidSdkLevel ruleLevel,
             AndroidSdkLevel deviceLevel,
             AndroidSdkLevel annotationLevel) {
-        RULE rule = newRuleForAtLeast(ruleLevel);
-        setDeviceSdkLevel(rule, deviceLevel);
+        var rule = newRule(ruleLevel, deviceLevel);
         Description testMethod = newTestMethod(newAnnotationForAtLeast(annotationLevel, REASON));
 
         AssumptionViolatedException e =
@@ -349,6 +439,31 @@ public abstract class AbstractSdkLevelSupportedRuleTestCase<
 
     private static Description newTestMethod(String methodName, Annotation... annotations) {
         return Description.createTestDescription(
-                AbstractSdkLevelSupportedRuleTestCase.class, methodName, annotations);
+                AbstractSdkLevelSupportedRuleTest.class, methodName, annotations);
+    }
+
+    /**
+     * Bogus implementation of {@link AbstractSdkLevelSupported}.
+     *
+     * <p>It's returned by default by {@link
+     * AbstractSdkLevelSupportedRuleTest#newRule(AndroidSdkLevel, AndroidSdkLevel)} and {@link
+     * AbstractSdkLevelSupportedRuleTest#newRuleForDeviceLevelAndRuleAtLeastLevel(AndroidSdkLevel)},
+     * so this test class can run independently of the real implementation, which makes it possible
+     * to run this test directly from an IDE.
+     */
+    private static final class FakeSdkLevelSupportedRule extends AbstractSdkLevelSupportedRule {
+
+        private final AndroidSdkLevel mDeviceLevel;
+
+        private FakeSdkLevelSupportedRule(AndroidSdkLevel ruleLevel, AndroidSdkLevel deviceLevel) {
+            super(StandardStreamsLogger.getInstance(), ruleLevel);
+
+            mDeviceLevel = deviceLevel;
+        }
+
+        @Override
+        public AndroidSdkLevel getDeviceApiLevel() {
+            return mDeviceLevel;
+        }
     }
 }

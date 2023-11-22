@@ -36,6 +36,8 @@ import androidx.test.filters.SmallTest;
 import com.android.adservices.MockRandom;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.data.topics.CombinedTopic;
+import com.android.adservices.data.topics.EncryptedTopic;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
@@ -57,6 +59,7 @@ import org.mockito.MockitoAnnotations;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -131,8 +134,12 @@ public final class CacheManagerTest {
     public void testGetTopics_emptyCache() {
         // The cache is empty when first created.
         List<Topic> topics =
-                mCacheManager.getTopics(
-                        /* numberOfLookBackEpochs= */ 3, /* epochId */ 0L, "app", "sdk");
+                getOnlyTopics(
+                        /* cacheManager */ mCacheManager,
+                        /* numberOfLookBackEpochs= */ 3,
+                        /* epochId */ 0L,
+                        "app",
+                        "sdk");
 
         assertThat(topics).isEmpty();
 
@@ -212,94 +219,170 @@ public final class CacheManagerTest {
         // Now look at epochId == 3 only by setting numberOfLookBackEpochs == 1.
         // Since the epochId 3 has empty cache, the results are always empty.
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 1, currentEpochId, "app1", ""))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 1,
+                                currentEpochId,
+                                "app1",
+                                ""))
                 .isEmpty();
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 1, currentEpochId, "app1", "sdk1"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 1,
+                                currentEpochId,
+                                "app1",
+                                "sdk1"))
                 .isEmpty();
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 1, currentEpochId, "app1", "sdk2"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 1,
+                                currentEpochId,
+                                "app1",
+                                "sdk2"))
                 .isEmpty();
 
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 1, currentEpochId, "app3", "sdk1"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 1,
+                                currentEpochId,
+                                "app3",
+                                "sdk1"))
                 .isEmpty();
 
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 1, currentEpochId, "app4", "sdk1"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 1,
+                                currentEpochId,
+                                "app4",
+                                "sdk1"))
                 .isEmpty();
 
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 1, currentEpochId, "app5", "sdk1"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 1,
+                                currentEpochId,
+                                "app5",
+                                "sdk1"))
                 .isEmpty();
 
         // Now look at epochId in {3, 2} only by setting numberOfLookBackEpochs = 2.
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 2, currentEpochId, "app1", ""))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 2,
+                                currentEpochId,
+                                "app1",
+                                ""))
                 .isEqualTo(Collections.singletonList(topic2));
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 2, currentEpochId, "app1", "sdk1"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 2,
+                                currentEpochId,
+                                "app1",
+                                "sdk1"))
                 .isEqualTo(Collections.singletonList(topic2));
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 2, currentEpochId, "app1", "sdk2"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 2,
+                                currentEpochId,
+                                "app1",
+                                "sdk2"))
                 .isEqualTo(Collections.singletonList(topic2));
 
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 2, currentEpochId, "app3", "sdk1"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 2,
+                                currentEpochId,
+                                "app3",
+                                "sdk1"))
                 .isEqualTo(Collections.singletonList(topic4));
 
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 2, currentEpochId, "app4", "sdk1"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 2,
+                                currentEpochId,
+                                "app4",
+                                "sdk1"))
                 .isEmpty();
 
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 2, currentEpochId, "app5", "sdk1"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 2,
+                                currentEpochId,
+                                "app5",
+                                "sdk1"))
                 .isEqualTo(Collections.singletonList(topic1));
 
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 2, currentEpochId, "app5", "sdk5"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 2,
+                                currentEpochId,
+                                "app5",
+                                "sdk5"))
                 .isEqualTo(Collections.singletonList(topic1));
 
         // Now look at epochId in [1,..,3] by setting numberOfLookBackEpochs = 3.
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 3, currentEpochId, "app1", ""))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 3,
+                                currentEpochId,
+                                "app1",
+                                ""))
                 .containsExactlyElementsIn(Arrays.asList(topic2, topic1));
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 3, currentEpochId, "app1", "sdk1"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 3,
+                                currentEpochId,
+                                "app1",
+                                "sdk1"))
                 .containsExactlyElementsIn(Arrays.asList(topic2, topic1));
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 3, currentEpochId, "app1", "sdk2"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 3,
+                                currentEpochId,
+                                "app1",
+                                "sdk2"))
                 .containsExactlyElementsIn(Arrays.asList(topic2, topic1));
 
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 3, currentEpochId, "app3", "sdk1"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 3,
+                                currentEpochId,
+                                "app3",
+                                "sdk1"))
                 .containsExactlyElementsIn(Arrays.asList(topic4, topic3));
 
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 3, currentEpochId, "app4", "sdk1"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 3,
+                                currentEpochId,
+                                "app4",
+                                "sdk1"))
                 .isEmpty();
 
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 3, currentEpochId, "app5", "sdk1"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 3,
+                                currentEpochId,
+                                "app5",
+                                "sdk1"))
                 .containsExactlyElementsIn(Arrays.asList(topic1, topic5));
 
         // Verify Cobalt Logger.
@@ -406,98 +489,174 @@ public final class CacheManagerTest {
         // Now look at epochId == 3 only by setting numberOfLookBackEpochs == 1.
         // Since the epochId 3 has empty cache, the results are always empty.
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 1, currentEpochId, "app1", ""))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 1,
+                                currentEpochId,
+                                "app1",
+                                ""))
                 .isEmpty();
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 1, currentEpochId, "app1", "sdk1"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 1,
+                                currentEpochId,
+                                "app1",
+                                "sdk1"))
                 .isEmpty();
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 1, currentEpochId, "app1", "sdk2"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 1,
+                                currentEpochId,
+                                "app1",
+                                "sdk2"))
                 .isEmpty();
 
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 1, currentEpochId, "app3", "sdk1"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 1,
+                                currentEpochId,
+                                "app3",
+                                "sdk1"))
                 .isEmpty();
 
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 1, currentEpochId, "app4", "sdk1"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 1,
+                                currentEpochId,
+                                "app4",
+                                "sdk1"))
                 .isEmpty();
 
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 1, currentEpochId, "app5", "sdk1"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 1,
+                                currentEpochId,
+                                "app5",
+                                "sdk1"))
                 .isEmpty();
 
         // Now look at epochId in {3, 2} only by setting numberOfLookBackEpochs = 2.
         // Should return topic2, but it's blocked - so emptyList is expected.
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 2, currentEpochId, "app1", ""))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 2,
+                                currentEpochId,
+                                "app1",
+                                ""))
                 .isEmpty();
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 2, currentEpochId, "app1", "sdk1"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 2,
+                                currentEpochId,
+                                "app1",
+                                "sdk1"))
                 .isEmpty();
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 2, currentEpochId, "app1", "sdk2"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 2,
+                                currentEpochId,
+                                "app1",
+                                "sdk2"))
                 .isEmpty();
 
         // Should return topic4, but it's blocked - so emptyList is expected.
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 2, currentEpochId, "app3", "sdk1"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 2,
+                                currentEpochId,
+                                "app3",
+                                "sdk1"))
                 .isEmpty();
 
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 2, currentEpochId, "app4", "sdk1"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 2,
+                                currentEpochId,
+                                "app4",
+                                "sdk1"))
                 .isEmpty();
 
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 2, currentEpochId, "app5", "sdk1"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 2,
+                                currentEpochId,
+                                "app5",
+                                "sdk1"))
                 .isEqualTo(Collections.singletonList(topic1));
 
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 2, currentEpochId, "app5", "sdk5"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 2,
+                                currentEpochId,
+                                "app5",
+                                "sdk5"))
                 .isEqualTo(Collections.singletonList(topic1));
 
         // Now look at epochId in [1,..,3] by setting numberOfLookBackEpochs = 3.
         // Should return topic1 and topic2, but topic2 is blocked - so only topic1 is expected.
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 3, currentEpochId, "app1", ""))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 3,
+                                currentEpochId,
+                                "app1",
+                                ""))
                 .containsExactlyElementsIn(Arrays.asList(topic1));
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 3, currentEpochId, "app1", "sdk1"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 3,
+                                currentEpochId,
+                                "app1",
+                                "sdk1"))
                 .containsExactlyElementsIn(Arrays.asList(topic1));
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 3, currentEpochId, "app1", "sdk2"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 3,
+                                currentEpochId,
+                                "app1",
+                                "sdk2"))
                 .containsExactlyElementsIn(Arrays.asList(topic1));
 
         // Should return topic3 and topic4, but topic4 is blocked - so only topic3 is expected.
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 3, currentEpochId, "app3", "sdk1"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 3,
+                                currentEpochId,
+                                "app3",
+                                "sdk1"))
                 .containsExactlyElementsIn(Arrays.asList(topic3));
 
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 3, currentEpochId, "app4", "sdk1"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 3,
+                                currentEpochId,
+                                "app4",
+                                "sdk1"))
                 .isEmpty();
 
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 3, currentEpochId, "app5", "sdk1"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 3,
+                                currentEpochId,
+                                "app5",
+                                "sdk1"))
                 .containsExactlyElementsIn(Arrays.asList(topic1, topic5));
 
         // GetTopics is invoked 19 times.
@@ -569,29 +728,53 @@ public final class CacheManagerTest {
         // Now look at epochId in {3, 2} only by setting numberOfLookBackEpochs = 2.
         // Should return topic2, but it's blocked - so emptyList is expected.
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 2, currentEpochId, "app1", ""))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 2,
+                                currentEpochId,
+                                "app1",
+                                ""))
                 .isEmpty();
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 2, currentEpochId, "app1", "sdk1"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 2,
+                                currentEpochId,
+                                "app1",
+                                "sdk1"))
                 .isEmpty();
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 2, currentEpochId, "app1", "sdk2"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 2,
+                                currentEpochId,
+                                "app1",
+                                "sdk2"))
                 .isEmpty();
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 2, currentEpochId, "app5", "sdk1"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 2,
+                                currentEpochId,
+                                "app5",
+                                "sdk1"))
                 .isEmpty();
 
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 2, currentEpochId, "app2", "sdk1"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 2,
+                                currentEpochId,
+                                "app2",
+                                "sdk1"))
                 .isEqualTo(Collections.singletonList(topic3));
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 2, currentEpochId, "app3", "sdk1"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 2,
+                                currentEpochId,
+                                "app3",
+                                "sdk1"))
                 .isEqualTo(Collections.singletonList(topic4));
 
         // GetTopics is invoked 6 times.
@@ -702,18 +885,30 @@ public final class CacheManagerTest {
         // Should return topic1, topic2 and topic3, but topic2 is blocked - so only topic1 and
         // topic3 are expected.
         assertThat(
-                        cacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 3, currentEpochId, "app1", ""))
+                        getOnlyTopics(
+                                /* cacheManager */ cacheManager,
+                                /* numberOfLookBackEpochs= */ 3,
+                                currentEpochId,
+                                "app1",
+                                ""))
                 .containsExactlyElementsIn(Arrays.asList(topic1, topic3));
         // Should return topic1 and topic2, but topic2 is blocked - so only topic1 is expected.
         assertThat(
-                        cacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 3, currentEpochId, "app1", "sdk1"))
+                        getOnlyTopics(
+                                /* cacheManager */ cacheManager,
+                                /* numberOfLookBackEpochs= */ 3,
+                                currentEpochId,
+                                "app1",
+                                "sdk1"))
                 .containsExactlyElementsIn(Arrays.asList(topic1));
         // Should return topic1 and topic2, but topic2 is blocked - so only topic1 is expected.
         assertThat(
-                        cacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 3, currentEpochId, "app1", "sdk2"))
+                        getOnlyTopics(
+                                /* cacheManager */ cacheManager,
+                                /* numberOfLookBackEpochs= */ 3,
+                                currentEpochId,
+                                "app1",
+                                "sdk2"))
                 .containsExactlyElementsIn(Arrays.asList(topic1));
 
         // GetTopics is invoked 3 times.
@@ -741,6 +936,152 @@ public final class CacheManagerTest {
 
         // Verify IPC calls
         verify(mMockAdServicesManager).retrieveAllBlockedTopics();
+    }
+
+    @Test
+    public void testGetTopics_enableEncryption_success() {
+        // Assume the current epochId is 4L, we will load cache for returned topics in the last 3
+        // epochs: epochId in {3, 2, 1}.
+        long currentEpochId = 4L;
+        // Mock Flags to make it independent of configuration
+        when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(3);
+        when(mMockFlags.getEnableDatabaseSchemaVersion8()).thenReturn(true);
+        // Enable encryption
+        when(mMockFlags.getEnableDatabaseSchemaVersion9()).thenReturn(true);
+        when(mMockFlags.getTopicsEnableEncryption()).thenReturn(true);
+
+        Topic topic1 =
+                Topic.create(
+                        /* topic */ 1,
+                        /* taxonomyVersion */ 1L,
+                        /* modelVersion */ 1L,
+                        /* loggedTopic */ 1);
+        EncryptedTopic encryptedTopic1 =
+                EncryptedTopic.create(
+                        /* encryptedTopic */ topic1.toString().getBytes(StandardCharsets.UTF_8),
+                        /* keyIdentifier */ "keyIdentifier1",
+                        /* encapsulatedKey */ new byte[] {});
+        Topic topic2 =
+                Topic.create(
+                        /* topic */ 2,
+                        /* taxonomyVersion */ 1L,
+                        /* modelVersion */ 1L,
+                        /* loggedTopic */ 1);
+        EncryptedTopic encryptedTopic2 =
+                EncryptedTopic.create(
+                        /* encryptedTopic */ topic2.toString().getBytes(StandardCharsets.UTF_8),
+                        /* keyIdentifier */ "keyIdentifier2",
+                        /* encapsulatedKey */ new byte[] {});
+
+        // EpochId 3 - Plain text Topics
+        Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap = new HashMap<>();
+        returnedAppSdkTopicsMap.put(Pair.create("app1", "sdk1"), topic1);
+        returnedAppSdkTopicsMap.put(Pair.create("app1", "sdk2"), topic2);
+
+        mTopicsDao.persistReturnedAppTopicsMap(/* epochId */ 3L, returnedAppSdkTopicsMap);
+
+        // EpochId 3 - EncryptedTopics
+        Map<Pair<String, String>, EncryptedTopic> returnedEncryptedTopics = new HashMap<>();
+        returnedEncryptedTopics.put(Pair.create("app1", "sdk1"), encryptedTopic1);
+        returnedEncryptedTopics.put(Pair.create("app1", "sdk2"), encryptedTopic2);
+
+        mTopicsDao.persistReturnedAppEncryptedTopicsMap(/* epochId */ 3L, returnedEncryptedTopics);
+
+        mCacheManager.loadCache(currentEpochId);
+
+        // Now look at epochId in [1,..,3] by setting numberOfLookBackEpochs = 3.
+        // Should return topics and encryptedTopics for epoch 3.
+        List<CombinedTopic> combinedTopics1 =
+                mCacheManager.getTopics(
+                        /* numberOfLookBackEpochs= */ 3, currentEpochId, "app1", "sdk1");
+        assertThat(combinedTopics1.size()).isEqualTo(1);
+        assertThat(combinedTopics1.get(0).getTopic()).isEqualTo(topic1);
+        assertThat(combinedTopics1.get(0).getEncryptedTopic()).isEqualTo(encryptedTopic1);
+
+        List<CombinedTopic> combinedTopics2 =
+                mCacheManager.getTopics(
+                        /* numberOfLookBackEpochs= */ 3, currentEpochId, "app1", "sdk2");
+        assertThat(combinedTopics2.size()).isEqualTo(1);
+        assertThat(combinedTopics2.get(0).getTopic()).isEqualTo(topic2);
+        assertThat(combinedTopics2.get(0).getEncryptedTopic()).isEqualTo(encryptedTopic2);
+    }
+
+    @Test
+    public void testGetTopics_enableEncryption_missingEncryptedTopics() {
+        // Assume the current epochId is 4L, we will load cache for returned topics in the last 3
+        // epochs: epochId in {3, 2, 1}.
+        long currentEpochId = 4L;
+        // Mock Flags to make it independent of configuration
+        when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(3);
+        when(mMockFlags.getEnableDatabaseSchemaVersion8()).thenReturn(true);
+        // Enable encryption
+        when(mMockFlags.getEnableDatabaseSchemaVersion9()).thenReturn(true);
+        when(mMockFlags.getTopicsEnableEncryption()).thenReturn(true);
+
+        Topic topic1 =
+                Topic.create(
+                        /* topic */ 1,
+                        /* taxonomyVersion */ 1L,
+                        /* modelVersion */ 1L,
+                        /* loggedTopic */ 1);
+        EncryptedTopic encryptedTopic1 =
+                EncryptedTopic.create(
+                        /* encryptedTopic */ topic1.toString().getBytes(StandardCharsets.UTF_8),
+                        /* keyIdentifier */ "keyIdentifier1",
+                        /* encapsulatedKey */ new byte[] {});
+        Topic topic2 =
+                Topic.create(
+                        /* topic */ 2,
+                        /* taxonomyVersion */ 1L,
+                        /* modelVersion */ 1L,
+                        /* loggedTopic */ 1);
+
+        // EpochId 3 - Plain text Topics
+        Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap1 = new HashMap<>();
+        returnedAppSdkTopicsMap1.put(Pair.create("app1", "sdk1"), topic1);
+        returnedAppSdkTopicsMap1.put(Pair.create("app1", "sdk2"), topic2);
+
+        mTopicsDao.persistReturnedAppTopicsMap(/* epochId */ 3L, returnedAppSdkTopicsMap1);
+
+        // EpochId 3 - EncryptedTopics
+        Map<Pair<String, String>, EncryptedTopic> returnedEncryptedTopics = new HashMap<>();
+        returnedEncryptedTopics.put(Pair.create("app1", "sdk1"), encryptedTopic1);
+        // Don't add entry for ("app1", "sdk2")
+        mTopicsDao.persistReturnedAppEncryptedTopicsMap(/* epochId */ 3L, returnedEncryptedTopics);
+
+        // EpochId 2 - Plain text Topics
+        Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap2 = new HashMap<>();
+        returnedAppSdkTopicsMap2.put(Pair.create("app1", "sdk1"), topic2);
+        returnedAppSdkTopicsMap2.put(Pair.create("app1", "sdk2"), topic1);
+
+        mTopicsDao.persistReturnedAppTopicsMap(/* epochId */ 2L, returnedAppSdkTopicsMap2);
+
+        // Epoch Id 2 - Missing EncryptedTopics for EpochId - 2
+
+        mCacheManager.loadCache(currentEpochId);
+
+        // Now look at epochId in [1,..,3] by setting numberOfLookBackEpochs = 3.
+        // Should return topics and encryptedTopics for epoch 3.
+        List<CombinedTopic> combinedTopics1 =
+                mCacheManager.getTopics(
+                        /* numberOfLookBackEpochs= */ 3, currentEpochId, "app1", "sdk1");
+        assertThat(combinedTopics1.size()).isEqualTo(2);
+        // Verify default instance for EncryptedTopic in case of missing map.
+        assertThat(combinedTopics1)
+                .containsExactly(
+                        CombinedTopic.create(topic1, encryptedTopic1),
+                        CombinedTopic.create(topic2, EncryptedTopic.getDefaultInstance()));
+
+        List<CombinedTopic> combinedTopics2 =
+                mCacheManager.getTopics(
+                        /* numberOfLookBackEpochs= */ 3, currentEpochId, "app1", "sdk2");
+        assertThat(combinedTopics2.size()).isEqualTo(2);
+        // Verify default instance for EncryptedTopic in case of missing specific entries on that
+        // epoch.
+        assertThat(combinedTopics2)
+                .containsExactly(
+                        CombinedTopic.create(topic1, EncryptedTopic.getDefaultInstance()),
+                        CombinedTopic.create(topic2, EncryptedTopic.getDefaultInstance()));
     }
 
     @Test
@@ -838,18 +1179,30 @@ public final class CacheManagerTest {
         // Should return topic1, topic2 and topic3, but topic2 is blocked - so only topic1 and
         // topic3 are expected.
         assertThat(
-                cacheManager.getTopics(
-                        /* numberOfLookBackEpochs= */ 3, currentEpochId, "app1", ""))
+                        getOnlyTopics(
+                                /* cacheManager */ cacheManager,
+                                /* numberOfLookBackEpochs= */ 3,
+                                currentEpochId,
+                                "app1",
+                                ""))
                 .containsExactlyElementsIn(Arrays.asList(topic1, topic3));
         // Should return topic1 and topic2, but topic2 is blocked - so only topic1 is expected.
         assertThat(
-                cacheManager.getTopics(
-                        /* numberOfLookBackEpochs= */ 3, currentEpochId, "app1", "sdk1"))
+                        getOnlyTopics(
+                                /* cacheManager */ cacheManager,
+                                /* numberOfLookBackEpochs= */ 3,
+                                currentEpochId,
+                                "app1",
+                                "sdk1"))
                 .containsExactlyElementsIn(Arrays.asList(topic1));
         // Should return topic1 and topic2, but topic2 is blocked - so only topic1 is expected.
         assertThat(
-                cacheManager.getTopics(
-                        /* numberOfLookBackEpochs= */ 3, currentEpochId, "app1", "sdk2"))
+                        getOnlyTopics(
+                                /* cacheManager */ cacheManager,
+                                /* numberOfLookBackEpochs= */ 3,
+                                currentEpochId,
+                                "app1",
+                                "sdk2"))
                 .containsExactlyElementsIn(Arrays.asList(topic1));
 
         // GetTopics is invoked 3 times.
@@ -943,7 +1296,8 @@ public final class CacheManagerTest {
         // As described above, (app1, sdk1) should have returned topics in order (3, 2, 1), while
         // (app2, sdk2) should have returned topics in order (1, 2, 3).
         assertThat(
-                        mCacheManager.getTopics(
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
                                 /* numberOfLookBackEpochs= */ 3,
                                 currentEpochId,
                                 "app1",
@@ -951,7 +1305,8 @@ public final class CacheManagerTest {
                                 mockRandom))
                 .isEqualTo(Arrays.asList(topic3, topic2, topic1));
         assertThat(
-                        mCacheManager.getTopics(
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
                                 /* numberOfLookBackEpochs= */ 3,
                                 currentEpochId,
                                 "app1",
@@ -1006,16 +1361,28 @@ public final class CacheManagerTest {
 
         // Now look at epochId == 3 only by setting numberOfLookBackEpochs == 1.
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 1, currentEpochId, "app1", ""))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 1,
+                                currentEpochId,
+                                "app1",
+                                ""))
                 .isEqualTo(Collections.singletonList(topic1));
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 1, currentEpochId, "app1", "sdk1"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 1,
+                                currentEpochId,
+                                "app1",
+                                "sdk1"))
                 .isEqualTo(Collections.singletonList(topic2));
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 1, currentEpochId, "app1", "sdk2"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 1,
+                                currentEpochId,
+                                "app1",
+                                "sdk2"))
                 .isEqualTo(Collections.singletonList(topic3));
 
         // Now look at epochId == [2,3] by setting numberOfLookBackEpochs == 2.
@@ -1024,16 +1391,28 @@ public final class CacheManagerTest {
         // Same things for (app1, ""), both Epoch 2 and Epoch 3 have same topic(topic 1), which
         // should be deduplicated.
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 2, currentEpochId, "app1", ""))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 2,
+                                currentEpochId,
+                                "app1",
+                                ""))
                 .isEqualTo(Collections.singletonList(topic1));
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 2, currentEpochId, "app1", "sdk1"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 2,
+                                currentEpochId,
+                                "app1",
+                                "sdk1"))
                 .isEqualTo(Collections.singletonList(topic2));
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 2, currentEpochId, "app1", "sdk2"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 2,
+                                currentEpochId,
+                                "app1",
+                                "sdk2"))
                 .containsExactlyElementsIn(Arrays.asList(topic2, topic3));
 
         // Now look at epochId == [1,2,3] by setting numberOfLookBackEpochs == 3.
@@ -1043,16 +1422,28 @@ public final class CacheManagerTest {
         // Note for (app1, sdk1), both Epoch 2 and Epoch 3 have same topic(topic 2), and Epoch 1 has
         // value topic 1, so it should return (topic1, topic2).
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 3, currentEpochId, "app1", ""))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 3,
+                                currentEpochId,
+                                "app1",
+                                ""))
                 .isEqualTo(Collections.singletonList(topic1));
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 3, currentEpochId, "app1", "sdk1"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 3,
+                                currentEpochId,
+                                "app1",
+                                "sdk1"))
                 .containsExactlyElementsIn(Arrays.asList(topic1, topic2));
         assertThat(
-                        mCacheManager.getTopics(
-                                /* numberOfLookBackEpochs= */ 3, currentEpochId, "app1", "sdk2"))
+                        getOnlyTopics(
+                                /* cacheManager */ mCacheManager,
+                                /* numberOfLookBackEpochs= */ 3,
+                                currentEpochId,
+                                "app1",
+                                "sdk2"))
                 .containsExactlyElementsIn(Arrays.asList(topic1, topic2, topic3));
 
         // GetTopics is invoked 9 times.
@@ -1075,8 +1466,12 @@ public final class CacheManagerTest {
     public void testGetTopics_failToLoadFromDb() {
         // Fail to load from DB will have empty cache.
         List<Topic> topics =
-                mCacheManager.getTopics(
-                        /* numberOfLookBackEpochs= */ 3, /* epochId */ 0L, "app", "sdk");
+                getOnlyTopics(
+                        /* cacheManager */ mCacheManager,
+                        /* numberOfLookBackEpochs= */ 3, /* epochId */
+                        0L,
+                        "app",
+                        "sdk");
 
         assertThat(topics).isEmpty();
 
@@ -1265,6 +1660,16 @@ public final class CacheManagerTest {
         verify(mMockAdServicesManager).retrieveAllBlockedTopics();
     }
 
+    private static List<Topic> getOnlyTopics(
+            CacheManager cacheManager,
+            int numberOfLookBackEpochs,
+            long currentEpochId,
+            String app,
+            String sdk) {
+        return extractTopics(
+                cacheManager.getTopics(numberOfLookBackEpochs, currentEpochId, app, sdk));
+    }
+
     @Test
     public void testGetKnownTopicsWithConsent_blockAllTopics() {
         // Assume the current epochId is 4L, we will load cache for returned topics in the last 3
@@ -1408,9 +1813,30 @@ public final class CacheManagerTest {
         mCacheManager.loadCache(epochId2);
         for (String app : new String[] {app1, app2}) {
             for (String sdk : new String[] {sdk1, sdk2}) {
-                assertThat(mCacheManager.getTopics((int) epochId2 + 1, epochId2, app, sdk))
+                assertThat(
+                                getOnlyTopics(
+                                        /* cacheManager */ mCacheManager,
+                                        (int) epochId2 + 1,
+                                        epochId2,
+                                        app,
+                                        sdk))
                         .isEmpty();
             }
         }
+    }
+
+    private static List<Topic> getOnlyTopics(
+            CacheManager cacheManager,
+            int numberOfLookBackEpochs,
+            long currentEpochId,
+            String app,
+            String sdk,
+            Random random) {
+        return extractTopics(
+                cacheManager.getTopics(numberOfLookBackEpochs, currentEpochId, app, sdk, random));
+    }
+
+    private static List<Topic> extractTopics(List<CombinedTopic> combinedTopics) {
+        return combinedTopics.stream().map(CombinedTopic::getTopic).collect(Collectors.toList());
     }
 }
