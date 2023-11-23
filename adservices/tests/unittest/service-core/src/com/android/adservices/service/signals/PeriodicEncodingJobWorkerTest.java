@@ -56,6 +56,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
@@ -121,7 +122,7 @@ public class PeriodicEncodingJobWorkerTest {
     public void testValidateAndPersistPayloadSuccess() {
         byte[] payload = new byte[] {0x0A, 0x01};
         int version = 1;
-        assertTrue(mJobWorker.validateAndPersistPayload(BUYER, encodedPayload, version));
+        assertTrue(mJobWorker.validateAndPersistPayload(BUYER, payload, version));
 
         verify(mEncodedPayloadDao).persistEncodedPayload(mEncodedPayloadCaptor.capture());
         assertEquals(BUYER, mEncodedPayloadCaptor.getValue().getBuyer());
@@ -213,9 +214,17 @@ public class PeriodicEncodingJobWorkerTest {
                                 new IllegalStateException("Simulating illegal response from JS")));
 
         // Run encoding for the buyer where jsEngine returns invalid payload
-        assertFalse(
-                mJobWorker.runEncodingPerBuyer(BUYER, TIMEOUT_SECONDS).get(5, TimeUnit.SECONDS));
-        verifyZeroInteractions(mEncodedPayloadDao);
+        Exception e =
+                assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                mJobWorker
+                                        .runEncodingPerBuyer(
+                                                BUYER, TIMEOUT_SECONDS)
+                                        .get(5, TimeUnit.SECONDS));
+        assertEquals(IllegalStateException.class, e.getCause().getClass());
+        assertEquals(PAYLOAD_PERSISTENCE_ERROR_MSG, e.getCause().getMessage());
+        Mockito.verifyZeroInteractions(mEncodedPayloadDao);
     }
 
     @Test
@@ -234,9 +243,9 @@ public class PeriodicEncodingJobWorkerTest {
         Map<String, List<ProtectedSignal>> fakeSignals = new HashMap<>();
         when(mSignalStorageManager.getSignals(BUYER)).thenReturn(fakeSignals);
 
-        when(mScriptEngine.encodeSignals(any(), any(), anyInt()))
-                .thenReturn(
-                        Futures.immediateFailedFuture(new RuntimeException("Random exception")));
+        ListenableFuture<byte[]> jsScriptResponse =
+                Futures.immediateFailedFuture(new RuntimeException("Random exception"));
+        when(mScriptEngine.encodeSignals(any(), any(), anyInt())).thenReturn(jsScriptResponse);
 
         // Run encoding for the buyer where jsEngine encounters Runtime Exception
         Exception e =

@@ -302,7 +302,6 @@ public class AdSelectionScriptEngine {
     private static final String MARSHALL_ENCODED_SIGNALS_JS =
             "function encodeHex(e){return e.reduce((e,n)=>e+n.toString(16).padStart(2,"
                     + " '0'),\"\");}";
-
     /**
      * This JS wraps around encodeSignals() logic. Un-marshals the signals and then invokes the
      * encodeSignals() script.
@@ -313,7 +312,6 @@ public class AdSelectionScriptEngine {
                     + "(signals, maxSize) {\n"
                     + "  const unmarshalledSignals = unmarshal(signals);\n"
                     + "\n"
-                    + "  "
                     + "  let encodeResult = "
                     + ENCODE_SIGNALS_FUNCTION_NAME
                     + "(unmarshalledSignals, maxSize);\n"
