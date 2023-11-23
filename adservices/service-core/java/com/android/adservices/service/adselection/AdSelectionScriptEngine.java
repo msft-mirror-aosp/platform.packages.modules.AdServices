@@ -260,37 +260,33 @@ public class AdSelectionScriptEngine {
      *     return byteArray;
      * }
      *
-     * function unmarshal(signalObjects) {
-     *     const signals = signalObjects;
-     *     const mappedObjects = [];
-     *
-     *     signals.forEach(signalGroup => {
-     *         for (const key in signalGroup) {
-     *             const signal_key = decodeHex(key);
-     *             const decodedValues = signalGroup[key].map(entry => ({
+     * function unmarshal(signalObjects){
+     *    const result=new Map();
+     *    signalObjects.forEach(
+     *      (signalGroup=> {
+     *        for(const key in signalGroup){
+     *          const signal_key = decodeHex(key)
+     *          const decodedValues= signalGroup[key].map((entry=>({
      *                 signal_value: decodeHex(entry.val),
      *                 creation_time: entry.time,
-     *                 package_name: entry.app.trim(), // Remove leading/trailing whitespaces
-     *             }));
+     *                 package_name: entry.app.trim()
+     *               })));
      *
-     *             const mappedObject = {
-     *                 [signal_key]: decodedValues,
-     *             };
-     *             mappedObjects.push(mappedObject);
+     *           result.set(signal_key, decodedValues)
      *         }
-     *     });
-     *
-     *     return mappedObjects;
+     *        })
+     *     )
+     *   return result;
      * }
      * </pre>
      */
     private static final String UNMARSHAL_SIGNALS_JS =
-            "function decodeHex(e){if((e=e.replace(/\\\\s/g,\"\")).length%2!=0)throw new Error"
-                    + "(\"hex must have even chars.\");const n=new Uint8Array(e.length/2);for(let"
-                    + " t=0;t<e.length;t+=2){const r=parseInt(e.substr(t,2),16);n[t/2]=r}return "
-                    + "n}function unmarshal(e){const n=[];return e.forEach((e=>{for(const t in e)"
-                    + "{const r={[decodeHex(t)]:e[t].map((e=>({signal_value:decodeHex(e.val),"
-                    + "creation_time:e.time,package_name:e.app.trim()})))};n.push(r)}})),n}";
+            "function decodeHex(e){if((e=e.replace(/\\\\s/g,\"\")).length%2!=0)throw Error(\"hex "
+                    + "must have even chars.\");let t=new Uint8Array(e.length/2);for(let n=0;n<e"
+                    + ".length;n+=2){let a=parseInt(e.substr(n,2),16);t[n/2]=a}return t}function "
+                    + "unmarshal(e){let t=new Map;return e.forEach(e=>{for(let n in e){let a=e[n]."
+                    + "map(e=>({signal_value:decodeHex(e.val),creation_time:e.time,package_name:e."
+                    + "app.trim()}));t.set(decodeHex(n),a)}}),t}";
 
     /**
      * Function used to marshal the Uint8Array returned by encodeSignals into an hex string.
@@ -315,13 +311,12 @@ public class AdSelectionScriptEngine {
             "function "
                     + ENCODE_SIGNALS_DRIVER_FUNCTION_NAME
                     + "(signals, maxSize) {\n"
-                    + "console.log(signals, maxSize);\n"
                     + "  const unmarshalledSignals = unmarshal(signals);\n"
                     + "\n"
                     + "  "
                     + "  let encodeResult = "
                     + ENCODE_SIGNALS_FUNCTION_NAME
-                    + "(signals, maxSize);\n"
+                    + "(unmarshalledSignals, maxSize);\n"
                     + "   return { 'status': encodeResult.status, "
                     + "'results': encodeHex(encodeResult.results) };\n"
                     + "}\n"

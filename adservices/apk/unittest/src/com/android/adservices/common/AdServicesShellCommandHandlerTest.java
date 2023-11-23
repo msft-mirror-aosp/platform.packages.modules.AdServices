@@ -48,7 +48,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
 
-public final class AdServicesShellCommandHandlerTest {
+public final class AdServicesShellCommandHandlerTest extends AdServicesUnitTestCase {
 
     private static final String PKG_NAME = "d.h.a.r.m.a";
     private static final String ENROLLMENT_ID = "42";
@@ -59,8 +59,6 @@ public final class AdServicesShellCommandHandlerTest {
             new AdServicesExtendedMockitoRule.Builder(this)
                     .spyStatic(AppManifestConfigHelper.class)
                     .build();
-
-    @Rule public final Expect expect = Expect.create();
 
     // mCmd is used on most tests methods, excepted those that runs more than one command
     private final OneTimeCommand mCmd = new OneTimeCommand(expect);
@@ -157,7 +155,7 @@ public final class AdServicesShellCommandHandlerTest {
                 .when(
                         () ->
                                 AppManifestConfigHelper.isAllowedAttributionAccess(
-                                        mCmd.context, PKG_NAME, ENROLLMENT_ID));
+                                        PKG_NAME, ENROLLMENT_ID));
 
         expect.withMessage(
                         "result of %s %s %s",
@@ -196,7 +194,7 @@ public final class AdServicesShellCommandHandlerTest {
                 .when(
                         () ->
                                 AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                                        mCmd.context, PKG_NAME, ENROLLMENT_ID));
+                                        PKG_NAME, ENROLLMENT_ID));
 
         expect.withMessage(
                         "result of %s %s %s",
@@ -256,7 +254,6 @@ public final class AdServicesShellCommandHandlerTest {
                 .when(
                         () ->
                                 AppManifestConfigHelper.isAllowedTopicsAccess(
-                                        mCmd.context,
                                         /* useSandboxCheck= */ true,
                                         PKG_NAME,
                                         ENROLLMENT_ID));

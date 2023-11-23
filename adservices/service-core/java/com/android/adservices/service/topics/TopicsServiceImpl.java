@@ -346,7 +346,6 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                 errorString = "STATUS_CALLER_NOT_ALLOWED: Enrollment ID invalid";
                 permitted = false;
             } else if (!AppManifestConfigHelper.isAllowedTopicsAccess(
-                    mContext,
                     ProcessCompatUtils.isSdkSandboxUid(callingUid),
                     topicsParam.getAppPackageName(),
                     enrollmentData.getEnrollmentId())) {
