@@ -97,7 +97,10 @@ public class EncryptionManager {
      * @return corresponding encrypted object
      */
     public Optional<EncryptedTopic> encryptTopic(Topic topic, String sdkName) {
-        return encryptTopicWithKey(topic, fetchPublicKeyFor(sdkName));
+        Optional<EncryptedTopic> encryptedTopicOptional =
+                encryptTopicWithKey(topic, fetchPublicKeyFor(sdkName));
+        sLogger.v("Encrypted topic for %s is %s", topic, encryptedTopicOptional);
+        return encryptedTopicOptional;
     }
 
     /**
