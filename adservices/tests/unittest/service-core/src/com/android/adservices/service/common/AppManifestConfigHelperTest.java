@@ -56,6 +56,7 @@ import android.util.Log;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.errorlogging.ErrorLogUtil;
@@ -65,8 +66,6 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.exception.XmlParseException;
 import com.android.modules.utils.build.SdkLevel;
 
-import com.google.common.truth.Expect;
-
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -74,9 +73,8 @@ import org.mockito.Mock;
 import org.mockito.verification.VerificationMode;
 
 @SmallTest
-public final class AppManifestConfigHelperTest {
+public final class AppManifestConfigHelperTest extends AdServicesUnitTestCase {
 
-    private static final String TAG = AppManifestConfigHelperTest.class.getSimpleName();
     private static final int RESOURCE_ID = 123;
     private static final String AD_SERVICES_CONFIG_PROPERTY =
             "android.adservices.AD_SERVICES_CONFIG";
@@ -105,10 +103,9 @@ public final class AppManifestConfigHelperTest {
 
     @Rule public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAnyLevel();
 
-    @Rule public final Expect expect = Expect.create();
-
     @Before
     public void setCommonExpectations() {
+        appContext.set(mMockContext);
         when(mMockContext.getPackageManager()).thenReturn(mMockPackageManager);
         mockGetFlags(mMockFlags);
         setEnabledByDefault(false);
@@ -117,7 +114,7 @@ public final class AppManifestConfigHelperTest {
                 .when(
                         () ->
                                 AppManifestConfigMetricsLogger.logUsage(
-                                        any(), any(), anyBoolean(), anyBoolean(), anyBoolean()));
+                                        any(), anyBoolean(), anyBoolean(), anyBoolean()));
     }
 
     @Test
@@ -129,7 +126,7 @@ public final class AppManifestConfigHelperTest {
         assertWithMessage("isAllowedAttributionAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
                 .that(
                         AppManifestConfigHelper.isAllowedAttributionAccess(
-                                mMockContext, PACKAGE_NAME, ENROLLMENT_ID))
+                                PACKAGE_NAME, ENROLLMENT_ID))
                 .isTrue();
 
         verifyLogUsage(APP_EXISTS, APP_HAS_CONFIG, NOT_ENABLED_BY_DEFAULT);
@@ -144,7 +141,7 @@ public final class AppManifestConfigHelperTest {
         assertWithMessage("isAllowedAttributionAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
                 .that(
                         AppManifestConfigHelper.isAllowedAttributionAccess(
-                                mMockContext, PACKAGE_NAME, ENROLLMENT_ID))
+                                PACKAGE_NAME, ENROLLMENT_ID))
                 .isTrue();
 
         verifyLogUsage(APP_EXISTS, APP_HAS_CONFIG, NOT_ENABLED_BY_DEFAULT);
@@ -160,7 +157,7 @@ public final class AppManifestConfigHelperTest {
                         "isAllowedCustomAudiencesAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
                 .that(
                         AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                                mMockContext, PACKAGE_NAME, ENROLLMENT_ID))
+                                PACKAGE_NAME, ENROLLMENT_ID))
                 .isTrue();
 
         verifyLogUsage(APP_EXISTS, APP_HAS_CONFIG, NOT_ENABLED_BY_DEFAULT);
@@ -176,7 +173,7 @@ public final class AppManifestConfigHelperTest {
                         "isAllowedCustomAudiencesAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
                 .that(
                         AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                                mMockContext, PACKAGE_NAME, ENROLLMENT_ID))
+                                PACKAGE_NAME, ENROLLMENT_ID))
                 .isTrue();
 
         verifyLogUsage(APP_EXISTS, APP_HAS_CONFIG, NOT_ENABLED_BY_DEFAULT);
@@ -308,7 +305,6 @@ public final class AppManifestConfigHelperTest {
         assertWithMessage("isAllowedTopicsAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
                 .that(
                         AppManifestConfigHelper.isAllowedTopicsAccess(
-                                mMockContext,
                                 /* useSandboxCheck= */ useSandboxCheck,
                                 PACKAGE_NAME,
                                 ENROLLMENT_ID))
@@ -441,7 +437,7 @@ public final class AppManifestConfigHelperTest {
         if (SdkLevel.isAtLeastS()) {
             mockIsAtLeastS(false);
         } else {
-            Log.v(TAG, "mockSdkLevelR(): not needed, device is not at least S");
+            Log.v(mTag, "mockSdkLevelR(): not needed, device is not at least S");
         }
     }
 
@@ -527,26 +523,22 @@ public final class AppManifestConfigHelperTest {
         expect.withMessage("isAllowedAttributionAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
                 .that(
                         AppManifestConfigHelper.isAllowedAttributionAccess(
-                                mMockContext, PACKAGE_NAME, ENROLLMENT_ID))
+                                PACKAGE_NAME, ENROLLMENT_ID))
                 .isFalse();
         expect.withMessage(
                         "isAllowedCustomAudiencesAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
                 .that(
                         AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                                mMockContext, PACKAGE_NAME, ENROLLMENT_ID))
+                                PACKAGE_NAME, ENROLLMENT_ID))
                 .isFalse();
         expect.withMessage("isAllowedTopicsAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
                 .that(
                         AppManifestConfigHelper.isAllowedTopicsAccess(
-                                mMockContext,
-                                /* useSandboxCheck= */ true,
-                                PACKAGE_NAME,
-                                ENROLLMENT_ID))
+                                /* useSandboxCheck= */ true, PACKAGE_NAME, ENROLLMENT_ID))
                 .isFalse();
         expect.withMessage("isAllowedTopicsAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
                 .that(
                         AppManifestConfigHelper.isAllowedTopicsAccess(
-                                mMockContext,
                                 /* useSandboxCheck= */ false,
                                 PACKAGE_NAME,
                                 ENROLLMENT_ID))
@@ -557,26 +549,22 @@ public final class AppManifestConfigHelperTest {
         expect.withMessage("isAllowedAttributionAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
                 .that(
                         AppManifestConfigHelper.isAllowedAttributionAccess(
-                                mMockContext, PACKAGE_NAME, ENROLLMENT_ID))
+                                PACKAGE_NAME, ENROLLMENT_ID))
                 .isTrue();
         expect.withMessage(
                         "isAllowedCustomAudiencesAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
                 .that(
                         AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                                mMockContext, PACKAGE_NAME, ENROLLMENT_ID))
+                                PACKAGE_NAME, ENROLLMENT_ID))
                 .isTrue();
         expect.withMessage("isAllowedTopicsAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
                 .that(
                         AppManifestConfigHelper.isAllowedTopicsAccess(
-                                mMockContext,
-                                /* useSandboxCheck= */ true,
-                                PACKAGE_NAME,
-                                ENROLLMENT_ID))
+                                /* useSandboxCheck= */ true, PACKAGE_NAME, ENROLLMENT_ID))
                 .isTrue();
         expect.withMessage("isAllowedTopicsAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
                 .that(
                         AppManifestConfigHelper.isAllowedTopicsAccess(
-                                mMockContext,
                                 /* useSandboxCheck= */ false,
                                 PACKAGE_NAME,
                                 ENROLLMENT_ID))
@@ -607,7 +595,6 @@ public final class AppManifestConfigHelperTest {
         verify(
                 () ->
                         AppManifestConfigMetricsLogger.logUsage(
-                                mMockContext,
                                 PACKAGE_NAME,
                                 appExists,
                                 appHasConfig,

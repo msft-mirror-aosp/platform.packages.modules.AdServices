@@ -47,6 +47,7 @@ import android.util.Pair;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.enrollment.EnrollmentData;
@@ -64,7 +65,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
-public class FledgeAuthorizationFilterTest {
+public final class FledgeAuthorizationFilterTest extends AdServicesUnitTestCase {
+
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final int UID = 111;
     private static final int API_NAME_LOGGING_ID =
@@ -324,8 +326,7 @@ public class FledgeAuthorizationFilterTest {
         when(mEnrollmentDaoMock.getEnrollmentDataForFledgeByAdTechIdentifier(
                         CommonFixture.VALID_BUYER_1))
                 .thenReturn(ENROLLMENT_DATA);
-        when(AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                        CONTEXT, PACKAGE_NAME, ENROLLMENT_ID))
+        when(AppManifestConfigHelper.isAllowedCustomAudiencesAccess(PACKAGE_NAME, ENROLLMENT_ID))
                 .thenReturn(true);
         when(PhFlags.getInstance()).thenReturn(mPhFlagsMock);
         when(mPhFlagsMock.isEnrollmentBlocklisted(ENROLLMENT_ID)).thenReturn(false);
@@ -392,8 +393,7 @@ public class FledgeAuthorizationFilterTest {
         when(mEnrollmentDaoMock.getEnrollmentDataForFledgeByAdTechIdentifier(
                         CommonFixture.VALID_BUYER_1))
                 .thenReturn(ENROLLMENT_DATA);
-        when(AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                        CONTEXT, PACKAGE_NAME, ENROLLMENT_ID))
+        when(AppManifestConfigHelper.isAllowedCustomAudiencesAccess(PACKAGE_NAME, ENROLLMENT_ID))
                 .thenReturn(false);
         when(PhFlags.getInstance()).thenReturn(mPhFlagsMock);
 
@@ -438,8 +438,7 @@ public class FledgeAuthorizationFilterTest {
         when(mEnrollmentDaoMock.getEnrollmentDataForFledgeByAdTechIdentifier(
                         CommonFixture.VALID_BUYER_1))
                 .thenReturn(ENROLLMENT_DATA);
-        when(AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                        CONTEXT, PACKAGE_NAME, ENROLLMENT_ID))
+        when(AppManifestConfigHelper.isAllowedCustomAudiencesAccess(PACKAGE_NAME, ENROLLMENT_ID))
                 .thenReturn(true);
         // Add ENROLLMENT_ID to blocklist.
         when(PhFlags.getInstance()).thenReturn(mPhFlagsMock);
@@ -645,7 +644,7 @@ public class FledgeAuthorizationFilterTest {
                 .when(
                         () ->
                                 AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                                        eq(CONTEXT), eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
+                                        PACKAGE_NAME, ENROLLMENT_ID));
         when(PhFlags.getInstance()).thenReturn(mPhFlagsMock);
         when(mPhFlagsMock.isEnrollmentBlocklisted(ENROLLMENT_ID)).thenReturn(false);
 
@@ -663,7 +662,7 @@ public class FledgeAuthorizationFilterTest {
         verify(
                 () ->
                         AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                                eq(CONTEXT), eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
+                                PACKAGE_NAME, ENROLLMENT_ID));
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(API_NAME_LOGGING_ID), eq(STATUS_CALLER_NOT_ALLOWED), anyInt());
@@ -690,7 +689,7 @@ public class FledgeAuthorizationFilterTest {
                 .when(
                         () ->
                                 AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                                        eq(CONTEXT), eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
+                                        PACKAGE_NAME, ENROLLMENT_ID));
         doReturn(mPhFlagsMock).when(PhFlags::getInstance);
         doReturn(true).when(mPhFlagsMock).isEnrollmentBlocklisted(eq(ENROLLMENT_ID));
 
@@ -708,7 +707,7 @@ public class FledgeAuthorizationFilterTest {
         verify(
                 () ->
                         AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                                eq(CONTEXT), eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
+                                PACKAGE_NAME, ENROLLMENT_ID));
         verify(mPhFlagsMock).isEnrollmentBlocklisted(eq(ENROLLMENT_ID));
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
@@ -738,7 +737,7 @@ public class FledgeAuthorizationFilterTest {
                 .when(
                         () ->
                                 AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                                        eq(CONTEXT), eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
+                                        PACKAGE_NAME, ENROLLMENT_ID));
         doReturn(mPhFlagsMock).when(PhFlags::getInstance);
         doReturn(false).when(mPhFlagsMock).isEnrollmentBlocklisted(eq(ENROLLMENT_ID));
 
@@ -756,7 +755,7 @@ public class FledgeAuthorizationFilterTest {
         verify(
                 () ->
                         AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                                eq(CONTEXT), eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
+                                PACKAGE_NAME, ENROLLMENT_ID));
         verify(mPhFlagsMock).isEnrollmentBlocklisted(eq(ENROLLMENT_ID));
         verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }

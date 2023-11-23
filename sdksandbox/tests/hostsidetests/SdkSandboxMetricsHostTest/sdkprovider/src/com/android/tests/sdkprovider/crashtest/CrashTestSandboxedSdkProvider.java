@@ -23,9 +23,13 @@ import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
 
+import java.util.List;
 import java.util.concurrent.Executors;
 
 public class CrashTestSandboxedSdkProvider extends SandboxedSdkProvider {
+
+    private static final int MAX_HISTORICAL_PROCESS_EXIT_REASONS = 10;
+
     static class CrashTestSdkImpl extends ICrashTestSdkApi.Stub {
         private final Context mContext;
 
@@ -43,12 +47,13 @@ public class CrashTestSandboxedSdkProvider extends SandboxedSdkProvider {
         }
 
         @Override
-        public ApplicationExitInfo getLastApplicationExitInfo() {
+        public List<ApplicationExitInfo> getSdkSandboxExitReasons() {
             final ActivityManager am = mContext.getSystemService(ActivityManager.class);
             if (am == null) {
-                return null;
+                throw new RuntimeException("No activity manager");
             }
-            return am.getHistoricalProcessExitReasons(mContext.getPackageName(), 0, 1).get(0);
+            return am.getHistoricalProcessExitReasons(
+                    mContext.getPackageName(), 0, MAX_HISTORICAL_PROCESS_EXIT_REASONS);
         }
     }
 

@@ -48,6 +48,7 @@ import android.os.RemoteException;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -110,7 +111,8 @@ import java.util.stream.IntStream;
 import javax.net.ssl.HttpsURLConnection;
 
 /** Unit tests for {@link AsyncRegistrationQueueRunnerTest} */
-public class AsyncRegistrationQueueRunnerTest {
+public final class AsyncRegistrationQueueRunnerTest extends AdServicesUnitTestCase {
+
     private static final Context sDefaultContext = ApplicationProvider.getApplicationContext();
     private static final boolean DEFAULT_AD_ID_PERMISSION = false;
     private static final String DEFAULT_ENROLLMENT_ID = "enrollment_id";
