@@ -41,7 +41,6 @@ import com.android.compatibility.common.util.ShellUtils;
 
 import com.google.common.util.concurrent.MoreExecutors;
 
-import org.junit.Assume;
 import org.junit.Test;
 
 import java.time.Instant;
@@ -152,7 +151,6 @@ public class AdSelectionTest extends FledgeScenarioTest {
     @FlakyTest(bugId = 299871209)
     @Test
     public void testAdSelection_withAdCostInUrl_adCostIsReported() throws Exception {
-        assumeTrue(isAdIdSupported());
         ScenarioDispatcher dispatcher =
                 ScenarioDispatcher.fromScenario(
                         "scenarios/remarketing-cuj-161.json", getCacheBusterPrefix());
@@ -340,6 +338,7 @@ public class AdSelectionTest extends FledgeScenarioTest {
     @FlakyTest(bugId = 301334790)
     @Test
     public void testAdSelection_withDebugReportingAndRejectReason_happyPath() throws Exception {
+        assumeTrue(isAdIdSupported());
         ScenarioDispatcher dispatcher =
                 ScenarioDispatcher.fromScenario(
                         "scenarios/remarketing-cuj-170.json", getCacheBusterPrefix());
