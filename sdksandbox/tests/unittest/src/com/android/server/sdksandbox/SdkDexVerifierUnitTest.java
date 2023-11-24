@@ -16,18 +16,24 @@
 
 package com.android.server.sdksandbox.verifier;
 
-import static org.junit.Assert.assertEquals;
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
+
+import android.os.OutcomeReceiver;
 
 import com.android.server.sdksandbox.proto.Verifier.AllowedApi;
 
 import org.junit.Test;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class SdkDexVerifierUnitTest {
 
     private final SdkDexVerifier mVerifier = SdkDexVerifier.getInstance();
 
     @Test
-    public void fullyQualifiedRule() {
+    public void getApiTokens_fullyQualifiedRule() {
         final AllowedApi apiRuleFull =
                 AllowedApi.newBuilder()
                         .setClassName("Landroid/view/inputmethod/InputMethodManager")
@@ -47,11 +53,11 @@ public class SdkDexVerifierUnitTest {
 
         String[] keys = mVerifier.getApiTokens(apiRuleFull);
 
-        assertEquals(keys, expectedKeys);
+        assertThat(keys).isEqualTo(expectedKeys);
     }
 
     @Test
-    public void classAndMethodRule() {
+    public void getApiTokens_classAndMethodRule() {
         final AllowedApi apiRuleClassMethod =
                 AllowedApi.newBuilder()
                         .setClassName("Landroid/view/inputmethod/InputMethodManager")
@@ -68,11 +74,11 @@ public class SdkDexVerifierUnitTest {
 
         String[] keys = mVerifier.getApiTokens(apiRuleClassMethod);
 
-        assertEquals(keys, expectedKeys);
+        assertThat(keys).isEqualTo(expectedKeys);
     }
 
     @Test
-    public void multiParam() {
+    public void getApiTokens_multiParam() {
         final AllowedApi apiRuleMultiParam =
                 AllowedApi.newBuilder()
                         .setClassName("Landroid/view/inputmethod/InputMethodManager")
@@ -94,11 +100,11 @@ public class SdkDexVerifierUnitTest {
 
         String[] keys = mVerifier.getApiTokens(apiRuleMultiParam);
 
-        assertEquals(keys, expectedKeys);
+        assertThat(keys).isEqualTo(expectedKeys);
     }
 
     @Test
-    public void classReturn() {
+    public void getApiTokens_classReturn() {
         final AllowedApi apiRuleClassReturn =
                 AllowedApi.newBuilder()
                         .setClassName("Landroid/view/inputmethod/InputMethodManager")
@@ -110,11 +116,11 @@ public class SdkDexVerifierUnitTest {
 
         String[] keys = mVerifier.getApiTokens(apiRuleClassReturn);
 
-        assertEquals(keys, expectedKeys);
+        assertThat(keys).isEqualTo(expectedKeys);
     }
 
     @Test
-    public void classAndParams() {
+    public void getApiTokens_classAndParams() {
         final AllowedApi apiRuleClassParam =
                 AllowedApi.newBuilder()
                         .setClassName("Landroid/view/inputmethod/InputMethodManager")
@@ -126,6 +132,50 @@ public class SdkDexVerifierUnitTest {
 
         String[] keys = mVerifier.getApiTokens(apiRuleClassParam);
 
-        assertEquals(keys, expectedKeys);
+        assertThat(keys).isEqualTo(expectedKeys);
+    }
+
+    @Test
+    public void startDexVerification_loadApisFails() throws Exception {
+        ApiAllowlistProvider failAllowlistProvider =
+                new ApiAllowlistProvider("allowlist_doesn't_exist");
+        TestOutcomeReceiver callback = new TestOutcomeReceiver();
+        mVerifier.setApiAllowlistProvider(failAllowlistProvider);
+
+        mVerifier.startDexVerification("apk_that_doesn't_get_verified", 33, callback);
+
+        assertThat(callback.getLastError()).isNotNull();
+        assertThat(callback.getLastError().getMessage())
+                .isEqualTo("allowlist_doesn't_exist not found.");
+    }
+
+    @Test
+    public void startDexVerification_apkNotFound() throws Exception {
+        TestOutcomeReceiver callback = new TestOutcomeReceiver();
+
+        mVerifier.startDexVerification("bogusPath", 33, callback);
+
+        assertThat(callback.getLastError()).isNotNull();
+        assertThat(callback.getLastError().getMessage())
+                .isEqualTo("Apk to verify not found: bogusPath");
+    }
+
+    private static class TestOutcomeReceiver implements OutcomeReceiver<Void, Exception> {
+        private CountDownLatch mLatch = new CountDownLatch(1);
+        private Exception mLastError;
+
+        public Exception getLastError() throws Exception {
+            assertWithMessage("Latch timed out").that(mLatch.await(5, TimeUnit.SECONDS)).isTrue();
+            return mLastError;
+        }
+
+        @Override
+        public void onResult(Void result) {}
+
+        @Override
+        public void onError(Exception e) {
+            mLastError = e;
+            mLatch.countDown();
+        }
     }
 }

@@ -24,6 +24,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.OutcomeReceiver;
 import android.provider.DeviceConfig;
 import android.util.Log;
 
@@ -96,7 +97,20 @@ public class SdkSandboxVerifierReceiver extends BroadcastReceiver {
                 packageInfo.applicationInfo != null
                         ? packageInfo.applicationInfo.targetSdkVersion
                         : Build.VERSION.SDK_INT;
-        handler.post(() -> mSdkDexVerifier.startDexVerification(apkPath, targetSdkVersion));
+        handler.post(
+                () ->
+                        mSdkDexVerifier.startDexVerification(
+                                apkPath,
+                                targetSdkVersion,
+                                new OutcomeReceiver<Void, Exception>() {
+                                    @Override
+                                    public void onResult(Void result) {}
+
+                                    @Override
+                                    public void onError(Exception e) {
+                                        Log.e(TAG, "Error at SdkSandboxVerifierReceiver", e);
+                                    }
+                                }));
 
         // Verification will continue to run on background, return VERIFICATION_ALLOW to
         // unblock install

@@ -28,6 +28,8 @@ import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_AP
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_SANDBOX_TO_APP;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_APP;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_SANDBOX;
+import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__TOTAL;
+import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__TOTAL_WITH_LOAD_SANDBOX;
 import static com.android.server.wm.ActivityInterceptorCallback.MAINLINE_SDK_SANDBOX_ORDER_ID;
 
 import static org.mockito.ArgumentMatchers.eq;
@@ -324,6 +326,17 @@ public class SdkSandboxStatsdMetricsUnitTest {
                                 /*success=*/ true,
                                 SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_APP,
                                 mClientAppUid));
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
+                                (int)
+                                        (TIME_APP_RECEIVED_CALL_FROM_SYSTEM_SERVER
+                                                - TIME_APP_CALLED_SYSTEM_SERVER),
+                                /*success=*/ true,
+                                SANDBOX_API_CALLED__STAGE__TOTAL_WITH_LOAD_SANDBOX,
+                                mClientAppUid));
     }
 
     @Test
@@ -416,7 +429,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
                                 Mockito.anyBoolean(),
                                 Mockito.anyInt(),
                                 Mockito.anyInt()),
-                Mockito.times(3));
+                Mockito.times(4));
     }
 
     @Test
@@ -617,6 +630,18 @@ public class SdkSandboxStatsdMetricsUnitTest {
                                 /*success=*/ true,
                                 SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_APP,
                                 mClientAppUid));
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                                SdkSandboxStatsLog
+                                        .SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE,
+                                (int)
+                                        (TIME_APP_RECEIVED_CALL_FROM_SYSTEM_SERVER
+                                                - TIME_APP_CALLED_SYSTEM_SERVER),
+                                /*success=*/ true,
+                                SANDBOX_API_CALLED__STAGE__TOTAL,
+                                mClientAppUid));
     }
 
     @Test
@@ -689,6 +714,17 @@ public class SdkSandboxStatsdMetricsUnitTest {
                                 SdkSandboxStatsLog
                                         .SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
                                 mClientAppUid));
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__GET_SANDBOXED_SDKS,
+                                (int)
+                                        (TIME_SYSTEM_SERVER_CALL_FINISHED
+                                                - TIME_APP_CALLED_SYSTEM_SERVER),
+                                /*success=*/ true,
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__TOTAL,
+                                mClientAppUid));
     }
 
     @Test
@@ -715,6 +751,18 @@ public class SdkSandboxStatsdMetricsUnitTest {
                                                 - TIME_APP_CALLED_SYSTEM_SERVER),
                                 /*success=*/ true,
                                 SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER,
+                                mClientAppUid));
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                                SdkSandboxStatsLog
+                                        .SANDBOX_API_CALLED__METHOD__SYNC_DATA_FROM_CLIENT,
+                                (int)
+                                        (TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP
+                                                - TIME_APP_CALLED_SYSTEM_SERVER),
+                                /*success=*/ true,
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__TOTAL,
                                 mClientAppUid));
     }
 
@@ -980,6 +1028,18 @@ public class SdkSandboxStatsdMetricsUnitTest {
                                 SdkSandboxStatsLog
                                         .SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
                                 mClientAppUid));
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                                SdkSandboxStatsLog
+                                        .SANDBOX_API_CALLED__METHOD__REGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE,
+                                (int)
+                                        (TIME_SYSTEM_SERVER_CALL_FINISHED
+                                                - TIME_APP_CALLED_SYSTEM_SERVER),
+                                /*success=*/ true,
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__TOTAL,
+                                mClientAppUid));
     }
 
     @Test
@@ -1058,6 +1118,18 @@ public class SdkSandboxStatsdMetricsUnitTest {
                                 SdkSandboxStatsLog
                                         .SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
                                 mClientAppUid));
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                                SdkSandboxStatsLog
+                                        .SANDBOX_API_CALLED__METHOD__UNREGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE,
+                                (int)
+                                        (TIME_SYSTEM_SERVER_CALL_FINISHED
+                                                - TIME_APP_CALLED_SYSTEM_SERVER),
+                                /*success=*/ true,
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__TOTAL,
+                                mClientAppUid));
     }
 
     @Test
@@ -1097,6 +1169,18 @@ public class SdkSandboxStatsdMetricsUnitTest {
                                 /*success=*/ true,
                                 SdkSandboxStatsLog
                                         .SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
+                                mClientAppUid));
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                                SdkSandboxStatsLog
+                                        .SANDBOX_API_CALLED__METHOD__GET_APP_OWNED_SDK_SANDBOX_INTERFACES,
+                                (int)
+                                        (TIME_SYSTEM_SERVER_CALL_FINISHED
+                                                - TIME_APP_CALLED_SYSTEM_SERVER),
+                                /*success=*/ true,
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__TOTAL,
                                 mClientAppUid));
     }
 

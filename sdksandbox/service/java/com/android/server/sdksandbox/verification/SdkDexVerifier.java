@@ -18,6 +18,7 @@ package com.android.server.sdksandbox.verifier;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.os.OutcomeReceiver;
 import android.os.SystemClock;
 import android.util.Log;
 
@@ -25,9 +26,12 @@ import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.sdksandbox.proto.Verifier.AllowedApi;
 import com.android.server.sdksandbox.proto.Verifier.AllowedApisList;
-import com.android.server.sdksandbox.proto.Verifier.AllowedApisPerTargetSdk;
+
+import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -46,79 +50,70 @@ public class SdkDexVerifier {
 
     private static final String TAG = "SdkSandboxVerifier";
 
-    private static final String ALLOW_LIST_PROTO_CURRENT_RES =
-            "platform_api_allowlist_per_target_sdk_version_current.binarypb";
-
     private static final String WILDCARD = "*";
     private static final String EMPTY_STRING = "";
 
+    private static final AllowedApi[] DEFAULT_RULES = {
+        AllowedApi.newBuilder().setClassName("Landroid/*").setAllow(false).build(),
+        AllowedApi.newBuilder().setClassName("Ljava/*").setAllow(false).build(),
+        AllowedApi.newBuilder().setClassName("Lcom/google/android/*").setAllow(false).build(),
+        AllowedApi.newBuilder().setClassName("Lcom/android/*").setAllow(false).build(),
+        AllowedApi.newBuilder().setClassName("Landroidx/*").setAllow(false).build(),
+    };
+
     private static SdkDexVerifier sSdkDexVerifier;
+    private ApiAllowlistProvider mApiAllowlistProvider = new ApiAllowlistProvider();
 
     // Maps targetSdkVersion to its allowlist
     @GuardedBy("mPlatformApiAllowlistsLock")
     private Map<Long, AllowedApisList> mPlatformApiAllowlists;
 
     @GuardedBy("mPlatformApiAllowlistsLock")
-    private Map<Long, StringTrie> mPlatformApiAllowTries;
+    private Map<Long, StringTrie> mPlatformApiAllowTries = new HashMap<>();
 
-    private SdkDexVerifier() {
-        // TODO(b/279165123): initialize dex parser
-
-        synchronized (mPlatformApiAllowlistsLock) {
-            mPlatformApiAllowTries = new HashMap<>();
+    /** Returns a singleton instance of {@link SdkDexVerifier} */
+    @NonNull
+    public static SdkDexVerifier getInstance() {
+        synchronized (SdkDexVerifier.class) {
+            if (sSdkDexVerifier == null) {
+                sSdkDexVerifier = new SdkDexVerifier();
+            }
         }
+        return sSdkDexVerifier;
     }
 
-    private void loadPlatformApiAllowlist() {
-        // TODO: Read a DeviceConfig to decide between current or next
+    /**
+     * Starts verification of the requested sdk
+     *
+     * @param sdkPath path to the sdk package to be verified
+     * @param targetSdkVersion Android SDK target version of the package being verified, declared in
+     *     the package manifest.
+     * @param callback to client for communication of parsing/verification results.
+     */
+    public void startDexVerification(
+            String sdkPath, long targetSdkVersion, OutcomeReceiver<Void, Exception> callback) {
+        long startTime = SystemClock.elapsedRealtime();
+
         try {
-            byte[] allowlistBytes =
-                    this.getClass()
-                            .getClassLoader()
-                            .getResource(ALLOW_LIST_PROTO_CURRENT_RES)
-                            .openStream()
-                            .readAllBytes();
-
-            AllowedApisPerTargetSdk allowedApisPerTargetSdk =
-                    AllowedApisPerTargetSdk.parseFrom(allowlistBytes);
-
-            synchronized (mPlatformApiAllowlistsLock) {
-                mPlatformApiAllowlists = allowedApisPerTargetSdk.getAllowlistPerTargetSdk();
-            }
-
+            initAllowlist(targetSdkVersion);
         } catch (Exception e) {
-            Log.e(TAG, "Could not parse allowlists", e);
-        }
-    }
-
-    private void buildAllowTrie(long targetSdkVersion) {
-        AllowedApisList allowedApisList;
-
-        synchronized (mPlatformApiAllowlistsLock) {
-            if (mPlatformApiAllowlists == null) {
-                return;
-            }
-            allowedApisList = mPlatformApiAllowlists.get(targetSdkVersion);
-        }
-        if (allowedApisList == null) {
-            Log.e(TAG, "No allowlist found for targetSdk " + targetSdkVersion);
+            callback.onError(e);
             return;
         }
 
-        StringTrie<AllowedApi> allowTrie = new StringTrie();
+        File sdkPathFile = new File(sdkPath);
 
-        for (AllowedApi apiRule : allowedApisList.getAllowedApisList()) {
-            String[] apiTokens = getApiTokens(apiRule);
-            if (apiTokens != null) {
-                allowTrie.put(apiRule, apiTokens);
-            } else {
-                Log.w(TAG, "API Rule was malformed for rule with class " + apiRule.getClassName());
-                return;
-            }
+        if (!sdkPathFile.exists()) {
+            callback.onError(new Exception("Apk to verify not found: " + sdkPath));
+            return;
         }
-        synchronized (mPlatformApiAllowlistsLock) {
-            mPlatformApiAllowTries.put(targetSdkVersion, allowTrie);
-        }
+
+        // TODO(b/231441674): load apk dex data and, verify against allowtrie.
+
+        long verificationTime = SystemClock.elapsedRealtime() - startTime;
+        Log.d(TAG, "Verification time (ms): " + verificationTime);
+
+        // TODO(b/231441674): cache and log verification result
     }
 
     /*
@@ -201,16 +196,13 @@ public class SdkDexVerifier {
 
         return tokens.toArray(new String[tokens.size()]);
     }
-
-    /** Returns a singleton instance of {@link SdkDexVerifier} */
-    @NonNull
-    public static SdkDexVerifier getInstance() {
-        synchronized (SdkDexVerifier.class) {
-            if (sSdkDexVerifier == null) {
-                sSdkDexVerifier = new SdkDexVerifier();
-            }
+    /** Sets the {@link ApiAllowlistProvider} and clears out previously loaded allowlists */
+    @VisibleForTesting
+    public void setApiAllowlistProvider(ApiAllowlistProvider apiAllowlistProvider) {
+        mApiAllowlistProvider = apiAllowlistProvider;
+        synchronized (mPlatformApiAllowlistsLock) {
+            mPlatformApiAllowlists = null;
         }
-        return sSdkDexVerifier;
     }
 
     /**
@@ -219,46 +211,54 @@ public class SdkDexVerifier {
      * @param targetSdkVersion declared in the manifest of the installed package, different from
      *     effectiveTargetSdkVersion.
      */
-    private void initAllowlist(long targetSdkVersion) throws Exception {
+    private void initAllowlist(long targetSdkVersion)
+            throws FileNotFoundException, InvalidProtocolBufferException, IOException {
         synchronized (mPlatformApiAllowlistsLock) {
             if (mPlatformApiAllowlists == null) {
-                loadPlatformApiAllowlist();
+                mPlatformApiAllowlists = mApiAllowlistProvider.loadPlatformApiAllowlist();
             }
 
             if (!mPlatformApiAllowTries.containsKey(targetSdkVersion)) {
-                buildAllowTrie(targetSdkVersion);
+                buildAllowTrie(targetSdkVersion, mPlatformApiAllowlists.get(targetSdkVersion));
             }
         }
     }
 
-    /**
-     * Starts verification of the requested sdk
-     *
-     * @param sdkPath path to the sdk package to be verified
-     * @param targetSdkVersion Android SDK target version of the package being verified, declared in
-     *     the package manifest.
-     */
-    public void startDexVerification(String sdkPath, long targetSdkVersion) {
-        long startTime = SystemClock.elapsedRealtime();
-
-        try {
-            initAllowlist(targetSdkVersion);
-        } catch (Exception e) {
-            Log.e(TAG, "Could not initialize allowlists", e);
+    @GuardedBy("mPlatformApiAllowlistsLock")
+    private void buildAllowTrie(long targetSdkVersion, AllowedApisList allowedApisList) {
+        if (allowedApisList == null) {
+            Log.w(TAG, "No allowlist found for targetSdk " + targetSdkVersion);
             return;
         }
 
-        File sdkPathFile = new File(sdkPath);
+        StringTrie<AllowedApi> allowTrie = getBaseRuleTrie();
 
-        if (!sdkPathFile.exists()) {
-            Log.e(TAG, "Apk to verify not found: " + sdkPath);
+        for (AllowedApi apiRule : allowedApisList.getAllowedApisList()) {
+            String[] apiTokens = getApiTokens(apiRule);
+            if (apiTokens != null) {
+                AllowedApi oldRule = allowTrie.put(apiRule, apiTokens);
+                if (oldRule != null && oldRule.getAllow() != apiRule.getAllow()) {
+                    Log.w(
+                            TAG,
+                            "Rule was replaced for class "
+                                    + oldRule.getClassName()
+                                    + ". New rule value is: "
+                                    + apiRule.getAllow());
+                }
+            } else {
+                Log.w(TAG, "API Rule was malformed for rule with class " + apiRule.getClassName());
+                return;
+            }
         }
 
-        // TODO(b/231441674): load apk dex data and, verify against allowtrie.
+        mPlatformApiAllowTries.put(targetSdkVersion, allowTrie);
+    }
 
-        long verificationTime = SystemClock.elapsedRealtime() - startTime;
-        Log.d(TAG, "Verification time (ms): " + verificationTime);
-
-        // TODO(b/231441674): cache and log verification result
+    private StringTrie<AllowedApi> getBaseRuleTrie() {
+        StringTrie<AllowedApi> allowTrie = new StringTrie();
+        for (int i = 0; i < DEFAULT_RULES.length; i++) {
+            allowTrie.put(DEFAULT_RULES[i], getApiTokens(DEFAULT_RULES[i]));
+        }
+        return allowTrie;
     }
 }

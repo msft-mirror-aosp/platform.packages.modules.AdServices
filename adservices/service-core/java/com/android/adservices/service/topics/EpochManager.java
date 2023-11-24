@@ -261,6 +261,8 @@ public class EpochManager {
                 // encryptedTopicMapTopics = Map<Pair<App, Sdk>, EncryptedTopic>
                 Map<Pair<String, String>, EncryptedTopic> encryptedTopicMapTopics =
                         encryptTopicsMap(returnedAppSdkTopics);
+                sLogger.v("encryptedTopicMapTopics size is  %d", returnedAppSdkTopics.size());
+
                 mTopicsDao.persistReturnedAppEncryptedTopicsMap(
                         currentEpochId, encryptedTopicMapTopics);
             }

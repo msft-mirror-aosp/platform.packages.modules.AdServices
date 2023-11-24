@@ -91,6 +91,9 @@ android_test {
         ":SampleApp",
         ":CodeProviderWithResources",
     ],
+    java_resources: [
+        "verification/corrupt_allowlist.binarypb",
+    ],
 }
 
 android_test {
