@@ -35,12 +35,12 @@ import org.mockito.Mockito;
 import java.util.Map;
 
 public class SdkSandboxSettingsListenerUnitTest {
-    private SdkSandboxSettingsListener mSdkSandboxSettingsListener;
     private static final String PROPERTY_DISABLE_SANDBOX = "disable_sdk_sandbox";
     private static final String PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS =
             "apply_sdk_sandbox_next_restrictions";
     private static final String PROPERTY_SERVICES_ALLOWLIST =
             "services_allowlist_per_targetSdkVersion";
+    private SdkSandboxSettingsListener mSdkSandboxSettingsListener;
 
     @Before
     public void setUp() {
@@ -61,21 +61,6 @@ public class SdkSandboxSettingsListenerUnitTest {
     public void tearDown() {
         if (mSdkSandboxSettingsListener != null) {
             mSdkSandboxSettingsListener.unregisterPropertiesListener();
-        }
-    }
-
-    private void setDeviceConfigProperty(String property, String value) {
-        // Explicitly calling the onPropertiesChanged method to avoid race conditions
-        if (value == null) {
-            // Map.of() does not handle null, so we need to use an ArrayMap to delete a property
-            ArrayMap<String, String> properties = new ArrayMap<>();
-            properties.put(property, null);
-            mSdkSandboxSettingsListener.onPropertiesChanged(
-                    new DeviceConfig.Properties(DeviceConfig.NAMESPACE_ADSERVICES, properties));
-        } else {
-            mSdkSandboxSettingsListener.onPropertiesChanged(
-                    new DeviceConfig.Properties(
-                            DeviceConfig.NAMESPACE_ADSERVICES, Map.of(property, value)));
         }
     }
 
@@ -116,7 +101,7 @@ public class SdkSandboxSettingsListenerUnitTest {
 
     @Test
     public void testServiceAllowlist_DeviceConfigAllowlistApplied() {
-        /**
+        /*
          * Base64 encoded Service allowlist allowlist_per_target_sdk { key: 33 value: {
          * allowed_services: { intentAction : "android.test.33" componentPackageName :
          * "packageName.test.33" componentClassName : "className.test.33" } } }
@@ -163,5 +148,20 @@ public class SdkSandboxSettingsListenerUnitTest {
         assertThat(allowedService.getAction()).isEqualTo(action);
         assertThat(allowedService.getPackageName()).isEqualTo(packageName);
         assertThat(allowedService.getComponentClassName()).isEqualTo(componentClassName);
+    }
+
+    private void setDeviceConfigProperty(String property, String value) {
+        // Explicitly calling the onPropertiesChanged method to avoid race conditions
+        if (value == null) {
+            // Map.of() does not handle null, so we need to use an ArrayMap to delete a property
+            ArrayMap<String, String> properties = new ArrayMap<>();
+            properties.put(property, null);
+            mSdkSandboxSettingsListener.onPropertiesChanged(
+                    new DeviceConfig.Properties(DeviceConfig.NAMESPACE_ADSERVICES, properties));
+        } else {
+            mSdkSandboxSettingsListener.onPropertiesChanged(
+                    new DeviceConfig.Properties(
+                            DeviceConfig.NAMESPACE_ADSERVICES, Map.of(property, value)));
+        }
     }
 }
