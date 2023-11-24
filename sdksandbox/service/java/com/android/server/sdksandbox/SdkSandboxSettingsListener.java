@@ -206,9 +206,7 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
                                         DEFAULT_VALUE_DISABLE_SDK_SANDBOX);
                         if (mKillSwitchEnabled && !killSwitchPreviouslyEnabled) {
                             Log.i(TAG, "SDK sandbox killswitch has become enabled");
-                            synchronized (mLock) {
-                                this.mSdkSandboxManagerService.stopAllSandboxes();
-                            }
+                            this.mSdkSandboxManagerService.stopAllSandboxes();
                         }
                         break;
                     case PROPERTY_CUSTOMIZED_SDK_CONTEXT_ENABLED:
