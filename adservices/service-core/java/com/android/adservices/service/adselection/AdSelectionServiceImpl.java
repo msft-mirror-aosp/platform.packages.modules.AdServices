@@ -777,7 +777,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     mFlags,
                                     mAdSelectionServiceFilter,
                                     mAdFilteringFeatureFactory.getAdCounterKeyCopier(),
-                                    callingUid);
+                                    callingUid,
+                                    mShouldUseUnifiedTables);
                     runner.runOutcomeSelection(inputParams, callback);
                 });
     }

@@ -60,6 +60,7 @@ import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -89,7 +90,8 @@ import org.mockito.quality.Strictness;
 import java.io.IOException;
 
 @RunWith(AndroidJUnit4.class)
-public class ConsentNotificationTriggerTest {
+public final class ConsentNotificationTriggerTest extends AdServicesUnitTestCase {
+
     private static final String NOTIFICATION_CHANNEL_ID = "PRIVACY_SANDBOX_CHANNEL";
     private static final int LAUNCH_TIMEOUT = 5000;
     private static UiDevice sDevice;

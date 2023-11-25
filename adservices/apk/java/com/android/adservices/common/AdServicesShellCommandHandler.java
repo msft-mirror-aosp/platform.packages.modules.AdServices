@@ -258,9 +258,7 @@ public final class AdServicesShellCommandHandler {
         boolean isValid = false;
         switch (cmd) {
             case CMD_IS_ALLOWED_ATTRIBUTION_ACCESS:
-                isValid =
-                        AppManifestConfigHelper.isAllowedAttributionAccess(
-                                mContext, pkgName, enrollmentId);
+                isValid = AppManifestConfigHelper.isAllowedAttributionAccess(pkgName, enrollmentId);
                 Log.i(
                         TAG,
                         "isAllowedAttributionAccess("
@@ -273,7 +271,7 @@ public final class AdServicesShellCommandHandler {
             case CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS:
                 isValid =
                         AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                                mContext, pkgName, enrollmentId);
+                                pkgName, enrollmentId);
                 Log.i(
                         TAG,
                         "isAllowedCustomAudiencesAccess("
@@ -290,7 +288,7 @@ public final class AdServicesShellCommandHandler {
                 }
                 isValid =
                         AppManifestConfigHelper.isAllowedTopicsAccess(
-                                mContext, usesSdkSandbox, pkgName, enrollmentId);
+                                usesSdkSandbox, pkgName, enrollmentId);
                 Log.i(
                         TAG,
                         "isAllowedTopicAccess("

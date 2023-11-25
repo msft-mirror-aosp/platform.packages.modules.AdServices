@@ -42,11 +42,10 @@ import androidx.appsearch.app.AppSearchSession;
 import androidx.appsearch.app.SetSchemaRequest;
 import androidx.appsearch.app.SetSchemaResponse;
 import androidx.appsearch.platformstorage.PlatformStorage;
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.AdServicesCommon;
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.Flags;
@@ -57,7 +56,6 @@ import com.android.adservices.service.consent.ConsentConstants;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
-import com.android.adservices.shared.testing.common.ApplicationContextSingletonRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
@@ -79,8 +77,8 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 @SmallTest
-public class AppSearchConsentWorkerTest {
-    private final Context mContext = ApplicationProvider.getApplicationContext();
+public final class AppSearchConsentWorkerTest extends AdServicesUnitTestCase {
+
     private static final String ADSERVICES_PACKAGE_NAME = "com.android.adservices.api";
     private static final String ADEXTSERVICES_PACKAGE_NAME = "com.android.ext.services";
     private static final String API_TYPE = AdServicesApiType.TOPICS.toPpApiDatastoreKey();
@@ -97,13 +95,6 @@ public class AppSearchConsentWorkerTest {
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevelRule = SdkLevelSupportRule.forAtLeastS();
-
-    @Rule(order = 1)
-    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesDeviceSupportedRule();
-
-    @Rule(order = 2)
-    public final ApplicationContextSingletonRule appContext = new ApplicationContextSingletonRule();
 
     @Before
     public void setup() {
