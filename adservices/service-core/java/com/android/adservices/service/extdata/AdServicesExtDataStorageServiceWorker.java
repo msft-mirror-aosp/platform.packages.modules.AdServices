@@ -37,7 +37,7 @@ import java.util.Objects;
  * Worker class that binds and interacts with {@link AdServicesExtDataStorageService}. All API calls
  * in this class are performed asynchronously.
  */
-public class AdServicesExtDataStorageServiceWorker {
+public final class AdServicesExtDataStorageServiceWorker {
     private static final Object SINGLETON_LOCK = new Object();
     private static volatile AdServicesExtDataStorageServiceWorker sExtDataWorker;
 
@@ -79,7 +79,7 @@ public class AdServicesExtDataStorageServiceWorker {
         if (service == null) {
             setCallbackOnError(
                     callback,
-                    new RuntimeException("Unable to find AdServicesExtDataStorageService!"),
+                    new IllegalStateException("Unable to find AdServicesExtDataStorageService!"),
                     /* shouldUnbind= */ false);
             return;
         }
@@ -111,7 +111,7 @@ public class AdServicesExtDataStorageServiceWorker {
         if (service == null) {
             setCallbackOnError(
                     callback,
-                    new RuntimeException("Unable to find AdServicesExtDataStorageService!"),
+                    new IllegalStateException("Unable to find AdServicesExtDataStorageService!"),
                     /* shouldUnbind= */ false);
             return;
         }

@@ -87,6 +87,9 @@ public final class ConsentMigrationUtils {
             } else {
                 LogUtil.e("Finished migrating consent to AppSearch. Shared prefs not updated.");
             }
+
+            // No longer need access to Android R data. Safe to clear here.
+            adExtDataManager.clearAllDataAsync();
         } catch (Exception e) {
             LogUtil.e("Consent migration to AppSearch failed: ", e);
         }

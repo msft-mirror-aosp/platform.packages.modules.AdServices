@@ -45,7 +45,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -265,6 +264,7 @@ public class PeriodicEncodingJobWorker {
                         Exception.class,
                         e -> {
                             sLogger.e(
+                                    e,
                                     "Exception trying to validate and persist encoded payload for"
                                             + " buyer: %s",
                                     buyer);
@@ -281,17 +281,8 @@ public class PeriodicEncodingJobWorker {
 
     @VisibleForTesting
     void validateAndPersistPayload(
-            DBEncoderLogicMetadata encoderLogicMetadata, String encodedPayload, int version) {
+            DBEncoderLogicMetadata encoderLogicMetadata, byte[] encodedBytes, int version) {
         AdTechIdentifier buyer = encoderLogicMetadata.getBuyer();
-        byte[] encodedBytes;
-        try {
-            encodedBytes = Base64.getDecoder().decode(encodedPayload);
-        } catch (IllegalArgumentException e) {
-            sLogger.e(
-                    "Malformed encoded payload returned by buyer: %s, encoded payload: %s",
-                    buyer, encodedPayload);
-            throw new IllegalArgumentException("Malformed encoded payload.");
-        }
         if (encodedBytes.length > mEncodedPayLoadMaxSizeBytes) {
             // Do not persist encoded payload if the encoding logic violates the size constraints
             sLogger.e("Buyer:%s encoded payload exceeded max size limit", buyer);

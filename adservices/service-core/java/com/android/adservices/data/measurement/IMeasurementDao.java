@@ -143,10 +143,10 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
-     * Gets the count of distinct Uri's of destinations in the Source table in a time window with
-     * matching publisher, enrollment, unexpired and ACTIVE status, excluding a given destination.
+     * Gets the count of distinct Uris of destinations in the Source table in a time window with
+     * matching publisher, enrollment, and unexpired; excluding given destinations.
      */
-    Integer countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+    Integer countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
             Uri publisher,
             @EventSurfaceType int publisherType,
             String enrollmentId,
@@ -157,10 +157,10 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
-     * Gets the count of distinct Uri's of destinations in the Source table with matching publisher,
-     * enrollment, unexpired and ACTIVE status, excluding a given destination.
+     * Gets the count of distinct Uris of destinations in the Source table with matching publisher,
+     * enrollment, and unexpired; excluding given destinations.
      */
-    Integer countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+    Integer countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
             Uri publisher,
             @EventSurfaceType int publisherType,
             String enrollmentId,
@@ -170,8 +170,8 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
-     * Gets the count of distinct Uri's of destinations in the Source table in a time window with
-     * matching publisher, and ACTIVE status, excluding a given destination.
+     * Gets the count of distinct Uris of destinations in the Source table in a time window with
+     * matching publisher; excluding given destinations.
      */
     Integer countDistinctDestinationsPerPublisherPerRateLimitWindow(
             Uri publisher,
@@ -184,7 +184,7 @@ public interface IMeasurementDao {
 
     /**
      * Gets the count of sources in the source table in a time period before event time with
-     * matching publisher, enrollment, excluding the given registration origin.
+     * matching publisher, enrollment; excluding the given registration origin.
      */
     Integer countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
             Uri registrationOrigin,
@@ -197,7 +197,7 @@ public interface IMeasurementDao {
 
     /**
      * Gets the count of distinct IDs of enrollments in the Source table in a time window with
-     * matching publisher and destination, excluding a given enrollment ID.
+     * matching publisher and destination; excluding a given reporting origin.
      */
     Integer countDistinctReportingOriginsPerPublisherXDestinationInSource(
             Uri publisher,

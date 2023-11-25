@@ -425,7 +425,7 @@ public class AsyncRegistrationQueueRunner {
         long windowStartTime = source.getEventTime()
                 - FlagsFactory.getFlags().getMeasurementDestinationRateLimitWindow();
         int destinationReportingCount =
-                dao.countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+                dao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                         publisher,
                         publisherType,
                         enrollmentId,
@@ -492,7 +492,7 @@ public class AsyncRegistrationQueueRunner {
         int destinationCount;
         if (flags.getMeasurementEnableDestinationRateLimit()) {
             destinationCount =
-                    dao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                    dao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                             publisher,
                             publisherType,
                             enrollmentId,
@@ -501,7 +501,7 @@ public class AsyncRegistrationQueueRunner {
                             requestTime);
         } else {
             destinationCount =
-                    dao.countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+                    dao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                             publisher,
                             publisherType,
                             enrollmentId,

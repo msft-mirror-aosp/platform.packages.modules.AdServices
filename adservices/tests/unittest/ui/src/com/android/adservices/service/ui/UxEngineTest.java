@@ -120,7 +120,7 @@ public class UxEngineTest {
                         BackgroundJobsManager.scheduleAllBackgroundJobs(any()));
         ExtendedMockito.doNothing()
                 .when(() -> BackgroundJobsManager.scheduleMeasurementBackgroundJobs(any()));
-        ExtendedMockito.doNothing().when(() -> UiStatsLogger.logEntryPointClicked(any()));
+        ExtendedMockito.doNothing().when(() -> UiStatsLogger.logEntryPointClicked());
 
         doReturn(true).when(mUxStatesManager).getFlag(KEY_ADSERVICES_ENABLED);
         doReturn(true).when(mUxStatesManager).getFlag(KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED);
