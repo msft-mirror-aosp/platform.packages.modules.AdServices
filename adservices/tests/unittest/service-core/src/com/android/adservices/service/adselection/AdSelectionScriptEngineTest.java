@@ -75,6 +75,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -1476,10 +1477,10 @@ public class AdSelectionScriptEngineTest {
         // Logger calls come after the callback is returned
         CountDownLatch loggerLatch = new CountDownLatch(1);
         doAnswer(
-                unusedInvocation -> {
-                    loggerLatch.countDown();
-                    return null;
-                })
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
                 .when(mAdSelectionExecutionLoggerMock)
                 .endScoreAds();
         final List<ScoreAdResult> results =
@@ -1507,10 +1508,10 @@ public class AdSelectionScriptEngineTest {
                         CUSTOM_AUDIENCE_SIGNALS_LIST);
         loggerLatch.await();
         assertThat(
-                results.stream()
-                        .map(ScoreAdResult::getSellerRejectReason)
-                        .filter(Objects::nonNull)
-                        .collect(Collectors.toList()))
+                        results.stream()
+                                .map(ScoreAdResult::getSellerRejectReason)
+                                .filter(Objects::nonNull)
+                                .collect(Collectors.toList()))
                 .containsExactly("hello", "world");
         verify(mAdSelectionExecutionLoggerMock).startScoreAds();
         verify(mAdSelectionExecutionLoggerMock).endScoreAds();
@@ -1522,10 +1523,10 @@ public class AdSelectionScriptEngineTest {
         // Logger calls come after the callback is returned
         CountDownLatch loggerLatch = new CountDownLatch(1);
         doAnswer(
-                unusedInvocation -> {
-                    loggerLatch.countDown();
-                    return null;
-                })
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
                 .when(mAdSelectionExecutionLoggerMock)
                 .endScoreAds();
         final List<ScoreAdResult> results =
@@ -1547,10 +1548,10 @@ public class AdSelectionScriptEngineTest {
                         CUSTOM_AUDIENCE_SIGNALS_LIST);
         loggerLatch.await();
         assertThat(
-                results.stream()
-                        .map(ScoreAdResult::getSellerRejectReason)
-                        .filter(Objects::nonNull)
-                        .collect(Collectors.toList()))
+                        results.stream()
+                                .map(ScoreAdResult::getSellerRejectReason)
+                                .filter(Objects::nonNull)
+                                .collect(Collectors.toList()))
                 .containsExactly("", "");
         verify(mAdSelectionExecutionLoggerMock).startScoreAds();
         verify(mAdSelectionExecutionLoggerMock).endScoreAds();
