@@ -16,9 +16,9 @@
 
 package com.android.adservices.service.appsearch;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
-import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -43,6 +43,7 @@ import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.data.common.BooleanFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
@@ -58,14 +59,12 @@ import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollectio
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 import java.util.List;
@@ -73,14 +72,14 @@ import java.util.List;
 @SmallTest
 public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
 
-    private MockitoSession mStaticMockSession;
     @Mock private AppSearchConsentWorker mAppSearchConsentWorker;
-    @Mock private Flags mFlags;
     @Mock private AdServicesStorageManager mAdServicesStorageManager;
     @Mock private BooleanFileDatastore mDatastore;
     @Mock private SharedPreferences mSharedPrefs;
     @Mock private AppConsentDao mAppConsentDao;
     @Mock private SharedPreferences.Editor mEditor;
+
+    @Mock Flags mMockFlags;
 
     private AppSearchConsentStorageManager mAppSearchConsentStorageManager;
     private static final AdServicesApiType API_TYPE = AdServicesApiType.TOPICS;
@@ -91,20 +90,19 @@ public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
     private static final Topic TOPIC2 = Topic.create(12, 12, 12);
     private static final Topic TOPIC3 = Topic.create(123, 123, 123);
 
+    @Rule
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(AppSearchConsentWorker.class)
+                    .spyStatic(PackageManagerCompatUtils.class)
+                    .spyStatic(SdkLevel.class)
+                    .spyStatic(FlagsFactory.class)
+                    .build();
+
     @Before
     public void setup() {
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(AppSearchConsentWorker.class)
-                        .mockStatic(PackageManagerCompatUtils.class)
-                        .mockStatic(SdkLevel.class)
-                        .mockStatic(FlagsFactory.class)
-                        .strictness(Strictness.WARN)
-                        .initMocks(this)
-                        .startMocking();
-        ExtendedMockito.doReturn(mAppSearchConsentWorker)
-                .when(() -> AppSearchConsentWorker.getInstance());
-        ExtendedMockito.doReturn(mFlags).when(() -> FlagsFactory.getFlags());
+        doReturn(mAppSearchConsentWorker).when(() -> AppSearchConsentWorker.getInstance());
+        mockGetFlags(mMockFlags);
         mAppSearchConsentStorageManager =
                 new AppSearchConsentStorageManager(mAppSearchConsentWorker);
         ApplicationInfo app1 = new ApplicationInfo();
@@ -113,24 +111,17 @@ public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
         app2.packageName = PACKAGE_NAME2;
         ApplicationInfo app3 = new ApplicationInfo();
         app3.packageName = PACKAGE_NAME3;
-        ExtendedMockito.doReturn(List.of(app1, app2, app3))
+        doReturn(List.of(app1, app2, app3))
                 .when(() -> PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()));
-    }
-
-    @After
-    public void teardown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
     }
 
     @Test
     public void testGetConsent() {
         when(mAppSearchConsentWorker.getConsent(API_TYPE.toPpApiDatastoreKey())).thenReturn(false);
-        assertThat(mAppSearchConsentStorageManager.getConsent(API_TYPE).isGiven()).isEqualTo(false);
+        expect.that(mAppSearchConsentStorageManager.getConsent(API_TYPE).isGiven()).isFalse();
 
         when(mAppSearchConsentWorker.getConsent(API_TYPE.toPpApiDatastoreKey())).thenReturn(true);
-        assertThat(mAppSearchConsentStorageManager.getConsent(API_TYPE).isGiven()).isEqualTo(true);
+        expect.that(mAppSearchConsentStorageManager.getConsent(API_TYPE).isGiven()).isTrue();
     }
 
     @Test
@@ -148,12 +139,7 @@ public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
         when(mAppSearchConsentWorker.getAppsWithConsent(eq(consentType)))
                 .thenReturn(List.of(PACKAGE_NAME1, PACKAGE_NAME2));
         List<String> result = mAppSearchConsentStorageManager.getKnownAppsWithConsent();
-        assertThat(result.size()).isEqualTo(2);
-
-        String package1 = result.get(0);
-        String package2 = result.get(1);
-        assertThat(package1.equals(PACKAGE_NAME1) || package2.equals(PACKAGE_NAME1)).isTrue();
-        assertThat(package1.equals(PACKAGE_NAME2) || package2.equals(PACKAGE_NAME2)).isTrue();
+        expect.that(result).containsExactly(PACKAGE_NAME1, PACKAGE_NAME2);
     }
 
     @Test
@@ -162,12 +148,9 @@ public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
         when(mAppSearchConsentWorker.getAppsWithConsent(eq(consentType)))
                 .thenReturn(List.of(PACKAGE_NAME1, PACKAGE_NAME2));
         List<String> result = mAppSearchConsentStorageManager.getAppsWithRevokedConsent();
-        assertThat(result.size()).isEqualTo(2);
+        expect.that(result).hasSize(2);
 
-        String package1 = result.get(0);
-        String package2 = result.get(1);
-        assertThat(package1.equals(PACKAGE_NAME1) || package2.equals(PACKAGE_NAME1)).isTrue();
-        assertThat(package1.equals(PACKAGE_NAME2) || package2.equals(PACKAGE_NAME2)).isTrue();
+        expect.that(result).containsExactly(PACKAGE_NAME1, PACKAGE_NAME2);
     }
 
     @Test
@@ -215,7 +198,8 @@ public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
         when(mAppSearchConsentWorker.getAppsWithConsent(
                         AppSearchAppConsentDao.APPS_WITH_REVOKED_CONSENT))
                 .thenReturn(List.of());
-        assertThat(mAppSearchConsentStorageManager.isConsentRevokedForApp(PACKAGE_NAME1)).isFalse();
+        expect.that(mAppSearchConsentStorageManager.isConsentRevokedForApp(PACKAGE_NAME1))
+                .isFalse();
     }
 
     @Test
@@ -225,12 +209,12 @@ public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
         when(mAppSearchConsentWorker.getAppsWithConsent(
                         AppSearchAppConsentDao.APPS_WITH_REVOKED_CONSENT))
                 .thenReturn(List.of(PACKAGE_NAME1));
-        assertThat(mAppSearchConsentStorageManager.isConsentRevokedForApp(PACKAGE_NAME1)).isTrue();
+        expect.that(mAppSearchConsentStorageManager.isConsentRevokedForApp(PACKAGE_NAME1)).isTrue();
     }
 
     @Test
     public void testIsFledgeConsentRevokedForAppAfterSettingFledgeUse() {
-        when(mFlags.getEnableAppsearchConsentData()).thenReturn(true);
+        when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);
         when(mAppSearchConsentWorker.getAppsWithConsent(
                         AppSearchAppConsentDao.APPS_WITH_REVOKED_CONSENT))
                 .thenReturn(List.of());
@@ -239,20 +223,20 @@ public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
                 .thenReturn(true);
         boolean result =
                 mAppSearchConsentStorageManager.setConsentForAppIfNew(PACKAGE_NAME1, false);
-        assertThat(result).isFalse();
+        expect.that(result).isFalse();
         verify(mAppSearchConsentWorker)
                 .addAppWithConsent(AppSearchAppConsentDao.APPS_WITH_CONSENT, PACKAGE_NAME1);
     }
 
     @Test
     public void testIsFledgeConsentRevokedForAppAfterSettingFledgeUse_revoked() {
-        when(mFlags.getEnableAppsearchConsentData()).thenReturn(true);
+        when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);
         when(mAppSearchConsentWorker.getAppsWithConsent(
                         AppSearchAppConsentDao.APPS_WITH_REVOKED_CONSENT))
                 .thenReturn(List.of(PACKAGE_NAME2));
         boolean result =
                 mAppSearchConsentStorageManager.setConsentForAppIfNew(PACKAGE_NAME2, false);
-        assertThat(result).isTrue();
+        expect.that(result).isTrue();
         verify(mAppSearchConsentWorker)
                 .getAppsWithConsent(AppSearchAppConsentDao.APPS_WITH_REVOKED_CONSENT);
 
@@ -285,14 +269,14 @@ public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
     @Test
     public void testWasNotificationDisplayed() {
         when(mAppSearchConsentWorker.wasNotificationDisplayed()).thenReturn(false);
-        assertThat(mAppSearchConsentStorageManager.wasNotificationDisplayed()).isFalse();
+        expect.that(mAppSearchConsentStorageManager.wasNotificationDisplayed()).isFalse();
         verify(mAppSearchConsentWorker).wasNotificationDisplayed();
     }
 
     @Test
     public void testWasGaUxNotificationDisplayed() {
         when(mAppSearchConsentWorker.wasGaUxNotificationDisplayed()).thenReturn(false);
-        assertThat(mAppSearchConsentStorageManager.wasGaUxNotificationDisplayed()).isFalse();
+        expect.that(mAppSearchConsentStorageManager.wasGaUxNotificationDisplayed()).isFalse();
         verify(mAppSearchConsentWorker).wasGaUxNotificationDisplayed();
     }
 
@@ -300,7 +284,7 @@ public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
     public void testGetCurrentPrivacySandboxFeature() {
         when(mAppSearchConsentWorker.getPrivacySandboxFeature())
                 .thenReturn(PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT);
-        assertThat(mAppSearchConsentStorageManager.getCurrentPrivacySandboxFeature())
+        expect.that(mAppSearchConsentStorageManager.getCurrentPrivacySandboxFeature())
                 .isEqualTo(PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT);
         verify(mAppSearchConsentWorker).getPrivacySandboxFeature();
     }
@@ -318,7 +302,7 @@ public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
     public void testGetUserManualInteractionsWithConsent() {
         when(mAppSearchConsentWorker.getUserManualInteractionWithConsent())
                 .thenReturn(ConsentManager.MANUAL_INTERACTIONS_RECORDED);
-        assertThat(mAppSearchConsentStorageManager.getUserManualInteractionWithConsent())
+        expect.that(mAppSearchConsentStorageManager.getUserManualInteractionWithConsent())
                 .isEqualTo(ConsentManager.MANUAL_INTERACTIONS_RECORDED);
         verify(mAppSearchConsentWorker).getUserManualInteractionWithConsent();
     }
@@ -356,10 +340,8 @@ public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
                 .thenReturn(List.of(TOPIC1, TOPIC2, TOPIC3));
         List<Topic> result = mAppSearchConsentStorageManager.retrieveAllBlockedTopics();
         verify(mAppSearchConsentWorker).getBlockedTopics();
-        assertThat(result.size()).isEqualTo(3);
-        assertThat(result.contains(TOPIC1)).isTrue();
-        assertThat(result.contains(TOPIC2)).isTrue();
-        assertThat(result.contains(TOPIC3)).isTrue();
+        expect.that(result.size()).isEqualTo(3);
+        expect.that(result).containsExactly(TOPIC1, TOPIC2, TOPIC3);
     }
 
     @Test
@@ -370,49 +352,49 @@ public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
         boolean result =
                 mAppSearchConsentStorageManager.shouldInitConsentDataFromAppSearch(
                         mSharedPrefs, mDatastore, mAdServicesStorageManager);
-        assertThat(result).isFalse();
+        expect.that(result).isFalse();
     }
 
     @Test
     public void testShouldInitConsentDataFromAppSearch_flagDisabled() {
         ExtendedMockito.doReturn(true).when(() -> SdkLevel.isAtLeastT());
-        when(mFlags.getEnableAppsearchConsentData()).thenReturn(false);
+        when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(false);
 
         boolean result =
                 mAppSearchConsentStorageManager.shouldInitConsentDataFromAppSearch(
                         mSharedPrefs, mDatastore, mAdServicesStorageManager);
-        assertThat(result).isFalse();
+        expect.that(result).isFalse();
     }
 
     @Test
     public void testShouldInitConsentDataFromAppSearch_hasMigrated() {
         ExtendedMockito.doReturn(true).when(() -> SdkLevel.isAtLeastT());
-        when(mFlags.getEnableAppsearchConsentData()).thenReturn(true);
+        when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);
         when(mSharedPrefs.getBoolean(any(), eq(false))).thenReturn(true);
 
         boolean result =
                 mAppSearchConsentStorageManager.shouldInitConsentDataFromAppSearch(
                         mSharedPrefs, mDatastore, mAdServicesStorageManager);
-        assertThat(result).isFalse();
+        expect.that(result).isFalse();
     }
 
     @Test
     public void testShouldInitConsentDataFromAppSearch_notificationWasDisplayedInSystemServer() {
         ExtendedMockito.doReturn(true).when(() -> SdkLevel.isAtLeastT());
-        when(mFlags.getEnableAppsearchConsentData()).thenReturn(true);
+        when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);
         when(mSharedPrefs.getBoolean(any(), eq(true))).thenReturn(true);
         when(mAdServicesStorageManager.wasNotificationDisplayed()).thenReturn(true);
 
         boolean result =
                 mAppSearchConsentStorageManager.shouldInitConsentDataFromAppSearch(
                         mSharedPrefs, mDatastore, mAdServicesStorageManager);
-        assertThat(result).isFalse();
+        expect.that(result).isFalse();
     }
 
     @Test
     public void testShouldInitConsentDataFromAppSearch_notificationWasDisplayedInPPAPI() {
         ExtendedMockito.doReturn(true).when(() -> SdkLevel.isAtLeastT());
-        when(mFlags.getEnableAppsearchConsentData()).thenReturn(true);
+        when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);
         when(mSharedPrefs.getBoolean(any(), eq(true))).thenReturn(true);
         when(mAdServicesStorageManager.wasNotificationDisplayed()).thenReturn(false);
         when(mAdServicesStorageManager.wasGaUxNotificationDisplayed()).thenReturn(false);
@@ -421,13 +403,13 @@ public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
         boolean result =
                 mAppSearchConsentStorageManager.shouldInitConsentDataFromAppSearch(
                         mSharedPrefs, mDatastore, mAdServicesStorageManager);
-        assertThat(result).isFalse();
+        expect.that(result).isFalse();
     }
 
     @Test
     public void testShouldInitConsentDataFromAppSearch_notificationNotDisplayed() {
         ExtendedMockito.doReturn(true).when(() -> SdkLevel.isAtLeastT());
-        when(mFlags.getEnableAppsearchConsentData()).thenReturn(true);
+        when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);
         when(mSharedPrefs.getBoolean(any(), eq(true))).thenReturn(true);
         when(mAdServicesStorageManager.wasNotificationDisplayed()).thenReturn(false);
         when(mAdServicesStorageManager.wasGaUxNotificationDisplayed()).thenReturn(false);
@@ -438,7 +420,7 @@ public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
         boolean result =
                 mAppSearchConsentStorageManager.shouldInitConsentDataFromAppSearch(
                         mSharedPrefs, mDatastore, mAdServicesStorageManager);
-        assertThat(result).isFalse();
+        expect.that(result).isFalse();
     }
 
     @Test
@@ -447,7 +429,7 @@ public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
         boolean result =
                 mAppSearchConsentStorageManager.shouldInitConsentDataFromAppSearch(
                         mSharedPrefs, mDatastore, mAdServicesStorageManager);
-        assertThat(result).isTrue();
+        expect.that(result).isTrue();
     }
 
     @Test
@@ -458,7 +440,7 @@ public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
         boolean result =
                 mAppSearchConsentStorageManager.migrateConsentDataIfNeeded(
                         mSharedPrefs, mDatastore, mAdServicesStorageManager, mAppConsentDao);
-        assertThat(result).isFalse();
+        expect.that(result).isFalse();
     }
 
     @Test
@@ -472,7 +454,7 @@ public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
         boolean result =
                 mAppSearchConsentStorageManager.migrateConsentDataIfNeeded(
                         mSharedPrefs, mDatastore, mAdServicesStorageManager, mAppConsentDao);
-        assertThat(result).isTrue();
+        expect.that(result).isTrue();
         verify(mDatastore).put(eq(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE), eq(true));
         verify(mAdServicesStorageManager).recordNotificationDisplayed(true);
         verify(mDatastore, atLeast(5)).put(any(), anyBoolean());
@@ -502,7 +484,7 @@ public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
         boolean result =
                 mAppSearchConsentStorageManager.migrateConsentDataIfNeeded(
                         mSharedPrefs, mDatastore, mAdServicesStorageManager, mAppConsentDao);
-        assertThat(result).isTrue();
+        expect.that(result).isTrue();
 
         verify(mDatastore).put(eq(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE), eq(true));
         verify(mAdServicesStorageManager).recordGaUxNotificationDisplayed(true);
@@ -521,22 +503,22 @@ public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
         // Verify blocked topics migration.
         ArgumentCaptor<List<TopicParcel>> argument = ArgumentCaptor.forClass(List.class);
         verify(mAdServicesStorageManager).recordBlockedTopic(argument.capture());
-        assertThat(argument.getValue().size()).isEqualTo(blockedTopics.size());
+        expect.that(argument.getValue().size()).isEqualTo(blockedTopics.size());
         for (TopicParcel topicParcel : argument.getValue()) {
-            assertThat(List.of(TOPIC1.getTopic(), TOPIC2.getTopic(), TOPIC3.getTopic()))
+            expect.that(List.of(TOPIC1.getTopic(), TOPIC2.getTopic(), TOPIC3.getTopic()))
                     .contains(topicParcel.getTopicId());
             List taxonomies =
                     List.of(
                             TOPIC1.getTaxonomyVersion(),
                             TOPIC2.getTaxonomyVersion(),
                             TOPIC3.getTaxonomyVersion());
-            assertThat(taxonomies).contains(topicParcel.getTaxonomyVersion());
+            expect.that(taxonomies).contains(topicParcel.getTaxonomyVersion());
             List models =
                     List.of(
                             TOPIC1.getModelVersion(),
                             TOPIC2.getModelVersion(),
                             TOPIC3.getModelVersion());
-            assertThat(models).contains(topicParcel.getModelVersion());
+            expect.that(models).contains(topicParcel.getModelVersion());
         }
     }
 
@@ -558,7 +540,7 @@ public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
 
     private void initConsentDataForMigration() {
         ExtendedMockito.doReturn(true).when(() -> SdkLevel.isAtLeastT());
-        when(mFlags.getEnableAppsearchConsentData()).thenReturn(true);
+        when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);
         when(mSharedPrefs.getBoolean(any(), eq(true))).thenReturn(true);
         when(mAdServicesStorageManager.wasNotificationDisplayed()).thenReturn(false);
         when(mAdServicesStorageManager.wasGaUxNotificationDisplayed()).thenReturn(false);
@@ -588,7 +570,7 @@ public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
     @Test
     public void isAdIdEnabledTest_defaultFalseBit() {
         when(mAppSearchConsentWorker.isAdIdEnabled()).thenReturn(false);
-        assertThat(mAppSearchConsentStorageManager.isAdIdEnabled()).isFalse();
+        expect.that(mAppSearchConsentStorageManager.isAdIdEnabled()).isFalse();
         verify(mAppSearchConsentWorker).isAdIdEnabled();
     }
 
@@ -612,7 +594,7 @@ public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
     @Test
     public void isU18AccountTest_defaultFalseBit() {
         when(mAppSearchConsentWorker.isU18Account()).thenReturn(false);
-        assertThat(mAppSearchConsentStorageManager.isU18Account()).isFalse();
+        expect.that(mAppSearchConsentStorageManager.isU18Account()).isFalse();
         verify(mAppSearchConsentWorker).isU18Account();
     }
 
@@ -634,7 +616,7 @@ public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
     @Test
     public void isEntryPointEnabledTest_defaultFalseBit() {
         when(mAppSearchConsentWorker.isEntryPointEnabled()).thenReturn(false);
-        assertThat(mAppSearchConsentStorageManager.isEntryPointEnabled()).isFalse();
+        expect.that(mAppSearchConsentStorageManager.isEntryPointEnabled()).isFalse();
         verify(mAppSearchConsentWorker).isEntryPointEnabled();
     }
 
@@ -658,7 +640,7 @@ public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
     @Test
     public void isAdultAccountTest_defaultFalseBit() {
         when(mAppSearchConsentWorker.isAdultAccount()).thenReturn(false);
-        assertThat(mAppSearchConsentStorageManager.isAdultAccount()).isFalse();
+        expect.that(mAppSearchConsentStorageManager.isAdultAccount()).isFalse();
         verify(mAppSearchConsentWorker).isAdultAccount();
     }
 
@@ -680,7 +662,7 @@ public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
     @Test
     public void wasU18NotificationDisplayedTest_defaultFalseBit() {
         when(mAppSearchConsentWorker.wasU18NotificationDisplayed()).thenReturn(false);
-        assertThat(mAppSearchConsentStorageManager.wasU18NotificationDisplayed()).isFalse();
+        expect.that(mAppSearchConsentStorageManager.wasU18NotificationDisplayed()).isFalse();
         verify(mAppSearchConsentWorker).wasU18NotificationDisplayed();
     }
 
@@ -722,7 +704,7 @@ public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
         for (PrivacySandboxUxCollection ux : PrivacySandboxUxCollection.values()) {
             doReturn(ux).when(mAppSearchConsentWorker).getUx();
             mAppSearchConsentStorageManager.setUx(ux);
-            assertThat(mAppSearchConsentStorageManager.getUx()).isEqualTo(ux);
+            expect.that(mAppSearchConsentStorageManager.getUx()).isEqualTo(ux);
         }
     }
 
@@ -733,7 +715,7 @@ public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
                     ux.getEnrollmentChannelCollection()) {
                 doReturn(channel).when(mAppSearchConsentWorker).getEnrollmentChannel(ux);
                 mAppSearchConsentStorageManager.setEnrollmentChannel(ux, channel);
-                assertThat(mAppSearchConsentStorageManager.getEnrollmentChannel(ux))
+                expect.that(mAppSearchConsentStorageManager.getEnrollmentChannel(ux))
                         .isEqualTo(channel);
             }
         }

@@ -22,11 +22,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
-import static com.google.common.truth.Truth.assertThat;
-
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.spy;
@@ -42,20 +38,19 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.RemoteException;
 
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.core.content.pm.ApplicationInfoBuilder;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.data.consent.AppConsentDaoFixture;
 
 import com.google.common.collect.ImmutableList;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
 import org.mockito.Spy;
 
 import java.io.IOException;
@@ -65,14 +60,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class AdServicesStorageManagerTest {
-    @Spy private final Context mContextSpy = ApplicationProvider.getApplicationContext();
+public class AdServicesStorageManagerTest extends AdServicesUnitTestCase {
+    @Spy private Context mContextSpy;
     @Mock private IAdServicesManager mMockIAdServicesManager;
 
     private AdServicesStorageManager mAdServicesStorageManager;
 
     private AdServicesManager mAdServicesManager;
-    private MockitoSession mStaticMockSession = null;
 
     @Mock private PackageManager mPackageManager;
 
@@ -95,10 +89,7 @@ public class AdServicesStorageManagerTest {
             if (!argument.containsAll(mStrings)) {
                 return false;
             }
-            if (!mStrings.containsAll(argument)) {
-                return false;
-            }
-            return true;
+            return mStrings.containsAll(argument);
         }
     }
 
@@ -114,6 +105,7 @@ public class AdServicesStorageManagerTest {
     @Before
     public void setup() throws IOException {
         MockitoAnnotations.initMocks(this);
+        mContextSpy = Mockito.spy(appContext.get());
         mPackageManager = mContextSpy.getPackageManager();
         mAdServicesManager = new AdServicesManager(mMockIAdServicesManager);
         doReturn(mPackageManager).when(mContextSpy).getPackageManager();
@@ -122,13 +114,6 @@ public class AdServicesStorageManagerTest {
                 spy(
                         new AdServicesStorageManager(
                                 mAdServicesManager, mContextSpy.getPackageManager()));
-    }
-
-    @After
-    public void teardown() throws IOException {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
     }
 
     @Test
@@ -170,8 +155,8 @@ public class AdServicesStorageManagerTest {
                         argThat(new ListMatcherIgnoreOrder(applicationsInstalledNames)));
 
         // all apps have received a consent
-        assertThat(knownAppsWithConsent).hasSize(3);
-        assertThat(appsWithRevokedConsent).isEmpty();
+        expect.that(knownAppsWithConsent).hasSize(3);
+        expect.that(appsWithRevokedConsent).isEmpty();
     }
 
     @Test
@@ -180,7 +165,8 @@ public class AdServicesStorageManagerTest {
         doReturn(ConsentParcel.createGivenConsent(ConsentParcel.ALL_API))
                 .when(mMockIAdServicesManager)
                 .getConsent(ConsentParcel.ALL_API);
-        assertTrue(mAdServicesStorageManager.getConsent(AdServicesApiType.ALL_API).isGiven());
+        expect.that(mAdServicesStorageManager.getConsent(AdServicesApiType.ALL_API).isGiven())
+                .isTrue();
 
         mockGetPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
         mockGetPackageUid(AppConsentDaoFixture.APP20_PACKAGE_NAME, AppConsentDaoFixture.APP20_UID);
@@ -205,15 +191,18 @@ public class AdServicesStorageManagerTest {
                         AppConsentDaoFixture.APP30_UID,
                         false);
 
-        assertFalse(
-                mAdServicesStorageManager.setConsentForAppIfNew(
-                        AppConsentDaoFixture.APP10_PACKAGE_NAME, false));
-        assertTrue(
-                mAdServicesStorageManager.setConsentForAppIfNew(
-                        AppConsentDaoFixture.APP20_PACKAGE_NAME, false));
-        assertFalse(
-                mAdServicesStorageManager.setConsentForAppIfNew(
-                        AppConsentDaoFixture.APP30_PACKAGE_NAME, false));
+        expect.that(
+                        mAdServicesStorageManager.setConsentForAppIfNew(
+                                AppConsentDaoFixture.APP10_PACKAGE_NAME, false))
+                .isFalse();
+        expect.that(
+                        mAdServicesStorageManager.setConsentForAppIfNew(
+                                AppConsentDaoFixture.APP20_PACKAGE_NAME, false))
+                .isTrue();
+        expect.that(
+                        mAdServicesStorageManager.setConsentForAppIfNew(
+                                AppConsentDaoFixture.APP30_PACKAGE_NAME, false))
+                .isFalse();
     }
 
     @Test
@@ -222,7 +211,8 @@ public class AdServicesStorageManagerTest {
         doReturn(ConsentParcel.createGivenConsent(ConsentParcel.ALL_API))
                 .when(mMockIAdServicesManager)
                 .getConsent(ConsentParcel.ALL_API);
-        assertTrue(mAdServicesStorageManager.getConsent(AdServicesApiType.ALL_API).isGiven());
+        expect.that(mAdServicesStorageManager.getConsent(AdServicesApiType.ALL_API).isGiven())
+                .isTrue();
 
         mockGetPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
         mockGetPackageUid(AppConsentDaoFixture.APP20_PACKAGE_NAME, AppConsentDaoFixture.APP20_UID);
@@ -241,15 +231,18 @@ public class AdServicesStorageManagerTest {
                 .isConsentRevokedForApp(
                         AppConsentDaoFixture.APP30_PACKAGE_NAME, AppConsentDaoFixture.APP30_UID);
 
-        assertFalse(
-                mAdServicesStorageManager.isConsentRevokedForApp(
-                        AppConsentDaoFixture.APP10_PACKAGE_NAME));
-        assertTrue(
-                mAdServicesStorageManager.isConsentRevokedForApp(
-                        AppConsentDaoFixture.APP20_PACKAGE_NAME));
-        assertFalse(
-                mAdServicesStorageManager.isConsentRevokedForApp(
-                        AppConsentDaoFixture.APP30_PACKAGE_NAME));
+        expect.that(
+                        mAdServicesStorageManager.isConsentRevokedForApp(
+                                AppConsentDaoFixture.APP10_PACKAGE_NAME))
+                .isFalse();
+        expect.that(
+                        mAdServicesStorageManager.isConsentRevokedForApp(
+                                AppConsentDaoFixture.APP20_PACKAGE_NAME))
+                .isTrue();
+        expect.that(
+                        mAdServicesStorageManager.isConsentRevokedForApp(
+                                AppConsentDaoFixture.APP30_PACKAGE_NAME))
+                .isFalse();
     }
 
     @Test
@@ -259,7 +252,8 @@ public class AdServicesStorageManagerTest {
                 .when(mMockIAdServicesManager)
                 .getConsent(ConsentParcel.FLEDGE);
 
-        assertTrue(mAdServicesStorageManager.getConsent(AdServicesApiType.FLEDGE).isGiven());
+        expect.that(mAdServicesStorageManager.getConsent(AdServicesApiType.FLEDGE).isGiven())
+                .isTrue();
         mockGetPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
         mockGetPackageUid(AppConsentDaoFixture.APP20_PACKAGE_NAME, AppConsentDaoFixture.APP20_UID);
         mockGetPackageUid(AppConsentDaoFixture.APP30_PACKAGE_NAME, AppConsentDaoFixture.APP30_UID);
@@ -277,15 +271,18 @@ public class AdServicesStorageManagerTest {
                 .isConsentRevokedForApp(
                         AppConsentDaoFixture.APP30_PACKAGE_NAME, AppConsentDaoFixture.APP30_UID);
 
-        assertFalse(
-                mAdServicesStorageManager.isConsentRevokedForApp(
-                        AppConsentDaoFixture.APP10_PACKAGE_NAME));
-        assertTrue(
-                mAdServicesStorageManager.isConsentRevokedForApp(
-                        AppConsentDaoFixture.APP20_PACKAGE_NAME));
-        assertFalse(
-                mAdServicesStorageManager.isConsentRevokedForApp(
-                        AppConsentDaoFixture.APP30_PACKAGE_NAME));
+        expect.that(
+                        mAdServicesStorageManager.isConsentRevokedForApp(
+                                AppConsentDaoFixture.APP10_PACKAGE_NAME))
+                .isFalse();
+        expect.that(
+                        mAdServicesStorageManager.isConsentRevokedForApp(
+                                AppConsentDaoFixture.APP20_PACKAGE_NAME))
+                .isTrue();
+        expect.that(
+                        mAdServicesStorageManager.isConsentRevokedForApp(
+                                AppConsentDaoFixture.APP30_PACKAGE_NAME))
+                .isFalse();
     }
 
     @Test
@@ -294,7 +291,8 @@ public class AdServicesStorageManagerTest {
         doReturn(ConsentParcel.createGivenConsent(ConsentParcel.ALL_API))
                 .when(mMockIAdServicesManager)
                 .getConsent(ConsentParcel.ALL_API);
-        assertTrue(mAdServicesStorageManager.getConsent(AdServicesApiType.ALL_API).isGiven());
+        expect.that(mAdServicesStorageManager.getConsent(AdServicesApiType.ALL_API).isGiven())
+                .isTrue();
 
         mockThrowExceptionOnGetPackageUid(AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME);
         assertThrows(
@@ -309,7 +307,8 @@ public class AdServicesStorageManagerTest {
         doReturn(ConsentParcel.createGivenConsent(ConsentParcel.FLEDGE))
                 .when(mMockIAdServicesManager)
                 .getConsent(ConsentParcel.FLEDGE);
-        assertTrue(mAdServicesStorageManager.getConsent(AdServicesApiType.FLEDGE).isGiven());
+        expect.that(mAdServicesStorageManager.getConsent(AdServicesApiType.FLEDGE).isGiven())
+                .isTrue();
 
         mockThrowExceptionOnGetPackageUid(AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME);
         assertThrows(
@@ -321,7 +320,7 @@ public class AdServicesStorageManagerTest {
 
     @Test
     public void testManualInteractionWithConsentRecorded() throws RemoteException {
-        assertThat(mAdServicesStorageManager.getUserManualInteractionWithConsent())
+        expect.that(mAdServicesStorageManager.getUserManualInteractionWithConsent())
                 .isEqualTo(UNKNOWN);
 
         verify(mMockIAdServicesManager).getUserManualInteractionWithConsent();
@@ -332,7 +331,7 @@ public class AdServicesStorageManagerTest {
         mAdServicesStorageManager.recordUserManualInteractionWithConsent(
                 MANUAL_INTERACTIONS_RECORDED);
 
-        assertThat(mAdServicesStorageManager.getUserManualInteractionWithConsent())
+        expect.that(mAdServicesStorageManager.getUserManualInteractionWithConsent())
                 .isEqualTo(MANUAL_INTERACTIONS_RECORDED);
 
         verify(mMockIAdServicesManager, times(2)).getUserManualInteractionWithConsent();
