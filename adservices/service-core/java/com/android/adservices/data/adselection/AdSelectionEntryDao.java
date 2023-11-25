@@ -738,6 +738,21 @@ public abstract class AdSelectionEntryDao {
             List<Long> adSelectionIds, String callerPackageName);
 
     /**
+     * Checks if there is a row in the ad_selection_initialization table with the unique key
+     * ad_selection_id and caller package name.
+     *
+     * @param adSelectionIds which is the key to query the corresponding ad selection data.
+     * @param callerPackageName package name which initiated the auction run
+     * @return true if row exists, false otherwise
+     */
+    @Query(
+            " SELECT ad_selection_id FROM ad_selection_initialization "
+                    + " WHERE ad_selection_id IN (:adSelectionIds) "
+                    + " AND caller_package_name = :callerPackageName ")
+    public abstract List<Long> getAdSelectionIdsWithCallerPackageNameFromUnifiedTable(
+            List<Long> adSelectionIds, String callerPackageName);
+
+    /**
      * Method used to create an AdSelectionId record in ad selection initialization.
      *
      * @return true if row was created in DBAdSelectionInitialization, false otherwise
@@ -916,9 +931,19 @@ public abstract class AdSelectionEntryDao {
                     + "winning_ad_bid AS winningAdBid, "
                     + "winning_ad_render_uri AS winningAdRenderUri "
                     + "FROM ad_selection WHERE ad_selection_id IN (:adSelectionIds)")
-    // TODO(b/291956961): Remove querying ad_selection table when migration to new
-    //  ad_selection_result table is done.
     public abstract List<AdSelectionResultBidAndUri> getWinningBidAndUriForIds(
+            List<Long> adSelectionIds);
+
+    /**
+     * Query the unified table to get winning ad data of ad selection run identified by
+     * adSelectionId.
+     */
+    @Query(
+            "SELECT ad_selection_id AS adSelectionId, "
+                    + "winning_ad_bid AS winningAdBid, "
+                    + "winning_ad_render_uri AS winningAdRenderUri "
+                    + "FROM ad_selection_result WHERE ad_selection_id IN (:adSelectionIds)")
+    public abstract List<AdSelectionResultBidAndUri> getWinningBidAndUriForIdsUnifiedTables(
             List<Long> adSelectionIds);
 
     /**

@@ -18,8 +18,10 @@ package com.android.adservices.data.adselection;
 
 import static android.adservices.adselection.DataHandlersFixture.AD_SELECTION_INITIALIZATION_1;
 import static android.adservices.adselection.DataHandlersFixture.DB_AD_SELECTION_INITIALIZATION_1;
+import static android.adservices.adselection.DataHandlersFixture.DB_AD_SELECTION_INITIALIZATION_2;
 import static android.adservices.adselection.DataHandlersFixture.TEST_PACKAGE_NAME_1;
 import static android.adservices.adselection.DataHandlersFixture.WINNING_CUSTOM_AUDIENCE_ALL_FIELDS_SET;
+import static android.adservices.adselection.DataHandlersFixture.getDBAdSelectionResultForCaAllFieldsWithId;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -2195,6 +2197,27 @@ public class AdSelectionEntryDaoTest {
     }
 
     @Test
+    public void test_getAdSelectionIdsWithCallerPackageNameUnifiedTables_success() {
+        DBAdSelectionInitialization dbAdSelectionInitialization =
+                DBAdSelectionInitialization.builder()
+                        .setAdSelectionId(AD_SELECTION_ID_1)
+                        .setSeller(AdTechIdentifier.fromString("seller"))
+                        .setCallerPackageName(DB_AD_SELECTION_2.getCallerPackageName())
+                        .setCreationInstant(CLOCK.instant())
+                        .build();
+        mAdSelectionEntryDao.insertDBAdSelectionInitialization(dbAdSelectionInitialization);
+        // Should not read from this table
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_2);
+
+        List<Long> expectedIds =
+                mAdSelectionEntryDao.getAdSelectionIdsWithCallerPackageNameFromUnifiedTable(
+                        ImmutableList.of(AD_SELECTION_ID_1, AD_SELECTION_ID_2, AD_SELECTION_ID_3),
+                        DB_AD_SELECTION_2.getCallerPackageName());
+
+        assertThat(expectedIds).containsExactly(AD_SELECTION_ID_1);
+    }
+
+    @Test
     public void test_getAdSelectionIdsWithCallerPackageNameInOnDeviceTable_success() {
         DBAdSelectionInitialization dbAdSelectionInitialization =
                 DBAdSelectionInitialization.builder()
@@ -2213,6 +2236,65 @@ public class AdSelectionEntryDaoTest {
 
         assertThat(expectedIds).hasSize(1);
         assertThat(expectedIds).containsExactly(AD_SELECTION_ID_2);
+    }
+
+    @Test
+    public void test_getWinningBidAndUriForIdsUnifiedTables() {
+        mAdSelectionEntryDao.insertDBAdSelectionInitialization(DB_AD_SELECTION_INITIALIZATION_1);
+        DBAdSelectionResult result1 = getDBAdSelectionResultForCaAllFieldsWithId(AD_SELECTION_ID_1);
+        mAdSelectionEntryDao.insertDBAdSelectionResult(result1);
+
+        mAdSelectionEntryDao.insertDBAdSelectionInitialization(DB_AD_SELECTION_INITIALIZATION_2);
+        DBAdSelectionResult result2 = getDBAdSelectionResultForCaAllFieldsWithId(AD_SELECTION_ID_2);
+        mAdSelectionEntryDao.insertDBAdSelectionResult(result2);
+
+        List<AdSelectionResultBidAndUri> bidAndUris =
+                mAdSelectionEntryDao.getWinningBidAndUriForIdsUnifiedTables(
+                        ImmutableList.of(AD_SELECTION_ID_1, AD_SELECTION_ID_2));
+
+        AdSelectionResultBidAndUri resultBidAndUri1 =
+                AdSelectionResultBidAndUri.create(
+                        AD_SELECTION_ID_1,
+                        result1.getWinningAdBid(),
+                        result1.getWinningAdRenderUri());
+        AdSelectionResultBidAndUri resultBidAndUri2 =
+                AdSelectionResultBidAndUri.create(
+                        AD_SELECTION_ID_2,
+                        result2.getWinningAdBid(),
+                        result2.getWinningAdRenderUri());
+
+        assertThat(bidAndUris).containsExactly(resultBidAndUri1, resultBidAndUri2);
+    }
+
+    @Test
+    public void test_getWinningBidAndUriForIdsUnifiedTablesOnlyGetsSpecifiedIds() {
+        mAdSelectionEntryDao.insertDBAdSelectionInitialization(DB_AD_SELECTION_INITIALIZATION_1);
+        DBAdSelectionResult result1 = getDBAdSelectionResultForCaAllFieldsWithId(AD_SELECTION_ID_1);
+        mAdSelectionEntryDao.insertDBAdSelectionResult(result1);
+
+        mAdSelectionEntryDao.insertDBAdSelectionInitialization(DB_AD_SELECTION_INITIALIZATION_2);
+        DBAdSelectionResult result2 = getDBAdSelectionResultForCaAllFieldsWithId(AD_SELECTION_ID_2);
+        mAdSelectionEntryDao.insertDBAdSelectionResult(result2);
+
+        List<AdSelectionResultBidAndUri> bidAndUris =
+                mAdSelectionEntryDao.getWinningBidAndUriForIdsUnifiedTables(
+                        ImmutableList.of(AD_SELECTION_ID_1));
+
+        AdSelectionResultBidAndUri resultBidAndUri1 =
+                AdSelectionResultBidAndUri.create(
+                        AD_SELECTION_ID_1,
+                        result1.getWinningAdBid(),
+                        result1.getWinningAdRenderUri());
+
+        assertThat(bidAndUris).containsExactly(resultBidAndUri1);
+    }
+
+    @Test
+    public void test_getWinningBidAndUriForIdsUnifiedTablesReturnsEmptyForEmptyTables() {
+        List<AdSelectionResultBidAndUri> bidAndUris =
+                mAdSelectionEntryDao.getWinningBidAndUriForIdsUnifiedTables(
+                        ImmutableList.of(AD_SELECTION_ID_1));
+        assertThat(bidAndUris).isEmpty();
     }
 
     /**
