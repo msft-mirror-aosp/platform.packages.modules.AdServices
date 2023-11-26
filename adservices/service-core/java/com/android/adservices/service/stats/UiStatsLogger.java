@@ -111,7 +111,6 @@ import static com.android.adservices.service.ui.constants.DebugMessages.PRIVACY_
 import android.content.Context;
 import android.os.Build;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
@@ -125,16 +124,17 @@ import com.android.adservices.service.ui.enrollment.collection.GaUxEnrollmentCha
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.enrollment.collection.RvcUxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.enrollment.collection.U18UxEnrollmentChannelCollection;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 
 /** Logger for UiStats. */
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
-public class UiStatsLogger {
+public final class UiStatsLogger {
     private static AdServicesLoggerImpl sLogger = AdServicesLoggerImpl.getInstance();
 
     /** Logs that a notification was displayed. */
-    public static void logNotificationDisplayed(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logNotificationDisplayed() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(
                 FlagsFactory.getFlags().getGaUxFeatureEnabled()
@@ -145,8 +145,8 @@ public class UiStatsLogger {
     }
 
     /** Logs that the more button on the landing page was displayed. */
-    public static void logLandingPageMoreButtonClicked(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logLandingPageMoreButtonClicked() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(
                 FlagsFactory.getFlags().getGaUxFeatureEnabled()
@@ -157,8 +157,8 @@ public class UiStatsLogger {
     }
 
     /** Logs that the additional info dropdown on the landing page was displayed. */
-    public static void logLandingPageAdditionalInfoClicked(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logLandingPageAdditionalInfoClicked() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(
                 FlagsFactory.getFlags().getGaUxFeatureEnabled()
@@ -169,8 +169,8 @@ public class UiStatsLogger {
     }
 
     /** Logs that the user scrolled the landing page. */
-    public static void logLandingPageScrolled(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logLandingPageScrolled() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(
                 FlagsFactory.getFlags().getGaUxFeatureEnabled()
@@ -181,8 +181,8 @@ public class UiStatsLogger {
     }
 
     /** Logs that the user scrolled to the bottom of the landing page. */
-    public static void logLandingPageScrolledToBottom(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logLandingPageScrolledToBottom() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(
                 FlagsFactory.getFlags().getGaUxFeatureEnabled()
@@ -193,8 +193,8 @@ public class UiStatsLogger {
     }
 
     /** Logs that the user clicked the setting button on the landing page. */
-    public static void logLandingPageSettingsButtonClicked(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logLandingPageSettingsButtonClicked() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(
                 FlagsFactory.getFlags().getGaUxFeatureEnabled()
@@ -205,8 +205,8 @@ public class UiStatsLogger {
     }
 
     /** Logs that the user dismissed the landing page. */
-    public static void logLandingPageDismissed(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logLandingPageDismissed() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(
                 FlagsFactory.getFlags().getGaUxFeatureEnabled()
@@ -217,8 +217,8 @@ public class UiStatsLogger {
     }
 
     /** Logs that the user clicked the got it button on the landing page. */
-    public static void logLandingPageGotItButtonClicked(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logLandingPageGotItButtonClicked() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(
                 FlagsFactory.getFlags().getGaUxFeatureEnabled()
@@ -229,8 +229,8 @@ public class UiStatsLogger {
     }
 
     /** Logs that the user opt-in from the landing page. */
-    public static void logLandingPageOptIn(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logLandingPageOptIn() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(
                 FlagsFactory.getFlags().getGaUxFeatureEnabled()
@@ -241,8 +241,8 @@ public class UiStatsLogger {
     }
 
     /** Logs that the user opt-out from the landing page. */
-    public static void logLandingPageOptOut(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logLandingPageOptOut() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(
                 FlagsFactory.getFlags().getGaUxFeatureEnabled()
@@ -253,8 +253,8 @@ public class UiStatsLogger {
     }
 
     /** Logs that the user clicked settings on the opt-in confirmation page. */
-    public static void logOptInConfirmationPageSettingsClicked(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logOptInConfirmationPageSettingsClicked() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(
                 FlagsFactory.getFlags().getGaUxFeatureEnabled()
@@ -265,8 +265,8 @@ public class UiStatsLogger {
     }
 
     /** Logs that the user clicked settings on the opt-out confirmation page. */
-    public static void logOptOutConfirmationPageSettingsClicked(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logOptOutConfirmationPageSettingsClicked() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(
                 FlagsFactory.getFlags().getGaUxFeatureEnabled()
@@ -277,8 +277,8 @@ public class UiStatsLogger {
     }
 
     /** Logs that the user clicked got it on the opt-in confirmation page. */
-    public static void logOptInConfirmationPageGotItClicked(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logOptInConfirmationPageGotItClicked() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(
                 FlagsFactory.getFlags().getGaUxFeatureEnabled()
@@ -289,8 +289,8 @@ public class UiStatsLogger {
     }
 
     /** Logs that the user clicked got it on the opt-out confirmation page. */
-    public static void logOptOutConfirmationPageGotItClicked(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logOptOutConfirmationPageGotItClicked() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(
                 FlagsFactory.getFlags().getGaUxFeatureEnabled()
@@ -301,8 +301,8 @@ public class UiStatsLogger {
     }
 
     /** GA only. Logs that the user clicked more info on the opt-in confirmation page. */
-    public static void logOptInConfirmationPageMoreInfoClicked(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logOptInConfirmationPageMoreInfoClicked() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(
                 AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_OPT_IN_CONFIRMATION_PAGE_MORE_INFO_CLICKED);
@@ -311,8 +311,8 @@ public class UiStatsLogger {
     }
 
     /** GA only. Logs that the user clicked more info on the opt-out confirmation page. */
-    public static void logOptOutConfirmationPageMoreInfoClicked(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logOptOutConfirmationPageMoreInfoClicked() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(
                 AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_OPT_OUT_CONFIRMATION_PAGE_MORE_INFO_CLICKED);
@@ -321,8 +321,8 @@ public class UiStatsLogger {
     }
 
     /** Logs that the user dismissed the confirmation page. */
-    public static void logConfirmationPageDismissed(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logConfirmationPageDismissed() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(
                 FlagsFactory.getFlags().getGaUxFeatureEnabled()
@@ -333,8 +333,8 @@ public class UiStatsLogger {
     }
 
     /** Logs that a notification was requested. */
-    public static void logRequestedNotification(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logRequestedNotification() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(
                 FlagsFactory.getFlags().getGaUxFeatureEnabled()
@@ -345,8 +345,8 @@ public class UiStatsLogger {
     }
 
     /** Logs that notifications are disabled on a device. */
-    public static void logNotificationDisabled(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logNotificationDisabled() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(
                 FlagsFactory.getFlags().getGaUxFeatureEnabled()
@@ -357,8 +357,8 @@ public class UiStatsLogger {
     }
 
     /** Logs that the landing page was shown to a user. */
-    public static void logLandingPageDisplayed(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logLandingPageDisplayed() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(
                 FlagsFactory.getFlags().getGaUxFeatureEnabled()
@@ -369,8 +369,8 @@ public class UiStatsLogger {
     }
 
     /** Logs that the confirmation page was shown to a user. */
-    public static void logConfirmationPageDisplayed(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logConfirmationPageDisplayed() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(
                 FlagsFactory.getFlags().getGaUxFeatureEnabled()
@@ -381,8 +381,8 @@ public class UiStatsLogger {
     }
 
     /** Logs user opt-in action for PP API. */
-    public static void logOptInSelected(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logOptInSelected() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(
                 FlagsFactory.getFlags().getGaUxFeatureEnabled()
@@ -393,8 +393,8 @@ public class UiStatsLogger {
     }
 
     /** Logs user opt-out action for PP API. */
-    public static void logOptOutSelected(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logOptOutSelected() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(
                 FlagsFactory.getFlags().getGaUxFeatureEnabled()
@@ -405,8 +405,8 @@ public class UiStatsLogger {
     }
 
     /** Logs user opt-in action given an ApiType. */
-    public static void logOptInSelected(@NonNull Context context, AdServicesApiType apiType) {
-        UIStats uiStats = getBaseUiStats(context, apiType);
+    public static void logOptInSelected(AdServicesApiType apiType) {
+        UIStats uiStats = getBaseUiStats(apiType);
 
         uiStats.setAction(getPerApiConsentAction(apiType, /* isOptIn */ true));
 
@@ -414,8 +414,8 @@ public class UiStatsLogger {
     }
 
     /** Logs user opt-out action given an ApiType. */
-    public static void logOptOutSelected(@NonNull Context context, AdServicesApiType apiType) {
-        UIStats uiStats = getBaseUiStats(context, apiType);
+    public static void logOptOutSelected(AdServicesApiType apiType) {
+        UIStats uiStats = getBaseUiStats(apiType);
 
         uiStats.setAction(getPerApiConsentAction(apiType, /* isOptIn */ false));
 
@@ -423,8 +423,8 @@ public class UiStatsLogger {
     }
 
     /** Logs that a user has opened the settings page. */
-    public static void logSettingsPageDisplayed(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logSettingsPageDisplayed() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(
                 AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__PRIVACY_SANDBOX_SETTINGS_PAGE_DISPLAYED);
@@ -433,8 +433,8 @@ public class UiStatsLogger {
     }
 
     /** Logs that a user has clicked manage topics button. */
-    public static void logManageTopicsSelected(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logManageTopicsSelected() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_TOPICS_SELECTED);
 
@@ -442,8 +442,8 @@ public class UiStatsLogger {
     }
 
     /** Logs that a user has clicked manage apps button. */
-    public static void logManageAppsSelected(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logManageAppsSelected() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_APPS_SELECTED);
 
@@ -451,8 +451,8 @@ public class UiStatsLogger {
     }
 
     /** Logs that a user has clicked reset topics button. */
-    public static void logResetTopicSelected(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logResetTopicSelected() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_TOPIC_SELECTED);
 
@@ -460,8 +460,8 @@ public class UiStatsLogger {
     }
 
     /** Logs that a user has clicked reset apps button. */
-    public static void logResetAppSelected(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logResetAppSelected() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_APP_SELECTED);
 
@@ -469,8 +469,8 @@ public class UiStatsLogger {
     }
 
     /** Logs that a user has clicked block topic button. */
-    public static void logBlockTopicSelected(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logBlockTopicSelected() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__BLOCK_TOPIC_SELECTED);
 
@@ -478,8 +478,8 @@ public class UiStatsLogger {
     }
 
     /** Logs that a user has clicked unblock topic button. */
-    public static void logUnblockTopicSelected(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logUnblockTopicSelected() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__UNBLOCK_TOPIC_SELECTED);
 
@@ -487,8 +487,8 @@ public class UiStatsLogger {
     }
 
     /** Logs that a user has clicked block app button. */
-    public static void logBlockAppSelected(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logBlockAppSelected() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__BLOCK_APP_SELECTED);
 
@@ -496,8 +496,8 @@ public class UiStatsLogger {
     }
 
     /** Logs that a user has clicked unblock app button. */
-    public static void logUnblockAppSelected(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logUnblockAppSelected() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__UNBLOCK_APP_SELECTED);
 
@@ -505,8 +505,8 @@ public class UiStatsLogger {
     }
 
     /** Logs that a user has clicked manage measurement button. */
-    public static void logManageMeasurementSelected(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logManageMeasurementSelected() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_MEASUREMENT_SELECTED);
 
@@ -514,8 +514,8 @@ public class UiStatsLogger {
     }
 
     /** Logs that a user has clicked reset measurement button. */
-    public static void logResetMeasurementSelected(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logResetMeasurementSelected() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_MEASUREMENT_SELECTED);
 
@@ -523,8 +523,8 @@ public class UiStatsLogger {
     }
 
     /** Logs that the user has clicked the privacy sandbox entry point in the settings page. */
-    public static void logEntryPointClicked(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
+    public static void logEntryPointClicked() {
+        UIStats uiStats = getBaseUiStats();
 
         uiStats.setAction(
                 AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__PRIVACY_SANDBOX_ENTRY_POINT_CLICKED);
@@ -534,13 +534,15 @@ public class UiStatsLogger {
         LogUtil.d(PRIVACY_SANDBOX_UI_REQUEST_MESSAGE);
     }
 
-    private static int getRegion(@NonNull Context context) {
+    private static int getRegion() {
+        Context context = getApplicationContext();
         return DeviceRegionProvider.isEuDevice(context)
                 ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
                 : AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
     }
 
-    private static int getDefaultConsent(@NonNull Context context) {
+    private static int getDefaultConsent() {
+        Context context = getApplicationContext();
         Boolean defaultConsent = ConsentManager.getInstance(context).getDefaultConsent();
         // edge case where the user opens the settings pages before receiving consent notification.
         if (defaultConsent == null) {
@@ -552,7 +554,8 @@ public class UiStatsLogger {
         }
     }
 
-    private static int getDefaultAdIdState(@NonNull Context context) {
+    private static int getDefaultAdIdState() {
+        Context context = getApplicationContext();
         Boolean defaultAdIdState = ConsentManager.getInstance(context).getDefaultAdIdState();
         // edge case where the user opens the settings pages before receiving consent notification.
         if (defaultAdIdState == null) {
@@ -564,7 +567,8 @@ public class UiStatsLogger {
         }
     }
 
-    private static int getDefaultConsent(@NonNull Context context, AdServicesApiType apiType) {
+    private static int getDefaultConsent(AdServicesApiType apiType) {
+        Context context = getApplicationContext();
         switch (apiType) {
             case TOPICS:
                 Boolean topicsDefaultConsent =
@@ -626,7 +630,8 @@ public class UiStatsLogger {
         }
     }
 
-    private static int getUx(@NonNull Context context) {
+    private static int getUx() {
+        Context context = getApplicationContext();
         switch (UxStatesManager.getInstance(context).getUx()) {
             case U18_UX:
                 return AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__UNSPECIFIED_UX;
@@ -641,7 +646,8 @@ public class UiStatsLogger {
         }
     }
 
-    private static int getEnrollmentChannel(@NonNull Context context) {
+    private static int getEnrollmentChannel() {
+        Context context = getApplicationContext();
         PrivacySandboxEnrollmentChannelCollection enrollmentChannel =
                 UxStatesManager.getInstance(context).getEnrollmentChannel();
         if (enrollmentChannel == GaUxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL
@@ -679,25 +685,33 @@ public class UiStatsLogger {
         return AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__UNSUPPORTED_CHANNEL;
     }
 
-    private static UIStats getBaseUiStats(@NonNull Context context) {
+    private static UIStats getBaseUiStats() {
         return new UIStats.Builder()
                 .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
-                .setRegion(getRegion(context))
-                .setDefaultConsent(getDefaultConsent(context))
-                .setDefaultAdIdState(getDefaultAdIdState(context))
-                .setUx(getUx(context))
-                .setEnrollmentChannel(getEnrollmentChannel(context))
+                .setRegion(getRegion())
+                .setDefaultConsent(getDefaultConsent())
+                .setDefaultAdIdState(getDefaultAdIdState())
+                .setUx(getUx())
+                .setEnrollmentChannel(getEnrollmentChannel())
                 .build();
     }
 
-    private static UIStats getBaseUiStats(@NonNull Context context, AdServicesApiType apiType) {
+    private static UIStats getBaseUiStats(AdServicesApiType apiType) {
         return new UIStats.Builder()
                 .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
-                .setRegion(getRegion(context))
-                .setDefaultConsent(getDefaultConsent(context, apiType))
-                .setDefaultAdIdState(getDefaultAdIdState(context))
-                .setUx(getUx(context))
-                .setEnrollmentChannel(getEnrollmentChannel(context))
+                .setRegion(getRegion())
+                .setDefaultConsent(getDefaultConsent(apiType))
+                .setDefaultAdIdState(getDefaultAdIdState())
+                .setUx(getUx())
+                .setEnrollmentChannel(getEnrollmentChannel())
                 .build();
+    }
+
+    private static Context getApplicationContext() {
+        return ApplicationContextSingleton.get();
+    }
+
+    private UiStatsLogger() {
+        throw new UnsupportedOperationException();
     }
 }

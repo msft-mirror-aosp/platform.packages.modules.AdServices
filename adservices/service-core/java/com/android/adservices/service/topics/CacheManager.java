@@ -30,6 +30,8 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.cobalt.CobaltFactory;
 import com.android.adservices.cobalt.CobaltInitializationException;
+import com.android.adservices.data.topics.CombinedTopic;
+import com.android.adservices.data.topics.EncryptedTopic;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.errorlogging.ErrorLogUtil;
@@ -83,6 +85,9 @@ public class CacheManager {
     private final Flags mFlags;
     // Map<EpochId, Map<Pair<App, Sdk>, Topic>
     private Map<Long, Map<Pair<String, String>, Topic>> mCachedTopics = new HashMap<>();
+    // Map<EpochId, Map<Pair<App, Sdk>, EncryptedTopic>
+    private Map<Long, Map<Pair<String, String>, EncryptedTopic>> mCachedEncryptedTopics =
+            new HashMap<>();
     // TODO(b/236422354): merge hashsets to have one point of truth (Taxonomy update)
     // HashSet<BlockedTopic>
     private HashSet<Topic> mCachedBlockedTopics = new HashSet<>();
@@ -159,8 +164,17 @@ public class CacheManager {
         // Retrieve the cache from DB.
         int lookbackEpochs = mFlags.getTopicsNumberOfLookBackEpochs();
         // Map<EpochId, Map<Pair<App, Sdk>, Topic>
-        Map<Long, Map<Pair<String, String>, Topic>> cacheFromDb =
+        Map<Long, Map<Pair<String, String>, Topic>> cachedTopicsFromDb =
                 mTopicsDao.retrieveReturnedTopics(currentEpochId, lookbackEpochs + 1);
+        // Map<EpochId, Map<Pair<App, Sdk>, EncryptedTopic>
+        Map<Long, Map<Pair<String, String>, EncryptedTopic>> cachedEncryptedTopicsFromDb = Map.of();
+        if (mFlags.getTopicsEnableEncryption()) {
+            cachedEncryptedTopicsFromDb =
+                    mTopicsDao.retrieveReturnedEncryptedTopics(currentEpochId, lookbackEpochs + 1);
+            sLogger.v(
+                    "CacheManager.loadCache() loads cachedEncryptedTopics of size "
+                            + cachedEncryptedTopicsFromDb.size());
+        }
         // HashSet<BlockedTopic>
         HashSet<Topic> blockedTopicsCacheFromDb =
                 new HashSet<>(mBlockedTopicsManager.retrieveAllBlockedTopics());
@@ -171,12 +185,13 @@ public class CacheManager {
 
         sLogger.v(
                 "CacheManager.loadCache(). CachedTopics mapping size is "
-                        + cacheFromDb.size()
+                        + cachedTopicsFromDb.size()
                         + ", CachedBlockedTopics mapping size is "
                         + blockedTopicsCacheFromDb.size());
         mReadWriteLock.writeLock().lock();
         try {
-            mCachedTopics = cacheFromDb;
+            mCachedTopics = cachedTopicsFromDb;
+            mCachedEncryptedTopics = cachedEncryptedTopicsFromDb;
             mCachedBlockedTopics = blockedTopicsCacheFromDb;
             mCachedBlockedTopicIds = blockedTopicIdsFromDb;
         } finally {
@@ -196,7 +211,7 @@ public class CacheManager {
      * @return {@link List<Topic>} a list of Topics
      */
     @NonNull
-    public List<Topic> getTopics(
+    public List<CombinedTopic> getTopics(
             int numberOfLookBackEpochs,
             long currentEpochId,
             String app,
@@ -205,6 +220,7 @@ public class CacheManager {
         // We will need to look at the 3 historical epochs starting from last epoch.
         long epochId = currentEpochId - 1;
         List<Topic> topics = new ArrayList<>();
+        List<CombinedTopic> combinedTopics = new ArrayList<>();
         List<Integer> topicIdsForLogging = new ArrayList<>();
 
         int duplicateTopicCount = 0, blockedTopicCount = 0;
@@ -223,7 +239,26 @@ public class CacheManager {
                             blockedTopicCount++;
                             continue;
                         }
+
+                        EncryptedTopic encryptedTopic = EncryptedTopic.getDefaultInstance();
+                        if (mFlags.getTopicsEnableEncryption()) {
+                            // Add encrypted Topic if encryption feature flag is turned on.
+                            try {
+                                encryptedTopic =
+                                        mCachedEncryptedTopics
+                                                .get(epochId - numEpoch)
+                                                .getOrDefault(
+                                                        Pair.create(app, sdk),
+                                                        EncryptedTopic.getDefaultInstance());
+                            } catch (NullPointerException e) {
+                                sLogger.d("Missing EncryptedTopic for " + topic, e);
+                            }
+                        }
+
                         topics.add(topic);
+
+                        CombinedTopic combinedTopic = CombinedTopic.create(topic, encryptedTopic);
+                        combinedTopics.add(combinedTopic);
                     }
                     if (mFlags.getEnableLoggedTopic()
                             && mTopicsDao.supportsLoggedTopicInReturnedTopicTable()) {
@@ -245,7 +280,7 @@ public class CacheManager {
             mReadWriteLock.readLock().unlock();
         }
 
-        Collections.shuffle(topics, random);
+        Collections.shuffle(combinedTopics, random);
 
         // Log GetTopics stats with logged topics if flag ENABLE_LOGGED_TOPIC is true.
         if (mFlags.getEnableLoggedTopic()
@@ -272,7 +307,7 @@ public class CacheManager {
             }
         }
 
-        return topics;
+        return combinedTopics;
     }
 
     /**
@@ -285,7 +320,7 @@ public class CacheManager {
      * @return {@link List<Topic>} a list of Topics
      */
     @NonNull
-    public List<Topic> getTopics(
+    public List<CombinedTopic> getTopics(
             int numberOfLookBackEpochs, long currentEpochId, String app, String sdk) {
         return getTopics(numberOfLookBackEpochs, currentEpochId, app, sdk, new Random());
     }

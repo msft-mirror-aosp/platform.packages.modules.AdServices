@@ -48,6 +48,7 @@ import android.os.RemoteException;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -110,7 +111,8 @@ import java.util.stream.IntStream;
 import javax.net.ssl.HttpsURLConnection;
 
 /** Unit tests for {@link AsyncRegistrationQueueRunnerTest} */
-public class AsyncRegistrationQueueRunnerTest {
+public final class AsyncRegistrationQueueRunnerTest extends AdServicesUnitTestCase {
+
     private static final Context sDefaultContext = ApplicationProvider.getApplicationContext();
     private static final boolean DEFAULT_AD_ID_PERMISSION = false;
     private static final String DEFAULT_ENROLLMENT_ID = "enrollment_id";
@@ -2241,10 +2243,10 @@ public class AsyncRegistrationQueueRunnerTest {
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
                 .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong()))
                 .thenReturn(Integer.valueOf(0));
         when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
@@ -2261,10 +2263,10 @@ public class AsyncRegistrationQueueRunnerTest {
         // Assertions
         assertTrue(status);
         verify(mMeasurementDao, times(2))
-                .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+                .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
         verify(mMeasurementDao, times(2))
-                .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong());
         verify(mMeasurementDao, times(2))
                 .countDistinctReportingOriginsPerPublisherXDestinationInSource(
@@ -2279,10 +2281,10 @@ public class AsyncRegistrationQueueRunnerTest {
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
                 .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong()))
                 .thenReturn(Integer.valueOf(100));
         when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
@@ -2299,10 +2301,10 @@ public class AsyncRegistrationQueueRunnerTest {
         // Assert
         assertFalse(status);
         verify(mMeasurementDao, times(2))
-                .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+                .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
         verify(mMeasurementDao, times(1))
-                .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong());
         verify(mMeasurementDao, never())
                 .countDistinctReportingOriginsPerPublisherXDestinationInSource(
@@ -2317,13 +2319,13 @@ public class AsyncRegistrationQueueRunnerTest {
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
                 .thenReturn(Integer.valueOf(0));
         when(mMeasurementDao.countDistinctDestinationsPerPublisherPerRateLimitWindow(
                         any(), anyInt(), any(), anyInt(), anyLong(), anyLong()))
                 .thenReturn(Integer.valueOf(500));
-        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong()))
                 .thenReturn(Integer.valueOf(0));
         when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
@@ -2340,12 +2342,12 @@ public class AsyncRegistrationQueueRunnerTest {
         // Assert
         assertFalse(status);
         verify(mMeasurementDao, times(1))
-                .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+                .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
         verify(mMeasurementDao, times(1)).countDistinctDestinationsPerPublisherPerRateLimitWindow(
                 any(), anyInt(), any(), anyInt(), anyLong(), anyLong());
         verify(mMeasurementDao, never())
-                .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong());
         verify(mMeasurementDao, never())
                 .countDistinctReportingOriginsPerPublisherXDestinationInSource(
@@ -2360,13 +2362,13 @@ public class AsyncRegistrationQueueRunnerTest {
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
                 .thenReturn(Integer.valueOf(500));
         when(mMeasurementDao.countDistinctDestinationsPerPublisherPerRateLimitWindow(
                         any(), anyInt(), any(), anyInt(), anyLong(), anyLong()))
                 .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong()))
                 .thenReturn(Integer.valueOf(0));
         when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
@@ -2383,12 +2385,12 @@ public class AsyncRegistrationQueueRunnerTest {
         // Assert
         assertFalse(status);
         verify(mMeasurementDao, times(1))
-                .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+                .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
         verify(mMeasurementDao, times(1)).countDistinctDestinationsPerPublisherPerRateLimitWindow(
                 any(), anyInt(), any(), anyInt(), anyLong(), anyLong());
         verify(mMeasurementDao, never())
-                .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong());
         verify(mMeasurementDao, never())
                 .countDistinctReportingOriginsPerPublisherXDestinationInSource(
@@ -2452,10 +2454,10 @@ public class AsyncRegistrationQueueRunnerTest {
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
         // Execution
-        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
                 .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong()))
                 .thenReturn(Integer.valueOf(0));
         when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
@@ -2472,10 +2474,10 @@ public class AsyncRegistrationQueueRunnerTest {
         // Assert
         assertFalse(status);
         verify(mMeasurementDao, times(2))
-                .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+                .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
         verify(mMeasurementDao, times(1))
-                .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong());
         verify(mMeasurementDao, times(1))
                 .countDistinctReportingOriginsPerPublisherXDestinationInSource(
@@ -2490,10 +2492,10 @@ public class AsyncRegistrationQueueRunnerTest {
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
                 .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong()))
                 .thenReturn(Integer.valueOf(100));
         when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
@@ -2511,10 +2513,10 @@ public class AsyncRegistrationQueueRunnerTest {
         assertFalse(status);
         verify(mMockContentProviderClient, never()).insert(any(), any());
         verify(mMeasurementDao, times(2))
-                .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+                .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
         verify(mMeasurementDao, times(1))
-                .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong());
         verify(mMeasurementDao, never())
                 .countDistinctReportingOriginsPerPublisherXDestinationInSource(
@@ -2528,10 +2530,10 @@ public class AsyncRegistrationQueueRunnerTest {
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
                 .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong()))
                 .thenReturn(Integer.valueOf(0));
         when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
@@ -2549,10 +2551,10 @@ public class AsyncRegistrationQueueRunnerTest {
         // Assert
         assertFalse(status);
         verify(mMeasurementDao, times(2))
-                .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+                .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
         verify(mMeasurementDao, times(1))
-                .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong());
         verify(mMeasurementDao, times(1))
                 .countDistinctReportingOriginsPerPublisherXDestinationInSource(
@@ -2768,10 +2770,10 @@ public class AsyncRegistrationQueueRunnerTest {
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
                 .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong()))
                 .thenReturn(Integer.valueOf(0));
         when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
@@ -2836,10 +2838,10 @@ public class AsyncRegistrationQueueRunnerTest {
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
                 .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong()))
                 .thenReturn(Integer.valueOf(0));
         when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
@@ -2891,10 +2893,10 @@ public class AsyncRegistrationQueueRunnerTest {
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
                 .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong()))
                 .thenReturn(Integer.valueOf(0));
         when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
@@ -2945,10 +2947,10 @@ public class AsyncRegistrationQueueRunnerTest {
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
                 .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong()))
                 .thenReturn(Integer.valueOf(0));
         when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
@@ -3014,10 +3016,10 @@ public class AsyncRegistrationQueueRunnerTest {
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
                 .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong()))
                 .thenReturn(Integer.valueOf(0));
         when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
@@ -3082,10 +3084,10 @@ public class AsyncRegistrationQueueRunnerTest {
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
                 .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong()))
                 .thenReturn(Integer.valueOf(0));
         when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
@@ -3145,10 +3147,10 @@ public class AsyncRegistrationQueueRunnerTest {
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
                 .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong()))
                 .thenReturn(Integer.valueOf(0));
         when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(

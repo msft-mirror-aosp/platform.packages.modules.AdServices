@@ -64,6 +64,7 @@ import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.TrustedBiddingDataFixture;
+import android.adservices.utils.CtsWebViewSupportUtil;
 import android.net.Uri;
 import android.os.Process;
 import android.util.Log;
@@ -75,13 +76,11 @@ import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.SupportedByConditionRule;
-import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.adselection.AdCost;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
-import com.android.adservices.service.js.JSScriptEngine;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
@@ -372,11 +371,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     // certain minimum version.
     @Rule(order = 1)
     public final SupportedByConditionRule webViewSupportsJSSandbox =
-            WebViewSupportUtil.createJSSandboxAvailableRule();
-
-    @Rule(order = 2)
-    public final SupportedByConditionRule webViewSupportsConfigurableHeapSize =
-            WebViewSupportUtil.createJSSandboxConfigurableHeapSizeRule(sContext);
+            CtsWebViewSupportUtil.createJSSandboxAvailableRule(sContext);
 
     @Rule(order = 3)
     public final AdServicesFlagsSetterRule flags =
@@ -386,8 +381,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
     @Before
     public void setup() throws InterruptedException {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
-
         if (SdkLevel.isAtLeastT()) {
             assertForegroundActivityStarted();
             flags.setFlag(
@@ -459,7 +452,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
     @After
     public void tearDown() throws Exception {
-        if (!JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable()) {
+        if (!CtsWebViewSupportUtil.isJSSandboxAvailable(sContext)) {
             return;
         }
 
@@ -1101,7 +1094,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     public void testFledgeAuctionSelectionFlow_overall_register_ad_beacon_Success()
             throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         // Enable registerAdBeacon feature
         PhFlagsFixture.overrideFledgeRegisterAdBeaconEnabled(true);
@@ -2075,7 +2067,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     @Test
     public void testAdSelectionFromOutcomesFlow_overall_Success() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         // Perform ad selection to persist two results
         double bid1 = 10.0, bid2 = 15.0;
@@ -2123,7 +2114,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     public void testAdSelectionFromOutcomesFlow_waterfallWithPrebuilt_returnsOutcomeSuccess()
             throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         // Enable prebuilt uri feature
         PhFlagsFixture.overrideFledgeAdSelectionPrebuiltUriEnabled(true);
@@ -2170,7 +2160,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     public void testAdSelectionFromOutcomesFlow_waterfallWithPrebuilt_returnsNoOutcomeSuccess()
             throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         // Enable prebuilt uri feature
         PhFlagsFixture.overrideFledgeAdSelectionPrebuiltUriEnabled(true);
@@ -2215,7 +2204,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     @Test
     public void testAdSelectionFromOutcomesFlow_returnsNull_Success() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         // Perform ad selection to persist two results
         double bid1 = 10.0, bid2 = 15.0;
@@ -2261,7 +2249,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     @Test
     public void testAdSelectionFromOutcomesFlow_overallTimeout_failure() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         // Perform ad selection to persist two results
         double bid1 = 10.0, bid2 = 15.0;
@@ -2313,7 +2300,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     @Test
     public void testAdSelectionFromOutcomesFlow_emptyAdSelectionIds_Failure() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         // Inputs for outcome selection
         AdSelectionSignals selectionSignals = AdSelectionSignals.EMPTY;
@@ -2351,7 +2337,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     public void testAdSelectionFromOutcomesFlow_nonExistingAdSelectionId_Failure()
             throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         // Inputs for outcome selection
         long nonExistingAdSelectionId = 12345;
@@ -2391,7 +2376,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     @Test
     public void testAdSelectionFromOutcomesFlow_malformedJs_failure() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         // Perform ad selection to persist two results
         double bid1 = 10.0, bid2 = 15.0;

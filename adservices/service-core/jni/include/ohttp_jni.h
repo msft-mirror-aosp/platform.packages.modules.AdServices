@@ -95,21 +95,34 @@ Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeCtxSetupSenderWithSeed(
     jlong evpKdfRef, jlong evpAeadRef, jbyteArray publicKeyArray,
     jbyteArray infoArray, jbyteArray seedArray);
 
-
 /*
  * Class:     OhttpJniWrapper
- * Method:    hpkeCtxSetupReceiver
- * Signature: (JJJ[B[B[B[B)[B
+ * Method:    hpkeSetupRecipient
+ * Signature: (JJJJ[B[B[B)Z
  */
-JNIEXPORT jbyteArray JNICALL
-Java_com_android_adservices_ohttp_OhttpJniWrapper_gatewayDecrypt(
+JNIEXPORT jboolean JNICALL
+Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeSetupRecipient(
     JNIEnv *env, jclass,
+    jlong hpkeCtxRef,
     jlong evpKemRef,
     jlong evpKdfRef,
     jlong evpAeadRef,
     jbyteArray privKeyArray,
     jbyteArray encArray,
-    jbyteArray infoArray,
+    jbyteArray infoArray);
+
+/*
+ * Class:     OhttpJniWrapper
+ * Method:    gatewayDecrypt
+ * Signature: (JJJJ[B)[B
+ */
+JNIEXPORT jbyteArray JNICALL
+Java_com_android_adservices_ohttp_OhttpJniWrapper_gatewayDecrypt(
+    JNIEnv *env, jclass,
+    jlong hpkeCtxRef,
+    jlong evpKemRef,
+    jlong evpKdfRef,
+    jlong evpAeadRef,
     jbyteArray encryptedDataArray);
 
 /*
@@ -158,6 +171,21 @@ JNIEXPORT jbyteArray JNICALL
 Java_com_android_adservices_ohttp_OhttpJniWrapper_aeadOpen(
     JNIEnv *env, jclass, jlong evpAeadRef, jbyteArray keyArray,
     jbyteArray nonceArray, jbyteArray cipherTextArray);
+
+
+/*
+ * Class:     OhttpJniWrapper
+ * Method:    aeadOpen
+ * Signature: (J[B[B[B)[B
+ */
+JNIEXPORT jbyteArray JNICALL
+Java_com_android_adservices_ohttp_OhttpJniWrapper_aeadSeal(
+    JNIEnv *env,
+    jclass,
+    jlong evpAeadRef,
+    jbyteArray keyArray,
+    jbyteArray nonceArray,
+    jbyteArray plainTextArray);
 
 #ifdef __cplusplus
 }
