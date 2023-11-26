@@ -23,8 +23,11 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.spy;
 
+import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -33,6 +36,9 @@ import com.android.adservices.common.SyncCallback;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.stats.Clock;
+import com.android.adservices.service.stats.StatsdAdServicesLogger;
+import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.truth.Expect;
@@ -163,6 +169,17 @@ public final class ExtendedMockitoExpectations {
                             return null;
                         })
                 .when(() -> invocation.run());
+    }
+
+    /** Mock {@link AdservicesJobServiceLogger} to not actually log the stats to server. */
+    public static AdservicesJobServiceLogger mockAdservicesJobServiceLogger(
+            Context context, StatsdAdServicesLogger statsDLogger) {
+        AdservicesJobServiceLogger logger =
+                spy(new AdservicesJobServiceLogger(context, Clock.SYSTEM_CLOCK, statsDLogger));
+        doNothing().when(logger).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        doReturn(logger).when(() -> AdservicesJobServiceLogger.getInstance(any(Context.class)));
+
+        return logger;
     }
 
     /**

@@ -57,6 +57,10 @@ import java.util.concurrent.Executors;
 @RunWith(JUnit4.class)
 public class TopicsManagerTest {
     private static final String TAG = "TopicsManagerTest";
+
+    // Test constants for testing encryption
+    static final String PUBLIC_KEY_BASE64 = "rSJBSUYG0ebvfW1AXCWO0CMGMJhDzpfQm3eLyw1uxX8=";
+
     // The JobId of the Epoch Computation.
     private static final int EPOCH_JOB_ID = 2;
 
@@ -461,6 +465,82 @@ public class TopicsManagerTest {
         // Top 5 topic ids as listed in precomputed_app_list.csv
         List<Integer> expectedTopTopicIds = Arrays.asList(10147, 10253, 10175, 10254, 10333);
         assertThat(topic.getTopicId()).isIn(expectedTopTopicIds);
+    }
+
+    @Test
+    @FlakyTest(bugId = 290122696)
+    public void testTopicsManager_runPrecomputedClassifier_encryptedTopics_usingGetManager()
+            throws Exception {
+        testTopicsManager_runPrecomputedClassifier_encryptedTopics(
+                /* useGetMethodToCreateManager = */ true);
+    }
+
+    @Test
+    @FlakyTest(bugId = 290122696)
+    public void testTopicsManager_runPrecomputedClassifier_encryptedTopics() throws Exception {
+        testTopicsManager_runPrecomputedClassifier_encryptedTopics(
+                /* useGetMethodToCreateManager = */ false);
+    }
+
+    private void testTopicsManager_runPrecomputedClassifier_encryptedTopics(
+            boolean useGetMethodToCreateManager) throws Exception {
+        // Set classifier flag to use precomputed classifier.
+        flags.setFlag(FlagsConstants.KEY_CLASSIFIER_TYPE, PRECOMPUTED_CLASSIFIER_TYPE);
+
+        // Set flags for encryption test
+        flags.setFlag(FlagsConstants.KEY_TOPICS_ENABLE_ENCRYPTION, true);
+        flags.setFlag(FlagsConstants.KEY_ENABLE_DATABASE_SCHEMA_VERSION_9, true);
+
+        // The Test App has 1 SDK: sdk6
+        // sdk6 calls the Topics API.
+        AdvertisingTopicsClient advertisingTopicsClient6 =
+                new AdvertisingTopicsClient.Builder()
+                        .setContext(sContext)
+                        .setSdkName("sdk6")
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .setUseGetMethodToCreateManagerInstance(useGetMethodToCreateManager)
+                        .build();
+
+        // At beginning, Sdk6 receives no topic.
+        GetTopicsResponse sdk6Result = advertisingTopicsClient6.getTopics().get();
+        assertThat(sdk6Result.getTopics()).isEmpty();
+
+        // Now force the Epoch Computation Job. This should be done in the same epoch for
+        // callersCanLearnMap to have the entry for processing.
+        forceEpochComputationJob();
+
+        // Wait to the next epoch. We will not need to do this after we implement the fix in
+        // go/rb-topics-epoch-scheduling
+        Thread.sleep(TEST_EPOCH_JOB_PERIOD_MS);
+
+        // Since the sdk4 called the Topics API in the previous Epoch, it should receive some topic.
+        sdk6Result = advertisingTopicsClient6.getTopics().get();
+        assertThat(sdk6Result.getTopics()).isNotEmpty();
+
+        // We only have 5 topics classified by the precomputed classifier.
+        // The app will be assigned one random topic from one of these 5 topics.
+        assertThat(sdk6Result.getTopics()).hasSize(1);
+        Topic topic = sdk6Result.getTopics().get(0);
+
+        // Expected asset versions to be bundled in the build.
+        // If old assets are being picked up, repo sync, build and install the new apex again.
+        assertWithMessage(INCORRECT_MODEL_VERSION_MESSAGE)
+                .that(topic.getModelVersion())
+                .isEqualTo(EXPECTED_MODEL_VERSION);
+        assertWithMessage(INCORRECT_TAXONOMY_VERSION_MESSAGE)
+                .that(topic.getTaxonomyVersion())
+                .isEqualTo(EXPECTED_TAXONOMY_VERSION);
+
+        // Top 5 topic ids as listed in precomputed_app_list.csv
+        List<Integer> expectedTopTopicIds = Arrays.asList(10147, 10253, 10175, 10254, 10333);
+        assertThat(topic.getTopicId()).isIn(expectedTopTopicIds);
+
+        // Verify values for encrypted topics
+        assertThat(sdk6Result.getEncryptedTopics()).hasSize(1);
+        assertThat(sdk6Result.getEncryptedTopics().get(0).getEncryptedTopic()).isNotNull();
+        assertThat(sdk6Result.getEncryptedTopics().get(0).getKeyIdentifier())
+                .isEqualTo(PUBLIC_KEY_BASE64);
+        assertThat(sdk6Result.getEncryptedTopics().get(0).getEncapsulatedKey()).isNotNull();
     }
 
     @Test

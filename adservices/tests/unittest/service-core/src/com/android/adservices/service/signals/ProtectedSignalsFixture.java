@@ -44,25 +44,26 @@ public class ProtectedSignalsFixture {
             String base64EncodedKey = generateKey(seed);
             protectedSignalsMap.putIfAbsent(base64EncodedKey, new ArrayList<>());
             for (int i = 1; i <= count; i++) {
-                protectedSignalsMap.get(base64EncodedKey).add(generateDBProtectedSignal(seed + i));
+                protectedSignalsMap
+                        .get(base64EncodedKey)
+                        .add(generateDBProtectedSignal(seed, new byte[] {(byte) i}));
             }
         }
 
         return protectedSignalsMap;
     }
 
-    private static ProtectedSignal generateDBProtectedSignal(String seed) {
-        String value = generateValue(seed);
-        String packageName = generatePackageName(seed);
-
-        ProtectedSignal protectedSignal =
-                ProtectedSignal.builder()
-                        .setCreationTime(NOW)
-                        .setBase64EncodedValue(value)
-                        .setPackageName(packageName)
-                        .build();
-
-        return protectedSignal;
+    /**
+     * @return a DB Protected signal instance where the package name starts with the given {@code
+     *     seed}, the creation time is the fixed {@code NOW} value and the signal value is the given
+     *     value.
+     */
+    public static ProtectedSignal generateDBProtectedSignal(String seed, byte[] value) {
+        return ProtectedSignal.builder()
+                .setCreationTime(NOW)
+                .setBase64EncodedValue(Base64.getEncoder().encodeToString(value))
+                .setPackageName(generatePackageName(seed))
+                .build();
     }
 
     private static String generateKey(String seed) {

@@ -44,7 +44,6 @@ import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.SupportedByConditionRule;
-import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.compatibility.common.util.ShellUtils;
 
@@ -104,11 +103,7 @@ public abstract class FledgeScenarioTest {
 
     @Rule(order = 2)
     public final SupportedByConditionRule webViewSupportsJSSandbox =
-            WebViewSupportUtil.createJSSandboxAvailableRule();
-
-    @Rule(order = 3)
-    public final SupportedByConditionRule webViewSupportsConfigurableHeapSize =
-            WebViewSupportUtil.createJSSandboxConfigurableHeapSizeRule(CONTEXT);
+            CtsWebViewSupportUtil.createJSSandboxAvailableRule(CONTEXT);
 
     @Rule(order = 1)
     public final AdServicesFlagsSetterRule flags =

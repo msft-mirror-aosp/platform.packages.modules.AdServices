@@ -20,13 +20,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
-import static com.google.common.truth.Truth.assertThat;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -39,57 +33,58 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.core.content.pm.ApplicationInfoBuilder;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.data.common.BooleanFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.consent.AppConsentDaoFixture;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
 import com.android.adservices.service.ui.data.UxStatesDao;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
 import org.mockito.Spy;
-import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class AppConsentStorageManagerTest {
+public class AppConsentStorageManagerTest extends AdServicesUnitTestCase {
 
-    @Spy private final Context mContextSpy = ApplicationProvider.getApplicationContext();
+    @Spy private Context mContextSpy;
     private BooleanFileDatastore mAppDaoDatastore;
     private BooleanFileDatastore mConsentDatastore;
     private AppConsentDao mAppConsentDaoSpy;
     private AppConsentStorageManager mAppConsentStorageManager;
     @Mock private UxStatesDao mUxStatesDaoMock;
-    private MockitoSession mStaticMockSession = null;
+
+    @Rule
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(PackageManagerCompatUtils.class)
+                    .spyStatic(SdkLevel.class)
+                    .spyStatic(FlagsFactory.class)
+                    .build();
 
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(PackageManagerCompatUtils.class)
-                        .mockStatic(SdkLevel.class)
-                        .strictness(Strictness.WARN)
-                        .initMocks(this)
-                        .startMocking();
+        mContextSpy = Mockito.spy(appContext.get());
         mConsentDatastore =
                 new BooleanFileDatastore(
                         mContextSpy,
@@ -112,9 +107,6 @@ public class AppConsentStorageManagerTest {
     public void teardown() throws IOException {
         mAppDaoDatastore.clear();
         mConsentDatastore.clear();
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
     }
 
     @Test
@@ -132,10 +124,11 @@ public class AppConsentStorageManagerTest {
         setConsentForOneApp();
 
         mAppConsentStorageManager.clearAllAppConsentData();
-        assertFalse(
-                mAppConsentStorageManager
-                        .getKnownAppsWithConsent()
-                        .contains(AppConsentDaoFixture.APP10_PACKAGE_NAME));
+        expect.that(
+                        mAppConsentStorageManager
+                                .getKnownAppsWithConsent()
+                                .contains(AppConsentDaoFixture.APP10_PACKAGE_NAME))
+                .isFalse();
     }
 
     @Test
@@ -143,10 +136,10 @@ public class AppConsentStorageManagerTest {
         mockGetPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
 
         mAppConsentStorageManager.setConsentForApp(AppConsentDaoFixture.APP10_PACKAGE_NAME, false);
-        assertEquals(Boolean.FALSE, mAppDaoDatastore.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
+        expect.that(mAppDaoDatastore.get(AppConsentDaoFixture.APP10_DATASTORE_KEY)).isFalse();
         mAppConsentStorageManager.clearConsentForUninstalledApp(
                 AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
-        assertNull(mAppDaoDatastore.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
+        expect.that(mAppDaoDatastore.get(AppConsentDaoFixture.APP10_DATASTORE_KEY)).isNull();
     }
 
     @Test
@@ -158,9 +151,9 @@ public class AppConsentStorageManagerTest {
         mAppConsentStorageManager.clearConsentForUninstalledApp(
                 AppConsentDaoFixture.APP20_PACKAGE_NAME);
 
-        assertEquals(true, mAppDaoDatastore.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
-        assertNull(mAppDaoDatastore.get(AppConsentDaoFixture.APP20_DATASTORE_KEY));
-        assertEquals(false, mAppDaoDatastore.get(AppConsentDaoFixture.APP30_DATASTORE_KEY));
+        expect.that(mAppDaoDatastore.get(AppConsentDaoFixture.APP10_DATASTORE_KEY)).isTrue();
+        expect.that(mAppDaoDatastore.get(AppConsentDaoFixture.APP20_DATASTORE_KEY)).isNull();
+        expect.that(mAppDaoDatastore.get(AppConsentDaoFixture.APP30_DATASTORE_KEY)).isFalse();
 
         verify(mAppConsentDaoSpy).clearConsentForUninstalledApp(anyString());
     }
@@ -184,16 +177,15 @@ public class AppConsentStorageManagerTest {
         PrivacySandboxFeatureType privacySandboxFeatureType =
                 PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT;
         mAppConsentStorageManager.setCurrentPrivacySandboxFeature(privacySandboxFeatureType);
-        assertEquals(
-                privacySandboxFeatureType,
-                mAppConsentStorageManager.getCurrentPrivacySandboxFeature());
+        expect.that(mAppConsentStorageManager.getCurrentPrivacySandboxFeature())
+                .isEqualTo(privacySandboxFeatureType);
 
         mAppConsentStorageManager.recordDefaultAdIdState(true);
 
-        assertTrue(mAppConsentStorageManager.getDefaultAdIdState());
+        expect.that(mAppConsentStorageManager.getDefaultAdIdState()).isTrue();
 
         mAppConsentStorageManager.setU18Account(true);
-        assertTrue(mAppConsentStorageManager.isU18Account());
+        expect.that(mAppConsentStorageManager.isU18Account()).isTrue();
 
         for (AdServicesApiType apiType : AdServicesApiType.values()) {
             if (apiType == AdServicesApiType.UNKNOWN) {
@@ -202,19 +194,19 @@ public class AppConsentStorageManagerTest {
             }
             mAppConsentStorageManager.recordDefaultConsent(apiType, true);
 
-            assertTrue(mAppConsentStorageManager.getDefaultConsent(apiType).isGiven());
+            expect.that(mAppConsentStorageManager.getDefaultConsent(apiType).isGiven()).isTrue();
 
             mAppConsentStorageManager.setConsent(apiType, true);
-            assertTrue(mAppConsentStorageManager.getConsent(apiType).isGiven());
+            expect.that(mAppConsentStorageManager.getConsent(apiType).isGiven()).isTrue();
         }
         mAppConsentStorageManager.recordGaUxNotificationDisplayed(true);
-        assertTrue(mAppConsentStorageManager.wasGaUxNotificationDisplayed());
+        expect.that(mAppConsentStorageManager.wasGaUxNotificationDisplayed()).isTrue();
 
         mAppConsentStorageManager.recordNotificationDisplayed(true);
-        assertTrue(mAppConsentStorageManager.wasNotificationDisplayed());
+        expect.that(mAppConsentStorageManager.wasNotificationDisplayed()).isTrue();
 
         mAppConsentStorageManager.setU18NotificationDisplayed(true);
-        assertTrue(mAppConsentStorageManager.wasU18NotificationDisplayed());
+        expect.that(mAppConsentStorageManager.wasU18NotificationDisplayed()).isTrue();
     }
 
     @Test
@@ -223,7 +215,7 @@ public class AppConsentStorageManagerTest {
             for (PrivacySandboxEnrollmentChannelCollection channel :
                     ux.getEnrollmentChannelCollection()) {
                 doReturn(channel).when(mUxStatesDaoMock).getEnrollmentChannel(ux);
-                assertThat(mAppConsentStorageManager.getEnrollmentChannel(ux)).isEqualTo(channel);
+                expect.that(mAppConsentStorageManager.getEnrollmentChannel(ux)).isEqualTo(channel);
                 mAppConsentStorageManager.setEnrollmentChannel(ux, channel);
             }
         }
@@ -246,9 +238,9 @@ public class AppConsentStorageManagerTest {
                 mAppConsentStorageManager.getAppsWithRevokedConsent();
 
         // all apps have received a consent
-        assertThat(knownAppsWithConsent).hasSize(2);
-        assertThat(appsWithRevokedConsent).hasSize(1);
-        assertThat(appsWithRevokedConsent.get(0)).isEqualTo(app.getPackageName());
+        expect.that(knownAppsWithConsent).hasSize(2);
+        expect.that(appsWithRevokedConsent).hasSize(1);
+        expect.that(appsWithRevokedConsent.get(0)).isEqualTo(app.getPackageName());
     }
 
     @Test
@@ -263,9 +255,9 @@ public class AppConsentStorageManagerTest {
                 mAppConsentStorageManager.getAppsWithRevokedConsent();
 
         // all apps have received a consent
-        assertThat(knownAppsWithConsent).hasSize(2);
-        assertThat(appsWithRevokedConsent).hasSize(1);
-        assertThat(appsWithRevokedConsent.get(0))
+        expect.that(knownAppsWithConsent).hasSize(2);
+        expect.that(appsWithRevokedConsent).hasSize(1);
+        expect.that(appsWithRevokedConsent.get(0))
                 .isEqualTo(AppConsentDaoFixture.APP10_PACKAGE_NAME);
 
         // restore consent for first app
@@ -274,8 +266,8 @@ public class AppConsentStorageManagerTest {
         appsWithRevokedConsent = mAppConsentStorageManager.getAppsWithRevokedConsent();
 
         // all apps have received a consent
-        assertThat(knownAppsWithConsent).hasSize(3);
-        assertThat(appsWithRevokedConsent).isEmpty();
+        expect.that(knownAppsWithConsent).hasSize(3);
+        expect.that(appsWithRevokedConsent).isEmpty();
     }
 
     @Test
@@ -288,15 +280,15 @@ public class AppConsentStorageManagerTest {
                 mAppConsentStorageManager.getAppsWithRevokedConsent();
 
         // all apps have received a consent
-        assertThat(knownAppsWithConsent).hasSize(3);
-        assertThat(appsWithRevokedConsent).isEmpty();
+        expect.that(knownAppsWithConsent).hasSize(3);
+        expect.that(appsWithRevokedConsent).isEmpty();
     }
 
     @Test
     public void testGetSetUx() {
         for (PrivacySandboxUxCollection ux : PrivacySandboxUxCollection.values()) {
             doReturn(ux).when(mUxStatesDaoMock).getUx();
-            assertThat(mAppConsentStorageManager.getUx()).isEqualTo(ux);
+            expect.that(mAppConsentStorageManager.getUx()).isEqualTo(ux);
 
             mAppConsentStorageManager.setUx(ux);
         }
@@ -315,15 +307,18 @@ public class AppConsentStorageManagerTest {
         mAppDaoDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
         mAppDaoDatastore.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
 
-        assertFalse(
-                mAppConsentStorageManager.isConsentRevokedForApp(
-                        AppConsentDaoFixture.APP10_PACKAGE_NAME));
-        assertTrue(
-                mAppConsentStorageManager.isConsentRevokedForApp(
-                        AppConsentDaoFixture.APP20_PACKAGE_NAME));
-        assertFalse(
-                mAppConsentStorageManager.isConsentRevokedForApp(
-                        AppConsentDaoFixture.APP30_PACKAGE_NAME));
+        expect.that(
+                        mAppConsentStorageManager.isConsentRevokedForApp(
+                                AppConsentDaoFixture.APP10_PACKAGE_NAME))
+                .isFalse();
+        expect.that(
+                        mAppConsentStorageManager.isConsentRevokedForApp(
+                                AppConsentDaoFixture.APP20_PACKAGE_NAME))
+                .isTrue();
+        expect.that(
+                        mAppConsentStorageManager.isConsentRevokedForApp(
+                                AppConsentDaoFixture.APP30_PACKAGE_NAME))
+                .isFalse();
     }
 
     @Test
@@ -331,8 +326,8 @@ public class AppConsentStorageManagerTest {
         for (int i = 0; i < 3; i++) {
             int interaction = i - 1;
             mAppConsentStorageManager.recordUserManualInteractionWithConsent(interaction);
-            assertEquals(
-                    interaction, mAppConsentStorageManager.getUserManualInteractionWithConsent());
+            expect.that(mAppConsentStorageManager.getUserManualInteractionWithConsent())
+                    .isEqualTo(interaction);
         }
     }
 
@@ -347,16 +342,16 @@ public class AppConsentStorageManagerTest {
                 mAppConsentStorageManager.getKnownAppsWithConsent();
         ImmutableList<String> appsWithRevokedConsent =
                 mAppConsentStorageManager.getAppsWithRevokedConsent();
-        assertThat(knownAppsWithConsent).hasSize(2);
-        assertThat(appsWithRevokedConsent).hasSize(1);
+        expect.that(knownAppsWithConsent).hasSize(2);
+        expect.that(appsWithRevokedConsent).hasSize(1);
 
         mAppConsentStorageManager.clearAllAppConsentData();
 
         // All app consent data was deleted
         knownAppsWithConsent = mAppConsentStorageManager.getKnownAppsWithConsent();
         appsWithRevokedConsent = mAppConsentStorageManager.getAppsWithRevokedConsent();
-        assertThat(knownAppsWithConsent).isEmpty();
-        assertThat(appsWithRevokedConsent).isEmpty();
+        expect.that(knownAppsWithConsent).isEmpty();
+        expect.that(appsWithRevokedConsent).isEmpty();
     }
 
     @Test
@@ -369,8 +364,8 @@ public class AppConsentStorageManagerTest {
                 mAppConsentStorageManager.getKnownAppsWithConsent();
         ImmutableList<String> appsWithRevokedConsentBeforeReset =
                 mAppConsentStorageManager.getAppsWithRevokedConsent();
-        assertThat(knownAppsWithConsentBeforeReset).hasSize(2);
-        assertThat(appsWithRevokedConsentBeforeReset).hasSize(1);
+        expect.that(knownAppsWithConsentBeforeReset).hasSize(2);
+        expect.that(appsWithRevokedConsentBeforeReset).hasSize(1);
         mAppConsentStorageManager.clearKnownAppsWithConsent();
 
         // Known apps with consent were cleared; revoked apps were not deleted
@@ -378,10 +373,10 @@ public class AppConsentStorageManagerTest {
                 mAppConsentStorageManager.getKnownAppsWithConsent();
         ImmutableList<String> appsWithRevokedConsentAfterReset =
                 mAppConsentStorageManager.getAppsWithRevokedConsent();
-        assertThat(knownAppsWithConsentAfterReset).isEmpty();
-        assertThat(appsWithRevokedConsentAfterReset).hasSize(1);
+        expect.that(knownAppsWithConsentAfterReset).isEmpty();
+        expect.that(appsWithRevokedConsentAfterReset).hasSize(1);
 
-        assertThat(appsWithRevokedConsentAfterReset)
+        expect.that(appsWithRevokedConsentAfterReset)
                 .containsExactlyElementsIn(appsWithRevokedConsentBeforeReset);
     }
 
@@ -391,14 +386,16 @@ public class AppConsentStorageManagerTest {
         mockGetPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
 
         mAppConsentStorageManager.setConsentForApp(AppConsentDaoFixture.APP10_PACKAGE_NAME, true);
-        assertTrue(
-                mAppConsentStorageManager.isConsentRevokedForApp(
-                        AppConsentDaoFixture.APP10_PACKAGE_NAME));
+        expect.that(
+                        mAppConsentStorageManager.isConsentRevokedForApp(
+                                AppConsentDaoFixture.APP10_PACKAGE_NAME))
+                .isTrue();
 
         mAppConsentStorageManager.setConsentForApp(AppConsentDaoFixture.APP10_PACKAGE_NAME, false);
-        assertFalse(
-                mAppConsentStorageManager.isConsentRevokedForApp(
-                        AppConsentDaoFixture.APP10_PACKAGE_NAME));
+        expect.that(
+                        mAppConsentStorageManager.isConsentRevokedForApp(
+                                AppConsentDaoFixture.APP10_PACKAGE_NAME))
+                .isFalse();
     }
 
     private List<ApplicationInfo> createApplicationInfos(String... packageNames) {
@@ -447,10 +444,11 @@ public class AppConsentStorageManagerTest {
         List<ApplicationInfo> applicationsInstalled =
                 createApplicationInfos(AppConsentDaoFixture.APP10_PACKAGE_NAME);
         mockInstalledApplications(applicationsInstalled);
-        assertTrue(
-                mAppConsentStorageManager
-                        .getKnownAppsWithConsent()
-                        .contains(AppConsentDaoFixture.APP10_PACKAGE_NAME));
+        expect.that(
+                        mAppConsentStorageManager
+                                .getKnownAppsWithConsent()
+                                .contains(AppConsentDaoFixture.APP10_PACKAGE_NAME))
+                .isTrue();
     }
 
     private void setMockfor3Apps(boolean value) throws IOException {

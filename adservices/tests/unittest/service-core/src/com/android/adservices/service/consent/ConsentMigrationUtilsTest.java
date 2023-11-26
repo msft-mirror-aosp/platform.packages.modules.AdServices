@@ -27,7 +27,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
@@ -160,7 +159,7 @@ public class ConsentMigrationUtilsTest {
                 mAppSearchConsentManagerMock,
                 mAdServicesExtDataManagerMock);
 
-        verify(mAppSearchConsentManagerMock, times(1)).wasU18NotificationDisplayed();
+        verify(mAppSearchConsentManagerMock).wasU18NotificationDisplayed();
         verifyNoMoreInteractions(mAppSearchConsentManagerMock);
 
         verifyZeroInteractions(mAdServicesExtDataManagerMock);
@@ -178,7 +177,7 @@ public class ConsentMigrationUtilsTest {
         mockNoNotifOnS();
         when(mAdServicesExtDataManagerMock.getAdServicesExtData())
                 .thenReturn(mAdServicesExtDataParamsMock);
-        when(mAdServicesExtDataParamsMock.getIsNotificationDisplayed()).thenReturn(0);
+        when(mAdServicesExtDataParamsMock.getIsNotificationDisplayed()).thenReturn(BOOLEAN_FALSE);
 
         ConsentMigrationUtils.handleConsentMigrationToAppSearchIfNeeded(
                 mContextSpy,
@@ -186,18 +185,18 @@ public class ConsentMigrationUtilsTest {
                 mAppSearchConsentManagerMock,
                 mAdServicesExtDataManagerMock);
 
-        verify(mAppSearchConsentManagerMock, times(1)).wasU18NotificationDisplayed();
-        verify(mAppSearchConsentManagerMock, times(1)).wasGaUxNotificationDisplayed();
-        verify(mAppSearchConsentManagerMock, times(1)).wasNotificationDisplayed();
+        verify(mAppSearchConsentManagerMock).wasU18NotificationDisplayed();
+        verify(mAppSearchConsentManagerMock).wasGaUxNotificationDisplayed();
+        verify(mAppSearchConsentManagerMock).wasNotificationDisplayed();
         verifyNoMoreInteractions(mAppSearchConsentManagerMock);
 
-        verify(mAdServicesExtDataManagerMock, times(1)).getAdServicesExtData();
+        verify(mAdServicesExtDataManagerMock).getAdServicesExtData();
         verifyNoMoreInteractions(mAdServicesExtDataManagerMock);
     }
 
     @Test
     public void
-            testHandleConsentMigrationToAppSearchIfNeeded_onSWithMigrationEligibleWithAllDataSet_migrationSuccess() {
+            testHandleConsentMigrationToAppSearchIfNeeded_onSWithMigrationEligibleWithFullData_migrationSuccessWithAdExtDataCleared() {
         mockSDevice();
 
         when(mContextSpy.getSharedPreferences(anyString(), anyInt()))
@@ -218,34 +217,35 @@ public class ConsentMigrationUtilsTest {
                 mAppSearchConsentManagerMock,
                 mAdServicesExtDataManagerMock);
 
-        verify(mAppSearchConsentManagerMock, times(1)).wasU18NotificationDisplayed();
-        verify(mAppSearchConsentManagerMock, times(1)).wasGaUxNotificationDisplayed();
-        verify(mAppSearchConsentManagerMock, times(1)).wasNotificationDisplayed();
-        verify(mAppSearchConsentManagerMock, times(1))
+        verify(mAppSearchConsentManagerMock).wasU18NotificationDisplayed();
+        verify(mAppSearchConsentManagerMock).wasGaUxNotificationDisplayed();
+        verify(mAppSearchConsentManagerMock).wasNotificationDisplayed();
+        verify(mAppSearchConsentManagerMock)
                 .setConsent(ConsentConstants.MEASUREMENT_DEFAULT_CONSENT, true);
-        verify(mAppSearchConsentManagerMock, times(1))
+        verify(mAppSearchConsentManagerMock)
                 .setConsent(
                         AdServicesApiType.MEASUREMENTS.toPpApiDatastoreKey(),
                         TEST_PARAMS_WITH_ALL_DATA.getIsMeasurementConsented() == BOOLEAN_TRUE);
-        verify(mAppSearchConsentManagerMock, times(1))
+        verify(mAppSearchConsentManagerMock)
                 .setU18NotificationDisplayed(
                         TEST_PARAMS_WITH_ALL_DATA.getIsNotificationDisplayed() == BOOLEAN_TRUE);
-        verify(mAppSearchConsentManagerMock, times(1))
+        verify(mAppSearchConsentManagerMock)
                 .recordUserManualInteractionWithConsent(
                         TEST_PARAMS_WITH_ALL_DATA.getManualInteractionWithConsentStatus());
-        verify(mAppSearchConsentManagerMock, times(1))
+        verify(mAppSearchConsentManagerMock)
                 .setU18Account(TEST_PARAMS_WITH_ALL_DATA.getIsU18Account() == BOOLEAN_TRUE);
-        verify(mAppSearchConsentManagerMock, times(1))
+        verify(mAppSearchConsentManagerMock)
                 .setAdultAccount(TEST_PARAMS_WITH_ALL_DATA.getIsAdultAccount() == BOOLEAN_TRUE);
         verifyNoMoreInteractions(mAppSearchConsentManagerMock);
 
-        verify(mAdServicesExtDataManagerMock, times(1)).getAdServicesExtData();
+        verify(mAdServicesExtDataManagerMock).getAdServicesExtData();
+        verify(mAdServicesExtDataManagerMock).clearAllDataAsync();
         verifyNoMoreInteractions(mAdServicesExtDataManagerMock);
     }
 
     @Test
     public void
-            testHandleConsentMigrationToAppSearchIfNeeded_onSWithMigrationEligibleWithPartialDataSetWithFailedSharedPrefUpdate_migrationSuccess() {
+            testHandleConsentMigrationToAppSearchIfNeeded_onSWithMigrationEligibleWithPartialDataWithFailedSharedPrefUpdate_migrationSuccessWithAdExtDataCleared() {
         mockSDevice();
 
         when(mContextSpy.getSharedPreferences(anyString(), anyInt()))
@@ -266,16 +266,16 @@ public class ConsentMigrationUtilsTest {
                 mAppSearchConsentManagerMock,
                 mAdServicesExtDataManagerMock);
 
-        verify(mAppSearchConsentManagerMock, times(1)).wasU18NotificationDisplayed();
-        verify(mAppSearchConsentManagerMock, times(1)).wasGaUxNotificationDisplayed();
-        verify(mAppSearchConsentManagerMock, times(1)).wasNotificationDisplayed();
+        verify(mAppSearchConsentManagerMock).wasU18NotificationDisplayed();
+        verify(mAppSearchConsentManagerMock).wasGaUxNotificationDisplayed();
+        verify(mAppSearchConsentManagerMock).wasNotificationDisplayed();
         verify(mAppSearchConsentManagerMock, never())
                 .setConsent(ConsentConstants.MEASUREMENT_DEFAULT_CONSENT, false);
-        verify(mAppSearchConsentManagerMock, times(1))
+        verify(mAppSearchConsentManagerMock)
                 .setConsent(
                         AdServicesApiType.MEASUREMENTS.toPpApiDatastoreKey(),
                         TEST_PARAMS_WITH_PARTIAL_DATA.getIsMeasurementConsented() == BOOLEAN_TRUE);
-        verify(mAppSearchConsentManagerMock, times(1))
+        verify(mAppSearchConsentManagerMock)
                 .setU18NotificationDisplayed(
                         TEST_PARAMS_WITH_PARTIAL_DATA.getIsNotificationDisplayed() == BOOLEAN_TRUE);
         verify(mAppSearchConsentManagerMock, never())
@@ -288,7 +288,8 @@ public class ConsentMigrationUtilsTest {
 
         verifyNoMoreInteractions(mAppSearchConsentManagerMock);
 
-        verify(mAdServicesExtDataManagerMock, times(1)).getAdServicesExtData();
+        verify(mAdServicesExtDataManagerMock).getAdServicesExtData();
+        verify(mAdServicesExtDataManagerMock).clearAllDataAsync();
         verifyNoMoreInteractions(mAdServicesExtDataManagerMock);
     }
 

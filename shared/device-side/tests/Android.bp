@@ -27,8 +27,6 @@ android_test {
         "adservices-shared-error-logging",
         "adservices-shared-storage",
         "adservices-shared-testing",
-        // TODO(b/306522832): should not depend on adservices-test-utility
-        "adservices-test-utility",
         "androidx.test.core",
         "androidx.test.runner",
         "truth",

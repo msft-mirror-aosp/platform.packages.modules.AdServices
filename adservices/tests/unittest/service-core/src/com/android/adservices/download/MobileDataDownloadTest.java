@@ -112,7 +112,7 @@ public class MobileDataDownloadTest {
     private static final String MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/1986/9e98784bcdb26a3eb2ab3f65ee811f43177c761f";
     private static final String PRODUCTION_ENROLLMENT_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/2532/edab7fde698f1c1fb382a9008901a88dadfa9623";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/2787/21a2d1da98d4e6359771681a553634d09e719f70";
 
     // Prod Test Bed enrollment manifest URL
     private static final String PTB_ENROLLMENT_MANIFEST_FILE_URL =
@@ -122,7 +122,7 @@ public class MobileDataDownloadTest {
     private static final String UI_OTA_STRINGS_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-ui-ota-strings/1360/d428721d225582922a7fe9d5ad6db7b09cb03209";
 
-    private static final int PRODUCTION_ENROLLMENT_ENTRIES = 48;
+    private static final int PRODUCTION_ENROLLMENT_ENTRIES = 59;
     private static final int PTB_ENROLLMENT_ENTRIES = 1;
     private static final int OEM_ENROLLMENT_ENTRIES = 114;
 

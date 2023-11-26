@@ -39,6 +39,7 @@ import android.os.Process;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
@@ -60,7 +61,8 @@ import org.mockito.MockitoSession;
 import org.mockito.Spy;
 import org.mockito.quality.Strictness;
 
-public class AdSelectionServiceFilterTest {
+public final class AdSelectionServiceFilterTest extends AdServicesUnitTestCase {
+
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     @Spy private Context mContext = ApplicationProvider.getApplicationContext();
     private static final Flags TEST_FLAGS = FlagsFactory.getFlagsForTest();
