@@ -55,4 +55,51 @@ public class ObliviousHttpGatewayTest {
                     new String(decrypted, StandardCharsets.UTF_8), testVector.plainText);
         }
     }
+
+    @Test
+    public void encrypt_canBeDecryptedByOhttpClient() throws Exception {
+        List<ObliviousHttpTestFixtures.OhttpTestVector> testVectors = getTestVectors();
+        for (ObliviousHttpTestFixtures.OhttpTestVector testVector : testVectors) {
+            ObliviousHttpClient client = ObliviousHttpClient.create(testVector.keyConfig);
+            String plainText = testVector.plainText;
+            byte[] plainTextBytes = plainText.getBytes(StandardCharsets.US_ASCII);
+            byte[] seedBytes = testVector.seed.getBytes(StandardCharsets.US_ASCII);
+
+            ObliviousHttpRequest request =
+                    client.createObliviousHttpRequest(plainTextBytes, seedBytes);
+
+            byte[] keyBytes = BaseEncoding.base16().lowerCase().decode(SERVER_PRIVATE_KEY);
+            byte[] serverEncrypted =
+                    ObliviousHttpGateway.encrypt(
+                            OhttpGatewayPrivateKey.create(keyBytes),
+                            request.serialize(),
+                            testVector.responsePlainText.getBytes(StandardCharsets.US_ASCII));
+
+            byte[] clientDecrypted =
+                    client.decryptObliviousHttpResponse(serverEncrypted, request.requestContext());
+
+            Assert.assertEquals(
+                    new String(clientDecrypted, StandardCharsets.UTF_8),
+                    testVector.responsePlainText);
+        }
+    }
+
+    @Test
+    public void encrypt_missingInfo_throwsError() throws Exception {
+        ObliviousHttpTestFixtures.OhttpTestVector testVector = getTestVectors().get(0);
+        ObliviousHttpClient client = ObliviousHttpClient.create(testVector.keyConfig);
+        String plainText = testVector.plainText;
+        byte[] plainTextBytes = plainText.getBytes(StandardCharsets.US_ASCII);
+        byte[] seedBytes = testVector.seed.getBytes(StandardCharsets.US_ASCII);
+
+        ObliviousHttpRequest request = client.createObliviousHttpRequest(plainTextBytes, seedBytes);
+
+        Assert.assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        ObliviousHttpGateway.encrypt(
+                                OhttpGatewayPrivateKey.create(null),
+                                request.serialize(),
+                                testVector.responsePlainText.getBytes(StandardCharsets.US_ASCII)));
+    }
 }

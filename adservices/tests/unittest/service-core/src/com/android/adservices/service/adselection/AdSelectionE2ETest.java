@@ -604,7 +604,8 @@ public class AdSelectionE2ETest {
 
     @Rule(order = 2)
     public final SupportedByConditionRule webViewSupportsJSSandbox =
-            WebViewSupportUtil.createJSSandboxAvailableRule();
+            WebViewSupportUtil.createJSSandboxAvailableRule(
+                    ApplicationProvider.getApplicationContext());
 
     @Rule(order = 3)
     public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();

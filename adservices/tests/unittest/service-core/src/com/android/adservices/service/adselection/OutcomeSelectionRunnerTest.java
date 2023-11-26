@@ -165,7 +165,8 @@ public class OutcomeSelectionRunnerTest {
                         mContext,
                         mFlags,
                         mAdSelectionServiceFilter,
-                        DevContext.createForDevOptionsDisabled());
+                        DevContext.createForDevOptionsDisabled(),
+                        false);
 
         doNothing()
                 .when(mAdSelectionServiceFilter)
@@ -319,7 +320,8 @@ public class OutcomeSelectionRunnerTest {
                         mContext,
                         mFlags,
                         mAdSelectionServiceFilter,
-                        DevContext.createForDevOptionsDisabled());
+                        DevContext.createForDevOptionsDisabled(),
+                        false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelectionFromOutcomes(
