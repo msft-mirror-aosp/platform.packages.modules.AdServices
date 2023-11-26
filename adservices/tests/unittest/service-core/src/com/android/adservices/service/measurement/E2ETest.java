@@ -42,6 +42,7 @@ import android.view.MotionEvent.PointerProperties;
 import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.AggregateReportingJob;
@@ -82,13 +83,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 /**
- * End-to-end test from source and trigger registration to attribution reporting. Extensions of
- * this class can implement different ways to prepare the registrations, either with an external
- * server or mocking HTTP responses, for example; similarly for examining the attribution reports.
+ * End-to-end test from source and trigger registration to attribution reporting. Extensions of this
+ * class can implement different ways to prepare the registrations, either with an external server
+ * or mocking HTTP responses, for example; similarly for examining the attribution reports.
  *
- * Consider @RunWith(Parameterized.class)
+ * <p>Consider @RunWith(Parameterized.class)
  */
-public abstract class E2ETest {
+public abstract class E2ETest extends AdServicesUnitTestCase {
     // Used to fuzzy-match expected report (not delivery) time
     private static final String LOG_TAG = "ADSERVICES_MSMT_E2E_TEST";
 

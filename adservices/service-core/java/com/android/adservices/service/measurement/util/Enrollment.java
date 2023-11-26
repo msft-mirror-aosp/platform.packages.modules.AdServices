@@ -80,7 +80,7 @@ public final class Enrollment {
             return Optional.empty();
         }
         if (!AppManifestConfigHelper.isAllowedAttributionAccess(
-                context, packageName, enrollmentData.getEnrollmentId())) {
+                packageName, enrollmentData.getEnrollmentId())) {
             LoggerFactory.getMeasurementLogger()
                     .w(
                             "Enrollment check failed, Reason: Enrollment Id missing from "

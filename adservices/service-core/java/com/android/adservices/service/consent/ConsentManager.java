@@ -307,7 +307,7 @@ public class ConsentManager {
             LogUtil.d("CONSENT_KEY already enable. Skipping enable process.");
             return;
         }
-        UiStatsLogger.logOptInSelected(context);
+        UiStatsLogger.logOptInSelected();
 
         BackgroundJobsManager.scheduleAllBackgroundJobs(context);
 
@@ -334,7 +334,7 @@ public class ConsentManager {
     public void disable(@NonNull Context context) {
         Objects.requireNonNull(context);
 
-        UiStatsLogger.logOptOutSelected(context);
+        UiStatsLogger.logOptOutSelected();
         // Disable all the APIs
         try {
             // reset all data
@@ -375,7 +375,7 @@ public class ConsentManager {
             return;
         }
 
-        UiStatsLogger.logOptInSelected(context, apiType);
+        UiStatsLogger.logOptInSelected(apiType);
 
         BackgroundJobsManager.scheduleJobsPerApi(context, apiType);
 
@@ -403,7 +403,7 @@ public class ConsentManager {
     public void disable(@NonNull Context context, AdServicesApiType apiType) {
         Objects.requireNonNull(context);
 
-        UiStatsLogger.logOptOutSelected(context, apiType);
+        UiStatsLogger.logOptOutSelected(apiType);
 
         try {
             resetByApi(apiType);
@@ -2037,7 +2037,7 @@ public class ConsentManager {
                 () -> mAdServicesManager.wasU18NotificationDisplayed(),
                 () -> mAppSearchConsentManager.wasU18NotificationDisplayed(),
                 () -> // On Android R only U18 notification is allowed to be displayed.
-                mAdExtDataManager.getNotifDisplayed(),
+                mAdExtDataManager.getNotificationDisplayed(),
                 /* errorLogger= */ null);
     }
 
@@ -2053,7 +2053,7 @@ public class ConsentManager {
                         mAppSearchConsentManager.setU18NotificationDisplayed(
                                 wasU18NotificationDisplayed),
                 () -> // On Android R only U18 notification is allowed to be displayed.
-                mAdExtDataManager.setNotifDisplayed(wasU18NotificationDisplayed),
+                mAdExtDataManager.setNotificationDisplayed(wasU18NotificationDisplayed),
                 /* errorLogger= */ null);
     }
 

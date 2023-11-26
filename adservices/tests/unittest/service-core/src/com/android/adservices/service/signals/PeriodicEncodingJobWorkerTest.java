@@ -149,29 +149,17 @@ public class PeriodicEncodingJobWorkerTest {
 
     @Test
     public void testValidateAndPersistPayloadSuccess() {
-        String encodedPayload = getBase64String("Valid payload");
+        byte[] payload = new byte[] {0x0A, 0x01};
         int version = 1;
-        mJobWorker.validateAndPersistPayload(DB_ENCODER_LOGIC_BUYER_1, encodedPayload, version);
+        mJobWorker.validateAndPersistPayload(DB_ENCODER_LOGIC_BUYER_1, payload, version);
 
         verify(mEncodedPayloadDao).persistEncodedPayload(mEncodedPayloadCaptor.capture());
         assertEquals(BUYER, mEncodedPayloadCaptor.getValue().getBuyer());
         assertEquals(version, mEncodedPayloadCaptor.getValue().getVersion());
 
         assertEquals(
-                getSetFromBytes(getBytesFromBase64(encodedPayload)),
+                getSetFromBytes(payload),
                 getSetFromBytes(mEncodedPayloadCaptor.getValue().getEncodedPayload()));
-    }
-
-    @Test
-    public void testValidateAndPersistPayloadInvalidBase64() {
-        String encodedPayload = "Invalid, non base64 payload";
-        int version = 1;
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        mJobWorker.validateAndPersistPayload(
-                                DB_ENCODER_LOGIC_BUYER_1, encodedPayload, version));
-        Mockito.verifyZeroInteractions(mEncodedPayloadDao);
     }
 
     @Test
@@ -191,13 +179,14 @@ public class PeriodicEncodingJobWorkerTest {
                         mLightWeightExecutor,
                         mDevContextFilter,
                         mFlags);
-        String encodedPayload = getBase64String("Valid, but really large payload");
         int version = 1;
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                         mJobWorker.validateAndPersistPayload(
-                                DB_ENCODER_LOGIC_BUYER_1, encodedPayload, version));
+                                DB_ENCODER_LOGIC_BUYER_1,
+                                new byte[] {0x01, 0x02, 0x03, 0x04, 0x05, 0x06},
+                                version));
 
         Mockito.verifyZeroInteractions(mEncodedPayloadDao);
     }
@@ -210,8 +199,8 @@ public class PeriodicEncodingJobWorkerTest {
         when(mEncoderLogicHandler.getEncoder(BUYER)).thenReturn(encoderLogic);
         when(mSignalStorageManager.getSignals(BUYER)).thenReturn(FAKE_SIGNALS);
 
-        String validBase64Response = getBase64String("Valid payload");
-        ListenableFuture<String> jsScriptResponse = Futures.immediateFuture(validBase64Response);
+        byte[] validResponse = new byte[] {0x01, 0x02, 0x03, 0x04, 0x05, 0x0A};
+        ListenableFuture<byte[]> jsScriptResponse = Futures.immediateFuture(validResponse);
         when(mScriptEngine.encodeSignals(any(), any(), anyInt())).thenReturn(jsScriptResponse);
         when((mEncodedPayloadDao.persistEncodedPayload(any()))).thenReturn(10L);
 
@@ -225,21 +214,22 @@ public class PeriodicEncodingJobWorkerTest {
         assertEquals(BUYER, mEncodedPayloadCaptor.getValue().getBuyer());
         assertEquals(VERSION_1, mEncodedPayloadCaptor.getValue().getVersion());
         assertEquals(
-                getSetFromBytes(getBytesFromBase64(validBase64Response)),
+                getSetFromBytes(validResponse),
                 getSetFromBytes(mEncodedPayloadCaptor.getValue().getEncodedPayload()));
     }
 
     @Test
-    public void testEncodingPerBuyerMalformedJsOutput()
+    public void testEncodingPerBuyerScriptFailureCausesIllegalStateException()
             throws ExecutionException, InterruptedException, TimeoutException {
         String encoderLogic = "function fakeEncodeJs() {}";
 
         when(mEncoderLogicHandler.getEncoder(BUYER)).thenReturn(encoderLogic);
         when(mSignalStorageManager.getSignals(BUYER)).thenReturn(FAKE_SIGNALS);
 
-        String invalidBase64Response = "Invalid payload";
-        ListenableFuture<String> jsScriptResponse = Futures.immediateFuture(invalidBase64Response);
-        when(mScriptEngine.encodeSignals(any(), any(), anyInt())).thenReturn(jsScriptResponse);
+        when(mScriptEngine.encodeSignals(any(), any(), anyInt()))
+                .thenReturn(
+                        Futures.immediateFailedFuture(
+                                new IllegalStateException("Simulating illegal response from JS")));
 
         // Run encoding for the buyer where jsEngine returns invalid payload
         Exception e =
@@ -259,12 +249,11 @@ public class PeriodicEncodingJobWorkerTest {
     public void testEncodingPerBuyerFailedFuture() {
         String encoderLogic = "function fakeEncodeJs() {}";
         when(mEncoderLogicHandler.getEncoder(BUYER)).thenReturn(encoderLogic);
-
         when(mSignalStorageManager.getSignals(BUYER)).thenReturn(FAKE_SIGNALS);
 
-        ListenableFuture<String> jsScriptResponse =
-                Futures.immediateFailedFuture(new RuntimeException("Random exception"));
-        when(mScriptEngine.encodeSignals(any(), any(), anyInt())).thenReturn(jsScriptResponse);
+        when(mScriptEngine.encodeSignals(any(), any(), anyInt()))
+                .thenReturn(
+                        Futures.immediateFailedFuture(new RuntimeException("Random exception")));
 
         // Run encoding for the buyer where jsEngine encounters Runtime Exception
         Exception e =
@@ -337,8 +326,8 @@ public class PeriodicEncodingJobWorkerTest {
         String encoderLogic1 = "function buyer1_EncodeJs() {\" correct result \"}";
         when(mEncoderLogicHandler.getEncoder(BUYER)).thenReturn(encoderLogic1);
         when(mSignalStorageManager.getSignals(BUYER)).thenReturn(FAKE_SIGNALS);
-        String validBase64Response = getBase64String("Valid payload");
-        ListenableFuture<String> successResponse = Futures.immediateFuture(validBase64Response);
+        byte[] validResponse = new byte[] {0x01, 0x02, 0x03, 0x04, 0x05, 0x0A};
+        ListenableFuture<byte[]> successResponse = Futures.immediateFuture(validResponse);
         when(mScriptEngine.encodeSignals(eq(encoderLogic1), any(), anyInt()))
                 .thenReturn(successResponse);
 
@@ -346,7 +335,7 @@ public class PeriodicEncodingJobWorkerTest {
         String encoderLogic2 = "function buyer2_EncodeJs() {\" throws exception \"}";
         when(mEncoderLogicHandler.getEncoder(BUYER_2)).thenReturn(encoderLogic2);
         when(mSignalStorageManager.getSignals(BUYER_2)).thenReturn(FAKE_SIGNALS);
-        ListenableFuture<String> failureResponse =
+        ListenableFuture<byte[]> failureResponse =
                 Futures.immediateFailedFuture(new RuntimeException("Random exception"));
         when(mScriptEngine.encodeSignals(eq(encoderLogic2), any(), anyInt()))
                 .thenReturn(failureResponse);
@@ -364,7 +353,7 @@ public class PeriodicEncodingJobWorkerTest {
         assertEquals(BUYER, mEncodedPayloadCaptor.getValue().getBuyer());
         assertEquals(VERSION_1, mEncodedPayloadCaptor.getValue().getVersion());
         assertEquals(
-                getSetFromBytes(getBytesFromBase64(validBase64Response)),
+                getSetFromBytes(validResponse),
                 getSetFromBytes(mEncodedPayloadCaptor.getValue().getEncodedPayload()));
         verify(mEncoderLogicHandler).updateEncoderFailedCount(BUYER_2, 1);
     }
@@ -401,8 +390,8 @@ public class PeriodicEncodingJobWorkerTest {
 
         String encoderLogic = "function buyer1_EncodeJs() {\" correct result \"}";
         when(mEncoderLogicHandler.getEncoder(BUYER)).thenReturn(encoderLogic);
-        String validBase64Response = getBase64String("Valid payload");
-        ListenableFuture<String> successResponse = Futures.immediateFuture(validBase64Response);
+        byte[] validResponse = new byte[] {0x01, 0x02, 0x03, 0x04, 0x05, 0x0A};
+        ListenableFuture<byte[]> successResponse = Futures.immediateFuture(validResponse);
         when(mScriptEngine.encodeSignals(eq(encoderLogic), any(), anyInt()))
                 .thenReturn(successResponse);
 
@@ -453,7 +442,7 @@ public class PeriodicEncodingJobWorkerTest {
         when(mSignalStorageManager.getSignals(any())).thenReturn(fakeSignals);
 
         // All the encodings are wired to fail with exceptions
-        ListenableFuture<String> failureResponse =
+        ListenableFuture<byte[]> failureResponse =
                 Futures.immediateFailedFuture(new RuntimeException("Random exception"));
         when(mScriptEngine.encodeSignals(any(), any(), anyInt())).thenReturn(failureResponse);
 

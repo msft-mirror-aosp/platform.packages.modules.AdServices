@@ -46,6 +46,7 @@ import android.util.Pair;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
@@ -92,7 +93,8 @@ import javax.net.ssl.HttpsURLConnection;
 
 /** Unit tests for {@link AsyncTriggerFetcher} */
 @RunWith(Parameterized.class)
-public final class AsyncTriggerFetcherTest {
+public final class AsyncTriggerFetcherTest extends AdServicesUnitTestCase {
+
     private static final String ANDROID_APP_SCHEME = "android-app";
     private static final String ANDROID_APP_SCHEME_URI_PREFIX = ANDROID_APP_SCHEME + "://";
     private static final String SDK_PACKAGE_NAME = "sdk.package.name";
@@ -186,7 +188,7 @@ public final class AsyncTriggerFetcherTest {
         mAraParsingAlignmentV1Enabled = araParsingAlignmentV1Enabled;
     }
 
-    @Rule
+    @Rule(order = 11)
     public ExternalResource externalResource =
             new ExternalResource() {
                 protected void before() throws Throwable {

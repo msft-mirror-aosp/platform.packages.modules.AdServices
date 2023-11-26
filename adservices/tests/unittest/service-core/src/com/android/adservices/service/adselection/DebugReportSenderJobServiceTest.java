@@ -16,9 +16,18 @@
 
 package com.android.adservices.service.adselection;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdservicesJobServiceLogger;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
+import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
+import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
+import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
+import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
+import static com.android.adservices.mockito.MockitoExpectations.verifyJobFinishedLogged;
+import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
+import static com.android.adservices.mockito.MockitoExpectations.verifyOnStartJobLogged;
+import static com.android.adservices.mockito.MockitoExpectations.verifyOnStopJobLogged;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__FAILED_WITHOUT_RETRY;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_USER_CONSENT_REVOKED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL;
 import static com.android.adservices.spe.AdservicesJobInfo.FLEDGE_AD_SELECTION_DEBUG_REPORT_SENDER_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doCallRealMethod;
@@ -39,7 +48,6 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
@@ -51,13 +59,13 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -69,7 +77,6 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.Spy;
 import org.mockito.quality.Strictness;
@@ -97,17 +104,12 @@ public class DebugReportSenderJobServiceTest {
             new DebugReportSenderJobServiceTestFlags.FlagsWithDebugReportingDisabled();
     private final Flags mFlagsWithGaUxDisabled =
             new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxDisabled();
-    @Mock
-    private ConsentManager mConsentManagerMock;
-    @Mock
-    private DebugReportSenderWorker mDebugReportSenderWorker;
-    @Mock
-    private JobParameters mJobParametersMock;
-    @Mock
-    private StatsdAdServicesLogger mMockStatsdLogger;
+    @Mock private ConsentManager mConsentManagerMock;
+    @Mock private DebugReportSenderWorker mDebugReportSenderWorker;
+    @Mock private JobParameters mJobParametersMock;
+    @Mock private StatsdAdServicesLogger mMockStatsdLogger;
 
-    @Mock
-    private AdservicesJobServiceLogger mSpyLogger;
+    @Mock private AdservicesJobServiceLogger mSpyLogger;
     private MockitoSession mStaticMockSession = null;
 
     @Before
@@ -127,14 +129,8 @@ public class DebugReportSenderJobServiceTest {
         assertNull(
                 "Job already scheduled before setup!",
                 JOB_SCHEDULER.getPendingJob(FLEDGE_DEBUG_REPORT_SENDER_JOB_ID));
-        // Mock AdservicesJobServiceLogger to not actually log the stats to server
-        mSpyLogger =
-                spy(new AdservicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mMockStatsdLogger));
-        Mockito.doNothing()
-                .when(mSpyLogger)
-                .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
-        ExtendedMockito.doReturn(mSpyLogger)
-                .when(() -> AdservicesJobServiceLogger.getInstance(any(Context.class)));
+
+        mSpyLogger = mockAdservicesJobServiceLogger(CONTEXT, mMockStatsdLogger);
     }
 
     @After
@@ -156,13 +152,11 @@ public class DebugReportSenderJobServiceTest {
 
         testOnStartJobFlagDisabled();
 
-        // Verify logging methods are not invoked.
-        verify(mSpyLogger, never()).persistJobExecutionData(anyInt(), anyLong());
-        verify(mSpyLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verifyLoggingNotHappened(mSpyLogger);
     }
 
     @Test
-    public void testOnStartJobFlagDisabledWithLogging() {
+    public void testOnStartJobFlagDisabledWithLogging() throws InterruptedException {
         Flags mFlagsWithDisabledBgFWithLogging =
                 new DebugReportSenderJobServiceTestFlags.FlagsWithAdSelectionDisabled() {
                     @Override
@@ -171,12 +165,11 @@ public class DebugReportSenderJobServiceTest {
                     }
                 };
         doReturn(mFlagsWithDisabledBgFWithLogging).when(FlagsFactory::getFlags);
+        JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
 
         testOnStartJobFlagDisabled();
 
-        // Verify logging methods are invoked.
-        verify(mSpyLogger).persistJobExecutionData(anyInt(), anyLong());
-        verify(mSpyLogger).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verifyBackgroundJobsSkipLogged(mSpyLogger, callback);
     }
 
     @Test
@@ -190,8 +183,8 @@ public class DebugReportSenderJobServiceTest {
         // Schedule the job to assert after starting that the scheduled job has been cancelled
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
-                        FLEDGE_DEBUG_REPORT_SENDER_JOB_ID,
-                        new ComponentName(CONTEXT, DebugReportSenderJobService.class))
+                                FLEDGE_DEBUG_REPORT_SENDER_JOB_ID,
+                                new ComponentName(CONTEXT, DebugReportSenderJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -216,8 +209,8 @@ public class DebugReportSenderJobServiceTest {
         // Schedule the job to assert after starting that the scheduled job has been cancelled
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
-                        FLEDGE_DEBUG_REPORT_SENDER_JOB_ID,
-                        new ComponentName(CONTEXT, DebugReportSenderJobService.class))
+                                FLEDGE_DEBUG_REPORT_SENDER_JOB_ID,
+                                new ComponentName(CONTEXT, DebugReportSenderJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -246,8 +239,8 @@ public class DebugReportSenderJobServiceTest {
         // Schedule the job to assert after starting that the scheduled job has been cancelled
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
-                        FLEDGE_DEBUG_REPORT_SENDER_JOB_ID,
-                        new ComponentName(CONTEXT, DebugReportSenderJobService.class))
+                                FLEDGE_DEBUG_REPORT_SENDER_JOB_ID,
+                                new ComponentName(CONTEXT, DebugReportSenderJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -276,8 +269,8 @@ public class DebugReportSenderJobServiceTest {
         // Schedule the job to assert after starting that the scheduled job has been cancelled
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
-                        FLEDGE_DEBUG_REPORT_SENDER_JOB_ID,
-                        new ComponentName(CONTEXT, DebugReportSenderJobService.class))
+                                FLEDGE_DEBUG_REPORT_SENDER_JOB_ID,
+                                new ComponentName(CONTEXT, DebugReportSenderJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -320,8 +313,8 @@ public class DebugReportSenderJobServiceTest {
         doReturn(mFlagsWithGaUxDisabled).when(FlagsFactory::getFlags);
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
-                        FLEDGE_DEBUG_REPORT_SENDER_JOB_ID,
-                        new ComponentName(CONTEXT, DebugReportSenderJobService.class))
+                                FLEDGE_DEBUG_REPORT_SENDER_JOB_ID,
+                                new ComponentName(CONTEXT, DebugReportSenderJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -341,8 +334,8 @@ public class DebugReportSenderJobServiceTest {
         doReturn(mFlagsWithGaUxDisabled).when(FlagsFactory::getFlags);
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
-                        FLEDGE_DEBUG_REPORT_SENDER_JOB_ID,
-                        new ComponentName(CONTEXT, DebugReportSenderJobService.class))
+                                FLEDGE_DEBUG_REPORT_SENDER_JOB_ID,
+                                new ComponentName(CONTEXT, DebugReportSenderJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -369,26 +362,24 @@ public class DebugReportSenderJobServiceTest {
     @Test
     public void testOnStartJob_shouldDisableJobTrueWithoutLogging() {
         Flags mockFlag = mock(Flags.class);
-        // Logging killswitch is on.
-        doReturn(mockFlag).when(FlagsFactory::getFlags);
-        doReturn(true).when(mockFlag).getBackgroundJobsLoggingKillSwitch();
+        mockGetFlags(mockFlag);
+        mockBackgroundJobsLoggingKillSwitch(mockFlag, /* overrideValue= */ true);
 
         testOnStartJobShouldDisableJobTrue();
 
-        // Verify logging method is not invoked.
-        verify(mSpyLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verifyLoggingNotHappened(mSpyLogger);
     }
 
     @Test
     public void testOnStartJobUpdateTimeoutHandledWithoutLogging() throws InterruptedException {
         Flags flagsWithGaUxDisabledLoggingDisabled =
                 new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxDisabledLoggingDisabled();
+
         doReturn(flagsWithGaUxDisabledLoggingDisabled).when(FlagsFactory::getFlags);
 
         testOnStartJobUpdateTimeoutHandled();
 
-        // Verify logging method is not invoked.
-        verify(mSpyLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verifyLoggingNotHappened(mSpyLogger);
     }
 
     @Test
@@ -396,11 +387,13 @@ public class DebugReportSenderJobServiceTest {
         Flags flagsWithGaUxDisabledLoggingEnabled =
                 new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxDisabledLoggingEnabled();
         doReturn(flagsWithGaUxDisabledLoggingEnabled).when(FlagsFactory::getFlags);
+        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mSpyLogger);
+        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
 
         testOnStartJobUpdateTimeoutHandled();
 
-        // Verify logging methods are invoked.
-        verify(mSpyLogger).persistJobExecutionData(anyInt(), anyLong());
+        verifyOnStartJobLogged(mSpyLogger, onStartJobCallback);
+        onJobDoneCallback.assertLoggingFinished();
         verify(mSpyLogger)
                 .logExecutionStats(
                         anyInt(),
@@ -421,15 +414,15 @@ public class DebugReportSenderJobServiceTest {
                 .getConsent(AdServicesApiType.FLEDGE);
         doReturn(mDebugReportSenderWorker).when(() -> DebugReportSenderWorker.getInstance(any()));
         doReturn(
-                FluentFuture.from(
-                        immediateFailedFuture(new InterruptedException("testing timeout"))))
+                        FluentFuture.from(
+                                immediateFailedFuture(new InterruptedException("testing timeout"))))
                 .when(mDebugReportSenderWorker)
                 .runDebugReportSender();
         doAnswer(
-                unusedInvocation -> {
-                    jobFinishedCountDown.countDown();
-                    return null;
-                })
+                        unusedInvocation -> {
+                            jobFinishedCountDown.countDown();
+                            return null;
+                        })
                 .when(mDebugReportSenderJobService)
                 .jobFinished(mJobParametersMock, false);
 
@@ -454,16 +447,16 @@ public class DebugReportSenderJobServiceTest {
                 .getConsent(AdServicesApiType.FLEDGE);
         doReturn(mDebugReportSenderWorker).when(() -> DebugReportSenderWorker.getInstance(any()));
         doReturn(
-                FluentFuture.from(
-                        immediateFailedFuture(
-                                new ExecutionException("testing timeout", null))))
+                        FluentFuture.from(
+                                immediateFailedFuture(
+                                        new ExecutionException("testing timeout", null))))
                 .when(mDebugReportSenderWorker)
                 .runDebugReportSender();
         doAnswer(
-                unusedInvocation -> {
-                    jobFinishedCountDown.countDown();
-                    return null;
-                })
+                        unusedInvocation -> {
+                            jobFinishedCountDown.countDown();
+                            return null;
+                        })
                 .when(mDebugReportSenderJobService)
                 .jobFinished(mJobParametersMock, false);
 
@@ -480,15 +473,14 @@ public class DebugReportSenderJobServiceTest {
     @Test
     public void testOnStartJob_shouldDisableJobTrueWithLoggingEnabled() {
         Flags mockFlag = mock(Flags.class);
-        // Logging killswitch is off.
-        doReturn(mockFlag).when(FlagsFactory::getFlags);
-        doReturn(false).when(mockFlag).getBackgroundJobsLoggingKillSwitch();
+        mockGetFlags(mockFlag);
+        mockBackgroundJobsLoggingKillSwitch(mockFlag, /* overrideValue= */ true);
 
         testOnStartJobShouldDisableJobTrue();
 
         // Verify logging has not happened even though logging is enabled because this field is not
         // logged
-        verify(mSpyLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verifyLoggingNotHappened(mSpyLogger);
     }
 
     @Test
@@ -499,45 +491,42 @@ public class DebugReportSenderJobServiceTest {
 
         testOnStopJobCallsStopWork();
 
-        // Verify logging methods are not invoked.
-        verify(mSpyLogger, never()).persistJobExecutionData(anyInt(), anyLong());
-        verify(mSpyLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verifyLoggingNotHappened(mSpyLogger);
     }
 
     @Test
-    public void testOnStopJobWithLogging() {
+    public void testOnStopJobWithLogging() throws InterruptedException {
         Flags mockFlag =
                 new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxDisabledLoggingEnabled();
-        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-        doReturn(mockFlag).when(FlagsFactory::getFlags);
+        mockGetFlags(mockFlag);
+        JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
 
         testOnStopJobCallsStopWork();
 
-        // Verify logging methods are invoked.
-        verify(mSpyLogger).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verifyOnStopJobLogged(mSpyLogger, callback);
     }
 
     @Test
     public void testOnStartJobConsentRevokedGaUxEnabledWithoutLogging() {
         Flags flags =
                 new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxEnabledLoggingDisabled();
-        doReturn(flags).when(FlagsFactory::getFlags);
+        mockGetFlags(flags);
 
         testOnStartJobConsentRevokedGaUxEnabled();
 
-        // Verify logging methods are not invoked.
-        verify(mSpyLogger, never()).persistJobExecutionData(anyInt(), anyLong());
-        verify(mSpyLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verifyLoggingNotHappened(mSpyLogger);
     }
 
     @Test
-    public void testOnStartJobConsentRevokedGaUxEnabledWithLogging() {
+    public void testOnStartJobConsentRevokedGaUxEnabledWithLogging() throws InterruptedException {
         Flags flags = new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxEnabledLoggingEnabled();
-        doReturn(flags).when(FlagsFactory::getFlags);
+        mockGetFlags(flags);
+        JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
 
         testOnStartJobConsentRevokedGaUxEnabled();
 
         // Verify logging has happened
+        callback.assertLoggingFinished();
         verify(mSpyLogger)
                 .logExecutionStats(
                         anyInt(),
@@ -555,8 +544,7 @@ public class DebugReportSenderJobServiceTest {
 
         testOnStartJobUpdateSuccess();
 
-        // Verify logging method is not invoked.
-        verify(mSpyLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verifyLoggingNotHappened(mSpyLogger);
     }
 
     @Test
@@ -564,18 +552,12 @@ public class DebugReportSenderJobServiceTest {
         Flags flagsWithGaUxDisabledLoggingEnabled =
                 new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxDisabledLoggingEnabled();
         doReturn(flagsWithGaUxDisabledLoggingEnabled).when(FlagsFactory::getFlags);
+        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mSpyLogger);
+        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
 
         testOnStartJobUpdateSuccess();
 
-        // Verify logging methods are invoked.
-        verify(mSpyLogger).persistJobExecutionData(anyInt(), anyLong());
-        verify(mSpyLogger)
-                .logExecutionStats(
-                        anyInt(),
-                        anyLong(),
-                        eq(
-                                AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL),
-                        anyInt());
+        verifyJobFinishedLogged(mSpyLogger, onStartJobCallback, onJobDoneCallback);
     }
 
     private void testOnStartJobUpdateSuccess() throws InterruptedException {
@@ -590,10 +572,10 @@ public class DebugReportSenderJobServiceTest {
                 .when(mDebugReportSenderWorker)
                 .runDebugReportSender();
         doAnswer(
-                unusedInvocation -> {
-                    jobFinishedCountDown.countDown();
-                    return null;
-                })
+                        unusedInvocation -> {
+                            jobFinishedCountDown.countDown();
+                            return null;
+                        })
                 .when(mDebugReportSenderJobService)
                 .jobFinished(mJobParametersMock, false);
 
@@ -620,8 +602,8 @@ public class DebugReportSenderJobServiceTest {
         // Schedule the job to assert after starting that the scheduled job has been cancelled
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
-                        FLEDGE_DEBUG_REPORT_SENDER_JOB_ID,
-                        new ComponentName(CONTEXT, DebugReportSenderJobService.class))
+                                FLEDGE_DEBUG_REPORT_SENDER_JOB_ID,
+                                new ComponentName(CONTEXT, DebugReportSenderJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -647,10 +629,10 @@ public class DebugReportSenderJobServiceTest {
                 .when(mDebugReportSenderWorker)
                 .runDebugReportSender();
         doAnswer(
-                unusedInvocation -> {
-                    jobFinishedCountDown.countDown();
-                    return null;
-                })
+                        unusedInvocation -> {
+                            jobFinishedCountDown.countDown();
+                            return null;
+                        })
                 .when(mDebugReportSenderJobService)
                 .jobFinished(mJobParametersMock, false);
 
@@ -687,8 +669,8 @@ public class DebugReportSenderJobServiceTest {
         // Schedule the job to assert after starting that the scheduled job has been cancelled
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
-                        FLEDGE_DEBUG_REPORT_SENDER_JOB_ID,
-                        new ComponentName(CONTEXT, DebugReportSenderJobService.class))
+                                FLEDGE_DEBUG_REPORT_SENDER_JOB_ID,
+                                new ComponentName(CONTEXT, DebugReportSenderJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -711,8 +693,8 @@ public class DebugReportSenderJobServiceTest {
         // Schedule the job to assert after starting that the scheduled job has been cancelled
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
-                        FLEDGE_DEBUG_REPORT_SENDER_JOB_ID,
-                        new ComponentName(CONTEXT, DebugReportSenderJobService.class))
+                                FLEDGE_DEBUG_REPORT_SENDER_JOB_ID,
+                                new ComponentName(CONTEXT, DebugReportSenderJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
