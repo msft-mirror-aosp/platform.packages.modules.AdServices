@@ -57,7 +57,8 @@
               "key_1": ["value_1"]
             }
           }
-        ]
+        ],
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       },
       {
         "id": "T2",
@@ -74,7 +75,8 @@
               "key_1": ["value_1"]
             }
           }
-        ]
+        ],
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       }
     ],
     "event_reports": [
@@ -223,7 +225,8 @@
               "key_1": ["value_1"]
             }
           }
-        ]
+        ],
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       },
       {
         "id": "T2",
@@ -240,7 +243,8 @@
               "key_1": ["value_1"]
             }
           }
-        ]
+        ],
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       }
     ],
     "event_reports": [

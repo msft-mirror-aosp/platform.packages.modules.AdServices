@@ -149,6 +149,12 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME =
             "measurement_null_agg_report_rate_incl_source_registration_time";
 
+    public static final String KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME =
+            "measurement_null_agg_report_rate_excl_source_registration_time";
+
+    public static final String
+            KEY_MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED =
+                    "measurement_source_registration_time_optional_for_agg_reports_enabled";
     public static final String KEY_MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS =
             "measurement_network_connect_timeout_ms";
     public static final String KEY_MEASUREMENT_NETWORK_READ_TIMEOUT_MS =
