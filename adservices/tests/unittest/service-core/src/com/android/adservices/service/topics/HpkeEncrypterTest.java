@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.topics;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilError;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_INVALID_KEY_LENGTH;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 import static com.android.adservices.service.topics.EncryptionManagerTest.DECODED_PRIVATE_KEY;
 import static com.android.adservices.service.topics.EncryptionManagerTest.DECODED_PUBLIC_KEY;
 import static com.android.adservices.service.topics.EncryptionManagerTest.EMPTY_CONTEXT_INFO;
@@ -29,16 +33,23 @@ import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.HpkeJni;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
 
 /** Unit tests for {@link HpkeEncrypter}. */
-public class HpkeEncrypterTest {
-    HpkeEncrypter mHpkeEncrypter = new HpkeEncrypter();
+public final class HpkeEncrypterTest {
+    private HpkeEncrypter mHpkeEncrypter = new HpkeEncrypter();
+
+    @Rule
+    public final AdServicesExtendedMockitoRule mAdServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this).spyStatic(ErrorLogUtil.class).build();
 
     @Test
     public void testEncryption_success() throws JSONException {
@@ -67,6 +78,7 @@ public class HpkeEncrypterTest {
 
     @Test
     public void testEncryption_invalidKeyLength_returnsEmpty() {
+        doNothingOnErrorLogUtilError();
         Topic topic = Topic.create(/* topic */ 5, /* taxonomyVersion */ 6L, /* modelVersion */ 7L);
         byte[] plainText = generateTopicsPlainText(topic);
 
@@ -78,8 +90,10 @@ public class HpkeEncrypterTest {
                         EMPTY_CONTEXT_INFO);
 
         // Verify cipher text is null.
-        assertThat(cipherText).isNotNull();
-        assertThat(cipherText).isEmpty();
+        assertThat(cipherText).isNull();
+        verifyErrorLogUtilError(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_INVALID_KEY_LENGTH,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
     }
 
     @Test
