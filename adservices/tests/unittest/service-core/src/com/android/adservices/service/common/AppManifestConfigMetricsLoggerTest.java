@@ -269,7 +269,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesUnitTest
                             return mPrefs;
                         });
 
-        logUsage(PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
+        logUsageAndWait(PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
 
         assertWithMessage("execution thread")
                 .that(executionThread.get())
