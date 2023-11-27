@@ -462,7 +462,7 @@ class MeasurementDao implements IMeasurementDao {
                 source.getRegistrationOrigin().toString());
         values.put(
                 MeasurementTables.SourceContract.COARSE_EVENT_REPORT_DESTINATIONS,
-                source.getCoarseEventReportDestinations());
+                source.hasCoarseEventReportDestinations());
         if (source.getTriggerSpecs() != null) {
             values.put(
                     MeasurementTables.SourceContract.TRIGGER_SPECS,

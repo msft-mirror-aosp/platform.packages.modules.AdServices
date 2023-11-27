@@ -5451,8 +5451,7 @@ public class AttributionJobHandlerTest {
                         .setTriggerDedupKey(new UnsignedLong(1233L))
                         .build();
 
-        TriggerSpecs templateTriggerSpecs = new TriggerSpecs(
-                SourceFixture.getTriggerSpecValueSumArrayValidBaseline(), 2, null);
+        TriggerSpecs templateTriggerSpecs = SourceFixture.getValidTriggerSpecsValueSum(2);
 
         JSONArray existingAttributes = new JSONArray();
         JSONObject triggerRecord1 = generateTriggerJSONFromEventReport(currentEventReport1);
@@ -5624,8 +5623,7 @@ public class AttributionJobHandlerTest {
                         .setTriggerDedupKey(new UnsignedLong(123L))
                         .build();
 
-        TriggerSpecs templateTriggerSpecs = new TriggerSpecs(
-                SourceFixture.getTriggerSpecValueSumArrayValidBaseline(), 2, null);
+        TriggerSpecs templateTriggerSpecs = SourceFixture.getValidTriggerSpecsValueSum(2);
         JSONArray existingAttributes = new JSONArray();
         JSONObject triggerRecord1 = generateTriggerJSONFromEventReport(currentEventReport1);
         JSONObject triggerRecord2 = generateTriggerJSONFromEventReport(currentEventReport2);
@@ -5739,8 +5737,7 @@ public class AttributionJobHandlerTest {
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .build();
 
-        TriggerSpecs templateTriggerSpecs = new TriggerSpecs(
-                SourceFixture.getTriggerSpecValueSumArrayValidBaseline(), 2, null);
+        TriggerSpecs templateTriggerSpecs = SourceFixture.getValidTriggerSpecsValueSum(2);
         JSONArray existingAttributes = new JSONArray();
 
         Source source =
@@ -5844,8 +5841,7 @@ public class AttributionJobHandlerTest {
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .build();
 
-        TriggerSpecs templateTriggerSpecs = new TriggerSpecs(
-                SourceFixture.getTriggerSpecValueSumArrayValidBaseline(), 2, null);
+        TriggerSpecs templateTriggerSpecs = SourceFixture.getValidTriggerSpecsValueSum(2);
         JSONArray existingAttributes = new JSONArray();
 
         Source source =
