@@ -35,6 +35,7 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -84,7 +85,7 @@ import java.util.concurrent.TimeoutException;
 
 /** Unit tests for {@link MobileDataDownloadFactory} */
 @SmallTest
-public class MobileDataDownloadTest {
+public final class MobileDataDownloadTest extends AdServicesUnitTestCase {
 
     private final Context mContext = ApplicationProvider.getApplicationContext();
     private static final int MAX_HANDLE_TASK_WAIT_TIME_SECS = 300;
