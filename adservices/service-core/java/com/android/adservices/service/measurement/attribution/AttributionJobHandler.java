@@ -262,13 +262,27 @@ class AttributionJobHandler {
                                     remainingMatchingSources,
                                     trigger.getEnrollmentId());
                         }
-                        attributeTriggerAndInsertAttribution(trigger, source, measurementDao);
+                        attributeTrigger(trigger, measurementDao);
+                        if (mFlags.getMeasurementEnableScopedAttributionRateLimit()) {
+                            if (isEventTriggeringStatusAttributed) {
+                                insertAttribution(Attribution.Scope.EVENT, source, trigger,
+                                        measurementDao);
+                            }
+                            if (isAggregateTriggeringStatusAttributed) {
+                                insertAttribution(Attribution.Scope.AGGREGATE, source, trigger,
+                                        measurementDao);
+                            }
+                        } else {
+                            insertAttribution(source, trigger, measurementDao);
+                        }
                         attributionStatus.setAttributionResult(
                                 isAggregateTriggeringStatusAttributed,
                                 isEventTriggeringStatusAttributed);
                     } else {
                         attributionStatus.setAttributionResult(
                                 AttributionStatus.AttributionResult.NOT_ATTRIBUTED);
+                        // TODO (b/309323690) Consider logging implications for scoped attribution
+                        // rate limit.
                         attributionStatus.setFailureType(
                                 AttributionStatus.FailureType.NO_REPORTS_GENERATED);
                         ignoreTrigger(trigger, measurementDao);
@@ -279,8 +293,9 @@ class AttributionJobHandler {
     private boolean shouldAttributionBeBlockedByRateLimits(
             Source source, Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
-        if (!hasAttributionQuota(source, trigger, measurementDao)
-                || !isReportingOriginWithinPrivacyBounds(source, trigger, measurementDao)) {
+        if ((!mFlags.getMeasurementEnableScopedAttributionRateLimit()
+                && !hasAttributionQuota(source, trigger, measurementDao))
+                        || !isReportingOriginWithinPrivacyBounds(source, trigger, measurementDao)) {
             LoggerFactory.getMeasurementLogger()
                     .d(
                             "Attribution blocked by rate limits. Source ID: %s ; Trigger ID: %s ",
@@ -296,6 +311,14 @@ class AttributionJobHandler {
             IMeasurementDao measurementDao,
             AttributionStatus attributionStatus)
             throws DatastoreException {
+        if (mFlags.getMeasurementEnableScopedAttributionRateLimit()
+                && !hasAttributionQuota(
+                        Attribution.Scope.AGGREGATE, source, trigger, measurementDao)) {
+            LoggerFactory.getMeasurementLogger()
+                    .d("Attribution blocked by aggregate rate limits. Source ID: %s ; "
+                            + "Trigger ID: %s ", source.getId(), trigger.getId());
+            return TriggeringStatus.DROPPED;
+        }
 
         if (trigger.getTriggerTime() >= source.getAggregatableReportWindow()) {
             mDebugReportApi.scheduleTriggerDebugReport(
@@ -642,10 +665,18 @@ class AttributionJobHandler {
             IMeasurementDao measurementDao,
             AttributionStatus attributionStatus)
             throws DatastoreException {
-
         if (source.getParentId() != null) {
             LoggerFactory.getMeasurementLogger()
                     .d("Event report generation skipped because it's a derived source.");
+            return TriggeringStatus.DROPPED;
+        }
+
+        if (mFlags.getMeasurementEnableScopedAttributionRateLimit()
+                && !hasAttributionQuota(
+                        Attribution.Scope.EVENT, source, trigger, measurementDao)) {
+            LoggerFactory.getMeasurementLogger()
+                    .d("Attribution blocked by event rate limits. Source ID: %s ; "
+                            + "Trigger ID: %s ", source.getId(), trigger.getId());
             return TriggeringStatus.DROPPED;
         }
 
@@ -1115,13 +1146,24 @@ class AttributionJobHandler {
                 Collections.singletonList(trigger.getId()), Trigger.Status.IGNORED);
     }
 
-    private static void attributeTriggerAndInsertAttribution(Trigger trigger, Source source,
-            IMeasurementDao measurementDao)
+    private static void attributeTrigger(Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
         trigger.setStatus(Trigger.Status.ATTRIBUTED);
         measurementDao.updateTriggerStatus(
                 Collections.singletonList(trigger.getId()), Trigger.Status.ATTRIBUTED);
-        measurementDao.insertAttribution(createAttribution(source, trigger));
+    }
+
+    private static void insertAttribution(Source source, Trigger trigger,
+            IMeasurementDao measurementDao) throws DatastoreException {
+        measurementDao.insertAttribution(createAttributionBuilder(source, trigger).build());
+    }
+
+    private static void insertAttribution(@Attribution.Scope int scope, Source source,
+            Trigger trigger, IMeasurementDao measurementDao) throws DatastoreException {
+        measurementDao.insertAttribution(
+                createAttributionBuilder(source, trigger)
+                        .setScope(scope)
+                        .build());
     }
 
     private boolean hasAttributionQuota(
@@ -1137,6 +1179,30 @@ class AttributionJobHandler {
                     Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT);
         }
         return attributionCount < mFlags.getMeasurementMaxAttributionPerRateLimitWindow();
+    }
+
+    private boolean hasAttributionQuota(
+            @Attribution.Scope int scope,
+            Source source,
+            Trigger trigger,
+            IMeasurementDao measurementDao) throws DatastoreException {
+        long attributionCount = measurementDao.getAttributionsPerRateLimitWindow(
+                scope, source, trigger);
+        int limit = scope == Attribution.Scope.EVENT
+                ? mFlags.getMeasurementMaxEventAttributionPerRateLimitWindow()
+                : mFlags.getMeasurementMaxAggregateAttributionPerRateLimitWindow();
+        boolean isWithinLimit = attributionCount < limit;
+        if (!isWithinLimit) {
+            // TODO (b/309324404) Consider debug report implications for scoped attribution rate
+            // limit.
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source,
+                    trigger,
+                    String.valueOf(attributionCount),
+                    measurementDao,
+                    Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT);
+        }
+        return isWithinLimit;
     }
 
     private boolean isWithinReportLimit(
@@ -1369,7 +1435,8 @@ class AttributionJobHandler {
         }
     }
 
-    public static Attribution createAttribution(@NonNull Source source, @NonNull Trigger trigger) {
+    public static Attribution.Builder createAttributionBuilder(@NonNull Source source,
+            @NonNull Trigger trigger) {
         Optional<Uri> publisherTopPrivateDomain =
                 getTopPrivateDomain(source.getPublisher(), source.getPublisherType());
         Uri destination = trigger.getAttributionDestination();
@@ -1397,8 +1464,7 @@ class AttributionJobHandler {
                 .setRegistrant(trigger.getRegistrant().toString())
                 .setSourceId(source.getId())
                 .setTriggerId(trigger.getId())
-                .setRegistrationOrigin(trigger.getRegistrationOrigin())
-                .build();
+                .setRegistrationOrigin(trigger.getRegistrationOrigin());
     }
 
     private static Optional<Uri> getTopPrivateDomain(
