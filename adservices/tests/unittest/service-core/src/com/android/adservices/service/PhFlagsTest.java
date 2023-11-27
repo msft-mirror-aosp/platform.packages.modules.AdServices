@@ -331,8 +331,10 @@ import static com.android.adservices.service.Flags.MEASUREMENT_EVENT_REPORTS_VTC
 import static com.android.adservices.service.Flags.MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED;
 import static com.android.adservices.service.Flags.MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS;
 import static com.android.adservices.service.Flags.MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS;
-import static com.android.adservices.service.Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT;
-import static com.android.adservices.service.Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION;
+import static com.android.adservices.service.Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT;
+import static com.android.adservices.service.Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION;
+import static com.android.adservices.service.Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT;
+import static com.android.adservices.service.Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY;
 import static com.android.adservices.service.Flags.MEASUREMENT_FLEX_LITE_API_ENABLED;
 import static com.android.adservices.service.Flags.MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY;
@@ -722,6 +724,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVEN
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY;
@@ -8867,9 +8871,9 @@ public class PhFlagsTest {
     public void testGetMeasurementFlexApiMaxInformationGainEvent() {
         // Without any overriding, the value is the hard coded constant.
         assertThat(mPhFlags.getMeasurementFlexApiMaxInformationGainEvent())
-                .isEqualTo(MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT);
+                .isEqualTo(MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT);
 
-        float phOverridingValue = MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT + 6.4f;
+        float phOverridingValue = MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT + 6.4f;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT,
@@ -8885,9 +8889,9 @@ public class PhFlagsTest {
     public void testGetMeasurementFlexApiMaxInformationGainNavigation() {
         // Without any overriding, the value is the hard coded constant.
         assertThat(mPhFlags.getMeasurementFlexApiMaxInformationGainNavigation())
-                .isEqualTo(MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION);
+                .isEqualTo(MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION);
 
-        float phOverridingValue = MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION + 6.4f;
+        float phOverridingValue = MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION + 6.4f;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION,
@@ -8897,6 +8901,44 @@ public class PhFlagsTest {
         assertThat(phOverridingValue)
                 .isWithin(0.000000001f)
                 .of(mPhFlags.getMeasurementFlexApiMaxInformationGainNavigation());
+    }
+
+    @Test
+    public void testGetMeasurementFlexApiMaxInformationGainDualDestinationEvent() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getMeasurementFlexApiMaxInformationGainDualDestinationEvent())
+                .isEqualTo(MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT);
+
+        float phOverridingValue = MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT
+                + 6.4f;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT,
+                Float.toString(phOverridingValue),
+                /* makeDefault */ true);
+
+        assertThat(phOverridingValue)
+                .isWithin(0.000000001f)
+                .of(mPhFlags.getMeasurementFlexApiMaxInformationGainDualDestinationEvent());
+    }
+
+    @Test
+    public void testGetMeasurementFlexApiMaxInformationGainDualDestinationNavigation() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getMeasurementFlexApiMaxInformationGainDualDestinationNavigation())
+                .isEqualTo(MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION);
+
+        float phOverridingValue =
+                MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION + 6.4f;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION,
+                Float.toString(phOverridingValue),
+                /* makeDefault */ true);
+
+        assertThat(phOverridingValue)
+                .isWithin(0.000000001f)
+                .of(mPhFlags.getMeasurementFlexApiMaxInformationGainDualDestinationNavigation());
     }
 
     @Test

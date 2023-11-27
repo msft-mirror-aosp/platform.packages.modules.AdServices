@@ -98,6 +98,8 @@ public class Source {
     @Nullable private List<AttributedTrigger> mAttributedTriggers;
     @Nullable private TriggerSpecs mTriggerSpecs;
     @Nullable private String mTriggerSpecsString;
+    @Nullable private Long mNumStates;
+    @Nullable private Double mFlipProbability;
     @Nullable private Integer mMaxEventLevelReports;
     @Nullable private String mEventAttributionStatusString;
     @Nullable private String mPrivacyParametersString = null;
@@ -225,32 +227,70 @@ public class Source {
      * @param flags flag values
      */
     public boolean hasValidInformationGain(@NonNull Flags flags) {
-        return isFlexLiteApiValueValid(flags) && isFlexEventApiValueValid(flags);
+        if (mTriggerSpecs != null) {
+            return isFlexEventApiValueValid(flags);
+        }
+        return isFlexLiteApiValueValid(flags);
+    }
+
+    private double getInformationGainThreshold(Flags flags) {
+        int destinationMultiplier = getDestinationTypeMultiplier(flags);
+        if (destinationMultiplier == 2) {
+            return mSourceType == SourceType.EVENT
+                    ? flags.getMeasurementFlexApiMaxInformationGainDualDestinationEvent()
+                    : flags.getMeasurementFlexApiMaxInformationGainDualDestinationNavigation();
+        }
+        return mSourceType == SourceType.EVENT
+                ? flags.getMeasurementFlexApiMaxInformationGainEvent()
+                : flags.getMeasurementFlexApiMaxInformationGainNavigation();
     }
 
     private boolean isFlexLiteApiValueValid(Flags flags) {
-        if (!flags.getMeasurementFlexLiteApiEnabled()
-                || (mEventReportWindows == null && mMaxEventLevelReports == null)) {
+        if (!flags.getMeasurementFlexLiteApiEnabled()) {
             return true;
         }
-        double informationGainThreshold =
-                mSourceType == SourceType.EVENT
-                        ? flags.getMeasurementFlexApiMaxInformationGainEvent()
-                        : flags.getMeasurementFlexApiMaxInformationGainNavigation();
+        return Combinatorics.getInformationGain(getNumStates(flags), getFlipProbability(flags))
+                <= getInformationGainThreshold(flags);
+    }
 
+    private void buildPrivacyParameters(Flags flags) {
+        if (mTriggerSpecs != null) {
+            // Flex source has num states set during registration but not during attribution; also
+            // num states is only needed for information gain calculation, which is handled during
+            // registration. We set flip probability here for use in noising during registration and
+            // availability for debug reporting during attribution.
+            setFlipProbability(mTriggerSpecs.getFlipProbability(this, flags));
+            return;
+        }
+        boolean installCase = SourceNoiseHandler.isInstallDetectionEnabled(this);
         EventReportWindowCalcDelegate eventReportWindowCalcDelegate =
                 new EventReportWindowCalcDelegate(flags);
-        boolean installCase = SourceNoiseHandler.isInstallDetectionEnabled(this);
-        long numStates =
-                Combinatorics.getNumStatesArithmetic(
-                        eventReportWindowCalcDelegate.getMaxReportCount(this, installCase),
-                        getTriggerDataCardinality(),
-                        eventReportWindowCalcDelegate.getReportingWindowCountForNoising(
-                                this, installCase));
-        double flipProbability = Combinatorics.getFlipProbability(numStates);
+        int reportingWindowCountForNoising =
+                eventReportWindowCalcDelegate.getReportingWindowCountForNoising(this, installCase);
+        int maxReportCount =
+                eventReportWindowCalcDelegate.getMaxReportCount(this, installCase);
+        int destinationMultiplier = getDestinationTypeMultiplier(flags);
+        long numberOfStates =
+                Combinatorics.getNumberOfStarsAndBarsSequences(
+                        /*numStars=*/ maxReportCount,
+                        /*numBars=*/ getTriggerDataCardinality()
+                                * reportingWindowCountForNoising
+                                * destinationMultiplier);
+        setNumStates(numberOfStates);
+        setFlipProbability(Combinatorics.getFlipProbability(numberOfStates));
+    }
 
-        return Combinatorics.getInformationGain(numStates, flipProbability)
-                <= informationGainThreshold;
+    /**
+     * Returns the number of destination types to use in privacy computations.
+     */
+    public int getDestinationTypeMultiplier(Flags flags) {
+        boolean shouldReportCoarseDestinations =
+                flags.getMeasurementEnableCoarseEventReportDestinations()
+                        && hasCoarseEventReportDestinations();
+        return !shouldReportCoarseDestinations && hasAppDestinations()
+                        && hasWebDestinations()
+                ? SourceNoiseHandler.DUAL_DESTINATION_IMPRESSION_NOISE_MULTIPLIER
+                : SourceNoiseHandler.SINGLE_DESTINATION_IMPRESSION_NOISE_MULTIPLIER;
     }
 
     /** Returns true is manual event reporting windows are set otherwise false; */
@@ -723,20 +763,9 @@ public class Source {
      *
      * @return whether the parameters of flexible are valid
      */
+    @VisibleForTesting
     public boolean isFlexEventApiValueValid(Flags flags) {
-        if (!flags.getMeasurementFlexibleEventReportingApiEnabled()
-                || mTriggerSpecs == null) {
-            return true;
-        }
-        double informationGainThreshold =
-                mSourceType == SourceType.EVENT
-                        ? flags.getMeasurementFlexApiMaxInformationGainEvent()
-                        : flags.getMeasurementFlexApiMaxInformationGainNavigation();
-
-        if (mTriggerSpecs.getInformationGain() > informationGainThreshold) {
-            return false;
-        }
-        return true;
+        return mTriggerSpecs.getInformationGain(this, flags) <= getInformationGainThreshold(flags);
     }
 
     /**
@@ -891,7 +920,7 @@ public class Source {
      * where the conversion occurred or merge app and web destinations. Set to true of both app and
      * web destination should be merged into the array of event report.
      */
-    public boolean getCoarseEventReportDestinations() {
+    public boolean hasCoarseEventReportDestinations() {
         return mCoarseEventReportDestinations;
     }
 
@@ -903,6 +932,25 @@ public class Source {
     /** Returns trigger specs */
     public String getTriggerSpecsString() {
         return mTriggerSpecsString;
+    }
+
+    /**
+     * Returns the number of report states for the source (used only for computation and not
+     * stored in the datastore)
+     */
+    private Long getNumStates(Flags flags) {
+        if (mNumStates == null) {
+            buildPrivacyParameters(flags);
+        }
+        return mNumStates;
+    }
+
+    /** Returns flip probability (used only for computation and not stored in the datastore) */
+    public Double getFlipProbability(Flags flags) {
+        if (mFlipProbability == null) {
+            buildPrivacyParameters(flags);
+        }
+        return mFlipProbability;
     }
 
     /** Returns max bucket increments */
@@ -954,6 +1002,16 @@ public class Source {
     /** Set app install attribution to the {@link Source}. */
     public void setInstallAttributed(boolean isInstallAttributed) {
         mIsInstallAttributed = isInstallAttributed;
+    }
+
+    /** Set the number of report states for the {@link Source}. */
+    private void setNumStates(long numStates) {
+        mNumStates = numStates;
+    }
+
+    /** Set flip probability for the {@link Source}. */
+    private void setFlipProbability(double flipProbability) {
+        mFlipProbability = flipProbability;
     }
 
     /**
@@ -1491,7 +1549,7 @@ public class Source {
             return this;
         }
 
-        /** See {@link Source#getCoarseEventReportDestinations()} */
+        /** See {@link Source#hasCoarseEventReportDestinations()} */
         @NonNull
         public Builder setCoarseEventReportDestinations(boolean coarseEventReportDestinations) {
             mBuilding.mCoarseEventReportDestinations = coarseEventReportDestinations;

@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 import android.util.Pair;
 
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONArray;
@@ -234,8 +235,11 @@ public class TriggerSpecsTest {
 
     @Test
     public void getPrivacyParamsForComputation_equal() throws JSONException {
+        Source source = SourceFixture.getMinimalValidSourceBuilder().build();
         TriggerSpecs testObject = new TriggerSpecs(
-                SourceFixture.getTriggerSpecArrayCountValidBaseline(), 3, null);
+                SourceFixture.getTriggerSpecArrayCountValidBaseline(), 3, source);
+        // Oblige building privacy parameters for the trigger specs
+        testObject.getInformationGain(source, FlagsFactory.getFlagsForTest());
         // Assertion
         assertEquals(3, testObject.getPrivacyParamsForComputation()[0][0]);
         assertArrayEquals(new int[] {3, 3, 3}, testObject.getPrivacyParamsForComputation()[1]);
