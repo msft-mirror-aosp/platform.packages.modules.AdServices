@@ -268,24 +268,18 @@ public class Combinatorics {
         if (perTypeNumWindowList.length == 0 || perTypeCapList.length == 0) {
             return 1;
         }
-        boolean canComputeArithmetic = true;
         for (int i = 1; i < perTypeNumWindowList.length; i++) {
             if (perTypeNumWindowList[i] != perTypeNumWindowList[i - 1]) {
-                canComputeArithmetic = false;
-                break;
+                return getNumStatesRecursive(totalCap, perTypeNumWindowList, perTypeCapList);
             }
         }
         for (int n : perTypeCapList) {
             if (n < totalCap) {
-                canComputeArithmetic = false;
-                break;
+                return getNumStatesRecursive(totalCap, perTypeNumWindowList, perTypeCapList);
             }
         }
-        if (canComputeArithmetic) {
-            return getNumStatesArithmetic(totalCap, perTypeCapList.length, perTypeNumWindowList[0]);
-        }
 
-        return getNumStatesRecursive(totalCap, perTypeNumWindowList, perTypeCapList);
+        return getNumStatesArithmetic(totalCap, perTypeCapList.length, perTypeNumWindowList[0]);
     }
 
     /**

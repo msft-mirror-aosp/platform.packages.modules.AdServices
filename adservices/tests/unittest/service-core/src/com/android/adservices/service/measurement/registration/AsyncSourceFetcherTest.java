@@ -5345,7 +5345,7 @@ public final class AsyncSourceFetcherTest extends AdServicesUnitTestCase {
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
-        assertFalse(result.getCoarseEventReportDestinations());
+        assertFalse(result.hasCoarseEventReportDestinations());
     }
 
     @Test
@@ -5383,7 +5383,7 @@ public final class AsyncSourceFetcherTest extends AdServicesUnitTestCase {
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
-        assertTrue(result.getCoarseEventReportDestinations());
+        assertTrue(result.hasCoarseEventReportDestinations());
     }
 
     @Test
