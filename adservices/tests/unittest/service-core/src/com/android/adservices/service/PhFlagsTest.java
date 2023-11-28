@@ -7485,11 +7485,49 @@ public class PhFlagsTest {
         testRvcUxEnabled(false, false, false);
     }
 
-    private void testRvcUxEnabled(
-            boolean adServicesSystemApi, boolean phOverridingValue, boolean expected) {
+    @Test
+    public void testRvcUxEnabled_adServicesSystemApiTrue_isSplus() {
+        testRvcUxEnabled_default(true, true, false);
+    }
 
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getEnableRvcUx()).isEqualTo(DEFAULT_RVC_UX_ENABLED);
+    @Test
+    public void testRvcUxEnabled_adServicesSystemApiFalse_isSplus() {
+        testRvcUxEnabled_default(true, false, false);
+    }
+
+    @Test
+    public void testRvcUxEnabled_adServicesSystemApiTrue_isR() {
+        testRvcUxEnabled_default(false, true, true);
+    }
+
+    @Test
+    public void testRvcUxEnabled_adServicesSystemApiFalse_isR() {
+        testRvcUxEnabled_default(false, false, false);
+    }
+
+    private void testRvcUxEnabled_default(
+            boolean assumeIsAtLeastS,
+            boolean adServicesSystemApi,
+            boolean expected) {
+        if (assumeIsAtLeastS) {
+                Assume.assumeTrue(SdkLevel.isAtLeastS());
+        } else {
+                Assume.assumeFalse(SdkLevel.isAtLeastS());
+        }
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENABLE_AD_SERVICES_SYSTEM_API,
+                Boolean.toString(adServicesSystemApi),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getEnableRvcUx()).isEqualTo(expected);
+    }
+
+    private void testRvcUxEnabled(
+            boolean adServicesSystemApi,
+            boolean phOverridingValue,
+            boolean expected) {
 
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,

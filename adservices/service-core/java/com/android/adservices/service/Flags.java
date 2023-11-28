@@ -3898,7 +3898,7 @@ public interface Flags extends CommonFlags {
     }
 
     /** Default RVC UX feature flag.. */
-    boolean DEFAULT_RVC_UX_ENABLED = false;
+    boolean DEFAULT_RVC_UX_ENABLED = SDK_INT == Build.VERSION_CODES.R;
 
     /** RVC UX feature flag.. */
     default boolean getEnableRvcUx() {
