@@ -4104,6 +4104,14 @@ public interface Flags extends CommonFlags {
         return MEASUREMENT_ENABLE_PREINSTALL_CHECK;
     }
 
+    /** Default value of flag for session stable kill switches. */
+    boolean MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES = true;
+
+    /** Returns true when session stable kill switches are enabled. */
+    default boolean getMeasurementEnableSessionStableKillSwitches() {
+        return MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES;
+    }
+
     /** Default value of flag for logging consent migration metrics when OTA from S to T+. */
     boolean DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED = true;
 
