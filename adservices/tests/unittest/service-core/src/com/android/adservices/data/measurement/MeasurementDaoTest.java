@@ -4250,6 +4250,7 @@ public class MeasurementDaoTest {
                         .build();
         Attribution attribution =
                 new Attribution.Builder()
+                        .setScope(Attribution.Scope.AGGREGATE)
                         .setEnrollmentId(source.getEnrollmentId())
                         .setDestinationOrigin(source.getWebDestinations().get(0).toString())
                         .setDestinationSite(source.getAppDestinations().get(0).toString())
@@ -4267,13 +4268,48 @@ public class MeasurementDaoTest {
                 });
 
         // Assertion
-        AtomicLong attributionsCount = new AtomicLong();
-        mDatastoreManager.runInTransaction(
-                (dao) -> {
-                    attributionsCount.set(dao.getAttributionsPerRateLimitWindow(source, trigger));
-                });
-
-        assertEquals(1L, attributionsCount.get());
+        try (Cursor cursor =
+                MeasurementDbHelper.getInstance(sContext)
+                        .getReadableDatabase()
+                        .query(AttributionContract.TABLE, null, null, null, null, null, null)) {
+            assertTrue(cursor.moveToNext());
+            assertEquals(
+                    attribution.getScope(),
+                    cursor.getInt(cursor.getColumnIndex(
+                            MeasurementTables.AttributionContract.SCOPE)));
+            assertEquals(
+                    attribution.getEnrollmentId(),
+                    cursor.getString(cursor.getColumnIndex(
+                            MeasurementTables.AttributionContract.ENROLLMENT_ID)));
+            assertEquals(
+                    attribution.getDestinationOrigin(),
+                    cursor.getString(cursor.getColumnIndex(
+                            MeasurementTables.AttributionContract.DESTINATION_ORIGIN)));
+            assertEquals(
+                    attribution.getDestinationSite(),
+                    cursor.getString(cursor.getColumnIndex(
+                            MeasurementTables.AttributionContract.DESTINATION_SITE)));
+            assertEquals(
+                    attribution.getSourceOrigin(),
+                    cursor.getString(cursor.getColumnIndex(
+                            MeasurementTables.AttributionContract.SOURCE_ORIGIN)));
+            assertEquals(
+                    attribution.getSourceSite(),
+                    cursor.getString(cursor.getColumnIndex(
+                            MeasurementTables.AttributionContract.SOURCE_SITE)));
+            assertEquals(
+                    attribution.getRegistrant(),
+                    cursor.getString(cursor.getColumnIndex(
+                            MeasurementTables.AttributionContract.REGISTRANT)));
+            assertEquals(
+                    attribution.getTriggerTime(),
+                    cursor.getLong(cursor.getColumnIndex(
+                            MeasurementTables.AttributionContract.TRIGGER_TIME)));
+            assertEquals(
+                    attribution.getRegistrationOrigin(),
+                    Uri.parse(cursor.getString(cursor.getColumnIndex(
+                            MeasurementTables.AttributionContract.REGISTRATION_ORIGIN))));
+        }
     }
 
     @Test
@@ -4313,6 +4349,98 @@ public class MeasurementDaoTest {
                 });
 
         assertEquals(1L, attributionsCount.get());
+    }
+
+    @Test
+    public void getAttributionsPerRateLimitWindow_atTimeWindowScoped_countsAttribution() {
+        // Setup
+        Source source = SourceFixture.getValidSource();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setTriggerTime(source.getEventTime() + TimeUnit.HOURS.toMillis(1))
+                        .build();
+
+        Attribution eventAttribution =
+                getAttributionBuilder(source, trigger)
+                        .setScope(Attribution.Scope.EVENT)
+                        .build();
+
+        Attribution aggregateAttribution =
+                getAttributionBuilder(source, trigger)
+                        .setScope(Attribution.Scope.AGGREGATE)
+                        .build();
+
+        // Execution
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    dao.insertAttribution(eventAttribution);
+                    dao.insertAttribution(aggregateAttribution);
+                });
+
+        // Assertion
+        AtomicLong eventAttributionsCount = new AtomicLong();
+        AtomicLong aggregateAttributionsCount = new AtomicLong();
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    eventAttributionsCount.set(
+                            dao.getAttributionsPerRateLimitWindow(
+                                    Attribution.Scope.EVENT, source, trigger));
+                    aggregateAttributionsCount.set(
+                            dao.getAttributionsPerRateLimitWindow(
+                                    Attribution.Scope.AGGREGATE, source, trigger));
+                });
+
+        assertEquals(1L, eventAttributionsCount.get());
+        assertEquals(1L, aggregateAttributionsCount.get());
+    }
+
+    @Test
+    public void getAttributionsPerRateLimitWindow_beyondTimeWindowScoped_countsAttribution() {
+        // Setup
+        Source source = SourceFixture.getValidSource();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setTriggerTime(source.getEventTime() + TimeUnit.HOURS.toMillis(1))
+                        .build();
+
+        Attribution eventAttribution =
+                getAttributionBuilder(source, trigger)
+                        .setTriggerTime(
+                                trigger.getTriggerTime()
+                                        - MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS)
+                        .setScope(Attribution.Scope.EVENT)
+                        .build();
+
+        Attribution aggregateAttribution =
+                getAttributionBuilder(source, trigger)
+                        .setTriggerTime(
+                                trigger.getTriggerTime()
+                                        - MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS)
+                        .setScope(Attribution.Scope.AGGREGATE)
+                        .build();
+
+        // Execution
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    dao.insertAttribution(eventAttribution);
+                    dao.insertAttribution(aggregateAttribution);
+                });
+
+        // Assertion
+        AtomicLong eventAttributionsCount = new AtomicLong();
+        AtomicLong aggregateAttributionsCount = new AtomicLong();
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    eventAttributionsCount.set(
+                            dao.getAttributionsPerRateLimitWindow(
+                                    Attribution.Scope.EVENT, source, trigger));
+                    aggregateAttributionsCount.set(
+                            dao.getAttributionsPerRateLimitWindow(
+                                    Attribution.Scope.AGGREGATE, source, trigger));
+                });
+
+        assertEquals(0L, eventAttributionsCount.get());
+        assertEquals(0L, aggregateAttributionsCount.get());
     }
 
     @Test
@@ -9765,12 +9893,31 @@ public class MeasurementDaoTest {
         }
     }
 
+    private static Attribution.Builder getAttributionBuilder(Source source, Trigger trigger) {
+        return new Attribution.Builder()
+                .setEnrollmentId(source.getEnrollmentId())
+                .setDestinationOrigin(source.getWebDestinations().get(0).toString())
+                .setDestinationSite(source.getAppDestinations().get(0).toString())
+                .setSourceOrigin(source.getPublisher().toString())
+                .setSourceSite(source.getPublisher().toString())
+                .setRegistrant(source.getRegistrant().toString())
+                .setTriggerTime(
+                        trigger.getTriggerTime()
+                                - MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS
+                                + 1)
+                .setRegistrationOrigin(trigger.getRegistrationOrigin());
+    }
+
     /** Create {@link Attribution} object from SQLite datastore. */
     private static Attribution constructAttributionFromCursor(Cursor cursor) {
         Attribution.Builder builder = new Attribution.Builder();
         int index = cursor.getColumnIndex(MeasurementTables.AttributionContract.ID);
         if (index > -1 && !cursor.isNull(index)) {
             builder.setId(cursor.getString(index));
+        }
+        index = cursor.getColumnIndex(MeasurementTables.AttributionContract.SCOPE);
+        if (index > -1 && !cursor.isNull(index)) {
+            builder.setScope(cursor.getInt(index));
         }
         index = cursor.getColumnIndex(MeasurementTables.AttributionContract.SOURCE_SITE);
         if (index > -1 && !cursor.isNull(index)) {
@@ -9829,19 +9976,23 @@ public class MeasurementDaoTest {
     }
 
     private static String getFirstSourceIdFromDatastore() {
+        return getFirstIdFromDatastore(SourceContract.TABLE, SourceContract.ID);
+    }
+
+    private static String getFirstIdFromDatastore(String tableName, String idColumn) {
         try (Cursor cursor =
                 MeasurementDbHelper.getInstance(sContext)
                         .getReadableDatabase()
                         .query(
-                                SourceContract.TABLE,
-                                new String[] {SourceContract.ID},
+                                tableName,
+                                new String[] {idColumn},
                                 null,
                                 null,
                                 null,
                                 null,
                                 null)) {
             assertTrue(cursor.moveToNext());
-            return cursor.getString(cursor.getColumnIndex(SourceContract.ID));
+            return cursor.getString(cursor.getColumnIndex(idColumn));
         }
     }
 

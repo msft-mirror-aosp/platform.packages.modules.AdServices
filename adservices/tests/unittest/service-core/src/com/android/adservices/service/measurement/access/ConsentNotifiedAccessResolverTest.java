@@ -26,6 +26,7 @@ import android.content.Context;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.measurement.CachedFlags;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -45,7 +46,7 @@ public class ConsentNotifiedAccessResolverTest {
         MockitoAnnotations.initMocks(this);
         mConsentNotifiedAccessResolver =
                 new ConsentNotifiedAccessResolver(
-                        mConsentManager, mFlags, mUserConsentAccessResolver);
+                        mConsentManager, new CachedFlags(mFlags), mUserConsentAccessResolver);
         doReturn(false).when(mFlags).getConsentNotifiedDebugMode();
         doReturn(false).when(mUserConsentAccessResolver).isAllowed(mContext);
         doReturn(false).when(mConsentManager).wasNotificationDisplayed();
