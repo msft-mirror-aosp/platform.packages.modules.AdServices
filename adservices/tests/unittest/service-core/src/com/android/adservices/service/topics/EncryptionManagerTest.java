@@ -16,6 +16,14 @@
 
 package com.android.adservices.service.topics;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilError;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_INVALID_KEY_LENGTH;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_INVALID_RESPONSE_LENGTH;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_KEY_DECODE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_KEY_MISSING;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_NULL_RESPONSE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 import static com.android.adservices.service.topics.TopicsJsonMapper.KEY_MODEL_VERSION;
 import static com.android.adservices.service.topics.TopicsJsonMapper.KEY_TAXONOMY_VERSION;
 import static com.android.adservices.service.topics.TopicsJsonMapper.KEY_TOPIC_ID;
@@ -23,6 +31,8 @@ import static com.android.adservices.service.topics.TopicsJsonMapper.KEY_TOPIC_I
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
@@ -35,6 +45,8 @@ import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.topics.EncryptedTopic;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
 import com.android.adservices.service.enrollment.EnrollmentData;
@@ -44,6 +56,7 @@ import com.google.common.primitives.Bytes;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -53,7 +66,7 @@ import java.util.List;
 import java.util.Optional;
 
 /** Unit tests for {@link EncryptionManager}. */
-public class EncryptionManagerTest {
+public final class EncryptionManagerTest {
     static final String PUBLIC_KEY_BASE64 = "rSJBSUYG0ebvfW1AXCWO0CMGMJhDzpfQm3eLyw1uxX8=";
     static final String PRIVATE_KEY_BASE64 = "f86EzLmGaVmc+PwjJk5ADPE4ijQvliWf0CQyY/Zyy7I=";
     static final byte[] DECODED_PUBLIC_KEY = Base64.getDecoder().decode(PUBLIC_KEY_BASE64);
@@ -93,11 +106,16 @@ public class EncryptionManagerTest {
                     .setLastFetchTime(100001L)
                     .build();
 
+    @Rule
+    public final AdServicesExtendedMockitoRule mAdServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this).spyStatic(ErrorLogUtil.class).build();
+
     private final Context mContext = ApplicationProvider.getApplicationContext();
     private EncryptionManager mEncryptionManager;
     @Mock private EnrollmentDao mEnrollmentDao;
     @Mock private EncryptionKeyDao mEncryptionKeyDao;
     @Mock private Flags mFlags;
+    @Mock private Encrypter mEncrypter;
 
     @Before
     public void setup() {
@@ -167,6 +185,7 @@ public class EncryptionManagerTest {
 
     @Test
     public void testEncryption_missingKeys() {
+        doNothingOnErrorLogUtilError();
         when(mEnrollmentDao.getEnrollmentDataFromSdkName(SDK_NAME)).thenReturn(ENROLLMENT_DATA);
         when(mEncryptionKeyDao.getEncryptionKeyFromEnrollmentIdAndKeyType(
                         ENROLLMENT_ID, EncryptionKey.KeyType.ENCRYPTION))
@@ -178,10 +197,14 @@ public class EncryptionManagerTest {
 
         // Verify EncryptedTopic is empty.
         assertThat(optionalEncryptedTopic.isPresent()).isFalse();
+        verifyErrorLogUtilError(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_KEY_MISSING,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
     }
 
     @Test
     public void testEncryption_incompatibleKeys() {
+        doNothingOnErrorLogUtilError();
         when(mEnrollmentDao.getEnrollmentDataFromSdkName(SDK_NAME)).thenReturn(ENROLLMENT_DATA);
         when(mEncryptionKeyDao.getEncryptionKeyFromEnrollmentIdAndKeyType(
                         ENROLLMENT_ID, EncryptionKey.KeyType.ENCRYPTION))
@@ -193,10 +216,14 @@ public class EncryptionManagerTest {
 
         // Verify EncryptedTopic is empty.
         assertThat(optionalEncryptedTopic.isPresent()).isFalse();
+        verifyErrorLogUtilError(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_INVALID_KEY_LENGTH,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
     }
 
     @Test
     public void testEncryption_missingEnrollmentData() {
+        doNothingOnErrorLogUtilError();
         when(mEnrollmentDao.getEnrollmentDataFromSdkName(SDK_NAME)).thenReturn(null);
         Topic topic = Topic.create(/* topic */ 5, /* taxonomyVersion */ 6L, /* modelVersion */ 7L);
 
@@ -205,10 +232,14 @@ public class EncryptionManagerTest {
 
         // Verify EncryptedTopic is empty.
         assertThat(optionalEncryptedTopic.isPresent()).isFalse();
+        verifyErrorLogUtilError(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_KEY_MISSING,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
     }
 
     @Test
     public void testEncryption_missingEnrollmentId() {
+        doNothingOnErrorLogUtilError();
         when(mEnrollmentDao.getEnrollmentDataFromSdkName(SDK_NAME))
                 .thenReturn(new EnrollmentData.Builder().build());
         Topic topic = Topic.create(/* topic */ 5, /* taxonomyVersion */ 6L, /* modelVersion */ 7L);
@@ -218,10 +249,14 @@ public class EncryptionManagerTest {
 
         // Verify EncryptedTopic is empty.
         assertThat(optionalEncryptedTopic.isPresent()).isFalse();
+        verifyErrorLogUtilError(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_KEY_MISSING,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
     }
 
     @Test
     public void testEncryption_missingSdkName() {
+        doNothingOnErrorLogUtilError();
         Topic topic = Topic.create(/* topic */ 5, /* taxonomyVersion */ 6L, /* modelVersion */ 7L);
 
         Optional<EncryptedTopic> optionalEncryptedTopic =
@@ -229,10 +264,14 @@ public class EncryptionManagerTest {
 
         // Verify EncryptedTopic is empty.
         assertThat(optionalEncryptedTopic.isPresent()).isFalse();
+        verifyErrorLogUtilError(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_KEY_MISSING,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
     }
 
     @Test
     public void testEncryption_nullSdkName() {
+        doNothingOnErrorLogUtilError();
         Topic topic = Topic.create(/* topic */ 5, /* taxonomyVersion */ 6L, /* modelVersion */ 7L);
 
         Optional<EncryptedTopic> optionalEncryptedTopic =
@@ -240,12 +279,135 @@ public class EncryptionManagerTest {
 
         // Verify EncryptedTopic is empty.
         assertThat(optionalEncryptedTopic.isPresent()).isFalse();
+        verifyErrorLogUtilError(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_KEY_MISSING,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
     }
 
     @Test
     public void testEncryption_nullTopic_throwsNullPointerException() {
+        doNothingOnErrorLogUtilError();
         assertThrows(
                 NullPointerException.class,
                 () -> mEncryptionManager.encryptTopic(/* topic */ null, SDK_NAME));
+        verifyErrorLogUtilError(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_KEY_MISSING,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
+    }
+
+    @Test
+    public void testEncryption_keyDecodingFailure() {
+        doNothingOnErrorLogUtilError();
+        EncryptionKey encryptionKeyWithIncompatibleBase64Key =
+                new EncryptionKey.Builder()
+                        .setId("1")
+                        .setKeyType(EncryptionKey.KeyType.ENCRYPTION)
+                        .setEnrollmentId("100")
+                        .setReportingOrigin(Uri.parse("https://test1.com"))
+                        .setEncryptionKeyUrl("https://test1.com/.well-known/encryption-keys")
+                        .setProtocolType(EncryptionKey.ProtocolType.HPKE)
+                        .setKeyCommitmentId(11)
+                        .setBody(
+                                /* incompatibleKeyWithBase64Encoding */
+                                "!?#$%^&*()=+<>[]{};:.,/\\|~@-_")
+                        .setExpiration(100004L)
+                        .setLastFetchTime(100004L)
+                        .build();
+        when(mEnrollmentDao.getEnrollmentDataFromSdkName(SDK_NAME)).thenReturn(ENROLLMENT_DATA);
+        when(mEncryptionKeyDao.getEncryptionKeyFromEnrollmentIdAndKeyType(
+                        ENROLLMENT_ID, EncryptionKey.KeyType.ENCRYPTION))
+                .thenReturn(List.of(encryptionKeyWithIncompatibleBase64Key));
+        Topic topic = Topic.create(/* topic */ 5, /* taxonomyVersion */ 6L, /* modelVersion */ 7L);
+
+        Optional<EncryptedTopic> optionalEncryptedTopic =
+                mEncryptionManager.encryptTopic(topic, SDK_NAME);
+
+        // Verify EncryptedTopic is empty.
+        assertThat(optionalEncryptedTopic.isPresent()).isFalse();
+        verifyErrorLogUtilError(
+                any(IllegalArgumentException.class),
+                eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_KEY_DECODE_FAILURE),
+                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS));
+    }
+
+    @Test
+    public void testEncryption_keyWithSmallerLength() {
+        doNothingOnErrorLogUtilError();
+        EncryptionKey encryptionKeyWithSmallerLength =
+                new EncryptionKey.Builder()
+                        .setId("1")
+                        .setKeyType(EncryptionKey.KeyType.ENCRYPTION)
+                        .setEnrollmentId("100")
+                        .setReportingOrigin(Uri.parse("https://test1.com"))
+                        .setEncryptionKeyUrl("https://test1.com/.well-known/encryption-keys")
+                        .setProtocolType(EncryptionKey.ProtocolType.HPKE)
+                        .setKeyCommitmentId(11)
+                        .setBody(
+                                /* keyWithSmallerLength */
+                                "rSJBSUYG0ebvfW1AXCWO0CMGMJhDzp")
+                        .setExpiration(100004L)
+                        .setLastFetchTime(100004L)
+                        .build();
+        when(mEnrollmentDao.getEnrollmentDataFromSdkName(SDK_NAME)).thenReturn(ENROLLMENT_DATA);
+        when(mEncryptionKeyDao.getEncryptionKeyFromEnrollmentIdAndKeyType(
+                        ENROLLMENT_ID, EncryptionKey.KeyType.ENCRYPTION))
+                .thenReturn(List.of(encryptionKeyWithSmallerLength));
+        Topic topic = Topic.create(/* topic */ 5, /* taxonomyVersion */ 6L, /* modelVersion */ 7L);
+
+        Optional<EncryptedTopic> optionalEncryptedTopic =
+                mEncryptionManager.encryptTopic(topic, SDK_NAME);
+
+        // Verify EncryptedTopic is empty.
+        assertThat(optionalEncryptedTopic.isPresent()).isFalse();
+        verifyErrorLogUtilError(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_INVALID_KEY_LENGTH,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
+    }
+
+    @Test
+    public void testEncryption_nullResponseFromEncrypter() {
+        doNothingOnErrorLogUtilError();
+        mEncryptionManager =
+                new EncryptionManager(mEncrypter, mEnrollmentDao, mEncryptionKeyDao, mFlags);
+        when(mEnrollmentDao.getEnrollmentDataFromSdkName(SDK_NAME)).thenReturn(ENROLLMENT_DATA);
+        when(mEncryptionKeyDao.getEncryptionKeyFromEnrollmentIdAndKeyType(
+                        ENROLLMENT_ID, EncryptionKey.KeyType.ENCRYPTION))
+                .thenReturn(List.of(LATEST_HPKE_ENCRYPTION_KEY));
+        when(mEncrypter.encrypt(any(), any(), any())).thenReturn(null);
+        Topic topic = Topic.create(/* topic */ 5, /* taxonomyVersion */ 6L, /* modelVersion */ 7L);
+
+        Optional<EncryptedTopic> optionalEncryptedTopic =
+                mEncryptionManager.encryptTopic(topic, SDK_NAME);
+
+        // Verify EncryptedTopic is empty.
+        assertThat(optionalEncryptedTopic.isPresent()).isFalse();
+        verifyErrorLogUtilError(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_NULL_RESPONSE,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
+    }
+
+    @Test
+    public void testEncryption_smallResponseFromEncrypter() {
+        doNothingOnErrorLogUtilError();
+        mEncryptionManager =
+                new EncryptionManager(mEncrypter, mEnrollmentDao, mEncryptionKeyDao, mFlags);
+        when(mEnrollmentDao.getEnrollmentDataFromSdkName(SDK_NAME)).thenReturn(ENROLLMENT_DATA);
+        when(mEncryptionKeyDao.getEncryptionKeyFromEnrollmentIdAndKeyType(
+                        ENROLLMENT_ID, EncryptionKey.KeyType.ENCRYPTION))
+                .thenReturn(List.of(LATEST_HPKE_ENCRYPTION_KEY));
+        when(mEncrypter.encrypt(any(), any(), any()))
+                .thenReturn(
+                        /* smallResponse */
+                        new byte[] {1, 2});
+        Topic topic = Topic.create(/* topic */ 5, /* taxonomyVersion */ 6L, /* modelVersion */ 7L);
+
+        Optional<EncryptedTopic> optionalEncryptedTopic =
+                mEncryptionManager.encryptTopic(topic, SDK_NAME);
+
+        // Verify EncryptedTopic is empty.
+        assertThat(optionalEncryptedTopic.isPresent()).isFalse();
+        verifyErrorLogUtilError(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_INVALID_RESPONSE_LENGTH,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
     }
 }
