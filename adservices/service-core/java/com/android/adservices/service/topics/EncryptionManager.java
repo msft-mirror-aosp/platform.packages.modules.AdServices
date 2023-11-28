@@ -16,6 +16,13 @@
 
 package com.android.adservices.service.topics;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_INVALID_RESPONSE_LENGTH;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_KEY_DECODE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_KEY_MISSING;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_NULL_REQUEST;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_NULL_RESPONSE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
+
 import android.annotation.NonNull;
 import android.content.Context;
 
@@ -24,6 +31,7 @@ import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.topics.EncryptedTopic;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
@@ -127,7 +135,10 @@ public class EncryptionManager {
                 return Optional.of(latestKey.get().getBody());
             }
         }
-        sLogger.d("Failed to fetch encryption key for %s", sdkName);
+        sLogger.e("Failed to fetch encryption key for %s", sdkName);
+        ErrorLogUtil.e(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_KEY_MISSING,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
         return Optional.empty();
     }
 
@@ -143,25 +154,53 @@ public class EncryptionManager {
 
         Optional<JSONObject> optionalTopicJSON = TopicsJsonMapper.toJson(topic);
         if (publicKey.isPresent() && optionalTopicJSON.isPresent()) {
-            // UTF-8 is the default encoding for JSON data.
-            byte[] unencryptedSerializedTopic =
-                    optionalTopicJSON.get().toString().getBytes(StandardCharsets.UTF_8);
-            byte[] base64DecodedPublicKey = Base64.getDecoder().decode(publicKey.get());
-            byte[] response =
-                    mEncrypter.encrypt(
-                            /* publicKey */ base64DecodedPublicKey,
-                            /* plainText */ unencryptedSerializedTopic,
-                            /* contextInfo */ EMPTY_BYTE_ARRAY);
+            try {
+                // UTF-8 is the default encoding for JSON data.
+                byte[] unencryptedSerializedTopic =
+                        optionalTopicJSON.get().toString().getBytes(StandardCharsets.UTF_8);
+                byte[] base64DecodedPublicKey = Base64.getDecoder().decode(publicKey.get());
+                byte[] response =
+                        mEncrypter.encrypt(
+                                /* publicKey */ base64DecodedPublicKey,
+                                /* plainText */ unencryptedSerializedTopic,
+                                /* contextInfo */ EMPTY_BYTE_ARRAY);
 
-            return buildEncryptedTopic(response, publicKey.get());
+                return buildEncryptedTopic(response, publicKey.get());
+            } catch (IllegalArgumentException illegalArgumentException) {
+                ErrorLogUtil.e(
+                        illegalArgumentException,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_KEY_DECODE_FAILURE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
+                sLogger.e(
+                        illegalArgumentException,
+                        "Failed to decode with Base64 decoder for public key = %s",
+                        publicKey);
+            } catch (NullPointerException nullPointerException) {
+                ErrorLogUtil.e(
+                        nullPointerException,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_NULL_REQUEST,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
+                sLogger.e(
+                        nullPointerException, "Null params while trying to encrypt Topics object.");
+            }
         }
         return Optional.empty();
     }
 
     private static Optional<EncryptedTopic> buildEncryptedTopic(byte[] response, String publicKey) {
+        if (response == null) {
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_NULL_RESPONSE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
+            sLogger.e("Null encryption response received for public key = %s", publicKey);
+            return Optional.empty();
+        }
         if (response.length < ENCAPSULATED_KEY_LENGTH) {
-            sLogger.d(
-                    "Encrypted response size is smaller than minimum expected size "
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_INVALID_RESPONSE_LENGTH,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
+            sLogger.e(
+                    "Encrypted response size is smaller than minimum expected size of "
                             + ENCAPSULATED_KEY_LENGTH);
             return Optional.empty();
         }
