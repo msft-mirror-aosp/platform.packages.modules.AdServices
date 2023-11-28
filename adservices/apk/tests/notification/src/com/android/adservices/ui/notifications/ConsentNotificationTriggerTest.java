@@ -19,6 +19,7 @@ package com.android.adservices.ui.notifications;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_AD_ID_STATE__AD_ID_DISABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__PP_API_DEFAULT_OPT_OUT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__MEASUREMENT_DEFAULT_OPT_OUT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__FIRST_CONSENT_NOTIFICATION_CHANNEL;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__RVC_POST_OTA_NOTIFICATION_CHANNEL;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
@@ -616,13 +617,13 @@ public final class ConsentNotificationTriggerTest extends AdServicesUnitTestCase
                     .isEqualTo(AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU);
             assertThat(argument.getValue().getDefaultConsent())
                     .isEqualTo(
-                            AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__PP_API_DEFAULT_OPT_OUT);
+                            AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__MEASUREMENT_DEFAULT_OPT_OUT);
         } else {
             assertThat(argument.getValue().getRegion())
                     .isEqualTo(AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW);
             assertThat(argument.getValue().getDefaultConsent())
                     .isEqualTo(
-                            AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__PP_API_DEFAULT_OPT_OUT);
+                            AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__MEASUREMENT_DEFAULT_OPT_OUT);
         }
         assertThat(argument.getValue().getDefaultAdIdState())
                 .isEqualTo(
@@ -633,7 +634,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesUnitTestCase
                 .isEqualTo(
                         AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__FIRST_CONSENT_NOTIFICATION_CHANNEL);
 
-        verify(mConsentManager, times(2)).getDefaultConsent();
+        verify(mConsentManager, times(2)).getMeasurementDefaultConsent();
         verify(mConsentManager, times(2)).getDefaultAdIdState();
         if (isEeaDevice) {
             verify(mConsentManager).recordMeasurementDefaultConsent(false);
