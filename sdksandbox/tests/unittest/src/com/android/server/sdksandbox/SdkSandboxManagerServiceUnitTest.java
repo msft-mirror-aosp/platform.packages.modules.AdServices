@@ -247,7 +247,13 @@ public class SdkSandboxManagerServiceUnitTest {
         mSdkSandboxStorageManagerUtility =
                 new SdkSandboxStorageManagerUtility(mSdkSandboxStorageManager);
 
-        mInjector = Mockito.spy(new InjectorForTest(mSpyContext, mSdkSandboxStorageManager));
+        mInjector =
+                Mockito.spy(
+                        new FakeInjector(
+                                mSpyContext,
+                                mSdkSandboxStorageManager,
+                                sProvider,
+                                sSdkSandboxPulledAtoms));
 
         mService = new SdkSandboxManagerService(mSpyContext, mInjector);
         mService.forceEnableSandbox();
@@ -2881,33 +2887,5 @@ public class SdkSandboxManagerServiceUnitTest {
         final Bundle data = new Bundle();
         data.putString(TEST_KEY, TEST_VALUE);
         return data;
-    }
-
-    public static class InjectorForTest extends SdkSandboxManagerService.Injector {
-        private SdkSandboxStorageManager mSdkSandboxStorageManager = null;
-
-        InjectorForTest(Context context, SdkSandboxStorageManager sdkSandboxStorageManager) {
-            super(context);
-            mSdkSandboxStorageManager = sdkSandboxStorageManager;
-        }
-
-        public InjectorForTest(Context spyContext) {
-            super(spyContext);
-        }
-
-        @Override
-        public SdkSandboxServiceProvider getSdkSandboxServiceProvider() {
-            return sProvider;
-        }
-
-        @Override
-        public SdkSandboxPulledAtoms getSdkSandboxPulledAtoms() {
-            return sSdkSandboxPulledAtoms;
-        }
-
-        @Override
-        public SdkSandboxStorageManager getSdkSandboxStorageManager() {
-            return mSdkSandboxStorageManager;
-        }
     }
 }
