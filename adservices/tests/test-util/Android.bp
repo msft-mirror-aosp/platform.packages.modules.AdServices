@@ -47,6 +47,7 @@ android_library {
     sdk_version: "module_current",
     min_sdk_version: "30",
     srcs: [
+        ":adservices-extended-mockito-rule-sources",
         ":adservices-test-utility-sideless-sources",
         ":adservices-test-utility-sources",
         ":adservices-service-core-phflags-sources",
@@ -63,6 +64,8 @@ android_library {
         "androidx.test.runner",
         "compatibility-device-util-axt",
         "modules-utils-preconditions",
+        // TODO(b/281577492): should use modules-utils-extended-mockito-rule instead
+        "modules-utils-testable-device-config",
     ],
     apex_available: ["com.android.adservices", "com.android.extservices"],
 }

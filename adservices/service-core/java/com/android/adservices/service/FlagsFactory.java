@@ -74,11 +74,6 @@ public class FlagsFactory {
         }
 
         @Override
-        public boolean getMeasurementFlexibleEventReportingApiEnabled() {
-            return true;
-        }
-
-        @Override
         public boolean getEnableLoggedTopic() {
             return true;
         }
