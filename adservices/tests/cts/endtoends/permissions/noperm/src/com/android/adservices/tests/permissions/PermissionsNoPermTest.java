@@ -52,7 +52,9 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.DevContextUtils;
 
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -66,6 +68,7 @@ import java.util.concurrent.Executors;
 @RunWith(AndroidJUnit4.class)
 // TODO: Add tests for measurement (b/238194122).
 public class PermissionsNoPermTest {
+    private static final String TAG = "PermissionsNoPermTest";
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String CALLER_NOT_AUTHORIZED =
@@ -82,10 +85,16 @@ public class PermissionsNoPermTest {
                     .setCompatModeFlags()
                     .setPpapiAppAllowList(sContext.getPackageName());
 
+    private boolean mHasAccessToDevOverrides;
+
+    private String mAccessStatus;
+
     @Before
     public void setup() {
         // Kill AdServices process
         AdservicesTestHelper.killAdservicesProcess(sContext);
+        mHasAccessToDevOverrides = DevContextUtils.isDevOptionsEnabled(sContext, TAG);
+        mAccessStatus = String.format("mHasAccessToDevOverrides is %b", mHasAccessToDevOverrides);
     }
 
     @Test
@@ -169,6 +178,8 @@ public class PermissionsNoPermTest {
 
     @Test
     public void testPermissionNotRequested_fledgeOverrideCustomAudienceRemoteInfo() {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+
         TestAdvertisingCustomAudienceClient testCustomAudienceClient =
                 new TestAdvertisingCustomAudienceClient.Builder()
                         .setContext(sContext)
@@ -195,6 +206,8 @@ public class PermissionsNoPermTest {
 
     @Test
     public void testPermissionNotRequested_fledgeRemoveCustomAudienceRemoteInfoOverride() {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+
         TestAdvertisingCustomAudienceClient testCustomAudienceClient =
                 new TestAdvertisingCustomAudienceClient.Builder()
                         .setContext(sContext)
@@ -219,6 +232,8 @@ public class PermissionsNoPermTest {
 
     @Test
     public void testPermissionNotRequested_fledgeResetAllCustomAudienceOverrides() {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+
         TestAdvertisingCustomAudienceClient testCustomAudienceClient =
                 new TestAdvertisingCustomAudienceClient.Builder()
                         .setContext(sContext)
@@ -318,6 +333,8 @@ public class PermissionsNoPermTest {
 
     @Test
     public void testPermissionNotRequested_fledgeOverrideAdSelectionConfigRemoteInfo() {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+
         TestAdSelectionClient testAdSelectionClient =
                 new TestAdSelectionClient.Builder()
                         .setContext(sContext)
@@ -351,6 +368,8 @@ public class PermissionsNoPermTest {
 
     @Test
     public void testPermissionNotRequested_fledgeRemoveAdSelectionConfigRemoteInfo() {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+
         TestAdSelectionClient testAdSelectionClient =
                 new TestAdSelectionClient.Builder()
                         .setContext(sContext)
@@ -375,6 +394,8 @@ public class PermissionsNoPermTest {
 
     @Test
     public void testPermissionNotRequested_fledgeResetAllAdSelectionConfigRemoteOverrides() {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+
         TestAdSelectionClient testAdSelectionClient =
                 new TestAdSelectionClient.Builder()
                         .setContext(sContext)
@@ -416,6 +437,8 @@ public class PermissionsNoPermTest {
 
     @Test
     public void testPermissionNotRequested_fledgeOverrideAdSelectionFromOutcomesConfigRemoteInfo() {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+
         TestAdSelectionClient testAdSelectionClient =
                 new TestAdSelectionClient.Builder()
                         .setContext(sContext)
@@ -445,6 +468,8 @@ public class PermissionsNoPermTest {
 
     @Test
     public void testPermissionNotRequested_fledgeRemoveAdSelectionFromOutcomesConfigRemoteInfo() {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+
         TestAdSelectionClient testAdSelectionClient =
                 new TestAdSelectionClient.Builder()
                         .setContext(sContext)
@@ -470,6 +495,8 @@ public class PermissionsNoPermTest {
 
     @Test
     public void testPermissionNotRequested_fledgeResetAllFromOutcomesConfigRemoteOverrides() {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+
         TestAdSelectionClient testAdSelectionClient =
                 new TestAdSelectionClient.Builder()
                         .setContext(sContext)
