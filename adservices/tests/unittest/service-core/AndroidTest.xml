@@ -28,11 +28,11 @@
     <option name="run-command" value="setprop log.tag.adservices.fledge VERBOSE" />
 </target_preparer>
 
-    <metrics_collector class="com.android.tradefed.device.metric.FilePullerLogCollector">
-        <option name="directory-keys" value="/sdcard/Documents" />
-        <option name="clean-up" value="false" />
-        <option name="collect-on-run-ended-only" value="true" />
-    </metrics_collector>
+<metrics_collector class="com.android.tradefed.device.metric.FilePullerLogCollector">
+    <option name="directory-keys" value="/sdcard/adservices-tests" />
+    <option name="clean-up" value="false" />
+    <option name="collect-on-run-ended-only" value="true" />
+</metrics_collector>
 
 <test class="com.android.tradefed.testtype.AndroidJUnitTest">
     <option name="hidden-api-checks" value="false" /> <!-- Allow hidden API uses -->
