@@ -254,7 +254,7 @@ public class PeriodicEncodingJobWorker {
     }
 
     @VisibleForTesting
-    boolean validateAndPersistPayload(AdTechIdentifier buyer, String encodedPayload, int version) {
+    boolean validateAndPersistPayload(AdTechIdentifier buyer, byte[] encodedBytes, int version) {
         if (encodedBytes.length > mEncodedPayLoadMaxSizeBytes) {
             // Do not persist encoded payload if the encoding logic violates the size constraints
             sLogger.e("Buyer:%s encoded payload exceeded max size limit", buyer);
