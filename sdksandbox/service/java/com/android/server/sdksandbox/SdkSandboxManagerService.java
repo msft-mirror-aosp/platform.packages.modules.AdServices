@@ -28,6 +28,7 @@ import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_A
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
 
 import static com.android.sdksandbox.flags.Flags.sandboxActivitySdkBasedContext;
+import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE_SECURITY_EXCEPTION;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__UNLOAD_SDK;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED;
 import static com.android.server.sdksandbox.SdkSandboxStorageManager.StorageDirInfo;
@@ -2521,35 +2522,49 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         @Override
         public void enforceAllowedToHostSandboxedActivity(
                 @NonNull Intent intent, int clientAppUid, @NonNull String clientAppPackageName) {
-            if (Process.isSdkSandboxUid(clientAppUid)) {
-                throw new SecurityException(
-                        "Sandbox process is not allowed to start sandbox activities.");
-            }
-            if (intent == null) {
-                throw new SecurityException("Intent to start sandbox activity is null.");
-            }
-            if (intent.getAction() == null
-                    || !intent.getAction().equals(ACTION_START_SANDBOXED_ACTIVITY)) {
-                throw new SecurityException(
-                        "Sandbox activity intent must have an action ("
-                                + ACTION_START_SANDBOXED_ACTIVITY
-                                + ").");
-            }
-            String sandboxPackageName = mContext.getPackageManager().getSdkSandboxPackageName();
-            if (intent.getPackage() == null || !intent.getPackage().equals(sandboxPackageName)) {
-                throw new SecurityException(
-                        "Sandbox activity intent's package must be set to the sandbox package");
-            }
-            if (intent.getComponent() != null) {
-                final String componentPackageName = intent.getComponent().getPackageName();
-                if (!componentPackageName.equals(sandboxPackageName)) {
+            long timeEventStarted = mInjector.elapsedRealtime();
+            try {
+                if (Process.isSdkSandboxUid(clientAppUid)) {
                     throw new SecurityException(
-                            "Sandbox activity intent's component must refer to the sandbox"
-                                    + " package");
+                            "Sandbox process is not allowed to start sandbox activities.");
                 }
+                if (intent == null) {
+                    throw new SecurityException("Intent to start sandbox activity is null.");
+                }
+                if (intent.getAction() == null
+                        || !intent.getAction().equals(ACTION_START_SANDBOXED_ACTIVITY)) {
+                    throw new SecurityException(
+                            "Sandbox activity intent must have an action ("
+                                    + ACTION_START_SANDBOXED_ACTIVITY
+                                    + ").");
+                }
+                String sandboxPackageName = mContext.getPackageManager().getSdkSandboxPackageName();
+                if (intent.getPackage() == null
+                        || !intent.getPackage().equals(sandboxPackageName)) {
+                    throw new SecurityException(
+                            "Sandbox activity intent's package must be set to the sandbox package");
+                }
+                if (intent.getComponent() != null) {
+                    final String componentPackageName = intent.getComponent().getPackageName();
+                    if (!componentPackageName.equals(sandboxPackageName)) {
+                        throw new SecurityException(
+                                "Sandbox activity intent's component must refer to the sandbox"
+                                        + " package");
+                    }
+                }
+            } catch (SecurityException e) {
+                logEnforceAllowedToHostSandboxedActivityEvent(
+                        SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE_SECURITY_EXCEPTION,
+                        timeEventStarted);
+                throw e;
             }
+
             final CallingInfo callingInfo = new CallingInfo(clientAppUid, clientAppPackageName);
             if (mServiceProvider.getSdkSandboxServiceForApp(callingInfo) == null) {
+                logEnforceAllowedToHostSandboxedActivityEvent(
+                        SdkSandboxStatsLog
+                                .SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE_SECURITY_EXCEPTION_NO_SANDBOX_PROCESS,
+                        timeEventStarted);
                 throw new SecurityException(
                         "There is no sandbox process running for the caller uid"
                                 + ": "
@@ -2559,12 +2574,29 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
             Bundle extras = intent.getExtras();
             if (extras == null || extras.getBinder(getSandboxedActivityHandlerKey()) == null) {
+                logEnforceAllowedToHostSandboxedActivityEvent(
+                        SdkSandboxStatsLog
+                                .SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE_ILLEGAL_ARGUMENT_EXCEPTION,
+                        timeEventStarted);
                 throw new IllegalArgumentException(
                         "Intent should contain an extra params with key = "
                                 + getSandboxedActivityHandlerKey()
                                 + " and value is an IBinder that identifies a registered "
                                 + "SandboxedActivityHandler.");
             }
+
+            logEnforceAllowedToHostSandboxedActivityEvent(
+                    SdkSandboxStatsLog.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__SUCCESS,
+                    timeEventStarted);
+        }
+
+        private void logEnforceAllowedToHostSandboxedActivityEvent(
+                int callResult, long timeEventStarted) {
+            SdkSandboxManagerService.this.logSandboxActivityEvent(
+                    SdkSandboxStatsLog
+                            .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__ENFORCE_ALLOWED_TO_HOST_SANDBOXED_ACTIVITY,
+                    callResult,
+                    (int) (mInjector.elapsedRealtime() - timeEventStarted));
         }
 
         @Override
