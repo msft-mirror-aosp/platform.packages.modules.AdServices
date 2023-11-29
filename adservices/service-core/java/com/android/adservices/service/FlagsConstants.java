@@ -92,6 +92,8 @@ public final class FlagsConstants {
     public static final String KEY_TOPICS_DISABLE_DIRECT_APP_CALLS =
             "topics_disable_direct_app_calls";
     public static final String KEY_TOPICS_ENABLE_ENCRYPTION = "topics_enable_encryption";
+    public static final String KEY_TOPICS_DISABLE_PLAINTEXT_RESPONSE =
+            "topics_disable_plaintext_response";
 
     // Topics classifier keys
     public static final String KEY_CLASSIFIER_TYPE = "classifier_type";
