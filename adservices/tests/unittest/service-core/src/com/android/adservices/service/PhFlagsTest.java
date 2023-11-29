@@ -426,7 +426,7 @@ import static com.android.adservices.service.Flags.TOPICS_API_SDK_REQUEST_PERMIT
 import static com.android.adservices.service.Flags.TOPICS_COBALT_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.TOPICS_DISABLE_DIRECT_APP_CALLS;
 import static com.android.adservices.service.Flags.TOPICS_DISABLE_PLAINTEXT_RESPONSE;
-import static com.android.adservices.service.Flags.TOPICS_ENABLE_ENCRYPTION;
+import static com.android.adservices.service.Flags.TOPICS_ENCRYPTION_ENABLED;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.TOPICS_KILL_SWITCH;
@@ -823,7 +823,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_API_SDK_R
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_COBALT_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_DISABLE_DIRECT_APP_CALLS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_DISABLE_PLAINTEXT_RESPONSE;
-import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_ENABLE_ENCRYPTION;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_KILL_SWITCH;
@@ -1079,18 +1079,18 @@ public class PhFlagsTest {
     }
 
     @Test
-    public void testGetTopicsEnableEncryption() {
-        assertThat(mPhFlags.getTopicsEnableEncryption()).isEqualTo(TOPICS_ENABLE_ENCRYPTION);
+    public void testGetTopicsEncryptionEnabled() {
+        assertThat(mPhFlags.getTopicsEncryptionEnabled()).isEqualTo(TOPICS_ENCRYPTION_ENABLED);
 
         // Now overriding with the value from PH.
-        boolean phOverridingValue = !TOPICS_ENABLE_ENCRYPTION;
+        boolean phOverridingValue = !TOPICS_ENCRYPTION_ENABLED;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_TOPICS_ENABLE_ENCRYPTION,
+                KEY_TOPICS_ENCRYPTION_ENABLED,
                 Boolean.toString(phOverridingValue),
                 /* makeDefault */ false);
 
-        assertThat(mPhFlags.getTopicsEnableEncryption()).isEqualTo(phOverridingValue);
+        assertThat(mPhFlags.getTopicsEncryptionEnabled()).isEqualTo(phOverridingValue);
     }
 
     @Test

@@ -230,7 +230,7 @@ public class TopicsWorkerTest {
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(epochId);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
         when(mMockFlags.getEnableDatabaseSchemaVersion9()).thenReturn(true);
-        when(mMockFlags.getTopicsEnableEncryption()).thenReturn(true);
+        when(mMockFlags.getTopicsEncryptionEnabled()).thenReturn(true);
         when(mMockFlags.getTopicsDisablePlaintextResponse()).thenReturn(true);
 
         // Real Cache Manager requires loading cache before getTopics() being called.
@@ -328,7 +328,7 @@ public class TopicsWorkerTest {
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(epochId);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
         when(mMockFlags.getEnableDatabaseSchemaVersion9()).thenReturn(true);
-        when(mMockFlags.getTopicsEnableEncryption()).thenReturn(true);
+        when(mMockFlags.getTopicsEncryptionEnabled()).thenReturn(true);
 
         // Real Cache Manager requires loading cache before getTopics() being called.
         mTopicsWorker.loadCache();
@@ -427,7 +427,7 @@ public class TopicsWorkerTest {
 
         // Feature off; Db flag on.
         when(mMockFlags.getEnableDatabaseSchemaVersion9()).thenReturn(true);
-        when(mMockFlags.getTopicsEnableEncryption()).thenReturn(false);
+        when(mMockFlags.getTopicsEncryptionEnabled()).thenReturn(false);
 
         // Real Cache Manager requires loading cache before getTopics() being called.
         mTopicsWorker.loadCache();
