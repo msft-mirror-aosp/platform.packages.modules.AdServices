@@ -582,6 +582,26 @@ public interface Flags extends CommonFlags {
         return MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
     }
 
+    int MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW = 100;
+
+    /**
+     * Returns maximum event attributions per rate limit window. Rate limit unit: (Source Site,
+     * Destination Site, Reporting Site, Window).
+     */
+    default int getMeasurementMaxEventAttributionPerRateLimitWindow() {
+        return MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
+    }
+
+    int MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW = 100;
+
+    /**
+     * Returns maximum aggregate attributions per rate limit window. Rate limit unit: (Source Site,
+     * Destination Site, Reporting Site, Window).
+     */
+    default int getMeasurementMaxAggregateAttributionPerRateLimitWindow() {
+        return MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
+    }
+
     int MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION = 10;
 
     /**
@@ -3534,6 +3554,14 @@ public interface Flags extends CommonFlags {
         return MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING;
     }
 
+    /** Default Measurement scoped attribution rate limit feature flag. */
+    boolean MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT = true;
+
+    /** Returns whether Measurement scoped attribution rate limit feature is enabled. */
+    default boolean getMeasurementEnableScopedAttributionRateLimit() {
+        return MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT;
+    }
+
     /** Default Measurement app package name logging flag. */
     boolean MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING = true;
 
@@ -4074,6 +4102,14 @@ public interface Flags extends CommonFlags {
     /** Returns true when pre-install check is enabled. */
     default boolean getMeasurementEnablePreinstallCheck() {
         return MEASUREMENT_ENABLE_PREINSTALL_CHECK;
+    }
+
+    /** Default value of flag for session stable kill switches. */
+    boolean MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES = true;
+
+    /** Returns true when session stable kill switches are enabled. */
+    default boolean getMeasurementEnableSessionStableKillSwitches() {
+        return MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES;
     }
 
     /** Default value of flag for logging consent migration metrics when OTA from S to T+. */

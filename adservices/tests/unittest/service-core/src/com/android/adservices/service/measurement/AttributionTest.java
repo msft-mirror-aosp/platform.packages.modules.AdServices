@@ -59,6 +59,9 @@ public class AttributionTest {
     @Test
     public void equals_fail() {
         assertNotEquals(
+                createExampleAttributionBuilder().setScope(Attribution.Scope.EVENT).build(),
+                createExampleAttributionBuilder().build());
+        assertNotEquals(
                 createExampleAttributionBuilder().setRegistrant(SOME_OTHER_STRING).build(),
                 createExampleAttributionBuilder().build());
         assertNotEquals(
@@ -109,6 +112,12 @@ public class AttributionTest {
 
     @Test
     public void hashCode_fail() {
+        assertNotEquals(
+                createExampleAttributionBuilder()
+                        .setScope(Attribution.Scope.EVENT)
+                        .build()
+                        .hashCode(),
+                createExampleAttributionBuilder().build().hashCode());
         assertNotEquals(
                 createExampleAttributionBuilder()
                         .setRegistrant(SOME_OTHER_STRING)
@@ -171,6 +180,9 @@ public class AttributionTest {
     @Test
     public void getters() {
         assertEquals(
+                Attribution.Scope.AGGREGATE,
+                createExampleAttributionBuilder().build().getScope());
+        assertEquals(
                 REGISTRANT, createExampleAttributionBuilder().build().getRegistrant());
         assertEquals(
                 DESTINATION_SITE,
@@ -223,6 +235,7 @@ public class AttributionTest {
     private static Attribution.Builder createExampleAttributionBuilder() {
         return new Attribution.Builder()
                 .setId(ID)
+                .setScope(Attribution.Scope.AGGREGATE)
                 .setRegistrant(REGISTRANT)
                 .setTriggerTime(TRIGGER_TIME)
                 .setEnrollmentId(ENROLLMENT_ID)
