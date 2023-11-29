@@ -1061,6 +1061,7 @@ class MeasurementDao implements IMeasurementDao {
     public void insertAttribution(@NonNull Attribution attribution) throws DatastoreException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.AttributionContract.ID, UUID.randomUUID().toString());
+        values.put(MeasurementTables.AttributionContract.SCOPE, attribution.getScope());
         values.put(MeasurementTables.AttributionContract.SOURCE_SITE, attribution.getSourceSite());
         values.put(
                 MeasurementTables.AttributionContract.SOURCE_ORIGIN, attribution.getSourceOrigin());
@@ -1100,7 +1101,7 @@ class MeasurementDao implements IMeasurementDao {
         Optional<Uri> destinationBaseUri =
                 extractBaseUri(trigger.getAttributionDestination(), trigger.getDestinationType());
 
-        if (!publisherBaseUri.isPresent() || !destinationBaseUri.isPresent()) {
+        if (publisherBaseUri.isEmpty() || destinationBaseUri.isEmpty()) {
             throw new IllegalArgumentException(
                     String.format(
                             Locale.ENGLISH,
@@ -1128,6 +1129,56 @@ class MeasurementDao implements IMeasurementDao {
                         + MeasurementTables.AttributionContract.TRIGGER_TIME
                         + " <= ? ",
                 new String[] {
+                    publisherTopPrivateDomain,
+                    triggerDestinationTopPrivateDomain,
+                    trigger.getEnrollmentId(),
+                    String.valueOf(
+                            trigger.getTriggerTime()
+                                    - FlagsFactory.getFlags()
+                                            .getMeasurementRateLimitWindowMilliseconds()),
+                    String.valueOf(trigger.getTriggerTime())
+                });
+    }
+
+    @Override
+    public long getAttributionsPerRateLimitWindow(@Attribution.Scope int scope,
+            @NonNull Source source, @NonNull Trigger trigger) throws DatastoreException {
+        Optional<Uri> publisherBaseUri =
+                extractBaseUri(source.getPublisher(), source.getPublisherType());
+        Optional<Uri> destinationBaseUri =
+                extractBaseUri(trigger.getAttributionDestination(), trigger.getDestinationType());
+
+        if (publisherBaseUri.isEmpty() || destinationBaseUri.isEmpty()) {
+            throw new IllegalArgumentException(
+                    String.format(
+                            Locale.ENGLISH,
+                            "getAttributionsPerRateLimitWindow:"
+                                    + " getSourceAndDestinationTopPrivateDomains failed. Publisher:"
+                                    + " %s; Attribution destination: %s",
+                            source.getPublisher().toString(),
+                            trigger.getAttributionDestination().toString()));
+        }
+
+        String publisherTopPrivateDomain = publisherBaseUri.get().toString();
+        String triggerDestinationTopPrivateDomain = destinationBaseUri.get().toString();
+
+        return DatabaseUtils.queryNumEntries(
+                mSQLTransaction.getDatabase(),
+                MeasurementTables.AttributionContract.TABLE,
+                MeasurementTables.AttributionContract.SCOPE
+                        + " = ? AND "
+                        + MeasurementTables.AttributionContract.SOURCE_SITE
+                        + " = ? AND "
+                        + MeasurementTables.AttributionContract.DESTINATION_SITE
+                        + " = ? AND "
+                        + MeasurementTables.AttributionContract.ENROLLMENT_ID
+                        + " = ? AND "
+                        + MeasurementTables.AttributionContract.TRIGGER_TIME
+                        + " > ? AND "
+                        + MeasurementTables.AttributionContract.TRIGGER_TIME
+                        + " <= ? ",
+                new String[] {
+                    String.valueOf(scope),
                     publisherTopPrivateDomain,
                     triggerDestinationTopPrivateDomain,
                     trigger.getEnrollmentId(),

@@ -22,6 +22,7 @@ import static com.android.adservices.common.AbstractSdkLevelSupportedRule.Androi
 import static com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel.T;
 import static com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel.U;
 import static com.android.adservices.common.TestAnnotations.newAnnotationForAtLeast;
+import static com.android.adservices.common.TestAnnotations.newAnnotationForLessThanT;
 
 import static org.junit.Assert.assertThrows;
 
@@ -342,6 +343,94 @@ public class AbstractSdkLevelSupportedRuleTest {
     public void testRuleIsAtLeastU_deviceIsU_testAnnotatedWithU_runs() throws Throwable {
         testRanWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithZ(
                 /* ruleLevel= */ U, /* deviceLevel= */ U, /* annotationLevel=*/ U);
+    }
+
+    /*
+     * Tests for tests annotated with @RequiresSdkLevelLessThanT - the rule is currently hard-coded
+     * to handle that annotation, so we need unit tests as a safety net to refactor that logic (even
+     * if this annotation is removed / deprecated later).
+     */
+
+    @Test
+    public void testAnnotatedWithRequiresSdkLevelLessThanT_skips() {
+        testSkippedWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithLessThanT(
+                /* ruleLevel= */ ANY, /* deviceLevel= */ T);
+        testSkippedWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithLessThanT(
+                /* ruleLevel= */ ANY, /* deviceLevel= */ U);
+        testSkippedWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithLessThanT(
+                /* ruleLevel= */ R, /* deviceLevel= */ T);
+        testSkippedWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithLessThanT(
+                /* ruleLevel= */ R, /* deviceLevel= */ U);
+        testSkippedWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithLessThanT(
+                /* ruleLevel= */ S, /* deviceLevel= */ T);
+        testSkippedWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithLessThanT(
+                /* ruleLevel= */ S, /* deviceLevel= */ U);
+        testSkippedWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithLessThanT(
+                /* ruleLevel= */ S2, /* deviceLevel= */ T);
+        testSkippedWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithLessThanT(
+                /* ruleLevel= */ S2, /* deviceLevel= */ U);
+        testSkippedWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithLessThanT(
+                /* ruleLevel= */ T, /* deviceLevel= */ T);
+        testSkippedWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithLessThanT(
+                /* ruleLevel= */ T, /* deviceLevel= */ U);
+    }
+
+    @Test
+    public void testAnnotatedWithRequiresSdkLevelLessThanT_runs() throws Throwable {
+        testRanWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithLessThanT(
+                /* ruleLevel= */ ANY, /* deviceLevel= */ R);
+        testRanWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithLessThanT(
+                /* ruleLevel= */ ANY, /* deviceLevel= */ S);
+        testRanWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithLessThanT(
+                /* ruleLevel= */ ANY, /* deviceLevel= */ S2);
+
+        testRanWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithLessThanT(
+                /* ruleLevel= */ R, /* deviceLevel= */ R);
+        testRanWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithLessThanT(
+                /* ruleLevel= */ R, /* deviceLevel= */ S);
+        testRanWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithLessThanT(
+                /* ruleLevel= */ R, /* deviceLevel= */ S2);
+
+        testRanWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithLessThanT(
+                /* ruleLevel= */ S, /* deviceLevel= */ S);
+        testRanWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithLessThanT(
+                /* ruleLevel= */ S, /* deviceLevel= */ S2);
+
+        testRanWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithLessThanT(
+                /* ruleLevel= */ S2, /* deviceLevel= */ S2);
+    }
+
+    private void testSkippedWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithLessThanT(
+            AndroidSdkLevel ruleLevel, AndroidSdkLevel deviceLevel) {
+        var rule = newRule(ruleLevel, deviceLevel);
+        Description testMethod = newTestMethod(newAnnotationForLessThanT(REASON));
+
+        AssumptionViolatedException e =
+                assertThrows(
+                        AssumptionViolatedException.class,
+                        () -> rule.apply(mBaseStatement, testMethod).evaluate());
+
+        StringSubject exceptionMessage =
+                expect.withMessage("exception message").that(e).hasMessageThat();
+        exceptionMessage.contains("@RequiresSdkLevelLessThanT");
+        exceptionMessage.contains(REASON);
+
+        mBaseStatement.assertNotEvaluated();
+    }
+
+    private void testRanWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithLessThanT(
+            AndroidSdkLevel ruleLevel, AndroidSdkLevel deviceLevel) throws Throwable {
+        var rule = newRule(ruleLevel, deviceLevel);
+        Description testMethod = newTestMethod(newAnnotationForLessThanT(REASON));
+
+        try {
+            rule.apply(mBaseStatement, testMethod).evaluate();
+        } catch (AssumptionViolatedException e) {
+            throw new Exception(
+                    "test should not throw AssumptionViolatedException: " + e.getMessage(), e);
+        }
+
+        mBaseStatement.assertEvaluated();
     }
 
     /**

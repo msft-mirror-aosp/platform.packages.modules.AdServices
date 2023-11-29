@@ -326,7 +326,8 @@ public class DbState {
                         .thenComparing(EventReport::getTriggerTime));
 
         mAttrRateLimitList.sort(
-                Comparator.comparing(Attribution::getTriggerId));
+                Comparator.comparing(Attribution::getScope)
+                        .thenComparing(Attribution::getTriggerId));
 
         mAggregateEncryptionKeyList.sort(
                 Comparator.comparing(AggregateEncryptionKey::getKeyId));
@@ -373,6 +374,8 @@ public class DbState {
                         sJSON.optInt("attribution_mode", Source.AttributionMode.TRUTHFULLY))
                 .setFilterData(sJSON.optString("filterData", null))
                 .setRegistrationOrigin(getRegistrationOrigin(sJSON))
+                .setTriggerSpecsString(sJSON.optString("triggerSpecs", null))
+                .setEventAttributionStatus(sJSON.optString("eventAttributionStatus", null))
                 .build();
     }
 
@@ -429,6 +432,7 @@ public class DbState {
             throws JSONException {
         return new Attribution.Builder()
                 .setId(attrJSON.getString("id"))
+                .setScope(attrJSON.optInt("scope", 0))
                 .setSourceSite(attrJSON.getString("sourceSite"))
                 .setSourceOrigin(attrJSON.getString("sourceOrigin"))
                 .setDestinationSite(attrJSON.getString("destinationSite"))
@@ -462,6 +466,10 @@ public class DbState {
                         cursor.getString(
                                 cursor.getColumnIndex(
                                         MeasurementTables.AttributionContract.SOURCE_SITE)))
+                .setScope(
+                        cursor.getInt(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AttributionContract.SCOPE)))
                 .setSourceOrigin(
                         cursor.getString(
                                 cursor.getColumnIndex(

@@ -167,7 +167,7 @@ public final class SourceFixture {
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2],"
                         + "\"event_report_windows\": { "
-                        + "\"start_time\": \"0\", "
+                        + "\"start_time\": 0, "
                         + String.format(
                                 "\"end_times\": [%s, %s]}, ",
                                 TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7))
@@ -181,7 +181,7 @@ public final class SourceFixture {
         String triggerSpecsString =
                 "[{\"trigger_data\": [1],"
                         + "\"event_report_windows\": { "
-                        + "\"start_time\": \"0\", "
+                        + "\"start_time\": 0, "
                         + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(2))
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [1]}]";
@@ -255,7 +255,7 @@ public final class SourceFixture {
     public static String getTriggerSpecCountEncodedJSONValidBaseline() {
         return "[{\"trigger_data\": [1, 2, 3],"
                 + "\"event_report_windows\": { "
-                + "\"start_time\": \"0\", "
+                + "\"start_time\": 0, "
                 + String.format(
                         "\"end_times\": [%s, %s, %s]}, ",
                         TimeUnit.DAYS.toMillis(2),
@@ -272,7 +272,7 @@ public final class SourceFixture {
     public static String getTriggerSpecValueSumEncodedJSONValidBaseline() {
         return "[{\"trigger_data\": [1, 2],"
                 + "\"event_report_windows\": { "
-                + "\"start_time\": \"0\", "
+                + "\"start_time\": 0, "
                 + String.format(
                         "\"end_times\": [%s, %s]}, ",
                         TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7))
@@ -288,7 +288,7 @@ public final class SourceFixture {
         return triggerSpecArrayFrom(
                 "[{\"trigger_data\": [1, 2, 3],"
                         + "\"event_report_windows\": { "
-                        + "\"start_time\": \"0\", "
+                        + "\"start_time\": 0, "
                         + String.format(
                                 "\"end_times\": [%s, %s, %s]}, ",
                                 TimeUnit.DAYS.toMillis(2),
@@ -298,7 +298,7 @@ public final class SourceFixture {
                         + "\"summary_buckets\": [1, 2, 3, 4]}, "
                         + "{\"trigger_data\": [4, 5, 6, 7],"
                         + "\"event_report_windows\": { "
-                        + "\"start_time\": \"0\", "
+                        + "\"start_time\": 0, "
                         + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(3))
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [1,5,7]} "
