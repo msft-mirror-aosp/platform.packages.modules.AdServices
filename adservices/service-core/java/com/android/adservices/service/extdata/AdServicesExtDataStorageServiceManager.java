@@ -67,9 +67,12 @@ public final class AdServicesExtDataStorageServiceManager {
                     .setMsmtRollbackApexVersion(APEX_VERSION_WHEN_NOT_FOUND)
                     .build();
 
-    private static final int[] ALL_FIELDS =
+    // FIELD_IS_NOTIFICATION_DISPLAYED is not cleared as this information is used for notification
+    // eligibility upon OTA. As there is no requirement to delete this metadata, we won't be
+    // clearing it to simplify OTA deletion logic which can now happen immediately after consent
+    // migration.
+    private static final int[] DATA_FIELDS_TO_CLEAR_POST_OTA =
             new int[] {
-                FIELD_IS_NOTIFICATION_DISPLAYED,
                 FIELD_IS_MEASUREMENT_CONSENTED,
                 FIELD_IS_U18_ACCOUNT,
                 FIELD_IS_ADULT_ACCOUNT,
@@ -338,13 +341,14 @@ public final class AdServicesExtDataStorageServiceManager {
     }
 
     /**
-     * Sets all AdExt data values to their respective default values to indicate data clearance in a
-     * non-blocking manner.
+     * Sets appropriate AdExt data values to their respective default values to indicate data
+     * clearance in a non-blocking manner. Data that indicates whether notification was shown on R
+     * will not be cleared to simplify OTA deletion logic as there's no requirement to delete it.
      */
-    public void clearAllDataAsync() {
+    public void clearDataOnOtaAsync() {
         mDataWorker.setAdServicesExtData(
                 DEFAULT_PARAMS,
-                ALL_FIELDS,
+                DATA_FIELDS_TO_CLEAR_POST_OTA,
                 new AdServicesOutcomeReceiver<>() {
                     @Override
                     public void onResult(AdServicesExtDataParams result) {

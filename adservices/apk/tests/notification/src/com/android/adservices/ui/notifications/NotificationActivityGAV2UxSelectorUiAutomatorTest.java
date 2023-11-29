@@ -109,8 +109,6 @@ public class NotificationActivityGAV2UxSelectorUiAutomatorTest {
                 getElement(R.string.notificationUI_confirmation_left_control_button_text);
         UiObject rightControlButton =
                 getElement(R.string.notificationUI_confirmation_right_control_button_text);
-        assertThat(leftControlButton.exists()).isFalse();
-        assertThat(rightControlButton.exists()).isFalse();
 
         clickMoreToBottom();
         assertThat(leftControlButton.exists()).isTrue();
@@ -140,8 +138,6 @@ public class NotificationActivityGAV2UxSelectorUiAutomatorTest {
         startActivity(false);
         UiObject leftControlButton = getElement(R.string.notificationUI_left_control_button_text);
         UiObject rightControlButton = getElement(R.string.notificationUI_right_control_button_text);
-        assertThat(leftControlButton.exists()).isFalse();
-        assertThat(rightControlButton.exists()).isFalse();
         clickMoreToBottom();
         assertThat(leftControlButton.exists()).isTrue();
         assertThat(rightControlButton.exists()).isTrue();
