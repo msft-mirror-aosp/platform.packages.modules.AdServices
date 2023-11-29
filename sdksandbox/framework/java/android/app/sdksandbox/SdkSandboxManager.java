@@ -229,21 +229,33 @@ public final class SdkSandboxManager {
      * The name of key to be used in the Bundle fields of {@link #requestSurfacePackage(String,
      * Bundle, Executor, OutcomeReceiver)}, its value should define the integer width of the {@link
      * SurfacePackage} in pixels.
+     *
+     * @deprecated Parameter for {@link #requestSurfacePackage(String, Bundle, Executor,
+     *     OutcomeReceiver)} which is getting deprecated.
      */
+    @Deprecated
     public static final String EXTRA_WIDTH_IN_PIXELS =
             "android.app.sdksandbox.extra.WIDTH_IN_PIXELS";
     /**
      * The name of key to be used in the Bundle fields of {@link #requestSurfacePackage(String,
      * Bundle, Executor, OutcomeReceiver)}, its value should define the integer height of the {@link
      * SurfacePackage} in pixels.
+     *
+     * @deprecated Parameter for {@link #requestSurfacePackage(String, Bundle, Executor,
+     *     OutcomeReceiver)} which is getting deprecated.
      */
+    @Deprecated
     public static final String EXTRA_HEIGHT_IN_PIXELS =
             "android.app.sdksandbox.extra.HEIGHT_IN_PIXELS";
     /**
      * The name of key to be used in the Bundle fields of {@link #requestSurfacePackage(String,
      * Bundle, Executor, OutcomeReceiver)}, its value should define the integer ID of the logical
      * display to display the {@link SurfacePackage}.
+     *
+     * @deprecated Parameter for {@link #requestSurfacePackage(String, Bundle, Executor,
+     *     OutcomeReceiver)} which is getting deprecated.
      */
+    @Deprecated
     public static final String EXTRA_DISPLAY_ID = "android.app.sdksandbox.extra.DISPLAY_ID";
 
     /**
@@ -251,14 +263,22 @@ public final class SdkSandboxManager {
      * Bundle, Executor, OutcomeReceiver)}, its value should present the token returned by {@link
      * android.view.SurfaceView#getHostToken()} once the {@link android.view.SurfaceView} has been
      * added to the view hierarchy. Only a non-null value is accepted to enable ANR reporting.
+     *
+     * @deprecated Parameter for {@link #requestSurfacePackage(String, Bundle, Executor,
+     *     OutcomeReceiver)} which is getting deprecated.
      */
+    @Deprecated
     public static final String EXTRA_HOST_TOKEN = "android.app.sdksandbox.extra.HOST_TOKEN";
 
     /**
      * The name of key in the Bundle which is passed to the {@code onResult} function of the {@link
      * OutcomeReceiver} which is field of {@link #requestSurfacePackage(String, Bundle, Executor,
      * OutcomeReceiver)}, its value presents the requested {@link SurfacePackage}.
+     *
+     * @deprecated Parameter for {@link #requestSurfacePackage(String, Bundle, Executor,
+     *     OutcomeReceiver)} which is getting deprecated.
      */
+    @Deprecated
     public static final String EXTRA_SURFACE_PACKAGE =
             "android.app.sdksandbox.extra.SURFACE_PACKAGE";
 
@@ -561,7 +581,10 @@ public final class SdkSandboxManager {
      * @see android.app.sdksandbox.SdkSandboxManager#EXTRA_HEIGHT_IN_PIXELS
      * @see android.app.sdksandbox.SdkSandboxManager#EXTRA_DISPLAY_ID
      * @see android.app.sdksandbox.SdkSandboxManager#EXTRA_HOST_TOKEN
+     * @deprecated This method will no longer be supported through {@link SdkSandboxManager}. Please
+     *     consider using androidx.privacysandbox library as an alternative
      */
+    @Deprecated
     public void requestSurfacePackage(
             @NonNull String sdkName,
             @NonNull Bundle params,
