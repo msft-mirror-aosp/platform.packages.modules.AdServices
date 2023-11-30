@@ -25,8 +25,12 @@ import java.util.Objects;
 
 /** Represent the result from the getTopics API. */
 public final class GetTopicsResponse {
+    private static final String KEY_TOPICS_ENCRYPTION_ENABLED =
+            FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED;
+
     /** List of Topic objects returned by getTopics API. */
     private final List<Topic> mTopics;
+
     /** List of EncryptedTopic objects returned by getTopics API. */
     private final List<EncryptedTopic> mEncryptedTopics;
 
@@ -43,7 +47,7 @@ public final class GetTopicsResponse {
 
     /** Returns a {@link List} of {@link EncryptedTopic} objects returned by getTopics API. */
     @NonNull
-    @FlaggedApi(FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED)
+    @FlaggedApi(KEY_TOPICS_ENCRYPTION_ENABLED)
     public List<EncryptedTopic> getEncryptedTopics() {
         return mEncryptedTopics;
     }
@@ -90,7 +94,7 @@ public final class GetTopicsResponse {
          * @param topics The list of the returned Topics.
          * @param encryptedTopics The list of encrypted Topics.
          */
-        @FlaggedApi(FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED)
+        @FlaggedApi(KEY_TOPICS_ENCRYPTION_ENABLED)
         public Builder(@NonNull List<Topic> topics, @NonNull List<EncryptedTopic> encryptedTopics) {
             mTopics = Objects.requireNonNull(topics);
             mEncryptedTopics = Objects.requireNonNull(encryptedTopics);
