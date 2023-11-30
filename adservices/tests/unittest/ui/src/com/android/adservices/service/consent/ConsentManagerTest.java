@@ -103,6 +103,7 @@ import androidx.test.filters.SmallTest;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.cobalt.CobaltJobService;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
@@ -151,24 +152,21 @@ import com.android.adservices.service.topics.TopicsWorker;
 import com.android.adservices.service.ui.data.UxStatesDao;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
-import com.android.adservices.shared.testing.common.ApplicationContextSingletonRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.MockedVoidMethod;
 import com.android.modules.utils.build.SdkLevel;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
 import org.mockito.Spy;
-import org.mockito.quality.Strictness;
 import org.mockito.verification.VerificationMode;
 
 import java.io.IOException;
@@ -178,8 +176,35 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@SpyStatic(AdServicesLoggerImpl.class)
+@SpyStatic(AggregateFallbackReportingJobService.class)
+@SpyStatic(AggregateReportingJobService.class)
+@SpyStatic(AsyncRegistrationQueueJobService.class)
+@SpyStatic(AsyncRegistrationFallbackJobService.class)
+@SpyStatic(AttributionJobService.class)
+@SpyStatic(AttributionFallbackJobService.class)
+@SpyStatic(BackgroundJobsManager.class)
+@SpyStatic(ConsentManager.class)
+@SpyStatic(DeleteExpiredJobService.class)
+@SpyStatic(DeleteUninstalledJobService.class)
+@SpyStatic(DeviceRegionProvider.class)
+@SpyStatic(EpochJobService.class)
+@SpyStatic(ErrorLogUtil.class)
+@SpyStatic(EventFallbackReportingJobService.class)
+@SpyStatic(EventReportingJobService.class)
+@SpyStatic(DebugReportingFallbackJobService.class)
+@SpyStatic(VerboseDebugReportingFallbackJobService.class)
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(MaintenanceJobService.class)
+@SpyStatic(MddJobService.class)
+@SpyStatic(EncryptionKeyJobService.class)
+@SpyStatic(CobaltJobService.class)
+@SpyStatic(UiStatsLogger.class)
+@SpyStatic(StatsdAdServicesLogger.class)
+@MockStatic(PackageManagerCompatUtils.class)
+@MockStatic(SdkLevel.class)
 @SmallTest
-public final class ConsentManagerTest {
+public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase {
     private static final int UX_TYPE_COUNT = 5;
     private static final int ENROLLMENT_CHANNEL_COUNT = 20;
 
@@ -212,48 +237,8 @@ public final class ConsentManagerTest {
     @Mock private UxStatesDao mUxStatesDaoMock;
     @Mock private StatsdAdServicesLogger mStatsdAdServicesLoggerMock;
 
-    private MockitoSession mStaticMockSession = null;
-
-    @Rule
-    public final ApplicationContextSingletonRule appContext = new ApplicationContextSingletonRule();
-
     @Before
     public void setup() throws IOException {
-        MockitoAnnotations.initMocks(this);
-
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(AdServicesLoggerImpl.class)
-                        .spyStatic(AggregateFallbackReportingJobService.class)
-                        .spyStatic(AggregateReportingJobService.class)
-                        .spyStatic(AsyncRegistrationQueueJobService.class)
-                        .spyStatic(AsyncRegistrationFallbackJobService.class)
-                        .spyStatic(AttributionJobService.class)
-                        .spyStatic(AttributionFallbackJobService.class)
-                        .spyStatic(BackgroundJobsManager.class)
-                        .spyStatic(ConsentManager.class)
-                        .spyStatic(DeleteExpiredJobService.class)
-                        .spyStatic(DeleteUninstalledJobService.class)
-                        .spyStatic(DeviceRegionProvider.class)
-                        .spyStatic(EpochJobService.class)
-                        .spyStatic(ErrorLogUtil.class)
-                        .spyStatic(EventFallbackReportingJobService.class)
-                        .spyStatic(EventReportingJobService.class)
-                        .spyStatic(DebugReportingFallbackJobService.class)
-                        .spyStatic(VerboseDebugReportingFallbackJobService.class)
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(MaintenanceJobService.class)
-                        .spyStatic(MddJobService.class)
-                        .spyStatic(EncryptionKeyJobService.class)
-                        .spyStatic(CobaltJobService.class)
-                        .spyStatic(UiStatsLogger.class)
-                        .spyStatic(StatsdAdServicesLogger.class)
-                        .mockStatic(PackageManagerCompatUtils.class)
-                        .mockStatic(SdkLevel.class)
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .startMocking();
-
         mDatastore =
                 new BooleanFileDatastore(
                         mContextSpy, AppConsentDao.DATASTORE_NAME, AppConsentDao.DATASTORE_VERSION);
@@ -328,9 +313,6 @@ public final class ConsentManagerTest {
     public void teardown() throws IOException {
         mDatastore.clear();
         mConsentDatastore.clear();
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
     }
 
     @Test

@@ -42,7 +42,8 @@ public abstract class AdServicesUnitTestCase {
             new AdServicesDeviceSupportedRule();
 
     @Rule(order = 5)
-    public final ApplicationContextSingletonRule appContext = new ApplicationContextSingletonRule();
+    public final ApplicationContextSingletonRule appContext =
+            new ApplicationContextSingletonRule(/* restoreAfter= */ false);
 
     @Rule(order = 6)
     public final ProcessLifeguardRule processLifeguard = new ProcessLifeguardRule();
