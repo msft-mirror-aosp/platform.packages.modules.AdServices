@@ -19,6 +19,8 @@ package com.android.adservices.cts;
 import static com.android.adservices.common.TestDeviceHelper.ADSERVICES_SETTINGS_INTENT;
 import static com.android.adservices.common.TestDeviceHelper.startActivity;
 
+import android.platform.test.annotations.FlakyTest;
+
 import com.android.adservices.common.AdServicesHostSideFlagsSetterRule;
 import com.android.adservices.common.AdServicesHostSideTestCase;
 import com.android.adservices.common.BackgroundLogReceiver;
@@ -60,6 +62,7 @@ public class AdExtServicesBootCompleteReceiverHostTest extends AdServicesHostSid
     // TODO(b/295269584): improve rule to support range of versions.
     @Test
     @RequiresSdkLevelLessThanT(reason = "It's for S only")
+    @FlakyTest(bugId = 313782211)
     public void testExtBootCompleteReceiver() throws Exception {
         // reboot the device
         mDevice.reboot();
