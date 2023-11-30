@@ -35,7 +35,7 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -75,6 +75,7 @@ import com.google.mobiledatadownload.DownloadConfigProto.DownloadConditions.Devi
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -85,7 +86,7 @@ import java.util.concurrent.TimeoutException;
 
 /** Unit tests for {@link MobileDataDownloadFactory} */
 @SmallTest
-public final class MobileDataDownloadTest extends AdServicesUnitTestCase {
+public final class MobileDataDownloadTest {
 
     private final Context mContext = ApplicationProvider.getApplicationContext();
     private static final int MAX_HANDLE_TASK_WAIT_TIME_SECS = 300;
@@ -144,6 +145,11 @@ public final class MobileDataDownloadTest extends AdServicesUnitTestCase {
     @Mock Flags mMockFlags;
     @Mock ConsentManager mConsentManager;
     @Mock UxStatesManager mUxStatesManager;
+
+    // TODO(b/314140991): Extends AdServicesUnitTestCase.
+    @Rule
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
 
     @Before
     public void setUp() throws Exception {
