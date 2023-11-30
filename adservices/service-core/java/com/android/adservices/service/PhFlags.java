@@ -3127,6 +3127,22 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getConsentManagerOTADebugMode() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_CONSENT_MANAGER_OTA_DEBUG_MODE,
+                /* defaultValue */ DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE);
+    }
+
+    @Override
+    public boolean getRvcPostOtaNotifAgeCheck() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_RVC_POST_OTA_NOTIF_AGE_CHECK,
+                /* defaultValue */ DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK);
+    }
+
+    @Override
     public int getConsentSourceOfTruth() {
         return DeviceConfig.getInt(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -3549,6 +3565,16 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + " = "
                         + getEnableAdServicesSystemApi());
         writer.println("\t" + FlagsConstants.KEY_U18_UX_ENABLED + " = " + getU18UxEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_CONSENT_MANAGER_OTA_DEBUG_MODE
+                        + " = "
+                        + getConsentManagerOTADebugMode());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_RVC_POST_OTA_NOTIF_AGE_CHECK
+                        + " = "
+                        + getRvcPostOtaNotifAgeCheck());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE

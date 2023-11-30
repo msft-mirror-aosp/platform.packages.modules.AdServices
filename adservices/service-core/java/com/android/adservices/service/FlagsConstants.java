@@ -889,6 +889,14 @@ public final class FlagsConstants {
     // Consent Manager debug mode keys.
     public static final String KEY_CONSENT_MANAGER_DEBUG_MODE = "consent_manager_debug_mode";
 
+    // Consent Manager ota debug mode keys.
+    public static final String KEY_CONSENT_MANAGER_OTA_DEBUG_MODE =
+            "consent_manager_ota_debug_mode";
+
+    // Rvc post ota notification age check keys.
+    public static final String KEY_RVC_POST_OTA_NOTIF_AGE_CHECK =
+            "rvc_post_ota_notification_age_check";
+
     // Consent notification activity debug mode keys.
     public static final String KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE =
             "consent_notification_activity_debug_mode";

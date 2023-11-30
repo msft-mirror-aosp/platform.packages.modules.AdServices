@@ -4419,6 +4419,37 @@ public final class ConsentManagerTest {
     }
 
     @Test
+    public void testIsRvcAdultUser_ageCheckFlagOn() throws RemoteException {
+        int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
+        when(mMockFlags.getEnableAdExtServiceConsentData()).thenReturn(true);
+        when(mMockFlags.getRvcPostOtaNotifAgeCheck()).thenReturn(true);
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        doReturn(true).when(mAdServicesExtDataManagerMock).getNotificationDisplayed();
+        doReturn(false).when(mAdServicesExtDataManagerMock).getIsU18Account();
+        doReturn(true).when(mAdServicesExtDataManagerMock).getIsAdultAccount();
+        assertThat(spyConsentManager.isOtaAdultUserFromRvc()).isTrue();
+        verify(mAdServicesExtDataManagerMock).getNotificationDisplayed();
+        verify(mAdServicesExtDataManagerMock).getIsAdultAccount();
+        verify(mAdServicesExtDataManagerMock).getIsU18Account();
+    }
+
+    @Test
+    public void testIsRvcAdultUser_ageCheckFlagOff() throws RemoteException {
+        int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
+        when(mMockFlags.getEnableAdExtServiceConsentData()).thenReturn(true);
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        doReturn(true).when(mAdServicesExtDataManagerMock).getNotificationDisplayed();
+        assertThat(spyConsentManager.isOtaAdultUserFromRvc()).isTrue();
+        verify(mAdServicesExtDataManagerMock).getNotificationDisplayed();
+    }
+
+    @Test
     public void testGetUx_PpApiOnly() throws RemoteException {
         getUxWithPpApiOnly(Flags.PPAPI_ONLY);
     }
