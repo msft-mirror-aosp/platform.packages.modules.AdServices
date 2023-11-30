@@ -206,6 +206,7 @@ public class MeasurementDaoTest {
                 SourceFixture.getValidSourceBuilder()
                         .setEventReportWindows("{'start_time': 1, 'end_times': ['3600', '7200']}")
                         .setStatus(Source.Status.MARKED_TO_DELETE)
+                        .setTriggerDataMatching(Source.TriggerDataMatching.EXACT)
                         .build();
         mDatastoreManager.runInTransaction((dao) -> dao.insertSource(validSource));
 
@@ -248,6 +249,7 @@ public class MeasurementDaoTest {
         assertEquals(
                 validSource.getCoarseEventReportDestinations(),
                 source.getCoarseEventReportDestinations());
+        assertEquals(validSource.getTriggerDataMatching(), source.getTriggerDataMatching());
         assertEquals(validSource.getEventReportWindows(), source.getEventReportWindows());
         assertEquals(SourceFixture.ValidSourceParams.SHARED_DEBUG_KEY, source.getSharedDebugKey());
 

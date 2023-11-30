@@ -721,6 +721,11 @@ class AttributionJobHandler {
             }
         }
 
+        if (getMatchingEffectiveTriggerData(eventTrigger, source).isEmpty()) {
+            // TODO (b/)314189512: send "trigger-event-no-matching-trigger-data" debug report.
+            return TriggeringStatus.DROPPED;
+        }
+
         if (mEventReportWindowCalcDelegate.getReportingTime(
                 source, trigger.getTriggerTime(), trigger.getDestinationType()) == -1
                 && (source.getTriggerSpecsString() == null
@@ -845,11 +850,20 @@ class AttributionJobHandler {
             EventTrigger eventTrigger,
             Pair<UnsignedLong, UnsignedLong> debugKeyPair,
             IMeasurementDao measurementDao) throws DatastoreException {
-        TriggerSpecs triggerSpecs = source.getTriggerSpecs();
-
-        if (!triggerSpecs.containsTriggerData(eventTrigger.getTriggerData())) {
+        if (source.getTriggerDataCardinality() == 0) {
             return false;
         }
+
+        TriggerSpecs triggerSpecs = source.getTriggerSpecs();
+
+        Optional<UnsignedLong> maybeEffectiveTriggerData =
+                getMatchingEffectiveTriggerData(eventTrigger, source);
+
+        if (maybeEffectiveTriggerData.isEmpty()) {
+            return false;
+        }
+
+        UnsignedLong effectiveTriggerData = maybeEffectiveTriggerData.get();
 
         // Store the current bucket index for each trigger data
         Map<UnsignedLong, Integer> triggerDataToBucketIndexMap = new HashMap<>();
@@ -865,7 +879,7 @@ class AttributionJobHandler {
         List<AttributedTrigger> attributedTriggers = source.getAttributedTriggers();
 
         long triggerValue =
-                triggerSpecs.getSummaryOperatorType(eventTrigger.getTriggerData())
+                triggerSpecs.getSummaryOperatorType(effectiveTriggerData)
                         == TriggerSpec.SummaryOperatorType.COUNT
                                 ? 1L
                                 : eventTrigger.getTriggerValue();
@@ -873,7 +887,9 @@ class AttributionJobHandler {
         attributedTriggers.add(new AttributedTrigger(
                 trigger.getId(),
                 eventTrigger.getTriggerPriority(),
-                eventTrigger.getTriggerData(),
+                // effectiveTriggerData is used in reporting and matching trigger spec; the original
+                // trigger datastore record contains the provided trigger data.
+                effectiveTriggerData,
                 triggerValue,
                 trigger.getTriggerTime(),
                 eventTrigger.getDedupKey(),
@@ -1430,6 +1446,36 @@ class AttributionJobHandler {
                             source.getPublisher(), trigger.getAttributionDestination());
             return true;
         }
+    }
+
+    private Optional<UnsignedLong> getMatchingEffectiveTriggerData(
+            EventTrigger eventTrigger, Source source) {
+        UnsignedLong triggerData = eventTrigger.getTriggerData();
+
+        // Flex source
+        if (source.getTriggerSpecs() != null) {
+            if (mFlags.getMeasurementEnableTriggerDataMatching()
+                    && source.getTriggerDataMatching() == Source.TriggerDataMatching.MODULUS) {
+                // Modify trigger data value mod total trigger spec cardinality.
+                triggerData = triggerData.mod(source.getTriggerDataCardinality());
+            }
+            if (!source.getTriggerSpecs().containsTriggerData(triggerData)) {
+                return Optional.empty();
+            }
+            return Optional.of(triggerData);
+        // V1 source
+        } else if (!mFlags.getMeasurementEnableTriggerDataMatching()) {
+            return Optional.of(triggerData);
+        }
+
+        if (source.getTriggerDataMatching() == Source.TriggerDataMatching.EXACT) {
+            UnsignedLong triggerDataCardinalityBound = new UnsignedLong(
+                    ((long) source.getTriggerDataCardinality()) - 1L);
+            if (eventTrigger.getTriggerData().compareTo(triggerDataCardinalityBound) > 0) {
+                return Optional.empty();
+            }
+        }
+        return Optional.of(triggerData);
     }
 
     private static Optional<Pair<Uri, Uri>> getPublisherAndDestinationTopPrivateDomains(

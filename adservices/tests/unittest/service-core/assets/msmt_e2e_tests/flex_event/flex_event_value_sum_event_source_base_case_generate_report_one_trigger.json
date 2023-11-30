@@ -38,7 +38,8 @@
                     ]
                   }
                 ],
-                "max_event_level_reports": 1
+                "max_event_level_reports": 1,
+                "trigger_data_matching": "exact"
               },
               "Location": null,
               "Attribution-Reporting-Redirect": null
