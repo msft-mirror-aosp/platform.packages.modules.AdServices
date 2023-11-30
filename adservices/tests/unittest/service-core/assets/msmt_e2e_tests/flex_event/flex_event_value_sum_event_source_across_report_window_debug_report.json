@@ -1,5 +1,5 @@
 {
-  "description": "value sum on navigation source, triggers are across multiple window",
+  "description": "value sum on navigation source, triggers are across multiple window, includes debug report.",
   "phflags_override": {
     "measurement_flexible_event_reporting_api_enabled": "true"
   },
@@ -14,6 +14,7 @@
         "responses": [
           {
             "url": "https://www.ad-tech1.test",
+            "has_ad_id_permission": true,
             "response": {
               "Attribution-Reporting-Register-Source": {
                 "source_event_id": "2",
@@ -39,7 +40,8 @@
                     ]
                   }
                 ],
-                "max_event_level_reports": 1
+                "max_event_level_reports": 1,
+                "debug_key": "333"
               },
               "Location": null,
               "Attribution-Reporting-Redirect": null
@@ -58,6 +60,7 @@
         "responses": [
           {
             "url": "https://www.ad-tech1.test",
+            "has_ad_id_permission": true,
             "response": {
               "Attribution-Reporting-Register-Trigger": {
                 "event_trigger_data": [
@@ -67,7 +70,9 @@
                     "deduplication_key": "10",
                     "value": "2"
                   }
-                ]
+                ],
+                "debug_key": "444",
+                "debug_reporting": true
               },
               "Location": null,
               "Attribution-Reporting-Redirect": null
@@ -84,6 +89,7 @@
         "responses": [
           {
             "url": "https://www.ad-tech1.test",
+            "has_ad_id_permission": true,
             "response": {
               "Attribution-Reporting-Register-Trigger": {
                 "event_trigger_data": [
@@ -93,7 +99,9 @@
                     "deduplication_key": "11",
                     "value": "9"
                   }
-                ]
+                ],
+                "debug_key": "555",
+                "debug_reporting": true
               },
               "Location": null,
               "Attribution-Reporting-Redirect": null
@@ -115,8 +123,27 @@
           "source_event_id": "2",
           "trigger_data": "0",
           "source_type": "navigation",
-          "trigger_summary_bucket": "[10,2147483646]",
-          "randomized_trigger_rate": 0.000004157629766763622
+          "source_debug_key": "333",
+          "trigger_summary_bucket": [10, 2147483646],
+          "randomized_trigger_rate": 0.000004157629766763622,
+          "trigger_debug_keys": ["555", "444"]
+        }
+      }
+    ],
+    "debug_event_level_results": [
+      {
+        "report_time": "1800203600001",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-event-attribution",
+        "payload": {
+          "attribution_destination": "android-app://example.2d1.test",
+          "scheduled_report_time": "1800599000",
+          "source_event_id": "2",
+          "trigger_data": "0",
+          "source_type": "navigation",
+          "source_debug_key": "333",
+          "trigger_summary_bucket": [10, 2147483646],
+          "randomized_trigger_rate": 0.000004157629766763622,
+          "trigger_debug_keys": ["555", "444"]
         }
       }
     ],

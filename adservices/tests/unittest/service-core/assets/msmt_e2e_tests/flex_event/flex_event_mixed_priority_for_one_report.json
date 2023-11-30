@@ -1,5 +1,5 @@
 {
-  "description": "One event source with two trigger specs, followed by three triggers. The last two triggers that have the highest priority win attribution.",
+  "description": "One event source followed by three triggers. The last two triggers that have the highest priority win attribution.",
   "phflags_override": {
     "measurement_flexible_event_reporting_api_enabled": "true"
   },
@@ -136,7 +136,7 @@
           "source_event_id": "123",
           "trigger_data": "1",
           "source_type": "event",
-          "trigger_summary_bucket": "[10,99]",
+          "trigger_summary_bucket": [10, 99],
           "randomized_trigger_rate": 0.0000033261065791548415
         }
       }

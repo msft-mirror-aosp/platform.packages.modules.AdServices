@@ -32,6 +32,8 @@ public class AttributedTrigger {
     private final long mValue;
     private final long mTriggerTime;
     private final UnsignedLong mDedupKey;
+    private final UnsignedLong mDebugKey;
+    private final Boolean mHasSourceDebugKey;
     private long mContribution;
 
     @Override
@@ -46,12 +48,22 @@ public class AttributedTrigger {
                 && Objects.equals(mTriggerData, t.mTriggerData)
                 && mValue == t.mValue
                 && mTriggerTime == t.mTriggerTime
-                && Objects.equals(mDedupKey, t.mDedupKey);
+                && Objects.equals(mDedupKey, t.mDedupKey)
+                && Objects.equals(mDebugKey, t.mDebugKey)
+                && Objects.equals(mHasSourceDebugKey, t.mHasSourceDebugKey);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mTriggerId, mPriority, mTriggerData, mValue, mTriggerTime, mDedupKey);
+        return Objects.hash(
+                mTriggerId,
+                mPriority,
+                mTriggerData,
+                mValue,
+                mTriggerTime,
+                mDedupKey,
+                mDebugKey,
+                mHasSourceDebugKey);
     }
 
     public AttributedTrigger(JSONObject json) throws JSONException {
@@ -83,6 +95,17 @@ public class AttributedTrigger {
         } else {
             mDedupKey = null;
         }
+        if (!json.isNull(JsonKeys.DEBUG_KEY)) {
+            mDebugKey = new UnsignedLong(
+                    json.getString(JsonKeys.DEBUG_KEY));
+        } else {
+            mDebugKey = null;
+        }
+        if (!json.isNull(JsonKeys.HAS_SOURCE_DEBUG_KEY)) {
+            mHasSourceDebugKey = json.getBoolean(JsonKeys.HAS_SOURCE_DEBUG_KEY);
+        } else {
+            mHasSourceDebugKey = null;
+        }
     }
 
     public AttributedTrigger(
@@ -91,6 +114,8 @@ public class AttributedTrigger {
             UnsignedLong dedupKey) {
         mTriggerId = triggerId;
         mDedupKey = dedupKey;
+        mDebugKey = null;
+        mHasSourceDebugKey = null;
         mPriority = 0L;
         mTriggerData = triggerData;
         mValue = 0L;
@@ -103,13 +128,17 @@ public class AttributedTrigger {
             UnsignedLong triggerData,
             long value,
             long triggerTime,
-            UnsignedLong dedupKey) {
+            UnsignedLong dedupKey,
+            UnsignedLong debugKey,
+            boolean hasSourceDebugKey) {
         mTriggerId = triggerId;
         mPriority = priority;
         mTriggerData = triggerData;
         mValue = value;
         mTriggerTime = triggerTime;
         mDedupKey = dedupKey;
+        mDebugKey = debugKey;
+        mHasSourceDebugKey = hasSourceDebugKey;
     }
 
     public String getTriggerId() {
@@ -134,6 +163,18 @@ public class AttributedTrigger {
 
     public UnsignedLong getDedupKey() {
         return mDedupKey;
+    }
+
+    public UnsignedLong getDebugKey() {
+        return mDebugKey;
+    }
+
+    /**
+     * Returns whether the source debug key was permitted and populated when this trigger was
+     * attributed.
+     */
+    public boolean hasSourceDebugKey() {
+        return mHasSourceDebugKey;
     }
 
     public long getContribution() {
@@ -180,6 +221,10 @@ public class AttributedTrigger {
             if (mDedupKey != null) {
                 json.put(JsonKeys.DEDUP_KEY, mDedupKey.toString());
             }
+            if (mDebugKey != null) {
+                json.put(JsonKeys.DEBUG_KEY, mDebugKey.toString());
+            }
+            json.put(JsonKeys.HAS_SOURCE_DEBUG_KEY, mHasSourceDebugKey);
             json.put(TriggerSpecs.FlexEventReportJsonKeys.PRIORITY, mPriority);
         } catch (JSONException e) {
             LoggerFactory.getMeasurementLogger()
@@ -194,5 +239,7 @@ public class AttributedTrigger {
     private interface JsonKeys {
         String TRIGGER_ID = "trigger_id";
         String DEDUP_KEY = "dedup_key";
+        String DEBUG_KEY = "debug_key";
+        String HAS_SOURCE_DEBUG_KEY = "has_source_debug_key";
     }
 }

@@ -276,13 +276,17 @@ public class TriggerSpecs {
                 continue;
             }
 
-            // Event reports are sorted by summary bucket so this event report must be either for
-            // the first or the next bucket.
-            triggerDataToBucketIndexMap.merge(
-                    eventReport.getTriggerData(), 1, (oldValue, value) -> oldValue + 1);
+            UnsignedLong triggerData = eventReport.getTriggerData();
 
-            Pair<Long, Long> summaryBucket = eventReport.getTriggerSummaryBucket();
-            long bucketSize = summaryBucket.second - summaryBucket.first + 1;
+            // Event reports are sorted by summary bucket so this event report must be either for
+            // the first or the next bucket. The index for the map is one higher, corresponding to
+            // the current bucket we'll start with for attribution.
+            triggerDataToBucketIndexMap.merge(triggerData, 1, (oldValue, value) -> oldValue + 1);
+
+            List<Long> buckets = getSummaryBucketsForTriggerData(triggerData);
+            int bucketIndex = triggerDataToBucketIndexMap.get(triggerData) - 1;
+            long prevBucket = bucketIndex == 0 ? 0L : buckets.get(bucketIndex - 1);
+            long bucketSize = buckets.get(bucketIndex) - prevBucket;
 
             for (AttributedTrigger attributedTrigger : mAttributedTriggersRef) {
                 bucketSize -= restoreTriggerContributionAndGetBucketDelta(
@@ -315,8 +319,7 @@ public class TriggerSpecs {
                 return bucketSize;
             // The trigger only covers some of the report's bucket.
             } else {
-                long diff = attributedTrigger.getValue()
-                        - attributedTrigger.getContribution();
+                long diff = attributedTrigger.remainingValue();
                 attributedTrigger.addContribution(diff);
                 return diff;
             }

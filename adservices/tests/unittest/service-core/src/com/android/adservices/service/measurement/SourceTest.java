@@ -82,7 +82,9 @@ public class SourceTest {
                             /* UnsignedLong triggerData */ new UnsignedLong("89"),
                             /* long value */ 15L,
                             /* long triggerTime */ 1934567890L,
-                            /* UnsignedLong dedupKey */ null));
+                            /* UnsignedLong dedupKey */ null,
+                            /* UnsignedLong debugKey */ null,
+                            /* boolean hasSourceDebugKey */ false));
     @Mock private Flags mFlags;
 
     @Before
