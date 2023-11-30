@@ -26,5 +26,6 @@
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
         <option name="hidden-api-checks" value="false" />
         <option name="package" value="com.android.sdksandbox.inprocess" />
+        <option name="instrument-sdk-sandbox" value="true" />
     </test>
 </configuration>
