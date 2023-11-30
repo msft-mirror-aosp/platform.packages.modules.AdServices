@@ -3053,6 +3053,14 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getConsentAlreadyInteractedEnableMode() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_CONSENT_ALREADY_INTERACTED_FIX_ENABLE,
+                /* defaultValue */ CONSENT_ALREADY_INTERACTED_FIX_ENABLE);
+    }
+
+    @Override
     public String getConsentNotificationResetToken() {
         return DeviceConfig.getString(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -5669,6 +5677,9 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         uxMap.put(
                 FlagsConstants.KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED,
                 isU18SupervisedAccountEnabled());
+        uxMap.put(
+                FlagsConstants.KEY_CONSENT_ALREADY_INTERACTED_FIX_ENABLE,
+                getConsentAlreadyInteractedEnableMode());
         return uxMap;
     }
 
