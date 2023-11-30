@@ -783,7 +783,8 @@ public class FetchCustomAudienceImplTest {
         verify(mCustomAudienceDaoMock)
                 .insertOrOverwriteCustomAudience(
                         FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
-                        getValidDailyUpdateUriByBuyer(BUYER));
+                        getValidDailyUpdateUriByBuyer(BUYER),
+                        DevContext.createForDevOptionsDisabled().getDevOptionsEnabled());
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_SUCCESS), anyInt());
     }
@@ -808,7 +809,8 @@ public class FetchCustomAudienceImplTest {
         verify(mCustomAudienceDaoMock)
                 .insertOrOverwriteCustomAudience(
                         FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
-                        getValidDailyUpdateUriByBuyer(BUYER));
+                        getValidDailyUpdateUriByBuyer(BUYER),
+                        DevContext.createForDevOptionsDisabled().getDevOptionsEnabled());
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_SUCCESS), anyInt());
     }
@@ -828,7 +830,8 @@ public class FetchCustomAudienceImplTest {
         verify(mCustomAudienceDaoMock)
                 .insertOrOverwriteCustomAudience(
                         FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
-                        getValidDailyUpdateUriByBuyer(BUYER));
+                        getValidDailyUpdateUriByBuyer(BUYER),
+                        DevContext.createForDevOptionsDisabled().getDevOptionsEnabled());
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_SUCCESS), anyInt());
     }
@@ -866,14 +869,16 @@ public class FetchCustomAudienceImplTest {
         verify(mCustomAudienceDaoMock)
                 .insertOrOverwriteCustomAudience(
                         FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
-                        getValidDailyUpdateUriByBuyer(BUYER));
+                        getValidDailyUpdateUriByBuyer(BUYER),
+                        DevContext.createForDevOptionsDisabled().getDevOptionsEnabled());
 
         FetchCustomAudienceTestCallback callback2 = callFetchCustomAudience(mInputBuilder.build());
         assertTrue(callback2.mIsSuccess);
         verify(mCustomAudienceDaoMock)
                 .insertOrOverwriteCustomAudience(
                         FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
-                        differentDailyUpdateUri);
+                        differentDailyUpdateUri,
+                        DevContext.createForDevOptionsDisabled().getDevOptionsEnabled());
 
         verify(mAdServicesLoggerMock, times(2))
                 .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_SUCCESS), anyInt());
@@ -948,7 +953,8 @@ public class FetchCustomAudienceImplTest {
         verify(mCustomAudienceDaoMock)
                 .insertOrOverwriteCustomAudience(
                         FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
-                        getValidDailyUpdateUriByBuyer(BUYER));
+                        getValidDailyUpdateUriByBuyer(BUYER),
+                        DevContext.createForDevOptionsDisabled().getDevOptionsEnabled());
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_SUCCESS), anyInt());
