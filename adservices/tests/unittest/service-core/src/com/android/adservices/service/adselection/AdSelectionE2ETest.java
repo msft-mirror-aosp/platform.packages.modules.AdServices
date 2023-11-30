@@ -106,6 +106,7 @@ import android.webkit.WebView;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
@@ -2947,6 +2948,7 @@ public class AdSelectionE2ETest {
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
 
+    @FlakyTest(bugId = 304764127)
     @Test
     public void testRunAdSelectionContextualAds_UseOverrides_Success() throws Exception {
         doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
@@ -6089,6 +6091,7 @@ public class AdSelectionE2ETest {
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
 
+    @FlakyTest(bugId = 304764127)
     @Test
     public void testRunAdSelectionImposesPerBuyerBiddingTimeout_v3BiddingLogic() throws Exception {
         doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
