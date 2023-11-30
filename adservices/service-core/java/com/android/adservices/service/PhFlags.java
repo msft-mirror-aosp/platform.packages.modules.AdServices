@@ -236,6 +236,15 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getTopicsDisablePlaintextResponse() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_TOPICS_DISABLE_PLAINTEXT_RESPONSE,
+                /* defaultValue */ TOPICS_DISABLE_PLAINTEXT_RESPONSE);
+    }
+
+    @Override
     public int getClassifierType() {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.

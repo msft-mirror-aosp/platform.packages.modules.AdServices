@@ -391,9 +391,9 @@ public class AdServicesExtDataStorageServiceManagerTest {
     }
 
     @Test
-    public void testClearAllDataAsync() {
+    public void testClearDataOnOtaAsync() {
         mockWorkerSetAdExtDataCall();
-        mManager.clearAllDataAsync();
+        mManager.clearDataOnOtaAsync();
 
         expect.that(mParamsCaptor.getValue().getIsMeasurementConsented())
                 .isEqualTo(BOOLEAN_UNKNOWN);
@@ -403,13 +403,10 @@ public class AdServicesExtDataStorageServiceManagerTest {
         expect.that(mParamsCaptor.getValue().getIsAdultAccount()).isEqualTo(BOOLEAN_UNKNOWN);
         expect.that(mParamsCaptor.getValue().getManualInteractionWithConsentStatus())
                 .isEqualTo(STATE_UNKNOWN);
-        expect.that(mParamsCaptor.getValue().getIsNotificationDisplayed())
-                .isEqualTo(BOOLEAN_UNKNOWN);
 
         expect.that(mFieldsCaptor.getValue())
                 .asList()
                 .containsExactly(
-                        FIELD_IS_NOTIFICATION_DISPLAYED,
                         FIELD_IS_MEASUREMENT_CONSENTED,
                         FIELD_IS_U18_ACCOUNT,
                         FIELD_IS_ADULT_ACCOUNT,

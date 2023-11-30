@@ -107,6 +107,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__UNSPECIFIED_UX;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__UNSUPPORTED_UX;
 import static com.android.adservices.service.ui.constants.DebugMessages.PRIVACY_SANDBOX_UI_REQUEST_MESSAGE;
+import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.RVC_UX;
 
 import android.content.Context;
 import android.os.Build;
@@ -549,6 +550,9 @@ public final class UiStatsLogger {
 
     private static int getDefaultConsent() {
         Context context = getApplicationContext();
+        if (UxStatesManager.getInstance(context).getUx() == RVC_UX) {
+            return getDefaultConsent(AdServicesApiType.MEASUREMENTS);
+        }
         Boolean defaultConsent = ConsentManager.getInstance(context).getDefaultConsent();
         // edge case where the user opens the settings pages before receiving consent notification.
         if (defaultConsent == null) {
