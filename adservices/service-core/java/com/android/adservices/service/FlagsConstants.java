@@ -895,6 +895,10 @@ public final class FlagsConstants {
 
     // Source of truth to get consent for PPAPI
     public static final String KEY_CONSENT_SOURCE_OF_TRUTH = "consent_source_of_truth";
+
+    public static final String KEY_CONSENT_ALREADY_INTERACTED_FIX_ENABLE =
+            "consent_already_interacted_fix_enable";
+
     public static final String KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH =
             "blocked_topics_source_of_truth";
 
