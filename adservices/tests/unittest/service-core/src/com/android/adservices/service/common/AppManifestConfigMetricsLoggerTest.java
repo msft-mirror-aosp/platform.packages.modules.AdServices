@@ -176,6 +176,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
                         + ")");
         logUsage(PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
         listener.assertReceived();
+        prefs.unregisterOnSharedPreferenceChangeListener(listener);
 
         int valueBefore = prefs.getInt(PKG_NAME, -1);
         expect.withMessage(
@@ -196,10 +197,10 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
                         + enabledByDefault
                         + ")");
         SyncOnSharedPreferenceChangeListener listener2 = new SyncOnSharedPreferenceChangeListener();
-        listener2 = new SyncOnSharedPreferenceChangeListener();
         prefs.registerOnSharedPreferenceChangeListener(listener2);
         logUsage(PKG_NAME, appExists, appHasConfig, enabledByDefault);
         listener2.assertReceived();
+        prefs.unregisterOnSharedPreferenceChangeListener(listener2);
 
         Map<String, ?> allProps = prefs.getAll();
         expect.withMessage("allProps").that(allProps).hasSize(1);
