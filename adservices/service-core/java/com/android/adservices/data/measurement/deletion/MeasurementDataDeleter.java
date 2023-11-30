@@ -29,7 +29,6 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.EventReport;
-import com.android.adservices.service.measurement.ReportSpecUtil;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.WipeoutStatus;
@@ -41,12 +40,12 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementWipeoutStats;
 import com.android.internal.annotations.VisibleForTesting;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Facilitates deletion of measurement data from the database, for e.g. deletion of sources,
@@ -89,7 +88,7 @@ public class MeasurementDataDeleter {
                                     deletionParam.getOriginUris(),
                                     deletionParam.getDomainUris(),
                                     deletionParam.getMatchBehavior());
-                    List<String> triggerIds =
+                    Set<String> triggerIds =
                             dao.fetchMatchingTriggers(
                                     getRegistrant(deletionParam.getAppPackageName()),
                                     deletionParam.getStart(),
@@ -119,40 +118,32 @@ public class MeasurementDataDeleter {
                          the flexible event report API, we must extract additional related
                          triggers from the source table.
                         */
-                        List<String> extendedSourceIds =
-                                dao.fetchMatchingSourcesFlexibleEventApi(triggerIds);
+                        Set<String> extendedSourceIds = dao.fetchFlexSourceIdsFor(triggerIds);
 
-                        extendedSourceIds.addAll(sourceIds);
-                        // deduplication of the source ids
-                        extendedSourceIds = new ArrayList<>(new HashSet<>(extendedSourceIds));
-
-                        List<EventReport> mixedEventReportsFromSourceAndTrigger =
-                                dao.fetchMatchingEventReports(extendedSourceIds, triggerIds);
-                        eventReports =
-                                filterReportFlexibleEventsAPI(
-                                        dao, sourceIds, mixedEventReportsFromSourceAndTrigger);
-                    } else {
-                        eventReports = dao.fetchMatchingEventReports(sourceIds, triggerIds);
-                        // If any of the source has flexible event report API previously turned
-                        // on, need to check additional trigger and delete them
-                        for (String sourceId : sourceIds) {
+                        // IMeasurementDao::fetchFlexSourceIdsFor fetches only
+                        // sources that have trigger specs (flex API), which means we can examine
+                        // only their attributed trigger list.
+                        for (String sourceId : extendedSourceIds) {
                             Source source = dao.getSource(sourceId);
-                            if (!mFlags.getMeasurementFlexibleEventReportingApiEnabled()
-                                    || source.getTriggerSpecs() == null
-                                    || source.getTriggerSpecs().isEmpty()) {
-                                continue;
-                            }
                             try {
-                                source.buildFlexibleEventReportApi();
-                                triggerIds.addAll(
-                                        source.getFlexEventReportSpec().getAllTriggerIds());
-                            } catch (JSONException e) {
-                                LoggerFactory.getMeasurementLogger()
-                                        .e(
-                                                "MeasurementDataDeleter::delete unable to build"
-                                                        + " event report spec");
+                                source.buildAttributedTriggers();
+                                triggerIds.addAll(source.getAttributedTriggerIds());
+                                // Delete all attributed triggers for the source.
+                                dao.updateSourceAttributedTriggers(
+                                        sourceId, new JSONArray().toString());
+                            } catch (JSONException error) {
+                                LoggerFactory.getMeasurementLogger().e(
+                                        error,
+                                        "MeasurementDataDeleter::delete unable to build attributed "
+                                                + "triggers. Source ID: %", sourceId);
                             }
                         }
+
+                        extendedSourceIds.addAll(sourceIds);
+
+                        eventReports = dao.fetchMatchingEventReports(extendedSourceIds, triggerIds);
+                    } else {
+                        eventReports = dao.fetchMatchingEventReports(sourceIds, triggerIds);
                     }
 
                     resetDedupKeys(dao, eventReports);
@@ -232,32 +223,30 @@ public class MeasurementDataDeleter {
             }
 
             Source source = dao.getSource(report.getSourceId());
+            UnsignedLong dedupKey = report.getTriggerDedupKey();
+
+            // Event reports for flex API do not have trigger dedup key populated. Otherwise,
+            // it may or may not be.
+            if (dedupKey == null) {
+                return;
+            }
 
             if (mFlags.getMeasurementEnableAraDeduplicationAlignmentV1()) {
-                UnsignedLong dedupKey = report.getTriggerDedupKey();
-                if (dedupKey != null) {
-                    try {
-                        source.buildAttributedTriggers();
-                        source.getAttributedTriggers().removeIf(attributedTrigger ->
-                                dedupKey.equals(attributedTrigger.getDedupKey())
-                                        && Objects.equals(
-                                                report.getTriggerId(),
-                                                attributedTrigger.getTriggerId()));
-                        // Flex API takes care of trigger removal from the attributed trigger list
-                        // without the need for changes here.
-                        if (!(mFlags.getMeasurementFlexibleEventReportingApiEnabled()
-                                        && source.getTriggerSpecs() != null
-                                        && !source.getTriggerSpecs().isEmpty())) {
-                            dao.updateSourceAttributedTriggers(
-                                    source.getId(), source.attributedTriggersToJson());
-                        }
-                    } catch (JSONException e) {
-                        LoggerFactory.getMeasurementLogger()
-                                .e(e, "resetDedupKeys: failed to build attributed triggers.");
-                    }
+                try {
+                    source.buildAttributedTriggers();
+                    source.getAttributedTriggers().removeIf(attributedTrigger ->
+                            dedupKey.equals(attributedTrigger.getDedupKey())
+                                    && Objects.equals(
+                                            report.getTriggerId(),
+                                            attributedTrigger.getTriggerId()));
+                    dao.updateSourceAttributedTriggers(
+                            source.getId(), source.attributedTriggersToJson());
+                } catch (JSONException e) {
+                    LoggerFactory.getMeasurementLogger()
+                            .e(e, "resetDedupKeys: failed to build attributed triggers.");
                 }
             } else {
-                source.getEventReportDedupKeys().remove(report.getTriggerDedupKey());
+                source.getEventReportDedupKeys().remove(dedupKey);
                 dao.updateSourceEventReportDedupKeys(source);
             }
         }
@@ -292,62 +281,5 @@ public class MeasurementDataDeleter {
                         .setWipeoutType(wipeoutStatus.getWipeoutType().getValue())
                         .setSourceRegistrant(sourceRegistrant)
                         .build());
-    }
-
-    List<EventReport> filterReportFlexibleEventsAPI(
-            IMeasurementDao dao, List<String> sourceIds, List<EventReport> eventReports)
-            throws DatastoreException {
-        List<EventReport> eventReportsToDelete = new ArrayList<>();
-        for (EventReport eventReport : eventReports) {
-            String sourceId = eventReport.getSourceId();
-            if (sourceIds.contains(sourceId)) {
-                /*
-                Deletion can occur in multiple cases. If the deletion request is for the source,
-                then all event reports related to this source should be deleted. No additional
-                logic is required.
-                 */
-                eventReportsToDelete.add(eventReport);
-            } else {
-                Source source = dao.getSource(sourceId);
-                try {
-                    source.buildFlexibleEventReportApi();
-                } catch (JSONException e) {
-                    LoggerFactory.getMeasurementLogger().d("Unable to read JSON from Database");
-                    eventReportsToDelete.add(eventReport);
-                    continue;
-                }
-                if (source.getFlexEventReportSpec() == null) {
-                    // Not using flexible event API at deletion time. No need to do the filtering
-                    // logic.
-                    eventReportsToDelete.add(eventReport);
-                } else {
-                    int numDecrementalBucket =
-                            ReportSpecUtil.numDecrementingBucket(
-                                    source.getFlexEventReportSpec(), eventReport);
-                    if (!source.getFlexEventReportSpec().deleteFromAttributedValue(eventReport)) {
-                        /*
-                        This indicates the case where the trigger record in the source table has
-                        been deleted already. This case will occur when deleting a trigger that has
-                        generated more than one event report. For example, if a summary bucket is
-                         [1, 5, 10] and a trigger with value 7 generates two event reports, then
-                         when this trigger is deleted, two event reports should be deleted. When
-                         deleting the first event report, the trigger record will be deleted.
-                         Therefore, when deleting the second event report, the trigger will not
-                         be found in the source table, and we still need to delete the event report.
-                         */
-                        eventReportsToDelete.add(eventReport);
-                        continue;
-                    }
-                    if (numDecrementalBucket > 0) {
-                        eventReportsToDelete.add(eventReport);
-                    }
-                    dao.updateSourceAttributedTriggers(
-                            source.getId(),
-                            source.attributedTriggersToJsonFlexApi());
-                    ReportSpecUtil.resetSummaryBucketForAllEventReport(source, dao);
-                }
-            }
-        }
-        return eventReportsToDelete;
     }
 }

@@ -26,6 +26,7 @@ import android.net.Uri;
 import androidx.test.filters.SmallTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AppManifestConfigHelper;
@@ -44,7 +45,7 @@ import java.util.List;
 import java.util.Optional;
 
 @SmallTest
-public final class EnrollmentTest {
+public final class EnrollmentTest extends AdServicesUnitTestCase {
 
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();
@@ -87,7 +88,7 @@ public final class EnrollmentTest {
                 .when(
                         () ->
                                 AppManifestConfigHelper.isAllowedAttributionAccess(
-                                        any(), eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
+                                        eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
 
         assertEquals(
                 Optional.of(ENROLLMENT.getEnrollmentId()),
@@ -105,7 +106,7 @@ public final class EnrollmentTest {
                 .when(
                         () ->
                                 AppManifestConfigHelper.isAllowedAttributionAccess(
-                                        any(), eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
+                                        eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
 
         assertEquals(
                 Optional.empty(),
@@ -123,7 +124,7 @@ public final class EnrollmentTest {
                 .when(
                         () ->
                                 AppManifestConfigHelper.isAllowedAttributionAccess(
-                                        any(), eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
+                                        eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
         assertEquals(
                 Optional.empty(),
                 Enrollment.getValidEnrollmentId(
@@ -140,7 +141,7 @@ public final class EnrollmentTest {
                 .when(
                         () ->
                                 AppManifestConfigHelper.isAllowedAttributionAccess(
-                                        any(), eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
+                                        eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
 
         assertEquals(
                 Optional.empty(),

@@ -32,10 +32,11 @@ import java.util.concurrent.TimeUnit;
 /**
  * Helper used to block until a success (or failure) callback is received.
  *
- * <p>It's abstract as the typical usage on tests would be some callback interface (like {@code
- * OutcomeReceiver}), so the actual test artifact would be subclasses. In fact, your test most
- * likely won't extend this class directly, but subclasses like {@link ExceptionFailureSyncCallback}
- * or {@link IntFailureSyncCallback}.
+ * <p>It's a concrete class so it can be used on simple cases (where usually people uses a {@link
+ * CountDownLatch}), but typically the tests need to use an existing callback (like {@code
+ * OutcomeReceiver}), in which case the actual test artifact would be a subclasses. In fact, your
+ * test most likely won't extend this class directly, but subclasses like {@link
+ * ExceptionFailureSyncCallback} or {@link IntFailureSyncCallback}.
  *
  * <p>Callers typically call {@link #assertResultReceived()} or {@link #assertFailureReceived()} to
  * assert the expected outcome.
@@ -43,7 +44,7 @@ import java.util.concurrent.TimeUnit;
  * @param <T> type of the object received on success.
  * @param <E> type of the object received on error.
  */
-public abstract class SyncCallback<T, E> {
+public class SyncCallback<T, E> {
 
     private static final String TAG = SyncCallback.class.getSimpleName();
 
@@ -100,7 +101,7 @@ public abstract class SyncCallback<T, E> {
      * @throws IllegalStateException if {@link #injectResult(T)} or {@link #injectError(E)} was
      *     already called.
      */
-    protected final void injectResult(T result) {
+    public final void injectResult(T result) {
         mResult = result;
         setMethodCalled("injectResult", result);
     }
@@ -111,7 +112,7 @@ public abstract class SyncCallback<T, E> {
      * @throws IllegalStateException if {@link #injectResult(T)} or {@link #injectError(E)} was
      *     already called.
      */
-    protected final void injectError(E error) {
+    public final void injectError(E error) {
         mError = error;
         setMethodCalled("injectError", error);
     }

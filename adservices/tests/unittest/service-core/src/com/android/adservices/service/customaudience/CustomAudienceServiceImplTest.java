@@ -71,6 +71,7 @@ import android.os.RemoteException;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -103,7 +104,8 @@ import org.mockito.MockitoSession;
 
 import java.util.concurrent.ExecutorService;
 
-public class CustomAudienceServiceImplTest {
+public final class CustomAudienceServiceImplTest extends AdServicesUnitTestCase {
+
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final ExecutorService DIRECT_EXECUTOR = MoreExecutors.newDirectExecutorService();
 

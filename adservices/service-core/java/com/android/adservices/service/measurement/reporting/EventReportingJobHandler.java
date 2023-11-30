@@ -333,6 +333,7 @@ public class EventReportingJobHandler {
                 .setRandomizedTriggerRate(eventReport.getRandomizedTriggerRate())
                 .setSourceDebugKey(eventReport.getSourceDebugKey())
                 .setTriggerDebugKey(eventReport.getTriggerDebugKey())
+                .setTriggerDebugKeys(eventReport.getTriggerDebugKeys())
                 .setTriggerSummaryBucket(eventReport.getTriggerSummaryBucket())
                 .build()
                 .toJson();

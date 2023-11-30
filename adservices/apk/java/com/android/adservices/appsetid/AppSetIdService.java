@@ -59,7 +59,7 @@ public class AppSetIdService extends Service {
             mAppSetIdService =
                     new AppSetIdServiceImpl(
                             this,
-                            AppSetIdWorker.getInstance(this),
+                            AppSetIdWorker.getInstance(),
                             AdServicesLoggerImpl.getInstance(),
                             Clock.SYSTEM_CLOCK,
                             FlagsFactory.getFlags(),

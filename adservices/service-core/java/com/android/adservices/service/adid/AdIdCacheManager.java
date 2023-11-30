@@ -39,6 +39,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
@@ -76,10 +77,10 @@ public final class AdIdCacheManager {
     }
 
     /** Gets a singleton instance of {@link AdIdCacheManager}. */
-    public static AdIdCacheManager getInstance(Context context) {
+    public static AdIdCacheManager getInstance() {
         synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
-                sSingleton = new AdIdCacheManager(context);
+                sSingleton = new AdIdCacheManager(ApplicationContextSingleton.get());
             }
 
             return sSingleton;

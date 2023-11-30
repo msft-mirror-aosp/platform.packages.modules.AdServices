@@ -28,7 +28,7 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 
 /**
- * Provides methods for OHTTP encryption and decryption
+ * Provides methods for OHTTP client side encryption and decryption
  *
  * <ul>
  *   <li>Facilitates client side to initiate OHttp request flow by initializing the key config

@@ -20,12 +20,20 @@ import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGet
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastS;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilError;
+import static com.android.adservices.service.common.AppManifestConfigMetricsLoggerTest.APP_DOES_NOT_EXIST;
+import static com.android.adservices.service.common.AppManifestConfigMetricsLoggerTest.APP_DOES_NOT_HAVE_CONFIG;
+import static com.android.adservices.service.common.AppManifestConfigMetricsLoggerTest.APP_EXISTS;
+import static com.android.adservices.service.common.AppManifestConfigMetricsLoggerTest.APP_HAS_CONFIG;
+import static com.android.adservices.service.common.AppManifestConfigMetricsLoggerTest.ENABLED_BY_DEFAULT;
+import static com.android.adservices.service.common.AppManifestConfigMetricsLoggerTest.NOT_ENABLED_BY_DEFAULT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_PARSING_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -34,6 +42,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 
 import android.content.Context;
@@ -47,6 +56,7 @@ import android.util.Log;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.errorlogging.ErrorLogUtil;
@@ -56,8 +66,6 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.exception.XmlParseException;
 import com.android.modules.utils.build.SdkLevel;
 
-import com.google.common.truth.Expect;
-
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -65,9 +73,8 @@ import org.mockito.Mock;
 import org.mockito.verification.VerificationMode;
 
 @SmallTest
-public final class AppManifestConfigHelperTest {
+public final class AppManifestConfigHelperTest extends AdServicesUnitTestCase {
 
-    private static final String TAG = AppManifestConfigHelperTest.class.getSimpleName();
     private static final int RESOURCE_ID = 123;
     private static final String AD_SERVICES_CONFIG_PROPERTY =
             "android.adservices.AD_SERVICES_CONFIG";
@@ -87,6 +94,7 @@ public final class AppManifestConfigHelperTest {
     public final AdServicesExtendedMockitoRule extendedMockito =
             new AdServicesExtendedMockitoRule.Builder(this)
                     .spyStatic(AppManifestConfigParser.class)
+                    .spyStatic(AppManifestConfigMetricsLogger.class)
                     .spyStatic(AndroidManifestConfigParser.class)
                     .spyStatic(FlagsFactory.class)
                     .spyStatic(SdkLevel.class)
@@ -95,14 +103,18 @@ public final class AppManifestConfigHelperTest {
 
     @Rule public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAnyLevel();
 
-    @Rule public final Expect expect = Expect.create();
-
     @Before
     public void setCommonExpectations() {
+        appContext.set(mMockContext);
         when(mMockContext.getPackageManager()).thenReturn(mMockPackageManager);
         mockGetFlags(mMockFlags);
         setEnabledByDefault(false);
         doNothingOnErrorLogUtilError();
+        doNothing()
+                .when(
+                        () ->
+                                AppManifestConfigMetricsLogger.logUsage(
+                                        any(), anyBoolean(), anyBoolean(), anyBoolean()));
     }
 
     @Test
@@ -111,12 +123,13 @@ public final class AppManifestConfigHelperTest {
         mockGetPropertySucceeds(PACKAGE_NAME, AD_SERVICES_CONFIG_PROPERTY, RESOURCE_ID);
         mockAppManifestConfigParserGetConfigSucceeds();
         mockIsAllowedAttributionAccess(ENROLLMENT_ID, true);
-
         assertWithMessage("isAllowedAttributionAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
                 .that(
                         AppManifestConfigHelper.isAllowedAttributionAccess(
-                                mMockContext, PACKAGE_NAME, ENROLLMENT_ID))
+                                PACKAGE_NAME, ENROLLMENT_ID))
                 .isTrue();
+
+        verifyLogUsage(APP_EXISTS, APP_HAS_CONFIG, NOT_ENABLED_BY_DEFAULT);
     }
 
     @Test
@@ -125,12 +138,13 @@ public final class AppManifestConfigHelperTest {
         mockGetAssetSucceeds(PACKAGE_NAME, RESOURCE_ID);
         mockAppManifestConfigParserGetConfigSucceeds();
         mockIsAllowedAttributionAccess(ENROLLMENT_ID, true);
-
         assertWithMessage("isAllowedAttributionAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
                 .that(
                         AppManifestConfigHelper.isAllowedAttributionAccess(
-                                mMockContext, PACKAGE_NAME, ENROLLMENT_ID))
+                                PACKAGE_NAME, ENROLLMENT_ID))
                 .isTrue();
+
+        verifyLogUsage(APP_EXISTS, APP_HAS_CONFIG, NOT_ENABLED_BY_DEFAULT);
     }
 
     @Test
@@ -139,13 +153,14 @@ public final class AppManifestConfigHelperTest {
         mockGetPropertySucceeds(PACKAGE_NAME, AD_SERVICES_CONFIG_PROPERTY, RESOURCE_ID);
         mockAppManifestConfigParserGetConfigSucceeds();
         mockIsAllowedCustomAudiencesAccess(ENROLLMENT_ID, true);
-
         assertWithMessage(
                         "isAllowedCustomAudiencesAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
                 .that(
                         AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                                mMockContext, PACKAGE_NAME, ENROLLMENT_ID))
+                                PACKAGE_NAME, ENROLLMENT_ID))
                 .isTrue();
+
+        verifyLogUsage(APP_EXISTS, APP_HAS_CONFIG, NOT_ENABLED_BY_DEFAULT);
     }
 
     @Test
@@ -154,13 +169,14 @@ public final class AppManifestConfigHelperTest {
         mockGetAssetSucceeds(PACKAGE_NAME, RESOURCE_ID);
         mockAppManifestConfigParserGetConfigSucceeds();
         mockIsAllowedCustomAudiencesAccess(ENROLLMENT_ID, true);
-
         assertWithMessage(
                         "isAllowedCustomAudiencesAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
                 .that(
                         AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                                mMockContext, PACKAGE_NAME, ENROLLMENT_ID))
+                                PACKAGE_NAME, ENROLLMENT_ID))
                 .isTrue();
+
+        verifyLogUsage(APP_EXISTS, APP_HAS_CONFIG, NOT_ENABLED_BY_DEFAULT);
     }
 
     @Test
@@ -286,17 +302,16 @@ public final class AppManifestConfigHelperTest {
         mockAppManifestConfigParserGetConfigSucceeds();
         mockContainsSdk(ENROLLMENT_ID, containsSdk);
         mockIsAllowedTopicsAccess(ENROLLMENT_ID, topicsAllowed);
-
         assertWithMessage("isAllowedTopicsAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
                 .that(
                         AppManifestConfigHelper.isAllowedTopicsAccess(
-                                mMockContext,
                                 /* useSandboxCheck= */ useSandboxCheck,
                                 PACKAGE_NAME,
                                 ENROLLMENT_ID))
                 .isEqualTo(expectedAllowed);
-    }
 
+        verifyLogUsage(APP_EXISTS, APP_HAS_CONFIG, NOT_ENABLED_BY_DEFAULT);
+    }
 
     @Test
     @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
@@ -305,7 +320,9 @@ public final class AppManifestConfigHelperTest {
         Exception e = mockAppManifestConfigParserGetConfigThrows();
 
         assertNoAccessAllowed();
+
         verifyErrorLogUtilErrorLogged(e, times(4)); // Called once for each API
+        verifyLogUsage(APP_EXISTS, APP_HAS_CONFIG, NOT_ENABLED_BY_DEFAULT, times(4));
     }
 
     @Test
@@ -315,7 +332,9 @@ public final class AppManifestConfigHelperTest {
         Exception e = mockAppManifestConfigParserGetConfigThrows();
 
         assertNoAccessAllowed();
+
         verifyErrorLogUtilErrorLogged(e, times(4)); // Called once for each API
+        verifyLogUsage(APP_EXISTS, APP_HAS_CONFIG, NOT_ENABLED_BY_DEFAULT, times(4));
     }
 
     @Test
@@ -327,7 +346,9 @@ public final class AppManifestConfigHelperTest {
         Exception e = mockAppManifestConfigParserGetConfigThrows();
 
         assertNoAccessAllowed();
+
         verifyErrorLogUtilErrorLogged(e, times(4)); // Called once for each API
+        verifyLogUsage(APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT, times(4));
     }
 
     @Test
@@ -339,7 +360,9 @@ public final class AppManifestConfigHelperTest {
         Exception e = mockAppManifestConfigParserGetConfigThrows();
 
         assertNoAccessAllowed();
+
         verifyErrorLogUtilErrorLogged(e, times(4)); // Called once for each API
+        verifyLogUsage(APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT, times(4));
     }
 
     @Test
@@ -347,6 +370,9 @@ public final class AppManifestConfigHelperTest {
         mockAppNotFound(PACKAGE_NAME);
 
         assertNoAccessAllowed();
+
+        verifyLogUsage(
+                APP_DOES_NOT_EXIST, APP_DOES_NOT_HAVE_CONFIG, NOT_ENABLED_BY_DEFAULT, times(4));
     }
 
     @Test
@@ -355,6 +381,8 @@ public final class AppManifestConfigHelperTest {
         mockAppNotFound(PACKAGE_NAME);
 
         assertNoAccessAllowed();
+
+        verifyLogUsage(APP_DOES_NOT_EXIST, APP_DOES_NOT_HAVE_CONFIG, ENABLED_BY_DEFAULT, times(4));
     }
 
     @Test
@@ -364,6 +392,8 @@ public final class AppManifestConfigHelperTest {
         mockGetPropertyNotFound(PACKAGE_NAME, AD_SERVICES_CONFIG_PROPERTY);
 
         assertNoAccessAllowed();
+
+        verifyLogUsage(APP_EXISTS, APP_DOES_NOT_HAVE_CONFIG, NOT_ENABLED_BY_DEFAULT, times(4));
     }
 
     @Test
@@ -373,6 +403,8 @@ public final class AppManifestConfigHelperTest {
         mockGetAssetNotFound(PACKAGE_NAME);
 
         assertNoAccessAllowed();
+
+        verifyLogUsage(APP_EXISTS, APP_DOES_NOT_HAVE_CONFIG, NOT_ENABLED_BY_DEFAULT, times(4));
     }
 
     @Test
@@ -384,6 +416,8 @@ public final class AppManifestConfigHelperTest {
         mockGetPropertyNotFound(PACKAGE_NAME, AD_SERVICES_CONFIG_PROPERTY);
 
         assertAllAccessAllowed();
+
+        verifyLogUsage(APP_EXISTS, APP_DOES_NOT_HAVE_CONFIG, ENABLED_BY_DEFAULT, times(4));
     }
 
     @Test
@@ -395,13 +429,15 @@ public final class AppManifestConfigHelperTest {
         mockGetAssetNotFound(PACKAGE_NAME);
 
         assertAllAccessAllowed();
+
+        verifyLogUsage(APP_EXISTS, APP_DOES_NOT_HAVE_CONFIG, ENABLED_BY_DEFAULT, times(4));
     }
 
     private void mockSdkLevelR() {
         if (SdkLevel.isAtLeastS()) {
             mockIsAtLeastS(false);
         } else {
-            Log.v(TAG, "mockSdkLevelR(): not needed, device is not at least S");
+            Log.v(mTag, "mockSdkLevelR(): not needed, device is not at least S");
         }
     }
 
@@ -487,26 +523,22 @@ public final class AppManifestConfigHelperTest {
         expect.withMessage("isAllowedAttributionAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
                 .that(
                         AppManifestConfigHelper.isAllowedAttributionAccess(
-                                mMockContext, PACKAGE_NAME, ENROLLMENT_ID))
+                                PACKAGE_NAME, ENROLLMENT_ID))
                 .isFalse();
         expect.withMessage(
                         "isAllowedCustomAudiencesAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
                 .that(
                         AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                                mMockContext, PACKAGE_NAME, ENROLLMENT_ID))
+                                PACKAGE_NAME, ENROLLMENT_ID))
                 .isFalse();
         expect.withMessage("isAllowedTopicsAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
                 .that(
                         AppManifestConfigHelper.isAllowedTopicsAccess(
-                                mMockContext,
-                                /* useSandboxCheck= */ true,
-                                PACKAGE_NAME,
-                                ENROLLMENT_ID))
+                                /* useSandboxCheck= */ true, PACKAGE_NAME, ENROLLMENT_ID))
                 .isFalse();
         expect.withMessage("isAllowedTopicsAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
                 .that(
                         AppManifestConfigHelper.isAllowedTopicsAccess(
-                                mMockContext,
                                 /* useSandboxCheck= */ false,
                                 PACKAGE_NAME,
                                 ENROLLMENT_ID))
@@ -517,26 +549,22 @@ public final class AppManifestConfigHelperTest {
         expect.withMessage("isAllowedAttributionAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
                 .that(
                         AppManifestConfigHelper.isAllowedAttributionAccess(
-                                mMockContext, PACKAGE_NAME, ENROLLMENT_ID))
+                                PACKAGE_NAME, ENROLLMENT_ID))
                 .isTrue();
         expect.withMessage(
                         "isAllowedCustomAudiencesAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
                 .that(
                         AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                                mMockContext, PACKAGE_NAME, ENROLLMENT_ID))
+                                PACKAGE_NAME, ENROLLMENT_ID))
                 .isTrue();
         expect.withMessage("isAllowedTopicsAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
                 .that(
                         AppManifestConfigHelper.isAllowedTopicsAccess(
-                                mMockContext,
-                                /* useSandboxCheck= */ true,
-                                PACKAGE_NAME,
-                                ENROLLMENT_ID))
+                                /* useSandboxCheck= */ true, PACKAGE_NAME, ENROLLMENT_ID))
                 .isTrue();
         expect.withMessage("isAllowedTopicsAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
                 .that(
                         AppManifestConfigHelper.isAllowedTopicsAccess(
-                                mMockContext,
                                 /* useSandboxCheck= */ false,
                                 PACKAGE_NAME,
                                 ENROLLMENT_ID))
@@ -552,6 +580,25 @@ public final class AppManifestConfigHelperTest {
                 exceptionMatcher,
                 eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_PARSING_ERROR),
                 eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON),
+                mode);
+    }
+
+    private void verifyLogUsage(boolean appExists, boolean appHasConfig, boolean enabledByDefault) {
+        verifyLogUsage(appExists, appHasConfig, enabledByDefault, times(1));
+    }
+
+    private void verifyLogUsage(
+            boolean appExists,
+            boolean appHasConfig,
+            boolean enabledByDefault,
+            VerificationMode mode) {
+        verify(
+                () ->
+                        AppManifestConfigMetricsLogger.logUsage(
+                                PACKAGE_NAME,
+                                appExists,
+                                appHasConfig,
+                                enabledByDefault),
                 mode);
     }
 
