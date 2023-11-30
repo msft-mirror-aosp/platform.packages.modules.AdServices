@@ -108,6 +108,14 @@ public interface Flags extends CommonFlags {
         return TOPICS_ENABLE_ENCRYPTION;
     }
 
+    /** Flag to disable plaintext Topics for Topics API response. */
+    boolean TOPICS_DISABLE_PLAINTEXT_RESPONSE = false;
+
+    /** Returns the feature flag to disable plaintext fields Topics API response. */
+    default boolean getTopicsDisablePlaintextResponse() {
+        return TOPICS_DISABLE_PLAINTEXT_RESPONSE;
+    }
+
     /**
      * Returns the number of epochs to look back when deciding if a caller has observed a topic
      * before.

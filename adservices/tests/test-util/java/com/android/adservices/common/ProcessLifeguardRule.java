@@ -15,13 +15,12 @@
  */
 package com.android.adservices.common;
 
+import static com.android.adservices.shared.testing.common.FileHelper.writeFile;
+
 import android.os.Looper;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 
 /**
@@ -49,7 +48,8 @@ public final class ProcessLifeguardRule extends AbstractProcessLifeguardRule {
             List<String> allTests,
             List<String> lastTests,
             Throwable uncaughtThrowable) {
-        saveToSdCard(testName, allTests, lastTests, /* testFailure= */ null, uncaughtThrowable);
+        writeToTestStorage(
+                testName, allTests, lastTests, /* testFailure= */ null, uncaughtThrowable);
         return super.newUncaughtBackgroundException(
                 testName, allTests, lastTests, uncaughtThrowable);
     }
@@ -61,12 +61,12 @@ public final class ProcessLifeguardRule extends AbstractProcessLifeguardRule {
             List<String> lastTests,
             Throwable testFailure,
             Throwable uncaughtThrowable) {
-        saveToSdCard(testName, allTests, lastTests, testFailure, uncaughtThrowable);
+        writeToTestStorage(testName, allTests, lastTests, testFailure, uncaughtThrowable);
         return super.newUncaughtBackgroundException(
                 testName, allTests, lastTests, testFailure, uncaughtThrowable);
     }
 
-    private void saveToSdCard(
+    private void writeToTestStorage(
             String testName,
             List<String> allTests,
             List<String> lastTests,
@@ -88,9 +88,7 @@ public final class ProcessLifeguardRule extends AbstractProcessLifeguardRule {
         sw.append("" + lastTests.size()).append(" tests since last failure:\n");
         lastTests.forEach(t -> sw.append('\t').append(t).append('\n'));
 
-        // TODO(b/303112789): un-hardcode /Documents
         writeFile(
-                "Documents",
                 getClass().getSimpleName()
                         + "-"
                         + testName
@@ -98,22 +96,5 @@ public final class ProcessLifeguardRule extends AbstractProcessLifeguardRule {
                         + System.currentTimeMillis()
                         + ".txt",
                 sw.toString());
-    }
-
-    // TODO(b/303112789): move to common class
-    private void writeFile(String directory, String filename, String contents) {
-        // TODO(b/303112789): un-hardcode /sdcard
-        String path = "/sdcard/" + directory;
-        Path filePath = Paths.get(path, filename);
-        try {
-            mLog.i("Creating file %s", filePath);
-            Files.createFile(filePath);
-            byte[] bytes = contents.getBytes();
-            mLog.d("Writing %d bytes to %s", bytes.length, filePath);
-            Files.write(filePath, bytes);
-            mLog.d("Saul Goodman!");
-        } catch (Exception e) {
-            mLog.e(e, "Failed to save %s", filePath);
-        }
     }
 }
