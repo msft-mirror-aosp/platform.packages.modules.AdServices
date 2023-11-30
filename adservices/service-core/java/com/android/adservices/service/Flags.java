@@ -101,11 +101,11 @@ public interface Flags extends CommonFlags {
     }
 
     /** Flag to enable encrypted Topics feature for Topics API. */
-    boolean TOPICS_ENABLE_ENCRYPTION = false;
+    boolean TOPICS_ENCRYPTION_ENABLED = false;
 
     /** Returns the feature flag to enable encryption for Topics API. */
-    default boolean getTopicsEnableEncryption() {
-        return TOPICS_ENABLE_ENCRYPTION;
+    default boolean getTopicsEncryptionEnabled() {
+        return TOPICS_ENCRYPTION_ENABLED;
     }
 
     /** Flag to disable plaintext Topics for Topics API response. */

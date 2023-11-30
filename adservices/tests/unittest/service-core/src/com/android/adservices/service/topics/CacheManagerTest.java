@@ -948,7 +948,7 @@ public final class CacheManagerTest {
         when(mMockFlags.getEnableDatabaseSchemaVersion8()).thenReturn(true);
         // Enable encryption
         when(mMockFlags.getEnableDatabaseSchemaVersion9()).thenReturn(true);
-        when(mMockFlags.getTopicsEnableEncryption()).thenReturn(true);
+        when(mMockFlags.getTopicsEncryptionEnabled()).thenReturn(true);
 
         Topic topic1 =
                 Topic.create(
@@ -1016,7 +1016,7 @@ public final class CacheManagerTest {
         when(mMockFlags.getEnableDatabaseSchemaVersion8()).thenReturn(true);
         // Enable encryption
         when(mMockFlags.getEnableDatabaseSchemaVersion9()).thenReturn(true);
-        when(mMockFlags.getTopicsEnableEncryption()).thenReturn(true);
+        when(mMockFlags.getTopicsEncryptionEnabled()).thenReturn(true);
 
         Topic topic1 =
                 Topic.create(

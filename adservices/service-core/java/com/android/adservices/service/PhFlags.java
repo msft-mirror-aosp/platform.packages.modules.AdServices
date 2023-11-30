@@ -227,12 +227,12 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
-    public boolean getTopicsEnableEncryption() {
+    public boolean getTopicsEncryptionEnabled() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants.KEY_TOPICS_ENABLE_ENCRYPTION,
-                /* defaultValue */ TOPICS_ENABLE_ENCRYPTION);
+                /* flagName */ FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED,
+                /* defaultValue */ TOPICS_ENCRYPTION_ENABLED);
     }
 
     @Override
