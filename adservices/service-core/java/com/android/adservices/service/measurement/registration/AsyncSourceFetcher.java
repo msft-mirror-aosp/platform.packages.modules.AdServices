@@ -566,6 +566,9 @@ public class AsyncSourceFetcher {
             summaryBuckets =
                     TriggerSpec.getLongListFromJSON(
                             triggerSpecJson, TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_BUCKETS);
+            if (summaryBuckets.size() > maxEventLevelReports) {
+                return Optional.empty();
+            }
         }
         if ((summaryBuckets == null || summaryBuckets.isEmpty())
                 && summaryWindowOperator != TriggerSpec.SummaryOperatorType.COUNT) {
