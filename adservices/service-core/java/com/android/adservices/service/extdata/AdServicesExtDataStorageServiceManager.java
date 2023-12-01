@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.extdata;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
 import static android.adservices.extdata.AdServicesExtDataParams.BOOLEAN_FALSE;
 import static android.adservices.extdata.AdServicesExtDataParams.BOOLEAN_TRUE;
 import static android.adservices.extdata.AdServicesExtDataParams.BOOLEAN_UNKNOWN;
@@ -30,6 +33,12 @@ import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_M
 import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_MEASUREMENT_ROLLBACK_APEX_VERSION;
 
 import static com.android.adservices.service.measurement.rollback.MeasurementRollbackCompatManager.APEX_VERSION_WHEN_NOT_FOUND;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__ADEXT_DATA_SERVICE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SERVICES_EXT_DATA;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__PUT_AD_SERVICES_EXT_DATA;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_ADEXT_DATA_SERVICE_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PUT_ADEXT_DATA_SERVICE_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__ADEXT_DATA_SERVICE;
 
 import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.extdata.AdServicesExtDataParams;
@@ -38,6 +47,13 @@ import android.annotation.NonNull;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.adservices.service.stats.ApiCallStats;
+import com.android.adservices.service.stats.Clock;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
@@ -56,6 +72,7 @@ public final class AdServicesExtDataStorageServiceManager {
     // 2000 ms writes). An additional 100 ms buffer is added for delays such as binder latency.
     private static final long READ_OPERATION_TIMEOUT_MS = 600L;
     private static final long WRITE_OPERATION_TIMEOUT_MS = 2100L;
+    @VisibleForTesting static final String UNKNOWN_PACKAGE_NAME = "unknown";
 
     private static final AdServicesExtDataParams DEFAULT_PARAMS =
             new AdServicesExtDataParams.Builder()
@@ -81,10 +98,18 @@ public final class AdServicesExtDataStorageServiceManager {
             };
 
     private final AdServicesExtDataStorageServiceWorker mDataWorker;
+    private final AdServicesLogger mAdServicesLogger;
+    private final Clock mClock;
+    private final String mPackageName;
 
     private AdServicesExtDataStorageServiceManager(
-            @NonNull AdServicesExtDataStorageServiceWorker dataWorker) {
+            @NonNull AdServicesExtDataStorageServiceWorker dataWorker,
+            @NonNull AdServicesLogger adServicesLogger,
+            @NonNull String packageName) {
         mDataWorker = Objects.requireNonNull(dataWorker);
+        mAdServicesLogger = Objects.requireNonNull(adServicesLogger);
+        mPackageName = Objects.requireNonNull(packageName);
+        mClock = Clock.SYSTEM_CLOCK;
     }
 
     /** Init {@link AdServicesExtDataStorageServiceManager}. */
@@ -92,7 +117,9 @@ public final class AdServicesExtDataStorageServiceManager {
     public static AdServicesExtDataStorageServiceManager getInstance(@NonNull Context context) {
         Objects.requireNonNull(context);
         return new AdServicesExtDataStorageServiceManager(
-                AdServicesExtDataStorageServiceWorker.getInstance(context));
+                AdServicesExtDataStorageServiceWorker.getInstance(context),
+                AdServicesLoggerImpl.getInstance(),
+                context.getPackageName());
     }
 
     /**
@@ -102,6 +129,7 @@ public final class AdServicesExtDataStorageServiceManager {
      */
     @NonNull
     public AdServicesExtDataParams getAdServicesExtData() {
+        long startServiceTime = mClock.elapsedRealtime();
         CountDownLatch latch = new CountDownLatch(1);
 
         AtomicBoolean isSuccess = new AtomicBoolean();
@@ -130,32 +158,48 @@ public final class AdServicesExtDataStorageServiceManager {
                     @Override
                     public void onError(@NonNull Exception e) {
                         LogUtil.e(e, "Error when getting AdExt data! Returning default values.");
+                        ErrorLogUtil.e(
+                                e,
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_ADEXT_DATA_SERVICE_ERROR,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__ADEXT_DATA_SERVICE);
                         latch.countDown();
                     }
                 });
 
         boolean timedOut;
-        AdServicesExtDataParams params;
+        AdServicesExtDataParams params = DEFAULT_PARAMS;
+        int resultCode = STATUS_SUCCESS;
         try {
             timedOut = !latch.await(READ_OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
             if (timedOut) {
                 LogUtil.e("Getting AdExt data timed out! Returning default values.");
-                params = DEFAULT_PARAMS;
+                resultCode = STATUS_TIMEOUT;
             } else {
-                params =
-                        isSuccess.get()
-                                ? constructParams(
-                                        notificationDisplayed.get(),
-                                        msmtConsent.get(),
-                                        isU18Account.get(),
-                                        isAdultAccount.get(),
-                                        manualInteractionWithConsentStatus.get(),
-                                        apexVersion.get())
-                                : DEFAULT_PARAMS;
+                if (isSuccess.get()) {
+                    params =
+                            constructParams(
+                                    notificationDisplayed.get(),
+                                    msmtConsent.get(),
+                                    isU18Account.get(),
+                                    isAdultAccount.get(),
+                                    manualInteractionWithConsentStatus.get(),
+                                    apexVersion.get());
+                } else {
+                    resultCode = STATUS_INTERNAL_ERROR;
+                }
             }
         } catch (Exception e) {
             LogUtil.e(e, "Error when awaiting latch! Returning default values.");
-            params = DEFAULT_PARAMS;
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_ADEXT_DATA_SERVICE_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__ADEXT_DATA_SERVICE);
+            resultCode = STATUS_INTERNAL_ERROR;
+        } finally {
+            logApiCallStats(
+                    startServiceTime,
+                    AD_SERVICES_API_CALLED__API_NAME__GET_AD_SERVICES_EXT_DATA,
+                    resultCode);
         }
 
         LogUtil.d("Returned AdExt data: %s", params);
@@ -175,6 +219,8 @@ public final class AdServicesExtDataStorageServiceManager {
             @NonNull @AdServicesExtDataFieldId int[] fieldsToUpdate) {
         Objects.requireNonNull(params);
         Objects.requireNonNull(fieldsToUpdate);
+
+        long startServiceTime = mClock.elapsedRealtime();
 
         if (fieldsToUpdate.length == 0) {
             LogUtil.d("No AdExt data fields to update. Returning early.");
@@ -199,24 +245,42 @@ public final class AdServicesExtDataStorageServiceManager {
                     @Override
                     public void onError(@NonNull Exception e) {
                         LogUtil.e(e, "Exception when updating AdExt data!");
+                        ErrorLogUtil.e(
+                                e,
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PUT_ADEXT_DATA_SERVICE_ERROR,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__ADEXT_DATA_SERVICE);
                         latch.countDown();
                     }
                 });
 
         boolean timedOut;
+        int resultCode = STATUS_SUCCESS;
         try {
             timedOut = !latch.await(WRITE_OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            if (timedOut) {
+                resultCode = STATUS_TIMEOUT;
+                LogUtil.e("Updating AdExt data failed due to timeout!");
+                return false;
+            } else if (isSuccess.get()) {
+                return true;
+            } else {
+                resultCode = STATUS_INTERNAL_ERROR;
+                return false;
+            }
         } catch (Exception e) {
             LogUtil.e(e, "Failed to update AdExt data! Exception when awaiting latch! ");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PUT_ADEXT_DATA_SERVICE_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__ADEXT_DATA_SERVICE);
+            resultCode = STATUS_INTERNAL_ERROR;
             return false;
+        } finally {
+            logApiCallStats(
+                    startServiceTime,
+                    AD_SERVICES_API_CALLED__API_NAME__PUT_AD_SERVICES_EXT_DATA,
+                    resultCode);
         }
-
-        if (timedOut) {
-            LogUtil.e("Updating AdExt data failed due to timeout!");
-            return false;
-        }
-
-        return isSuccess.get();
     }
 
     /**
@@ -378,6 +442,23 @@ public final class AdServicesExtDataStorageServiceManager {
                 .setManualInteractionWithConsentStatus(manualInteractionStatus)
                 .setMsmtRollbackApexVersion(msmtApex)
                 .build();
+    }
+
+    private void logApiCallStats(long startServiceTime, int apiName, int resultCode) {
+        // only log when not using debug proxy
+        if (!FlagsFactory.getFlags().getEnableAdExtServiceDebugProxy()) {
+            int apiLatency = (int) (mClock.elapsedRealtime() - startServiceTime);
+            mAdServicesLogger.logApiCallStats(
+                    new ApiCallStats.Builder()
+                            .setCode(AdServicesStatsLog.AD_SERVICES_API_CALLED)
+                            .setApiClass(AD_SERVICES_API_CALLED__API_CLASS__ADEXT_DATA_SERVICE)
+                            .setApiName(apiName)
+                            .setAppPackageName(mPackageName)
+                            .setSdkPackageName(UNKNOWN_PACKAGE_NAME)
+                            .setLatencyMillisecond(apiLatency)
+                            .setResultCode(resultCode)
+                            .build());
+        }
     }
 
     /** Converts AdExt data to be updated into readable string, used for debug logging. */
