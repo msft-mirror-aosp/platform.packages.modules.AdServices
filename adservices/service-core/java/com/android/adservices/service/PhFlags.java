@@ -3287,7 +3287,16 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
-    public boolean getMeasurementFlexLiteAPIEnabled() {
+    public boolean getMeasurementEnableTriggerDataMatching() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING,
+                /* defaultValue */ MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING);
+    }
+
+    @Override
+    public boolean getMeasurementFlexLiteApiEnabled() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_MEASUREMENT_FLEX_LITE_API_ENABLED,
@@ -4044,9 +4053,14 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getMeasurementFlexibleEventReportingApiEnabled());
         writer.println(
                 "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING
+                        + " = "
+                        + getMeasurementEnableTriggerDataMatching());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_MEASUREMENT_FLEX_LITE_API_ENABLED
                         + " = "
-                        + getMeasurementFlexLiteAPIEnabled());
+                        + getMeasurementFlexLiteApiEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT

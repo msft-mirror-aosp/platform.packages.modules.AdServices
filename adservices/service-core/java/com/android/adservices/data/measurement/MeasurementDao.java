@@ -480,6 +480,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.SourceContract.SHARED_DEBUG_KEY,
                 getNullableUnsignedLong(source.getSharedDebugKey()));
+        values.put(
+                MeasurementTables.SourceContract.TRIGGER_DATA_MATCHING,
+                source.getTriggerDataMatching().name());
 
         long rowId =
                 mSQLTransaction
