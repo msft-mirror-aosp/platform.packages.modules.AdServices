@@ -1683,7 +1683,7 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTimeForNoising_flexLiteApi() {
-        doReturn(true).when(mFlags).getMeasurementFlexLiteAPIEnabled();
+        doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
         long sourceTime = System.currentTimeMillis();
         Source oneWindowNoStart =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -1760,7 +1760,7 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTime_flexLiteApi() {
-        doReturn(true).when(mFlags).getMeasurementFlexLiteAPIEnabled();
+        doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
         long sourceTime = System.currentTimeMillis();
         Source oneWindowNoStart =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -1862,7 +1862,7 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getMaxReportCount_flexLiteApi() {
-        doReturn(true).when(mFlags).getMeasurementFlexLiteAPIEnabled();
+        doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
         doReturn(false).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         long sourceTime = System.currentTimeMillis();
         Source source10Reports =
@@ -1907,7 +1907,7 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingWindowCountForNoising_flexLiteApi() {
-        doReturn(true).when(mFlags).getMeasurementFlexLiteAPIEnabled();
+        doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
         doReturn(false).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         long sourceTime = System.currentTimeMillis();
         Source defaultSourceEvent =

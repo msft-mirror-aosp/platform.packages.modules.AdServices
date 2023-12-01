@@ -86,7 +86,6 @@ import static com.android.adservices.service.Flags.DEFAULT_NOTIFICATION_DISMISSE
 import static com.android.adservices.service.Flags.DEFAULT_RVC_NOTIFICATION_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK;
 import static com.android.adservices.service.Flags.DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE;
-import static com.android.adservices.service.Flags.DEFAULT_RVC_UX_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_U18_UX_ENABLED;
 import static com.android.adservices.service.Flags.DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.Flags.DISABLE_MEASUREMENT_ENROLLMENT_CHECK;
@@ -307,6 +306,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_SHARED_FIL
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_SHARED_SOURCE_DEBUG_KEY;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_SOURCE_DEBUG_REPORT;
+import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_TRIGGER_DEBUG_REPORT;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_XNA;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH;
@@ -696,6 +696,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENAB
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_SHARED_SOURCE_DEBUG_KEY;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_SOURCE_DEBUG_REPORT;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_DEBUG_REPORT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_VTC_CONFIGURABLE_MAX_EVENT_REPORTS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_XNA;
@@ -8831,9 +8832,25 @@ public class PhFlagsTest {
     }
 
     @Test
+    public void testGetMeasurementEnableTriggerDataMatching() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getMeasurementEnableTriggerDataMatching())
+                .isEqualTo(MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING);
+        boolean phOverridingValue = !MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ true);
+
+        assertThat(mPhFlags.getMeasurementEnableTriggerDataMatching())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
     public void testGetFlexLiteAPIEnabled() {
         // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementFlexLiteAPIEnabled())
+        assertThat(mPhFlags.getMeasurementFlexLiteApiEnabled())
                 .isEqualTo(MEASUREMENT_FLEX_LITE_API_ENABLED);
 
         boolean phOverridingValue = !MEASUREMENT_FLEX_LITE_API_ENABLED;
@@ -8843,7 +8860,7 @@ public class PhFlagsTest {
                 Boolean.toString(phOverridingValue),
                 /* makeDefault */ true);
 
-        assertThat(mPhFlags.getMeasurementFlexLiteAPIEnabled()).isEqualTo(phOverridingValue);
+        assertThat(mPhFlags.getMeasurementFlexLiteApiEnabled()).isEqualTo(phOverridingValue);
     }
 
     @Test
