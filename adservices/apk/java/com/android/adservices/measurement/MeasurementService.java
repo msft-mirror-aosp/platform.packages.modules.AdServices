@@ -33,6 +33,7 @@ import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.encryptionkey.EncryptionKeyJobService;
+import com.android.adservices.service.measurement.CachedFlags;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.DeleteUninstalledJobService;
 import com.android.adservices.service.measurement.MeasurementServiceImpl;
@@ -47,7 +48,6 @@ import com.android.adservices.service.measurement.reporting.EventFallbackReporti
 import com.android.adservices.service.measurement.reporting.EventReportingJobService;
 import com.android.adservices.service.measurement.reporting.VerboseDebugReportingFallbackJobService;
 import com.android.adservices.service.stats.Clock;
-import com.android.adservices.service.ui.data.UxStatesManager;
 
 /** Measurement Service */
 // TODO(b/269798827): Enable for R.
@@ -78,8 +78,7 @@ public class MeasurementService extends Service {
                             this,
                             Clock.SYSTEM_CLOCK,
                             ConsentManager.getInstance(this),
-                            UxStatesManager.getInstance(this),
-                            flags,
+                            new CachedFlags(flags),
                             appImportanceFilter);
         }
 
@@ -100,13 +99,9 @@ public class MeasurementService extends Service {
     }
 
     private boolean hasUserConsent() {
-        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
-            return ConsentManager.getInstance(this)
-                    .getConsent(AdServicesApiType.MEASUREMENTS)
-                    .isGiven();
-        } else {
-            return ConsentManager.getInstance(this).getConsent().isGiven();
-        }
+        return ConsentManager.getInstance(this)
+                .getConsent(AdServicesApiType.MEASUREMENTS)
+                .isGiven();
     }
 
     private void schedulePeriodicJobsIfNeeded() {

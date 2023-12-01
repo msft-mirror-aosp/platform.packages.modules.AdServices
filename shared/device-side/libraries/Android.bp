@@ -65,7 +65,7 @@ java_library {
         "//packages/modules/ExtServices:__subpackages__",
         "//packages/modules/OnDevicePersonalization:__subpackages__",
     ],
-    apex_available: ["com.android.adservices", "com.android.ondevicepersonalization", "com.android.extservices"],
+    apex_available: ["com.android.adservices", "com.android.extservices", "com.android.ondevicepersonalization"],
 }
 
 // NOTE: currently there's just one library for everything (which for
@@ -81,7 +81,23 @@ java_library {
     ],
     libs: [
         "framework-annotations-lib",
-        "jsr305", // for @ThreadSafe
+        "jsr305", // for @ThreadSafe",
+    ],
+    apex_available: ["com.android.adservices", "com.android.extservices", "com.android.ondevicepersonalization"],
+}
+
+java_library {
+    name: "adservices-shared-testing",
+    min_sdk_version: "30",
+    sdk_version: "module_current",
+    srcs: [
+        "java/com/android/adservices/shared/testing/**/*.java",
+    ],
+    static_libs: [
+        "adservices-shared-common",
+        "androidx.test.core",
+        "junit",
+        "truth",
     ],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",

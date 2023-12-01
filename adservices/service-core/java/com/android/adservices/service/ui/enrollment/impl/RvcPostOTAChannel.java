@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.ui.enrollment.impl;
 
-import static com.android.adservices.service.FlagsConstants.KEY_RVC_UX_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_RVC_NOTIFICATION_ENABLED;
 
 import android.content.Context;
 import android.os.Build;
@@ -24,6 +24,7 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.service.common.ConsentNotificationJobService;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.enrollment.base.PrivacySandboxEnrollmentChannel;
@@ -38,17 +39,21 @@ public class RvcPostOTAChannel implements PrivacySandboxEnrollmentChannel {
             PrivacySandboxUxCollection uxCollection,
             ConsentManager consentManager,
             UxStatesManager uxStatesManager) {
-        // Only user who opted in msmt API on R is eligible
-        return uxStatesManager.getFlag(KEY_RVC_UX_ENABLED)
-                && consentManager.getConsentFromR().isGiven();
+        // Rvc user should be matched to RvcPostOTAChannel on S+
+        // TODO: rename flag to KEY_RVC_POST_OTA_NOTIFICATION_ENABLED
+        return uxStatesManager.getFlag(KEY_RVC_NOTIFICATION_ENABLED)
+                && consentManager.isOtaAdultUserFromRvc();
     }
 
     /** Enroll users with GA notification. */
     public void enroll(Context context, ConsentManager consentManager) {
+        // Only rvc user who opted in msmt API is eligible for enrollment
         // Reconsent bit does not matter here.
-        ConsentNotificationJobService.schedule(
-                context,
-                /* adidEnabled= */ consentManager.isAdIdEnabled(),
-                /* reConsentStatus= */ false);
+        if (consentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven()) {
+            ConsentNotificationJobService.schedule(
+                    context,
+                    /* adidEnabled= */ consentManager.isAdIdEnabled(),
+                    /* reConsentStatus= */ false);
+        }
     }
 }

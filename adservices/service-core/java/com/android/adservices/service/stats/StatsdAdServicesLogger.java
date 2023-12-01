@@ -22,6 +22,8 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACK_COMPAT_GET_TOPICS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_CONSENT_MIGRATED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENCRYPTION_KEY_DB_TRANSACTION_ENDED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENCRYPTION_KEY_FETCHED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_DATA_STORED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_FAILED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_FILE_DOWNLOADED;
@@ -464,6 +466,30 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 mEnrollmentRecordCountInTable,
                 mQueryParameter,
                 mErrorCause);
+    }
+
+    /** Logs encryption key fetch stats. */
+    @Override
+    public void logEncryptionKeyFetchedStats(AdServicesEncryptionKeyFetchedStats stats) {
+        AdServicesStatsLog.write(
+                AD_SERVICES_ENCRYPTION_KEY_FETCHED,
+                stats.getFetchJobType().getValue(),
+                stats.getFetchStatus().getValue(),
+                stats.getIsFirstTimeFetch(),
+                stats.getAdtechEnrollmentId(),
+                stats.getCompanyId(),
+                stats.getEncryptionKeyUrl());
+    }
+
+    /** Logs encryption key datastore transaction ended stats. */
+    @Override
+    public void logEncryptionKeyDbTransactionEndedStats(
+            AdServicesEncryptionKeyDbTransactionEndedStats stats) {
+        AdServicesStatsLog.write(
+                AD_SERVICES_ENCRYPTION_KEY_DB_TRANSACTION_ENDED,
+                stats.getDbTransactionType().getValue(),
+                stats.getDbTransactionStatus().getValue(),
+                stats.getMethodName().getValue());
     }
 
     @NonNull

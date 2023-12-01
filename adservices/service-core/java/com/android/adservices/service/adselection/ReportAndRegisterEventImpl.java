@@ -190,12 +190,9 @@ class ReportAndRegisterEventImpl extends EventReporter {
         }
 
         // Check if user consent is granted.
-        AdServicesApiConsent userConsent = AdServicesApiConsent.REVOKED;
-        if (mFlags.getGaUxFeatureEnabled()) {
-            userConsent = mConsentManager.getConsent(AdServicesApiType.MEASUREMENTS);
-        } else {
-            userConsent = mConsentManager.getConsent();
-        }
+        AdServicesApiConsent userConsent =
+                mConsentManager.getConsent(AdServicesApiType.MEASUREMENTS);
+
         if (!userConsent.isGiven()) {
             sLogger.v("Skipping event registration: User consent is revoked.");
             return false;

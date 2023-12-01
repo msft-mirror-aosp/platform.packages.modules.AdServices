@@ -32,6 +32,7 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.service.stats.AdServicesEncryptionKeyFetchedStats.FetchJobType;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -136,7 +137,9 @@ public class EncryptionKeyJobService extends JobService {
         EnrollmentDao enrollmentDao = EnrollmentDao.getInstance(getApplicationContext());
         EncryptionKeyJobHandler encryptionKeyJobHandler =
                 new EncryptionKeyJobHandler(
-                        encryptionKeyDao, enrollmentDao, new EncryptionKeyFetcher());
+                        encryptionKeyDao,
+                        enrollmentDao,
+                        new EncryptionKeyFetcher(FetchJobType.ENCRYPTION_KEY_DAILY_FETCH_JOB));
         encryptionKeyJobHandler.fetchAndUpdateEncryptionKeys();
     }
 

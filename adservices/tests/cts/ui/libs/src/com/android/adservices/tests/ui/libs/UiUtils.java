@@ -48,6 +48,7 @@ import androidx.test.uiautomator.Until;
 import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.shared.testing.common.FileHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import com.google.common.util.concurrent.SettableFuture;
@@ -170,6 +171,11 @@ public class UiUtils {
         forceSetFlag("rvc_ux_enabled", true);
     }
 
+    /** Override flag rvc_notification_enabled in tests to true */
+    public static void enableRvcNotification() throws Exception {
+        forceSetFlag("rvc_notification_enabled", true);
+    }
+
     /** Override flag rvc_ux_enabled in tests to false */
     public static void disableRvc() throws Exception {
         forceSetFlag("rvc_ux_enabled", false);
@@ -224,6 +230,17 @@ public class UiUtils {
     /** Set flag consent_manager_debug_mode to true in tests */
     public static void setConsentManagerDebugMode() {
         ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
+    }
+
+    /** Set flag consent_manager_ota_debug_mode to true in tests */
+    public static void setConsentManagerOtaDebugMode() {
+        ShellUtils.runShellCommand(
+                "device_config put adservices consent_manager_ota_debug_mode true");
+    }
+
+    /** Set flag consent_manager_debug_mode to false in tests */
+    public static void resetConsentManagerDebugMode() {
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode false");
     }
 
     public static void enableNotificationPermission() {
@@ -721,7 +738,10 @@ public class UiUtils {
                     new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
                             .format(Date.from(Instant.now()));
 
-            File screenshotFile = new File("/sdcard/Pictures/" + methodName + timeStamp + ".png");
+            File screenshotFile =
+                    new File(
+                            FileHelper.getAdServicesTestsOutputDir(),
+                            methodName + timeStamp + ".png");
             device.takeScreenshot(screenshotFile);
         } catch (RuntimeException e) {
             LogUtil.e("Failed to take screenshot: " + e.getMessage());

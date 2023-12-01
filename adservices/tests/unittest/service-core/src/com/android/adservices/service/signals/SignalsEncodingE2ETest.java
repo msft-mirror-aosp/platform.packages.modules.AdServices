@@ -23,6 +23,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -41,9 +42,10 @@ import android.net.Uri;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.SupportedByConditionRule;
+import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -71,7 +73,6 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.js.IsolateSettings;
-import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -85,7 +86,6 @@ import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.RecordedRequest;
 
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -111,7 +111,16 @@ public class SignalsEncodingE2ETest {
 
     @Spy private final Context mContextSpy = ApplicationProvider.getApplicationContext();
 
-    @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
+    // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
+    // availability depends on an external component (the system webview) being higher than a
+    // certain minimum version.
+    @Rule(order = 1)
+    public final SupportedByConditionRule webViewSupportsJSSandbox =
+            WebViewSupportUtil.createJSSandboxAvailableRule(
+                    ApplicationProvider.getApplicationContext());
+
+    @Rule(order = 2)
+    public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
@@ -153,8 +162,6 @@ public class SignalsEncodingE2ETest {
 
     @Before
     public void setup() {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
-
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .mockStatic(PeriodicEncodingJobService.class)
@@ -291,18 +298,10 @@ public class SignalsEncodingE2ETest {
     }
 
     @Test
-    @FlakyTest(bugId = 302689885)
     public void testSignalsEncoding_Success() throws Exception {
         String encodeSignalsJS =
                 "\nfunction encodeSignals(signals, maxSize) {\n"
-                        // Numbers to their base 64 strings
-                        + "var base64Array = ["
-                        + "'MA==','MQ==','Mg==','Mw==','NA==','NQ==','Ng==',"
-                        + "'Nw==','OA==','OQ==',"
-                        + "'Og==','Ow==','PA==','PQ==','Pg==','Pw==','QA==',"
-                        + "'QQ==','Qg==','Qw=='];"
-                        + "\n"
-                        + "    return {'status' : 0, 'results' : base64Array[signals.length]};\n"
+                        + "   return {'status': 0, 'results': new Uint8Array([signals.size])};\n"
                         + "}\n";
         Uri encoderUri = mMockWebServerRule.uriForPath(ENCODER_PATH);
         String json =
@@ -408,10 +407,10 @@ public class SignalsEncodingE2ETest {
 
         // Validate that the encoded results are correctly persisted
         byte[] payload = mEncodedPayloadDao.getEncodedPayload(BUYER).getEncodedPayload();
-        assertEquals(
+        assertArrayEquals(
                 "Encoding JS should have returned size of signals as result",
-                String.valueOf(expected.size()),
-                new String(payload));
+                new byte[] {(byte) expected.size()},
+                payload);
     }
 
     /**
@@ -419,12 +418,10 @@ public class SignalsEncodingE2ETest {
      * was used in encoding just by looking at the encoded payload output.
      */
     @Test
-    @FlakyTest(bugId = 302689885)
     public void testSecondUpdateEncoderDoesNotDownloadEncodingLogic() throws Exception {
         String encodeSignalsJS1 =
                 "\nfunction encodeSignals(signals, maxSize) {\n"
-                        // 'SSBhbSBmaXJzdCBlbmNvZGVy' = bas64("I am first encoder")
-                        + "    return {'status' : 0, 'results' : 'SSBhbSBmaXJzdCBlbmNvZGVy'};\n"
+                        + "    return {'status' : 0, 'results' : new Uint8Array( [0x01] ) };\n"
                         + "}\n";
         Uri encoderUri1 = mMockWebServerRule.uriForPath(ENCODER_PATH + "1");
         String json1 =
@@ -454,8 +451,7 @@ public class SignalsEncodingE2ETest {
 
         String encodeSignalsJS2 =
                 "\nfunction encodeSignals(signals, maxSize) {\n"
-                        // 'SSBhbSBzZWNvbmQgZW5jb2Rlcg==' = bas64("I am second encoder")
-                        + "    return {'status' : 0, 'results' : 'SSBhbSBzZWNvbmQgZW5jb2Rlcg=='};\n"
+                        + "    return {'status' : 0, 'results' : new Uint8Array( [0x02] )};\n"
                         + "}\n";
         Uri encoderUri2 = mMockWebServerRule.uriForPath(ENCODER_PATH + "2");
         String json2 =
@@ -513,7 +509,7 @@ public class SignalsEncodingE2ETest {
 
         // Validate that the encoded results are correctly persisted
         byte[] payload1A = mEncodedPayloadDao.getEncodedPayload(BUYER).getEncodedPayload();
-        assertEquals("I am first encoder", new String(payload1A));
+        assertArrayEquals(new byte[] {0x01}, payload1A);
 
         // We make second call with new encoder logic, but encoder logic will not be downloaded
         callForUri(uri2);
@@ -523,10 +519,8 @@ public class SignalsEncodingE2ETest {
 
         // Validate that the encoded results are correctly persisted
         byte[] payload1B = mEncodedPayloadDao.getEncodedPayload(BUYER).getEncodedPayload();
-        assertEquals(
-                "Encoder should have still remained the same",
-                "I am first encoder",
-                new String(payload1B));
+        assertArrayEquals(
+                "Encoder should have still remained the same", new byte[] {0x01}, payload1B);
 
         CountDownLatch updateEventLatch2 = new CountDownLatch(1);
         SignalsEncodingE2ETest.EncoderUpdateEventTestObserver observer2 =
@@ -547,22 +541,14 @@ public class SignalsEncodingE2ETest {
 
         // Validate that the encoded results are correctly persisted, and we used the second encoder
         byte[] payload2 = mEncodedPayloadDao.getEncodedPayload(BUYER).getEncodedPayload();
-        assertEquals("I am second encoder", new String(payload2));
+        assertArrayEquals(new byte[] {0x02}, payload2);
     }
 
     @Test
-    @FlakyTest(bugId = 302689885)
     public void testPeriodicEncodingUpdatesEncoders_Success() throws Exception {
         String encodeSignalsJS =
                 "\nfunction encodeSignals(signals, maxSize) {\n"
-                        // Numbers to their base 64 strings
-                        + "var base64Array = ["
-                        + "'MA==','MQ==','Mg==','Mw==','NA==','NQ==','Ng==',"
-                        + "'Nw==','OA==','OQ==',"
-                        + "'Og==','Ow==','PA==','PQ==','Pg==','Pw==','QA==',"
-                        + "'QQ==','Qg==','Qw=='];"
-                        + "\n"
-                        + "    return {'status' : 0, 'results' : base64Array[signals.length]};\n"
+                        + "  return {'status' : 0, 'results' : new Uint8Array([signals.size])};\n"
                         + "}\n";
         Uri encoderUri = mMockWebServerRule.uriForPath(ENCODER_PATH);
         String json =
@@ -600,10 +586,9 @@ public class SignalsEncodingE2ETest {
                         switch (request.getPath()) {
                             case SIGNALS_PATH:
                                 return signalsResponse;
-                            case ENCODER_PATH: {
-                                    encoderLogicDownloadedLatch.countDown();
-                                    return encoderResponse;
-                                }
+                            case ENCODER_PATH:
+                                encoderLogicDownloadedLatch.countDown();
+                                return encoderResponse;
                             default:
                                 return new MockResponse().setResponseCode(404);
                         }
@@ -673,10 +658,10 @@ public class SignalsEncodingE2ETest {
         // Validate that the encoded results are correctly persisted
         DBEncodedPayload firstEncodingRun = mEncodedPayloadDao.getEncodedPayload(BUYER);
         byte[] payload = firstEncodingRun.getEncodedPayload();
-        assertEquals(
+        assertArrayEquals(
                 "Encoding JS should have returned size of signals as result",
-                String.valueOf(expected.size()),
-                new String(payload));
+                new byte[] {(byte) expected.size()},
+                payload);
         assertEquals(
                 "Encoder should not have been downloaded again",
                 1,
@@ -709,10 +694,10 @@ public class SignalsEncodingE2ETest {
         // Validate that the encoded results are correctly persisted
         DBEncodedPayload secondEncodingRun = mEncodedPayloadDao.getEncodedPayload(BUYER);
         byte[] payload2 = secondEncodingRun.getEncodedPayload();
-        assertEquals(
+        assertArrayEquals(
                 "Encoding JS should have returned size of signals as result",
-                String.valueOf(expected.size()),
-                new String(payload2));
+                new byte[] {(byte) expected.size()},
+                payload2);
         assertTrue(secondEncodingRun.getCreationTime().isAfter(firstEncodingRun.getCreationTime()));
 
         encoderLogicDownloadedLatch.await(5, TimeUnit.SECONDS);

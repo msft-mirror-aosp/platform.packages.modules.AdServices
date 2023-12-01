@@ -87,10 +87,6 @@ public class ProtectedSignalsService extends Service {
      * @return {@code true} if the Privacy Sandbox has user consent
      */
     private boolean hasUserConsent() {
-        if (mFlags.getGaUxFeatureEnabled()) {
-            return ConsentManager.getInstance(this).getConsent(AdServicesApiType.FLEDGE).isGiven();
-        } else {
-            return ConsentManager.getInstance(this).getConsent().isGiven();
-        }
+        return ConsentManager.getInstance(this).getConsent(AdServicesApiType.FLEDGE).isGiven();
     }
 }

@@ -29,45 +29,39 @@ import static org.mockito.Mockito.times;
 
 import android.content.Context;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.common.ConsentNotificationJobService;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.enrollment.impl.FirstConsentNotificationChannel;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 
-public class FirstConsentNotificationChannelTest {
+public class FirstConsentNotificationChannelTest extends AdServicesUnitTestCase {
     private final FirstConsentNotificationChannel mFirstConsentNotificationChannel =
             new FirstConsentNotificationChannel();
 
-    @Mock private Context mContext;
     @Mock private PrivacySandboxUxCollection mPrivacySandboxUxCollection;
     @Mock private UxStatesManager mUxStatesManager;
     @Mock private ConsentManager mConsentManager;
-    private MockitoSession mStaticMockSession;
+
+    @Rule
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(ConsentNotificationJobService.class)
+                    .build();
 
     @Before
     public void setup() throws IOException {
         MockitoAnnotations.initMocks(this);
-
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(UxStatesManager.class)
-                        .spyStatic(ConsentManager.class)
-                        .spyStatic(ConsentNotificationJobService.class)
-                        .strictness(Strictness.WARN)
-                        .initMocks(this)
-                        .startMocking();
 
         // Do not trigger real notifications.
         doNothing()
@@ -75,13 +69,6 @@ public class FirstConsentNotificationChannelTest {
                         () ->
                                 ConsentNotificationJobService.schedule(
                                         any(Context.class), anyBoolean(), anyBoolean()));
-    }
-
-    @After
-    public void teardown() throws IOException {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
     }
 
     @Test
@@ -136,7 +123,7 @@ public class FirstConsentNotificationChannelTest {
 
     @Test
     public void enrollTest_nonReconsentNotification() {
-        mFirstConsentNotificationChannel.enroll(mContext, mConsentManager);
+        mFirstConsentNotificationChannel.enroll(appContext.get(), mConsentManager);
 
         verify(
                 () ->
@@ -149,7 +136,7 @@ public class FirstConsentNotificationChannelTest {
     public void enrollTest_adIdEnabledFirstConsentNotification() {
         doReturn(true).when(mConsentManager).isAdIdEnabled();
 
-        mFirstConsentNotificationChannel.enroll(mContext, mConsentManager);
+        mFirstConsentNotificationChannel.enroll(appContext.get(), mConsentManager);
 
         verify(
                 () ->
@@ -162,7 +149,7 @@ public class FirstConsentNotificationChannelTest {
     public void enrollTest_adIdDisabledFirstConsentNotification() {
         doReturn(false).when(mConsentManager).isAdIdEnabled();
 
-        mFirstConsentNotificationChannel.enroll(mContext, mConsentManager);
+        mFirstConsentNotificationChannel.enroll(appContext.get(), mConsentManager);
 
         verify(
                 () ->
@@ -170,4 +157,5 @@ public class FirstConsentNotificationChannelTest {
                                 any(Context.class), eq(false), eq(false)),
                 times(1));
     }
+
 }

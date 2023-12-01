@@ -44,6 +44,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.BackgroundJobsManager;
 import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.enrollment.collection.BetaUxEnrollmentChannelCollection;
@@ -335,7 +336,6 @@ public class UxEngineUtilTest {
         doReturn(NO_MANUAL_INTERACTIONS_RECORDED)
                 .when(mConsentManager)
                 .getUserManualInteractionWithConsent();
-        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManager).getConsentFromR();
 
         assertThat(
                 mUxEngineUtil.getEligibleEnrollmentChannelCollection(
@@ -350,7 +350,6 @@ public class UxEngineUtilTest {
         doReturn(mAdServicesApiConsent).when(mConsentManager).getConsent();
         doReturn(false).when(mAdServicesApiConsent).isGiven();
         doReturn(UNKNOWN).when(mConsentManager).getUserManualInteractionWithConsent();
-        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManager).getConsentFromR();
 
         assertThat(
                 mUxEngineUtil.getEligibleEnrollmentChannelCollection(
@@ -361,7 +360,6 @@ public class UxEngineUtilTest {
     @Test
     public void getEligibleEnrollmentChannelTest_gaUxGraduationDisabled() {
         doReturn(true).when(mConsentManager).wasU18NotificationDisplayed();
-        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManager).getConsentFromR();
 
         assertThat(
                 mUxEngineUtil.getEligibleEnrollmentChannelCollection(
@@ -574,9 +572,26 @@ public class UxEngineUtilTest {
     }
 
     @Test
+    public void startBackgroundTasksUponConsentTest_u18UxConsentGiven() {
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManager)
+                .getConsent(any(AdServicesApiType.class));
+        mUxEngineUtil.startBackgroundTasksUponConsent(
+                PrivacySandboxUxCollection.U18_UX, mContext, mFlags);
+
+        ExtendedMockito.verify(
+                () -> PackageChangedReceiver.enableReceiver(mContext, mFlags), times(1));
+
+        ExtendedMockito.verify(
+                () -> BackgroundJobsManager.scheduleMeasurementBackgroundJobs(mContext), times(1));
+    }
+
+    @Test
     public void startBackgroundTasksUponConsentTest_rvcUxConsentGiven() {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
-
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManager)
+                .getConsent(any(AdServicesApiType.class));
         mUxEngineUtil.startBackgroundTasksUponConsent(RVC_UX, mContext, mFlags);
 
         ExtendedMockito.verify(
