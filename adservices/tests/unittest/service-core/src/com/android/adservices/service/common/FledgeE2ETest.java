@@ -4260,8 +4260,8 @@ public class FledgeE2ETest {
                 false,
                 dataVersionHeaderEnabled,
                 false,
-                shouldUseUnifiedTables,
-                false);
+                false,
+                shouldUseUnifiedTables);
     }
 
     private void initClients(
@@ -5093,6 +5093,11 @@ public class FledgeE2ETest {
         @Override
         public boolean getFledgeOnDeviceAuctionShouldUseUnifiedTables() {
             return mShouldUseUnifiedTables;
+        }
+
+        @Override
+        public boolean getFledgeAuctionServerEnabledForReportEvent() {
+            return false;
         }
     }
 }

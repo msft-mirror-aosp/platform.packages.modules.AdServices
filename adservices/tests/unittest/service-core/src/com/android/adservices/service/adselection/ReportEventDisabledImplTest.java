@@ -75,7 +75,8 @@ public class ReportEventDisabledImplTest {
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
-                        DevContext.createForDevOptionsDisabled());
+                        DevContext.createForDevOptionsDisabled(),
+                        false);
 
         CountDownLatch resultLatch = new CountDownLatch(1);
         ReportEventTestCallback callback = new ReportEventTestCallback(resultLatch);
