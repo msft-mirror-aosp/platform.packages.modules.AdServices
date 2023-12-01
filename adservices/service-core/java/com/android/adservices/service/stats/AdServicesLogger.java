@@ -122,4 +122,11 @@ public interface AdServicesLogger {
             int mEnrollmentRecordCountInTable,
             String mQueryParameter,
             int mErrorCause);
+
+    /** Logs encryption key fetch stats. */
+    void logEncryptionKeyFetchedStats(AdServicesEncryptionKeyFetchedStats stats);
+
+    /** Logs encryption key datastore transaction ended stats. */
+    void logEncryptionKeyDbTransactionEndedStats(
+            AdServicesEncryptionKeyDbTransactionEndedStats stats);
 }

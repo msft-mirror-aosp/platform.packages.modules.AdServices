@@ -74,33 +74,8 @@ public class UserConsentAccessResolverTest {
     }
 
     @Test
-    public void isAllowed_consented_gaUxDisabled_success() {
-        // Setup
-        doReturn(/* isGaUxEnabled */ false).when(mMockFlags).getGaUxFeatureEnabled();
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
-        mClassUnderTest = new UserConsentAccessResolver(mConsentManager);
-
-        // Execution
-        assertTrue(mClassUnderTest.isAllowed(mContext));
-    }
-
-    @Test
-    public void isAllowed_notConsented_gaUxDisabled_success() {
-        // Setup
-        doReturn(/* isGaUxEnabled */ false).when(mMockFlags).getGaUxFeatureEnabled();
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManager).getConsent();
-        mClassUnderTest = new UserConsentAccessResolver(mConsentManager);
-
-        // Execution
-        assertFalse(mClassUnderTest.isAllowed(mContext));
-    }
-
-    @Test
     public void isAllowed_consented_gaUxEnabled_success() {
         // Setup
-        doReturn(/* isGaUxEnabled */ true).when(mMockFlags).getGaUxFeatureEnabled();
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManager)
@@ -114,7 +89,6 @@ public class UserConsentAccessResolverTest {
     @Test
     public void isAllowed_notConsented_gaUxEnabled_success() {
         // Setup
-        doReturn(/* isGaUxEnabled */ true).when(mMockFlags).getGaUxFeatureEnabled();
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.REVOKED)
                 .when(mConsentManager)

@@ -22,6 +22,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.util.ArrayMap;
 import android.util.ArraySet;
@@ -122,7 +123,7 @@ public class SharedPreferencesSyncManager {
             try {
                 SandboxLatencyInfo sandboxLatencyInfo =
                         new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_SYNC_DATA_FROM_CLIENT);
-                sandboxLatencyInfo.setTimeAppCalledSystemServer(System.currentTimeMillis());
+                sandboxLatencyInfo.setTimeAppCalledSystemServer(SystemClock.elapsedRealtime());
                 mService.syncDataFromClient(
                         mContext.getPackageName(), sandboxLatencyInfo, update, mCallback);
             } catch (RemoteException e) {
@@ -201,7 +202,7 @@ public class SharedPreferencesSyncManager {
         try {
             SandboxLatencyInfo sandboxLatencyInfo =
                     new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_SYNC_DATA_FROM_CLIENT);
-            sandboxLatencyInfo.setTimeAppCalledSystemServer(System.currentTimeMillis());
+            sandboxLatencyInfo.setTimeAppCalledSystemServer(SystemClock.elapsedRealtime());
             mService.syncDataFromClient(
                     mContext.getPackageName(), sandboxLatencyInfo, update, mCallback);
         } catch (RemoteException e) {
@@ -249,7 +250,7 @@ public class SharedPreferencesSyncManager {
                 try {
                     SandboxLatencyInfo sandboxLatencyInfo =
                             new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_SYNC_DATA_FROM_CLIENT);
-                    sandboxLatencyInfo.setTimeAppCalledSystemServer(System.currentTimeMillis());
+                    sandboxLatencyInfo.setTimeAppCalledSystemServer(SystemClock.elapsedRealtime());
                     mService.syncDataFromClient(
                             mContext.getPackageName(), sandboxLatencyInfo, update, mCallback);
                 } catch (RemoteException e) {

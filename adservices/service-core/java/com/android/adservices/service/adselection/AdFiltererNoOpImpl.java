@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
-import android.adservices.adselection.ContextualAds;
+import android.adservices.adselection.SignedContextualAds;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.customaudience.DBCustomAudience;
@@ -47,7 +47,7 @@ public final class AdFiltererNoOpImpl implements AdFilterer {
      * @return contextual ads
      */
     @Override
-    public ContextualAds filterContextualAds(ContextualAds contextualAds) {
+    public SignedContextualAds filterContextualAds(SignedContextualAds contextualAds) {
         logSkip();
         return contextualAds;
     }

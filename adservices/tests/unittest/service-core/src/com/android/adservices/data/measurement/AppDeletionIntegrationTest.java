@@ -29,6 +29,7 @@ import org.mockito.Mockito;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * Tests for {@link MeasurementDao} app deletion that affect the database.
@@ -38,7 +39,7 @@ public class AppDeletionIntegrationTest extends AbstractDbIntegrationTest {
     private final Uri mUri;
     private final AdServicesErrorLogger mErrorLogger;
 
-    @Parameterized.Parameters(name = "{3}")
+    @Parameterized.Parameters(name = "{4}")
     public static Collection<Object[]> data() throws IOException, JSONException {
         InputStream inputStream = sContext.getAssets().open(
                 "measurement_app_uninstall_deletion_test.json");
@@ -48,10 +49,13 @@ public class AppDeletionIntegrationTest extends AbstractDbIntegrationTest {
 
     // The 'name' parameter is needed for the JUnit parameterized
     // test, although it's ostensibly unused by this constructor.
-    public AppDeletionIntegrationTest(DbState input, DbState output, Uri uri, String name) {
-        super(input, output);
-
-        this.mUri = uri;
+    public AppDeletionIntegrationTest(
+            DbState input,
+            DbState output,
+            Map<String, String> flagsMap,
+            Uri uri, String name) {
+        super(input, output, flagsMap);
+        mUri = uri;
         mErrorLogger = Mockito.mock(AdServicesErrorLogger.class);
     }
 

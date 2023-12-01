@@ -22,18 +22,24 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 import java.lang.Thread.UncaughtExceptionHandler;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 // TODO(b/302757068): add unit tests
 
 /** See documentation on {#link {@link ProcessLifeguardRule}. */
 abstract class AbstractProcessLifeguardRule implements TestRule {
+
     protected final Logger mLog;
 
     // TODO(b/302757068): protected these static variables (either using @GuardedBy or
     // AtomitReference)
     private static @Nullable UncaughtExceptionHandler sRealHandler;
     private static @Nullable DreamCatcher sMyHandler;
+
+    private static final List<String> sAllTestsSoFar = new ArrayList<>();
+    private static final List<String> sTestsSinceLastUncaughtFailure = new ArrayList<>();
 
     /** Default constructor. */
     AbstractProcessLifeguardRule(RealLogger logger) {
@@ -47,6 +53,54 @@ abstract class AbstractProcessLifeguardRule implements TestRule {
      * (at least not on device side).
      */
     protected abstract boolean isMainThread();
+
+    // TODO(b/303112789): add unit tests
+    protected UncaughtBackgroundException newUncaughtBackgroundException(
+            String testName,
+            List<String> allTests,
+            List<String> lastTests,
+            Throwable uncaughtThrowable) {
+        return new UncaughtBackgroundException(
+                uncaughtThrowable,
+                "Failing "
+                        + testName
+                        + "because an exception was caught on background (NOTE: "
+                        + allTests.size()
+                        + " tests executed so far, "
+                        + lastTests.size()
+                        + " since last uncaught failure - see log with tag "
+                        + mLog.getTag()
+                        + " for list)");
+    }
+
+    // TODO(b/303112789): add unit tests
+    protected UncaughtBackgroundException newUncaughtBackgroundException(
+            String testName,
+            List<String> allTests,
+            List<String> lastTests,
+            Throwable testFailure,
+            Throwable uncaughtThrowable) {
+        mLog.e(
+                testFailure,
+                "Exception thrown by test %s (but not re-surfaced). %d tests executed since last"
+                        + " failure: %s",
+                testName,
+                lastTests.size(),
+                lastTests);
+        mLog.e("And %d tests executed so far: %s", allTests.size(), allTests);
+        return new UncaughtBackgroundException(
+                uncaughtThrowable,
+                "Failing test because an exception was caught on background; test also"
+                        + " threw an exception('"
+                        + testFailure
+                        + "'), "
+                        + allTests.size()
+                        + " tests have been executed so far ("
+                        + lastTests.size()
+                        + " since last uncaught failure) - see log with tag "
+                        + mLog.getTag()
+                        + " for full stack trace and name of these tests");
+    }
 
     @Override
     public Statement apply(Statement base, Description description) {
@@ -72,6 +126,12 @@ abstract class AbstractProcessLifeguardRule implements TestRule {
                 }
 
                 Throwable testFailure = null;
+                String testName =
+                        description.getTestClass().getSimpleName()
+                                + "#"
+                                + description.getMethodName();
+                sAllTestsSoFar.add(testName);
+                sTestsSinceLastUncaughtFailure.add(testName);
                 try {
                     base.evaluate();
                 } catch (Throwable t) {
@@ -81,26 +141,25 @@ abstract class AbstractProcessLifeguardRule implements TestRule {
                 if (sMyHandler.uncaughtThrowable != null) {
                     // Need to clear exception once it's thrown
                     Throwable uncaughtThrowable = sMyHandler.uncaughtThrowable;
-                    sMyHandler = null;
+                    sMyHandler.uncaughtThrowable = null;
+                    List<String> lastTests = new ArrayList<>(sTestsSinceLastUncaughtFailure);
+                    sTestsSinceLastUncaughtFailure.clear();
 
-                    if (testFailure != null) {
-                        throw new UncaughtBackgroundException(
-                                uncaughtThrowable,
-                                "Failing test because an exception was caught on background");
+                    if (testFailure == null) {
+                        throw newUncaughtBackgroundException(
+                                testName, sAllTestsSoFar, lastTests, uncaughtThrowable);
+                    } else {
+                        // TODO(b/303112789): add unit tests for this scenario
+                        throw newUncaughtBackgroundException(
+                                testName,
+                                sAllTestsSoFar,
+                                lastTests,
+                                testFailure,
+                                uncaughtThrowable);
                     }
-                    mLog.e(testFailure, "Exception thrown by test (but not re-surfaced)");
-                    // TODO(b/302757068): add unit tests for this scenario
-                    throw new UncaughtBackgroundException(
-                            uncaughtThrowable,
-                            "Failing test because an exception was caught on background; test also"
-                                    + " threw an exception('"
-                                    + testFailure
-                                    + "'; see log with tag "
-                                    + mLog.getTag()
-                                    + " for full stack trace)");
                 }
                 if (testFailure != null) {
-                    // TODO(b/302757068): add unit tests for this scenario
+                    // TODO(b/303112789): add unit tests for this scenario
                     throw testFailure;
                 }
             }
@@ -136,6 +195,12 @@ abstract class AbstractProcessLifeguardRule implements TestRule {
                     t,
                     isMain,
                     sRealHandler);
+            mLog.e(
+                    e,
+                    "%d tests executed since last failure: %s",
+                    sTestsSinceLastUncaughtFailure.size(),
+                    sTestsSinceLastUncaughtFailure);
+            mLog.e(e, "%d tests executed so far: %s", sAllTestsSoFar.size(), sAllTestsSoFar);
             if (isMain && !(sRealHandler instanceof DreamCatcher)) {
                 mLog.e("passing uncaught exception to %s", sRealHandler);
                 sRealHandler.uncaughtException(t, e);

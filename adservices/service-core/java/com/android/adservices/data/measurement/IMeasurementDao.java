@@ -143,10 +143,10 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
-     * Gets the count of distinct Uri's of destinations in the Source table in a time window with
-     * matching publisher, enrollment, unexpired and ACTIVE status, excluding a given destination.
+     * Gets the count of distinct Uris of destinations in the Source table in a time window with
+     * matching publisher, enrollment, and unexpired; excluding given destinations.
      */
-    Integer countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+    Integer countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
             Uri publisher,
             @EventSurfaceType int publisherType,
             String enrollmentId,
@@ -157,10 +157,10 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
-     * Gets the count of distinct Uri's of destinations in the Source table with matching publisher,
-     * enrollment, unexpired and ACTIVE status, excluding a given destination.
+     * Gets the count of distinct Uris of destinations in the Source table with matching publisher,
+     * enrollment, and unexpired; excluding given destinations.
      */
-    Integer countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+    Integer countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
             Uri publisher,
             @EventSurfaceType int publisherType,
             String enrollmentId,
@@ -170,8 +170,8 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
-     * Gets the count of distinct Uri's of destinations in the Source table in a time window with
-     * matching publisher, and ACTIVE status, excluding a given destination.
+     * Gets the count of distinct Uris of destinations in the Source table in a time window with
+     * matching publisher; excluding given destinations.
      */
     Integer countDistinctDestinationsPerPublisherPerRateLimitWindow(
             Uri publisher,
@@ -184,7 +184,7 @@ public interface IMeasurementDao {
 
     /**
      * Gets the count of sources in the source table in a time period before event time with
-     * matching publisher, enrollment, excluding the given registration origin.
+     * matching publisher, enrollment; excluding the given registration origin.
      */
     Integer countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
             Uri registrationOrigin,
@@ -197,7 +197,7 @@ public interface IMeasurementDao {
 
     /**
      * Gets the count of distinct IDs of enrollments in the Source table in a time window with
-     * matching publisher and destination, excluding a given enrollment ID.
+     * matching publisher and destination; excluding a given reporting origin.
      */
     Integer countDistinctReportingOriginsPerPublisherXDestinationInSource(
             Uri publisher,
@@ -215,7 +215,7 @@ public interface IMeasurementDao {
      * @param status status to apply
      * @throws DatastoreException database transaction related issues
      */
-    void updateTriggerStatus(@NonNull List<String> triggerIds, @Trigger.Status int status)
+    void updateTriggerStatus(@NonNull Collection<String> triggerIds, @Trigger.Status int status)
             throws DatastoreException;
 
     /**
@@ -245,7 +245,7 @@ public interface IMeasurementDao {
      * @param sourceIds list of sources.
      * @param status value to be set
      */
-    void updateSourceStatus(@NonNull List<String> sourceIds, @Source.Status int status)
+    void updateSourceStatus(@NonNull Collection<String> sourceIds, @Source.Status int status)
             throws DatastoreException;
 
     /**
@@ -385,6 +385,16 @@ public interface IMeasurementDao {
     long getAttributionsPerRateLimitWindow(@NonNull Source source, @NonNull Trigger trigger)
             throws DatastoreException;
 
+    /**
+     * Find the number of entries for a rate limit window, scoped to event- or aggregate-level using
+     * the {@link Source} and {@link Trigger}. Rate-Limit Window: (Scope, Source Site, Destination
+     * Site, Window) from triggerTime.
+     *
+     * @return the number of entries for the window.
+     */
+    long getAttributionsPerRateLimitWindow(@Attribution.Scope int scope, @NonNull Source source,
+            @NonNull Trigger trigger) throws DatastoreException;
+
     /** Add an entry in Attribution datastore. */
     void insertAttribution(@NonNull Attribution attribution) throws DatastoreException;
 
@@ -466,7 +476,7 @@ public interface IMeasurementDao {
      * @param sourceIds source IDs to match
      * @throws DatastoreException database transaction issues
      */
-    void deleteSources(@NonNull List<String> sourceIds) throws DatastoreException;
+    void deleteSources(@NonNull Collection<String> sourceIds) throws DatastoreException;
 
     /**
      * Delete records from trigger table that match provided trigger IDs.
@@ -474,7 +484,7 @@ public interface IMeasurementDao {
      * @param triggerIds trigger IDs to match
      * @throws DatastoreException database transaction issues
      */
-    void deleteTriggers(@NonNull List<String> triggerIds) throws DatastoreException;
+    void deleteTriggers(@NonNull Collection<String> triggerIds) throws DatastoreException;
 
     /**
      * Delete records from async registration table that match provided async registration IDs.
@@ -553,7 +563,7 @@ public interface IMeasurementDao {
      * @param triggerIds triggers to be matched with aggregate reports
      */
     List<AggregateReport> fetchMatchingAggregateReports(
-            @NonNull List<String> sourceIds, @NonNull List<String> triggerIds)
+            @NonNull Collection<String> sourceIds, @NonNull Collection<String> triggerIds)
             throws DatastoreException;
 
     /**
@@ -565,7 +575,7 @@ public interface IMeasurementDao {
      * @param triggerIds triggers to be matched with event reports
      */
     List<EventReport> fetchMatchingEventReports(
-            @NonNull List<String> sourceIds, @NonNull List<String> triggerIds)
+            @NonNull Collection<String> sourceIds, @NonNull Collection<String> triggerIds)
             throws DatastoreException;
 
     /**
@@ -575,7 +585,7 @@ public interface IMeasurementDao {
      * @return the list of sourced ids
      * @throws DatastoreException throw DatastoreException
      */
-    List<String> fetchMatchingSourcesFlexibleEventApi(@NonNull List<String> triggerIds)
+    Set<String> fetchFlexSourceIdsFor(@NonNull Collection<String> triggerIds)
             throws DatastoreException;
 
     /**
@@ -625,7 +635,7 @@ public interface IMeasurementDao {
      * @return list of trigger IDs
      * @throws DatastoreException database transaction level issues
      */
-    List<String> fetchMatchingTriggers(
+    Set<String> fetchMatchingTriggers(
             @NonNull Uri registrant,
             @NonNull Instant start,
             @NonNull Instant end,

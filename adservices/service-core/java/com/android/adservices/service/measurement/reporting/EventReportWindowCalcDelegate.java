@@ -29,10 +29,11 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.PrivacyParams;
-import com.android.adservices.service.measurement.ReportSpec;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.TriggerSpec;
+import com.android.adservices.service.measurement.TriggerSpecs;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import com.google.common.collect.ImmutableList;
 
@@ -165,11 +166,11 @@ public class EventReportWindowCalcDelegate {
      *
      * @param windowIndex window index corresponding to which the reporting time should be returned
      * @param triggerDataIndex trigger data state index
-     * @param reportSpec flex event report spec
+     * @param triggerSpecs flex event trigger specs
      */
     public long getReportingTimeForNoisingFlexEventApi(
-            int windowIndex, int triggerDataIndex, ReportSpec reportSpec) {
-        for (TriggerSpec triggerSpec : reportSpec.getTriggerSpecs()) {
+            int windowIndex, int triggerDataIndex, TriggerSpecs triggerSpecs) {
+        for (TriggerSpec triggerSpec : triggerSpecs.getTriggerSpecs()) {
             triggerDataIndex -= triggerSpec.getTriggerData().size();
             if (triggerDataIndex < 0) {
                 return triggerSpec.getEventReportWindowsEnd().get(windowIndex)
@@ -177,6 +178,39 @@ public class EventReportWindowCalcDelegate {
             }
         }
         return 0;
+    }
+
+    /**
+     * Calculates the reporting time based on the {@link Trigger} time for flexible event report API
+     *
+     * @param triggerSpecs the report specification to be processed
+     * @param sourceRegistrationTime source registration time
+     * @param triggerTime trigger time
+     * @param triggerData the trigger data
+     * @return the reporting time
+     */
+    public long getFlexEventReportingTime(
+            TriggerSpecs triggerSpecs,
+            long sourceRegistrationTime,
+            long triggerTime,
+            UnsignedLong triggerData) {
+        if (triggerTime < sourceRegistrationTime) {
+            return -1L;
+        }
+        if (triggerTime
+                < triggerSpecs.findReportingStartTimeForTriggerData(triggerData)
+                        + sourceRegistrationTime) {
+            return -1L;
+        }
+
+        List<Long> reportingWindows = triggerSpecs.findReportingEndTimesForTriggerData(triggerData);
+        for (Long window : reportingWindows) {
+            if (triggerTime <= window + sourceRegistrationTime) {
+                return sourceRegistrationTime + window
+                        + mFlags.getMeasurementMinEventReportDelayMillis();
+            }
+        }
+        return -1L;
     }
 
     private boolean isAppInstalled(Source source, int destinationType) {

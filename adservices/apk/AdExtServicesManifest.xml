@@ -456,6 +456,13 @@
             android:process=".adservices"
         />
 
+        <provider
+            android:name="com.android.adservices.service.common.AdServicesInternalProvider"
+            android:authorities="com.android.ext.adservices.provider.internal"
+            android:exported="false"
+            android:process=".adservices"
+        />
+
         <!-- Boot completed receiver registers package changed event receivers. -->
         <receiver android:name="com.android.adservices.service.common.AdExtBootCompletedReceiver"
                   android:enabled="@bool/isAdExtBootCompletedReceiverEnabled"

@@ -33,6 +33,8 @@ import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.SupportedByConditionRule;
+import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -42,13 +44,12 @@ import com.android.adservices.service.adselection.ReportImpressionScriptEngine.S
 import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
-import com.android.adservices.service.js.JSScriptEngine;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
 
-import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Instant;
@@ -125,13 +126,15 @@ public class ReportImpressionScriptEngineTest {
     private static final AdDataArgumentUtil AD_DATA_ARGUMENT_UTIL =
             new AdDataArgumentUtil(new AdCounterKeyCopierNoOpImpl());
 
+    // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
+    // availability depends on an external component (the system webview) being higher than a
+    // certain minimum version.
+    @Rule(order = 1)
+    public final SupportedByConditionRule webViewSupportsJSSandbox =
+            WebViewSupportUtil.createJSSandboxAvailableRule(sContext);
+
     @Before
     public void setUp() {
-        // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
-        // availability depends on an external component (the system webview) being higher than a
-        // certain minimum version. Marking that as an assumption that the test is making.
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
-
         mReportImpressionScriptEngine =
                 initEngine(true, mFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount);
     }
