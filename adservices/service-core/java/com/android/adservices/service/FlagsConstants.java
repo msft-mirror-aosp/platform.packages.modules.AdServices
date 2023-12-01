@@ -91,7 +91,7 @@ public final class FlagsConstants {
     public static final String KEY_GLOBAL_BLOCKED_TOPIC_IDS = "topics_global_blocked_topic_ids";
     public static final String KEY_TOPICS_DISABLE_DIRECT_APP_CALLS =
             "topics_disable_direct_app_calls";
-    public static final String KEY_TOPICS_ENABLE_ENCRYPTION = "topics_enable_encryption";
+    public static final String KEY_TOPICS_ENCRYPTION_ENABLED = "topics_encryption_enabled";
     public static final String KEY_TOPICS_DISABLE_PLAINTEXT_RESPONSE =
             "topics_disable_plaintext_response";
 
@@ -889,12 +889,24 @@ public final class FlagsConstants {
     // Consent Manager debug mode keys.
     public static final String KEY_CONSENT_MANAGER_DEBUG_MODE = "consent_manager_debug_mode";
 
+    // Consent Manager ota debug mode keys.
+    public static final String KEY_CONSENT_MANAGER_OTA_DEBUG_MODE =
+            "consent_manager_ota_debug_mode";
+
+    // Rvc post ota notification age check keys.
+    public static final String KEY_RVC_POST_OTA_NOTIF_AGE_CHECK =
+            "rvc_post_ota_notification_age_check";
+
     // Consent notification activity debug mode keys.
     public static final String KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE =
             "consent_notification_activity_debug_mode";
 
     // Source of truth to get consent for PPAPI
     public static final String KEY_CONSENT_SOURCE_OF_TRUTH = "consent_source_of_truth";
+
+    public static final String KEY_CONSENT_ALREADY_INTERACTED_FIX_ENABLE =
+            "consent_already_interacted_fix_enable";
+
     public static final String KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH =
             "blocked_topics_source_of_truth";
 

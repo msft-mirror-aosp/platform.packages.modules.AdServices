@@ -101,11 +101,11 @@ public interface Flags extends CommonFlags {
     }
 
     /** Flag to enable encrypted Topics feature for Topics API. */
-    boolean TOPICS_ENABLE_ENCRYPTION = false;
+    boolean TOPICS_ENCRYPTION_ENABLED = false;
 
     /** Returns the feature flag to enable encryption for Topics API. */
-    default boolean getTopicsEnableEncryption() {
-        return TOPICS_ENABLE_ENCRYPTION;
+    default boolean getTopicsEncryptionEnabled() {
+        return TOPICS_ENCRYPTION_ENABLED;
     }
 
     /** Flag to disable plaintext Topics for Topics API response. */
@@ -1686,6 +1686,12 @@ public interface Flags extends CommonFlags {
         return CONSENT_MANAGER_LAZY_ENABLE_MODE;
     }
 
+    boolean CONSENT_ALREADY_INTERACTED_FIX_ENABLE = true;
+
+    default boolean getConsentAlreadyInteractedEnableMode() {
+        return CONSENT_ALREADY_INTERACTED_FIX_ENABLE;
+    }
+
     long CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS =
             /* hours */ 9 * /* minutes */ 60 * /* seconds */ 60 * /* milliseconds */ 1000; // 9 AM
 
@@ -1732,6 +1738,20 @@ public interface Flags extends CommonFlags {
 
     default boolean getConsentManagerDebugMode() {
         return CONSENT_MANAGER_DEBUG_MODE;
+    }
+
+    boolean DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE = false;
+
+    /** When enabled, the device is treated as OTA device. */
+    default boolean getConsentManagerOTADebugMode() {
+        return DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE;
+    }
+
+    boolean DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK = false;
+
+    /** When enabled, perform age check in rvc post ota notification channel. */
+    default boolean getRvcPostOtaNotifAgeCheck() {
+        return DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK;
     }
 
     /** Available sources of truth to get consent for PPAPI. */
@@ -3906,7 +3926,7 @@ public interface Flags extends CommonFlags {
     }
 
     /** Default RVC UX feature flag.. */
-    boolean DEFAULT_RVC_UX_ENABLED = false;
+    boolean DEFAULT_RVC_UX_ENABLED = SDK_INT == Build.VERSION_CODES.R;
 
     /** RVC UX feature flag.. */
     default boolean getEnableRvcUx() {
