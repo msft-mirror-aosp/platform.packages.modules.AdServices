@@ -22,12 +22,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import android.content.Context;
 
 import androidx.room.Room;
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.cobalt.data.TestOnlyDao.AggregateStoreTableRow;
 
 import com.google.cobalt.AggregateValue;
@@ -39,13 +38,9 @@ import com.google.common.collect.ImmutableListMultimap;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -55,9 +50,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @RunWith(AndroidJUnit4.class)
-public final class DataServiceTest {
+public final class DataServiceTest extends AdServicesMockitoTestCase {
     private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
 
     private static final Instant TIME = Instant.parse("2023-06-13T16:09:30.00Z");
     private static final int DAY_INDEX_1 = 19202;
@@ -104,9 +98,6 @@ public final class DataServiceTest {
     private static final ImmutableListMultimap<SystemProfile, CountEvent> EMPTY_EVENT_DATA =
             ImmutableListMultimap.of();
 
-    @Rule(order = 0)
-    public final MockitoRule mockito = MockitoJUnit.rule();
-
     private CobaltDatabase mCobaltDatabase;
     private DaoBuildingBlocks mDaoBuildingBlocks;
     private TestOnlyDao mTestOnlyDao;
@@ -115,8 +106,8 @@ public final class DataServiceTest {
 
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
-        mCobaltDatabase = Room.inMemoryDatabaseBuilder(CONTEXT, CobaltDatabase.class).build();
+        mCobaltDatabase =
+                Room.inMemoryDatabaseBuilder(appContext.get(), CobaltDatabase.class).build();
         mDaoBuildingBlocks = mCobaltDatabase.daoBuildingBlocks();
         mTestOnlyDao = mCobaltDatabase.testOnlyDao();
         mDataService = new DataService(EXECUTOR, mCobaltDatabase);

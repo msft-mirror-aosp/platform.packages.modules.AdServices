@@ -29,6 +29,7 @@ import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.tests.ui.libs.AdservicesWorkflows;
+import com.android.adservices.tests.ui.libs.UiConstants;
 import com.android.adservices.tests.ui.libs.UiConstants.UX;
 import com.android.adservices.tests.ui.libs.UiUtils;
 
@@ -69,6 +70,7 @@ public class GaUxRvcPostOTAChannelTest {
         UiUtils.enableNotificationPermission();
         UiUtils.enableGa();
         UiUtils.enableRvc();
+        UiUtils.enableRvcNotification();
         UiUtils.disableNotificationFlowV2();
         UiUtils.disableOtaStrings();
 
@@ -102,9 +104,12 @@ public class GaUxRvcPostOTAChannelTest {
         AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
-    /** Verify that the R Post OTA notification is displayed after 1st U18 notification. */
+    /**
+     * Verify that the R Post OTA notification is displayed after 1st U18 notification if msmt is
+     * opt in.
+     */
     @Test
-    public void testU18ToGAForRPostOTA() throws Exception {
+    public void testU18ToGAForRPostOTA_optInMsmt() throws Exception {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
         UiUtils.setAsRowDevice();
@@ -125,7 +130,9 @@ public class GaUxRvcPostOTAChannelTest {
         AdservicesWorkflows.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, UX.RVC_UX);
 
-        // Mock user was opt-in on R by enabling consent manager debug mode
+        // Mock user is ota from Rvc by enabling consent manager ota debug mode
+        UiUtils.setConsentManagerOtaDebugMode();
+        // Enable consent manager debug mode to mock user opt-in msmt API
         UiUtils.setConsentManagerDebugMode();
         // Disable RVC UX to mock user is not eligible RVC UX post OTA
         UiUtils.disableRvc();
@@ -142,5 +149,71 @@ public class GaUxRvcPostOTAChannelTest {
         // Notifications should not be shown twice
         AdservicesWorkflows.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, UX.GA_UX);
+        mDevice.pressHome();
+
+        // User should be able to open GA UX after notification
+        UiUtils.resetConsentManagerDebugMode();
+        AdservicesWorkflows.testSettingsPageFlow(
+                sContext,
+                mDevice,
+                UiConstants.UX.GA_UX,
+                /* isOptIn= */ true,
+                /* isFlipConsent= */ true);
+    }
+
+    /**
+     * Verify that the R Post OTA notification is not displayed after 1st U18 notification if msmt
+     * is opt out.
+     */
+    @Test
+    public void testU18ToGAForRPostOTA_optOutMsmt() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
+        UiUtils.setAsRowDevice();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
+
+        // R 18+ user receives 1st U18 notification
+        AdServicesStates adultStates =
+                new AdServicesStates.Builder()
+                        .setU18Account(false)
+                        .setAdIdEnabled(true)
+                        .setAdultAccount(true)
+                        .setPrivacySandboxUiEnabled(true)
+                        .build();
+
+        mCommonManager.enableAdServices(adultStates, Executors.newCachedThreadPool(), mCallback);
+
+        AdservicesWorkflows.verifyNotification(
+                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, UX.RVC_UX);
+
+        // Open settings page and opt out msmt api
+        AdservicesWorkflows.testSettingsPageFlow(
+                sContext,
+                mDevice,
+                UiConstants.UX.RVC_UX,
+                /* isOptIn= */ true,
+                /* isFlipConsent= */ true);
+        mDevice.pressHome();
+
+        // Mock user is ota from Rvc by enabling consent manager ota debug mode
+        UiUtils.setConsentManagerOtaDebugMode();
+        // Disable RVC UX to mock user is not eligible RVC UX post OTA
+        UiUtils.disableRvc();
+        AdservicesTestHelper.killAdservicesProcess(sContext);
+
+        mCommonManager.enableAdServices(adultStates, Executors.newCachedThreadPool(), mCallback);
+
+        AdservicesWorkflows.verifyNotification(
+                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, UX.GA_UX);
+        mDevice.pressHome();
+
+        // User should be able to open GA UX post OTA
+        AdservicesWorkflows.testSettingsPageFlow(
+                sContext,
+                mDevice,
+                UiConstants.UX.GA_UX,
+                /* isOptIn= */ true,
+                /* isFlipConsent= */ true);
     }
 }

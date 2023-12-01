@@ -28,6 +28,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_STATUS_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
 
 import android.os.Build;
@@ -103,10 +104,12 @@ public final class AdServicesFlagsSetterRule
     /** Factory method for Measurement E2E CTS tests */
     public static AdServicesFlagsSetterRule forMeasurementE2ETests(String packageName) {
         return forGlobalKillSwitchDisabledTests()
+                .setLogcatTag(LOGCAT_TAG_MEASUREMENT, LOGCAT_LEVEL_VERBOSE)
                 .setCompatModeFlags()
                 .setMsmtApiAppAllowList(packageName)
                 .setMsmtWebContextClientAllowList(packageName)
                 .setConsentManagerDebugMode(true)
+                .setConsentNotifiedDebugMode(true)
                 .setSystemProperty(KEY_GLOBAL_KILL_SWITCH, false)
                 .setSystemProperty(KEY_MEASUREMENT_KILL_SWITCH, false)
                 .setSystemProperty(KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH, false)
@@ -115,6 +118,7 @@ public final class AdServicesFlagsSetterRule
                 .setSystemProperty(KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH, false)
                 .setSystemProperty(KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH, false)
                 .setSystemProperty(KEY_MEASUREMENT_API_STATUS_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES, false)
                 .setAdIdKillSwitchForTests(false);
     }
 

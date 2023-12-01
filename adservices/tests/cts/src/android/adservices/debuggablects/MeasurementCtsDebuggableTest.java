@@ -109,7 +109,9 @@ public class MeasurementCtsDebuggableTest {
 
     @Rule(order = 1)
     public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests().setCompatModeFlags();
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
+                    .setCompatModeFlags()
+                    .setMeasurementTags();
 
     @BeforeClass
     public static void setupDevicePropertiesAndInitializeClient() throws Exception {
@@ -590,6 +592,10 @@ public class MeasurementCtsDebuggableTest {
         // Disable device config sync
         getUiDevice().executeShellCommand(
                 "device_config set_sync_disabled_for_tests persistent");
+
+        // Override consent notified behavior to give user consent.
+        getUiDevice()
+                .executeShellCommand("setprop debug.adservices.consent_notified_debug_mode true");
 
         // Override consent manager behavior to give user consent.
         getUiDevice().executeShellCommand(

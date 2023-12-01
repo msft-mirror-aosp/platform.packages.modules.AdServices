@@ -20,6 +20,7 @@ java_library {
     name: "SdkSandboxTestUtils",
     srcs: [
         "src/**/testutils/*.java",
+        "src/com/android/server/sdksandbox/*.java"
     ],
     libs: [
         "framework-sdksandbox.impl",

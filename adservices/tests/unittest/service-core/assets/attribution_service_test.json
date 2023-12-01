@@ -5074,6 +5074,20 @@
         "attributions": [
           {
             "id": "unused",
+            "scope": 0,
+            "sourceSite": "android-app://com.example.abc",
+            "sourceOrigin": "android-app://com.example.abc",
+            "destinationSite": "https://example2.test",
+            "destinationOrigin": "https://subdomain.example2.test",
+            "enrollmentId": "enrollment-id-3",
+            "triggerTime": 8640000001,
+            "registrant": "android-app://com.example.xyz",
+            "sourceId": "S1",
+            "triggerId": "T1"
+          },
+          {
+            "id": "unused",
+            "scope": 1,
             "sourceSite": "android-app://com.example.abc",
             "sourceOrigin": "android-app://com.example.abc",
             "destinationSite": "https://example2.test",
@@ -5234,6 +5248,7 @@
         "attributions": [
           {
             "id": "unused",
+            "scope": 1,
             "sourceSite": "android-app://com.example.abc",
             "sourceOrigin": "android-app://com.example.abc",
             "destinationSite": "https://example2.test",

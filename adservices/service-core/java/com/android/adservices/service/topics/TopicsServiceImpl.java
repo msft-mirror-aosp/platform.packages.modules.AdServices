@@ -321,12 +321,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             return resultCode;
         }
 
-        AdServicesApiConsent userConsent;
-        if (mFlags.getGaUxFeatureEnabled()) {
-            userConsent = mConsentManager.getConsent(AdServicesApiType.TOPICS);
-        } else {
-            userConsent = mConsentManager.getConsent();
-        }
+        AdServicesApiConsent userConsent = mConsentManager.getConsent(AdServicesApiType.TOPICS);
 
         if (!userConsent.isGiven()) {
             sLogger.v("STATUS_USER_CONSENT_REVOKED: User consent revoked");
@@ -351,7 +346,6 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                 errorString = "STATUS_CALLER_NOT_ALLOWED: Enrollment ID invalid";
                 permitted = false;
             } else if (!AppManifestConfigHelper.isAllowedTopicsAccess(
-                    mContext,
                     ProcessCompatUtils.isSdkSandboxUid(callingUid),
                     topicsParam.getAppPackageName(),
                     enrollmentData.getEnrollmentId())) {

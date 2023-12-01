@@ -20,6 +20,7 @@ import static com.android.adservices.service.topics.EpochManager.PADDED_TOP_TOPI
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -37,6 +38,7 @@ import androidx.test.filters.SmallTest;
 import com.android.adservices.MockRandom;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.data.topics.EncryptedTopic;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
@@ -57,6 +59,7 @@ import org.mockito.MockitoAnnotations;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -64,6 +67,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -92,6 +96,7 @@ public final class EpochManagerTest {
     @Mock Clock mMockClock;
     @Mock Flags mMockFlag;
     @Mock ClassifierManager mClassifierManager;
+    @Mock EncryptionManager mEncryptionManager;
     @Mock Random mRandom;
 
     @Before
@@ -108,7 +113,8 @@ public final class EpochManagerTest {
                         mMockClassifier,
                         mFlags,
                         mMockClock,
-                        mClassifierManager);
+                        mClassifierManager,
+                        mEncryptionManager);
 
         // Erase all existing data.
         DbTestUtil.deleteTable(TopicsTables.TaxonomyContract.TABLE);
@@ -212,7 +218,8 @@ public final class EpochManagerTest {
                         mMockClassifier,
                         mFlags,
                         mMockClock,
-                        mClassifierManager);
+                        mClassifierManager,
+                        mEncryptionManager);
 
         Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
         Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
@@ -253,7 +260,8 @@ public final class EpochManagerTest {
                         mMockClassifier,
                         mFlags,
                         mMockClock,
-                        mClassifierManager);
+                        mClassifierManager,
+                        mEncryptionManager);
 
         Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
         Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
@@ -279,12 +287,12 @@ public final class EpochManagerTest {
                                 new long[] {1, 5, 6, 7, 8, 9},
                                 // Use a positive double greater than 1 to ensure that loggedTopic
                                 // must be the same as the topic.
-                                new double[] {2d}
-                        ),
+                                new double[] {2d}),
                         mMockClassifier,
                         mFlags,
                         mMockClock,
-                        mClassifierManager);
+                        mClassifierManager,
+                        mEncryptionManager);
 
         // Note: we iterate over the appSdksUsageMap. For the test to be deterministic, we use
         // LinkedHashMap so that the order of iteration is defined.
@@ -416,7 +424,8 @@ public final class EpochManagerTest {
                         mMockClassifier,
                         mMockFlag,
                         mMockClock,
-                        mClassifierManager);
+                        mClassifierManager,
+                        mEncryptionManager);
 
         // For table except CallerCanLearnTopicsContract, epoch to delete from is 7-3-1 = epoch 3
         final long epochToDeleteFrom = currentEpoch - epochLookBackNumberForGarbageCollection - 1;
@@ -486,6 +495,72 @@ public final class EpochManagerTest {
     }
 
     @Test
+    public void testGarbageCollectOutdatedEpochData_encryptedTopicsTable() {
+        final long currentEpochId = 7L;
+        final int epochLookBackNumberForGarbageCollection = 3;
+
+        // Mock the flag to make test result deterministic
+        when(mMockFlag.getNumberOfEpochsToKeepInHistory())
+                .thenReturn(epochLookBackNumberForGarbageCollection);
+
+        EpochManager epochManager =
+                new EpochManager(
+                        mTopicsDao,
+                        mDbHelper,
+                        new Random(),
+                        mMockClassifier,
+                        mMockFlag,
+                        mMockClock,
+                        mClassifierManager,
+                        mEncryptionManager);
+
+        final String app = "app";
+        final String sdk = "sdk";
+        final long epochId = 1L;
+        final int topicId = 1;
+        final int numberOfLookBackEpochs = 1;
+
+        Topic topic1 = Topic.create(topicId, TAXONOMY_VERSION, MODEL_VERSION);
+        EncryptedTopic encryptedTopic1 =
+                EncryptedTopic.create(
+                        topic1.toString().getBytes(StandardCharsets.UTF_8),
+                        "publicKey",
+                        "encapsulatedKey".getBytes(StandardCharsets.UTF_8));
+
+        // Handle ReturnedTopicContract
+        Map<Pair<String, String>, Topic> returnedAppSdkTopics = new HashMap<>();
+        returnedAppSdkTopics.put(Pair.create(app, sdk), topic1);
+
+        mTopicsDao.persistReturnedAppTopicsMap(epochId, returnedAppSdkTopics);
+        // Handle ReturnedEncryptedTopicContract
+        Map<Pair<String, String>, EncryptedTopic> encryptedTopics =
+                Map.of(Pair.create(app, sdk), encryptedTopic1);
+
+        mTopicsDao.persistReturnedAppEncryptedTopicsMap(epochId, encryptedTopics);
+
+        // When db flag is off for version 9.
+        when(mMockFlag.getEnableDatabaseSchemaVersion9()).thenReturn(false);
+        epochManager.garbageCollectOutdatedEpochData(7);
+        // Unencrypted table is cleared.
+        assertThat(mTopicsDao.retrieveReturnedTopics(epochId, numberOfLookBackEpochs)).isEmpty();
+        // Encrypted table is not cleared.
+        assertThat(
+                        mTopicsDao
+                                .retrieveReturnedEncryptedTopics(epochId, numberOfLookBackEpochs)
+                                .get(epochId))
+                .isEqualTo(encryptedTopics);
+
+        // When db flag is on for version 9.
+        when(mMockFlag.getEnableDatabaseSchemaVersion9()).thenReturn(true);
+        epochManager.garbageCollectOutdatedEpochData(currentEpochId);
+        // Unencrypted table is cleared.
+        assertThat(mTopicsDao.retrieveReturnedTopics(epochId, numberOfLookBackEpochs)).isEmpty();
+        // Encrypted table is cleared.
+        assertThat(mTopicsDao.retrieveReturnedEncryptedTopics(epochId, numberOfLookBackEpochs))
+                .isEmpty();
+    }
+
+    @Test
     public void testProcessEpoch() {
         // Create a new EpochManager that we can control the random generator.
         //
@@ -513,7 +588,8 @@ public final class EpochManagerTest {
                                 mMockClassifier,
                                 mFlags,
                                 mMockClock,
-                                mClassifierManager));
+                                mClassifierManager,
+                                mEncryptionManager));
         // Mock EpochManager for getCurrentEpochId()
         final long epochId = 1L;
         doReturn(epochId).when(epochManager).getCurrentEpochId();
@@ -673,6 +749,77 @@ public final class EpochManagerTest {
     }
 
     @Test
+    public void testProcessEpoch_enableEncryptedTopics() {
+        // Simplify the setup of epoch computation, to only test the effect of feature flag
+        // Mock the flag to make test result deterministic
+        EpochManager epochManager =
+                Mockito.spy(
+                        new EpochManager(
+                                mTopicsDao,
+                                mDbHelper,
+                                new Random(),
+                                mMockClassifier,
+                                mMockFlag,
+                                mMockClock,
+                                mClassifierManager,
+                                mEncryptionManager));
+
+        final String app = "app";
+        final String sdk = "sdk";
+        final long epochId = 1L;
+        final int numberOfLookBackEpochs = 1;
+
+        Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic3 = Topic.create(/* topic */ 3, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic4 = Topic.create(/* topic */ 4, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic5 = Topic.create(/* topic */ 5, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic6 = Topic.create(/* topic */ 6, TAXONOMY_VERSION, MODEL_VERSION);
+        Map<String, List<Topic>> appClassificationTopicsMap =
+                Map.of(app, List.of(topic1, topic2, topic3, topic4, topic5, topic6));
+        List<Topic> topTopics = List.of(topic1, topic2, topic3, topic4, topic5, topic6);
+
+        when(mMockFlag.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
+        when(mMockFlag.getTopicsNumberOfTopTopics())
+                .thenReturn(mFlags.getTopicsNumberOfTopTopics());
+        when(mMockFlag.getTopicsNumberOfRandomTopics())
+                .thenReturn(mFlags.getTopicsNumberOfRandomTopics());
+        doReturn(epochId).when(epochManager).getCurrentEpochId();
+
+        mTopicsDao.recordUsageHistory(epochId, app, sdk);
+        when(mMockClassifier.classify(any())).thenReturn(appClassificationTopicsMap);
+        when(mMockClassifier.getTopTopics(
+                        appClassificationTopicsMap,
+                        mFlags.getTopicsNumberOfTopTopics(),
+                        mFlags.getTopicsNumberOfRandomTopics()))
+                .thenReturn(topTopics);
+
+        // Mock for encryption data.
+        EncryptedTopic expectedEncryptedTopic =
+                EncryptedTopic.create(new byte[] {}, "", new byte[] {});
+        when(mEncryptionManager.encryptTopic(any(), any()))
+                .thenReturn(Optional.of(expectedEncryptedTopic));
+
+        // Mock encryption db and feature flag.
+        when(mMockFlag.getTopicsEncryptionEnabled()).thenReturn(true);
+        when(mMockFlag.getEnableDatabaseSchemaVersion9()).thenReturn(true);
+
+        epochManager.processEpoch();
+
+        // ReturnedEncryptedTopics table should not be empty when feature is enabled.
+        assertThat(
+                        mTopicsDao
+                                .retrieveReturnedEncryptedTopics(epochId, numberOfLookBackEpochs)
+                                .get(epochId))
+                .isNotEmpty();
+        assertThat(
+                        mTopicsDao
+                                .retrieveReturnedEncryptedTopics(epochId, numberOfLookBackEpochs)
+                                .get(epochId))
+                .containsEntry(Pair.create(app, sdk), expectedEncryptedTopic);
+    }
+
+    @Test
     public void testDump() {
         // Trigger the dump to verify no crash
         PrintWriter printWriter = new PrintWriter(new Writer() {
@@ -709,7 +856,8 @@ public final class EpochManagerTest {
                                 mMockClassifier,
                                 mFlags,
                                 mMockClock,
-                                mClassifierManager));
+                                mClassifierManager,
+                                mEncryptionManager));
 
         // To mimic the scenario that there was no usage in last epoch.
         // i.e. current epoch id is 2, with some usages, while epoch id = 1 has no usage.
@@ -910,7 +1058,8 @@ public final class EpochManagerTest {
                         mMockClassifier,
                         flags,
                         mMockClock,
-                        mClassifierManager);
+                        mClassifierManager,
+                        mEncryptionManager);
 
         // Mock clock so that:
         // 1st call: There is no origin and will set 0 as origin.
@@ -1063,7 +1212,8 @@ public final class EpochManagerTest {
                         mMockClassifier,
                         mMockFlag,
                         mMockClock,
-                        mClassifierManager);
+                        mClassifierManager,
+                        mEncryptionManager);
 
         // The first random double is 0.1, it's smaller than 0.595,
         // loggedTopic should be a random topic 50.
@@ -1143,6 +1293,7 @@ public final class EpochManagerTest {
                 mMockClassifier,
                 mMockFlag,
                 mMockClock,
-                mClassifierManager);
+                mClassifierManager,
+                mEncryptionManager);
     }
 }

@@ -65,7 +65,7 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
             // apply to activity context as well since activity context has been created already.
             OTAResourcesManager.applyOTAResources(this, false);
         }
-        UiStatsLogger.logSettingsPageDisplayed(getApplication());
+        UiStatsLogger.logSettingsPageDisplayed();
         super.onCreate(savedInstanceState);
         if (!isUxStatesReady(this)) {
             initMainFragment();
@@ -104,6 +104,11 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
     @Override
     public void initU18() {
         initMainActivity(R.layout.main_u18_activity);
+    }
+
+    @Override
+    public void initRvc() {
+        initU18();
     }
 
     private void initMainActivity(int layoutResID) {
