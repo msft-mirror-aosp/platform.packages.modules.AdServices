@@ -42,6 +42,7 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.Flags;
@@ -52,56 +53,42 @@ import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.App;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
-import com.android.adservices.shared.testing.common.ApplicationContextSingletonRule;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
 
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(BackgroundJobsManager.class)
+@SpyStatic(ConsentManager.class)
+@SpyStatic(UxStatesManager.class)
 @RunWith(AndroidJUnit4.class)
-public class SettingsActivityUiAutomatorTest {
+public final class SettingsActivityUiAutomatorTest extends AdServicesExtendedMockitoTestCase {
+
     private static final String PRIVACY_SANDBOX_TEST_PACKAGE = "android.test.adservices.ui.MAIN";
-    private static final int LAUNCH_TIMEOUT = 5000;
+    private static final int LAUNCH_TIMEOUT = 5_000;
+
     private static UiDevice sDevice;
 
     private String mTestName;
-    private MockitoSession mStaticMockSession;
     private ConsentManager mConsentManager;
-    @Mock Flags mMockFlags;
-    @Mock UxStatesManager mUxStatesManager;
-
-    @Rule
-    public final ApplicationContextSingletonRule appContext = new ApplicationContextSingletonRule();
+    @Mock private Flags mMockFlags;
+    @Mock private UxStatesManager mUxStatesManager;
 
     @Before
     public void setup() throws UiObjectNotFoundException, IOException {
-        // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(ApkTestUtil.isDeviceSupported());
-
-        // Static mocking
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(BackgroundJobsManager.class)
-                        .spyStatic(ConsentManager.class)
-                        .spyStatic(UxStatesManager.class)
-                        .strictness(Strictness.WARN)
-                        .initMocks(this)
-                        .startMocking();
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         doReturn(false).when(mMockFlags).getUiDialogFragmentEnabled();
@@ -199,15 +186,9 @@ public class SettingsActivityUiAutomatorTest {
 
     @After
     public void teardown() {
-        if (!ApkTestUtil.isDeviceSupported()) return;
-
         ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + mTestName + "_");
 
         AdservicesTestHelper.killAdservicesProcess(ApplicationProvider.getApplicationContext());
-
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
     }
 
     @Test
