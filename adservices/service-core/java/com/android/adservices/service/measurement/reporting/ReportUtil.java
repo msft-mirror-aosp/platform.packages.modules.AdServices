@@ -71,13 +71,13 @@ public class ReportUtil {
      * Prepare summary bucket for report JSON
      *
      * @param summaryBucket the summary bucket
-     * @return the string encoded summary bucket in format [start, end]
+     * @return the encoded summary bucket in format [start, end]
      */
     @Nullable
-    public static String serializeSummaryBucket(@NonNull Pair<Long, Long> summaryBucket) {
+    public static JSONArray serializeSummaryBucket(@NonNull Pair<Long, Long> summaryBucket) {
         JSONArray result = new JSONArray();
         result.put(summaryBucket.first);
         result.put(summaryBucket.second);
-        return result.toString();
+        return result;
     }
 }

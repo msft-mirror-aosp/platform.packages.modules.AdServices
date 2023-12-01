@@ -127,6 +127,7 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
                         "trigger_summary_bucket");
         String DOUBLE = "randomized_trigger_rate";
         String STRING_OR_ARRAY = "attribution_destination";
+        String ARRAY = "trigger_debug_keys";
     }
 
     interface AggregateReportPayloadKeys {
@@ -503,7 +504,7 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
 
     private static int hashForEventReportObject(OutputType outputType, JSONObject obj) {
         int n = EventReportPayloadKeys.STRINGS.size();
-        int numValuesExcludingN = 3;
+        int numValuesExcludingN = 4;
         Object[] objArray = new Object[n + numValuesExcludingN];
         // TODO (b/306863121) add time to hash
         String url = obj.optString(TestFormatJsonMapping.REPORT_TO_KEY, "");
@@ -518,10 +519,12 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
         if (maybeString != null) {
             objArray[2] = maybeString;
         }
-        JSONArray maybeArray = payload.optJSONArray(EventReportPayloadKeys.STRING_OR_ARRAY);
-        if (maybeArray != null) {
-            objArray[2] = maybeArray;
+        JSONArray maybeArray1 = payload.optJSONArray(EventReportPayloadKeys.STRING_OR_ARRAY);
+        if (maybeArray1 != null) {
+            objArray[2] = maybeArray1;
         }
+        JSONArray maybeArray2 = payload.optJSONArray(EventReportPayloadKeys.ARRAY);
+        objArray[3] = maybeArray2;
         for (int i = 0; i < n; i++) {
             objArray[i + numValuesExcludingN] =
                     payload.optString(EventReportPayloadKeys.STRINGS.get(i), "");
@@ -592,6 +595,24 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
         return true;
     }
 
+    private static boolean areNullOrEqualJSONArray(JSONArray expected, JSONArray actual)
+            throws JSONException {
+        if (expected == null) {
+            return actual == null;
+        } else if (actual == null) {
+            return false;
+        }
+        if (expected.length() != actual.length()) {
+            return false;
+        }
+        for (int i = 0; i < expected.length(); i++) {
+            if (!expected.getString(i).equals(actual.getString(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private boolean areEqualEventReportJsons(
             ReportType reportType, JSONObject expected, JSONObject actual) throws JSONException {
         JSONObject expectedPayload = expected.getJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
@@ -604,6 +625,13 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
         if (!areEqualStringOrJSONArray(
                 expectedPayload.get(EventReportPayloadKeys.STRING_OR_ARRAY),
                 actualPayload.get(EventReportPayloadKeys.STRING_OR_ARRAY))) {
+            log("Event payload string-or-array mismatch. Report type: " + reportType.name());
+            return false;
+        }
+        if (!areNullOrEqualJSONArray(
+                expectedPayload.optJSONArray(EventReportPayloadKeys.ARRAY),
+                actualPayload.optJSONArray(EventReportPayloadKeys.ARRAY))) {
+            log("Event payload array mismatch. Report type: " + reportType.name());
             return false;
         }
         for (String key : EventReportPayloadKeys.STRINGS) {
@@ -895,6 +923,11 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
             result.append("JSONObject::get failed for EventReportPayloadKeys.STRING_OR_ARRAY "
                     + e + "\n");
         }
+        result.append(EventReportPayloadKeys.ARRAY + ": ")
+                .append(payload1.optJSONArray(EventReportPayloadKeys.ARRAY))
+                .append(" ::: ")
+                .append(payload2.optJSONArray(EventReportPayloadKeys.ARRAY))
+                .append("\n");
         for (String key : EventReportPayloadKeys.STRINGS) {
             result.append(key)
                     .append(": ")
@@ -925,6 +958,10 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
             result.append("JSONObject::get failed for EventReportPayloadKeys.STRING_OR_ARRAY "
                     + e + "\n");
         }
+        result.append(EventReportPayloadKeys.ARRAY + ": ")
+                .append(pad)
+                .append(payload.optJSONArray(EventReportPayloadKeys.ARRAY))
+                .append("\n");
         for (String key : EventReportPayloadKeys.STRINGS) {
             result.append(key).append(": ").append(pad).append(payload.optString(key)).append("\n");
         }
@@ -999,10 +1036,23 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
                     expiryTimes.add(
                             MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
                 }
+                if (sourceJson.has("event_report_windows")) {
+                    expiryTimes.addAll(
+                            getFlexEndTimes(sourceJson.getJSONObject("event_report_windows")));
+                }
             }
         }
 
         return expiryTimes;
+    }
+
+    private static Set<Long> getFlexEndTimes(JSONObject eventReportWindows) throws JSONException {
+        Set<Long> endTimes = new HashSet<>();
+        JSONArray endTimesArray = eventReportWindows.getJSONArray("end_times");
+        for (int i = 0; i < endTimesArray.length(); i++) {
+            endTimes.add(endTimesArray.getLong(i));
+        }
+        return endTimes;
     }
 
     private static long roundSecondsToWholeDays(long seconds) {

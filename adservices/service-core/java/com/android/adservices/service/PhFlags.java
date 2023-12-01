@@ -227,12 +227,21 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
-    public boolean getTopicsEnableEncryption() {
+    public boolean getTopicsEncryptionEnabled() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants.KEY_TOPICS_ENABLE_ENCRYPTION,
-                /* defaultValue */ TOPICS_ENABLE_ENCRYPTION);
+                /* flagName */ FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED,
+                /* defaultValue */ TOPICS_ENCRYPTION_ENABLED);
+    }
+
+    @Override
+    public boolean getTopicsDisablePlaintextResponse() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_TOPICS_DISABLE_PLAINTEXT_RESPONSE,
+                /* defaultValue */ TOPICS_DISABLE_PLAINTEXT_RESPONSE);
     }
 
     @Override
@@ -3044,6 +3053,14 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getConsentAlreadyInteractedEnableMode() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_CONSENT_ALREADY_INTERACTED_FIX_ENABLE,
+                /* defaultValue */ CONSENT_ALREADY_INTERACTED_FIX_ENABLE);
+    }
+
+    @Override
     public String getConsentNotificationResetToken() {
         return DeviceConfig.getString(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -3107,6 +3124,22 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE),
                 /* defaultValue */ CONSENT_MANAGER_DEBUG_MODE);
+    }
+
+    @Override
+    public boolean getConsentManagerOTADebugMode() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_CONSENT_MANAGER_OTA_DEBUG_MODE,
+                /* defaultValue */ DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE);
+    }
+
+    @Override
+    public boolean getRvcPostOtaNotifAgeCheck() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_RVC_POST_OTA_NOTIF_AGE_CHECK,
+                /* defaultValue */ DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK);
     }
 
     @Override
@@ -3532,6 +3565,16 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + " = "
                         + getEnableAdServicesSystemApi());
         writer.println("\t" + FlagsConstants.KEY_U18_UX_ENABLED + " = " + getU18UxEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_CONSENT_MANAGER_OTA_DEBUG_MODE
+                        + " = "
+                        + getConsentManagerOTADebugMode());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_RVC_POST_OTA_NOTIF_AGE_CHECK
+                        + " = "
+                        + getRvcPostOtaNotifAgeCheck());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE
@@ -5660,6 +5703,9 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         uxMap.put(
                 FlagsConstants.KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED,
                 isU18SupervisedAccountEnabled());
+        uxMap.put(
+                FlagsConstants.KEY_CONSENT_ALREADY_INTERACTED_FIX_ENABLE,
+                getConsentAlreadyInteractedEnableMode());
         return uxMap;
     }
 

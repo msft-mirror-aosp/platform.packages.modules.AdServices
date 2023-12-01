@@ -360,20 +360,17 @@ public final class MeasurementImpl {
     }
 
     /**
-     * Delete all records from a specific package.
+     * Delete all records from a specific package and return a boolean value to indicate whether any
+     * data was deleted.
      */
-    public void deletePackageRecords(Uri packageUri) {
+    public boolean deletePackageRecords(Uri packageUri) {
         Uri appUri = getAppUri(packageUri);
         LoggerFactory.getMeasurementLogger().d("Deleting records for " + appUri);
         mReadWriteLock.writeLock().lock();
+        boolean didDeletionOccur = false;
         try {
-            Optional<Boolean> didDeletionOccurOpt =
-                    mDatastoreManager.runInTransactionWithResult(
-                            (dao) -> {
-                                dao.undoInstallAttribution(appUri);
-                                return dao.deleteAppRecords(appUri);
-                            });
-            if (didDeletionOccurOpt.isPresent() && didDeletionOccurOpt.get()) {
+            didDeletionOccur = mMeasurementDataDeleter.deleteAppUninstalledData(appUri);
+            if (didDeletionOccur) {
                 markDeletion();
             }
         } catch (NullPointerException | IllegalArgumentException e) {
@@ -382,6 +379,7 @@ public final class MeasurementImpl {
         } finally {
             mReadWriteLock.writeLock().unlock();
         }
+        return didDeletionOccur;
     }
 
     /**
@@ -406,18 +404,17 @@ public final class MeasurementImpl {
 
     /** Delete all data generated from apps that are not currently installed. */
     public void deleteAllUninstalledMeasurementData() {
-        List<Uri> installedApplicationsList =
+        final List<Uri> installedAppList =
                 Applications.getCurrentInstalledApplicationsList(mContext);
-        mReadWriteLock.writeLock().lock();
-        try {
-            Optional<Boolean> didDeletionOccurOpt =
-                    mDatastoreManager.runInTransactionWithResult(
-                            (dao) -> dao.deleteAppRecordsNotPresent(installedApplicationsList));
-            if (didDeletionOccurOpt.isPresent() && didDeletionOccurOpt.get()) {
-                markDeletion();
+
+        final Optional<List<Uri>> uninstalledAppsOpt =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) -> dao.getUninstalledAppNamesHavingMeasurementData(installedAppList));
+
+        if (uninstalledAppsOpt.isPresent() && !uninstalledAppsOpt.get().isEmpty()) {
+            for (Uri uninstalledAppName : uninstalledAppsOpt.get()) {
+                deletePackageRecords(uninstalledAppName);
             }
-        } finally {
-            mReadWriteLock.writeLock().unlock();
         }
     }
 
@@ -445,7 +442,9 @@ public final class MeasurementImpl {
     }
 
     private Uri getAppUri(Uri packageUri) {
-        return Uri.parse(ANDROID_APP_SCHEME + "://" + packageUri.getEncodedSchemeSpecificPart());
+        return packageUri.getScheme() == null
+                ? Uri.parse(ANDROID_APP_SCHEME + "://" + packageUri.getEncodedSchemeSpecificPart())
+                : packageUri;
     }
 
     private boolean isValid(WebSourceRegistrationRequest sourceRegistrationRequest) {

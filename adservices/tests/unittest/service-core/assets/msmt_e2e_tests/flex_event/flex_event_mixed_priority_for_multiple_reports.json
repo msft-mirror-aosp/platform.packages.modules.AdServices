@@ -137,7 +137,7 @@
           "source_event_id": "123",
           "trigger_data": "1",
           "source_type": "event",
-          "trigger_summary_bucket": "[10,19]",
+          "trigger_summary_bucket": [10, 19],
           "randomized_trigger_rate": 0.00001663031163901838
         }
       },
@@ -150,7 +150,7 @@
           "source_event_id": "123",
           "trigger_data": "0",
           "source_type": "event",
-          "trigger_summary_bucket": "[10,19]",
+          "trigger_summary_bucket": [10, 19],
           "randomized_trigger_rate": 0.00001663031163901838
         }
       },

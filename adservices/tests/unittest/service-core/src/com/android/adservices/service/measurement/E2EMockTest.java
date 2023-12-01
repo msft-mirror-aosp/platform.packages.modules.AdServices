@@ -451,11 +451,7 @@ public abstract class E2EMockTest extends E2ETest {
     void processAction(UninstallApp uninstallApp) {
         Assert.assertTrue(
                 "measurementDao.undoInstallAttribution failed",
-                mDatastoreManager.runInTransaction(
-                        measurementDao -> {
-                            measurementDao.deleteAppRecords(uninstallApp.mUri);
-                            measurementDao.undoInstallAttribution(uninstallApp.mUri);
-                        }));
+                mMeasurementImpl.deletePackageRecords(uninstallApp.mUri));
     }
 
     @Override

@@ -33,7 +33,7 @@ public final class SdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
     @Nullable private Supplier<AndroidSdkLevel> mDeviceLevelSupplier;
 
     SdkLevelSupportRule(AndroidSdkLevel level) {
-        super(AndroidLogger.getInstance(), level);
+        super(AndroidLogger.getInstance(), AndroidSdkRange.forAtLeast(level.getLevel()));
     }
 
     @VisibleForTesting

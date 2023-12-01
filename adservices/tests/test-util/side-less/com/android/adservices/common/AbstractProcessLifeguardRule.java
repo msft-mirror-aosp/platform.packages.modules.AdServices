@@ -31,8 +31,6 @@ import java.util.Objects;
 /** See documentation on {#link {@link ProcessLifeguardRule}. */
 abstract class AbstractProcessLifeguardRule implements TestRule {
 
-    protected final Logger mLog;
-
     // TODO(b/302757068): protected these static variables (either using @GuardedBy or
     // AtomitReference)
     private static @Nullable UncaughtExceptionHandler sRealHandler;
@@ -40,6 +38,10 @@ abstract class AbstractProcessLifeguardRule implements TestRule {
 
     private static final List<String> sAllTestsSoFar = new ArrayList<>();
     private static final List<String> sTestsSinceLastUncaughtFailure = new ArrayList<>();
+
+    protected final Logger mLog;
+
+    @Nullable private String mTestName;
 
     /** Default constructor. */
     AbstractProcessLifeguardRule(RealLogger logger) {
@@ -64,7 +66,7 @@ abstract class AbstractProcessLifeguardRule implements TestRule {
                 uncaughtThrowable,
                 "Failing "
                         + testName
-                        + "because an exception was caught on background (NOTE: "
+                        + " because an exception was caught on background (NOTE: "
                         + allTests.size()
                         + " tests executed so far, "
                         + lastTests.size()
@@ -102,16 +104,42 @@ abstract class AbstractProcessLifeguardRule implements TestRule {
                         + " for full stack trace and name of these tests");
     }
 
+    /**
+     * Gets the name of the test being executed.
+     *
+     * @throws IllegalStateException if not running a test.
+     */
+    public final String getTestName() {
+        if (mTestName == null) {
+            throw new IllegalStateException("not running a test");
+        }
+        return mTestName;
+    }
+
     @Override
     public Statement apply(Statement base, Description description) {
         return new Statement() {
 
             @Override
             public void evaluate() throws Throwable {
+                mTestName =
+                        description.getTestClass().getSimpleName()
+                                + "#"
+                                + description.getMethodName();
+                try {
+                    evaluateWitTestNameSet();
+                } finally {
+                    mTestName = null;
+                }
+            }
+
+            private void evaluateWitTestNameSet() throws Throwable {
                 if (sRealHandler == null) {
                     sRealHandler = Thread.getDefaultUncaughtExceptionHandler();
                     if (sRealHandler != null) {
-                        mLog.i("Saving real handler (%s) as sRealHandler", sRealHandler);
+                        mLog.i(
+                                "Saving real handler (%s) as sRealHandler on %s",
+                                sRealHandler, mTestName);
                     } else {
                         mLog.d("No real UncaughtExceptionHandler");
                     }

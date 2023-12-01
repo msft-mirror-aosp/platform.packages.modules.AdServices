@@ -252,7 +252,8 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 if (!mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
                         ownerPackageName)) {
                     sLogger.v("Joining custom audience");
-                    mCustomAudienceImpl.joinCustomAudience(customAudience, ownerPackageName);
+                    mCustomAudienceImpl.joinCustomAudience(
+                            customAudience, ownerPackageName, devContext);
                     BackgroundFetchJobService.scheduleIfNeeded(mContext, mFlags, false);
                     resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
                 } else {
