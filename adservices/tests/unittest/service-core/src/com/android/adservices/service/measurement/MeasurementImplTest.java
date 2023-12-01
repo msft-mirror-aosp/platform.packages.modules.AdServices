@@ -92,6 +92,7 @@ import org.mockito.quality.Strictness;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 /** Unit tests for {@link MeasurementImpl} */
@@ -631,8 +632,7 @@ public final class MeasurementImplTest {
                                 MeasurementRollbackCompatManager.getInstance(
                                         any(), eq(AdServicesManager.MEASUREMENT_DELETION)));
 
-        doReturn(Optional.of(true)).when(mDatastoreManager).runInTransactionWithResult(any());
-        doReturn(true).when(mDatastoreManager).runInTransaction(any());
+        doReturn(true).when(mMeasurementDataDeleter).deleteAppUninstalledData(any());
 
         doDeletePackageRecords();
         return mockRollbackManager;
@@ -771,8 +771,7 @@ public final class MeasurementImplTest {
                                 MeasurementRollbackCompatManager.getInstance(
                                         any(), eq(AdServicesManager.MEASUREMENT_DELETION)));
 
-        doReturn(Optional.of(true)).when(mDatastoreManager).runInTransactionWithResult(any());
-        doReturn(true).when(mDatastoreManager).runInTransaction(any());
+        doReturn(true).when(mMeasurementDataDeleter).deleteAppUninstalledData(any());
 
         MeasurementImpl measurement = createMeasurementImpl();
         measurement.deleteAllUninstalledMeasurementData();
@@ -790,8 +789,10 @@ public final class MeasurementImplTest {
         ExtendedMockito.doReturn(mockAdServicesManager)
                 .when(() -> AdServicesManager.getInstance(any()));
 
-        doReturn(Optional.of(false)).when(mDatastoreManager).runInTransactionWithResult(any());
-        doReturn(true).when(mDatastoreManager).runInTransaction(any());
+        doReturn(Optional.of(List.of(Uri.parse("android-app://foo"))))
+                .when(mDatastoreManager)
+                .runInTransactionWithResult(any());
+        doReturn(false).when(mMeasurementDataDeleter).deleteAppUninstalledData(any());
 
         MeasurementImpl measurement = createMeasurementImpl();
         measurement.deleteAllUninstalledMeasurementData();
