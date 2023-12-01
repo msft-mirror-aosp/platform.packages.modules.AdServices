@@ -21,6 +21,8 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARG
 import static android.adservices.common.AdServicesStatusUtils.STATUS_IO_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_WIPEOUT;
+
 import android.adservices.adid.AdId;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.measurement.DeletionParam;
@@ -51,11 +53,13 @@ import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.appsearch.AppSearchMeasurementRollbackManager;
 import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.registration.EnqueueAsyncRegistration;
+import com.android.adservices.service.measurement.rollback.MeasurementRollbackCompatManager;
 import com.android.adservices.service.measurement.util.Applications;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.MeasurementWipeoutStats;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -545,11 +549,24 @@ public final class MeasurementImpl {
             LoggerFactory.getMeasurementLogger()
                     .d("Rollback and deletion detected, deleting all measurement data.");
             mReadWriteLock.writeLock().lock();
+            boolean success;
             try {
-                mDatastoreManager.runInTransaction(
-                        (dao) -> dao.deleteAllMeasurementData(Collections.emptyList()));
+                success =
+                        mDatastoreManager.runInTransaction(
+                                (dao) -> dao.deleteAllMeasurementData(Collections.emptyList()));
             } finally {
                 mReadWriteLock.writeLock().unlock();
+            }
+            if (success) {
+                AdServicesLoggerImpl.getInstance()
+                        .logMeasurementWipeoutStats(
+                                new MeasurementWipeoutStats.Builder()
+                                        .setCode(AD_SERVICES_MEASUREMENT_WIPEOUT)
+                                        .setWipeoutType(
+                                                WipeoutStatus.WipeoutType.ROLLBACK_WIPEOUT_CAUSE
+                                                        .getValue())
+                                        .setSourceRegistrant("")
+                                        .build());
             }
         }
     }
@@ -561,14 +578,14 @@ public final class MeasurementImpl {
                     .needsToHandleRollbackReconciliation(AdServicesManager.MEASUREMENT_DELETION);
         }
 
-        // Not on Android T+
-        if (FlagsFactory.getFlags().getMeasurementRollbackDeletionAppSearchKillSwitch()) {
+        // Not on Android T+. Check if flag is enabled if on R/S.
+        if (isMeasurementRollbackCompatDisabled()) {
             LoggerFactory.getMeasurementLogger()
-                    .e("Rollback deletion is disabled. Not checking App Search for rollback.");
+                    .e("Rollback deletion disabled. Not checking compatible store for rollback.");
             return false;
         }
 
-        return AppSearchMeasurementRollbackManager.getInstance(
+        return MeasurementRollbackCompatManager.getInstance(
                         mContext, AdServicesManager.MEASUREMENT_DELETION)
                 .needsToHandleRollbackReconciliation();
     }
@@ -592,16 +609,27 @@ public final class MeasurementImpl {
             return;
         }
 
-        // On Android S or lower.
-        if (FlagsFactory.getFlags().getMeasurementRollbackDeletionAppSearchKillSwitch()) {
+        // If on Android R/S, check if the appropriate flag is enabled, otherwise do nothing.
+        if (isMeasurementRollbackCompatDisabled()) {
             LoggerFactory.getMeasurementLogger()
-                    .e("Rollback deletion in AppSearch disabled. Not storing status in AppSearch.");
+                    .e("Rollback deletion disabled. Not storing status in compatible store.");
             return;
         }
 
-        LoggerFactory.getMeasurementLogger().d("Marking deletion in AppSearch");
-        AppSearchMeasurementRollbackManager.getInstance(
+        MeasurementRollbackCompatManager.getInstance(
                         mContext, AdServicesManager.MEASUREMENT_DELETION)
                 .recordAdServicesDeletionOccurred();
+    }
+
+    private boolean isMeasurementRollbackCompatDisabled() {
+        if (SdkLevel.isAtLeastT()) {
+            // This method should never be called on T+.
+            return true;
+        }
+
+        Flags flags = FlagsFactory.getFlags();
+        return SdkLevel.isAtLeastS()
+                ? flags.getMeasurementRollbackDeletionAppSearchKillSwitch()
+                : !flags.getMeasurementRollbackDeletionREnabled();
     }
 }

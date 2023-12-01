@@ -196,6 +196,7 @@ public final class MeasurementTables {
         String RANDOMIZED_TRIGGER_RATE = "randomized_trigger_rate";
         String SOURCE_DEBUG_KEY = "source_debug_key";
         String TRIGGER_DEBUG_KEY = "trigger_debug_key";
+        String TRIGGER_DEBUG_KEYS = "trigger_debug_keys";
         String SOURCE_ID = "source_id";
         String TRIGGER_ID = "trigger_id";
         String REGISTRATION_ORIGIN = "registration_origin";
@@ -217,6 +218,7 @@ public final class MeasurementTables {
         String SOURCE_ID = "source_id";
         String TRIGGER_ID = "trigger_id";
         String REGISTRATION_ORIGIN = "registration_origin";
+        String SCOPE = "scope";
     }
 
     /** Contract for Unencrypted aggregate payload. */
@@ -239,6 +241,7 @@ public final class MeasurementTables {
         String DEDUP_KEY = "dedup_key";
         String REGISTRATION_ORIGIN = "registration_origin";
         String AGGREGATION_COORDINATOR_ORIGIN = "aggregation_coordinator_origin";
+        String IS_FAKE_REPORT = "is_fake_report";
     }
 
     /** Contract for aggregate encryption key. */
@@ -729,6 +732,8 @@ public final class MeasurementTables {
                     + " TEXT, "
                     + EventReportContract.TRIGGER_SUMMARY_BUCKET
                     + " TEXT, "
+                    + EventReportContract.TRIGGER_DEBUG_KEYS
+                    + " TEXT, "
                     + "FOREIGN KEY ("
                     + EventReportContract.SOURCE_ID
                     + ") REFERENCES "
@@ -811,6 +816,8 @@ public final class MeasurementTables {
                     + " TEXT, "
                     + AttributionContract.REGISTRATION_ORIGIN
                     + " TEXT, "
+                    + AttributionContract.SCOPE
+                    + " INTEGER, "
                     + "FOREIGN KEY ("
                     + AttributionContract.SOURCE_ID
                     + ") REFERENCES "
@@ -913,6 +920,8 @@ public final class MeasurementTables {
                     + " TEXT, "
                     + AggregateReport.AGGREGATION_COORDINATOR_ORIGIN
                     + " TEXT, "
+                    + AggregateReport.IS_FAKE_REPORT
+                    + " INTEGER, "
                     + "FOREIGN KEY ("
                     + AggregateReport.SOURCE_ID
                     + ") REFERENCES "
@@ -994,6 +1003,7 @@ public final class MeasurementTables {
                     + DebugReportContract.REGISTRANT
                     + " TEXT "
                     + ")";
+
     public static final String CREATE_TABLE_XNA_IGNORED_SOURCES_V6 =
             "CREATE TABLE "
                     + XnaIgnoredSourcesContract.TABLE
@@ -1104,17 +1114,15 @@ public final class MeasurementTables {
         "CREATE INDEX "
                 + INDEX_PREFIX
                 + AttributionContract.TABLE
-                + "_ss_so_ds_do_ei_tt"
+                + "_s_ss_ds_ei_tt"
                 + " ON "
                 + AttributionContract.TABLE
                 + "("
+                + AttributionContract.SCOPE
+                + ", "
                 + AttributionContract.SOURCE_SITE
                 + ", "
-                + AttributionContract.SOURCE_ORIGIN
-                + ", "
                 + AttributionContract.DESTINATION_SITE
-                + ", "
-                + AttributionContract.DESTINATION_ORIGIN
                 + ", "
                 + AttributionContract.ENROLLMENT_ID
                 + ", "

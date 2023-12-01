@@ -76,7 +76,6 @@ import java.util.List;
 /** Unit test for {@link com.android.adservices.measurement.MeasurementService}. */
 public class MeasurementServiceTest {
     @Mock ConsentManager mMockConsentManager;
-    @Mock UxStatesManager mUxStatesManager;
     @Mock DevContextFilter mDevContextFilter;
     @Mock Flags mMockFlags;
     @Mock MeasurementImpl mMockMeasurementImpl;
@@ -103,74 +102,12 @@ public class MeasurementServiceTest {
 
     /** Test kill switch off with consent given */
     @Test
-    public void testBindableMeasurementService_killSwitchOff_gaUxDisabled_consentGiven()
-            throws Exception {
-        runWithMocks(
-                /* killSwitchOff */ false,
-                /* consentGiven */ true,
-                /* consentNotified */ true,
-                /* isGaUxEnabled */ false,
-                () -> {
-                    // Execute
-                    final IBinder binder = onCreateAndOnBindService();
-
-                    // Verification
-                    assertNotNull(binder);
-                    verify(mMockConsentManager, times(1)).getConsent();
-                    ExtendedMockito.verify(
-                            () -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
-                    assertJobScheduled(/* timesCalled */ 1);
-                });
-    }
-
-    /** Test kill switch off with consent revoked */
-    @Test
-    public void testBindableMeasurementService_killSwitchOff_gaUxDisabled_consentRevoked()
-            throws Exception {
-        runWithMocks(
-                /* killSwitchOff */ false,
-                /* consentNotifiedState */ true,
-                /* consentRevoked */ false,
-                /* isGaUxEnabled */ false,
-                () -> {
-                    // Execute
-                    final IBinder binder = onCreateAndOnBindService();
-
-                    // Verification
-                    assertNotNull(binder);
-                    verify(mMockConsentManager, times(1)).getConsent();
-                    assertJobScheduled(/* timesCalled */ 0);
-                });
-    }
-
-    /** Test kill switch on */
-    @Test
-    public void testBindableMeasurementService_killSwitchOn_gaUxDisabled() throws Exception {
-        runWithMocks(
-                /* killSwitchOn */ true,
-                /* consentNotifiedState */ true,
-                /* consentGiven */ true,
-                /* isGaUxEnabled */ false,
-                () -> {
-                    // Execute
-                    final IBinder binder = onCreateAndOnBindService();
-
-                    // Verification
-                    assertNull(binder);
-                    verify(mMockConsentManager, never()).getConsent();
-                    assertJobScheduled(/* timesCalled */ 0);
-                });
-    }
-
-    /** Test kill switch off with consent given */
-    @Test
     public void testBindableMeasurementService_killSwitchOff_gaUxEnabled_consentGiven()
             throws Exception {
         runWithMocks(
                 /* killSwitchOff */ false,
-                /* consentNotifiedState */ true,
+                /* consentNotifiedState */
                 /* consentGiven */ true,
-                /* isGaUxEnabled */ true,
                 () -> {
                     // Execute
                     final IBinder binder = onCreateAndOnBindService();
@@ -192,9 +129,8 @@ public class MeasurementServiceTest {
             throws Exception {
         runWithMocks(
                 /* killSwitchOff */ false,
-                /* consentNotifiedState */ true,
+                /* consentNotifiedState */
                 /* consentRevoked */ false,
-                /* isGaUxEnabled */ true,
                 () -> {
                     // Execute
                     final IBinder binder = onCreateAndOnBindService();
@@ -213,9 +149,7 @@ public class MeasurementServiceTest {
     public void testBindableMeasurementService_killSwitchOn_gaUxEnabled() throws Exception {
         runWithMocks(
                 /* killSwitchOn */ true,
-                /* consentNotifiedState */ true,
                 /* consentGiven */ true,
-                /* isGaUxEnabled */ false,
                 () -> {
                     // Execute
                     final IBinder binder = onCreateAndOnBindService();
@@ -241,9 +175,7 @@ public class MeasurementServiceTest {
 
     private void runWithMocks(
             boolean killSwitchStatus,
-            boolean consentNotifiedState,
             boolean consentStatus,
-            boolean isGaUxEnabled,
             TestUtils.RunnableWithThrow execute)
             throws Exception {
         // Start a mockitoSession to mock static method
@@ -275,15 +207,11 @@ public class MeasurementServiceTest {
                         .startMocking();
         try {
             doReturn(killSwitchStatus).when(mMockFlags).getMeasurementKillSwitch();
-            doReturn(isGaUxEnabled).when(mMockFlags).getGaUxFeatureEnabled();
 
             ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
             ExtendedMockito.doReturn(mMockConsentManager)
                     .when(() -> ConsentManager.getInstance(any()));
-
-            ExtendedMockito.doReturn(mUxStatesManager)
-                    .when(() -> UxStatesManager.getInstance(any()));
 
             ExtendedMockito.doReturn(mDevContextFilter)
                     .when(() -> DevContextFilter.create(any(Context.class)));
@@ -291,13 +219,9 @@ public class MeasurementServiceTest {
             final AdServicesApiConsent mockConsent = mock(AdServicesApiConsent.class);
             doReturn(consentStatus).when(mockConsent).isGiven();
 
-            if (isGaUxEnabled) {
-                doReturn(mockConsent)
-                        .when(mMockConsentManager)
-                        .getConsent(eq(AdServicesApiType.MEASUREMENTS));
-            } else {
-                doReturn(mockConsent).when(mMockConsentManager).getConsent();
-            }
+            doReturn(mockConsent)
+                    .when(mMockConsentManager)
+                    .getConsent(eq(AdServicesApiType.MEASUREMENTS));
 
             ExtendedMockito.doReturn(mMockEnrollmentDao)
                     .when(() -> EnrollmentDao.getInstance(any()));

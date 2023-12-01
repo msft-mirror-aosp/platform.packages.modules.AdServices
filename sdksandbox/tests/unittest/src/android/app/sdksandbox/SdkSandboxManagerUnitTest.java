@@ -23,6 +23,7 @@ import static android.app.sdksandbox.SdkSandboxManager.EXTRA_SURFACE_PACKAGE;
 import static android.app.sdksandbox.SdkSandboxManager.EXTRA_WIDTH_IN_PIXELS;
 import static android.app.sdksandbox.SdkSandboxManager.LOAD_SDK_NOT_FOUND;
 import static android.app.sdksandbox.SdkSandboxManager.REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR;
+import static android.app.sdksandbox.StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__START_SDK_SANDBOX_ACTIVITY;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -41,6 +42,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.SurfaceControlViewHost.SurfacePackage;
 
@@ -95,9 +97,9 @@ public class SdkSandboxManagerUnitTest {
 
         OutcomeReceiver<SandboxedSdk, LoadSdkException> outcomeReceiver =
                 Mockito.spy(new FakeOutcomeReceiver<>());
-        long beforeCallingTimeStamp = System.currentTimeMillis();
+        long beforeCallingTimeStamp = SystemClock.elapsedRealtime();
         mSdkSandboxManager.loadSdk(SDK_NAME, params, Runnable::run, outcomeReceiver);
-        long afterCallingTimeStamp = System.currentTimeMillis();
+        long afterCallingTimeStamp = SystemClock.elapsedRealtime();
 
         ArgumentCaptor<ILoadSdkCallback> callbackArgumentCaptor =
                 ArgumentCaptor.forClass(ILoadSdkCallback.class);
@@ -593,6 +595,22 @@ public class SdkSandboxManagerUnitTest {
                 .isNotNull();
         assertThat(params.getBinder(SdkSandboxManager.EXTRA_SANDBOXED_ACTIVITY_HANDLER))
                 .isEqualTo(token);
+    }
+
+    @Test
+    public void testStartSandboxActivity_logSandboxActivityEventCalled() throws Exception {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        Activity fromActivitySpy = Mockito.mock(Activity.class);
+        IBinder token = new Binder();
+        mSdkSandboxManager.startSdkSandboxActivity(fromActivitySpy, token);
+
+        Mockito.verify(mBinder, Mockito.times(1))
+                .logSandboxActivityEvent(
+                        Mockito.eq(
+                                SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__START_SDK_SANDBOX_ACTIVITY),
+                        Mockito.anyInt(),
+                        Mockito.anyInt());
     }
 
     private void ensureIllegalArgumentExceptionOnRequestSurfacePackage(

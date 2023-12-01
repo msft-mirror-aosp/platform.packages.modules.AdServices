@@ -33,6 +33,7 @@ import java.util.Objects;
  * Mockito can not mock native methods. Hence, this class implements an interface {@link
  * IOhttpJniWrapper} that can be mocked.
  */
+// TODO(b/309107764) : Refactor this class to have a consistent style
 class OhttpJniWrapper implements IOhttpJniWrapper {
     private static OhttpJniWrapper sWrapper;
 
@@ -171,6 +172,54 @@ class OhttpJniWrapper implements IOhttpJniWrapper {
     }
 
     /**
+     * Provides the Ohttp gateway side decryption method
+     *
+     * <p>https://www.ietf.org/archive/id/draft-ietf-ohai-ohttp-03.html#section-4.1-10
+     */
+    public GatewayDecryptResponse gatewayDecrypt(
+            HpkeContextNativeRef hpkeContextNativeRef,
+            KemNativeRef kemNativeRef,
+            KdfNativeRef kdfNativeRef,
+            AeadNativeRef aeadNativeRef,
+            byte[] cipherText) {
+
+        byte[] decryptedBytes =
+                gatewayDecrypt(
+                        hpkeContextNativeRef.getAddress(),
+                        kemNativeRef.getAddress(),
+                        kdfNativeRef.getAddress(),
+                        aeadNativeRef.getAddress(),
+                        cipherText);
+
+        return GatewayDecryptResponse.create(decryptedBytes);
+    }
+
+    /**
+     * Sets up the {@code hpkeContextNativeRef} as the recipient/gateway/server context and returns
+     * whether the setup was successful.
+     *
+     * <p>https://www.ietf.org/archive/id/draft-ietf-ohai-ohttp-03.html#section-4.1-10
+     */
+    public boolean hpkeSetupRecipient(
+            HpkeContextNativeRef hpkeContextNativeRef,
+            KemNativeRef kemNativeRef,
+            KdfNativeRef kdfNativeRef,
+            AeadNativeRef aeadNativeRef,
+            OhttpGatewayPrivateKey privateKey,
+            EncapsulatedSharedSecret encapsulatedSharedSecret,
+            RecipientKeyInfo recipientKeyInfo) {
+
+        return hpkeSetupRecipient(
+                hpkeContextNativeRef.getAddress(),
+                kemNativeRef.getAddress(),
+                kdfNativeRef.getAddress(),
+                aeadNativeRef.getAddress(),
+                privateKey.getBytes(),
+                encapsulatedSharedSecret.getBytes(),
+                recipientKeyInfo.getBytes());
+    }
+
+    /**
      * Computes and returns a HKDF PseudoRandomKey (as specified by RFC 5869) from initial keying
      * material {@code secret} and {@code salt} using a digest method referenced by {@code
      * hkdfMessageDigestNativeRef}
@@ -225,6 +274,19 @@ class OhttpJniWrapper implements IOhttpJniWrapper {
     }
 
     /**
+     * Encrypts the {@code cipherTextArray} using the symmetric key {@code keyArray} and the
+     * single-use {@code nonceArray}
+     */
+    public byte[] aeadSeal(
+            AeadNativeRef aeadNativeRef,
+            byte[] keyArray,
+            byte[] nonceArray,
+            byte[] plainTextArray) {
+        Objects.requireNonNull(aeadNativeRef);
+        return aeadSeal(aeadNativeRef.getAddress(), keyArray, nonceArray, plainTextArray);
+    }
+
+    /**
      * Calls the boringSSL method {@code EVP_HPKE_CTX_seal} to encrypt the {@code plainText} using
      * optional {@code aad}
      *
@@ -253,10 +315,30 @@ class OhttpJniWrapper implements IOhttpJniWrapper {
             @Nullable byte[] info,
             byte[] seed);
 
+    @Nullable
+    private native byte[] gatewayDecrypt(
+            long hpkeCtxRef,
+            long kemNativeRef,
+            long kdfNativeRef,
+            long aeadNativeRef,
+            byte[] encryptedData);
+
+    private native boolean hpkeSetupRecipient(
+            long hpkeCtxRef,
+            long kemNativeRef,
+            long kdfNativeRef,
+            long aeadNativeRef,
+            byte[] privateKey,
+            byte[] enc,
+            byte[] info);
+
     private native byte[] hpkeCtxSeal(long ctx, @Nullable byte[] plaintText, @Nullable byte[] aad);
 
     private native byte[] aeadOpen(
             long aeadNativeRef, byte[] keyArray, byte[] nonceArray, byte[] cipherTextArray);
+
+    private native byte[] aeadSeal(
+            long aeadNativeRef, byte[] keyArray, byte[] nonceArray, byte[] plainTextArray);
 
     private native byte[] hkdfExpand(
             long hkdfMessageDigestNativeRef, byte[] prkArray, byte[] infoArray, int keyLength);

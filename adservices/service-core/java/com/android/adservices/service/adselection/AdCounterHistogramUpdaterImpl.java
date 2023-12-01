@@ -47,6 +47,7 @@ public class AdCounterHistogramUpdaterImpl implements AdCounterHistogramUpdater 
     private final int mAbsoluteMaxPerBuyerHistogramEventCount;
     private final int mLowerMaxPerBuyerHistogramEventCount;
     private final boolean mAuctionServerEnabledForUpdateHistogram;
+    private final boolean mShouldUseUnifiedTables;
 
     public AdCounterHistogramUpdaterImpl(
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
@@ -55,7 +56,8 @@ public class AdCounterHistogramUpdaterImpl implements AdCounterHistogramUpdater 
             int lowerMaxTotalHistogramEventCount,
             int absoluteMaxPerBuyerHistogramEventCount,
             int lowerMaxPerBuyerHistogramEventCount,
-            boolean auctionServerEnabledForUpdateHistogram) {
+            boolean auctionServerEnabledForUpdateHistogram,
+            boolean shouldUseUnifiedTables) {
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(frequencyCapDao);
         Preconditions.checkArgument(absoluteMaxTotalHistogramEventCount > 0);
@@ -74,6 +76,7 @@ public class AdCounterHistogramUpdaterImpl implements AdCounterHistogramUpdater 
         mAbsoluteMaxPerBuyerHistogramEventCount = absoluteMaxPerBuyerHistogramEventCount;
         mLowerMaxPerBuyerHistogramEventCount = lowerMaxPerBuyerHistogramEventCount;
         mAuctionServerEnabledForUpdateHistogram = auctionServerEnabledForUpdateHistogram;
+        mShouldUseUnifiedTables = shouldUseUnifiedTables;
     }
 
     @Override
@@ -162,11 +165,18 @@ public class AdCounterHistogramUpdaterImpl implements AdCounterHistogramUpdater 
         Objects.requireNonNull(eventTimestamp);
 
         DBAdSelectionHistogramInfo histogramInfo;
-        if (!mAuctionServerEnabledForUpdateHistogram) {
+        if (mShouldUseUnifiedTables) {
+            sLogger.v("Should use unified tables flag is on, reading only from new tables.");
+            histogramInfo =
+                    mAdSelectionEntryDao.getAdSelectionHistogramInfoFromUnifiedTable(
+                            adSelectionId, callerPackageName);
+        } else if (!mAuctionServerEnabledForUpdateHistogram) {
+            sLogger.v("Reading from legacy tables.");
             histogramInfo =
                     mAdSelectionEntryDao.getAdSelectionHistogramInfoInOnDeviceTable(
                             adSelectionId, callerPackageName);
         } else {
+            sLogger.v("Server auction is enabled, reading from all tables.");
             histogramInfo =
                     mAdSelectionEntryDao.getAdSelectionHistogramInfo(
                             adSelectionId, callerPackageName);
