@@ -5555,7 +5555,7 @@ public final class AsyncSourceFetcherTest extends AdServicesUnitTestCase {
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(20))
                         + "\"summary_window_operator\": \"count\", "
-                        + "\"summary_buckets\": [1, 2, 3, 4]}], \n";
+                        + "\"summary_buckets\": [1, 2, 3]}], \n";
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
@@ -5671,10 +5671,10 @@ public final class AsyncSourceFetcherTest extends AdServicesUnitTestCase {
                 TriggerSpec.SummaryOperatorType.COUNT,
                 triggerSpecs.getSummaryOperatorType(triggerData));
         // Default summary buckets
-        List<Long> expectedSummaryBuckets = List.of(1L, 2L, 3L, 4L);
+        List<Long> expectedSummaryBuckets = List.of(1L, 2L, 3L);
         List<Long> actualSummaryBuckets = triggerSpecs.getSummaryBucketsForTriggerData(triggerData);
         assertEquals(expectedSummaryBuckets, actualSummaryBuckets);
-        assertEquals(triggerSpecs.getMaxReports() + 1, actualSummaryBuckets.size());
+        assertEquals(triggerSpecs.getMaxReports(), actualSummaryBuckets.size());
         assertEquals(
                 1L,
                 triggerSpecs
@@ -5707,7 +5707,7 @@ public final class AsyncSourceFetcherTest extends AdServicesUnitTestCase {
                                 TimeUnit.DAYS.toSeconds(7),
                                 expiry + TimeUnit.DAYS.toSeconds(10))
                         + "\"summary_window_operator\": \"count\", "
-                        + "\"summary_buckets\": [1, 2, 3, 4]}], \n";
+                        + "\"summary_buckets\": [1, 2, 3]}], \n";
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
@@ -5757,17 +5757,19 @@ public final class AsyncSourceFetcherTest extends AdServicesUnitTestCase {
     }
 
     @Test
-    public void fetchSource_flexibleEventReportApi_truncatesSummaryBuckets() throws Exception {
-        long expiry = 2592000L;
+    public void fetchSource_flexEventReportApiMoreSummaryBucketsThanReports_noSourceGenerated()
+            throws Exception {
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3],"
                         + "\"event_report_windows\": { "
                         + "\"start_time\": 0,"
                         + String.format(
-                                "\"end_times\": [%s]}, ",
-                                TimeUnit.DAYS.toSeconds(7))
+                                "\"end_times\": [%s, %s, %s]}, ",
+                                TimeUnit.DAYS.toSeconds(2),
+                                TimeUnit.DAYS.toSeconds(7),
+                                TimeUnit.DAYS.toSeconds(20))
                         + "\"summary_window_operator\": \"count\", "
-                        + "\"summary_buckets\": [1, 2, 3, 4]}],";
+                        + "\"summary_buckets\": [1, 2, 3, 4]}], \n";
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
@@ -5785,12 +5787,12 @@ public final class AsyncSourceFetcherTest extends AdServicesUnitTestCase {
                                                 + "  \"destination\": \"android-app://com"
                                                 + ".myapps\","
                                                 + "  \"priority\": \"123\","
-                                                + "  \"expiry\":\"" + String.valueOf(expiry) + "\","
+                                                + "  \"expiry\": \"2592000\","
                                                 + "  \"source_event_id\": \"987654321\","
                                                 + "  \"install_attribution_window\": \"272800\","
                                                 + "  \"trigger_specs\": "
                                                 + triggerSpecsString
-                                                + "  \"max_event_level_reports\": 2,"
+                                                + "  \"max_event_level_reports\": 3,"
                                                 + "  \"post_install_exclusivity_window\": "
                                                 + "\"987654\""
                                                 + "}")));
@@ -5801,16 +5803,9 @@ public final class AsyncSourceFetcherTest extends AdServicesUnitTestCase {
                 mFetcher.fetchSource(
                         appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
-        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
-        assertTrue(fetch.isPresent());
-        Source result = fetch.get();
-        assertNull(result.getTriggerSpecsString());
-        UnsignedLong triggerData = new UnsignedLong(2L);
-        TriggerSpecs triggerSpecs = result.getTriggerSpecs();
-        List<Long> expectedSummaryBuckets = List.of(1L, 2L, 3L);
-        List<Long> actualSummaryBuckets = triggerSpecs.getSummaryBucketsForTriggerData(triggerData);
-        assertEquals(expectedSummaryBuckets, actualSummaryBuckets);
-        assertEquals(triggerSpecs.getMaxReports() + 1, actualSummaryBuckets.size());
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
+        assertTrue(fetch.isEmpty());
     }
 
     @Test
@@ -5824,7 +5819,7 @@ public final class AsyncSourceFetcherTest extends AdServicesUnitTestCase {
                                 "\"end_times\": [%s]}, ",
                                 TimeUnit.MINUTES.toSeconds(38))
                         + "\"summary_window_operator\": \"count\", "
-                        + "\"summary_buckets\": [1, 2, 3, 4]}], \n";
+                        + "\"summary_buckets\": [1, 2, 3]}], \n";
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
@@ -5883,7 +5878,7 @@ public final class AsyncSourceFetcherTest extends AdServicesUnitTestCase {
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(30))
                         + "\"summary_window_operator\": \"count\", "
-                        + "\"summary_buckets\": [1, 2, 3, 4]}], \n";
+                        + "\"summary_buckets\": [1, 2, 3]}], \n";
         WebSourceRegistrationRequest request =
                 buildWebSourceRegistrationRequest(
                         Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
