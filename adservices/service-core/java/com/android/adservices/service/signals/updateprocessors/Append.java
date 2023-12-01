@@ -17,6 +17,7 @@
 package com.android.adservices.service.signals.updateprocessors;
 
 import com.android.adservices.data.signals.DBProtectedSignal;
+import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -42,6 +43,10 @@ import java.util.Set;
  * oldest signals will be removed. Note that you can append to a key added by put.
  */
 public class Append implements UpdateProcessor {
+    @VisibleForTesting
+    public static final String TOO_MANY_SIGNALS_ERROR =
+            "Attempting to append %d than with a max_signals of %d";
+
     private static final String MAX_SIGNALS = "max_signals";
     private static final String VALUES = "values";
 
@@ -79,7 +84,8 @@ public class Append implements UpdateProcessor {
         JSONArray values = update.getJSONArray(VALUES);
         // Check that the JSON isn't trying to add more than it's maximum allowed signals
         if (values.length() > maxSignals) {
-            throw new IllegalArgumentException("Attempting to append more than max_signals");
+            throw new IllegalArgumentException(
+                    String.format(TOO_MANY_SIGNALS_ERROR, values.length(), maxSignals));
         }
         // Delete enough signals to make room for the new ones.
         deleteSignals(key, maxSignals, values, current, toReturn);

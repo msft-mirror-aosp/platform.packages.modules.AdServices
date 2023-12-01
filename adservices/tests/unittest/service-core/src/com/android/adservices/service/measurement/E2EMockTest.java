@@ -136,15 +136,13 @@ public abstract class E2EMockTest extends E2ETest {
     private final Map<String, String> mUriToEnrollmentId = new HashMap<>();
     protected DebugReportApi mDebugReportApi;
 
-    @Rule public final E2EMockStatic.E2EMockStaticRule mE2EMockStaticRule;
+    @Rule(order = 11)
+    public final E2EMockStatic.E2EMockStaticRule e2EMockStaticRule;
 
-    private static Map<String, String> sPhFlags = Map.ofEntries(
-            entry(
-                    "measurement_enable_configurable_aggregate_report_delay",
-                    "true"),
-            entry(
-                    "measurement_aggregate_report_delay_config",
-                    "0,0"));
+    private static Map<String, String> sPhFlags =
+            Map.ofEntries(
+                    entry("measurement_enable_configurable_aggregate_report_delay", "true"),
+                    entry("measurement_aggregate_report_delay_config", "0,0"));
 
     E2EMockTest(
             Collection<Action> actions,
@@ -156,21 +154,20 @@ public abstract class E2EMockTest extends E2ETest {
                 actions,
                 expectedOutput,
                 name,
-                (
-                        (Supplier<Map<String, String>>) () -> {
-                            for (String key : sPhFlags.keySet()) {
-                                phFlagsMap.put(key, sPhFlags.get(key));
-                            }
-                            return phFlagsMap;
-                        }
-                ).get()
-        );
+                ((Supplier<Map<String, String>>)
+                                () -> {
+                                    for (String key : sPhFlags.keySet()) {
+                                        phFlagsMap.putIfAbsent(key, sPhFlags.get(key));
+                                    }
+                                    return phFlagsMap;
+                                })
+                        .get());
         mClickVerifier = mock(ClickVerifier.class);
         mFlags = FlagsFactory.getFlags();
         mErrorLogger = mock(AdServicesErrorLogger.class);
         mDatastoreManager =
                 new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
-        mE2EMockStaticRule = new E2EMockStatic.E2EMockStaticRule(paramsProvider);
+        e2EMockStaticRule = new E2EMockStatic.E2EMockStaticRule(paramsProvider);
         mMeasurementDataDeleter = spy(new MeasurementDataDeleter(mDatastoreManager, mFlags));
 
         mEnrollmentDao =

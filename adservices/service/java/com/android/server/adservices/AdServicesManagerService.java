@@ -45,6 +45,7 @@ import android.provider.DeviceConfig;
 import android.util.ArrayMap;
 import android.util.Dumpable;
 
+import com.android.adservices.service.CommonFlagsConstants;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.BackgroundThread;
@@ -760,7 +761,8 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         if (!isShellCmdEnabled()) {
             LogUtil.d(
                     "handleShellCommand(%s): disabled by flag %s",
-                    Arrays.toString(args), PhFlags.KEY_ADSERVICES_SHELL_COMMAND_ENABLED);
+                    Arrays.toString(args),
+                    CommonFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED);
             return super.handleShellCommand(in, out, err, args);
         }
 

@@ -118,8 +118,19 @@ public class AggregateHistogramContribution {
         }
 
         /**
-         * Build the {@link AggregateHistogramContribution}.
+         * Return a builder that builds an empty (key = 0x0, value = 0) histogram contribution. Used
+         * for padding.
+         *
+         * @return {@link AggregateHistogramContribution.Builder}
          */
+        public Builder setPaddingContribution() {
+            mAggregateHistogramContribution.mKey = BigInteger.valueOf(0L);
+            mAggregateHistogramContribution.mValue = 0;
+
+            return this;
+        }
+
+        /** Build the {@link AggregateHistogramContribution}. */
         public AggregateHistogramContribution build() {
             return mAggregateHistogramContribution;
         }

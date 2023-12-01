@@ -55,7 +55,6 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -64,6 +63,7 @@ import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.measurement.access.AppPackageAccessResolver;
+import com.android.adservices.service.measurement.access.ConsentNotifiedAccessResolver;
 import com.android.adservices.service.measurement.access.DevContextAccessResolver;
 import com.android.adservices.service.measurement.access.ForegroundEnforcementAccessResolver;
 import com.android.adservices.service.measurement.access.IAccessResolver;
@@ -92,25 +92,25 @@ import java.util.function.Supplier;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class MeasurementServiceImpl extends IMeasurementService.Stub {
+    private static final String RATE_LIMIT_REACHED = "Rate limit reached to call this API.";
+    private static final String CALLBACK_ERROR = "Unable to send result to the callback";
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
     private static final Executor sLightExecutor = AdServicesExecutors.getLightWeightExecutor();
     private final Clock mClock;
     private final MeasurementImpl mMeasurementImpl;
-    private final Flags mFlags;
+    private final CachedFlags mFlags;
     private final AdServicesLogger mAdServicesLogger;
     private final ConsentManager mConsentManager;
     private final AppImportanceFilter mAppImportanceFilter;
     private final Context mContext;
     private final Throttler mThrottler;
     private final DevContextFilter mDevContextFilter;
-    private static final String RATE_LIMIT_REACHED = "Rate limit reached to call this API.";
-    private static final String CALLBACK_ERROR = "Unable to send result to the callback";
 
     public MeasurementServiceImpl(
             @NonNull Context context,
             @NonNull Clock clock,
             @NonNull ConsentManager consentManager,
-            @NonNull Flags flags,
+            @NonNull CachedFlags flags,
             @NonNull AppImportanceFilter appImportanceFilter) {
         this(
                 MeasurementImpl.getInstance(context),
@@ -131,7 +131,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             @NonNull Clock clock,
             @NonNull ConsentManager consentManager,
             @NonNull Throttler throttler,
-            @NonNull Flags flags,
+            @NonNull CachedFlags flags,
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull DevContextFilter devContextFilter) {
@@ -190,6 +190,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             mFlags.getMsmtApiAppAllowList(),
                                             mFlags.getMsmtApiAppBlockList(),
                                             request.getAppPackageName()),
+                                    new ConsentNotifiedAccessResolver(mConsentManager, mFlags),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
                                     new DevContextAccessResolver(
@@ -252,6 +253,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             mFlags.getMsmtApiAppAllowList(),
                                             mFlags.getMsmtApiAppBlockList(),
                                             request.getAppPackageName()),
+                                    new ConsentNotifiedAccessResolver(mConsentManager, mFlags),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
                                     new AppPackageAccessResolver(
@@ -312,6 +314,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             mFlags.getMsmtApiAppAllowList(),
                                             mFlags.getMsmtApiAppBlockList(),
                                             request.getAppPackageName()),
+                                    new ConsentNotifiedAccessResolver(mConsentManager, mFlags),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(
                                             PermissionHelper.hasAttributionPermission(
@@ -376,6 +379,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             mFlags.getMsmtApiAppAllowList(),
                                             mFlags.getMsmtApiAppBlockList(),
                                             request.getAppPackageName()),
+                                    new ConsentNotifiedAccessResolver(mConsentManager, mFlags),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
                                     new DevContextAccessResolver(
@@ -491,6 +495,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                     List.of(
                                             new KillSwitchAccessResolver(
                                                     mFlags::getMeasurementApiStatusKillSwitch),
+                                            new ConsentNotifiedAccessResolver(
+                                                    mConsentManager, mFlags),
                                             new UserConsentAccessResolver(mConsentManager),
                                             new ForegroundEnforcementAccessResolver(
                                                     apiNameId,
@@ -708,7 +714,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
     }
 
     private Supplier<Boolean> getRegisterSourceOrTriggerEnforcementForegroundStatus(
-            RegistrationRequest request, Flags flags) {
+            RegistrationRequest request, CachedFlags flags) {
         return request.getRegistrationType() == RegistrationRequest.REGISTER_SOURCE
                 ? flags::getEnforceForegroundStatusForMeasurementRegisterSource
                 : flags::getEnforceForegroundStatusForMeasurementRegisterTrigger;

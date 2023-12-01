@@ -16,6 +16,7 @@
 
 package com.android.adservices.spe;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__HALTED_FOR_UNKNOWN_REASON;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL;
 import static com.android.adservices.spe.JobServiceConstants.MILLISECONDS_PER_MINUTE;
@@ -29,6 +30,7 @@ import static com.android.adservices.spe.JobServiceConstants.UNAVAILABLE_STOP_RE
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -37,17 +39,22 @@ import android.content.SharedPreferences;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.spe.stats.ExecutionReportedStats;
 
+import com.google.common.truth.Expect;
+
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 
 /** Unit test for {@link AdservicesJobServiceLogger}. */
 public class AdservicesJobServiceLoggerTest {
@@ -62,14 +69,22 @@ public class AdservicesJobServiceLoggerTest {
 
     private AdservicesJobServiceLogger mLogger;
     @Mock StatsdAdServicesLogger mMockStatsdLogger;
+    @Mock Flags mMockFlags;
+
+    @Rule(order = 0)
+    public final AdServicesExtendedMockitoRule mAdServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this).spyStatic(FlagsFactory.class).build();
+
+    @Rule(order = 1)
+    public final Expect expect = Expect.create();
 
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
         mLogger =
                 Mockito.spy(
                         new AdservicesJobServiceLogger(
                                 CONTEXT, Clock.SYSTEM_CLOCK, mMockStatsdLogger));
+        mockGetFlags(mMockFlags);
 
         // Clear shared preference
         CONTEXT.deleteSharedPreferences(JobServiceConstants.SHARED_PREFS_BACKGROUND_JOBS);
@@ -295,6 +310,9 @@ public class AdservicesJobServiceLoggerTest {
 
     @Test
     public void testLogJobStatsHelper() {
+        // Mock to avoid sampling logging
+        doReturn(true).when(mLogger).shouldLog();
+
         ArgumentCaptor<ExecutionReportedStats> captor =
                 ArgumentCaptor.forClass(ExecutionReportedStats.class);
         long executionDurationInMs = 1000L;
@@ -321,6 +339,9 @@ public class AdservicesJobServiceLoggerTest {
 
     @Test
     public void testLogJobStatsHelper_overflowValues() {
+        // Mock to avoid sampling logging
+        doReturn(true).when(mLogger).shouldLog();
+
         ArgumentCaptor<ExecutionReportedStats> captor =
                 ArgumentCaptor.forClass(ExecutionReportedStats.class);
         long executionDurationInMs = 1L + Integer.MAX_VALUE;
@@ -342,6 +363,15 @@ public class AdservicesJobServiceLoggerTest {
                                 .setExecutionResultCode(resultCode)
                                 .setStopReason(stopReason)
                                 .build());
+    }
+
+    @Test
+    public void testShouldLog() {
+        doReturn(0).when(mMockFlags).getBackgroundJobSamplingLoggingRate();
+        expect.that(mLogger.shouldLog()).isFalse();
+
+        doReturn(100).when(mMockFlags).getBackgroundJobSamplingLoggingRate();
+        expect.that(mLogger.shouldLog()).isTrue();
     }
 
     @Test
