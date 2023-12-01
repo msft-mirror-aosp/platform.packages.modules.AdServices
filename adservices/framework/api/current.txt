@@ -590,11 +590,11 @@ package android.adservices.measurement {
 
 package android.adservices.topics {
 
-  @FlaggedApi(android.adservices.FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED) public final class EncryptedTopic {
-    ctor @FlaggedApi(android.adservices.FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED) public EncryptedTopic(@NonNull byte[], @NonNull String, @NonNull byte[]);
-    method @FlaggedApi(android.adservices.FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED) @NonNull public byte[] getEncapsulatedKey();
-    method @FlaggedApi(android.adservices.FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED) @NonNull public byte[] getEncryptedTopic();
-    method @FlaggedApi(android.adservices.FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED) @NonNull public String getKeyIdentifier();
+  @FlaggedApi("topics_encryption_enabled") public final class EncryptedTopic {
+    ctor @FlaggedApi("topics_encryption_enabled") public EncryptedTopic(@NonNull byte[], @NonNull String, @NonNull byte[]);
+    method @FlaggedApi("topics_encryption_enabled") @NonNull public byte[] getEncapsulatedKey();
+    method @FlaggedApi("topics_encryption_enabled") @NonNull public byte[] getEncryptedTopic();
+    method @FlaggedApi("topics_encryption_enabled") @NonNull public String getKeyIdentifier();
   }
 
   public final class GetTopicsRequest {
@@ -610,13 +610,13 @@ package android.adservices.topics {
   }
 
   public final class GetTopicsResponse {
-    method @FlaggedApi(android.adservices.FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED) @NonNull public java.util.List<android.adservices.topics.EncryptedTopic> getEncryptedTopics();
+    method @FlaggedApi("topics_encryption_enabled") @NonNull public java.util.List<android.adservices.topics.EncryptedTopic> getEncryptedTopics();
     method @NonNull public java.util.List<android.adservices.topics.Topic> getTopics();
   }
 
   public static final class GetTopicsResponse.Builder {
     ctor @Deprecated public GetTopicsResponse.Builder(@NonNull java.util.List<android.adservices.topics.Topic>);
-    ctor @FlaggedApi(android.adservices.FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED) public GetTopicsResponse.Builder(@NonNull java.util.List<android.adservices.topics.Topic>, @NonNull java.util.List<android.adservices.topics.EncryptedTopic>);
+    ctor @FlaggedApi("topics_encryption_enabled") public GetTopicsResponse.Builder(@NonNull java.util.List<android.adservices.topics.Topic>, @NonNull java.util.List<android.adservices.topics.EncryptedTopic>);
     method @NonNull public android.adservices.topics.GetTopicsResponse build();
   }
 

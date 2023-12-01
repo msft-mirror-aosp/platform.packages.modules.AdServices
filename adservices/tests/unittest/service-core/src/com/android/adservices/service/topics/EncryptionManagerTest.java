@@ -126,7 +126,7 @@ public final class EncryptionManagerTest {
                         new HpkeEncrypter(), mEnrollmentDao, mEncryptionKeyDao, mFlags);
 
         when(mFlags.getEnableDatabaseSchemaVersion9()).thenReturn(true);
-        when(mFlags.getTopicsEnableEncryption()).thenReturn(true);
+        when(mFlags.getTopicsEncryptionEnabled()).thenReturn(true);
     }
 
     @Test

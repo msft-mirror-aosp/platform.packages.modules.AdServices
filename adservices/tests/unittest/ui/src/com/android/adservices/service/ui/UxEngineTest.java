@@ -729,7 +729,6 @@ public class UxEngineTest {
         doReturn(isU18Account).when(mConsentManager).isU18Account();
         doReturn(true).when(mUxStatesManager).getFlag(KEY_U18_UX_ENABLED);
         doReturn(true).when(mUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
-        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManager).getConsentFromR();
         // U18 notice was already displayed.
         doReturn(true).when(mConsentManager).wasU18NotificationDisplayed();
 

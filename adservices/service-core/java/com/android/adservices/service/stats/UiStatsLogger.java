@@ -540,6 +540,17 @@ public final class UiStatsLogger {
     public static AdServicesLogger getAdServicesLogger() {
         return sLogger;
     }
+    /** Logs that the user enter an unspecified ux flow. */
+    public static void logRequestedNotificationIneligible() {
+        UIStats uiStats = getBaseUiStats();
+
+        /* Reuse beta's notification here, so that this track won't affect GA metrics */
+        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__REQUESTED_NOTIFICATION);
+        uiStats.setUx(AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__UNSUPPORTED_UX);
+        sLogger.logUIStats(uiStats);
+
+        LogUtil.d(PRIVACY_SANDBOX_UI_REQUEST_MESSAGE);
+    }
 
     private static int getRegion() {
         Context context = getApplicationContext();

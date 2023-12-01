@@ -40,6 +40,7 @@ import static com.android.adservices.service.Flags.COBALT_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.COBALT_LOGGING_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS;
 import static com.android.adservices.service.Flags.COMPAT_LOGGING_KILL_SWITCH;
+import static com.android.adservices.service.Flags.CONSENT_ALREADY_INTERACTED_FIX_ENABLE;
 import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_RESET_TOKEN;
 import static com.android.adservices.service.Flags.CONSENT_NOTIFIED_DEBUG_MODE;
@@ -83,6 +84,8 @@ import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_PLATFORM_
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT;
 import static com.android.adservices.service.Flags.DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK;
 import static com.android.adservices.service.Flags.DEFAULT_RVC_NOTIFICATION_ENABLED;
+import static com.android.adservices.service.Flags.DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK;
+import static com.android.adservices.service.Flags.DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE;
 import static com.android.adservices.service.Flags.DEFAULT_RVC_UX_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_U18_UX_ENABLED;
 import static com.android.adservices.service.Flags.DISABLE_FLEDGE_ENROLLMENT_CHECK;
@@ -426,7 +429,7 @@ import static com.android.adservices.service.Flags.TOPICS_API_SDK_REQUEST_PERMIT
 import static com.android.adservices.service.Flags.TOPICS_COBALT_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.TOPICS_DISABLE_DIRECT_APP_CALLS;
 import static com.android.adservices.service.Flags.TOPICS_DISABLE_PLAINTEXT_RESPONSE;
-import static com.android.adservices.service.Flags.TOPICS_ENABLE_ENCRYPTION;
+import static com.android.adservices.service.Flags.TOPICS_ENCRYPTION_ENABLED;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.TOPICS_KILL_SWITCH;
@@ -468,6 +471,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_COBALT_LOGGING_E
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_LOGGING_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_COMPAT_LOGGING_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_MANAGER_OTA_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_ALREADY_INTERACTED_FIX_ENABLE;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_RESET_TOKEN;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
@@ -816,6 +821,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNAL
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_RECORD_MANUAL_INTERACTION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_RVC_NOTIFICATION_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_RVC_POST_OTA_NOTIF_AGE_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_RVC_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND;
@@ -823,7 +829,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_API_SDK_R
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_COBALT_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_DISABLE_DIRECT_APP_CALLS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_DISABLE_PLAINTEXT_RESPONSE;
-import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_ENABLE_ENCRYPTION;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_KILL_SWITCH;
@@ -839,6 +845,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_UI_EEA_COUNTRIES
 import static com.android.adservices.service.FlagsConstants.KEY_UI_FEATURE_TYPE_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_TOGGLE_SPEED_BUMP_ENABLED;
+
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -1079,18 +1086,18 @@ public class PhFlagsTest {
     }
 
     @Test
-    public void testGetTopicsEnableEncryption() {
-        assertThat(mPhFlags.getTopicsEnableEncryption()).isEqualTo(TOPICS_ENABLE_ENCRYPTION);
+    public void testGetTopicsEncryptionEnabled() {
+        assertThat(mPhFlags.getTopicsEncryptionEnabled()).isEqualTo(TOPICS_ENCRYPTION_ENABLED);
 
         // Now overriding with the value from PH.
-        boolean phOverridingValue = !TOPICS_ENABLE_ENCRYPTION;
+        boolean phOverridingValue = !TOPICS_ENCRYPTION_ENABLED;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_TOPICS_ENABLE_ENCRYPTION,
+                KEY_TOPICS_ENCRYPTION_ENABLED,
                 Boolean.toString(phOverridingValue),
                 /* makeDefault */ false);
 
-        assertThat(mPhFlags.getTopicsEnableEncryption()).isEqualTo(phOverridingValue);
+        assertThat(mPhFlags.getTopicsEncryptionEnabled()).isEqualTo(phOverridingValue);
     }
 
     @Test
@@ -7484,6 +7491,38 @@ public class PhFlagsTest {
     }
 
     @Test
+    public void testRvcPostOtaNotifAgeCheck() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getRvcPostOtaNotifAgeCheck())
+                .isEqualTo(DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK);
+
+        boolean phOverridingValue = true;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_RVC_POST_OTA_NOTIF_AGE_CHECK,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getRvcPostOtaNotifAgeCheck()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testConsentManagerOTADebugMode() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getConsentManagerOTADebugMode())
+                .isEqualTo(DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE);
+
+        boolean phOverridingValue = true;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_CONSENT_MANAGER_OTA_DEBUG_MODE,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getConsentManagerOTADebugMode()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
     public void testRvcUxEnabled_adServicesSystemApiTrue_rvcUxTrue() {
         testRvcUxEnabled(true, true, true);
     }
@@ -7503,11 +7542,49 @@ public class PhFlagsTest {
         testRvcUxEnabled(false, false, false);
     }
 
-    private void testRvcUxEnabled(
-            boolean adServicesSystemApi, boolean phOverridingValue, boolean expected) {
+    @Test
+    public void testRvcUxEnabled_adServicesSystemApiTrue_isSplus() {
+        testRvcUxEnabled_default(true, true, false);
+    }
 
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getEnableRvcUx()).isEqualTo(DEFAULT_RVC_UX_ENABLED);
+    @Test
+    public void testRvcUxEnabled_adServicesSystemApiFalse_isSplus() {
+        testRvcUxEnabled_default(true, false, false);
+    }
+
+    @Test
+    public void testRvcUxEnabled_adServicesSystemApiTrue_isR() {
+        testRvcUxEnabled_default(false, true, true);
+    }
+
+    @Test
+    public void testRvcUxEnabled_adServicesSystemApiFalse_isR() {
+        testRvcUxEnabled_default(false, false, false);
+    }
+
+    private void testRvcUxEnabled_default(
+            boolean assumeIsAtLeastS,
+            boolean adServicesSystemApi,
+            boolean expected) {
+        if (assumeIsAtLeastS) {
+                Assume.assumeTrue(SdkLevel.isAtLeastS());
+        } else {
+                Assume.assumeFalse(SdkLevel.isAtLeastS());
+        }
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENABLE_AD_SERVICES_SYSTEM_API,
+                Boolean.toString(adServicesSystemApi),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getEnableRvcUx()).isEqualTo(expected);
+    }
+
+    private void testRvcUxEnabled(
+            boolean adServicesSystemApi,
+            boolean phOverridingValue,
+            boolean expected) {
 
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -9412,6 +9489,22 @@ public class PhFlagsTest {
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_CONSENT_NOTIFIED_DEBUG_MODE,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getConsentNotifiedDebugMode()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testConsentAlreadyInteractedFix() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getConsentAlreadyInteractedEnableMode())
+                .isEqualTo(CONSENT_ALREADY_INTERACTED_FIX_ENABLE);
+
+        boolean phOverridingValue = !CONSENT_ALREADY_INTERACTED_FIX_ENABLE;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_CONSENT_ALREADY_INTERACTED_FIX_ENABLE,
                 Boolean.toString(phOverridingValue),
                 /* makeDefault */ false);
 
