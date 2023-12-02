@@ -50,6 +50,8 @@ public class TriggerSpecs {
 
     // Trigger data magnitude is restricted to 32 bits.
     public static final UnsignedLong MAX_TRIGGER_DATA_VALUE = new UnsignedLong((1L << 32) - 1L);
+    // Max bucket threshold is 32 bits.
+    public static final long MAX_BUCKET_THRESHOLD = (1L << 32) - 1L;
 
     /** The JSON keys for flexible event report API input */
     public interface FlexEventReportJsonKeys {
@@ -210,7 +212,7 @@ public class TriggerSpecs {
                 summaryBuckets.get(index),
                 index < summaryBuckets.size() - 1
                         ? summaryBuckets.get(index + 1) - 1
-                        : Integer.MAX_VALUE - 1);
+                        : MAX_BUCKET_THRESHOLD);
     }
 
    /**

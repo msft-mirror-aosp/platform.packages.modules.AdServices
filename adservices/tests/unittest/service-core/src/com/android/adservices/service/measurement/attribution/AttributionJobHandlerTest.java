@@ -103,8 +103,6 @@ public class AttributionJobHandlerTest {
     public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
             new TestableDeviceConfig.TestableDeviceConfigRule();
 
-    private static final Long PENULTIMATE_INT_AS_LONG =
-            Integer.valueOf(Integer.MAX_VALUE - 1).longValue();
     private static final long SOURCE_TIME = 1690000000000L;
     private static final long TRIGGER_TIME = 1690000001000L;
     private static final long EXPIRY_TIME = 1692592000000L;
@@ -4866,7 +4864,7 @@ public class AttributionJobHandlerTest {
                         .build();
 
         Pair<Long, Long> firstBucket = Pair.create(10L, 99L);
-        Pair<Long, Long> secondBucket = Pair.create(100L, PENULTIMATE_INT_AS_LONG);
+        Pair<Long, Long> secondBucket = Pair.create(100L, TriggerSpecs.MAX_BUCKET_THRESHOLD);
 
         final EventReport currentEventReport1 =
                 new EventReport.Builder()
@@ -5096,7 +5094,7 @@ public class AttributionJobHandlerTest {
                         .build();
 
         Pair<Long, Long> firstBucket = Pair.create(10L, 99L);
-        Pair<Long, Long> secondBucket = Pair.create(100L, PENULTIMATE_INT_AS_LONG);
+        Pair<Long, Long> secondBucket = Pair.create(100L, TriggerSpecs.MAX_BUCKET_THRESHOLD);
 
         when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
         when(mMeasurementDao.getPendingTriggerIds())
@@ -5226,7 +5224,7 @@ public class AttributionJobHandlerTest {
                         .build();
 
         Pair<Long, Long> firstBucket = Pair.create(10L, 99L);
-        Pair<Long, Long> secondBucket = Pair.create(100L, PENULTIMATE_INT_AS_LONG);
+        Pair<Long, Long> secondBucket = Pair.create(100L, TriggerSpecs.MAX_BUCKET_THRESHOLD);
 
         final EventReport.Builder eventReportBuilder =
                 new EventReport.Builder()
@@ -5404,7 +5402,7 @@ public class AttributionJobHandlerTest {
                         .build();
 
         Pair<Long, Long> firstBucket = Pair.create(10L, 99L);
-        Pair<Long, Long> secondBucket = Pair.create(100L, PENULTIMATE_INT_AS_LONG);
+        Pair<Long, Long> secondBucket = Pair.create(100L, TriggerSpecs.MAX_BUCKET_THRESHOLD);
 
         final EventReport currentEventReport1 =
                 new EventReport.Builder()

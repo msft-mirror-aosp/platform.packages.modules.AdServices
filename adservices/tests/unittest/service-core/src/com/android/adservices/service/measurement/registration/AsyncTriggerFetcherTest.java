@@ -56,6 +56,7 @@ import com.android.adservices.service.measurement.FilterMap;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -1318,6 +1319,150 @@ public final class AsyncTriggerFetcherTest extends AdServicesUnitTestCase {
         Trigger result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
         assertEquals(eventTriggerData, result.getEventTriggers());
+        assertEquals(TRIGGER_URI, result.getRegistrationOrigin().toString());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_eventTriggerDataWithValue_success() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String eventTriggerData =
+                "[{\"trigger_data\":\"14\",\"priority\":\"101\",\"value\":156}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
+
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertTrue(fetch.isPresent());
+        Trigger result = fetch.get();
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(eventTriggerData, result.getEventTriggers());
+        assertEquals(TRIGGER_URI, result.getRegistrationOrigin().toString());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_eventTriggerDataWithValueTooSmall_fail() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String eventTriggerData =
+                "[{\"trigger_data\":\"14\",\"priority\":\"101\",\"value\":0}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
+
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR,
+                asyncFetchStatus.getEntityStatus());
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_eventTriggerDataWithValueTooLarge_fail() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        long tooLarge = TriggerSpecs.MAX_BUCKET_THRESHOLD + 1L;
+        String eventTriggerData =
+                "[{\"trigger_data\":\"14\",\"priority\":\"101\",\"value\":" + tooLarge + "}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
+
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR,
+                asyncFetchStatus.getEntityStatus());
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_eventTriggerDataWithValueAsString_fail() throws Exception {
+        Assume.assumeTrue(mAraParsingAlignmentV1Enabled);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String eventTriggerData =
+                "[{\"trigger_data\":\"14\",\"priority\":\"101\",\"value\":\"123\"}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
+
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR,
+                asyncFetchStatus.getEntityStatus());
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_eventTriggerDataWithValueAsString_success() throws Exception {
+        Assume.assumeFalse(mAraParsingAlignmentV1Enabled);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String eventTriggerData =
+                "[{\"trigger_data\":\"14\",\"priority\":\"101\",\"value\":\"123\"}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
+
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertTrue(fetch.isPresent());
+        Trigger result = fetch.get();
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        String expectedEventTriggerData =
+                "[{\"trigger_data\":\"14\",\"priority\":\"101\",\"value\":123}]";
+        assertEquals(expectedEventTriggerData, result.getEventTriggers());
         assertEquals(TRIGGER_URI, result.getRegistrationOrigin().toString());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());

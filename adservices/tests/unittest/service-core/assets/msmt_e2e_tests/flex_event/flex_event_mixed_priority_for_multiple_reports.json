@@ -63,7 +63,7 @@
                   {
                     "trigger_data": "0",
                     "priority": "1000",
-                    "value": "115"
+                    "value": 115
                   }
                 ]
               },
@@ -88,7 +88,7 @@
                   {
                     "trigger_data": "1",
                     "priority": "970",
-                    "value": "30"
+                    "value": 30
                   }
                 ]
               },
@@ -113,7 +113,7 @@
                   {
                     "trigger_data": "1",
                     "priority": "1030",
-                    "value": "10"
+                    "value": 10
                   }
                 ]
               },

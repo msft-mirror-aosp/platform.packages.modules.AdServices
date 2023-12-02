@@ -209,7 +209,7 @@ public class AsyncSourceFetcher {
         if (!json.isNull(SourceHeaderContract.PRIORITY)) {
             if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
                 Optional<Long> maybePriority =
-                        FetcherUtil.extractLong(json, SourceHeaderContract.PRIORITY);
+                        FetcherUtil.extractLongString(json, SourceHeaderContract.PRIORITY);
                 if (!maybePriority.isPresent()) {
                     return false;
                 }
@@ -417,7 +417,7 @@ public class AsyncSourceFetcher {
                         SourceHeaderContract.MAX_EVENT_LEVEL_REPORTS);
                 maxEventLevelReports =
                         json.getInt(SourceHeaderContract.MAX_EVENT_LEVEL_REPORTS);
-                if (!is64BitInteger(maxEventLevelReportsObj) || maxEventLevelReports < 0
+                if (!FetcherUtil.is64BitInteger(maxEventLevelReportsObj) || maxEventLevelReports < 0
                         || maxEventLevelReports > mFlags.getMeasurementFlexApiMaxEventReports()) {
                     return false;
                 }
@@ -543,9 +543,13 @@ public class AsyncSourceFetcher {
             List<Long> defaultEnds,
             Set<UnsignedLong> triggerDataSet,
             int maxEventLevelReports) throws JSONException {
+        Optional<JSONArray> maybeTriggerDataListJson = extractLongJsonArray(
+                triggerSpecJson, TriggerSpecs.FlexEventReportJsonKeys.TRIGGER_DATA);
+        if (maybeTriggerDataListJson.isEmpty()) {
+            return Optional.empty();
+        }
         List<UnsignedLong> triggerDataList =
-                TriggerSpec.getTriggerDataArrayFromJSON(
-                        triggerSpecJson, TriggerSpecs.FlexEventReportJsonKeys.TRIGGER_DATA);
+                TriggerSpec.getTriggerDataArrayFromJSON(maybeTriggerDataListJson.get());
         if (triggerDataList.isEmpty()
                 || triggerDataList.size()
                         > mFlags.getMeasurementFlexApiMaxTriggerDataCardinality()) {
@@ -586,9 +590,15 @@ public class AsyncSourceFetcher {
         }
         List<Long> summaryBuckets = null;
         if (!triggerSpecJson.isNull(TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_BUCKETS)) {
-            summaryBuckets =
-                    TriggerSpec.getLongListFromJSON(
-                            triggerSpecJson, TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_BUCKETS);
+            Optional<JSONArray> maybeSummaryBucketsJson = extractLongJsonArray(
+                    triggerSpecJson, TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_BUCKETS);
+
+            if (maybeSummaryBucketsJson.isEmpty()) {
+                return Optional.empty();
+            }
+
+            summaryBuckets = TriggerSpec.getLongListFromJSON(maybeSummaryBucketsJson.get());
+
             if (summaryBuckets.size() > maxEventLevelReports) {
                 return Optional.empty();
             }
@@ -615,7 +625,7 @@ public class AsyncSourceFetcher {
         // Start time in seconds
         long startTime = 0;
         if (!jsonReportWindows.isNull(TriggerSpecs.FlexEventReportJsonKeys.START_TIME)) {
-            if (!is64BitInteger(jsonReportWindows.get(
+            if (!FetcherUtil.is64BitInteger(jsonReportWindows.get(
                     TriggerSpecs.FlexEventReportJsonKeys.START_TIME))) {
                 return Optional.empty();
             }
@@ -630,9 +640,14 @@ public class AsyncSourceFetcher {
             return Optional.empty();
         }
 
-        List<Long> windowEnds =
-                TriggerSpec.getLongListFromJSON(
-                        jsonReportWindows, TriggerSpecs.FlexEventReportJsonKeys.END_TIMES);
+        Optional<JSONArray> maybeWindowEndsJson = extractLongJsonArray(
+                jsonReportWindows, TriggerSpecs.FlexEventReportJsonKeys.END_TIMES);
+
+        if (maybeWindowEndsJson.isEmpty()) {
+            return Optional.empty();
+        }
+
+        List<Long> windowEnds = TriggerSpec.getLongListFromJSON(maybeWindowEndsJson.get());
 
         int windowEndsSize = windowEnds.size();
         if (windowEnds.isEmpty()
@@ -912,8 +927,15 @@ public class AsyncSourceFetcher {
         return true;
     }
 
-    private static boolean is64BitInteger(Object obj) {
-        return (obj instanceof Integer) || (obj instanceof Long);
+    private static Optional<JSONArray> extractLongJsonArray(JSONObject json, String key)
+            throws JSONException {
+        JSONArray jsonArray = json.getJSONArray(key);
+        for (int i = 0; i < jsonArray.length(); i++) {
+            if (!FetcherUtil.is64BitInteger(jsonArray.get(i))) {
+                return Optional.empty();
+            }
+        }
+        return Optional.of(jsonArray);
     }
 
     private static long roundSecondsToWholeDays(long seconds) {
