@@ -48,6 +48,9 @@ public class TriggerSpecs {
     // Reference to a list that is a property of the Source object.
     private List<AttributedTrigger> mAttributedTriggersRef;
 
+    // Trigger data magnitude is restricted to 32 bits.
+    public static final UnsignedLong MAX_TRIGGER_DATA_VALUE = new UnsignedLong((1L << 32) - 1L);
+
     /** The JSON keys for flexible event report API input */
     public interface FlexEventReportJsonKeys {
         String VALUE = "value";
@@ -428,6 +431,13 @@ public class TriggerSpecs {
      */
     public boolean containsTriggerData(UnsignedLong triggerData) {
         return mTriggerDataToTriggerSpecIndexMap.containsKey(triggerData);
+    }
+
+    /**
+     * @return the trigger data cardinality across all trigger specs
+     */
+    public int getTriggerDataCardinality() {
+        return mTriggerDataToTriggerSpecIndexMap.size();
     }
 
     @VisibleForTesting
