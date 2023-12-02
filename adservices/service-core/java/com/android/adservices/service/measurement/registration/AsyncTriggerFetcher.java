@@ -29,6 +29,7 @@ import com.android.adservices.service.measurement.AttributionConfig;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.adservices.service.measurement.XNetworkData;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Enrollment;
@@ -417,7 +418,7 @@ public class AsyncTriggerFetcher {
                 if (!eventTriggerDatum.isNull("priority")) {
                     if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
                         Optional<Long> maybePriority =
-                                FetcherUtil.extractLong(eventTriggerDatum, "priority");
+                                FetcherUtil.extractLongString(eventTriggerDatum, "priority");
                         if (!maybePriority.isPresent()) {
                             return Optional.empty();
                         }
@@ -439,13 +440,18 @@ public class AsyncTriggerFetcher {
                         if (!maybeValue.isPresent()) {
                             return Optional.empty();
                         }
-                        validEventTriggerDatum.put("value", String.valueOf(maybeValue.get()));
+                        long value = maybeValue.get();
+                        if (value < 1L || value > TriggerSpecs.MAX_BUCKET_THRESHOLD) {
+                            return Optional.empty();
+                        }
+                        validEventTriggerDatum.put("value", value);
                     } else {
                         try {
-                            validEventTriggerDatum.put(
-                                    "value",
-                                    String.valueOf(
-                                            Long.parseLong(eventTriggerDatum.getString("value"))));
+                            long value = Long.parseLong(eventTriggerDatum.getString("value"));
+                            if (value < 1L || value > TriggerSpecs.MAX_BUCKET_THRESHOLD) {
+                                return Optional.empty();
+                            }
+                            validEventTriggerDatum.put("value", value);
                         } catch (NumberFormatException e) {
                             LoggerFactory.getMeasurementLogger()
                                     .d(e, "getValidEventTriggerData: parsing value failed.");
