@@ -41,6 +41,10 @@ public class AttributedTriggerTest {
     private static final long TRIGGER_TIME2 = 1689564817010L;
     private static final UnsignedLong DEDUP_KEY1 = new UnsignedLong("453");
     private static final UnsignedLong DEDUP_KEY2 = new UnsignedLong("357");
+    private static final UnsignedLong DEBUG_KEY1 = new UnsignedLong("980");
+    private static final UnsignedLong DEBUG_KEY2 = new UnsignedLong("812");
+    private static final boolean HAS_SOURCE_DEBUG_KEY1 = true;
+    private static final boolean HAS_SOURCE_DEBUG_KEY2 = false;
     private static final long CONTRIBUTION = 50L;
 
     @Test
@@ -52,14 +56,18 @@ public class AttributedTriggerTest {
                         TRIGGER_DATA1,
                         VALUE1,
                         TRIGGER_TIME1,
-                        DEDUP_KEY1),
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1),
                 new AttributedTrigger(
                         TRIGGER_ID1,
                         PRIORITY1,
                         TRIGGER_DATA1,
                         VALUE1,
                         TRIGGER_TIME1,
-                        DEDUP_KEY1));
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1));
     }
 
     @Test
@@ -71,14 +79,18 @@ public class AttributedTriggerTest {
                         TRIGGER_DATA1,
                         VALUE1,
                         TRIGGER_TIME1,
-                        DEDUP_KEY1),
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1),
                 new AttributedTrigger(
                         TRIGGER_ID2,
                         PRIORITY1,
                         TRIGGER_DATA1,
                         VALUE1,
                         TRIGGER_TIME1,
-                        DEDUP_KEY1));
+                        DEDUP_KEY1,
+                        DEDUP_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1));
         assertNotEquals(
                 new AttributedTrigger(
                         TRIGGER_ID1,
@@ -86,14 +98,18 @@ public class AttributedTriggerTest {
                         TRIGGER_DATA1,
                         VALUE1,
                         TRIGGER_TIME1,
-                        DEDUP_KEY1),
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1),
                 new AttributedTrigger(
                         TRIGGER_ID1,
                         PRIORITY2,
                         TRIGGER_DATA1,
                         VALUE1,
                         TRIGGER_TIME1,
-                        DEDUP_KEY1));
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1));
         assertNotEquals(
                 new AttributedTrigger(
                         TRIGGER_ID1,
@@ -101,14 +117,18 @@ public class AttributedTriggerTest {
                         TRIGGER_DATA1,
                         VALUE1,
                         TRIGGER_TIME1,
-                        DEDUP_KEY1),
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1),
                 new AttributedTrigger(
                         TRIGGER_ID1,
                         PRIORITY1,
                         TRIGGER_DATA2,
                         VALUE1,
                         TRIGGER_TIME1,
-                        DEDUP_KEY1));
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1));
         assertNotEquals(
                 new AttributedTrigger(
                         TRIGGER_ID1,
@@ -116,14 +136,18 @@ public class AttributedTriggerTest {
                         TRIGGER_DATA1,
                         VALUE1,
                         TRIGGER_TIME1,
-                        DEDUP_KEY1),
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1),
                 new AttributedTrigger(
                         TRIGGER_ID1,
                         PRIORITY1,
                         TRIGGER_DATA1,
                         VALUE2,
                         TRIGGER_TIME1,
-                        DEDUP_KEY1));
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1));
         assertNotEquals(
                 new AttributedTrigger(
                         TRIGGER_ID1,
@@ -131,14 +155,18 @@ public class AttributedTriggerTest {
                         TRIGGER_DATA1,
                         VALUE1,
                         TRIGGER_TIME1,
-                        DEDUP_KEY1),
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1),
                 new AttributedTrigger(
                         TRIGGER_ID1,
                         PRIORITY1,
                         TRIGGER_DATA1,
                         VALUE1,
                         TRIGGER_TIME2,
-                        DEDUP_KEY1));
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1));
         assertNotEquals(
                 new AttributedTrigger(
                         TRIGGER_ID1,
@@ -146,14 +174,56 @@ public class AttributedTriggerTest {
                         TRIGGER_DATA1,
                         VALUE1,
                         TRIGGER_TIME1,
-                        DEDUP_KEY1),
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1),
                 new AttributedTrigger(
                         TRIGGER_ID1,
                         PRIORITY1,
                         TRIGGER_DATA1,
                         VALUE1,
                         TRIGGER_TIME1,
-                        DEDUP_KEY2));
+                        DEDUP_KEY2,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1));
+        assertNotEquals(
+                new AttributedTrigger(
+                        TRIGGER_ID1,
+                        PRIORITY1,
+                        TRIGGER_DATA1,
+                        VALUE1,
+                        TRIGGER_TIME1,
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1),
+                new AttributedTrigger(
+                        TRIGGER_ID1,
+                        PRIORITY1,
+                        TRIGGER_DATA1,
+                        VALUE1,
+                        TRIGGER_TIME1,
+                        DEDUP_KEY1,
+                        DEBUG_KEY2,
+                        HAS_SOURCE_DEBUG_KEY1));
+        assertNotEquals(
+                new AttributedTrigger(
+                        TRIGGER_ID1,
+                        PRIORITY1,
+                        TRIGGER_DATA1,
+                        VALUE1,
+                        TRIGGER_TIME1,
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1),
+                new AttributedTrigger(
+                        TRIGGER_ID1,
+                        PRIORITY1,
+                        TRIGGER_DATA1,
+                        VALUE1,
+                        TRIGGER_TIME1,
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY2));
     }
 
     @Test
@@ -165,14 +235,18 @@ public class AttributedTriggerTest {
                         TRIGGER_DATA1,
                         VALUE1,
                         TRIGGER_TIME1,
-                        DEDUP_KEY1).hashCode(),
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1).hashCode(),
                 new AttributedTrigger(
                         TRIGGER_ID1,
                         PRIORITY1,
                         TRIGGER_DATA1,
                         VALUE1,
                         TRIGGER_TIME1,
-                        DEDUP_KEY1).hashCode());
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1).hashCode());
     }
 
     @Test
@@ -184,14 +258,18 @@ public class AttributedTriggerTest {
                         TRIGGER_DATA1,
                         VALUE1,
                         TRIGGER_TIME1,
-                        DEDUP_KEY1).hashCode(),
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1).hashCode(),
                 new AttributedTrigger(
                         TRIGGER_ID2,
                         PRIORITY1,
                         TRIGGER_DATA1,
                         VALUE1,
                         TRIGGER_TIME1,
-                        DEDUP_KEY1).hashCode());
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1).hashCode());
         assertNotEquals(
                 new AttributedTrigger(
                         TRIGGER_ID1,
@@ -199,14 +277,18 @@ public class AttributedTriggerTest {
                         TRIGGER_DATA1,
                         VALUE1,
                         TRIGGER_TIME1,
-                        DEDUP_KEY1).hashCode(),
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1).hashCode(),
                 new AttributedTrigger(
                         TRIGGER_ID1,
                         PRIORITY2,
                         TRIGGER_DATA1,
                         VALUE1,
                         TRIGGER_TIME1,
-                        DEDUP_KEY1).hashCode());
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1).hashCode());
         assertNotEquals(
                 new AttributedTrigger(
                         TRIGGER_ID1,
@@ -214,14 +296,18 @@ public class AttributedTriggerTest {
                         TRIGGER_DATA1,
                         VALUE1,
                         TRIGGER_TIME1,
-                        DEDUP_KEY1).hashCode(),
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1).hashCode(),
                 new AttributedTrigger(
                         TRIGGER_ID1,
                         PRIORITY1,
                         TRIGGER_DATA2,
                         VALUE1,
                         TRIGGER_TIME1,
-                        DEDUP_KEY1).hashCode());
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1).hashCode());
         assertNotEquals(
                 new AttributedTrigger(
                         TRIGGER_ID1,
@@ -229,14 +315,18 @@ public class AttributedTriggerTest {
                         TRIGGER_DATA1,
                         VALUE1,
                         TRIGGER_TIME1,
-                        DEDUP_KEY1).hashCode(),
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1).hashCode(),
                 new AttributedTrigger(
                         TRIGGER_ID1,
                         PRIORITY1,
                         TRIGGER_DATA1,
                         VALUE2,
                         TRIGGER_TIME1,
-                        DEDUP_KEY1).hashCode());
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1).hashCode());
         assertNotEquals(
                 new AttributedTrigger(
                         TRIGGER_ID1,
@@ -244,14 +334,18 @@ public class AttributedTriggerTest {
                         TRIGGER_DATA1,
                         VALUE1,
                         TRIGGER_TIME1,
-                        DEDUP_KEY1).hashCode(),
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1).hashCode(),
                 new AttributedTrigger(
                         TRIGGER_ID1,
                         PRIORITY1,
                         TRIGGER_DATA1,
                         VALUE1,
                         TRIGGER_TIME2,
-                        DEDUP_KEY1).hashCode());
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1).hashCode());
         assertNotEquals(
                 new AttributedTrigger(
                         TRIGGER_ID1,
@@ -259,14 +353,56 @@ public class AttributedTriggerTest {
                         TRIGGER_DATA1,
                         VALUE1,
                         TRIGGER_TIME1,
-                        DEDUP_KEY1).hashCode(),
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1).hashCode(),
                 new AttributedTrigger(
                         TRIGGER_ID1,
                         PRIORITY1,
                         TRIGGER_DATA1,
                         VALUE1,
                         TRIGGER_TIME1,
-                        DEDUP_KEY2).hashCode());
+                        DEDUP_KEY2,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1).hashCode());
+        assertNotEquals(
+                new AttributedTrigger(
+                        TRIGGER_ID1,
+                        PRIORITY1,
+                        TRIGGER_DATA1,
+                        VALUE1,
+                        TRIGGER_TIME1,
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1).hashCode(),
+                new AttributedTrigger(
+                        TRIGGER_ID1,
+                        PRIORITY1,
+                        TRIGGER_DATA1,
+                        VALUE1,
+                        TRIGGER_TIME1,
+                        DEDUP_KEY1,
+                        DEBUG_KEY2,
+                        HAS_SOURCE_DEBUG_KEY1).hashCode());
+        assertNotEquals(
+                new AttributedTrigger(
+                        TRIGGER_ID1,
+                        PRIORITY1,
+                        TRIGGER_DATA1,
+                        VALUE1,
+                        TRIGGER_TIME1,
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1).hashCode(),
+                new AttributedTrigger(
+                        TRIGGER_ID1,
+                        PRIORITY1,
+                        TRIGGER_DATA1,
+                        VALUE1,
+                        TRIGGER_TIME1,
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY2).hashCode());
     }
 
     @Test
@@ -278,7 +414,9 @@ public class AttributedTriggerTest {
                         TRIGGER_DATA1,
                         VALUE1,
                         TRIGGER_TIME1,
-                        DEDUP_KEY1);
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1);
 
         attributedTrigger.addContribution(CONTRIBUTION);
         assertEquals(CONTRIBUTION, attributedTrigger.getContribution());
@@ -288,6 +426,8 @@ public class AttributedTriggerTest {
         assertEquals(VALUE1, attributedTrigger.getValue());
         assertEquals(TRIGGER_TIME1, attributedTrigger.getTriggerTime());
         assertEquals(DEDUP_KEY1, attributedTrigger.getDedupKey());
+        assertEquals(DEBUG_KEY1, attributedTrigger.getDebugKey());
+        assertEquals(HAS_SOURCE_DEBUG_KEY1, attributedTrigger.hasSourceDebugKey());
     }
 
     @Test
@@ -299,7 +439,9 @@ public class AttributedTriggerTest {
                         TRIGGER_DATA1,
                         VALUE1,
                         TRIGGER_TIME1,
-                        DEDUP_KEY1);
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1);
 
         attributedTrigger1.addContribution(CONTRIBUTION);
         assertEquals(-45L, attributedTrigger1.remainingValue());
@@ -311,7 +453,9 @@ public class AttributedTriggerTest {
                         TRIGGER_DATA2,
                         VALUE2,
                         TRIGGER_TIME2,
-                        DEDUP_KEY2);
+                        DEDUP_KEY2,
+                        DEBUG_KEY2,
+                        HAS_SOURCE_DEBUG_KEY2);
 
         attributedTrigger2.addContribution(CONTRIBUTION);
         assertEquals(16L, attributedTrigger2.remainingValue());
@@ -349,6 +493,8 @@ public class AttributedTriggerTest {
         triggerObj.put("value", VALUE1);
         triggerObj.put("trigger_time", TRIGGER_TIME1);
         triggerObj.put("dedup_key", DEDUP_KEY1.toString());
+        triggerObj.put("debug_key", DEBUG_KEY1.toString());
+        triggerObj.put("has_source_debug_key", HAS_SOURCE_DEBUG_KEY1);
 
         AttributedTrigger triggerFromJson = new AttributedTrigger(triggerObj);
         JSONObject encodedObj = triggerFromJson.encodeToJsonFlexApi();
@@ -374,7 +520,9 @@ public class AttributedTriggerTest {
                         /* trigger data */ null,
                         VALUE1,
                         TRIGGER_TIME1,
-                        DEDUP_KEY1);
+                        DEDUP_KEY1,
+                        DEBUG_KEY1,
+                        HAS_SOURCE_DEBUG_KEY1);
 
         assertThrows(
                 NullPointerException.class,

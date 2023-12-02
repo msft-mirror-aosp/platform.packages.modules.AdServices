@@ -48,7 +48,8 @@ class ReportEventDisabledImpl extends EventReporter {
             @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
             int callerUid,
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
-            @NonNull DevContext devContext) {
+            @NonNull DevContext devContext,
+            boolean shouldUseUnifiedTables) {
         super(
                 adSelectionEntryDao,
                 adServicesHttpsClient,
@@ -59,7 +60,8 @@ class ReportEventDisabledImpl extends EventReporter {
                 adSelectionServiceFilter,
                 callerUid,
                 fledgeAuthorizationFilter,
-                devContext);
+                devContext,
+                shouldUseUnifiedTables);
     }
 
     @Override

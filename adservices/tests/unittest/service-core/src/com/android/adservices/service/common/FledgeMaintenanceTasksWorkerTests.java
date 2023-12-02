@@ -90,6 +90,8 @@ public class FledgeMaintenanceTasksWorkerTests {
         verify(mAdSelectionEntryDaoMock).removeExpiredRegisteredAdInteractions();
         verify(mAdSelectionEntryDaoMock)
                 .removeExpiredAdSelectionInitializations(eq(expectedExpirationTime));
+        verify(mAdSelectionEntryDaoMock, never())
+                .removeExpiredRegisteredAdInteractionsFromUnifiedTable();
         verify(mEncryptionContextDaoMock)
                 .removeExpiredEncryptionContext(eq(expectedExpirationTime));
         verifyNoMoreInteractions(mAdSelectionEntryDaoMock);
@@ -132,6 +134,8 @@ public class FledgeMaintenanceTasksWorkerTests {
         verify(mAdSelectionEntryDaoMock).removeExpiredRegisteredAdInteractions();
         verify(mAdSelectionEntryDaoMock, never())
                 .removeExpiredAdSelectionInitializations(eq(expectedExpirationTime));
+        verify(mAdSelectionEntryDaoMock, never())
+                .removeExpiredRegisteredAdInteractionsFromUnifiedTable();
         verify(mEncryptionContextDaoMock, never())
                 .removeExpiredEncryptionContext(eq(expectedExpirationTime));
         verifyNoMoreInteractions(mAdSelectionEntryDaoMock);
@@ -179,6 +183,7 @@ public class FledgeMaintenanceTasksWorkerTests {
         verify(mAdSelectionEntryDaoMock).removeExpiredRegisteredAdInteractions();
         verify(mAdSelectionEntryDaoMock)
                 .removeExpiredAdSelectionInitializations(eq(expectedExpirationTime));
+        verify(mAdSelectionEntryDaoMock).removeExpiredRegisteredAdInteractionsFromUnifiedTable();
         verify(mEncryptionContextDaoMock, never())
                 .removeExpiredEncryptionContext(eq(expectedExpirationTime));
         verifyNoMoreInteractions(mAdSelectionEntryDaoMock);

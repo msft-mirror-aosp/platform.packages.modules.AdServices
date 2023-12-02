@@ -1031,6 +1031,8 @@ public interface Flags extends CommonFlags {
     int PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES = (int) (10 * 1024);
     int PROTECTED_SIGNALS_MAX_JS_FAILURE_EXECUTION_ON_CERTAIN_VERSION_BEFORE_STOP = 3;
     long PROTECTED_SIGNALS_ENCODER_REFRESH_WINDOW_SECONDS = 24L * 60L * 60L; // 1 day
+    int PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_BYTES = 10 * 1024;
+    int PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES = 15 * 1024;
 
     /** Returns {@code true} feature flag if Periodic encoding of Protected Signals is enabled. */
     default boolean getProtectedSignalsPeriodicEncodingEnabled() {
@@ -1065,6 +1067,19 @@ public interface Flags extends CommonFlags {
     /** Returns the maximum time window beyond which encoder logic should be refreshed */
     default long getProtectedSignalsEncoderRefreshWindowSeconds() {
         return PROTECTED_SIGNALS_ENCODER_REFRESH_WINDOW_SECONDS;
+    }
+
+    /** Returns the maximum size of signals in storage per buyer. */
+    default int getProtectedSignalsMaxSignalSizePerBuyerBytes() {
+        return PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_BYTES;
+    }
+
+    /**
+     * Returns the maximum size of signals in the storage per buyer with a graceful oversubscription
+     * policy.
+     */
+    default int getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes() {
+        return PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES;
     }
 
     int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT = 10_000;

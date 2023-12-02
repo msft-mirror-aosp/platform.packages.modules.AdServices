@@ -16,10 +16,8 @@
 
 package com.android.adservices.service.encryptionkey;
 
-import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -164,7 +162,6 @@ public class EncryptionKeyJobHandlerTest {
 
     @After
     public void after() {
-
         mMockitoSession.finishMocking();
     }
 
@@ -180,7 +177,8 @@ public class EncryptionKeyJobHandlerTest {
 
         mSpyEncryptionKeyJobHandler.fetchAndUpdateEncryptionKeys();
 
-        verify(mEncryptionKeyDao, times(1)).insert(anyList());
+        verify(mEncryptionKeyDao, times(1)).insert(ENCRYPTION_KEY);
+        verify(mEncryptionKeyDao, times(1)).insert(SIGNING_KEY);
     }
 
     @Test
@@ -222,8 +220,7 @@ public class EncryptionKeyJobHandlerTest {
         mSpyEncryptionKeyJobHandler.fetchAndUpdateEncryptionKeys();
 
         verify(mEncryptionKeyDao, times(1)).delete(ENCRYPTION_KEY.getId());
-        verify(mEncryptionKeyDao, times(1)).insert((EncryptionKey) any());
-        assertEquals(1, mEncryptionKeyDao.getAllEncryptionKeys().size());
+        verify(mEncryptionKeyDao, times(3)).insert((EncryptionKey) any());
     }
 
     @Test
@@ -239,7 +236,7 @@ public class EncryptionKeyJobHandlerTest {
         mSpyEncryptionKeyJobHandler.fetchAndUpdateEncryptionKeys();
 
         verify(mEncryptionKeyDao, times(1)).delete(SIGNING_KEY.getId());
-        verify(mEncryptionKeyDao, times(2)).insert((EncryptionKey) any());
+        verify(mEncryptionKeyDao, times(3)).insert((EncryptionKey) any());
     }
 
     @Test
@@ -256,6 +253,30 @@ public class EncryptionKeyJobHandlerTest {
         mSpyEncryptionKeyJobHandler.fetchAndUpdateEncryptionKeys();
 
         verify(mEncryptionKeyDao, times(2)).delete(any());
-        verify(mEncryptionKeyDao, times(3)).insert((EncryptionKey) any());
+        verify(mEncryptionKeyDao, times(6)).insert((EncryptionKey) any());
+    }
+
+    @Test
+    public void testHasEncryptionKey_insertEncryptionKeyForPreviouslyNotFetchedEnrollment() {
+        when(mEncryptionKeyDao.getAllEncryptionKeys())
+                .thenReturn(List.of(ENCRYPTION_KEY_NO_ENROLLMENT_WITH_IT));
+        when(mEnrollmentDao.getAllEnrollmentData()).thenReturn(List.of(ENROLLMENT_DATA));
+        when(mEnrollmentDao.getEnrollmentData(ENROLLMENT_DATA.getEnrollmentId()))
+                .thenReturn(ENROLLMENT_DATA);
+        when(mEnrollmentDao.getEnrollmentData(
+                        ENCRYPTION_KEY_NO_ENROLLMENT_WITH_IT.getEnrollmentId()))
+                .thenReturn(null);
+        when(mEncryptionKeyDao.getEncryptionKeyFromEnrollmentId(ENROLLMENT_DATA.getEnrollmentId()))
+                .thenReturn(new ArrayList<>());
+
+        Optional<List<EncryptionKey>> newKeys = Optional.of(List.of(ENCRYPTION_KEY, SIGNING_KEY));
+        when(mEncryptionKeyFetcher.fetchEncryptionKeys(null, ENROLLMENT_DATA, true))
+                .thenReturn(newKeys);
+
+        mSpyEncryptionKeyJobHandler.fetchAndUpdateEncryptionKeys();
+
+        verify(mEncryptionKeyDao, times(1)).delete(ENCRYPTION_KEY_NO_ENROLLMENT_WITH_IT.getId());
+        verify(mEncryptionKeyDao, times(1)).insert(ENCRYPTION_KEY);
+        verify(mEncryptionKeyDao, times(1)).insert(SIGNING_KEY);
     }
 }

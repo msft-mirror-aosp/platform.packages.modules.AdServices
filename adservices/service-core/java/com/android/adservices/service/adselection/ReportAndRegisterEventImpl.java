@@ -71,7 +71,8 @@ class ReportAndRegisterEventImpl extends EventReporter {
             @NonNull DevContext devContext,
             @NonNull MeasurementImpl measurementService,
             @NonNull ConsentManager consentManager,
-            @NonNull Context context) {
+            @NonNull Context context,
+            boolean shouldUseUnifiedTables) {
         super(
                 adSelectionEntryDao,
                 adServicesHttpsClient,
@@ -82,7 +83,8 @@ class ReportAndRegisterEventImpl extends EventReporter {
                 adSelectionServiceFilter,
                 callerUid,
                 fledgeAuthorizationFilter,
-                devContext);
+                devContext,
+                shouldUseUnifiedTables);
 
         Objects.requireNonNull(measurementService);
         Objects.requireNonNull(context);

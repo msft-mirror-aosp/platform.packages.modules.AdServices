@@ -62,7 +62,16 @@ public final class Tracing {
     public static final String GET_FILTERED_BUYERS_CA =
             "BuyerInputGenerator#getFilteredCustomAudiences";
     public static final String GET_BUYERS_PS = "BuyerInputGenerator#getBuyersProtectedSignals";
+    public static final String GET_COMPRESSED_BUYERS_INPUTS =
+            "BuyerInputGenerator#getCompressedBuyerInputs";
+    public static final String AUCTION_SERVER_GZIP_COMPRESS =
+            "AuctionServerDataCompressorGzip#compress";
+    public static final String FORMAT_PAYLOAD_V0 = "AuctionServerPayloadFormatterV0#apply";
+    public static final String FORMAT_PAYLOAD_EXCESSIVE_MAX_SIZE =
+            "AuctionServerPayloadFormatterExcessiveMaxSize#apply";
     public static final String CREATE_BUYER_INPUTS = "BuyerInputGenerator#createBuyerInputs";
+    public static final String CREATE_GET_AD_SELECTION_DATA_PAYLOAD =
+            "GetAdSelectionDataRunner#createPayload";
     public static final String ORCHESTRATE_GET_AD_SELECTION_DATA =
             "GetAdSelectionDataRunner#orchestrateGetAdSelectionDataRunner";
     public static final String PERSIST_AD_SELECTION_ID_REQUEST =

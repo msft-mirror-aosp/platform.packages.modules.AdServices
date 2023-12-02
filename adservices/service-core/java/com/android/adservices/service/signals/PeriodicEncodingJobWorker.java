@@ -242,13 +242,18 @@ public class PeriodicEncodingJobWorker {
     FluentFuture<Void> runEncodingPerBuyer(
             DBEncoderLogicMetadata encoderLogicMetadata, int timeout) {
         AdTechIdentifier buyer = encoderLogicMetadata.getBuyer();
+        Map<String, List<ProtectedSignal>> signals = mSignalsProvider.getSignals(buyer);
+        if (signals.isEmpty()) {
+            mEncoderLogicHandler.deleteEncoderForBuyer(buyer);
+            return FluentFuture.from(Futures.immediateFuture(null));
+        }
+
         int failedCount = encoderLogicMetadata.getFailedEncodingCount();
         if (failedCount >= mEncoderLogicMaximumFailure) {
             return FluentFuture.from(Futures.immediateFuture(null));
         }
         String encodingLogic = mEncoderLogicHandler.getEncoder(buyer);
         int version = encoderLogicMetadata.getVersion();
-        Map<String, List<ProtectedSignal>> signals = mSignalsProvider.getSignals(buyer);
 
         return FluentFuture.from(
                         mScriptEngine.encodeSignals(
