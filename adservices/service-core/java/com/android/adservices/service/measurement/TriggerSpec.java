@@ -262,10 +262,10 @@ public class TriggerSpec {
                                 jsonObject,
                                 TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_BUCKETS);
                 this.setSummaryBuckets(summaryBuckets.subList(
-                        0, Math.min(summaryBuckets.size(), maxEventLevelReports + 1)));
+                        0, Math.min(summaryBuckets.size(), maxEventLevelReports)));
             } else {
                 this.setSummaryBuckets(
-                        LongStream.range(1, maxEventLevelReports + 2)
+                        LongStream.range(1, maxEventLevelReports + 1)
                                 .boxed()
                                 .collect(Collectors.toList()));
             }

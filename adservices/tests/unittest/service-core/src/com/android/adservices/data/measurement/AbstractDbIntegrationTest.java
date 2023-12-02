@@ -412,6 +412,9 @@ public abstract class AbstractDbIntegrationTest {
         values.put(
                 MeasurementTables.SourceContract.REGISTRATION_ORIGIN,
                 source.getRegistrationOrigin().toString());
+        values.put(
+                MeasurementTables.SourceContract.AGGREGATE_REPORT_DEDUP_KEYS,
+                listToCommaSeparatedString(source.getAggregateReportDedupKeys()));
         // Flex API
         values.put(
                 MeasurementTables.SourceContract.TRIGGER_SPECS,
@@ -423,6 +426,10 @@ public abstract class AbstractDbIntegrationTest {
         if (row == -1) {
             throw new SQLiteException("Source insertion failed");
         }
+    }
+
+    private static String listToCommaSeparatedString(List<UnsignedLong> list) {
+        return list.stream().map(UnsignedLong::toString).collect(Collectors.joining(","));
     }
 
     /**
@@ -578,6 +585,11 @@ public abstract class AbstractDbIntegrationTest {
                 aggregateReport.getAggregationCoordinatorOrigin().toString());
         values.put(
                 MeasurementTables.AggregateReport.IS_FAKE_REPORT, aggregateReport.isFakeReport());
+        values.put(
+                MeasurementTables.AggregateReport.DEDUP_KEY,
+                aggregateReport.getDedupKey() != null
+                        ? aggregateReport.getDedupKey().getValue()
+                        : null);
         long row = db.insert(MeasurementTables.AggregateReport.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("AggregateReport insertion failed");

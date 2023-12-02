@@ -122,6 +122,11 @@ public class FledgeMaintenanceTasksWorker {
             mAdSelectionEntryDao.removeExpiredAdSelectionInitializations(expirationTime);
         }
 
+        if (mFlags.getFledgeOnDeviceAuctionShouldUseUnifiedTables()) {
+            sLogger.v("Clearing expired Registered Ad Interaction data from unified table ");
+            mAdSelectionEntryDao.removeExpiredRegisteredAdInteractionsFromUnifiedTable();
+        }
+
         if (mFlags.getFledgeAuctionServerEnabled()) {
             sLogger.v("Clearing expired Encryption Context");
             mEncryptionContextDao.removeExpiredEncryptionContext(expirationTime);

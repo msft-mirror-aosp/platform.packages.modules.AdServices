@@ -135,7 +135,8 @@ public class EventReporterFactoryTest {
                         DevContext.createForDevOptionsDisabled(),
                         mMeasurementServiceMock,
                         mConsentManagerMock,
-                        mContextMock)
+                        mContextMock,
+                        false)
                 .getEventReporter();
     }
 
