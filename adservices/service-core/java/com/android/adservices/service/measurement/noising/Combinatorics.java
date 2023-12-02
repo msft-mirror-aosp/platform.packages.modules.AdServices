@@ -265,6 +265,9 @@ public class Combinatorics {
      */
     public static long getNumStatesFlexApi(
             int totalCap, int[] perTypeNumWindowList, int[] perTypeCapList) {
+        if (perTypeNumWindowList.length == 0 || perTypeCapList.length == 0) {
+            return 1;
+        }
         boolean canComputeArithmetic = true;
         for (int i = 1; i < perTypeNumWindowList.length; i++) {
             if (perTypeNumWindowList[i] != perTypeNumWindowList[i - 1]) {

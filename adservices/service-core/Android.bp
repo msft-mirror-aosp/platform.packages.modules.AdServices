@@ -201,8 +201,8 @@ cc_library_shared {
     ],
     include_dirs: ["packages/modules/AdServices/adservices/service-core/jni/include"],
     header_libs: ["jni_headers"],
-    shared_libs: ["libcrypto", "liblog",],
-    static_libs: ["libact"],
+    shared_libs: ["liblog",],
+    static_libs: ["libact", "libcrypto_static"],
     version_script: "jni/version-script.lds",
     apex_available: ["com.android.adservices", "com.android.extservices"],
     visibility: [

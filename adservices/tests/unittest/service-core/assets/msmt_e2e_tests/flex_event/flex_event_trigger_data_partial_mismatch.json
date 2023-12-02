@@ -46,7 +46,8 @@
                     ]
                   }
                 ],
-                "max_event_level_reports": 3
+                "max_event_level_reports": 3,
+                "trigger_data_matching": "exact"
               },
               "Location": null,
               "Attribution-Reporting-Redirect": null
@@ -145,7 +146,7 @@
           "source_event_id": "2",
           "trigger_data": "2",
           "source_type": "navigation",
-          "trigger_summary_bucket": "[1,1]",
+          "trigger_summary_bucket": [1, 1],
           "randomized_trigger_rate": 0.0001371835308365974
         }
       },
@@ -158,7 +159,7 @@
           "source_event_id": "2",
           "trigger_data": "1",
           "source_type": "navigation",
-          "trigger_summary_bucket": "[1,1]",
+          "trigger_summary_bucket": [1, 1],
           "randomized_trigger_rate": 0.0001371835308365974
         }
       }
