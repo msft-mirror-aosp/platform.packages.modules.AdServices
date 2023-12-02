@@ -91,7 +91,9 @@ public final class FlagsConstants {
     public static final String KEY_GLOBAL_BLOCKED_TOPIC_IDS = "topics_global_blocked_topic_ids";
     public static final String KEY_TOPICS_DISABLE_DIRECT_APP_CALLS =
             "topics_disable_direct_app_calls";
-    public static final String KEY_TOPICS_ENABLE_ENCRYPTION = "topics_enable_encryption";
+    public static final String KEY_TOPICS_ENCRYPTION_ENABLED = "topics_encryption_enabled";
+    public static final String KEY_TOPICS_DISABLE_PLAINTEXT_RESPONSE =
+            "topics_disable_plaintext_response";
 
     // Topics classifier keys
     public static final String KEY_CLASSIFIER_TYPE = "classifier_type";
@@ -246,6 +248,12 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW =
             "measurement_max_attribution_per_rate_limit_window";
 
+    public static final String KEY_MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW =
+            "measurement_max_event_attribution_per_rate_limit_window";
+
+    public static final String KEY_MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW =
+            "measurement_max_aggregate_attribution_per_rate_limit_window";
+
     public static final String KEY_MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION =
             "measurement_max_distinct_enrollments_in_attribution";
 
@@ -290,6 +298,9 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING =
             "measurement_enable_source_deactivation_after_filtering";
+
+    public static final String KEY_MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT =
+            "measurement_enable_scoped_attribution_rate_limit";
 
     public static final String KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS =
             "measurement_debug_reporting_fallback_job_period_ms";
@@ -418,6 +429,9 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING =
             "measurement_enable_aggregatable_report_payload_padding";
+
+    public static final String KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES =
+            "key_measurement_enable_session_stable_kill_switches";
 
     // FLEDGE Custom Audience keys
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT =
@@ -875,12 +889,24 @@ public final class FlagsConstants {
     // Consent Manager debug mode keys.
     public static final String KEY_CONSENT_MANAGER_DEBUG_MODE = "consent_manager_debug_mode";
 
+    // Consent Manager ota debug mode keys.
+    public static final String KEY_CONSENT_MANAGER_OTA_DEBUG_MODE =
+            "consent_manager_ota_debug_mode";
+
+    // Rvc post ota notification age check keys.
+    public static final String KEY_RVC_POST_OTA_NOTIF_AGE_CHECK =
+            "rvc_post_ota_notification_age_check";
+
     // Consent notification activity debug mode keys.
     public static final String KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE =
             "consent_notification_activity_debug_mode";
 
     // Source of truth to get consent for PPAPI
     public static final String KEY_CONSENT_SOURCE_OF_TRUTH = "consent_source_of_truth";
+
+    public static final String KEY_CONSENT_ALREADY_INTERACTED_FIX_ENABLE =
+            "consent_already_interacted_fix_enable";
+
     public static final String KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH =
             "blocked_topics_source_of_truth";
 
@@ -978,6 +1004,9 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED =
             "measurement_flexible_event_reporting_api_enabled";
+
+    public static final String KEY_MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING =
+            "measurement_enable_trigger_data_matching";
 
     public static final String KEY_MEASUREMENT_FLEX_LITE_API_ENABLED =
             "measurement_flex_lite_api_enabled";

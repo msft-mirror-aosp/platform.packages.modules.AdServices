@@ -273,15 +273,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
                     }
                     mLog.d("setCompatModeFlags(): setting flags for R+");
                     setFlag(FlagsConstants.KEY_ENABLE_BACK_COMPAT, true);
-                    // TODO (b/285208753): Update flags once AppSearch is supported on R.
-                    setFlag(
-                            FlagsConstants.KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH,
-                            FlagsConstants.PPAPI_ONLY);
-                    setFlag(FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH, FlagsConstants.PPAPI_ONLY);
-                    setFlag(FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA, false);
-                    setFlag(
-                            FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH,
-                            true);
+                    setFlag(FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_DEBUG_PROXY, true);
                 });
     }
 

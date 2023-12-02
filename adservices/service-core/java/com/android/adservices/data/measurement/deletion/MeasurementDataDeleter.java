@@ -43,8 +43,11 @@ import com.android.internal.annotations.VisibleForTesting;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -78,109 +81,154 @@ public class MeasurementDataDeleter {
      * @return true if deletion was successful, false otherwise
      */
     public boolean delete(@NonNull DeletionParam deletionParam) {
-        return mDatastoreManager.runInTransaction(
-                (dao) -> {
-                    List<String> sourceIds =
-                            dao.fetchMatchingSources(
-                                    getRegistrant(deletionParam.getAppPackageName()),
-                                    deletionParam.getStart(),
-                                    deletionParam.getEnd(),
-                                    deletionParam.getOriginUris(),
-                                    deletionParam.getDomainUris(),
-                                    deletionParam.getMatchBehavior());
-                    Set<String> triggerIds =
-                            dao.fetchMatchingTriggers(
-                                    getRegistrant(deletionParam.getAppPackageName()),
-                                    deletionParam.getStart(),
-                                    deletionParam.getEnd(),
-                                    deletionParam.getOriginUris(),
-                                    deletionParam.getDomainUris(),
-                                    deletionParam.getMatchBehavior());
-                    List<String> asyncRegistrationIds =
-                            dao.fetchMatchingAsyncRegistrations(
-                                    getRegistrant(deletionParam.getAppPackageName()),
-                                    deletionParam.getStart(),
-                                    deletionParam.getEnd(),
-                                    deletionParam.getOriginUris(),
-                                    deletionParam.getDomainUris(),
-                                    deletionParam.getMatchBehavior());
+        boolean result = mDatastoreManager.runInTransaction((dao) -> delete(dao, deletionParam));
+        if (result) {
+            // Log wipeout event triggered by request (from the delete registrations API)
+            WipeoutStatus wipeoutStatus = new WipeoutStatus();
+            wipeoutStatus.setWipeoutType(WipeoutStatus.WipeoutType.DELETE_REGISTRATIONS_API);
+            logWipeoutStats(
+                    wipeoutStatus, getRegistrant(deletionParam.getAppPackageName()).toString());
+        }
+        return result;
+    }
 
-                    // Rest aggregate contributions and dedup keys on sources for triggers to be
-                    // deleted.
-                    List<AggregateReport> aggregateReports =
-                            dao.fetchMatchingAggregateReports(sourceIds, triggerIds);
-                    resetAggregateContributions(dao, aggregateReports);
-                    resetAggregateReportDedupKeys(dao, aggregateReports);
-                    List<EventReport> eventReports;
-                    if (mFlags.getMeasurementFlexibleEventReportingApiEnabled()) {
-                        /*
-                         Because some triggers may not be stored in the event report table in
-                         the flexible event report API, we must extract additional related
-                         triggers from the source table.
-                        */
-                        Set<String> extendedSourceIds = dao.fetchFlexSourceIdsFor(triggerIds);
+    /**
+     * Deletes all measurement data for a given package name that has been uninstalled.
+     *
+     * @param packageName including android-app:// scheme
+     * @return true if deletion deleted any record
+     */
+    public boolean deleteAppUninstalledData(@NonNull Uri packageName) {
+        // Using MATCH_BEHAVIOR_PRESERVE with empty origins and domains to preserve nothing.
+        // In other words, to delete all data that only matches the provided app package name.
+        final DeletionParam deletionParam =
+                new DeletionParam.Builder(
+                                /* originUris= */ Collections.emptyList(),
+                                /* domainUris= */ Collections.emptyList(),
+                                /* start= */ Instant.MIN,
+                                /* end= */ Instant.MAX,
+                                /* appPackageName= */ packageName.getHost(),
+                                /* sdkPackageName= */ "")
+                        .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_PRESERVE)
+                        .build();
 
-                        // IMeasurementDao::fetchFlexSourceIdsFor fetches only
-                        // sources that have trigger specs (flex API), which means we can examine
-                        // only their attributed trigger list.
-                        for (String sourceId : extendedSourceIds) {
-                            Source source = dao.getSource(sourceId);
-                            try {
-                                source.buildAttributedTriggers();
-                                triggerIds.addAll(source.getAttributedTriggerIds());
-                                // Delete all attributed triggers for the source.
-                                dao.updateSourceAttributedTriggers(
-                                        sourceId, new JSONArray().toString());
-                            } catch (JSONException error) {
-                                LoggerFactory.getMeasurementLogger().e(
-                                        error,
-                                        "MeasurementDataDeleter::delete unable to build attributed "
-                                                + "triggers. Source ID: %", sourceId);
-                            }
-                        }
+        Optional<Boolean> result =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) -> {
+                            dao.undoInstallAttribution(packageName);
+                            return delete(dao, deletionParam);
+                        });
+        return result.orElse(false);
+    }
 
-                        extendedSourceIds.addAll(sourceIds);
+    /** Returns true if any record were deleted. */
+    private boolean delete(@NonNull IMeasurementDao dao, @NonNull DeletionParam deletionParam)
+            throws DatastoreException {
+        List<String> sourceIds =
+                dao.fetchMatchingSources(
+                        getRegistrant(deletionParam.getAppPackageName()),
+                        deletionParam.getStart(),
+                        deletionParam.getEnd(),
+                        deletionParam.getOriginUris(),
+                        deletionParam.getDomainUris(),
+                        deletionParam.getMatchBehavior());
+        Set<String> triggerIds =
+                dao.fetchMatchingTriggers(
+                        getRegistrant(deletionParam.getAppPackageName()),
+                        deletionParam.getStart(),
+                        deletionParam.getEnd(),
+                        deletionParam.getOriginUris(),
+                        deletionParam.getDomainUris(),
+                        deletionParam.getMatchBehavior());
+        List<String> asyncRegistrationIds =
+                dao.fetchMatchingAsyncRegistrations(
+                        getRegistrant(deletionParam.getAppPackageName()),
+                        deletionParam.getStart(),
+                        deletionParam.getEnd(),
+                        deletionParam.getOriginUris(),
+                        deletionParam.getDomainUris(),
+                        deletionParam.getMatchBehavior());
 
-                        eventReports = dao.fetchMatchingEventReports(extendedSourceIds, triggerIds);
-                    } else {
-                        eventReports = dao.fetchMatchingEventReports(sourceIds, triggerIds);
-                    }
+        int debugReportsDeletedCount =
+                dao.deleteDebugReports(
+                        getRegistrant(deletionParam.getAppPackageName()),
+                        deletionParam.getStart(),
+                        deletionParam.getEnd());
 
-                    resetDedupKeys(dao, eventReports);
+        final boolean containsRecordsToBeDeleted =
+                !sourceIds.isEmpty() || !triggerIds.isEmpty() || !asyncRegistrationIds.isEmpty();
+        if (!containsRecordsToBeDeleted) {
+            return debugReportsDeletedCount > 0;
+        }
 
-                    dao.deleteAsyncRegistrations(asyncRegistrationIds);
+        // Reset aggregate contributions and dedup keys on sources for triggers to be
+        // deleted.
+        List<AggregateReport> aggregateReports =
+                dao.fetchMatchingAggregateReports(sourceIds, triggerIds);
+        resetAggregateContributions(dao, aggregateReports);
+        resetAggregateReportDedupKeys(dao, aggregateReports);
+        List<EventReport> eventReports;
+        if (mFlags.getMeasurementFlexibleEventReportingApiEnabled()) {
+            /*
+             Because some triggers may not be stored in the event report table in
+             the flexible event report API, we must extract additional related
+             triggers from the source table.
+            */
+            Set<String> extendedSourceIds = dao.fetchFlexSourceIdsFor(triggerIds);
 
-                    // Delete sources and triggers, that'll take care of deleting related reports
-                    // and attributions
-                    if (deletionParam.getDeletionMode() == DeletionRequest.DELETION_MODE_ALL) {
-                        dao.deleteSources(sourceIds);
-                        dao.deleteTriggers(triggerIds);
-                        return;
-                    }
+            // IMeasurementDao::fetchFlexSourceIdsFor fetches only
+            // sources that have trigger specs (flex API), which means we can examine
+            // only their attributed trigger list.
+            for (String sourceId : extendedSourceIds) {
+                Source source = dao.getSource(sourceId);
+                try {
+                    source.buildAttributedTriggers();
+                    triggerIds.addAll(source.getAttributedTriggerIds());
+                    // Delete all attributed triggers for the source.
+                    dao.updateSourceAttributedTriggers(sourceId, new JSONArray().toString());
+                } catch (JSONException error) {
+                    LoggerFactory.getMeasurementLogger()
+                            .e(
+                                    error,
+                                    "MeasurementDataDeleter::delete unable to build attributed "
+                                            + "triggers. Source ID: %",
+                                    sourceId);
+                }
+            }
 
-                    // Mark reports for deletion for DELETION_MODE_EXCLUDE_INTERNAL_DATA
-                    for (EventReport eventReport : eventReports) {
-                        dao.markEventReportStatus(
-                                eventReport.getId(), EventReport.Status.MARKED_TO_DELETE);
-                    }
+            extendedSourceIds.addAll(sourceIds);
 
-                    for (AggregateReport aggregateReport : aggregateReports) {
-                        dao.markAggregateReportStatus(
-                                aggregateReport.getId(), AggregateReport.Status.MARKED_TO_DELETE);
-                    }
+            eventReports = dao.fetchMatchingEventReports(extendedSourceIds, triggerIds);
+        } else {
+            eventReports = dao.fetchMatchingEventReports(sourceIds, triggerIds);
+        }
 
-                    // Finally mark sources and triggers for deletion
-                    dao.updateSourceStatus(sourceIds, Source.Status.MARKED_TO_DELETE);
-                    dao.updateTriggerStatus(triggerIds, Trigger.Status.MARKED_TO_DELETE);
+        resetDedupKeys(dao, eventReports);
 
-                    // Log wipeout event triggered by request (from the delete registrations API)
-                    WipeoutStatus wipeoutStatus = new WipeoutStatus();
-                    wipeoutStatus.setWipeoutType(
-                            WipeoutStatus.WipeoutType.DELETE_REGISTRATIONS_API);
-                    logWipeoutStats(
-                            wipeoutStatus,
-                            getRegistrant(deletionParam.getAppPackageName()).toString());
-                });
+        dao.deleteAsyncRegistrations(asyncRegistrationIds);
+
+        // Delete sources and triggers, that'll take care of deleting related reports
+        // and attributions
+        if (deletionParam.getDeletionMode() == DeletionRequest.DELETION_MODE_ALL) {
+            dao.deleteSources(sourceIds);
+            dao.deleteTriggers(triggerIds);
+            return true;
+        }
+
+        // Mark reports for deletion for DELETION_MODE_EXCLUDE_INTERNAL_DATA
+        for (EventReport eventReport : eventReports) {
+            dao.markEventReportStatus(eventReport.getId(), EventReport.Status.MARKED_TO_DELETE);
+        }
+
+        for (AggregateReport aggregateReport : aggregateReports) {
+            dao.markAggregateReportStatus(
+                    aggregateReport.getId(), AggregateReport.Status.MARKED_TO_DELETE);
+        }
+
+        // Finally mark sources and triggers for deletion
+        dao.updateSourceStatus(sourceIds, Source.Status.MARKED_TO_DELETE);
+        dao.updateTriggerStatus(triggerIds, Trigger.Status.MARKED_TO_DELETE);
+        return true;
     }
 
     @VisibleForTesting

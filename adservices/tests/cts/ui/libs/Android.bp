@@ -23,11 +23,12 @@ android_library {
     ],
     static_libs: [
         "adservices-assets",
+        "adservices-shared-testing",
         "adservices-service-core",
+        "adservices-test-utility",
         "compatibility-device-util-axt",
         "truth",
         "androidx.test.uiautomator_uiautomator",
-        "adservices-test-utility",
         "framework-adservices-lib",
     ],
     libs: [

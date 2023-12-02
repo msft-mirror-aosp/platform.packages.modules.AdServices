@@ -16,16 +16,20 @@
 
 package com.android.adservices.data.measurement;
 
+import android.Manifest;
+import android.app.UiAutomation;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
+import android.provider.DeviceConfig;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.DbTestUtil;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.KeyValueData;
@@ -36,7 +40,7 @@ import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
 import com.android.adservices.service.measurement.reporting.DebugReport;
 import com.android.adservices.service.measurement.util.UnsignedLong;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -44,9 +48,8 @@ import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -54,7 +57,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -69,21 +74,19 @@ import java.util.stream.Collectors;
  * Consider @RunWith(Parameterized.class)
  */
 public abstract class AbstractDbIntegrationTest {
+    @Rule
+    public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
+            new TestableDeviceConfig.TestableDeviceConfigRule();
+
+    private static final String PH_FLAGS_OVERRIDE_KEY = "phflags_override";
+
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     public final DbState mInput;
     public final DbState mOutput;
-
-    private MockitoSession mStaticMockSession;
+    public Map<String, String> mFlagsMap;
 
     @Before
     public void before() {
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .strictness(Strictness.WARN)
-                        .startMocking();
-        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
-
         SQLiteDatabase db = DbTestUtil.getMeasurementDbHelperForTest().getWritableDatabase();
         emptyTables(db);
         seedTables(db, mInput);
@@ -93,13 +96,12 @@ public abstract class AbstractDbIntegrationTest {
     public void after() {
         SQLiteDatabase db = DbTestUtil.getMeasurementDbHelperForTest().getWritableDatabase();
         emptyTables(db);
-
-        mStaticMockSession.finishMocking();
     }
 
-    public AbstractDbIntegrationTest(DbState input, DbState output) {
-        this.mInput = input;
-        this.mOutput = output;
+    public AbstractDbIntegrationTest(DbState input, DbState output, Map<String, String> flagsMap) {
+        mInput = input;
+        mOutput = output;
+        mFlagsMap = flagsMap;
     }
 
     /**
@@ -109,6 +111,9 @@ public abstract class AbstractDbIntegrationTest {
 
     @Test
     public void runTest() throws DatastoreException {
+        // Flags must be set after TestableDeviceConfigRule so as to apply to the mock device
+        // config.
+        setupFlags();
         runActionToTest();
         SQLiteDatabase readerDb = DbTestUtil.getMeasurementDbHelperForTest().getReadableDatabase();
         DbState dbState = new DbState(readerDb);
@@ -239,17 +244,7 @@ public abstract class AbstractDbIntegrationTest {
         List<Object[]> testCases = new ArrayList<>();
         for (int i = 0; i < testArray.length(); i++) {
             JSONObject testObj = testArray.getJSONObject(i);
-            String name = testObj.getString("name");
-            JSONObject input = testObj.getJSONObject("input");
-            JSONObject output = testObj.getJSONObject("output");
-            DbState inputState = new DbState(input);
-            DbState outputState = new DbState(output);
-            if (prepareAdditionalData != null) {
-                testCases.add(new Object[]{inputState, outputState,
-                        prepareAdditionalData.apply(testObj), name});
-            } else {
-                testCases.add(new Object[]{inputState, outputState, name});
-            }
+            addTestCase(testObj, testCases, prepareAdditionalData);
         }
         return testCases;
     }
@@ -265,21 +260,47 @@ public abstract class AbstractDbIntegrationTest {
             inputStream.close();
             String json = new String(buffer, StandardCharsets.UTF_8);
             JSONObject testObj = new JSONObject(json);
-            String name = testObj.getString("name");
-            JSONObject input = testObj.getJSONObject("input");
-            JSONObject output = testObj.getJSONObject("output");
-            DbState inputState = new DbState(input);
-            DbState outputState = new DbState(output);
-            if (prepareAdditionalData != null) {
-                testCases.add(
-                        new Object[] {
-                            inputState, outputState, prepareAdditionalData.apply(testObj), name
-                        });
-            } else {
-                testCases.add(new Object[] {inputState, outputState, name});
-            }
+            addTestCase(testObj, testCases, prepareAdditionalData);
         }
         return testCases;
+    }
+
+    private static void addTestCase(JSONObject testObj, List<Object[]> testCases,
+            CheckedJsonFunction prepareAdditionalData) throws JSONException {
+        String name = testObj.getString("name");
+        JSONObject input = testObj.getJSONObject("input");
+        JSONObject output = testObj.getJSONObject("output");
+        DbState inputState = new DbState(input);
+        DbState outputState = new DbState(output);
+        Map<String, String> flagsMap = getFlagsMap(testObj);
+        if (prepareAdditionalData != null) {
+            testCases.add(
+                    new Object[]{
+                            inputState,
+                            outputState,
+                            flagsMap,
+                            prepareAdditionalData.apply(testObj),
+                            name });
+        } else {
+            testCases.add(
+                    new Object[]{
+                            inputState,
+                            outputState,
+                            flagsMap,
+                            name });
+        }
+    }
+
+    private static Map<String, String> getFlagsMap(JSONObject testObj) throws JSONException {
+        Map<String, String> flagsMap = new HashMap<>();
+        if (testObj.isNull(PH_FLAGS_OVERRIDE_KEY)) {
+            return flagsMap;
+        }
+        JSONObject phFlagsObject = testObj.optJSONObject(PH_FLAGS_OVERRIDE_KEY);
+        for (String key : phFlagsObject.keySet()) {
+            flagsMap.put(key, phFlagsObject.optString(key));
+        }
+        return flagsMap;
     }
 
     /**
@@ -391,10 +412,24 @@ public abstract class AbstractDbIntegrationTest {
         values.put(
                 MeasurementTables.SourceContract.REGISTRATION_ORIGIN,
                 source.getRegistrationOrigin().toString());
+        values.put(
+                MeasurementTables.SourceContract.AGGREGATE_REPORT_DEDUP_KEYS,
+                listToCommaSeparatedString(source.getAggregateReportDedupKeys()));
+        // Flex API
+        values.put(
+                MeasurementTables.SourceContract.TRIGGER_SPECS,
+                source.getTriggerSpecsString());
+        values.put(
+                MeasurementTables.SourceContract.EVENT_ATTRIBUTION_STATUS,
+                source.getEventAttributionStatus());
         long row = db.insert(MeasurementTables.SourceContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("Source insertion failed");
         }
+    }
+
+    private static String listToCommaSeparatedString(List<UnsignedLong> list) {
+        return list.stream().map(UnsignedLong::toString).collect(Collectors.joining(","));
     }
 
     /**
@@ -550,6 +585,11 @@ public abstract class AbstractDbIntegrationTest {
                 aggregateReport.getAggregationCoordinatorOrigin().toString());
         values.put(
                 MeasurementTables.AggregateReport.IS_FAKE_REPORT, aggregateReport.isFakeReport());
+        values.put(
+                MeasurementTables.AggregateReport.DEDUP_KEY,
+                aggregateReport.getDedupKey() != null
+                        ? aggregateReport.getDedupKey().getValue()
+                        : null);
         long row = db.insert(MeasurementTables.AggregateReport.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("AggregateReport insertion failed");
@@ -678,5 +718,31 @@ public abstract class AbstractDbIntegrationTest {
 
     private static String getNullableUriString(Uri uri) {
         return Optional.ofNullable(uri).map(Uri::toString).orElse(null);
+    }
+
+    private void setupFlags() {
+        UiAutomation uiAutomation = getUiAutomation();
+        try {
+            uiAutomation.adoptShellPermissionIdentity(
+                    Manifest.permission.WRITE_ALLOWLISTED_DEVICE_CONFIG);
+            mFlagsMap
+                    .keySet()
+                    .forEach(
+                            key -> {
+                                    LoggerFactory.getMeasurementLogger().d(
+                                            "Setting PhFlag %s to %s", key, mFlagsMap.get(key));
+                                    DeviceConfig.setProperty(
+                                            DeviceConfig.NAMESPACE_ADSERVICES,
+                                            key,
+                                            mFlagsMap.get(key),
+                                            false);
+                            });
+        } finally {
+            uiAutomation.dropShellPermissionIdentity();
+        }
+    }
+
+    private static UiAutomation getUiAutomation() {
+        return InstrumentationRegistry.getInstrumentation().getUiAutomation();
     }
 }

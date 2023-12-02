@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.extdata;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
 import static android.adservices.extdata.AdServicesExtDataParams.BOOLEAN_FALSE;
 import static android.adservices.extdata.AdServicesExtDataParams.BOOLEAN_TRUE;
 import static android.adservices.extdata.AdServicesExtDataParams.BOOLEAN_UNKNOWN;
@@ -28,6 +31,13 @@ import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_I
 import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_MANUAL_INTERACTION_WITH_CONSENT_STATUS;
 import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_MEASUREMENT_ROLLBACK_APEX_VERSION;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
+import static com.android.adservices.service.extdata.AdServicesExtDataStorageServiceManager.UNKNOWN_PACKAGE_NAME;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__ADEXT_DATA_SERVICE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SERVICES_EXT_DATA;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__PUT_AD_SERVICES_EXT_DATA;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import static org.mockito.Mockito.any;
@@ -42,7 +52,13 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.ApiCallStats;
 
 import com.google.common.truth.Expect;
 
@@ -73,13 +89,18 @@ public class AdServicesExtDataStorageServiceManagerTest {
     public final AdServicesExtendedMockitoRule extendedMockito =
             new AdServicesExtendedMockitoRule.Builder(this)
                     .spyStatic(AdServicesExtDataStorageServiceWorker.class)
+                    .spyStatic(AdServicesLoggerImpl.class)
+                    .spyStatic(ErrorLogUtil.class)
+                    .spyStatic(FlagsFactory.class)
                     .build();
 
     @Rule public final Expect expect = Expect.create();
 
-    private final Context mContext = spy(ApplicationProvider.getApplicationContext());
+    private final Context mContext = ApplicationProvider.getApplicationContext();
+    private final AdServicesLogger mAdServicesLogger = spy(AdServicesLoggerImpl.getInstance());
 
     @Mock private AdServicesExtDataStorageServiceWorker mMockWorker;
+    @Mock private Flags mFlags;
     @Captor private ArgumentCaptor<AdServicesExtDataParams> mParamsCaptor;
     @Captor private ArgumentCaptor<int[]> mFieldsCaptor;
 
@@ -87,8 +108,16 @@ public class AdServicesExtDataStorageServiceManagerTest {
 
     @Before
     public void setup() {
+        // mock ErrorLogUtil for logging in the callbacks
+        doNothingOnErrorLogUtilError();
+
+        // mock the device config read for checking debug proxy
+        doReturn(false).when(mFlags).getEnableAdExtServiceDebugProxy();
+        mockGetFlags(mFlags);
+
         doReturn(mMockWorker)
                 .when(() -> AdServicesExtDataStorageServiceWorker.getInstance(mContext));
+        doReturn(mAdServicesLogger).when(AdServicesLoggerImpl::getInstance);
         mManager = AdServicesExtDataStorageServiceManager.getInstance(mContext);
     }
 
@@ -104,6 +133,8 @@ public class AdServicesExtDataStorageServiceManagerTest {
         expect.that(result.getManualInteractionWithConsentStatus())
                 .isEqualTo(STATE_NO_MANUAL_INTERACTIONS_RECORDED);
         expect.that(result.getIsNotificationDisplayed()).isEqualTo(BOOLEAN_TRUE);
+
+        verifyLogging(AD_SERVICES_API_CALLED__API_NAME__GET_AD_SERVICES_EXT_DATA, STATUS_SUCCESS);
     }
 
     @Test
@@ -124,6 +155,9 @@ public class AdServicesExtDataStorageServiceManagerTest {
         expect.that(result.getIsAdultAccount()).isEqualTo(BOOLEAN_UNKNOWN);
         expect.that(result.getManualInteractionWithConsentStatus()).isEqualTo(STATE_UNKNOWN);
         expect.that(result.getIsNotificationDisplayed()).isEqualTo(BOOLEAN_UNKNOWN);
+
+        verifyLogging(
+                AD_SERVICES_API_CALLED__API_NAME__GET_AD_SERVICES_EXT_DATA, STATUS_INTERNAL_ERROR);
     }
 
     @Test
@@ -143,6 +177,8 @@ public class AdServicesExtDataStorageServiceManagerTest {
         expect.that(result.getIsAdultAccount()).isEqualTo(BOOLEAN_UNKNOWN);
         expect.that(result.getManualInteractionWithConsentStatus()).isEqualTo(STATE_UNKNOWN);
         expect.that(result.getIsNotificationDisplayed()).isEqualTo(BOOLEAN_UNKNOWN);
+
+        verifyLogging(AD_SERVICES_API_CALLED__API_NAME__GET_AD_SERVICES_EXT_DATA, STATUS_TIMEOUT);
     }
 
     @Test
@@ -158,6 +194,8 @@ public class AdServicesExtDataStorageServiceManagerTest {
         expect.that(mManager.setAdServicesExtData(TEST_PARAMS, TEST_FIELD_LIST)).isTrue();
 
         verify(mMockWorker).setAdServicesExtData(any(), any(), any());
+
+        verifyLogging(AD_SERVICES_API_CALLED__API_NAME__PUT_AD_SERVICES_EXT_DATA, STATUS_SUCCESS);
     }
 
     @Test
@@ -174,6 +212,9 @@ public class AdServicesExtDataStorageServiceManagerTest {
         expect.that(mManager.setAdServicesExtData(TEST_PARAMS, TEST_FIELD_LIST)).isFalse();
 
         verify(mMockWorker).setAdServicesExtData(any(), any(), any());
+
+        verifyLogging(
+                AD_SERVICES_API_CALLED__API_NAME__PUT_AD_SERVICES_EXT_DATA, STATUS_INTERNAL_ERROR);
     }
 
     @Test
@@ -189,6 +230,8 @@ public class AdServicesExtDataStorageServiceManagerTest {
         expect.that(mManager.setAdServicesExtData(TEST_PARAMS, TEST_FIELD_LIST)).isFalse();
 
         verify(mMockWorker).setAdServicesExtData(any(), any(), any());
+
+        verifyLogging(AD_SERVICES_API_CALLED__API_NAME__PUT_AD_SERVICES_EXT_DATA, STATUS_TIMEOUT);
     }
 
     @Test
@@ -391,9 +434,9 @@ public class AdServicesExtDataStorageServiceManagerTest {
     }
 
     @Test
-    public void testClearAllDataAsync() {
+    public void testClearDataOnOtaAsync() {
         mockWorkerSetAdExtDataCall();
-        mManager.clearAllDataAsync();
+        mManager.clearDataOnOtaAsync();
 
         expect.that(mParamsCaptor.getValue().getIsMeasurementConsented())
                 .isEqualTo(BOOLEAN_UNKNOWN);
@@ -403,18 +446,30 @@ public class AdServicesExtDataStorageServiceManagerTest {
         expect.that(mParamsCaptor.getValue().getIsAdultAccount()).isEqualTo(BOOLEAN_UNKNOWN);
         expect.that(mParamsCaptor.getValue().getManualInteractionWithConsentStatus())
                 .isEqualTo(STATE_UNKNOWN);
-        expect.that(mParamsCaptor.getValue().getIsNotificationDisplayed())
-                .isEqualTo(BOOLEAN_UNKNOWN);
 
         expect.that(mFieldsCaptor.getValue())
                 .asList()
                 .containsExactly(
-                        FIELD_IS_NOTIFICATION_DISPLAYED,
                         FIELD_IS_MEASUREMENT_CONSENTED,
                         FIELD_IS_U18_ACCOUNT,
                         FIELD_IS_ADULT_ACCOUNT,
                         FIELD_MANUAL_INTERACTION_WITH_CONSENT_STATUS,
                         FIELD_MEASUREMENT_ROLLBACK_APEX_VERSION);
+    }
+
+    private void verifyLogging(int apiName, int expectedResultCode) {
+        ArgumentCaptor<ApiCallStats> argument = ArgumentCaptor.forClass(ApiCallStats.class);
+
+        verify(mAdServicesLogger).logApiCallStats(argument.capture());
+
+        ApiCallStats stats = argument.getValue();
+        expect.that(stats.getCode()).isEqualTo(AD_SERVICES_API_CALLED);
+        expect.that(stats.getApiClass())
+                .isEqualTo(AD_SERVICES_API_CALLED__API_CLASS__ADEXT_DATA_SERVICE);
+        expect.that(stats.getApiName()).isEqualTo(apiName);
+        expect.that(stats.getResultCode()).isEqualTo(expectedResultCode);
+        expect.that(stats.getAppPackageName()).isEqualTo(mContext.getPackageName());
+        expect.that(stats.getSdkPackageName()).isEqualTo(UNKNOWN_PACKAGE_NAME);
     }
 
     private void mockWorkerGetAdExtDataCall(AdServicesExtDataParams params) {

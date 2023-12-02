@@ -16,10 +16,14 @@
 
 package com.android.adservices.service.topics;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_INVALID_KEY_LENGTH;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
+
 import androidx.annotation.NonNull;
 
 import com.android.adservices.HpkeJni;
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -30,8 +34,6 @@ import java.util.Objects;
  */
 public class HpkeEncrypter implements Encrypter {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
-
-    private static final byte[] EMPTY_BYTE_ARRAY = new byte[] {};
 
     private static final int X25519_PUBLIC_VALUE_LEN = 32;
 
@@ -51,7 +53,7 @@ public class HpkeEncrypter implements Encrypter {
         Objects.requireNonNull(contextInfo);
 
         if (!isValidKey(publicKey)) {
-            return EMPTY_BYTE_ARRAY;
+            return null;
         }
 
         return HpkeJni.encrypt(publicKey, plainText, contextInfo);
@@ -61,10 +63,12 @@ public class HpkeEncrypter implements Encrypter {
     private boolean isValidKey(byte[] publicKey) {
         // Check if the public key length matches the X25519 public key requirement.
         if (publicKey.length != X25519_PUBLIC_VALUE_LEN) {
-            sLogger.d(
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_INVALID_KEY_LENGTH,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
+            sLogger.e(
                     "Invalid HPKE public key = %s. Expected public key length of %d, got %d.",
                     Arrays.toString(publicKey), X25519_PUBLIC_VALUE_LEN, publicKey.length);
-            // TODO(b/310699530): Add CEL here to Topics encryption
             return false;
         }
         return true;

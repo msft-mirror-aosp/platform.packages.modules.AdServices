@@ -34,6 +34,7 @@ import org.mockito.Mockito;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * Tests for {@link MeasurementDao} app deletion that affect the database, and
@@ -43,7 +44,7 @@ import java.util.Collection;
 public class DeleteExpiredDynamicIntegrationTest extends AbstractDbIntegrationTest {
     private final DatastoreManager mDatastoreManager;
 
-    @Parameterized.Parameters(name = "{2}")
+    @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> data() throws IOException, JSONException {
         InputStream inputStream = sContext.getAssets().open(
                 "measurement_delete_expired_test.json");
@@ -90,8 +91,12 @@ public class DeleteExpiredDynamicIntegrationTest extends AbstractDbIntegrationTe
 
     // The 'name' parameter is needed for the JUnit parameterized
     // test, although it's ostensibly unused by this constructor.
-    public DeleteExpiredDynamicIntegrationTest(DbState input, DbState output, String name) {
-        super(input, output);
+    public DeleteExpiredDynamicIntegrationTest(
+            DbState input,
+            DbState output,
+            Map<String, String> flagsMap,
+            String name) {
+        super(input, output, flagsMap);
         AdServicesErrorLogger errorLogger = Mockito.mock(AdServicesErrorLogger.class);
         this.mDatastoreManager =
                 new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), errorLogger);
