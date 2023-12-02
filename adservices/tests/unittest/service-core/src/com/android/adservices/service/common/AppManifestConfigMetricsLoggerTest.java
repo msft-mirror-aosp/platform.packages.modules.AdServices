@@ -38,19 +38,17 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.util.Log;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.Nullable;
 import com.android.adservices.common.SyncCallback;
 import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.mockito.ExtendedMockitoExpectations.ErrorLogUtilCallback;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.testing.common.DumpHelper;
-
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 
@@ -64,7 +62,9 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
-public final class AppManifestConfigMetricsLoggerTest extends AdServicesUnitTestCase {
+@SpyStatic(ErrorLogUtil.class)
+@SpyStatic(FlagsFactory.class)
+public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtendedMockitoTestCase {
 
     private static final String PKG_NAME = "pkg.I.am";
     private static final String PKG_NAME2 = "or.not";
@@ -77,13 +77,6 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesUnitTest
 
     static final boolean ENABLED_BY_DEFAULT = true;
     static final boolean NOT_ENABLED_BY_DEFAULT = false;
-
-    @Rule
-    public final AdServicesExtendedMockitoRule extendedMockito =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(ErrorLogUtil.class)
-                    .spyStatic(FlagsFactory.class)
-                    .build();
 
     @Mock private Context mMockContext;
     @Mock private Flags mMockFlags;
@@ -183,6 +176,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesUnitTest
                         + ")");
         logUsage(PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
         listener.assertReceived();
+        prefs.unregisterOnSharedPreferenceChangeListener(listener);
 
         int valueBefore = prefs.getInt(PKG_NAME, -1);
         expect.withMessage(
@@ -203,10 +197,10 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesUnitTest
                         + enabledByDefault
                         + ")");
         SyncOnSharedPreferenceChangeListener listener2 = new SyncOnSharedPreferenceChangeListener();
-        listener2 = new SyncOnSharedPreferenceChangeListener();
         prefs.registerOnSharedPreferenceChangeListener(listener2);
         logUsage(PKG_NAME, appExists, appHasConfig, enabledByDefault);
         listener2.assertReceived();
+        prefs.unregisterOnSharedPreferenceChangeListener(listener2);
 
         Map<String, ?> allProps = prefs.getAll();
         expect.withMessage("allProps").that(allProps).hasSize(1);
@@ -269,7 +263,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesUnitTest
                             return mPrefs;
                         });
 
-        logUsage(PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
+        logUsageAndWait(PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
 
         assertWithMessage("execution thread")
                 .that(executionThread.get())

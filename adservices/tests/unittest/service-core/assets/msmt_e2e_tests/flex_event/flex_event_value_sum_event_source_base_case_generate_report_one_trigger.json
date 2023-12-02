@@ -38,7 +38,8 @@
                     ]
                   }
                 ],
-                "max_event_level_reports": 1
+                "max_event_level_reports": 1,
+                "trigger_data_matching": "exact"
               },
               "Location": null,
               "Attribution-Reporting-Redirect": null
@@ -140,7 +141,7 @@
           "source_event_id": "2",
           "trigger_data": "0",
           "source_type": "event",
-          "trigger_summary_bucket": "[10,2147483646]",
+          "trigger_summary_bucket": [10, 2147483646],
           "randomized_trigger_rate": 0.000002494582008677539
         }
       }

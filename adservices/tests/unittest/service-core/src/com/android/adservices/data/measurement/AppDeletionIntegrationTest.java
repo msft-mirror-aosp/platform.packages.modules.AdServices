@@ -19,6 +19,9 @@ package com.android.adservices.data.measurement;
 import android.net.Uri;
 
 import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
 import org.json.JSONException;
@@ -29,6 +32,7 @@ import org.mockito.Mockito;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * Tests for {@link MeasurementDao} app deletion that affect the database.
@@ -36,9 +40,10 @@ import java.util.Collection;
 @RunWith(Parameterized.class)
 public class AppDeletionIntegrationTest extends AbstractDbIntegrationTest {
     private final Uri mUri;
+    private final AdServicesLogger mLogger;
     private final AdServicesErrorLogger mErrorLogger;
 
-    @Parameterized.Parameters(name = "{3}")
+    @Parameterized.Parameters(name = "{4}")
     public static Collection<Object[]> data() throws IOException, JSONException {
         InputStream inputStream = sContext.getAssets().open(
                 "measurement_app_uninstall_deletion_test.json");
@@ -48,15 +53,23 @@ public class AppDeletionIntegrationTest extends AbstractDbIntegrationTest {
 
     // The 'name' parameter is needed for the JUnit parameterized
     // test, although it's ostensibly unused by this constructor.
-    public AppDeletionIntegrationTest(DbState input, DbState output, Uri uri, String name) {
-        super(input, output);
-
-        this.mUri = uri;
+    public AppDeletionIntegrationTest(
+            DbState input,
+            DbState output,
+            Map<String, String> flagsMap,
+            Uri uri, String name) {
+        super(input, output, flagsMap);
+        mUri = uri;
+        mLogger = Mockito.mock(AdServicesLogger.class);
         mErrorLogger = Mockito.mock(AdServicesErrorLogger.class);
     }
 
     public void runActionToTest() {
-        new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger)
-                .runInTransaction((dao) -> dao.deleteAppRecords(mUri));
+        new MeasurementDataDeleter(
+                        new SQLDatastoreManager(
+                                DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger),
+                        FlagsFactory.getFlagsForTest(),
+                        mLogger)
+                .deleteAppUninstalledData(mUri);
     }
 }

@@ -1492,7 +1492,8 @@ public class ReportAndRegisterEventFallbackImplTest {
                 DevContext.createForDevOptionsDisabled(),
                 mMeasurementServiceMock,
                 mConsentManagerMock,
-                mContextMock);
+                mContextMock,
+                false);
     }
 
     private ReportEventTestCallback callReportEvent(ReportInteractionInput inputParams)

@@ -69,4 +69,9 @@ public final class TestAnnotations {
     public static RequiresSdkLevelAtLeastU sdkLevelAtLeastU(String reason) {
         return new AutoAnnotation_TestAnnotations_sdkLevelAtLeastU(reason);
     }
+
+    @AutoAnnotation
+    public static RequiresSdkLevelLessThanT newAnnotationForLessThanT(String reason) {
+        return new AutoAnnotation_TestAnnotations_newAnnotationForLessThanT(reason);
+    }
 }

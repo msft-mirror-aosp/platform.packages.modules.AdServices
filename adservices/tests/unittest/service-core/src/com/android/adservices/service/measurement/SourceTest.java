@@ -82,7 +82,9 @@ public class SourceTest {
                             /* UnsignedLong triggerData */ new UnsignedLong("89"),
                             /* long value */ 15L,
                             /* long triggerTime */ 1934567890L,
-                            /* UnsignedLong dedupKey */ null));
+                            /* UnsignedLong dedupKey */ null,
+                            /* UnsignedLong debugKey */ null,
+                            /* boolean hasSourceDebugKey */ false));
     @Mock private Flags mFlags;
 
     @Before
@@ -98,6 +100,7 @@ public class SourceTest {
         assertEquals(Source.Status.ACTIVE, source.getStatus());
         assertEquals(Source.SourceType.EVENT, source.getSourceType());
         assertEquals(Source.AttributionMode.UNASSIGNED, source.getAttributionMode());
+        assertEquals(Source.TriggerDataMatching.MODULUS, source.getTriggerDataMatching());
         assertNull(source.getAttributedTriggers());
     }
 
@@ -171,6 +174,7 @@ public class SourceTest {
                         .setMaxEventLevelReports(triggerSpecs.getMaxReports())
                         .setEventAttributionStatus(null)
                         .setPrivacyParameters(triggerSpecs.encodePrivacyParametersToJSONString())
+                        .setTriggerDataMatching(Source.TriggerDataMatching.EXACT)
                         .setDropSourceIfInstalled(true)
                         .build(),
                 new Source.Builder()
@@ -218,6 +222,7 @@ public class SourceTest {
                         .setAttributedTriggers(ATTRIBUTED_TRIGGERS)
                         .setTriggerSpecs(triggerSpecs)
                         .setTriggerSpecsString(triggerSpecs.encodeToJson())
+                        .setTriggerDataMatching(Source.TriggerDataMatching.EXACT)
                         .setMaxEventLevelReports(triggerSpecs.getMaxReports())
                         .setEventAttributionStatus(null)
                         .setPrivacyParameters(triggerSpecs.encodePrivacyParametersToJSONString())
@@ -461,6 +466,13 @@ public class SourceTest {
                         .build(),
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setTriggerSpecsString(triggerSpecsCountBased.encodeToJson())
+                        .build());
+        assertNotEquals(
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setTriggerDataMatching(Source.TriggerDataMatching.MODULUS)
+                        .build(),
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setTriggerDataMatching(Source.TriggerDataMatching.EXACT)
                         .build());
         assertNotEquals(
                 SourceFixture.getMinimalValidSourceBuilder()

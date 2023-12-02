@@ -394,9 +394,23 @@ public class AsyncSourceFetcher {
             return false;
         }
 
+        Source.TriggerDataMatching triggerDataMatching = Source.TriggerDataMatching.MODULUS;
+
+        if (mFlags.getMeasurementEnableTriggerDataMatching()
+                && !json.isNull(SourceHeaderContract.TRIGGER_DATA_MATCHING)) {
+            // If the token for trigger_data_matching is not in the predefined list, it will throw
+            // IllegalArgumentException that will be caught by the overall parser.
+            triggerDataMatching =
+                    Source.TriggerDataMatching.valueOf(
+                            json
+                                    .getString(SourceHeaderContract.TRIGGER_DATA_MATCHING)
+                                    .toUpperCase(Locale.ENGLISH));
+            builder.setTriggerDataMatching(triggerDataMatching);
+        }
+
         JSONObject eventReportWindows = null;
         Integer maxEventLevelReports = null;
-        if (mFlags.getMeasurementFlexLiteAPIEnabled()
+        if (mFlags.getMeasurementFlexLiteApiEnabled()
                 || mFlags.getMeasurementFlexibleEventReportingApiEnabled()) {
             if (!json.isNull(SourceHeaderContract.MAX_EVENT_LEVEL_REPORTS)) {
                 Object maxEventLevelReportsObj = json.get(
@@ -449,7 +463,8 @@ public class AsyncSourceFetcher {
                             eventReportWindows,
                             expiry,
                             asyncRegistration.getSourceType(),
-                            finalMaxEventLevelReports);
+                            finalMaxEventLevelReports,
+                            triggerDataMatching);
 
             if (!maybeTriggerSpecArray.isPresent()) {
                 LoggerFactory.getMeasurementLogger().d("Invalid Trigger Spec format");
@@ -481,7 +496,8 @@ public class AsyncSourceFetcher {
             JSONObject eventReportWindows,
             long expiry,
             Source.SourceType sourceType,
-            int maxEventLevelReports) {
+            int maxEventLevelReports,
+            Source.TriggerDataMatching triggerDataMatching) {
         List<Pair<Long, Long>> parsedEventReportWindows = Source.getOrDefaultEventReportWindows(
                 eventReportWindows, sourceType, expiry, mFlags);
         long defaultStart = parsedEventReportWindows.get(0).first;
@@ -508,6 +524,11 @@ public class AsyncSourceFetcher {
             if (triggerDataSet.size() > mFlags.getMeasurementFlexApiMaxTriggerDataCardinality()) {
                 return Optional.empty();
             }
+            if (mFlags.getMeasurementEnableTriggerDataMatching()
+                    && triggerDataMatching == Source.TriggerDataMatching.MODULUS
+                    && !isContiguousStartingAtZero(triggerDataSet)) {
+                return Optional.empty();
+            }
             return Optional.of(validTriggerSpecs);
         } catch (JSONException | IllegalArgumentException ex) {
             LoggerFactory.getMeasurementLogger().d(ex, "Trigger Spec parsing failed");
@@ -530,9 +551,11 @@ public class AsyncSourceFetcher {
                         > mFlags.getMeasurementFlexApiMaxTriggerDataCardinality()) {
             return Optional.empty();
         }
-        // Check exclusivity of trigger_data across the whole trigger spec array
+        // Check exclusivity of trigger_data across the whole trigger spec array, and validate
+        // trigger data magnitude.
         for (UnsignedLong triggerData : triggerDataList) {
-            if (!triggerDataSet.add(triggerData)) {
+            if (!triggerDataSet.add(triggerData)
+                    || triggerData.compareTo(TriggerSpecs.MAX_TRIGGER_DATA_VALUE) > 0) {
                 return Optional.empty();
             }
         }
@@ -551,7 +574,7 @@ public class AsyncSourceFetcher {
         TriggerSpec.SummaryOperatorType summaryWindowOperator =
                 TriggerSpec.SummaryOperatorType.COUNT;
         if (!triggerSpecJson.isNull(TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_WINDOW_OPERATOR)) {
-            // If a summary window operator is not in the pre-defined list, it will throw
+            // If a summary window operator is not in the predefined list, it will throw
             // IllegalArgumentException that will be caught by the overall parser.
             summaryWindowOperator =
                     TriggerSpec.SummaryOperatorType.valueOf(
@@ -566,6 +589,9 @@ public class AsyncSourceFetcher {
             summaryBuckets =
                     TriggerSpec.getLongListFromJSON(
                             triggerSpecJson, TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_BUCKETS);
+            if (summaryBuckets.size() > maxEventLevelReports) {
+                return Optional.empty();
+            }
         }
         if ((summaryBuckets == null || summaryBuckets.isEmpty())
                 && summaryWindowOperator != TriggerSpec.SummaryOperatorType.COUNT) {
@@ -876,6 +902,16 @@ public class AsyncSourceFetcher {
         return true;
     }
 
+    private static boolean isContiguousStartingAtZero(Set<UnsignedLong> unsignedLongs) {
+        UnsignedLong upperBound = new UnsignedLong(((long) unsignedLongs.size()) - 1L);
+        for (UnsignedLong unsignedLong : unsignedLongs) {
+            if (unsignedLong.compareTo(upperBound) > 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private static boolean is64BitInteger(Object obj) {
         return (obj instanceof Integer) || (obj instanceof Long);
     }
@@ -912,6 +948,7 @@ public class AsyncSourceFetcher {
         String SHARED_DEBUG_KEY = "shared_debug_key";
         String SHARED_FILTER_DATA_KEYS = "shared_filter_data_keys";
         String DROP_SOURCE_IF_INSTALLED = "drop_source_if_installed";
+        String TRIGGER_DATA_MATCHING = "trigger_data_matching";
     }
 
     private interface SourceRequestContract {

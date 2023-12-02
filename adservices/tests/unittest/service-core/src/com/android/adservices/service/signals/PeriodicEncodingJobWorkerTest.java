@@ -27,6 +27,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
@@ -270,6 +271,18 @@ public class PeriodicEncodingJobWorkerTest {
     }
 
     @Test
+    public void testEncodingPerBuyerNoSignalAvailable()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        when(mSignalStorageManager.getSignals(BUYER)).thenReturn(ImmutableMap.of());
+        mJobWorker
+                .runEncodingPerBuyer(DB_ENCODER_LOGIC_BUYER_1, TIMEOUT_SECONDS)
+                .get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        verify(mEncoderLogicHandler).deleteEncoderForBuyer(BUYER);
+        verifyNoMoreInteractions(mEncoderLogicHandler);
+        verifyZeroInteractions(mScriptEngine);
+    }
+
+    @Test
     public void testEncodingPerBuyerFailedTimeout() throws InterruptedException {
         String encoderLogic = "function fakeEncodeJs() {}";
         when(mEncoderLogicHandler.getEncoder(BUYER)).thenReturn(encoderLogic);
@@ -361,6 +374,7 @@ public class PeriodicEncodingJobWorkerTest {
     @Test
     public void testEncodeSignals_tooManyFailure_noJsExecution()
             throws ExecutionException, InterruptedException, TimeoutException {
+        when(mSignalStorageManager.getSignals(BUYER)).thenReturn(FAKE_SIGNALS);
         int maxFailure =
                 Flags.PROTECTED_SIGNALS_MAX_JS_FAILURE_EXECUTION_ON_CERTAIN_VERSION_BEFORE_STOP;
         DBEncoderLogicMetadata metadata =
@@ -373,7 +387,9 @@ public class PeriodicEncodingJobWorkerTest {
 
         mJobWorker.runEncodingPerBuyer(metadata, 5).get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        verifyZeroInteractions(mScriptEngine, mSignalStorageManager);
+        verify(mSignalStorageManager).getSignals(BUYER);
+        verifyNoMoreInteractions(mSignalStorageManager);
+        verifyZeroInteractions(mScriptEngine);
     }
 
     @Test

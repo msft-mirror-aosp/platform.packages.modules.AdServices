@@ -101,11 +101,19 @@ public interface Flags extends CommonFlags {
     }
 
     /** Flag to enable encrypted Topics feature for Topics API. */
-    boolean TOPICS_ENABLE_ENCRYPTION = false;
+    boolean TOPICS_ENCRYPTION_ENABLED = false;
 
     /** Returns the feature flag to enable encryption for Topics API. */
-    default boolean getTopicsEnableEncryption() {
-        return TOPICS_ENABLE_ENCRYPTION;
+    default boolean getTopicsEncryptionEnabled() {
+        return TOPICS_ENCRYPTION_ENABLED;
+    }
+
+    /** Flag to disable plaintext Topics for Topics API response. */
+    boolean TOPICS_DISABLE_PLAINTEXT_RESPONSE = false;
+
+    /** Returns the feature flag to disable plaintext fields Topics API response. */
+    default boolean getTopicsDisablePlaintextResponse() {
+        return TOPICS_DISABLE_PLAINTEXT_RESPONSE;
     }
 
     /**
@@ -582,6 +590,26 @@ public interface Flags extends CommonFlags {
         return MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
     }
 
+    int MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW = 100;
+
+    /**
+     * Returns maximum event attributions per rate limit window. Rate limit unit: (Source Site,
+     * Destination Site, Reporting Site, Window).
+     */
+    default int getMeasurementMaxEventAttributionPerRateLimitWindow() {
+        return MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
+    }
+
+    int MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW = 100;
+
+    /**
+     * Returns maximum aggregate attributions per rate limit window. Rate limit unit: (Source Site,
+     * Destination Site, Reporting Site, Window).
+     */
+    default int getMeasurementMaxAggregateAttributionPerRateLimitWindow() {
+        return MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
+    }
+
     int MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION = 10;
 
     /**
@@ -658,7 +686,7 @@ public interface Flags extends CommonFlags {
     boolean MEASUREMENT_FLEX_LITE_API_ENABLED = true;
 
     /** Returns true if flex lite api is enabled else false. */
-    default boolean getMeasurementFlexLiteAPIEnabled() {
+    default boolean getMeasurementFlexLiteApiEnabled() {
         return MEASUREMENT_FLEX_LITE_API_ENABLED;
     }
 
@@ -1003,6 +1031,8 @@ public interface Flags extends CommonFlags {
     int PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES = (int) (10 * 1024);
     int PROTECTED_SIGNALS_MAX_JS_FAILURE_EXECUTION_ON_CERTAIN_VERSION_BEFORE_STOP = 3;
     long PROTECTED_SIGNALS_ENCODER_REFRESH_WINDOW_SECONDS = 24L * 60L * 60L; // 1 day
+    int PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_BYTES = 10 * 1024;
+    int PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES = 15 * 1024;
 
     /** Returns {@code true} feature flag if Periodic encoding of Protected Signals is enabled. */
     default boolean getProtectedSignalsPeriodicEncodingEnabled() {
@@ -1037,6 +1067,19 @@ public interface Flags extends CommonFlags {
     /** Returns the maximum time window beyond which encoder logic should be refreshed */
     default long getProtectedSignalsEncoderRefreshWindowSeconds() {
         return PROTECTED_SIGNALS_ENCODER_REFRESH_WINDOW_SECONDS;
+    }
+
+    /** Returns the maximum size of signals in storage per buyer. */
+    default int getProtectedSignalsMaxSignalSizePerBuyerBytes() {
+        return PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_BYTES;
+    }
+
+    /**
+     * Returns the maximum size of signals in the storage per buyer with a graceful oversubscription
+     * policy.
+     */
+    default int getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes() {
+        return PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES;
     }
 
     int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT = 10_000;
@@ -1658,6 +1701,12 @@ public interface Flags extends CommonFlags {
         return CONSENT_MANAGER_LAZY_ENABLE_MODE;
     }
 
+    boolean CONSENT_ALREADY_INTERACTED_FIX_ENABLE = true;
+
+    default boolean getConsentAlreadyInteractedEnableMode() {
+        return CONSENT_ALREADY_INTERACTED_FIX_ENABLE;
+    }
+
     long CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS =
             /* hours */ 9 * /* minutes */ 60 * /* seconds */ 60 * /* milliseconds */ 1000; // 9 AM
 
@@ -1704,6 +1753,20 @@ public interface Flags extends CommonFlags {
 
     default boolean getConsentManagerDebugMode() {
         return CONSENT_MANAGER_DEBUG_MODE;
+    }
+
+    boolean DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE = false;
+
+    /** When enabled, the device is treated as OTA device. */
+    default boolean getConsentManagerOTADebugMode() {
+        return DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE;
+    }
+
+    boolean DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK = false;
+
+    /** When enabled, perform age check in rvc post ota notification channel. */
+    default boolean getRvcPostOtaNotifAgeCheck() {
+        return DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK;
     }
 
     /** Available sources of truth to get consent for PPAPI. */
@@ -3342,12 +3405,20 @@ public interface Flags extends CommonFlags {
         return DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED;
     }
 
-    /** Default value for flexible event reporting API */
+    /** Default value for Measurement flexible event reporting API */
     boolean MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED = false;
 
-    /** Returns whether to enable flexible event reporting API */
+    /** Returns whether to enable Measurement flexible event reporting API */
     default boolean getMeasurementFlexibleEventReportingApiEnabled() {
         return MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED;
+    }
+
+    /** Default value for Measurement trigger data matching */
+    boolean MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING = true;
+
+    /** Returns whether to enable Measurement trigger data matching */
+    default boolean getMeasurementEnableTriggerDataMatching() {
+        return MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING;
     }
 
     /** Default maximum sources per publisher */
@@ -3532,6 +3603,14 @@ public interface Flags extends CommonFlags {
     /** Returns whether Measurement source deactivation after filtering feature is enabled. */
     default boolean getMeasurementEnableSourceDeactivationAfterFiltering() {
         return MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING;
+    }
+
+    /** Default Measurement scoped attribution rate limit feature flag. */
+    boolean MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT = true;
+
+    /** Returns whether Measurement scoped attribution rate limit feature is enabled. */
+    default boolean getMeasurementEnableScopedAttributionRateLimit() {
+        return MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT;
     }
 
     /** Default Measurement app package name logging flag. */
@@ -3870,7 +3949,7 @@ public interface Flags extends CommonFlags {
     }
 
     /** Default RVC UX feature flag.. */
-    boolean DEFAULT_RVC_UX_ENABLED = false;
+    boolean DEFAULT_RVC_UX_ENABLED = SDK_INT == Build.VERSION_CODES.R;
 
     /** RVC UX feature flag.. */
     default boolean getEnableRvcUx() {
@@ -4074,6 +4153,14 @@ public interface Flags extends CommonFlags {
     /** Returns true when pre-install check is enabled. */
     default boolean getMeasurementEnablePreinstallCheck() {
         return MEASUREMENT_ENABLE_PREINSTALL_CHECK;
+    }
+
+    /** Default value of flag for session stable kill switches. */
+    boolean MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES = true;
+
+    /** Returns true when session stable kill switches are enabled. */
+    default boolean getMeasurementEnableSessionStableKillSwitches() {
+        return MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES;
     }
 
     /** Default value of flag for logging consent migration metrics when OTA from S to T+. */

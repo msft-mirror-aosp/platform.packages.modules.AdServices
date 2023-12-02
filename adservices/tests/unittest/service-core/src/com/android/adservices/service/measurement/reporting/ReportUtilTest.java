@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement.reporting;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import android.net.Uri;
 import android.util.Pair;
@@ -25,6 +26,7 @@ import android.util.Pair;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.junit.Test;
 
 import java.util.List;
@@ -68,14 +70,26 @@ public class ReportUtilTest {
     }
 
     @Test
-    public void serializeSummaryBucket_baseCase_returnsExpectedFormat() {
+    public void serializeSummaryBucket_baseCase_returnsExpectedFormat() throws JSONException {
         Pair<Long, Long> summaryBucket = new Pair<>(1L, 5L);
-        assertEquals("[1,5]", ReportUtil.serializeSummaryBucket(summaryBucket));
+        JSONArray result = ReportUtil.serializeSummaryBucket(summaryBucket);
+        Object first = result.get(0);
+        assertTrue(first instanceof Number);
+        assertEquals(summaryBucket.first, Long.valueOf((long) first));
+        Object second = result.get(1);
+        assertTrue(second instanceof Number);
+        assertEquals(summaryBucket.second, Long.valueOf((long) second));
     }
 
     @Test
-    public void serializeSummaryBucket_largestBucket_returnsExpectedFormat() {
+    public void serializeSummaryBucket_largestBucket_returnsExpectedFormat() throws JSONException {
         Pair<Long, Long> summaryBucket = new Pair<>(100L, Long.MAX_VALUE);
-        assertEquals("[100,9223372036854775807]", ReportUtil.serializeSummaryBucket(summaryBucket));
+        JSONArray result = ReportUtil.serializeSummaryBucket(summaryBucket);
+        Object first = result.get(0);
+        assertTrue(first instanceof Number);
+        assertEquals(summaryBucket.first, Long.valueOf((long) first));
+        Object second = result.get(1);
+        assertTrue(second instanceof Number);
+        assertEquals(summaryBucket.second, Long.valueOf((long) second));
     }
 }

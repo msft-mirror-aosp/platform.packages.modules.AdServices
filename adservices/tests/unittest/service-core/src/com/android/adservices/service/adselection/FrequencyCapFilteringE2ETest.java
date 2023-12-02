@@ -561,7 +561,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesUnitTestCase {
                 DBCustomAudienceFixture.getValidBuilderByBuyerNoFilters(CommonFixture.VALID_BUYER_1)
                         .setAds(Collections.singletonList(AD_WITH_FILTER))
                         .build(),
-                CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"));
+                CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback adSelectionCallback = callSelectAds();
 
@@ -594,7 +595,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesUnitTestCase {
                 DBCustomAudienceFixture.getValidBuilderByBuyerNoFilters(CommonFixture.VALID_BUYER_1)
                         .setAds(Arrays.asList(AD_WITH_FILTER))
                         .build(),
-                CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"));
+                CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback callback = callSelectAds();
 
@@ -627,7 +629,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesUnitTestCase {
                 DBCustomAudienceFixture.getValidBuilderByBuyerNoFilters(CommonFixture.VALID_BUYER_1)
                         .setAds(Arrays.asList(AD_WITH_FILTER))
                         .build(),
-                CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"));
+                CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback adSelectionCallback = callSelectAds();
 
@@ -672,7 +675,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesUnitTestCase {
                 DBCustomAudienceFixture.getValidBuilderByBuyerNoFilters(CommonFixture.VALID_BUYER_1)
                         .setAds(Arrays.asList(AD_WITH_FILTER))
                         .build(),
-                CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"));
+                CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback adSelectionCallback = callSelectAds();
 
@@ -707,7 +711,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesUnitTestCase {
                 DBCustomAudienceFixture.getValidBuilderByBuyerNoFilters(CommonFixture.VALID_BUYER_2)
                         .setAds(Arrays.asList(AD_WITH_FILTER))
                         .build(),
-                CommonFixture.getUri(CommonFixture.VALID_BUYER_2, "/update"));
+                CommonFixture.getUri(CommonFixture.VALID_BUYER_2, "/update"),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback adSelectionCallback = callSelectAds();
 
@@ -794,7 +799,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesUnitTestCase {
                 DBCustomAudienceFixture.getValidBuilderByBuyerNoFilters(CommonFixture.VALID_BUYER_1)
                         .setAds(Arrays.asList(AD_WITH_FILTER))
                         .build(),
-                CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"));
+                CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback adSelectionCallback = callSelectAds();
 
@@ -909,7 +915,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesUnitTestCase {
                 DBCustomAudienceFixture.getValidBuilderByBuyerNoFilters(CommonFixture.VALID_BUYER_1)
                         .setAds(Arrays.asList(AD_WITH_FILTER))
                         .build(),
-                CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"));
+                CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback adSelectionCallback = callSelectAds();
 
