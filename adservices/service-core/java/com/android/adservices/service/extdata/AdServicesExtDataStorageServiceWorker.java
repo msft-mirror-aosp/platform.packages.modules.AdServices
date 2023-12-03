@@ -27,7 +27,9 @@ import android.adservices.extdata.IGetAdServicesExtDataCallback;
 import android.annotation.NonNull;
 import android.content.Context;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
+import com.android.adservices.service.FlagsFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -43,12 +45,15 @@ public final class AdServicesExtDataStorageServiceWorker {
 
     private final ServiceBinder<IAdServicesExtDataStorageService> mServiceBinder;
 
+    private AdServicesExtDataStorageServiceDebugProxy mDebugProxy;
+
     private AdServicesExtDataStorageServiceWorker(Context context) {
         mServiceBinder =
                 ServiceBinder.getServiceBinder(
                         context,
                         AdServicesExtDataStorageService.SERVICE_INTERFACE,
                         IAdServicesExtDataStorageService.Stub::asInterface);
+        mDebugProxy = AdServicesExtDataStorageServiceDebugProxy.getInstance(context);
     }
 
     /** Gets a singleton instance of {@link AdServicesExtDataStorageServiceWorker}. */
@@ -77,6 +82,14 @@ public final class AdServicesExtDataStorageServiceWorker {
 
         IAdServicesExtDataStorageService service = getService();
         if (service == null) {
+            if (FlagsFactory.getFlags().getEnableAdExtServiceDebugProxy()) {
+                LogUtil.d(
+                        "AdExt Service is null and enable debug proxy flag is true, "
+                                + "getting data via proxy");
+                Objects.requireNonNull(mDebugProxy);
+                mDebugProxy.getAdServicesExtData(callback);
+                return;
+            }
             setCallbackOnError(
                     callback,
                     new IllegalStateException("Unable to find AdServicesExtDataStorageService!"),
@@ -109,6 +122,14 @@ public final class AdServicesExtDataStorageServiceWorker {
 
         IAdServicesExtDataStorageService service = getService();
         if (service == null) {
+            if (FlagsFactory.getFlags().getEnableAdExtServiceDebugProxy()) {
+                LogUtil.d(
+                        "AdExt Service is null and enable debug proxy flag is true putting data "
+                                + "via debug proxy");
+                Objects.requireNonNull(mDebugProxy);
+                mDebugProxy.setAdServicesExtData(params, fieldsToUpdate, callback);
+                return;
+            }
             setCallbackOnError(
                     callback,
                     new IllegalStateException("Unable to find AdServicesExtDataStorageService!"),
@@ -158,5 +179,10 @@ public final class AdServicesExtDataStorageServiceWorker {
     @VisibleForTesting
     void unbindFromService() {
         mServiceBinder.unbindFromService();
+    }
+
+    @VisibleForTesting
+    public void setProxy(AdServicesExtDataStorageServiceDebugProxy proxy) {
+        mDebugProxy = proxy;
     }
 }

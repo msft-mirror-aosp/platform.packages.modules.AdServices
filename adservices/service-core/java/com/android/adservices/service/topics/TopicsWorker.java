@@ -217,9 +217,12 @@ public class TopicsWorker {
             List<byte[]> encapsulatedKeys = new ArrayList<>(combinedTopics.size());
 
             for (CombinedTopic combinedTopic : combinedTopics) {
-                taxonomyVersions.add(combinedTopic.getTopic().getTaxonomyVersion());
-                modelVersions.add(combinedTopic.getTopic().getModelVersion());
-                topicIds.add(combinedTopic.getTopic().getTopic());
+                if (!mFlags.getTopicsDisablePlaintextResponse()) {
+                    // Set plaintext unencrypted topics only when flag is false.
+                    taxonomyVersions.add(combinedTopic.getTopic().getTaxonomyVersion());
+                    modelVersions.add(combinedTopic.getTopic().getModelVersion());
+                    topicIds.add(combinedTopic.getTopic().getTopic());
+                }
 
                 if (!combinedTopic
                         .getEncryptedTopic()

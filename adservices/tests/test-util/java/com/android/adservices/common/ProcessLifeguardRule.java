@@ -33,8 +33,8 @@ import java.util.List;
  */
 public final class ProcessLifeguardRule extends AbstractProcessLifeguardRule {
 
-    public ProcessLifeguardRule() {
-        super(AndroidLogger.getInstance());
+    public ProcessLifeguardRule(Mode mode) {
+        super(AndroidLogger.getInstance(), mode);
     }
 
     @Override
@@ -43,31 +43,47 @@ public final class ProcessLifeguardRule extends AbstractProcessLifeguardRule {
     }
 
     @Override
-    protected UncaughtBackgroundException newUncaughtBackgroundException(
+    protected void ignoreUncaughtBackgroundException(
             String testName,
+            Thread thread,
             List<String> allTests,
             List<String> lastTests,
             Throwable uncaughtThrowable) {
+        super.ignoreUncaughtBackgroundException(
+                testName, thread, allTests, lastTests, uncaughtThrowable);
         writeToTestStorage(
-                testName, allTests, lastTests, /* testFailure= */ null, uncaughtThrowable);
-        return super.newUncaughtBackgroundException(
-                testName, allTests, lastTests, uncaughtThrowable);
+                testName, thread, allTests, lastTests, /* testFailure= */ null, uncaughtThrowable);
     }
 
     @Override
     protected UncaughtBackgroundException newUncaughtBackgroundException(
             String testName,
+            Thread thread,
+            List<String> allTests,
+            List<String> lastTests,
+            Throwable uncaughtThrowable) {
+        writeToTestStorage(
+                testName, thread, allTests, lastTests, /* testFailure= */ null, uncaughtThrowable);
+        return super.newUncaughtBackgroundException(
+                testName, thread, allTests, lastTests, uncaughtThrowable);
+    }
+
+    @Override
+    protected UncaughtBackgroundException newUncaughtBackgroundException(
+            String testName,
+            Thread thread,
             List<String> allTests,
             List<String> lastTests,
             Throwable testFailure,
             Throwable uncaughtThrowable) {
-        writeToTestStorage(testName, allTests, lastTests, testFailure, uncaughtThrowable);
+        writeToTestStorage(testName, thread, allTests, lastTests, testFailure, uncaughtThrowable);
         return super.newUncaughtBackgroundException(
-                testName, allTests, lastTests, testFailure, uncaughtThrowable);
+                testName, thread, allTests, lastTests, testFailure, uncaughtThrowable);
     }
 
     private void writeToTestStorage(
             String testName,
+            Thread thread,
             List<String> allTests,
             List<String> lastTests,
             @Nullable Throwable testFailure,
@@ -75,9 +91,11 @@ public final class ProcessLifeguardRule extends AbstractProcessLifeguardRule {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
 
+        sw.append("Mode: ").append(mMode.toString()).append("\n");
+        sw.append("Thread: ").append(thread.toString()).append("\n");
+
         sw.append("Uncaught failure: ");
         uncaughtThrowable.printStackTrace(pw);
-
         if (testFailure != null) {
             sw.append("Test failure: ");
             testFailure.printStackTrace(pw);

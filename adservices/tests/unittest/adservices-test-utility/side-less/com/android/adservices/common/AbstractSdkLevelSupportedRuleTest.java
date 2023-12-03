@@ -27,6 +27,7 @@ import static com.android.adservices.common.TestAnnotations.newAnnotationForLess
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel;
+import com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkRange;
 import com.android.adservices.common.Logger.RealLogger;
 
 import com.google.common.truth.Expect;
@@ -363,16 +364,26 @@ public class AbstractSdkLevelSupportedRuleTest {
                 /* ruleLevel= */ R, /* deviceLevel= */ U);
         testSkippedWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithLessThanT(
                 /* ruleLevel= */ S, /* deviceLevel= */ T);
+
         testSkippedWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithLessThanT(
                 /* ruleLevel= */ S, /* deviceLevel= */ U);
         testSkippedWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithLessThanT(
                 /* ruleLevel= */ S2, /* deviceLevel= */ T);
         testSkippedWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithLessThanT(
                 /* ruleLevel= */ S2, /* deviceLevel= */ U);
-        testSkippedWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithLessThanT(
+    }
+
+    // Should fail because the annotation is out of the range of the rule (i.e. < S2 and >= T)
+    @Test
+    public void testAnnotatedWithRequiresSdkLevelLessThanT_invalid() {
+        testThrewWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithLessThanT(
                 /* ruleLevel= */ T, /* deviceLevel= */ T);
-        testSkippedWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithLessThanT(
+        testThrewWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithLessThanT(
                 /* ruleLevel= */ T, /* deviceLevel= */ U);
+        testThrewWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithLessThanT(
+                /* ruleLevel= */ U, /* deviceLevel= */ T);
+        testThrewWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithLessThanT(
+                /* ruleLevel= */ U, /* deviceLevel= */ U);
     }
 
     @Test
@@ -412,8 +423,27 @@ public class AbstractSdkLevelSupportedRuleTest {
 
         StringSubject exceptionMessage =
                 expect.withMessage("exception message").that(e).hasMessageThat();
-        exceptionMessage.contains("@RequiresSdkLevelLessThanT");
+        exceptionMessage.contains(
+                AndroidSdkRange.forRange(ruleLevel.getLevel(), S2.getLevel()).toString());
         exceptionMessage.contains(REASON);
+
+        mBaseStatement.assertNotEvaluated();
+    }
+
+    private void testThrewWhenRuleIsAtLeastXDeviceIsYAndTestAnnotatedWithLessThanT(
+            AndroidSdkLevel ruleLevel, AndroidSdkLevel deviceLevel) {
+        var rule = newRule(ruleLevel, deviceLevel);
+        Description testMethod = newTestMethod(newAnnotationForLessThanT(REASON));
+
+        IllegalArgumentException e =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> rule.apply(mBaseStatement, testMethod).evaluate());
+
+        StringSubject exceptionMessage =
+                expect.withMessage("exception message").that(e).hasMessageThat();
+        exceptionMessage.matches(
+                ".*Invalid range.*minLevel=" + ruleLevel.getLevel() + ".*" + REASON + ".*");
 
         mBaseStatement.assertNotEvaluated();
     }
@@ -497,7 +527,7 @@ public class AbstractSdkLevelSupportedRuleTest {
         expect.withMessage("exception message")
                 .that(e)
                 .hasMessageThat()
-                .contains("SDK level " + ruleLevel);
+                .contains(AndroidSdkRange.forAtLeast(ruleLevel.getLevel()).toString());
 
         mBaseStatement.assertNotEvaluated();
     }
@@ -516,7 +546,8 @@ public class AbstractSdkLevelSupportedRuleTest {
 
         StringSubject exceptionMessage =
                 expect.withMessage("exception message").that(e).hasMessageThat();
-        exceptionMessage.contains("SDK level " + annotationLevel);
+        exceptionMessage.contains(
+                AndroidSdkRange.forAtLeast(annotationLevel.getLevel()).toString());
         exceptionMessage.contains(REASON);
 
         mBaseStatement.assertNotEvaluated();
@@ -545,7 +576,9 @@ public class AbstractSdkLevelSupportedRuleTest {
         private final AndroidSdkLevel mDeviceLevel;
 
         private FakeSdkLevelSupportedRule(AndroidSdkLevel ruleLevel, AndroidSdkLevel deviceLevel) {
-            super(StandardStreamsLogger.getInstance(), ruleLevel);
+            super(
+                    StandardStreamsLogger.getInstance(),
+                    AndroidSdkRange.forAtLeast(ruleLevel.getLevel()));
 
             mDeviceLevel = deviceLevel;
         }

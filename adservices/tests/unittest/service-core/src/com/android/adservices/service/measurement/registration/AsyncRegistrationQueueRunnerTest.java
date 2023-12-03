@@ -118,6 +118,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesUnitTestCa
     private static final String DEFAULT_ENROLLMENT_ID = "enrollment_id";
     private static final Uri DEFAULT_REGISTRANT = Uri.parse("android-app://com.registrant");
     private static final Uri DEFAULT_VERIFIED_DESTINATION = Uri.parse("android-app://com.example");
+    private static final String DEFAULT_SOURCE_ID = UUID.randomUUID().toString();
     private static final String SDK_PACKAGE_NAME = "sdk.package.name";
     private static final Uri APP_TOP_ORIGIN =
             Uri.parse("android-app://" + sDefaultContext.getPackageName());
@@ -217,7 +218,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesUnitTestCa
     }
 
     @Before
-    public void before() throws RemoteException {
+    public void before() throws Exception {
         MockitoAnnotations.initMocks(this);
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
@@ -265,6 +266,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesUnitTestCa
                         .MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW);
         when(mFlags.getMeasurementDestinationRateLimitWindow())
                 .thenReturn(Flags.MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW);
+        when(mMeasurementDao.insertSource(any())).thenReturn(DEFAULT_SOURCE_ID);
         mContext = spy(sDefaultContext);
         when(mContext.getPackageManager()).thenReturn(mPackageManager);
     }
@@ -1974,6 +1976,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesUnitTestCa
 
         assertEquals(
                 new Attribution.Builder()
+                        .setSourceId(DEFAULT_SOURCE_ID)
                         .setDestinationOrigin(source.getAppDestinations().get(0).toString())
                         .setDestinationSite(source.getAppDestinations().get(0).toString())
                         .setEnrollmentId(source.getEnrollmentId())
@@ -2024,6 +2027,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesUnitTestCa
 
         assertEquals(
                 new Attribution.Builder()
+                        .setSourceId(DEFAULT_SOURCE_ID)
                         .setDestinationOrigin(source.getWebDestinations().get(0).toString())
                         .setDestinationSite(source.getWebDestinations().get(0).toString())
                         .setEnrollmentId(source.getEnrollmentId())
@@ -2081,6 +2085,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesUnitTestCa
                 .insertAttribution(attributionRateLimitArgCaptor.capture());
         assertEquals(
                 new Attribution.Builder()
+                        .setSourceId(DEFAULT_SOURCE_ID)
                         .setDestinationOrigin(source.getAppDestinations().get(0).toString())
                         .setDestinationSite(source.getAppDestinations().get(0).toString())
                         .setEnrollmentId(source.getEnrollmentId())
@@ -2094,6 +2099,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesUnitTestCa
 
         assertEquals(
                 new Attribution.Builder()
+                        .setSourceId(DEFAULT_SOURCE_ID)
                         .setDestinationOrigin(source.getWebDestinations().get(0).toString())
                         .setDestinationSite(source.getWebDestinations().get(0).toString())
                         .setEnrollmentId(source.getEnrollmentId())
@@ -2224,6 +2230,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesUnitTestCa
 
         assertEquals(
                 new Attribution.Builder()
+                        .setSourceId(DEFAULT_SOURCE_ID)
                         .setDestinationOrigin(source.getAppDestinations().get(0).toString())
                         .setDestinationSite(source.getAppDestinations().get(0).toString())
                         .setEnrollmentId(source.getEnrollmentId())
@@ -2862,7 +2869,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesUnitTestCa
     public void isSourceAllowedToInsert_flexLiteApiExceedMaxInfoGain_fail()
             throws DatastoreException {
         // setup
-        when(mFlags.getMeasurementFlexLiteAPIEnabled()).thenReturn(true);
+        when(mFlags.getMeasurementFlexLiteApiEnabled()).thenReturn(true);
         when(mFlags.getMeasurementFlexApiMaxInformationGainEvent())
                 .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT);
         when(mFlags.getMeasurementFlexApiMaxInformationGainNavigation())
@@ -2917,7 +2924,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesUnitTestCa
     public void isSourceAllowedToInsert_flexLiteApiExceedMaxInfoGain_pass()
             throws DatastoreException {
         // setup
-        when(mFlags.getMeasurementFlexLiteAPIEnabled()).thenReturn(true);
+        when(mFlags.getMeasurementFlexLiteApiEnabled()).thenReturn(true);
         when(mFlags.getMeasurementFlexApiMaxInformationGainEvent())
                 .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT);
         when(mFlags.getMeasurementFlexApiMaxInformationGainNavigation())
