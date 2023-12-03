@@ -257,7 +257,29 @@ class AttributionJobHandler {
                                 trigger.getEnrollmentId());
                     }
 
-                    if (shouldAttributionBeBlockedByRateLimits(source, trigger, measurementDao)) {
+                    // For flex event attribution, we delete attribution records of pending reports
+                    // and process a new attribution state. The count of attributions affects the
+                    // alloted report quota, as well as limits calculated in different code paths
+                    // form here so we retrieve it once and pass as needed.
+                    long eventAttributionCount =
+                            mFlags.getMeasurementEnableScopedAttributionRateLimit()
+                                    ? measurementDao.getAttributionsPerRateLimitWindow(
+                                            Attribution.Scope.EVENT, source, trigger)
+                                    : measurementDao.getAttributionsPerRateLimitWindow(
+                                            source, trigger);
+
+                    long aggregateAttributionCount =
+                            mFlags.getMeasurementEnableScopedAttributionRateLimit()
+                                    ? measurementDao.getAttributionsPerRateLimitWindow(
+                                            Attribution.Scope.AGGREGATE, source, trigger)
+                                    // If scoped attribution is not enabled, eventAttributionCount
+                                    // and aggregateAttributionCount are the same, total count.
+                                    : eventAttributionCount;
+
+                    // Attribution count passed here can be either `eventAttributionCount` or
+                    // `aggregateAttributionCount` since this method won't use scoped attribution.
+                    if (shouldAttributionBeBlockedByRateLimits(
+                            eventAttributionCount, source, trigger, measurementDao)) {
                         attributionStatus.setAttributionResult(
                                 AttributionStatus.AttributionResult.NOT_ATTRIBUTED);
                         attributionStatus.setFailureType(
@@ -268,11 +290,19 @@ class AttributionJobHandler {
 
                     TriggeringStatus aggregateTriggeringStatus =
                             maybeGenerateAggregateReport(
-                                    source, trigger, measurementDao, attributionStatus);
+                                    source,
+                                    trigger,
+                                    aggregateAttributionCount,
+                                    measurementDao,
+                                    attributionStatus);
 
                     TriggeringStatus eventTriggeringStatus =
                             maybeGenerateEventReport(
-                                    source, trigger, measurementDao, attributionStatus);
+                                    source,
+                                    trigger,
+                                    eventAttributionCount,
+                                    measurementDao,
+                                    attributionStatus);
 
                     boolean isEventTriggeringStatusAttributed =
                             eventTriggeringStatus == TriggeringStatus.ATTRIBUTED;
@@ -288,9 +318,13 @@ class AttributionJobHandler {
                         }
                         attributeTrigger(trigger, measurementDao);
                         if (mFlags.getMeasurementEnableScopedAttributionRateLimit()) {
-                            if (isEventTriggeringStatusAttributed) {
-                                insertAttribution(
-                                        Attribution.Scope.EVENT, source, trigger, measurementDao);
+                            // Non-flex source, insert a single attribution record. (For flex
+                            // sources, we insert a variable number of attribution rate-limit
+                            // records during processing.)
+                            if (source.getTriggerSpecs() == null
+                                    && isEventTriggeringStatusAttributed) {
+                                insertAttribution(Attribution.Scope.EVENT, source, trigger,
+                                        measurementDao);
                             }
                             if (isAggregateTriggeringStatusAttributed) {
                                 insertAttribution(
@@ -299,7 +333,12 @@ class AttributionJobHandler {
                                         trigger,
                                         measurementDao);
                             }
-                        } else {
+                        // Non-scoped attribution rate-limiting: insert attribution if aggregate
+                        // report was created or if an event report was created and the source is
+                        // non-flex.
+                        } else if (isAggregateTriggeringStatusAttributed
+                                || (isEventTriggeringStatusAttributed
+                                      && source.getTriggerSpecs() == null)) {
                             insertAttribution(source, trigger, measurementDao);
                         }
                         attributionStatus.setAttributionResult(
@@ -318,10 +357,10 @@ class AttributionJobHandler {
     }
 
     private boolean shouldAttributionBeBlockedByRateLimits(
-            Source source, Trigger trigger, IMeasurementDao measurementDao)
+            long attributionCount, Source source, Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
         if ((!mFlags.getMeasurementEnableScopedAttributionRateLimit()
-                && !hasAttributionQuota(source, trigger, measurementDao))
+                && !hasAttributionQuota(attributionCount, source, trigger, measurementDao))
                         || !isReportingOriginWithinPrivacyBounds(source, trigger, measurementDao)) {
             LoggerFactory.getMeasurementLogger()
                     .d(
@@ -335,12 +374,17 @@ class AttributionJobHandler {
     private TriggeringStatus maybeGenerateAggregateReport(
             Source source,
             Trigger trigger,
+            long attributionCount,
             IMeasurementDao measurementDao,
             AttributionStatus attributionStatus)
             throws DatastoreException {
         if (mFlags.getMeasurementEnableScopedAttributionRateLimit()
                 && !hasAttributionQuota(
-                        Attribution.Scope.AGGREGATE, source, trigger, measurementDao)) {
+                      attributionCount,
+                      Attribution.Scope.AGGREGATE,
+                      source,
+                      trigger,
+                      measurementDao)) {
             LoggerFactory.getMeasurementLogger()
                     .d("Attribution blocked by aggregate rate limits. Source ID: %s ; "
                             + "Trigger ID: %s ", source.getId(), trigger.getId());
@@ -689,6 +733,7 @@ class AttributionJobHandler {
     private TriggeringStatus maybeGenerateEventReport(
             Source source,
             Trigger trigger,
+            long attributionCount,
             IMeasurementDao measurementDao,
             AttributionStatus attributionStatus)
             throws DatastoreException {
@@ -698,9 +743,16 @@ class AttributionJobHandler {
             return TriggeringStatus.DROPPED;
         }
 
-        if (mFlags.getMeasurementEnableScopedAttributionRateLimit()
+        // Non-flex source can determine attribution limit here. For flex sources, attribution count
+        // can limit report quota rather than prevent reporting altogether.
+        if (source.getTriggerSpecs() == null
+                && mFlags.getMeasurementEnableScopedAttributionRateLimit()
                 && !hasAttributionQuota(
-                        Attribution.Scope.EVENT, source, trigger, measurementDao)) {
+                        attributionCount,
+                        Attribution.Scope.EVENT,
+                        source,
+                        trigger,
+                        measurementDao)) {
             LoggerFactory.getMeasurementLogger()
                     .d("Attribution blocked by event rate limits. Source ID: %s ; "
                             + "Trigger ID: %s ", source.getId(), trigger.getId());
@@ -820,16 +872,17 @@ class AttributionJobHandler {
             }
         // The source is using flexible event API
         } else if (!generateFlexEventReports(
-                source, trigger, eventTrigger, debugKeyPair, measurementDao)) {
+                source, trigger, eventTrigger, attributionCount, debugKeyPair, measurementDao)) {
             return TriggeringStatus.DROPPED;
         }
 
         return TriggeringStatus.ATTRIBUTED;
     }
 
-    private static int restoreTriggerContributionsAndProvisionFlexEventReportQuota(
+    private long restoreTriggerContributionsAndProvisionFlexEventReportQuota(
             Source source,
             Trigger trigger,
+            long attributionCount,
             Map<UnsignedLong, Integer> triggerDataToBucketIndexMap,
             IMeasurementDao measurementDao) throws DatastoreException {
 
@@ -851,18 +904,26 @@ class AttributionJobHandler {
             return 0;
         }
 
-        // Delete pending reports. We will recreate an updated sequence below.
-        for (EventReport eventReport : reportsToDelete) {
-            measurementDao.deleteEventReport(eventReport);
-        }
+        // Delete pending reports and associated attribution rate-limit records. We will recreate an
+        // updated sequence below.
+        measurementDao.deleteFlexEventReportsAndAttributions(reportsToDelete);
 
-        return maxEventReports - numEarlierScheduledReports;
+        // Each report deleted has an associated attribution rate-limit record deleted
+        long remainingAttributions =
+                (long) mFlags.getMeasurementMaxEventAttributionPerRateLimitWindow()
+                        - attributionCount + reportsToDelete.size();
+
+        // Return the smaller of remaining attributions per rate limit or remaining report quota.
+        return Math.min(
+                remainingAttributions,
+                (long) (maxEventReports - numEarlierScheduledReports));
     }
 
     private boolean generateFlexEventReports(
             Source source,
             Trigger trigger,
             EventTrigger eventTrigger,
+            long attributionCount,
             Pair<UnsignedLong, UnsignedLong> debugKeyPair,
             IMeasurementDao measurementDao) throws DatastoreException {
         if (source.getTriggerDataCardinality() == 0) {
@@ -883,11 +944,15 @@ class AttributionJobHandler {
         // Store the current bucket index for each trigger data
         Map<UnsignedLong, Integer> triggerDataToBucketIndexMap = new HashMap<>();
 
-        int remainingReportQuota =
+        long remainingReportQuota =
                 restoreTriggerContributionsAndProvisionFlexEventReportQuota(
-                        source, trigger, triggerDataToBucketIndexMap, measurementDao);
+                        source,
+                        trigger,
+                        attributionCount,
+                        triggerDataToBucketIndexMap,
+                        measurementDao);
 
-        if (remainingReportQuota == 0) {
+        if (remainingReportQuota == 0L) {
             return false;
         }
 
@@ -952,11 +1017,11 @@ class AttributionJobHandler {
         return true;
     }
 
-    private int updateFlexAttributionStateAndGetNumReports(
+    private long updateFlexAttributionStateAndGetNumReports(
             Source source,
             Trigger trigger,
             AttributedTrigger attributedTrigger,
-            int remainingReportQuota,
+            long remainingReportQuota,
             Map<UnsignedLong, Integer> triggerDataToBucketIndexMap,
             Map<UnsignedLong, Long> triggerDataToBucketAmountMap,
             Map<UnsignedLong, List<AttributedTrigger>> triggerDataToContributingTriggersMap,
@@ -985,7 +1050,7 @@ class AttributionJobHandler {
         }
 
         long prevBucket = bucketIndex == 0 ? 0L : buckets.get(bucketIndex - 1);
-        int numReportsCreated = 0;
+        long numReportsCreated = 0L;
 
         for (int i = bucketIndex; i < buckets.size(); i++) {
             long bucket = buckets.get(i);
@@ -993,16 +1058,16 @@ class AttributionJobHandler {
             long bucketAmount = triggerDataToBucketAmountMap.get(triggerData);
 
             if (attributedTrigger.remainingValue() >= bucketSize - bucketAmount) {
-                finalizeEventReportCreationForFlex(
+                finalizeEventReportAndAttributionCreationForFlex(
                         source,
                         trigger,
                         attributedTrigger,
                         contributingTriggers,
                         TriggerSpecs.getSummaryBucketFromIndex(i, buckets),
                         measurementDao);
-                numReportsCreated += 1;
+                numReportsCreated += 1L;
 
-                if (remainingReportQuota - numReportsCreated == 0) {
+                if (remainingReportQuota - numReportsCreated == 0L) {
                     return numReportsCreated;
                 }
 
@@ -1128,7 +1193,7 @@ class AttributionJobHandler {
         measurementDao.insertEventReport(eventReport);
     }
 
-    private void finalizeEventReportCreationForFlex(
+    private void finalizeEventReportAndAttributionCreationForFlex(
             Source source,
             Trigger trigger,
             AttributedTrigger attributedTrigger,
@@ -1166,6 +1231,11 @@ class AttributionJobHandler {
                                         source, trigger.getDestinationType()))
                         .build();
         measurementDao.insertEventReport(eventReport);
+        if (mFlags.getMeasurementEnableScopedAttributionRateLimit()) {
+            insertAttribution(Attribution.Scope.EVENT, source, trigger, measurementDao);
+        } else {
+            insertAttribution(source, trigger, measurementDao);
+        }
     }
 
     private static void finalizeAggregateReportCreation(
@@ -1216,9 +1286,8 @@ class AttributionJobHandler {
     }
 
     private boolean hasAttributionQuota(
-            Source source, Trigger trigger, IMeasurementDao measurementDao)
+            long attributionCount, Source source, Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
-        long attributionCount = measurementDao.getAttributionsPerRateLimitWindow(source, trigger);
         if (attributionCount >= mFlags.getMeasurementMaxAttributionPerRateLimitWindow()) {
             mDebugReportApi.scheduleTriggerDebugReport(
                     source,
@@ -1231,12 +1300,11 @@ class AttributionJobHandler {
     }
 
     private boolean hasAttributionQuota(
+            long attributionCount,
             @Attribution.Scope int scope,
             Source source,
             Trigger trigger,
             IMeasurementDao measurementDao) throws DatastoreException {
-        long attributionCount = measurementDao.getAttributionsPerRateLimitWindow(
-                scope, source, trigger);
         int limit = scope == Attribution.Scope.EVENT
                 ? mFlags.getMeasurementMaxEventAttributionPerRateLimitWindow()
                 : mFlags.getMeasurementMaxAggregateAttributionPerRateLimitWindow();

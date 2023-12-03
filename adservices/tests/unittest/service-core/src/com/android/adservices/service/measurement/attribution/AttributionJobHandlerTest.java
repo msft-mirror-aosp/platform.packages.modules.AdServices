@@ -540,9 +540,11 @@ public class AttributionJobHandlerTest {
         List<Source> matchingSourceList = new ArrayList<>();
         matchingSourceList.add(source);
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
-        when(mMeasurementDao.getAttributionsPerRateLimitWindow(anyInt(), any(), any()))
-                .thenReturn(
-                        (long) Flags.MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW,
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(
+                Attribution.Scope.AGGREGATE, source, trigger)).thenReturn(
+                        (long) Flags.MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(
+                Attribution.Scope.EVENT, source, trigger)).thenReturn(
                         5L);
         mHandler.performPendingAttributions();
         verify(mMeasurementDao, times(1)).getAttributionsPerRateLimitWindow(
@@ -569,10 +571,12 @@ public class AttributionJobHandlerTest {
         List<Source> matchingSourceList = new ArrayList<>();
         matchingSourceList.add(source);
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
-        when(mMeasurementDao.getAttributionsPerRateLimitWindow(anyInt(), any(), any()))
-                .thenReturn(
-                        5L,
-                        (long) Flags.MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(
+                Attribution.Scope.AGGREGATE, source, trigger)).thenReturn(
+                        5L);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(
+                Attribution.Scope.EVENT, source, trigger)).thenReturn(
+                        (long) Flags.MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW);
         mHandler.performPendingAttributions();
         verify(mMeasurementDao, times(1)).getAttributionsPerRateLimitWindow(
                 Attribution.Scope.EVENT, source, trigger);
@@ -597,9 +601,11 @@ public class AttributionJobHandlerTest {
         List<Source> matchingSourceList = new ArrayList<>();
         matchingSourceList.add(source);
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
-        when(mMeasurementDao.getAttributionsPerRateLimitWindow(anyInt(), any(), any()))
-                .thenReturn(
-                        (long) Flags.MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW,
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(
+                Attribution.Scope.AGGREGATE, source, trigger)).thenReturn(
+                        (long) Flags.MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(
+                Attribution.Scope.EVENT, source, trigger)).thenReturn(
                         5L);
         when(mMeasurementDao.getSourceDestinations(source.getId()))
                 .thenReturn(Pair.create(
@@ -4956,12 +4962,14 @@ public class AttributionJobHandlerTest {
         verify(mMeasurementDao, times(1)).getSourceEventReports(any());
         ArgumentCaptor<EventReport> insertedReportsCaptor =
                 ArgumentCaptor.forClass(EventReport.class);
-        ArgumentCaptor<EventReport> deletedReportsCaptor =
-                ArgumentCaptor.forClass(EventReport.class);
+        ArgumentCaptor<List<EventReport>> deletedReportsCaptor =
+                ArgumentCaptor.forClass((Class) List.class);
         verify(mMeasurementDao, times(3)).insertEventReport(insertedReportsCaptor.capture());
-        verify(mMeasurementDao, times(1)).deleteEventReport(deletedReportsCaptor.capture());
+        verify(mMeasurementDao, times(1)).deleteFlexEventReportsAndAttributions(
+                deletedReportsCaptor.capture());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
+        assertEquals(1, deletedReportsCaptor.getValue().size());
         List<EventReport> insertedEventReports = insertedReportsCaptor.getAllValues();
         assertEquals(firstBucket, insertedEventReports.get(0).getTriggerSummaryBucket());
         assertEquals(firstBucket, insertedEventReports.get(1).getTriggerSummaryBucket());
@@ -5139,10 +5147,11 @@ public class AttributionJobHandlerTest {
         verify(mMeasurementDao, never()).fetchMatchingEventReports(any(), any());
         ArgumentCaptor<EventReport> insertedReportsCaptor =
                 ArgumentCaptor.forClass(EventReport.class);
-        ArgumentCaptor<EventReport> deletedReportsCaptor =
-                ArgumentCaptor.forClass(EventReport.class);
+        ArgumentCaptor<List<EventReport>> deletedReportsCaptor =
+                ArgumentCaptor.forClass((Class) List.class);
         verify(mMeasurementDao, times(3)).insertEventReport(insertedReportsCaptor.capture());
-        verify(mMeasurementDao, times(2)).deleteEventReport(deletedReportsCaptor.capture());
+        verify(mMeasurementDao, times(1)).deleteFlexEventReportsAndAttributions(
+                deletedReportsCaptor.capture());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
         List<EventReport> insertedEventReports = insertedReportsCaptor.getAllValues();
@@ -5167,7 +5176,7 @@ public class AttributionJobHandlerTest {
         assertEquals(
                 EventReport.DebugReportStatus.NONE,
                 insertedEventReports.get(2).getDebugReportStatus());
-        assertEquals(2, deletedReportsCaptor.getAllValues().size());
+        assertEquals(2, deletedReportsCaptor.getValue().size());
         long reportTime = TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS;
         assertEquals(reportTime, insertedEventReports.get(0).getReportTime() - baseTime);
         assertEquals(reportTime, insertedEventReports.get(1).getReportTime() - baseTime);
@@ -5188,7 +5197,6 @@ public class AttributionJobHandlerTest {
      */
     public void performAttribution_flexEventReportSecondTriggerLowerPrioritySomeDebugReports()
             throws DatastoreException, JSONException {
-
         // Setup
         long baseTime = System.currentTimeMillis();
         UnsignedLong triggerData1 = new UnsignedLong(1L);
@@ -5324,12 +5332,14 @@ public class AttributionJobHandlerTest {
         verify(mMeasurementDao, times(1)).getSourceEventReports(any());
         ArgumentCaptor<EventReport> insertedReportsCaptor =
                 ArgumentCaptor.forClass(EventReport.class);
-        ArgumentCaptor<EventReport> deletedReportsCaptor =
-                ArgumentCaptor.forClass(EventReport.class);
+        ArgumentCaptor<List<EventReport>> deletedReportsCaptor =
+                ArgumentCaptor.forClass((Class) List.class);
         verify(mMeasurementDao, times(3)).insertEventReport(insertedReportsCaptor.capture());
-        verify(mMeasurementDao, times(2)).deleteEventReport(deletedReportsCaptor.capture());
+        verify(mMeasurementDao, times(1)).deleteFlexEventReportsAndAttributions(
+                deletedReportsCaptor.capture());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
+        assertEquals(2, deletedReportsCaptor.getValue().size());
         List<EventReport> insertedEventReports = insertedReportsCaptor.getAllValues();
         assertEquals(firstBucket, insertedEventReports.get(0).getTriggerSummaryBucket());
         assertEquals(secondBucket, insertedEventReports.get(1).getTriggerSummaryBucket());
@@ -5523,12 +5533,14 @@ public class AttributionJobHandlerTest {
         verify(mMeasurementDao, times(1)).getSourceEventReports(any());
         ArgumentCaptor<EventReport> insertedReportsCaptor =
                 ArgumentCaptor.forClass(EventReport.class);
-        ArgumentCaptor<EventReport> deletedReportsCaptor =
-                ArgumentCaptor.forClass(EventReport.class);
+        ArgumentCaptor<List<EventReport>> deletedReportsCaptor =
+                ArgumentCaptor.forClass((Class) List.class);
         verify(mMeasurementDao, times(2)).insertEventReport(insertedReportsCaptor.capture());
-        verify(mMeasurementDao, times(2)).deleteEventReport(deletedReportsCaptor.capture());
+        verify(mMeasurementDao, times(1)).deleteFlexEventReportsAndAttributions(
+                deletedReportsCaptor.capture());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
+        assertEquals(2, deletedReportsCaptor.getValue().size());
         List<EventReport> insertedEventReports = insertedReportsCaptor.getAllValues();
         assertEquals(firstBucket, insertedEventReports.get(0).getTriggerSummaryBucket());
         assertEquals(secondBucket, insertedEventReports.get(1).getTriggerSummaryBucket());
