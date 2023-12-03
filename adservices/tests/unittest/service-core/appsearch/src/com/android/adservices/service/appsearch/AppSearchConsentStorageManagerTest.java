@@ -552,14 +552,12 @@ public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
 
     @Test
     public void setAdIdEnabledTest_trueBit() {
-        mAppSearchConsentStorageManager.setAdIdEnabled(true);
-        verify(mAppSearchConsentWorker).setAdIdEnabled(true);
+        setAdIdEnabledTest(true);
     }
 
     @Test
     public void setAdIdEnabledTest_falseBit() {
-        mAppSearchConsentStorageManager.setAdIdEnabled(false);
-        verify(mAppSearchConsentWorker).setAdIdEnabled(false);
+        setAdIdEnabledTest(false);
     }
 
     private void setAdIdEnabledTest(boolean isAdIdEnabled) {
@@ -576,14 +574,12 @@ public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
 
     @Test
     public void setU18AccountTest_trueBit() {
-        mAppSearchConsentStorageManager.setU18Account(true);
-        verify(mAppSearchConsentWorker).setU18Account(true);
+        setU18AccountTest(true);
     }
 
     @Test
     public void setU18AccountTest_falseBit() {
-        mAppSearchConsentStorageManager.setU18Account(false);
-        verify(mAppSearchConsentWorker).setU18Account(false);
+        setU18AccountTest(false);
     }
 
     private void setU18AccountTest(boolean isU18Account) {
@@ -622,14 +618,12 @@ public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
 
     @Test
     public void setAdultAccountTest_trueBit() {
-        mAppSearchConsentStorageManager.setAdultAccount(true);
-        verify(mAppSearchConsentWorker).setAdultAccount(true);
+        setAdultAccountTest(true);
     }
 
     @Test
     public void setAdultAccountTest_falseBit() {
-        mAppSearchConsentStorageManager.setAdultAccount(false);
-        verify(mAppSearchConsentWorker).setAdultAccount(false);
+        setAdultAccountTest(false);
     }
 
     private void setAdultAccountTest(boolean isAdultAccount) {

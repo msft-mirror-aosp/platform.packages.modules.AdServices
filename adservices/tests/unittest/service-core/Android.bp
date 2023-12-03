@@ -336,8 +336,8 @@ cc_library_shared {
         "packages/modules/AdServices/adservices/tests/unittest/service-core/src/jni/cpp"
     ],
     header_libs: ["jni_headers"],
-    shared_libs: ["libcrypto", "liblog",],
-    static_libs: ["libact"],
+    shared_libs: ["liblog",],
+    static_libs: ["libact", "libcrypto_static"],
     apex_available: ["com.android.adservices", "com.android.extservices"],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",

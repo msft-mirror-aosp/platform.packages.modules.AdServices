@@ -515,7 +515,8 @@ public class GetAdSelectionDataRunnerTest {
             DBCustomAudience thisCustomAudience =
                     DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(buyer, name)
                             .build();
-            mCustomAudienceDao.insertOrOverwriteCustomAudience(thisCustomAudience, Uri.EMPTY);
+            mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                    thisCustomAudience, Uri.EMPTY, /*debuggable=*/ false);
         }
     }
 
@@ -548,6 +549,7 @@ public class GetAdSelectionDataRunnerTest {
             return true;
         }
     }
+
     static class GetAdSelectionDataRunnerTestFlagsWithExcessiveSizeFormatter
             extends GetAdSelectionDataRunnerTestFlags {
         @Override

@@ -19,6 +19,7 @@ package com.android.adservices.ui.notifications;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_AD_ID_STATE__AD_ID_DISABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__PP_API_DEFAULT_OPT_OUT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__MEASUREMENT_DEFAULT_OPT_OUT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__FIRST_CONSENT_NOTIFICATION_CHANNEL;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__RVC_POST_OTA_NOTIFICATION_CHANNEL;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
@@ -40,7 +41,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 
 import android.app.Notification;
@@ -67,8 +67,10 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.consent.DeviceRegionProvider;
+import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.UIStats;
+import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.enrollment.collection.GaUxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.enrollment.collection.RvcUxEnrollmentChannelCollection;
@@ -76,7 +78,6 @@ import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -101,22 +102,16 @@ public final class ConsentNotificationTriggerTest extends AdServicesUnitTestCase
     private MockitoSession mStaticMockSession = null;
     private String mTestName;
 
-    // Use static sAdServicesLoggerImpl to spy static field UiStatsLogger.sLogger
-    // since class static field is only initialized once
-    @Spy private static AdServicesLoggerImpl sAdServicesLoggerImpl;
-
+    @Mock private AdServicesLogger mAdServicesLogger;
     @Mock private NotificationManagerCompat mNotificationManagerCompat;
     @Mock private ConsentManager mConsentManager;
     @Mock private UxStatesManager mMockUxStatesManager;
-    @Mock Flags mMockFlags;
+    @Mock private Flags mMockFlags;
     @Spy private Context mContext;
 
     @Before
     public void setUp() {
-        // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(ApkTestUtil.isDeviceSupported());
-
-        mContext = InstrumentationRegistry.getInstrumentation().getContext();
+        mContext = appContext.get();
         // Initialize UiDevice instance
         sDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
         mNotificationManager = mContext.getSystemService(NotificationManager.class);
@@ -130,15 +125,15 @@ public final class ConsentNotificationTriggerTest extends AdServicesUnitTestCase
                         .spyStatic(AdServicesLoggerImpl.class)
                         .spyStatic(DeviceRegionProvider.class)
                         .spyStatic(UxStatesManager.class)
+                        .spyStatic(UiStatsLogger.class)
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
 
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        ExtendedMockito.doReturn(sAdServicesLoggerImpl).when(AdServicesLoggerImpl::getInstance);
-        ExtendedMockito.doReturn(mMockUxStatesManager)
-                .when(() -> UxStatesManager.getInstance(any(Context.class)));
+        doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        doReturn(mAdServicesLogger).when(UiStatsLogger::getAdServicesLogger);
+        doReturn(mMockUxStatesManager).when(() -> UxStatesManager.getInstance(any(Context.class)));
         doReturn(mAdServicesManager).when(mContext).getSystemService(AdServicesManager.class);
         doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any(Context.class)));
         doReturn(true).when(mMockFlags).isEeaDeviceFeatureEnabled();
@@ -153,15 +148,10 @@ public final class ConsentNotificationTriggerTest extends AdServicesUnitTestCase
 
     @After
     public void tearDown() throws IOException {
-        if (!ApkTestUtil.isDeviceSupported()) return;
-
         ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + mTestName + "_");
 
         AdservicesTestHelper.killAdservicesProcess(mContext);
         mStaticMockSession.finishMocking();
-        // Use static sAdServicesLoggerImpl to spy static field UiStatsLogger.sLogger
-        // reset sAdServicesLoggerImpl after each test run
-        reset(sAdServicesLoggerImpl);
     }
 
     @Test
@@ -180,7 +170,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesUnitTestCase
         ConsentNotificationTrigger.showConsentNotification(mContext, true);
         Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
 
-        verify(sAdServicesLoggerImpl, times(2)).logUIStats(any());
+        verify(mAdServicesLogger, times(2)).logUIStats(any());
 
         verify(mConsentManager, times(2)).getDefaultConsent();
         verify(mConsentManager, times(2)).getDefaultAdIdState();
@@ -236,7 +226,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesUnitTestCase
         ConsentNotificationTrigger.showConsentNotification(mContext, true);
         Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
 
-        verify(sAdServicesLoggerImpl, times(2)).logUIStats(any());
+        verify(mAdServicesLogger, times(2)).logUIStats(any());
 
         verify(mConsentManager, times(2)).getDefaultConsent();
         verify(mConsentManager, times(2)).getDefaultAdIdState();
@@ -299,7 +289,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesUnitTestCase
         ConsentNotificationTrigger.showConsentNotification(mContext, false);
         Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
 
-        verify(sAdServicesLoggerImpl, times(2)).logUIStats(any());
+        verify(mAdServicesLogger, times(2)).logUIStats(any());
 
         verify(mConsentManager, times(2)).getDefaultConsent();
         verify(mConsentManager, times(2)).getDefaultAdIdState();
@@ -356,7 +346,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesUnitTestCase
         ConsentNotificationTrigger.showConsentNotification(mContext, false);
         Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
 
-        verify(sAdServicesLoggerImpl, times(2)).logUIStats(any());
+        verify(mAdServicesLogger, times(2)).logUIStats(any());
 
         verify(mConsentManager).enable(mContext, AdServicesApiType.TOPICS);
         verify(mConsentManager).enable(mContext, AdServicesApiType.FLEDGE);
@@ -403,7 +393,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesUnitTestCase
         ConsentNotificationTrigger.showConsentNotification(mContext, true);
         Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
 
-        verify(sAdServicesLoggerImpl, times(2)).logUIStats(any());
+        verify(mAdServicesLogger, times(2)).logUIStats(any());
 
         verify(mConsentManager, times(2)).getDefaultConsent();
         verify(mConsentManager, times(2)).getDefaultAdIdState();
@@ -485,7 +475,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesUnitTestCase
         ConsentNotificationTrigger.showConsentNotification(mContext, true);
         Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
 
-        verify(sAdServicesLoggerImpl, times(2)).logUIStats(any());
+        verify(mAdServicesLogger, times(2)).logUIStats(any());
 
         verify(mConsentManager, times(2)).getDefaultConsent();
         verify(mConsentManager, times(2)).getDefaultAdIdState();
@@ -562,13 +552,12 @@ public final class ConsentNotificationTriggerTest extends AdServicesUnitTestCase
         doReturn(false).when(mMockUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
         doReturn(BETA_UX).when(mMockUxStatesManager).getUx();
 
-        ExtendedMockito.doReturn(mNotificationManagerCompat)
-                .when(() -> NotificationManagerCompat.from(mContext));
+        doReturn(mNotificationManagerCompat).when(() -> NotificationManagerCompat.from(mContext));
         doReturn(false).when(mNotificationManagerCompat).areNotificationsEnabled();
 
         ConsentNotificationTrigger.showConsentNotification(mContext, true);
 
-        verify(sAdServicesLoggerImpl, times(2)).logUIStats(any());
+        verify(mAdServicesLogger, times(2)).logUIStats(any());
 
         verify(mConsentManager, times(2)).getDefaultConsent();
         verify(mConsentManager, times(2)).getDefaultAdIdState();
@@ -608,7 +597,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesUnitTestCase
         Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
 
         ArgumentCaptor<UIStats> argument = ArgumentCaptor.forClass(UIStats.class);
-        verify(sAdServicesLoggerImpl, times(2)).logUIStats(argument.capture());
+        verify(mAdServicesLogger, times(2)).logUIStats(argument.capture());
 
         assertThat(argument.getValue().getCode()).isEqualTo(AD_SERVICES_SETTINGS_USAGE_REPORTED);
         if (isEeaDevice) {
@@ -616,13 +605,13 @@ public final class ConsentNotificationTriggerTest extends AdServicesUnitTestCase
                     .isEqualTo(AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU);
             assertThat(argument.getValue().getDefaultConsent())
                     .isEqualTo(
-                            AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__PP_API_DEFAULT_OPT_OUT);
+                            AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__MEASUREMENT_DEFAULT_OPT_OUT);
         } else {
             assertThat(argument.getValue().getRegion())
                     .isEqualTo(AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW);
             assertThat(argument.getValue().getDefaultConsent())
                     .isEqualTo(
-                            AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__PP_API_DEFAULT_OPT_OUT);
+                            AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__MEASUREMENT_DEFAULT_OPT_OUT);
         }
         assertThat(argument.getValue().getDefaultAdIdState())
                 .isEqualTo(
@@ -633,7 +622,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesUnitTestCase
                 .isEqualTo(
                         AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__FIRST_CONSENT_NOTIFICATION_CHANNEL);
 
-        verify(mConsentManager, times(2)).getDefaultConsent();
+        verify(mConsentManager, times(2)).getMeasurementDefaultConsent();
         verify(mConsentManager, times(2)).getDefaultAdIdState();
         if (isEeaDevice) {
             verify(mConsentManager).recordMeasurementDefaultConsent(false);
@@ -717,7 +706,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesUnitTestCase
         Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
 
         ArgumentCaptor<UIStats> argument = ArgumentCaptor.forClass(UIStats.class);
-        verify(sAdServicesLoggerImpl, times(2)).logUIStats(argument.capture());
+        verify(mAdServicesLogger, times(2)).logUIStats(argument.capture());
 
         assertThat(argument.getValue().getCode()).isEqualTo(AD_SERVICES_SETTINGS_USAGE_REPORTED);
         if (isEeaDevice) {

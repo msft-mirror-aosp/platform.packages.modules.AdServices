@@ -107,6 +107,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__UNSPECIFIED_UX;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__UNSUPPORTED_UX;
 import static com.android.adservices.service.ui.constants.DebugMessages.PRIVACY_SANDBOX_UI_REQUEST_MESSAGE;
+import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.RVC_UX;
 
 import android.content.Context;
 import android.os.Build;
@@ -125,6 +126,7 @@ import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnr
 import com.android.adservices.service.ui.enrollment.collection.RvcUxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.enrollment.collection.U18UxEnrollmentChannelCollection;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
+import com.android.internal.annotations.VisibleForTesting;
 
 /** Logger for UiStats. */
 // TODO(b/269798827): Enable for R.
@@ -141,7 +143,7 @@ public final class UiStatsLogger {
                         ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_NOTIFICATION_DISPLAYED
                         : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__NOTIFICATION_DISPLAYED);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs that the more button on the landing page was displayed. */
@@ -153,7 +155,7 @@ public final class UiStatsLogger {
                         ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_MORE_BUTTON_CLICKED
                         : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_MORE_BUTTON_CLICKED);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs that the additional info dropdown on the landing page was displayed. */
@@ -165,7 +167,7 @@ public final class UiStatsLogger {
                         ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_ADDITIONAL_INFO_CLICKED
                         : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_ADDITIONAL_INFO_CLICKED);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs that the user scrolled the landing page. */
@@ -177,7 +179,7 @@ public final class UiStatsLogger {
                         ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_SCROLLED
                         : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_SCROLLED);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs that the user scrolled to the bottom of the landing page. */
@@ -189,7 +191,7 @@ public final class UiStatsLogger {
                         ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_SCROLLED_TO_BOTTOM
                         : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_SCROLLED_TO_BOTTOM);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs that the user clicked the setting button on the landing page. */
@@ -201,7 +203,7 @@ public final class UiStatsLogger {
                         ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_SETTINGS_BUTTON_CLICKED
                         : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_SETTINGS_BUTTON_CLICKED);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs that the user dismissed the landing page. */
@@ -213,7 +215,7 @@ public final class UiStatsLogger {
                         ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_DISMISSED
                         : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_DISMISSED);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs that the user clicked the got it button on the landing page. */
@@ -225,7 +227,7 @@ public final class UiStatsLogger {
                         ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_GOT_IT_BUTTON_CLICKED
                         : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_GOT_IT_BUTTON_CLICKED);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs that the user opt-in from the landing page. */
@@ -237,7 +239,7 @@ public final class UiStatsLogger {
                         ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_OPT_IN
                         : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_OPT_IN);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs that the user opt-out from the landing page. */
@@ -249,7 +251,7 @@ public final class UiStatsLogger {
                         ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_OPT_OUT
                         : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_OPT_OUT);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs that the user clicked settings on the opt-in confirmation page. */
@@ -261,7 +263,7 @@ public final class UiStatsLogger {
                         ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_OPT_IN_CONFIRMATION_PAGE_SETTINGS_CLICKED
                         : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_IN_CONFIRMATION_PAGE_SETTINGS_CLICKED);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs that the user clicked settings on the opt-out confirmation page. */
@@ -273,7 +275,7 @@ public final class UiStatsLogger {
                         ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_OPT_OUT_CONFIRMATION_PAGE_SETTINGS_CLICKED
                         : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_OUT_CONFIRMATION_PAGE_SETTINGS_CLICKED);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs that the user clicked got it on the opt-in confirmation page. */
@@ -285,7 +287,7 @@ public final class UiStatsLogger {
                         ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_OPT_IN_CONFIRMATION_PAGE_GOT_IT_CLICKED
                         : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_IN_CONFIRMATION_PAGE_GOT_IT_CLICKED);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs that the user clicked got it on the opt-out confirmation page. */
@@ -297,7 +299,7 @@ public final class UiStatsLogger {
                         ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_OPT_OUT_CONFIRMATION_PAGE_GOT_IT_CLICKED
                         : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_OUT_CONFIRMATION_PAGE_GOT_IT_CLICKED);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** GA only. Logs that the user clicked more info on the opt-in confirmation page. */
@@ -307,7 +309,7 @@ public final class UiStatsLogger {
         uiStats.setAction(
                 AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_OPT_IN_CONFIRMATION_PAGE_MORE_INFO_CLICKED);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** GA only. Logs that the user clicked more info on the opt-out confirmation page. */
@@ -317,7 +319,7 @@ public final class UiStatsLogger {
         uiStats.setAction(
                 AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_OPT_OUT_CONFIRMATION_PAGE_MORE_INFO_CLICKED);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs that the user dismissed the confirmation page. */
@@ -329,7 +331,7 @@ public final class UiStatsLogger {
                         ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_CONFIRMATION_PAGE_DISMISSED
                         : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__CONFIRMATION_PAGE_DISMISSED);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs that a notification was requested. */
@@ -341,7 +343,7 @@ public final class UiStatsLogger {
                         ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_NOTIFICATION_REQUESTED
                         : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__REQUESTED_NOTIFICATION);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs that notifications are disabled on a device. */
@@ -353,7 +355,7 @@ public final class UiStatsLogger {
                         ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_NOTIFICATION_DISABLED
                         : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__NOTIFICATION_DISABLED);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs that the landing page was shown to a user. */
@@ -365,7 +367,7 @@ public final class UiStatsLogger {
                         ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_NOTIFICATION_LANDING_PAGE_DISPLAYED
                         : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_DISPLAYED);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs that the confirmation page was shown to a user. */
@@ -377,7 +379,7 @@ public final class UiStatsLogger {
                         ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_NOTIFICATION_CONFIRMATION_PAGE_DISPLAYED
                         : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__CONFIRMATION_PAGE_DISPLAYED);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs user opt-in action for PP API. */
@@ -389,7 +391,7 @@ public final class UiStatsLogger {
                         ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__NOTIFICATION_OPT_IN_SELECTED
                         : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_IN_SELECTED);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs user opt-out action for PP API. */
@@ -401,7 +403,7 @@ public final class UiStatsLogger {
                         ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__NOTIFICATION_OPT_OUT_SELECTED
                         : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_OUT_SELECTED);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs user opt-in action given an ApiType. */
@@ -410,7 +412,7 @@ public final class UiStatsLogger {
 
         uiStats.setAction(getPerApiConsentAction(apiType, /* isOptIn */ true));
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs user opt-out action given an ApiType. */
@@ -419,7 +421,7 @@ public final class UiStatsLogger {
 
         uiStats.setAction(getPerApiConsentAction(apiType, /* isOptIn */ false));
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs that a user has opened the settings page. */
@@ -429,7 +431,7 @@ public final class UiStatsLogger {
         uiStats.setAction(
                 AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__PRIVACY_SANDBOX_SETTINGS_PAGE_DISPLAYED);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs that a user has clicked manage topics button. */
@@ -438,7 +440,7 @@ public final class UiStatsLogger {
 
         uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_TOPICS_SELECTED);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs that a user has clicked manage apps button. */
@@ -447,7 +449,7 @@ public final class UiStatsLogger {
 
         uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_APPS_SELECTED);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs that a user has clicked reset topics button. */
@@ -456,7 +458,7 @@ public final class UiStatsLogger {
 
         uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_TOPIC_SELECTED);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs that a user has clicked reset apps button. */
@@ -465,7 +467,7 @@ public final class UiStatsLogger {
 
         uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_APP_SELECTED);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs that a user has clicked block topic button. */
@@ -474,7 +476,7 @@ public final class UiStatsLogger {
 
         uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__BLOCK_TOPIC_SELECTED);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs that a user has clicked unblock topic button. */
@@ -483,7 +485,7 @@ public final class UiStatsLogger {
 
         uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__UNBLOCK_TOPIC_SELECTED);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs that a user has clicked block app button. */
@@ -492,7 +494,7 @@ public final class UiStatsLogger {
 
         uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__BLOCK_APP_SELECTED);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs that a user has clicked unblock app button. */
@@ -501,7 +503,7 @@ public final class UiStatsLogger {
 
         uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__UNBLOCK_APP_SELECTED);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs that a user has clicked manage measurement button. */
@@ -510,7 +512,7 @@ public final class UiStatsLogger {
 
         uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_MEASUREMENT_SELECTED);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs that a user has clicked reset measurement button. */
@@ -519,7 +521,7 @@ public final class UiStatsLogger {
 
         uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_MEASUREMENT_SELECTED);
 
-        sLogger.logUIStats(uiStats);
+        getAdServicesLogger().logUIStats(uiStats);
     }
 
     /** Logs that the user has clicked the privacy sandbox entry point in the settings page. */
@@ -529,6 +531,22 @@ public final class UiStatsLogger {
         uiStats.setAction(
                 AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__PRIVACY_SANDBOX_ENTRY_POINT_CLICKED);
 
+        getAdServicesLogger().logUIStats(uiStats);
+
+        LogUtil.d(PRIVACY_SANDBOX_UI_REQUEST_MESSAGE);
+    }
+
+    @VisibleForTesting
+    public static AdServicesLogger getAdServicesLogger() {
+        return sLogger;
+    }
+    /** Logs that the user enter an unspecified ux flow. */
+    public static void logRequestedNotificationIneligible() {
+        UIStats uiStats = getBaseUiStats();
+
+        /* Reuse beta's notification here, so that this track won't affect GA metrics */
+        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__REQUESTED_NOTIFICATION);
+        uiStats.setUx(AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__UNSUPPORTED_UX);
         sLogger.logUIStats(uiStats);
 
         LogUtil.d(PRIVACY_SANDBOX_UI_REQUEST_MESSAGE);
@@ -543,6 +561,9 @@ public final class UiStatsLogger {
 
     private static int getDefaultConsent() {
         Context context = getApplicationContext();
+        if (UxStatesManager.getInstance(context).getUx() == RVC_UX) {
+            return getDefaultConsent(AdServicesApiType.MEASUREMENTS);
+        }
         Boolean defaultConsent = ConsentManager.getInstance(context).getDefaultConsent();
         // edge case where the user opens the settings pages before receiving consent notification.
         if (defaultConsent == null) {

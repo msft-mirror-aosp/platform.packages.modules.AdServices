@@ -1130,6 +1130,72 @@ public class AdSelectionEntryDaoTest {
     }
 
     @Test
+    public void testClearsExpiredRegisteredEventsDataWithUnifiedTables() {
+        mAdSelectionEntryDao.persistAdSelectionInitialization(
+                AD_SELECTION_ID_1, AD_SELECTION_INITIALIZATION_1);
+
+        // Added registered event data with same adSelectionId as AD_SELECTION_INITIALIZATION_1
+        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
+                ImmutableList.of(
+                        DB_REGISTERED_INTERACTION_SELLER_CLICK_1,
+                        DB_REGISTERED_INTERACTION_SELLER_HOVER_1));
+
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_1, CLICK_EVENT, SELLER_DESTINATION));
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_1, HOVER_EVENT, SELLER_DESTINATION));
+
+        // Simulating stale registered event data by inserting data with different adSelectionIds
+        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
+                ImmutableList.of(
+                        DB_REGISTERED_INTERACTION_SELLER_CLICK_2,
+                        DB_REGISTERED_INTERACTION_SELLER_HOVER_2,
+                        DB_REGISTERED_INTERACTION_SELLER_CLICK_3,
+                        DB_REGISTERED_INTERACTION_SELLER_HOVER_3));
+
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_2, CLICK_EVENT, SELLER_DESTINATION));
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_2, HOVER_EVENT, SELLER_DESTINATION));
+
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_3, CLICK_EVENT, SELLER_DESTINATION));
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_3, HOVER_EVENT, SELLER_DESTINATION));
+
+        mAdSelectionEntryDao.removeExpiredRegisteredAdInteractionsFromUnifiedTable();
+
+        // Assert that stale registered event data was cleared
+        assertFalse(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_2, CLICK_EVENT, SELLER_DESTINATION));
+        assertFalse(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_2, HOVER_EVENT, SELLER_DESTINATION));
+
+        assertFalse(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_3, CLICK_EVENT, SELLER_DESTINATION));
+        assertFalse(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_3, HOVER_EVENT, SELLER_DESTINATION));
+
+        // Assert that non-stale data was not cleared
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_1, CLICK_EVENT, SELLER_DESTINATION));
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_1, HOVER_EVENT, SELLER_DESTINATION));
+    }
+
+    @Test
     public void testGetNumRegisteredAdInteractions() {
         // Nothing inserted yet, should return 0
         assertEquals(0, mAdSelectionEntryDao.getTotalNumRegisteredAdInteractions());

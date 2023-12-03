@@ -101,6 +101,7 @@ public class Source {
     @Nullable private Integer mMaxEventLevelReports;
     @Nullable private String mEventAttributionStatusString;
     @Nullable private String mPrivacyParametersString = null;
+    private TriggerDataMatching mTriggerDataMatching;
     @Nullable private String mPlatformAdId;
     @Nullable private String mDebugAdId;
     private Uri mRegistrationOrigin;
@@ -228,7 +229,7 @@ public class Source {
     }
 
     private boolean isFlexLiteApiValueValid(Flags flags) {
-        if (!flags.getMeasurementFlexLiteAPIEnabled()
+        if (!flags.getMeasurementFlexLiteApiEnabled()
                 || (mEventReportWindows == null && mMaxEventLevelReports == null)) {
             return true;
         }
@@ -279,6 +280,12 @@ public class Source {
         int FALSELY = 3;
     }
 
+    /** The choice of the summary operator with the reporting window */
+    public enum TriggerDataMatching {
+        MODULUS,
+        EXACT
+    }
+
     public enum SourceType {
         EVENT("event"),
         NAVIGATION("navigation");
@@ -306,6 +313,7 @@ public class Source {
         // Making this default explicit since it anyway would occur on an uninitialised int field.
         mPublisherType = EventSurfaceType.APP;
         mAttributionMode = AttributionMode.UNASSIGNED;
+        mTriggerDataMatching = TriggerDataMatching.MODULUS;
         mIsInstallAttributed = false;
         mIsDebugReporting = false;
     }
@@ -356,6 +364,9 @@ public class Source {
      * @return Cardinality of {@link Trigger} metadata
      */
     public int getTriggerDataCardinality() {
+        if (getTriggerSpecs() != null) {
+            return getTriggerSpecs().getTriggerDataCardinality();
+        }
         return mSourceType == SourceType.EVENT
                 ? PrivacyParams.EVENT_TRIGGER_DATA_CARDINALITY
                 : PrivacyParams.getNavigationTriggerDataCardinality();
@@ -462,6 +473,7 @@ public class Source {
                 && Objects.equals(
                         mEventAttributionStatusString, source.mEventAttributionStatusString)
                 && Objects.equals(mPrivacyParametersString, source.mPrivacyParametersString)
+                && Objects.equals(mTriggerDataMatching, source.mTriggerDataMatching)
                 && Objects.equals(mSharedDebugKey, source.mSharedDebugKey)
                 && mDropSourceIfInstalled == source.mDropSourceIfInstalled;
     }
@@ -505,6 +517,7 @@ public class Source {
                 mAttributedTriggers,
                 mTriggerSpecs,
                 mTriggerSpecsString,
+                mTriggerDataMatching,
                 mMaxEventLevelReports,
                 mEventAttributionStatusString,
                 mPrivacyParametersString,
@@ -670,6 +683,11 @@ public class Source {
     @AttributionMode
     public int getAttributionMode() {
         return mAttributionMode;
+    }
+
+    /** Specification for trigger matching behaviour. Values: Modulus, Exact. */
+    public TriggerDataMatching getTriggerDataMatching() {
+        return mTriggerDataMatching;
     }
 
     /**
@@ -1163,6 +1181,7 @@ public class Source {
             builder.setRegistrationOrigin(copyFrom.mRegistrationOrigin);
             builder.setAttributedTriggers(copyFrom.mAttributedTriggers);
             builder.setTriggerSpecs(copyFrom.mTriggerSpecs);
+            builder.setTriggerDataMatching(copyFrom.mTriggerDataMatching);
             builder.setCoarseEventReportDestinations(copyFrom.mCoarseEventReportDestinations);
             builder.setSharedDebugKey(copyFrom.mSharedDebugKey);
             builder.setDropSourceIfInstalled(copyFrom.mDropSourceIfInstalled);
@@ -1336,6 +1355,13 @@ public class Source {
         @NonNull
         public Builder setAttributionMode(@AttributionMode int attributionMode) {
             mBuilding.mAttributionMode = attributionMode;
+            return this;
+        }
+
+        /** See {@link Source#getTriggerDataMatching()} */
+        @NonNull
+        public Builder setTriggerDataMatching(TriggerDataMatching triggerDataMatching) {
+            mBuilding.mTriggerDataMatching = triggerDataMatching;
             return this;
         }
 

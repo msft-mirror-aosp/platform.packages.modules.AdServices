@@ -61,7 +61,8 @@ class ReportAndRegisterEventFallbackImpl extends ReportAndRegisterEventImpl {
             @NonNull DevContext devContext,
             @NonNull MeasurementImpl measurementService,
             @NonNull ConsentManager consentManager,
-            @NonNull Context context) {
+            @NonNull Context context,
+            boolean shouldUseUnifiedTables) {
         super(
                 adSelectionEntryDao,
                 adServicesHttpsClient,
@@ -75,7 +76,8 @@ class ReportAndRegisterEventFallbackImpl extends ReportAndRegisterEventImpl {
                 devContext,
                 measurementService,
                 consentManager,
-                context);
+                context,
+                shouldUseUnifiedTables);
     }
 
     @Override

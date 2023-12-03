@@ -32,8 +32,10 @@ import com.android.adservices.data.topics.EncryptedTopic;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.topics.classifier.Classifier;
 import com.android.adservices.service.topics.classifier.ClassifierManager;
@@ -257,7 +259,7 @@ public class EpochManager {
 
             // Encrypt and store encrypted topics if the feature is enabled and the version 9 db
             // is available.
-            if (mFlags.getTopicsEnableEncryption() && mFlags.getEnableDatabaseSchemaVersion9()) {
+            if (mFlags.getTopicsEncryptionEnabled() && mFlags.getEnableDatabaseSchemaVersion9()) {
                 // encryptedTopicMapTopics = Map<Pair<App, Sdk>, EncryptedTopic>
                 Map<Pair<String, String>, EncryptedTopic> encryptedTopicMapTopics =
                         encryptTopicsMap(returnedAppSdkTopics);
@@ -410,10 +412,13 @@ public class EpochManager {
             if (optionalEncryptedTopic.isPresent()) {
                 encryptedTopicMap.put(entry.getKey(), optionalEncryptedTopic.get());
             } else {
+                ErrorLogUtil.e(
+                        AdServicesStatsLog
+                                .AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_FAILURE,
+                        AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
                 sLogger.d(
                         "Failed to encrypt %s for (%s, %s) caller.",
                         entry.getValue(), entry.getKey().first, entry.getKey().second);
-                // TODO(b/310699530): Add CEL here to Topics encryption
             }
         }
         return encryptedTopicMap;
