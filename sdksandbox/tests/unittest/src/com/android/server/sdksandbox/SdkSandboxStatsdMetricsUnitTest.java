@@ -32,6 +32,8 @@ import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_AP
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__TOTAL_WITH_LOAD_SANDBOX;
 import static com.android.server.wm.ActivityInterceptorCallback.MAINLINE_SDK_SANDBOX_ORDER_ID;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.mockito.ArgumentMatchers.eq;
 
 import android.Manifest;
@@ -43,6 +45,7 @@ import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.app.sdksandbox.StatsdUtil;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallbackBinder;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallbackBinder;
+import android.app.sdksandbox.testutils.FakeSdkSandboxManagerLocal;
 import android.app.sdksandbox.testutils.FakeSdkSandboxProcessDeathCallbackBinder;
 import android.app.sdksandbox.testutils.FakeSdkSandboxService;
 import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
@@ -52,7 +55,6 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Process;
 import android.os.RemoteException;
-import android.os.SystemClock;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
@@ -60,6 +62,7 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSessionBuilder;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.sdksandbox.service.stats.SdkSandboxStatsLog;
+import com.android.server.pm.PackageManagerLocal;
 import com.android.server.sdksandbox.testutils.FakeSdkSandboxProvider;
 import com.android.server.wm.ActivityInterceptorCallback;
 import com.android.server.wm.ActivityInterceptorCallbackRegistry;
@@ -73,16 +76,12 @@ import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
 
 /** Unit tests for {@link SdkSandboxManagerService} StatsD metrics collection. */
 public class SdkSandboxStatsdMetricsUnitTest {
-    private static final String TAG = SdkSandboxStatsdMetricsUnitTest.class.getSimpleName();
-
     private static final String SDK_NAME = "com.android.codeprovider";
     private static final String APP_OWNED_SDK_SANDBOX_INTERFACE_NAME = "com.android.testinterface";
     private static final String TEST_PACKAGE = "com.android.server.sdksandbox.tests";
@@ -109,7 +108,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
     private FakeSdkSandboxService mSdkSandboxService;
     private MockitoSession mStaticMockSession;
     private Context mSpyContext;
-    private InjectorForTest mInjector;
+    private FakeInjector mInjector;
     private int mClientAppUid;
     private ArgumentCaptor<ActivityInterceptorCallback> mInterceptorCallbackArgumentCaptor =
             ArgumentCaptor.forClass(ActivityInterceptorCallback.class);
@@ -172,7 +171,19 @@ public class SdkSandboxStatsdMetricsUnitTest {
                 TIME_SANDBOX_CALLED_SYSTEM_SERVER);
         sProvider = new FakeSdkSandboxProvider(mSdkSandboxService);
 
-        mInjector = Mockito.spy(new InjectorForTest(mSpyContext));
+        mInjector =
+                Mockito.spy(
+                        new FakeInjector(
+                                mSpyContext,
+                                new SdkSandboxStorageManager(
+                                        mSpyContext,
+                                        new FakeSdkSandboxManagerLocal(),
+                                        Mockito.spy(PackageManagerLocal.class),
+                                        /*rootDir=*/ context.getDir(
+                                                        "test_dir", Context.MODE_PRIVATE)
+                                                .getPath()),
+                                sProvider,
+                                Mockito.spy(SdkSandboxPulledAtoms.class)));
 
         mService = new SdkSandboxManagerService(mSpyContext, mInjector);
         mService.forceEnableSandbox();
@@ -1255,37 +1266,5 @@ public class SdkSandboxStatsdMetricsUnitTest {
         sandboxLatencyInfo.setTimeSandboxReceivedCallFromSystemServer(
                 TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER);
         sandboxLatencyInfo.setTimeSandboxCalledSystemServer(TIME_SANDBOX_CALLED_SYSTEM_SERVER);
-    }
-
-    public static class InjectorForTest extends SdkSandboxManagerService.Injector {
-        private ArrayDeque<Long> mLatencyTimeSeries;
-
-        public InjectorForTest(Context spyContext) {
-            super(spyContext);
-            mLatencyTimeSeries = new ArrayDeque<>();
-        }
-
-
-        @Override
-        public SdkSandboxServiceProvider getSdkSandboxServiceProvider() {
-            return sProvider;
-        }
-
-        @Override
-        public long elapsedRealtime() {
-            if (mLatencyTimeSeries.isEmpty()) {
-                return SystemClock.elapsedRealtime();
-            }
-
-            return mLatencyTimeSeries.poll();
-        }
-
-        void setLatencyTimeSeries(List<Long> latencyTimeSeries) {
-            mLatencyTimeSeries = new ArrayDeque<>(latencyTimeSeries);
-        }
-
-        void resetTimeSeries() {
-            mLatencyTimeSeries.clear();
-        }
     }
 }

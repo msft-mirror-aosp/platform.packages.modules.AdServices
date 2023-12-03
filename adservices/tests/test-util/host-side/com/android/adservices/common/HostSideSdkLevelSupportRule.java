@@ -21,7 +21,7 @@ import com.android.tradefed.device.ITestDevice;
 public final class HostSideSdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
 
     private HostSideSdkLevelSupportRule(AndroidSdkLevel level) {
-        super(ConsoleLogger.getInstance(), level);
+        super(ConsoleLogger.getInstance(), AndroidSdkRange.forAtLeast(level.getLevel()));
     }
 
     public void setDevice(ITestDevice device) {

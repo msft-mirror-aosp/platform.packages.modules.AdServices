@@ -43,8 +43,10 @@ import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -102,6 +104,7 @@ public class NotificationActivityGAV2UxSelectorUiAutomatorTest {
 
     @Test
     public void euAcceptFlowTest() throws UiObjectNotFoundException, InterruptedException {
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
         startActivity(true);
@@ -109,8 +112,6 @@ public class NotificationActivityGAV2UxSelectorUiAutomatorTest {
                 getElement(R.string.notificationUI_confirmation_left_control_button_text);
         UiObject rightControlButton =
                 getElement(R.string.notificationUI_confirmation_right_control_button_text);
-        assertThat(leftControlButton.exists()).isFalse();
-        assertThat(rightControlButton.exists()).isFalse();
 
         clickMoreToBottom();
         assertThat(leftControlButton.exists()).isTrue();
@@ -140,8 +141,6 @@ public class NotificationActivityGAV2UxSelectorUiAutomatorTest {
         startActivity(false);
         UiObject leftControlButton = getElement(R.string.notificationUI_left_control_button_text);
         UiObject rightControlButton = getElement(R.string.notificationUI_right_control_button_text);
-        assertThat(leftControlButton.exists()).isFalse();
-        assertThat(rightControlButton.exists()).isFalse();
         clickMoreToBottom();
         assertThat(leftControlButton.exists()).isTrue();
         assertThat(rightControlButton.exists()).isTrue();

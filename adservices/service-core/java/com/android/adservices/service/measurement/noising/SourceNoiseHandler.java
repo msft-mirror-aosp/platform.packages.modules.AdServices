@@ -147,7 +147,7 @@ public class SourceNoiseHandler {
 
         if (mFlags.getMeasurementEnableConfigurableEventReportingWindows()
                 || mFlags.getMeasurementEnableVtcConfigurableMaxEventReports()
-                || (mFlags.getMeasurementFlexLiteAPIEnabled()
+                || (mFlags.getMeasurementFlexLiteApiEnabled()
                         && (source.getMaxEventLevelReports() != null
                                 || source.hasManualEventReportWindows()))) {
             return calculateNoiseDynamically(source);

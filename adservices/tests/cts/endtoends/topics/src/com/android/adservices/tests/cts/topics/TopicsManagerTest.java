@@ -488,7 +488,7 @@ public class TopicsManagerTest {
         flags.setFlag(FlagsConstants.KEY_CLASSIFIER_TYPE, PRECOMPUTED_CLASSIFIER_TYPE);
 
         // Set flags for encryption test
-        flags.setFlag(FlagsConstants.KEY_TOPICS_ENABLE_ENCRYPTION, true);
+        flags.setFlag(FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED, true);
         flags.setFlag(FlagsConstants.KEY_ENABLE_DATABASE_SCHEMA_VERSION_9, true);
 
         // The Test App has 1 SDK: sdk6

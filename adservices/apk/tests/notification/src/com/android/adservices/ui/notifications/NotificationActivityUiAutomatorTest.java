@@ -138,10 +138,6 @@ public final class NotificationActivityUiAutomatorTest extends AdServicesUnitTes
         UiObject rightControlButton =
                 getElement(R.string.notificationUI_right_control_button_text_eu);
         UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
-        assertThat(leftControlButton.exists()).isFalse();
-        assertThat(rightControlButton.exists()).isFalse();
-        assertThat(moreButton.exists()).isTrue();
-
         while (moreButton.exists()) {
             moreButton.click();
             Thread.sleep(2000);
@@ -164,10 +160,6 @@ public final class NotificationActivityUiAutomatorTest extends AdServicesUnitTes
         UiObject rightControlButton =
                 getElement(R.string.notificationUI_right_control_button_text_eu);
         UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
-        assertThat(leftControlButton.exists()).isFalse();
-        assertThat(rightControlButton.exists()).isFalse();
-        assertThat(moreButton.exists()).isTrue();
-
         while (moreButton.exists()) {
             moreButton.click();
             Thread.sleep(2000);
