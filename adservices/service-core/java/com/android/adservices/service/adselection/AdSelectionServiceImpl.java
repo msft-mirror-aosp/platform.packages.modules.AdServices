@@ -897,7 +897,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 devContext,
                                 measurementService,
                                 mConsentManager,
-                                mContext)
+                                mContext,
+                                mShouldUseUnifiedTables)
                         .getEventReporter();
 
         eventReporter.reportInteraction(inputParams, callback);

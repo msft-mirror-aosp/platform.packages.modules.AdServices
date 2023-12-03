@@ -21,6 +21,8 @@ java_test_host {
     srcs: ["src/**/*.java"],
     libs: [
         "tradefed",
+    ],
+    static_libs: [
         "cts-install-lib-host",
     ],
     test_suites: [

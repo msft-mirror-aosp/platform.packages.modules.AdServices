@@ -686,7 +686,7 @@ public interface Flags extends CommonFlags {
     boolean MEASUREMENT_FLEX_LITE_API_ENABLED = true;
 
     /** Returns true if flex lite api is enabled else false. */
-    default boolean getMeasurementFlexLiteAPIEnabled() {
+    default boolean getMeasurementFlexLiteApiEnabled() {
         return MEASUREMENT_FLEX_LITE_API_ENABLED;
     }
 
@@ -3405,12 +3405,20 @@ public interface Flags extends CommonFlags {
         return DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED;
     }
 
-    /** Default value for flexible event reporting API */
+    /** Default value for Measurement flexible event reporting API */
     boolean MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED = false;
 
-    /** Returns whether to enable flexible event reporting API */
+    /** Returns whether to enable Measurement flexible event reporting API */
     default boolean getMeasurementFlexibleEventReportingApiEnabled() {
         return MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED;
+    }
+
+    /** Default value for Measurement trigger data matching */
+    boolean MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING = true;
+
+    /** Returns whether to enable Measurement trigger data matching */
+    default boolean getMeasurementEnableTriggerDataMatching() {
+        return MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING;
     }
 
     /** Default maximum sources per publisher */
