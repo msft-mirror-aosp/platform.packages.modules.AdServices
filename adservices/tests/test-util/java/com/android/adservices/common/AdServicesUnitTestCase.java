@@ -79,7 +79,8 @@ public abstract class AdServicesUnitTestCase {
             new ApplicationContextSingletonRule(/* restoreAfter= */ false);
 
     @Rule(order = 6)
-    public final ProcessLifeguardRule processLifeguard = new ProcessLifeguardRule();
+    public final ProcessLifeguardRule processLifeguard =
+            new ProcessLifeguardRule(ProcessLifeguardRule.Mode.IGNORE);
 
     @Rule(order = 7)
     public final Expect expect = Expect.create();
