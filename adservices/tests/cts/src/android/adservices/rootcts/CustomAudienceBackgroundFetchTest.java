@@ -34,6 +34,7 @@ import java.util.concurrent.ExecutionException;
 
 public class CustomAudienceBackgroundFetchTest extends FledgeScenarioTest {
 
+    private static final String CA_NAME = "shoes";
     private BackgroundJobHelper mBackgroundJobHelper;
 
     @Before
@@ -53,15 +54,45 @@ public class CustomAudienceBackgroundFetchTest extends FledgeScenarioTest {
                         "scenarios/remarketing-cuj-020.json", getCacheBusterPrefix());
         setupDefaultMockWebServer(dispatcher);
         AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
-        String customAudienceName = "shoes";
 
         try {
-            joinCustomAudience(makeCustomAudience(customAudienceName).setAds(List.of()).build());
+            joinCustomAudience(makeCustomAudience(CA_NAME).setAds(List.of()).build());
             assertThrows(ExecutionException.class, () -> doSelectAds(adSelectionConfig));
-            mBackgroundJobHelper.runJob(FLEDGE_BACKGROUND_FETCH_JOB.getJobId());
+            assertThat(mBackgroundJobHelper.runJob(FLEDGE_BACKGROUND_FETCH_JOB.getJobId()))
+                    .isTrue();
             assertThat(doSelectAds(adSelectionConfig).hasOutcome()).isTrue();
         } finally {
-            leaveCustomAudience(customAudienceName);
+            leaveCustomAudience(CA_NAME);
+        }
+
+        assertThat(dispatcher.getCalledPaths())
+                .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
+    }
+
+    /**
+     * Test to ensure that trusted signals are not updated if a daily update server response exceeds
+     * the 30-second timeout.
+     */
+    @Test
+    public void testAdSelection_withHighLatencyBackend_backgroundJobFails() throws Exception {
+        ScenarioDispatcher dispatcher =
+                ScenarioDispatcher.fromScenario(
+                        "scenarios/remarketing-cuj-030-032.json", getCacheBusterPrefix());
+        setupDefaultMockWebServer(dispatcher);
+        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+
+        try {
+            joinCustomAudience(makeCustomAudience(CA_NAME).setAds(List.of()).build());
+            assertThrows(ExecutionException.class, () -> doSelectAds(adSelectionConfig));
+            assertThat(mBackgroundJobHelper.runJob(FLEDGE_BACKGROUND_FETCH_JOB.getJobId()))
+                    .isTrue();
+            // Wait for the execution to complete. As this is an asynchronous operation, there is no
+            // better alternative to Thread.sleep().
+            // In this case, the background job should timeout and the subsequent call fail.
+            Thread.sleep(31 * 1000);
+            assertThrows(ExecutionException.class, () -> doSelectAds(adSelectionConfig));
+        } finally {
+            leaveCustomAudience(CA_NAME);
         }
 
         assertThat(dispatcher.getCalledPaths())
