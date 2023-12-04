@@ -72,7 +72,7 @@ import androidx.annotation.NonNull;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.IntFailureSyncCallback;
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -105,7 +105,6 @@ import com.android.modules.utils.build.SdkLevel;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
@@ -127,7 +126,13 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+// TODO(b/290839573) - Remove @RequiresSdkLevelAtLeastS if Topics is enabled on R in the future.
 /** Unit test for {@link com.android.adservices.service.topics.TopicsServiceImpl}. */
+@RequiresSdkLevelAtLeastS(
+        reason =
+                "We are not expecting to launch Topics API on Android R. Hence, skipping this test"
+                        + " on Android R since some tests require handling of unsupported"
+                        + " PackageManager APIs.")
 public final class TopicsServiceImplTest extends AdServicesUnitTestCase {
     private static final String TEST_APP_PACKAGE_NAME = "com.android.adservices.servicecoretest";
     private static final String INVALID_PACKAGE_NAME = "com.do_not_exists";
@@ -170,12 +175,6 @@ public final class TopicsServiceImplTest extends AdServicesUnitTestCase {
     @Mock private AdServicesManager mMockAdServicesManager;
     @Mock private AppSearchConsentManager mAppSearchConsentManager;
     @Mock private TopicsCobaltLogger mTopicsCobaltLogger;
-
-    // We are not expecting to launch Topics API on Android R. Hence, skipping this test on
-    // Android R since some tests require handling of unsupported PackageManager APIs.
-    // TODO(b/290839573) - Remove rule if Topics is enabled on R in the future.
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() throws Exception {
