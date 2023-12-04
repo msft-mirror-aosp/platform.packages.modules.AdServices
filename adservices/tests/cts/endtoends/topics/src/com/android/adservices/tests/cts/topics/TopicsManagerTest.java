@@ -29,6 +29,7 @@ import android.adservices.topics.TopicsManager;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
@@ -37,6 +38,7 @@ import com.android.adservices.common.OutcomeReceiverForTests;
 import com.android.adservices.common.RequiresLowRamDevice;
 import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.service.FlagsConstants;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Before;
@@ -55,13 +57,17 @@ import java.util.concurrent.Executors;
 @RunWith(JUnit4.class)
 public class TopicsManagerTest {
     private static final String TAG = "TopicsManagerTest";
+
+    // Test constants for testing encryption
+    static final String PUBLIC_KEY_BASE64 = "rSJBSUYG0ebvfW1AXCWO0CMGMJhDzpfQm3eLyw1uxX8=";
+
     // The JobId of the Epoch Computation.
     private static final int EPOCH_JOB_ID = 2;
 
     // Override the Epoch Job Period to this value to speed up the epoch computation.
     private static final long TEST_EPOCH_JOB_PERIOD_MS = 5000;
     // Expected model versions.
-    private static final long EXPECTED_MODEL_VERSION = 4L;
+    private static final long EXPECTED_MODEL_VERSION = 5L;
     // Expected taxonomy version.
     private static final long EXPECTED_TAXONOMY_VERSION = 2L;
 
@@ -133,13 +139,14 @@ public class TopicsManagerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     // @RequiresGlobalKillSwitchDisabled // TODO(b/284971005): re-add when it uses the rule / runner
     public void testTopicsManager_testTopicsKillSwitch() throws Exception {
         // Override Topics kill switch to disable Topics API.
         flags.setTopicsKillSwitch(true);
 
         // Set classifier flag to use precomputed-then-on-device classifier.
-        flags.setTopicsClassifierType(DEFAULT_CLASSIFIER_TYPE);
+        flags.setFlag(FlagsConstants.KEY_CLASSIFIER_TYPE, DEFAULT_CLASSIFIER_TYPE);
 
         // Default classifier uses the precomputed list first, then on-device classifier.
         AdvertisingTopicsClient advertisingTopicsClient =
@@ -158,9 +165,10 @@ public class TopicsManagerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_disableDirectAppCalls_testEmptySdkNameRequests()
             throws Exception {
-        flags.setTopicsDisableDirectAppCalls(true);
+        flags.setFlag(FlagsConstants.KEY_TOPICS_DISABLE_DIRECT_APP_CALLS, true);
 
         AdvertisingTopicsClient advertisingTopicsClient =
                 new AdvertisingTopicsClient.Builder()
@@ -177,13 +185,14 @@ public class TopicsManagerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_testOnDeviceKillSwitch_shouldUsePrecomputedList()
             throws Exception {
         // Override Topics on device classifier kill switch to disable on device classifier.
         flags.setTopicsOnDeviceClassifierKillSwitch(true);
 
         // Set classifier flag to use on-device classifier.
-        flags.setTopicsClassifierType(ON_DEVICE_CLASSIFIER_TYPE);
+        flags.setFlag(FlagsConstants.KEY_CLASSIFIER_TYPE, ON_DEVICE_CLASSIFIER_TYPE);
 
         // The Test App has 1 SDK: sdk5
         // sdk3 calls the Topics API.
@@ -232,12 +241,14 @@ public class TopicsManagerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runDefaultClassifier_usingGetMethodToCreateManager()
             throws Exception {
         testTopicsManager_runDefaultClassifier(/* useGetMethodToCreateManager */ true);
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runDefaultClassifier() throws Exception {
         testTopicsManager_runDefaultClassifier(/* useGetMethodToCreateManager */ false);
     }
@@ -245,7 +256,7 @@ public class TopicsManagerTest {
     private void testTopicsManager_runDefaultClassifier(boolean useGetMethodToCreateManager)
             throws Exception {
         // Set classifier flag to use precomputed-then-on-device classifier.
-        flags.setTopicsClassifierType(DEFAULT_CLASSIFIER_TYPE);
+        flags.setFlag(FlagsConstants.KEY_CLASSIFIER_TYPE, DEFAULT_CLASSIFIER_TYPE);
 
         // Default classifier uses the precomputed list first, then on-device classifier.
         // The Test App has 2 SDKs: sdk1 calls the Topics API and sdk2 does not.
@@ -308,12 +319,14 @@ public class TopicsManagerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runOnDeviceClassifier_usingGetMethodToCreateManager()
             throws Exception {
         testTopicsManager_runOnDeviceClassifier(true);
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runOnDeviceClassifier() throws Exception {
         testTopicsManager_runOnDeviceClassifier(false);
     }
@@ -321,12 +334,14 @@ public class TopicsManagerTest {
     private void testTopicsManager_runOnDeviceClassifier(boolean useGetMethodToCreateManager)
             throws Exception {
         // Set classifier flag to use on-device classifier.
-        flags.setTopicsClassifierType(ON_DEVICE_CLASSIFIER_TYPE);
+        flags.setFlag(FlagsConstants.KEY_CLASSIFIER_TYPE, ON_DEVICE_CLASSIFIER_TYPE);
 
         // Set number of top labels returned by the on-device classifier to 5.
-        flags.setTopicsClassifierNumberOfTopLabels(TEST_CLASSIFIER_NUMBER_OF_TOP_LABELS);
+        flags.setFlag(
+                FlagsConstants.KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS,
+                TEST_CLASSIFIER_NUMBER_OF_TOP_LABELS);
         // Remove classifier threshold by setting it to 0.
-        flags.setTopicsClassifierThreshold(TEST_CLASSIFIER_THRESHOLD);
+        flags.setFlag(FlagsConstants.KEY_CLASSIFIER_THRESHOLD, TEST_CLASSIFIER_THRESHOLD);
 
         // The Test App has 1 SDK: sdk3
         // sdk3 calls the Topics API.
@@ -368,17 +383,21 @@ public class TopicsManagerTest {
                 .that(topic.getTaxonomyVersion())
                 .isEqualTo(EXPECTED_TAXONOMY_VERSION);
 
-        // Top 5 classifications for empty string with v4 model are:
-        // S-: [10420, 10189, 10301, 10230, 10010].
-        // T+: [10166, 10010, 10301, 10230, 10184].
-        // V4 model uses package name as part of input, which differs between
+        // Top 5 classifications and corresponding input for v5 model are:
+        // S-:
+        //  Input string: ". android adextservices tests cts endtoendtest"
+        //  Predictions: [10301, 10009, 10230, 10010, 10184].
+        // T+:
+        //  Input string: ". android adservices tests cts endtoendtest"
+        //  Predictions: [10166, 10010, 10301, 10230, 10184].
+        // V5 model uses package name as part of input, which differs between
         // versions for back-compat, changing the returned topics for each version.
         // This is computed by running the model on the device; topics are checked
         // depending on whether the package name is that for S- or T+.
         // Returned topic is one of the 5 classification topics of the test app.
         List<Integer> expectedTopTopicIds;
         if (ADSERVICES_PACKAGE_NAME.contains("ext.services")) {
-            expectedTopTopicIds = Arrays.asList(10420, 10189, 10301, 10230, 10010);
+            expectedTopTopicIds = Arrays.asList(10301, 10009, 10230, 10010, 10184);
         } else {
             expectedTopTopicIds = Arrays.asList(10166, 10010, 10301, 10230, 10184);
         }
@@ -386,12 +405,14 @@ public class TopicsManagerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runPrecomputedClassifier_usingGetMethodToCreateManager()
             throws Exception {
         testTopicsManager_runPrecomputedClassifier(/* useGetMethodToCreateManager = */ true);
     }
 
     @Test
+    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runPrecomputedClassifier() throws Exception {
         testTopicsManager_runPrecomputedClassifier(/* useGetMethodToCreateManager = */ false);
     }
@@ -399,7 +420,7 @@ public class TopicsManagerTest {
     private void testTopicsManager_runPrecomputedClassifier(boolean useGetMethodToCreateManager)
             throws Exception {
         // Set classifier flag to use precomputed classifier.
-        flags.setTopicsClassifierType(PRECOMPUTED_CLASSIFIER_TYPE);
+        flags.setFlag(FlagsConstants.KEY_CLASSIFIER_TYPE, PRECOMPUTED_CLASSIFIER_TYPE);
 
         // The Test App has 1 SDK: sdk4
         // sdk4 calls the Topics API.
@@ -444,6 +465,82 @@ public class TopicsManagerTest {
         // Top 5 topic ids as listed in precomputed_app_list.csv
         List<Integer> expectedTopTopicIds = Arrays.asList(10147, 10253, 10175, 10254, 10333);
         assertThat(topic.getTopicId()).isIn(expectedTopTopicIds);
+    }
+
+    @Test
+    @FlakyTest(bugId = 290122696)
+    public void testTopicsManager_runPrecomputedClassifier_encryptedTopics_usingGetManager()
+            throws Exception {
+        testTopicsManager_runPrecomputedClassifier_encryptedTopics(
+                /* useGetMethodToCreateManager = */ true);
+    }
+
+    @Test
+    @FlakyTest(bugId = 290122696)
+    public void testTopicsManager_runPrecomputedClassifier_encryptedTopics() throws Exception {
+        testTopicsManager_runPrecomputedClassifier_encryptedTopics(
+                /* useGetMethodToCreateManager = */ false);
+    }
+
+    private void testTopicsManager_runPrecomputedClassifier_encryptedTopics(
+            boolean useGetMethodToCreateManager) throws Exception {
+        // Set classifier flag to use precomputed classifier.
+        flags.setFlag(FlagsConstants.KEY_CLASSIFIER_TYPE, PRECOMPUTED_CLASSIFIER_TYPE);
+
+        // Set flags for encryption test
+        flags.setFlag(FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED, true);
+        flags.setFlag(FlagsConstants.KEY_ENABLE_DATABASE_SCHEMA_VERSION_9, true);
+
+        // The Test App has 1 SDK: sdk6
+        // sdk6 calls the Topics API.
+        AdvertisingTopicsClient advertisingTopicsClient6 =
+                new AdvertisingTopicsClient.Builder()
+                        .setContext(sContext)
+                        .setSdkName("sdk6")
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .setUseGetMethodToCreateManagerInstance(useGetMethodToCreateManager)
+                        .build();
+
+        // At beginning, Sdk6 receives no topic.
+        GetTopicsResponse sdk6Result = advertisingTopicsClient6.getTopics().get();
+        assertThat(sdk6Result.getTopics()).isEmpty();
+
+        // Now force the Epoch Computation Job. This should be done in the same epoch for
+        // callersCanLearnMap to have the entry for processing.
+        forceEpochComputationJob();
+
+        // Wait to the next epoch. We will not need to do this after we implement the fix in
+        // go/rb-topics-epoch-scheduling
+        Thread.sleep(TEST_EPOCH_JOB_PERIOD_MS);
+
+        // Since the sdk4 called the Topics API in the previous Epoch, it should receive some topic.
+        sdk6Result = advertisingTopicsClient6.getTopics().get();
+        assertThat(sdk6Result.getTopics()).isNotEmpty();
+
+        // We only have 5 topics classified by the precomputed classifier.
+        // The app will be assigned one random topic from one of these 5 topics.
+        assertThat(sdk6Result.getTopics()).hasSize(1);
+        Topic topic = sdk6Result.getTopics().get(0);
+
+        // Expected asset versions to be bundled in the build.
+        // If old assets are being picked up, repo sync, build and install the new apex again.
+        assertWithMessage(INCORRECT_MODEL_VERSION_MESSAGE)
+                .that(topic.getModelVersion())
+                .isEqualTo(EXPECTED_MODEL_VERSION);
+        assertWithMessage(INCORRECT_TAXONOMY_VERSION_MESSAGE)
+                .that(topic.getTaxonomyVersion())
+                .isEqualTo(EXPECTED_TAXONOMY_VERSION);
+
+        // Top 5 topic ids as listed in precomputed_app_list.csv
+        List<Integer> expectedTopTopicIds = Arrays.asList(10147, 10253, 10175, 10254, 10333);
+        assertThat(topic.getTopicId()).isIn(expectedTopTopicIds);
+
+        // Verify values for encrypted topics
+        assertThat(sdk6Result.getEncryptedTopics()).hasSize(1);
+        assertThat(sdk6Result.getEncryptedTopics().get(0).getEncryptedTopic()).isNotNull();
+        assertThat(sdk6Result.getEncryptedTopics().get(0).getKeyIdentifier())
+                .isEqualTo(PUBLIC_KEY_BASE64);
+        assertThat(sdk6Result.getEncryptedTopics().get(0).getEncapsulatedKey()).isNotNull();
     }
 
     @Test

@@ -16,8 +16,13 @@
 
 package com.android.adservices.service.measurement;
 
+import android.annotation.IntDef;
+import android.net.Uri;
+
 import com.android.adservices.service.measurement.util.Validation;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.Objects;
 
 /**
@@ -27,6 +32,8 @@ import java.util.Objects;
  */
 public class Attribution {
     private final String mId;
+    // Defaults to Scope.EVENT
+    @Scope private int mScope;
     private final String mSourceSite;
     private final String mSourceOrigin;
     private final String mDestinationSite;
@@ -37,9 +44,11 @@ public class Attribution {
     private final String mRegistrant;
     private final String mSourceId;
     private final String mTriggerId;
+    private final Uri mRegistrationOrigin;
 
     private Attribution(Builder builder) {
         this.mId = builder.mId;
+        this.mScope = builder.mScope;
         this.mSourceSite = builder.mSourceSite;
         this.mSourceOrigin = builder.mSourceOrigin;
         this.mDestinationSite = builder.mDestinationSite;
@@ -49,6 +58,14 @@ public class Attribution {
         this.mRegistrant = builder.mRegistrant;
         this.mSourceId = builder.mSourceId;
         this.mTriggerId = builder.mTriggerId;
+        this.mRegistrationOrigin = builder.mRegistrationOrigin;
+    }
+
+    @IntDef(value = {Scope.EVENT, Scope.AGGREGATE})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface Scope {
+        int EVENT = 0;
+        int AGGREGATE = 1;
     }
 
     @Override
@@ -57,7 +74,8 @@ public class Attribution {
             return false;
         }
         Attribution attr = (Attribution) obj;
-        return mTriggerTime == attr.mTriggerTime
+        return mScope == attr.mScope
+                && mTriggerTime == attr.mTriggerTime
                 && Objects.equals(mSourceSite, attr.mSourceSite)
                 && Objects.equals(mSourceOrigin, attr.mSourceOrigin)
                 && Objects.equals(mDestinationSite, attr.mDestinationSite)
@@ -65,12 +83,14 @@ public class Attribution {
                 && Objects.equals(mEnrollmentId, attr.mEnrollmentId)
                 && Objects.equals(mRegistrant, attr.mRegistrant)
                 && Objects.equals(mSourceId, attr.mSourceId)
-                && Objects.equals(mTriggerId, attr.mTriggerId);
+                && Objects.equals(mTriggerId, attr.mTriggerId)
+                && Objects.equals(mRegistrationOrigin, attr.mRegistrationOrigin);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(
+                mScope,
                 mSourceSite,
                 mSourceOrigin,
                 mDestinationSite,
@@ -79,12 +99,19 @@ public class Attribution {
                 mTriggerTime,
                 mRegistrant,
                 mSourceId,
-                mTriggerId);
+                mTriggerId,
+                mRegistrationOrigin);
     }
 
     /** @return unique identifier for {@link Attribution} */
     public String getId() {
         return mId;
+    }
+
+    /** Current scope of the {@link Attribution}. */
+    @Scope
+    public int getScope() {
+        return mScope;
     }
 
     /** @return top private domain of {@link Source} publisher */
@@ -132,9 +159,17 @@ public class Attribution {
         return mTriggerId;
     }
 
+    /**
+     * @return {@link Trigger} registration origin
+     */
+    public Uri getRegistrationOrigin() {
+        return mRegistrationOrigin;
+    }
+
     /** Builder for AttributionRateLimit */
     public static final class Builder {
         private String mId;
+        @Scope private int mScope;
         private String mSourceSite;
         private String mSourceOrigin;
         private String mDestinationSite;
@@ -144,10 +179,17 @@ public class Attribution {
         private String mRegistrant;
         private String mSourceId;
         private String mTriggerId;
+        private Uri mRegistrationOrigin;
 
         /** See {@link Attribution#getId()}. */
         public Builder setId(String id) {
             mId = id;
+            return this;
+        }
+
+        /** See {@link Attribution#getScope()}. */
+        public Builder setScope(@Scope int scope) {
+            mScope = scope;
             return this;
         }
 
@@ -202,6 +244,12 @@ public class Attribution {
         /** See {@link Attribution#getTriggerId()}. */
         public Builder setTriggerId(String triggerId) {
             mTriggerId = triggerId;
+            return this;
+        }
+
+        /** See {@link Attribution#getRegistrationOrigin()} ()}. */
+        public Builder setRegistrationOrigin(Uri registrationOrigin) {
+            mRegistrationOrigin = registrationOrigin;
             return this;
         }
 

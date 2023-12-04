@@ -91,14 +91,9 @@ public class PeriodicEncodingJobService extends JobService {
                     /* doRecord=*/ true);
         }
 
-        // Skip the execution and cancel the job if user consent is revoked. Use the aggregated
-        // consent with Beta UX and use the per-API consent with GA UX.
-        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()
-                        && !ConsentManager.getInstance(this)
-                                .getConsent(AdServicesApiType.FLEDGE)
-                                .isGiven()
-                || !FlagsFactory.getFlags().getGaUxFeatureEnabled()
-                        && !ConsentManager.getInstance(this).getConsent().isGiven()) {
+        // Skip the execution and cancel the job if user consent is revoked.
+        // Use the per-API consent with GA UX.
+        if (!ConsentManager.getInstance(this).getConsent(AdServicesApiType.FLEDGE).isGiven()) {
             LoggerFactory.getFledgeLogger()
                     .d("User Consent is revoked ; skipping and cancelling job");
             return skipAndCancelBackgroundJob(
@@ -148,6 +143,7 @@ public class PeriodicEncodingJobService extends JobService {
     @Override
     public boolean onStopJob(JobParameters params) {
         LoggerFactory.getFledgeLogger().d("PeriodicEncodingJobService.onStopJob");
+        PeriodicEncodingJobWorker.getInstance(this).stopWork();
 
         boolean shouldRetry = true;
         AdservicesJobServiceLogger.getInstance(PeriodicEncodingJobService.this)
@@ -160,6 +156,10 @@ public class PeriodicEncodingJobService extends JobService {
      * Attempts to schedule the Periodic encoding as a singleton job if it is not already scheduled.
      */
     public static void scheduleIfNeeded(Context context, Flags flags, boolean forceSchedule) {
+        LoggerFactory.getFledgeLogger()
+                .v(
+                        "Attempting to schedule job:%s if needed",
+                        PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID);
         if (!flags.getProtectedSignalsPeriodicEncodingEnabled()) {
             LoggerFactory.getFledgeLogger()
                     .v("Protected Signals periodic encoding is disabled; skipping schedule");

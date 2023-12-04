@@ -30,6 +30,7 @@ import androidx.test.uiautomator.UiSelector;
 
 import com.android.adservices.api.R;
 import com.android.adservices.tests.ui.libs.UiConstants;
+import com.android.adservices.tests.ui.libs.UiUtils;
 
 public class SettingsPages {
     public static void testSettingsPageConsents(
@@ -57,6 +58,10 @@ public class SettingsPages {
             case U18_UX:
                 enterU18ConsentPage(context, device);
                 flipConsent(device, isOptin, flipConsent);
+                break;
+            case RVC_UX:
+                enterU18ConsentPage(context, device);
+                flipConsent(device, isOptin, flipConsent);
         }
     }
 
@@ -80,26 +85,31 @@ public class SettingsPages {
         scrollToAndClick(context, device, R.string.settingsUI_apps_ga_title);
     }
 
+    /** Flips the consent toggle. */
     public static void flipConsent(UiDevice device, boolean isOptin, boolean flipConsent)
             throws UiObjectNotFoundException, InterruptedException {
         UiObject consentSwitch =
                 device.findObject(new UiSelector().className("android.widget.Switch"));
         consentSwitch.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(consentSwitch.exists()).isTrue();
+
+        // The consent toggle can be blocked by the navigation bar on some devices.
+        UiUtils.gentleSwipe(device);
+
         boolean consentStatus = consentSwitch.isChecked();
         if (flipConsent) {
-            consentSwitch.click();
+            consentSwitch.clickTopLeft();
             Thread.sleep(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
             assertThat(consentSwitch.isChecked()).isEqualTo(!consentStatus);
         } else if (isOptin) {
             if (!consentStatus) {
-                consentSwitch.click();
+                consentSwitch.clickTopLeft();
             }
             Thread.sleep(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
             assertThat(consentSwitch.isChecked()).isTrue();
         } else {
             if (consentStatus) {
-                consentSwitch.click();
+                consentSwitch.clickTopLeft();
             }
             Thread.sleep(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
             assertThat(consentSwitch.isChecked()).isFalse();

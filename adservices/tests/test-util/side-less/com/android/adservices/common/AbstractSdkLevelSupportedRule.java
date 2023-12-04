@@ -23,6 +23,7 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 // TODO(b/295269584): move to module-utils?
@@ -43,19 +44,20 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
 
     private static final String TAG = "SdkLevelSupportRule";
 
-    // TODO(b/295269584): need to provide more flexible levels (min, max, range, etc..)
+    private static final String REASON_LEVEL_SET_ON_RULE_CONSTRUCTOR =
+            "(level set on rule constructor)";
 
-    private final AndroidSdkLevel mDefaultMinLevel;
+    private final AndroidSdkRange mDefaultRequiredRange;
     protected final Logger mLog;
 
-    AbstractSdkLevelSupportedRule(RealLogger logger, AndroidSdkLevel defaultMinLevel) {
+    AbstractSdkLevelSupportedRule(RealLogger logger, AndroidSdkRange defaultRange) {
         mLog = new Logger(Objects.requireNonNull(logger), TAG);
-        mDefaultMinLevel = Objects.requireNonNull(defaultMinLevel);
-        mLog.d("Constructor: logger=%s, defaultMinLevel=%s", logger, defaultMinLevel);
+        mDefaultRequiredRange = Objects.requireNonNull(defaultRange);
+        mLog.d("Constructor: logger=%s, defaultRange=%s", logger, defaultRange);
     }
 
     AbstractSdkLevelSupportedRule(RealLogger logger) {
-        this(logger, /* defaultMinLevel= */ AndroidSdkLevel.ANY);
+        this(logger, /* defaultRange= */ AndroidSdkRange.forAnyLevel());
     }
 
     @Override
@@ -68,40 +70,20 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                skipIfSdkLevelHigherThanMax(description);
-
                 String testName = description.getDisplayName();
-                MinimumLevelRequired minLevelRequired = getMinimumLevelRequired(description);
-                mLog.v("MinimumLevelRequired for %s: %s", testName, minLevelRequired);
+                RequiredRange requiredRange = getRequiredRange(description);
+                mLog.v("required SDK range for %s: %s", testName, requiredRange);
 
-                boolean skip = false;
-                switch (minLevelRequired.level) {
-                    case ANY:
-                        break;
-                    case R:
-                        skip = !isAtLeastR();
-                        break;
-                    case S:
-                        skip = !isAtLeastS();
-                        break;
-                    case U:
-                        skip = !isAtLeastU();
-                        break;
-                    case T:
-                        skip = !isAtLeastT();
-                        break;
-                    default:
-                        // Shouldn't happen
-                        throw new IllegalStateException(
-                                "Invalid MinimumLevelRequired: " + minLevelRequired.level);
-                }
-
+                int deviceLevel = getDeviceApiLevel().mLevel;
+                boolean skip = !requiredRange.range.isInRange(deviceLevel);
                 if (skip) {
                     String message =
-                            "requires SDK level "
-                                    + minLevelRequired.level
-                                    + ". Reason: "
-                                    + minLevelRequired.reason;
+                            "requires "
+                                    + requiredRange.range
+                                    + " (and device level is "
+                                    + deviceLevel
+                                    + "). Reason: "
+                                    + requiredRange.reason;
                     mLog.i("Skipping %s, as it %s", testName, message);
                     throw new AssumptionViolatedException("Test " + message);
                 }
@@ -110,82 +92,114 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
         };
     }
 
-    protected void skipIfSdkLevelHigherThanMax(Description description) throws Exception {
-        // TODO(b/295269584): for now it only supports (no pun intended) "lessThanT", but
-        // it should support others (in which case it would need explicit minLevel /
-        // maxLevel
-        RequiresSdkLevelLessThanT requiresLessThanT =
-                description.getAnnotation(RequiresSdkLevelLessThanT.class);
-        if (requiresLessThanT != null && isAtLeastT()) {
-            String testName = description.getDisplayName();
-            String reason = requiresLessThanT.reason();
-            String message =
-                    "Test annotated with @RequiresSdkLevelLessThanT "
-                            + (reason.isEmpty()
-                                    ? ""
-                                    : "(reason=" + requiresLessThanT.reason() + ")");
-            mLog.i("Skipping %s: %s", testName, message);
-            throw new AssumptionViolatedException(message);
-        }
-    }
+    // TODO(b/295269584): expose as @VisibleForTest and add unit tests for it - that would be a more
+    // pragmatic approach then adding more combinations to the existing tests
+    private RequiredRange getRequiredRange(Description description) {
+        // Start with the levels set in the constructor
+        int minLevel = mDefaultRequiredRange.mMinLevel;
+        int maxLevel = mDefaultRequiredRange.mMaxLevel;
+        String reason = REASON_LEVEL_SET_ON_RULE_CONSTRUCTOR;
 
-    private MinimumLevelRequired getMinimumLevelRequired(Description description) {
-        RequiresSdkLevelAtLeastU atLeastU =
-                description.getAnnotation(RequiresSdkLevelAtLeastU.class);
-        if (atLeastU != null) {
-            return new MinimumLevelRequired(AndroidSdkLevel.U, atLeastU.reason());
-        }
-        RequiresSdkLevelAtLeastT atLeastT =
-                description.getAnnotation(RequiresSdkLevelAtLeastT.class);
-        if (atLeastT != null) {
-            return new MinimumLevelRequired(AndroidSdkLevel.T, atLeastT.reason());
+        // Then check for the "atLeastX" method annotations
+        RequiresSdkLevelAtLeastR atLeastR =
+                description.getAnnotation(RequiresSdkLevelAtLeastR.class);
+        if (atLeastR != null && minLevel <= AndroidSdkLevel.R.mLevel) {
+            minLevel = AndroidSdkLevel.R.mLevel;
+            reason = atLeastR.reason();
         }
         RequiresSdkLevelAtLeastS atLeastS =
                 description.getAnnotation(RequiresSdkLevelAtLeastS.class);
-        if (atLeastS != null) {
-            return new MinimumLevelRequired(AndroidSdkLevel.S, atLeastS.reason());
+        if (atLeastS != null && minLevel <= AndroidSdkLevel.S.mLevel) {
+            minLevel = AndroidSdkLevel.S.mLevel;
+            reason = atLeastS.reason();
         }
-        RequiresSdkLevelAtLeastR atLeastR =
-                description.getAnnotation(RequiresSdkLevelAtLeastR.class);
-        if (atLeastR != null) {
-            return new MinimumLevelRequired(AndroidSdkLevel.R, atLeastR.reason());
+        RequiresSdkLevelAtLeastS2 atLeastS2 =
+                description.getAnnotation(RequiresSdkLevelAtLeastS2.class);
+        if (atLeastS2 != null && minLevel <= AndroidSdkLevel.S2.mLevel) {
+            minLevel = AndroidSdkLevel.S2.mLevel;
+            reason = atLeastS2.reason();
+        }
+        RequiresSdkLevelAtLeastT atLeastT =
+                description.getAnnotation(RequiresSdkLevelAtLeastT.class);
+        if (atLeastT != null && minLevel <= AndroidSdkLevel.T.mLevel) {
+            minLevel = AndroidSdkLevel.T.mLevel;
+            reason = atLeastT.reason();
+        }
+        RequiresSdkLevelAtLeastU atLeastU =
+                description.getAnnotation(RequiresSdkLevelAtLeastU.class);
+        if (atLeastU != null && minLevel <= AndroidSdkLevel.U.mLevel) {
+            minLevel = AndroidSdkLevel.U.mLevel;
+            reason = atLeastU.reason();
         }
 
-        return new MinimumLevelRequired(mDefaultMinLevel, "(level set on rule constructor)");
+        // Then check for the "atMostX" method annotations
+        RequiresSdkLevelLessThanT requiresLessThanT =
+                description.getAnnotation(RequiresSdkLevelLessThanT.class);
+        if (requiresLessThanT != null && maxLevel > AndroidSdkLevel.S2.mLevel) {
+            maxLevel = AndroidSdkLevel.S2.mLevel;
+            reason = requiresLessThanT.reason();
+        }
+        try {
+            return new RequiredRange(AndroidSdkRange.forRange(minLevel, maxLevel), reason);
+        } catch (Exception e) {
+            throw new IllegalArgumentException(
+                    "Invalid range when combining constructor range ("
+                            + mDefaultRequiredRange
+                            + ") and annotations ("
+                            + description.getAnnotations()
+                            + ")",
+                    e);
+        }
     }
 
-    private static final class MinimumLevelRequired {
-        public final AndroidSdkLevel level;
+    private static final class RequiredRange {
+        public final AndroidSdkRange range;
         public final String reason;
 
-        MinimumLevelRequired(AndroidSdkLevel level, String reason) {
-            this.level = level;
+        RequiredRange(AndroidSdkRange range, String reason) {
+            this.range = Objects.requireNonNull(range);
             this.reason = (reason == null || reason.isBlank()) ? "N/A" : reason;
         }
 
         @Override
         public String toString() {
-            return "[level=" + level + ", reason=" + reason + "]";
+            return "[range=" + range + ", reason=" + reason + "]";
         }
     }
+    /** Gets the device API level. */
+    public abstract AndroidSdkLevel getDeviceApiLevel();
 
     /** Gets whether the device supports at least Android {@code R}. */
-    public abstract boolean isAtLeastR() throws Exception;
+    public final boolean isAtLeastR() {
+        return getDeviceApiLevel().isAtLeast(AndroidSdkLevel.R);
+    }
 
     /** Gets whether the device supports at least Android {@code S}. */
-    public abstract boolean isAtLeastS() throws Exception;
+    public final boolean isAtLeastS() {
+        return getDeviceApiLevel().isAtLeast(AndroidSdkLevel.S);
+    }
+
+    /** Gets whether the device supports at least Android {@code SC_V2}. */
+    public final boolean isAtLeastS2() {
+        return getDeviceApiLevel().isAtLeast(AndroidSdkLevel.S2);
+    }
 
     /** Gets whether the device supports at least Android {@code T}. */
-    public abstract boolean isAtLeastT() throws Exception;
+    public final boolean isAtLeastT() {
+        return getDeviceApiLevel().isAtLeast(AndroidSdkLevel.T);
+    }
 
     /** Gets whether the device supports at least Android {@code U}. */
-    public abstract boolean isAtLeastU() throws Exception;
+    public final boolean isAtLeastU() {
+        return getDeviceApiLevel().isAtLeast(AndroidSdkLevel.U);
+    }
 
     // NOTE: calling it AndroidSdkLevel to avoid conflict with SdkLevel
     protected enum AndroidSdkLevel {
         ANY(Integer.MIN_VALUE),
         R(30),
         S(31),
+        S2(32),
         T(33),
         U(34);
 
@@ -201,6 +215,117 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
 
         int getLevel() {
             return mLevel;
+        }
+
+        public static AndroidSdkLevel forLevel(int level) {
+            switch (level) {
+                case 30:
+                    return R;
+                case 31:
+                    return S;
+                case 32:
+                    return S2;
+                case 33:
+                    return T;
+                case 34:
+                    return U;
+            }
+            throw new IllegalArgumentException("Unsupported level: " + level);
+        }
+    }
+
+    /** Represents a range of Android API levels. */
+    static final class AndroidSdkRange {
+        static final int NO_MIN = Integer.MIN_VALUE;
+        static final int NO_MAX = Integer.MAX_VALUE;
+
+        private final int mMinLevel;
+        private final int mMaxLevel;
+
+        private AndroidSdkRange(int minLevel, int maxLevel) {
+            if (minLevel > maxLevel || minLevel == NO_MAX || maxLevel == NO_MIN) {
+                throw new IllegalArgumentException(
+                        "maxLevel ("
+                                + maxLevel
+                                + ") must equal or higher than minLevel ("
+                                + minLevel
+                                + ")");
+            }
+            mMinLevel = minLevel;
+            mMaxLevel = maxLevel;
+        }
+
+        public static AndroidSdkRange forAtLeast(int level) {
+            return new AndroidSdkRange(/* minLevel= */ level, NO_MAX);
+        }
+
+        public static AndroidSdkRange forAtMost(int level) {
+            return new AndroidSdkRange(NO_MIN, /* maxLevel= */ level);
+        }
+
+        public static AndroidSdkRange forRange(int minLevel, int maxLevel) {
+            return new AndroidSdkRange(minLevel, maxLevel);
+        }
+
+        public static AndroidSdkRange forExactly(int level) {
+            return new AndroidSdkRange(/* minLevel= */ level, /* maxLevel= */ level);
+        }
+
+        public static AndroidSdkRange forAnyLevel() {
+            return new AndroidSdkRange(NO_MIN, NO_MAX);
+        }
+
+        public boolean isInRange(int level) {
+            return level >= mMinLevel && level <= mMaxLevel;
+        }
+
+        protected static AndroidSdkRange merge(AndroidSdkRange... ranges) {
+            Objects.requireNonNull(ranges, "ranges cannot be null");
+            if (ranges.length == 0) {
+                throw new IllegalArgumentException("ranges cannot be empty");
+            }
+            int minRange = NO_MIN;
+            int maxRange = NO_MAX;
+            for (AndroidSdkRange range : ranges) {
+                if (range == null) {
+                    throw new IllegalArgumentException(
+                            "ranges cannot have null range: " + Arrays.toString(ranges));
+                }
+                minRange = Math.max(minRange, range.mMinLevel);
+                maxRange = Math.min(maxRange, range.mMaxLevel);
+            }
+            return forRange(minRange, maxRange);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(mMaxLevel, mMinLevel);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (obj == null) return false;
+            if (getClass() != obj.getClass()) return false;
+            AndroidSdkRange other = (AndroidSdkRange) obj;
+            return mMaxLevel == other.mMaxLevel && mMinLevel == other.mMinLevel;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder builder = new StringBuilder("AndroidSdkRange[minLevel=");
+            if (mMinLevel == NO_MIN) {
+                builder.append("OPEN");
+            } else {
+                builder.append(mMinLevel);
+            }
+            builder.append(", maxLevel=");
+            if (mMaxLevel == NO_MAX) {
+                builder.append("OPEN");
+            } else {
+                builder.append(mMaxLevel);
+            }
+            return builder.append(']').toString();
         }
     }
 }

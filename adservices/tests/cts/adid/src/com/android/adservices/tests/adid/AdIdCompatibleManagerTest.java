@@ -15,8 +15,7 @@
  */
 package com.android.adservices.tests.adid;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdCompatibleManager;
@@ -44,7 +43,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class AdIdCompatibleManagerTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
-    private static final float DEFAULT_ADID_REQUEST_PERMITS_PER_SECOND = 25f;
     private static final Context sContext = ApplicationProvider.getApplicationContext();
 
     @Rule(order = 0)
@@ -80,8 +78,8 @@ public final class AdIdCompatibleManagerTest {
                 };
         adIdCompatibleManager.getAdId(CALLBACK_EXECUTOR, callback);
         AdId resultAdId = future.get();
-        Assert.assertNotNull(resultAdId.getAdId());
-        Assert.assertNotNull(resultAdId.isLimitAdTrackingEnabled());
+        assertThat(resultAdId.getAdId()).isNotNull();
+        assertThat(resultAdId.isLimitAdTrackingEnabled()).isFalse();
     }
 
     @Test
@@ -92,7 +90,7 @@ public final class AdIdCompatibleManagerTest {
         final long nowInMillis = System.currentTimeMillis();
         final float requestPerSecond = flags.getAdIdRequestPerSecond();
         for (int i = 0; i < requestPerSecond; i++) {
-            assertFalse(getAdIdAndVerifyRateLimitReached(adIdCompatibleManager));
+            assertThat(getAdIdAndVerifyRateLimitReached(adIdCompatibleManager)).isFalse();
         }
 
         // Due to bursting, we could reach the limit at the exact limit or limit + 1. Therefore,
@@ -106,7 +104,7 @@ public final class AdIdCompatibleManagerTest {
         final boolean executedInLessThanOneSec =
                 (System.currentTimeMillis() - nowInMillis) < (1_000 / requestPerSecond);
         if (executedInLessThanOneSec) {
-            assertTrue(reachedLimit);
+            assertThat(reachedLimit).isTrue();
         }
     }
 

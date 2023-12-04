@@ -21,6 +21,7 @@ import static com.android.adservices.data.signals.EncoderLogicHandler.FALLBACK_V
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
@@ -31,6 +32,7 @@ import android.net.Uri;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
+import com.android.adservices.service.devapi.DevContext;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -51,7 +53,9 @@ import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -64,15 +68,15 @@ public class EncoderLogicHandlerTest {
 
     @Rule public MockitoRule mRule = MockitoJUnit.rule();
 
-    @Mock private EncoderPersistenceManager mEncoderPersistenceManager;
+    @Mock private EncoderPersistenceDao mEncoderPersistenceDao;
 
     @Mock private EncoderEndpointsDao mEncoderEndpointsDao;
 
-    @Mock private EncoderLogicDao mEncoderLogicDao;
+    @Mock private EncoderLogicMetadataDao mEncoderLogicMetadataDao;
 
     @Mock private AdServicesHttpsClient mAdServicesHttpsClient;
 
-    @Captor ArgumentCaptor<DBEncoderLogic> mDBEncoderLogicArgumentCaptor;
+    @Captor ArgumentCaptor<DBEncoderLogicMetadata> mDBEncoderLogicArgumentCaptor;
 
     private ListeningExecutorService mExecutorService = MoreExecutors.newDirectExecutorService();
 
@@ -83,9 +87,9 @@ public class EncoderLogicHandlerTest {
     public void setup() {
         mEncoderLogicHandler =
                 new EncoderLogicHandler(
-                        mEncoderPersistenceManager,
+                        mEncoderPersistenceDao,
                         mEncoderEndpointsDao,
-                        mEncoderLogicDao,
+                        mEncoderLogicMetadataDao,
                         mAdServicesHttpsClient,
                         mExecutorService);
     }
@@ -108,6 +112,7 @@ public class EncoderLogicHandlerTest {
                         .setResponseHeaderKeys(ImmutableSet.of(ENCODER_VERSION_RESPONSE_HEADER))
                         .setUseCache(false)
                         .setUri(encoderUri)
+                        .setDevContext(DevContext.createForDevOptionsDisabled())
                         .build();
 
         String body = "function() { fake JS}";
@@ -125,10 +130,12 @@ public class EncoderLogicHandlerTest {
         ListenableFuture<AdServicesHttpClientResponse> responseFuture =
                 Futures.immediateFuture(response);
         when(mAdServicesHttpsClient.fetchPayload(request)).thenReturn(responseFuture);
-        when(mEncoderPersistenceManager.persistEncoder(buyer, body)).thenReturn(true);
+        when(mEncoderPersistenceDao.persistEncoder(buyer, body)).thenReturn(true);
 
         boolean updateSucceeded =
-                mEncoderLogicHandler.downloadAndUpdate(buyer).get(5, TimeUnit.SECONDS);
+                mEncoderLogicHandler
+                        .downloadAndUpdate(buyer, DevContext.createForDevOptionsDisabled())
+                        .get(5, TimeUnit.SECONDS);
         assertTrue(updateSucceeded);
     }
 
@@ -141,11 +148,13 @@ public class EncoderLogicHandlerTest {
         when(mEncoderEndpointsDao.getEndpoint(buyer)).thenReturn(encoderEndpoint);
 
         boolean updateSucceeded =
-                mEncoderLogicHandler.downloadAndUpdate(buyer).get(5, TimeUnit.SECONDS);
+                mEncoderLogicHandler
+                        .downloadAndUpdate(buyer, DevContext.createForDevOptionsDisabled())
+                        .get(5, TimeUnit.SECONDS);
         assertFalse("The call to download should have been skipped", updateSucceeded);
 
         verifyZeroInteractions(
-                mAdServicesHttpsClient, mEncoderPersistenceManager, mEncoderLogicDao);
+                mAdServicesHttpsClient, mEncoderPersistenceDao, mEncoderLogicMetadataDao);
     }
 
     @Test
@@ -163,10 +172,11 @@ public class EncoderLogicHandlerTest {
                         .setResponseHeaders(responseHeaders)
                         .build();
 
-        when(mEncoderPersistenceManager.persistEncoder(buyer, body)).thenReturn(true);
+        when(mEncoderPersistenceDao.persistEncoder(buyer, body)).thenReturn(true);
         assertTrue(mEncoderLogicHandler.extractAndPersistEncoder(buyer, response));
 
-        Mockito.verify(mEncoderLogicDao).persistEncoder(mDBEncoderLogicArgumentCaptor.capture());
+        Mockito.verify(mEncoderLogicMetadataDao)
+                .persistEncoderLogicMetadata(mDBEncoderLogicArgumentCaptor.capture());
         Assert.assertEquals(buyer, mDBEncoderLogicArgumentCaptor.getValue().getBuyer());
         Assert.assertEquals(version, mDBEncoderLogicArgumentCaptor.getValue().getVersion());
     }
@@ -179,10 +189,11 @@ public class EncoderLogicHandlerTest {
 
         AdServicesHttpClientResponse response =
                 AdServicesHttpClientResponse.builder().setResponseBody(body).build();
-        when(mEncoderPersistenceManager.persistEncoder(buyer, body)).thenReturn(true);
+        when(mEncoderPersistenceDao.persistEncoder(buyer, body)).thenReturn(true);
         assertTrue(mEncoderLogicHandler.extractAndPersistEncoder(buyer, response));
 
-        Mockito.verify(mEncoderLogicDao).persistEncoder(mDBEncoderLogicArgumentCaptor.capture());
+        Mockito.verify(mEncoderLogicMetadataDao)
+                .persistEncoderLogicMetadata(mDBEncoderLogicArgumentCaptor.capture());
         Assert.assertEquals(buyer, mDBEncoderLogicArgumentCaptor.getValue().getBuyer());
         Assert.assertEquals(
                 "Missing version from response should have fallen back to fallback",
@@ -207,10 +218,11 @@ public class EncoderLogicHandlerTest {
                         .setResponseHeaders(responseHeadersWithBadVersion)
                         .build();
 
-        when(mEncoderPersistenceManager.persistEncoder(buyer, body)).thenReturn(true);
+        when(mEncoderPersistenceDao.persistEncoder(buyer, body)).thenReturn(true);
         assertTrue(mEncoderLogicHandler.extractAndPersistEncoder(buyer, response));
 
-        Mockito.verify(mEncoderLogicDao).persistEncoder(mDBEncoderLogicArgumentCaptor.capture());
+        Mockito.verify(mEncoderLogicMetadataDao)
+                .persistEncoderLogicMetadata(mDBEncoderLogicArgumentCaptor.capture());
         Assert.assertEquals(buyer, mDBEncoderLogicArgumentCaptor.getValue().getBuyer());
         Assert.assertEquals(
                 "Unreadable version from response should have fallen back to fallback",
@@ -234,10 +246,50 @@ public class EncoderLogicHandlerTest {
                         .build();
 
         // Deliberately fail the persistence on file
-        when(mEncoderPersistenceManager.persistEncoder(buyer, body)).thenReturn(false);
+        when(mEncoderPersistenceDao.persistEncoder(buyer, body)).thenReturn(false);
         assertFalse(mEncoderLogicHandler.extractAndPersistEncoder(buyer, response));
 
-        Mockito.verifyZeroInteractions(mEncoderLogicDao);
+        Mockito.verifyZeroInteractions(mEncoderLogicMetadataDao);
+    }
+
+    @Test
+    public void testGetAllBuyersWithEncoders() {
+        mEncoderLogicHandler.getBuyersWithEncoders();
+        verify(mEncoderLogicMetadataDao).getAllBuyersWithRegisteredEncoders();
+    }
+
+    @Test
+    public void testGetAllBuyersWithStaleEncoders() {
+        Instant now = Instant.now();
+        mEncoderLogicHandler.getBuyersWithStaleEncoders(now);
+        verify(mEncoderLogicMetadataDao).getBuyersWithEncodersBeforeTime(now);
+    }
+
+    @Test
+    public void testDeleteEncoderForBuyer() {
+        AdTechIdentifier buyer = CommonFixture.VALID_BUYER_1;
+        mEncoderLogicHandler.deleteEncoderForBuyer(buyer);
+
+        verify(mEncoderLogicMetadataDao).deleteEncoder(buyer);
+        verify(mEncoderPersistenceDao).deleteEncoder(buyer);
+        verify(mEncoderEndpointsDao).deleteEncoderEndpoint(buyer);
+    }
+
+    @Test
+    public void testDeleteEncodersForBuyers() {
+        AdTechIdentifier buyer1 = CommonFixture.VALID_BUYER_1;
+        AdTechIdentifier buyer2 = CommonFixture.VALID_BUYER_2;
+        Set<AdTechIdentifier> buyers = Set.of(buyer1, buyer2);
+        mEncoderLogicHandler.deleteEncodersForBuyers(buyers);
+
+        verify(mEncoderLogicMetadataDao).deleteEncoder(buyer1);
+        verify(mEncoderLogicMetadataDao).deleteEncoder(buyer2);
+
+        verify(mEncoderPersistenceDao).deleteEncoder(buyer1);
+        verify(mEncoderPersistenceDao).deleteEncoder(buyer2);
+
+        verify(mEncoderEndpointsDao).deleteEncoderEndpoint(buyer1);
+        verify(mEncoderEndpointsDao).deleteEncoderEndpoint(buyer2);
     }
 
     @SuppressWarnings("FutureReturnValueIgnored")
@@ -265,8 +317,8 @@ public class EncoderLogicHandlerTest {
                         assertFalse(
                                 "This encoder update should have failed",
                                 mEncoderLogicHandler.extractAndPersistEncoder(buyer, response));
-                        Mockito.verifyZeroInteractions(mEncoderLogicDao);
-                        Mockito.verifyZeroInteractions(mEncoderPersistenceManager);
+                        Mockito.verifyZeroInteractions(mEncoderLogicMetadataDao);
+                        Mockito.verifyZeroInteractions(mEncoderPersistenceDao);
                         writeWhileLockedLatch.countDown();
                     });
             Assert.assertTrue(writeWhileLockedLatch.await(5, TimeUnit.SECONDS));
@@ -277,12 +329,12 @@ public class EncoderLogicHandlerTest {
         CountDownLatch writeWhileUnLockedLatch = new CountDownLatch(1);
         mService.submit(
                 () -> {
-                    when(mEncoderPersistenceManager.persistEncoder(buyer, body)).thenReturn(true);
+                    when(mEncoderPersistenceDao.persistEncoder(buyer, body)).thenReturn(true);
                     assertTrue(
                             "This encoder update should have succeeded",
                             mEncoderLogicHandler.extractAndPersistEncoder(buyer, response));
-                    Mockito.verify(mEncoderLogicDao)
-                            .persistEncoder(mDBEncoderLogicArgumentCaptor.capture());
+                    Mockito.verify(mEncoderLogicMetadataDao)
+                            .persistEncoderLogicMetadata(mDBEncoderLogicArgumentCaptor.capture());
                     Assert.assertEquals(buyer, mDBEncoderLogicArgumentCaptor.getValue().getBuyer());
                     Assert.assertEquals(
                             version, mDBEncoderLogicArgumentCaptor.getValue().getVersion());

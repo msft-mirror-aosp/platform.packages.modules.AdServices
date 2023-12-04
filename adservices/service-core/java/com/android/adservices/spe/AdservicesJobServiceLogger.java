@@ -16,6 +16,7 @@
 
 package com.android.adservices.spe;
 
+import static com.android.adservices.service.FlagsConstants.MAX_PERCENTAGE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__FAILED_WITHOUT_RETRY;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__FAILED_WITH_RETRY;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__HALTED_FOR_UNKNOWN_REASON;
@@ -39,6 +40,7 @@ import android.content.SharedPreferences;
 import android.os.Build;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
@@ -46,9 +48,23 @@ import com.android.adservices.spe.stats.ExecutionReportedStats;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
 
+import com.google.common.util.concurrent.MoreExecutors;
+
+import java.util.Random;
+import java.util.concurrent.Executor;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 /** Class for logging methods used by background jobs. */
 public final class AdservicesJobServiceLogger {
     private static final Object SINGLETON_LOCK = new Object();
+    private static final ReadWriteLock sReadWriteLock = new ReentrantReadWriteLock();
+    // JobService runs the execution on the main thread, so the logging part should be offloaded to
+    // a separated thread. However, these logging events should be in sequence, respecting to the
+    // start and the end of an execution.
+    private static final Executor sLoggingExecutor =
+            MoreExecutors.newSequentialExecutor(AdServicesExecutors.getBackgroundExecutor());
+    private static final Random sRandom = new Random();
 
     private static volatile AdservicesJobServiceLogger sSingleton;
 
@@ -98,7 +114,7 @@ public final class AdservicesJobServiceLogger {
 
         long startJobTimestamp = mClock.currentTimeMillis();
 
-        persistJobExecutionData(jobId, startJobTimestamp);
+        sLoggingExecutor.execute(() -> persistJobExecutionData(jobId, startJobTimestamp));
     }
 
     /**
@@ -120,7 +136,14 @@ public final class AdservicesJobServiceLogger {
                         : (shouldRetry
                                 ? AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__FAILED_WITH_RETRY
                                 : AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__FAILED_WITHOUT_RETRY);
-        logExecutionStats(jobId, mClock.currentTimeMillis(), resultCode, UNAVAILABLE_STOP_REASON);
+
+        sLoggingExecutor.execute(
+                () ->
+                        logExecutionStats(
+                                jobId,
+                                mClock.currentTimeMillis(),
+                                resultCode,
+                                UNAVAILABLE_STOP_REASON));
     }
 
     /**
@@ -147,7 +170,8 @@ public final class AdservicesJobServiceLogger {
                         ? AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__ONSTOP_CALLED_WITH_RETRY
                         : AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__ONSTOP_CALLED_WITHOUT_RETRY;
 
-        logExecutionStats(jobId, endJobTimestamp, resultCode, stopReason);
+        sLoggingExecutor.execute(
+                () -> logExecutionStats(jobId, endJobTimestamp, resultCode, stopReason));
     }
 
     /**
@@ -161,7 +185,13 @@ public final class AdservicesJobServiceLogger {
             return;
         }
 
-        logExecutionStats(jobId, mClock.currentTimeMillis(), skipReason, UNAVAILABLE_STOP_REASON);
+        sLoggingExecutor.execute(
+                () ->
+                        logExecutionStats(
+                                jobId,
+                                mClock.currentTimeMillis(),
+                                skipReason,
+                                UNAVAILABLE_STOP_REASON));
     }
 
     /**
@@ -194,11 +224,21 @@ public final class AdservicesJobServiceLogger {
                 mContext.getSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
 
-        long jobStartExecutionTimestamp =
-                sharedPreferences.getLong(
-                        jobStartTimestampKey, UNAVAILABLE_JOB_EXECUTION_START_TIMESTAMP);
-        long jobExecutionPeriodMs =
-                sharedPreferences.getLong(executionPeriodKey, UNAVAILABLE_JOB_EXECUTION_PERIOD);
+        long jobStartExecutionTimestamp;
+        long jobExecutionPeriodMs;
+
+        sReadWriteLock.readLock().lock();
+        try {
+
+            jobStartExecutionTimestamp =
+                    sharedPreferences.getLong(
+                            jobStartTimestampKey, UNAVAILABLE_JOB_EXECUTION_START_TIMESTAMP);
+
+            jobExecutionPeriodMs =
+                    sharedPreferences.getLong(executionPeriodKey, UNAVAILABLE_JOB_EXECUTION_PERIOD);
+        } finally {
+            sReadWriteLock.readLock().unlock();
+        }
 
         // Stop telemetry the metrics and log error in logcat if the stat is not valid.
         if (jobStartExecutionTimestamp == UNAVAILABLE_JOB_EXECUTION_START_TIMESTAMP
@@ -219,13 +259,20 @@ public final class AdservicesJobServiceLogger {
         // Update jobStopExecutionTimestamp in storage.
         editor.putLong(jobStopTimestampKey, jobStopExecutionTimestamp);
 
-        if (!editor.commit()) {
-            // The commitment failure should be rare. It may result in 1 problematic data but the
-            // impact could be ignored compared to a job's lifecycle.
-            // TODO(b/279231865): Log CEL with SPE_FAIL_TO_COMMIT_JOB_STOP_TIME
-            LogUtil.e(
-                    "Failed to update job Ending Execution Logging Data for Job %s.",
-                    AdservicesJobInfo.getJobIdToInfoMap().get(jobId).getJobServiceName());
+        sReadWriteLock.writeLock().lock();
+        try {
+            if (!editor.commit()) {
+                // The commitment failure should be rare. It may result in 1 problematic data but
+                // the impact could be ignored compared to a job's lifecycle.
+                // TODO(b/279231865): Log CEL with SPE_FAIL_TO_COMMIT_JOB_STOP_TIME
+                LogUtil.e(
+                        "Failed to update job Ending Execution Logging Data for Job %s, Job ID ="
+                                + " %d.",
+                        AdservicesJobInfo.getJobIdToInfoMap().get(jobId).getJobServiceName(),
+                        jobId);
+            }
+        } finally {
+            sReadWriteLock.writeLock().unlock();
         }
 
         // Actually upload the metrics to statsD.
@@ -258,6 +305,11 @@ public final class AdservicesJobServiceLogger {
             long executionPeriodMs,
             int resultCode,
             int stopReason) {
+        if (!shouldLog()) {
+            LogUtil.v("This background job logging isn't selected for sampling logging, skip...");
+            return;
+        }
+
         long executionPeriodMinute = executionPeriodMs / MILLISECONDS_PER_MINUTE;
 
         ExecutionReportedStats stats =
@@ -303,14 +355,23 @@ public final class AdservicesJobServiceLogger {
         // are same, it checks jobId, callingUid (the package that schedules the job). Therefore,
         // there won't have two pending/running job instances with a same jobId. For more details,
         // please check source code of JobScheduler.
-        long previousJobStartTimestamp =
-                sharedPreferences.getLong(
-                        jobStartTimestampKey, UNAVAILABLE_JOB_EXECUTION_START_TIMESTAMP);
-        long previousJobStopTimestamp =
-                sharedPreferences.getLong(
-                        jobStopTimestampKey, UNAVAILABLE_JOB_EXECUTION_STOP_TIMESTAMP);
-        long previousExecutionPeriod =
-                sharedPreferences.getLong(executionPeriodKey, UNAVAILABLE_JOB_EXECUTION_PERIOD);
+        long previousJobStartTimestamp;
+        long previousJobStopTimestamp;
+        long previousExecutionPeriod;
+
+        sReadWriteLock.readLock().lock();
+        try {
+            previousJobStartTimestamp =
+                    sharedPreferences.getLong(
+                            jobStartTimestampKey, UNAVAILABLE_JOB_EXECUTION_START_TIMESTAMP);
+            previousJobStopTimestamp =
+                    sharedPreferences.getLong(
+                            jobStopTimestampKey, UNAVAILABLE_JOB_EXECUTION_STOP_TIMESTAMP);
+            previousExecutionPeriod =
+                    sharedPreferences.getLong(executionPeriodKey, UNAVAILABLE_JOB_EXECUTION_PERIOD);
+        } finally {
+            sReadWriteLock.readLock().unlock();
+        }
 
         SharedPreferences.Editor editor = sharedPreferences.edit();
 
@@ -342,13 +403,19 @@ public final class AdservicesJobServiceLogger {
         // Store current JobStartTimestamp into shared preference.
         editor.putLong(jobStartTimestampKey, startJobTimestamp);
 
-        if (!editor.commit()) {
-            // The commitment failure should be rare. It may result in 1 problematic data but the
-            // impact could be ignored compared to a job's lifecycle.
-            // TODO(b/279231865): Log CEL with SPE_FAIL_TO_COMMIT_JOB_START_TIME.
-            LogUtil.e(
-                    "Failed to update onStartJob() Logging Data for Job %s.",
-                    AdservicesJobInfo.getJobIdToInfoMap().get(jobId).getJobServiceName());
+        sReadWriteLock.writeLock().lock();
+        try {
+            if (!editor.commit()) {
+                // The commitment failure should be rare. It may result in 1 problematic data but
+                // the impact could be ignored compared to a job's lifecycle.
+                // TODO(b/279231865): Log CEL with SPE_FAIL_TO_COMMIT_JOB_START_TIME.
+                LogUtil.e(
+                        "Failed to update onStartJob() Logging Data for Job %s, Job ID = %d",
+                        AdservicesJobInfo.getJobIdToInfoMap().get(jobId).getJobServiceName(),
+                        jobId);
+            }
+        } finally {
+            sReadWriteLock.writeLock().unlock();
         }
     }
 
@@ -389,5 +456,13 @@ public final class AdservicesJobServiceLogger {
         }
 
         return intValue;
+    }
+
+    // Make a random draw to determine if a logging event should be uploaded t0 the logging server.
+    @VisibleForTesting
+    boolean shouldLog() {
+        int loggingRatio = FlagsFactory.getFlags().getBackgroundJobSamplingLoggingRate();
+
+        return sRandom.nextInt(MAX_PERCENTAGE) < loggingRatio;
     }
 }

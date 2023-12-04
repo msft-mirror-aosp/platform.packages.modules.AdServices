@@ -200,7 +200,8 @@ public class ReportEventImplTest {
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
-                        DevContext.createForDevOptionsDisabled());
+                        DevContext.createForDevOptionsDisabled(),
+                        false);
 
         Uri baseBuyerUri = mMockWebServerRule.uriForPath(BUYER_INTERACTION_REPORTING_PATH);
 
@@ -595,7 +596,8 @@ public class ReportEventImplTest {
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
-                        DevContext.createForDevOptionsDisabled());
+                        DevContext.createForDevOptionsDisabled(),
+                        false);
 
         // Allow the first call and filter the second
         doNothing()
@@ -678,7 +680,8 @@ public class ReportEventImplTest {
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
-                        DevContext.createForDevOptionsDisabled());
+                        DevContext.createForDevOptionsDisabled(),
+                        false);
 
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterMock)
@@ -1167,7 +1170,8 @@ public class ReportEventImplTest {
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
-                        DevContext.createForDevOptionsDisabled());
+                        DevContext.createForDevOptionsDisabled(),
+                        false);
         ReportInteractionTestCallback callback = callReportInteraction(inputParams);
 
         assertFalse(callback.mIsSuccess);
@@ -1286,7 +1290,8 @@ public class ReportEventImplTest {
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
-                        DevContext.createForDevOptionsDisabled());
+                        DevContext.createForDevOptionsDisabled(),
+                        false);
 
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
@@ -1371,7 +1376,8 @@ public class ReportEventImplTest {
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
-                        DevContext.createForDevOptionsDisabled());
+                        DevContext.createForDevOptionsDisabled(),
+                        false);
 
         // Count down callback + log interaction.
         ReportInteractionTestCallback callback = callReportInteraction(inputParams, true);

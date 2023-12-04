@@ -36,6 +36,7 @@ android_test {
         "ub-uiautomator",
         "handheld-app-helpers",
         "framework-adservices-lib",
+        "adservices-test-fixtures",
         "adservices-device-collectors-lib",
         "hamcrest-library",
     ],

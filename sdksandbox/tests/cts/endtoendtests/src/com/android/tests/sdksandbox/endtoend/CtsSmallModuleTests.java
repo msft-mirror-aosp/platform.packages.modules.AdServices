@@ -26,7 +26,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.os.Bundle;
-import android.os.UserHandle;
 
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -42,7 +41,7 @@ import org.junit.runners.JUnit4;
 import java.util.List;
 
 @RunWith(JUnit4.class)
-public class CtsSmallModuleTests {
+public class CtsSmallModuleTests extends SandboxKillerBeforeTest {
     private static final String SDK_NAME = "com.android.emptysdkprovider";
 
     @Rule
@@ -79,13 +78,12 @@ public class CtsSmallModuleTests {
         // On small module, TOPIC_SERVICE is unavailable
         Intent serviceIntent = new Intent("android.adservices.TOPICS_SERVICE");
         List<ResolveInfo> resolvedInfos =
-                pm.queryIntentServicesAsUser(
+                pm.queryIntentServices(
                         serviceIntent,
                         PackageManager.GET_SERVICES
                                 | PackageManager.MATCH_SYSTEM_ONLY
                                 | PackageManager.MATCH_DIRECT_BOOT_AWARE
-                                | PackageManager.MATCH_DIRECT_BOOT_UNAWARE,
-                        UserHandle.SYSTEM);
+                                | PackageManager.MATCH_DIRECT_BOOT_UNAWARE);
 
         boolean serviceFound = resolvedInfos != null && !resolvedInfos.isEmpty();
 

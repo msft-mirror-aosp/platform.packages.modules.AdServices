@@ -1,10 +1,9 @@
 {
   "description": "A2W test for trigger-attributions-per-source-destination-limit debug report",
-  "api_config": {
-    "rate_limit_max_attributions": "1"
-  },
   "phflags_override": {
-    "measurement_debug_join_key_enrollment_allowlist" : "enrollment-id-ad-tech1.test"
+    "measurement_debug_join_key_enrollment_allowlist" : "enrollment-id-ad-tech1.test",
+    "measurement_max_attribution_per_rate_limit_window": "1",
+    "measurement_max_event_attribution_per_rate_limit_window": "1"
   },
   "input": {
     "sources": [

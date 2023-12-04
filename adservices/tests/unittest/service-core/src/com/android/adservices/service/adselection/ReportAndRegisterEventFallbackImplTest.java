@@ -68,6 +68,7 @@ import android.os.RemoteException;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -288,7 +289,9 @@ public class ReportAndRegisterEventFallbackImplTest {
                         BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT);
     }
 
+    // TODO(b/298871007): Remove FlakyTest annotation after stabilizing flake.
     @Test
+    @FlakyTest(bugId = 298871007)
     public void testImplDoesNotCrashAfterSellerReportingThrowsAnException() throws Exception {
         enableARA();
         persistReportingArtifacts();
@@ -343,7 +346,9 @@ public class ReportAndRegisterEventFallbackImplTest {
                 BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT, server.takeRequest().getPath());
     }
 
+    // TODO(b/298871007): Remove FlakyTest annotation after stabilizing flake.
     @Test
+    @FlakyTest(bugId = 298871007)
     public void testImplDoesNotCrashAfterSellerReportingAndRegisteringThrowsAnException()
             throws Exception {
         enableARA();
@@ -397,7 +402,9 @@ public class ReportAndRegisterEventFallbackImplTest {
                         BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT);
     }
 
+    // TODO(b/298871007): Remove FlakyTest annotation after stabilizing flake.
     @Test
+    @FlakyTest(bugId = 298871007)
     public void testImplDoesNotCrashAfterBuyerReportingThrowsAnException() throws Exception {
         enableARA();
         persistReportingArtifacts();
@@ -452,7 +459,9 @@ public class ReportAndRegisterEventFallbackImplTest {
                 SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT, server.takeRequest().getPath());
     }
 
+    // TODO(b/298871007): Remove FlakyTest annotation after stabilizing flake.
     @Test
+    @FlakyTest(bugId = 298871007)
     public void testImplDoesNotCrashAfterBuyerReportingAndRegisteringThrowsAnException()
             throws Exception {
         enableARA();
@@ -1483,7 +1492,8 @@ public class ReportAndRegisterEventFallbackImplTest {
                 DevContext.createForDevOptionsDisabled(),
                 mMeasurementServiceMock,
                 mConsentManagerMock,
-                mContextMock);
+                mContextMock,
+                false);
     }
 
     private ReportEventTestCallback callReportEvent(ReportInteractionInput inputParams)

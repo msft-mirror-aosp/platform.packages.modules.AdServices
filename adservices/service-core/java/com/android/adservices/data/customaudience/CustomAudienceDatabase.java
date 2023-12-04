@@ -16,14 +16,12 @@
 
 package com.android.adservices.data.customaudience;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
 import androidx.room.AutoMigration;
 import androidx.room.Database;
 import androidx.room.RenameColumn;
-import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 import androidx.room.migration.AutoMigrationSpec;
@@ -48,12 +46,13 @@ import java.util.Objects;
             @AutoMigration(from = 1, to = 2, spec = CustomAudienceDatabase.AutoMigration1To2.class),
             @AutoMigration(from = 2, to = 3),
             @AutoMigration(from = 3, to = 4),
+            @AutoMigration(from = 4, to = 5),
         })
 @TypeConverters({FledgeRoomConverters.class})
 public abstract class CustomAudienceDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();
 
-    public static final int DATABASE_VERSION = 4;
+    public static final int DATABASE_VERSION = 5;
     // TODO(b/230653780): Should we separate the DB.
     public static final String DATABASE_NAME =
             FileCompatUtils.getAdservicesFilename("customaudience.db");
@@ -77,7 +76,6 @@ public abstract class CustomAudienceDatabase extends RoomDatabase {
     // TODO: How we want handle synchronized situation (b/228101878).
 
     /** Returns an instance of the CustomAudienceDatabase given a context. */
-    @SuppressLint("NewAdServicesFile")
     public static CustomAudienceDatabase getInstance(@NonNull Context context) {
         Objects.requireNonNull(context, "Context must be provided.");
         // Initialization pattern recommended on page 334 of "Effective Java" 3rd edition
@@ -99,7 +97,8 @@ public abstract class CustomAudienceDatabase extends RoomDatabase {
                                                         .getFledgeAuctionServerAdRenderIdEnabled())
                         );
                 sSingleton =
-                        Room.databaseBuilder(context, CustomAudienceDatabase.class, DATABASE_NAME)
+                        FileCompatUtils.roomDatabaseBuilderHelper(
+                                        context, CustomAudienceDatabase.class, DATABASE_NAME)
                                 .fallbackToDestructiveMigration()
                                 .addTypeConverter(converters)
                                 .build();

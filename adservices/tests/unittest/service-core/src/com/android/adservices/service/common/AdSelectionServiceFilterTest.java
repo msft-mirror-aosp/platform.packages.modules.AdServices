@@ -39,6 +39,7 @@ import android.os.Process;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
@@ -60,7 +61,8 @@ import org.mockito.MockitoSession;
 import org.mockito.Spy;
 import org.mockito.quality.Strictness;
 
-public class AdSelectionServiceFilterTest {
+public final class AdSelectionServiceFilterTest extends AdServicesUnitTestCase {
+
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     @Spy private Context mContext = ApplicationProvider.getApplicationContext();
     private static final Flags TEST_FLAGS = FlagsFactory.getFlagsForTest();
@@ -144,7 +146,9 @@ public class AdSelectionServiceFilterTest {
 
     @Test
     public void testFilterRequestSucceedsGaUxDisabled() {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManagerMock)
+                .getConsent(AdServicesApiType.FLEDGE);
         mAdSelectionServiceFilter.filterRequest(
                 SELLER_VALID,
                 CALLER_PACKAGE_NAME,
@@ -248,7 +252,9 @@ public class AdSelectionServiceFilterTest {
         doThrow(new AppImportanceFilter.WrongCallingApplicationStateException())
                 .when(mAppImportanceFilter)
                 .assertCallerIsInForeground(Process.myUid(), API_NAME, null);
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManagerMock)
+                .getConsent(AdServicesApiType.FLEDGE);
         mAdSelectionServiceFilter.filterRequest(
                 SELLER_VALID,
                 CALLER_PACKAGE_NAME,
@@ -318,7 +324,9 @@ public class AdSelectionServiceFilterTest {
 
     @Test
     public void testFilterRequestThrowsRevokedConsentExceptionAppDoesNotHaveConsentGaUxDisabled() {
-        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent();
+        doReturn(AdServicesApiConsent.REVOKED)
+                .when(mConsentManagerMock)
+                .getConsent(AdServicesApiType.FLEDGE);
         FilterException exception =
                 assertThrows(
                         FilterException.class,
@@ -337,7 +345,9 @@ public class AdSelectionServiceFilterTest {
 
     @Test
     public void testFilterRequestSucceedsConsentRevokedEnforceConsentFalse() {
-        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent();
+        doReturn(AdServicesApiConsent.REVOKED)
+                .when(mConsentManagerMock)
+                .getConsent(AdServicesApiType.FLEDGE);
         mAdSelectionServiceFilter.filterRequest(
                 SELLER_VALID,
                 CALLER_PACKAGE_NAME,
@@ -383,7 +393,9 @@ public class AdSelectionServiceFilterTest {
 
     @Test
     public void testFilterRequestDoesNotDoEnrollmentCheckWhenAdTechParamIsNull() {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManagerMock)
+                .getConsent(AdServicesApiType.FLEDGE);
 
         mAdSelectionServiceFilter.filterRequest(
                 null,

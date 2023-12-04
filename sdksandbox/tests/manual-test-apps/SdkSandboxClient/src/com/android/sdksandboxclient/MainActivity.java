@@ -140,6 +140,7 @@ public class MainActivity extends AppCompatActivity {
     private Button mDumpSandboxButton;
     private Button mNewFullScreenAd;
     private Button mNewAppWebviewButton;
+    private Button mNewAppVideoButton;
     private Button mReleaseAllSurfaceControlViewHostButton;
 
     private SurfaceView mInScrollBannerView;
@@ -207,6 +208,7 @@ public class MainActivity extends AppCompatActivity {
         mSdkToSdkCommButton = findViewById(R.id.enable_sdk_sdk_button);
         mDumpSandboxButton = findViewById(R.id.dump_sandbox_button);
         mNewAppWebviewButton = findViewById(R.id.new_app_webview_button);
+        mNewAppVideoButton = findViewById(R.id.new_app_video_button);
 
         configureFeatureFlagSection();
 
@@ -226,6 +228,7 @@ public class MainActivity extends AppCompatActivity {
         registerSdkToSdkButton();
         registerDumpSandboxButton();
         registerNewAppWebviewButton();
+        registerNewAppVideoButton();
 
         refreshLoadSdksButtonText();
     }
@@ -359,32 +362,24 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     Bundle params = new Bundle();
-                    OutcomeReceiver<SandboxedSdk, LoadSdkException> mediateeReceiver =
-                            new OutcomeReceiver<>() {
-                                @Override
-                                public void onResult(SandboxedSdk sandboxedSdk) {
-                                    logAndDisplayMessage(INFO, "All SDKs Loaded successfully!");
-                                    mSdksLoaded = true;
-                                    refreshLoadSdksButtonText();
-                                    configureFeatureFlagSection();
-                                }
-
-                                @Override
-                                public void onError(LoadSdkException error) {
-                                    logAndDisplayMessage(
-                                            ERROR, "Failed to load all SDKs: %s", error);
-                                }
-                            };
                     OutcomeReceiver<SandboxedSdk, LoadSdkException> receiver =
                             new OutcomeReceiver<>() {
                                 @Override
                                 public void onResult(SandboxedSdk sandboxedSdk) {
                                     mSandboxedSdk = sandboxedSdk;
-                                    mSdkSandboxManager.loadSdk(
-                                            MEDIATEE_SDK_NAME,
-                                            params,
-                                            Runnable::run,
-                                            mediateeReceiver);
+                                    IBinder binder = mSandboxedSdk.getInterface();
+                                    ISdkApi sdkApi = ISdkApi.Stub.asInterface(binder);
+                                    try {
+                                        sdkApi.loadSdkBySdk(MEDIATEE_SDK_NAME);
+                                    } catch (Exception error) {
+                                        logAndDisplayMessage(
+                                                ERROR, "Failed to load all SDKs: %s", error);
+                                        return;
+                                    }
+                                    logAndDisplayMessage(INFO, "All SDKs Loaded successfully!");
+                                    mSdksLoaded = true;
+                                    refreshLoadSdksButtonText();
+                                    configureFeatureFlagSection();
                                 }
 
                                 @Override
@@ -883,6 +878,19 @@ public class MainActivity extends AppCompatActivity {
                     IBinder binder = mSandboxedSdk.getInterface();
                     Intent intent = new Intent(this, AppWebViewActivity.class);
                     intent.putExtra(SANDBOXED_SDK_BINDER, binder);
+                    startActivity(intent);
+                });
+    }
+
+    private void registerNewAppVideoButton() {
+        mNewAppVideoButton.setOnClickListener(
+                v -> {
+                    final BannerOptions options =
+                            BannerOptions.fromSharedPreferences(mSharedPreferences);
+
+                    Intent intent = new Intent(this, AppVideoView.class);
+                    intent.putExtra(AppVideoView.VIDEO_URL_KEY, options.getVideoUrl());
+
                     startActivity(intent);
                 });
     }

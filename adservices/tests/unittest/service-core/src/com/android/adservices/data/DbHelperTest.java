@@ -16,13 +16,13 @@
 
 package com.android.adservices.data;
 
-import static com.android.adservices.data.DbHelper.DATABASE_VERSION;
+import static com.android.adservices.data.DbHelper.DATABASE_VERSION_7;
 import static com.android.adservices.data.DbTestUtil.doesIndexExist;
 import static com.android.adservices.data.DbTestUtil.doesTableExist;
 import static com.android.adservices.data.DbTestUtil.doesTableExistAndColumnCountMatch;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_WRITE_EXCEPTION;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -34,6 +34,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -46,9 +47,11 @@ import com.android.adservices.data.measurement.DbHelperV1;
 import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.data.topics.migration.TopicsDbMigratorV7;
 import com.android.adservices.data.topics.migration.TopicsDbMigratorV8;
+import com.android.adservices.data.topics.migration.TopicsDbMigratorV9;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
@@ -124,7 +127,7 @@ public class DbHelperTest {
 
     @Test
     public void testGetDbFileSize() {
-        final String databaseName = "testsize.db";
+        final String databaseName = FileCompatUtils.getAdservicesFilename("testsize.db");
         DbHelper dbHelper = new DbHelper(sContext, databaseName, 1);
 
         // Create database
@@ -198,7 +201,7 @@ public class DbHelperTest {
 
     @Test
     public void testOnUpgrade_topicsV8Migration_loggedTopicColumnExist() {
-        String dbName = "test_db";
+        String dbName = FileCompatUtils.getAdservicesFilename("test_db");
         DbHelperV1 dbHelperV1 = new DbHelperV1(sContext, dbName, /* dbVersion */ 1);
         SQLiteDatabase db = dbHelperV1.safeGetWritableDatabase();
 
@@ -213,12 +216,88 @@ public class DbHelperTest {
     }
 
     @Test
+    public void testOnUpgrade_topicsV9Migration() {
+        DbHelper dbHelper = spy(DbTestUtil.getDbHelperForTest());
+        SQLiteDatabase db = mock(SQLiteDatabase.class);
+
+        // Do not actually perform queries but verify the invocation.
+        TopicsDbMigratorV9 topicsDbMigratorV9 = Mockito.spy(new TopicsDbMigratorV9());
+        Mockito.doNothing().when(topicsDbMigratorV9).performMigration(db);
+
+        // Ignore Measurement Migrators
+        doReturn(false).when(dbHelper).hasV1MeasurementTables(db);
+        doReturn(List.of()).when(dbHelper).getOrderedDbMigrators();
+        doReturn(List.of(topicsDbMigratorV9)).when(dbHelper).topicsGetOrderedDbMigrators();
+
+        // Negative case - target version 8 is not in (oldVersion, newVersion]
+        dbHelper.onUpgrade(db, /* oldVersion */ 1, /* new Version */ 8);
+        Mockito.verify(topicsDbMigratorV9, Mockito.never()).performMigration(db);
+
+        // Positive case - target version 9 is in (oldVersion, newVersion]
+        dbHelper.onUpgrade(db, /* oldVersion */ 1, /* new Version */ 9);
+        Mockito.verify(topicsDbMigratorV9, times(1)).performMigration(db);
+
+        // Positive case - target version 9 is in (oldVersion, newVersion]
+        dbHelper.onUpgrade(db, /* oldVersion */ 8, /* new Version */ 9);
+        Mockito.verify(topicsDbMigratorV9, times(2)).performMigration(db);
+
+        // Don't expect interaction when we try upgrading from 9 to 9.
+        dbHelper.onUpgrade(db, /* oldVersion */ 9, /* new Version */ 9);
+        Mockito.verify(topicsDbMigratorV9, times(2)).performMigration(db);
+    }
+
+    @Test
+    public void testOnUpgrade_topicsMigration_V7_V8_V9() {
+        DbHelper dbHelper = spy(DbTestUtil.getDbHelperForTest());
+        SQLiteDatabase db = mock(SQLiteDatabase.class);
+
+        // Do not actually perform queries but verify the invocation.
+        TopicsDbMigratorV7 topicsDbMigratorV7 = Mockito.spy(new TopicsDbMigratorV7());
+        TopicsDbMigratorV8 topicsDbMigratorV8 = Mockito.spy(new TopicsDbMigratorV8());
+        TopicsDbMigratorV9 topicsDbMigratorV9 = Mockito.spy(new TopicsDbMigratorV9());
+        Mockito.doNothing().when(topicsDbMigratorV7).performMigration(db);
+        Mockito.doNothing().when(topicsDbMigratorV8).performMigration(db);
+        Mockito.doNothing().when(topicsDbMigratorV9).performMigration(db);
+
+        // Ignore Measurement Migrators
+        doReturn(false).when(dbHelper).hasV1MeasurementTables(db);
+        doReturn(List.of()).when(dbHelper).getOrderedDbMigrators();
+        doReturn(List.of(topicsDbMigratorV7, topicsDbMigratorV8, topicsDbMigratorV9))
+                .when(dbHelper)
+                .topicsGetOrderedDbMigrators();
+
+        // Negative case - target version 6 is not in (oldVersion, newVersion]
+        dbHelper.onUpgrade(db, /* oldVersion */ 1, /* new Version */ 6);
+        Mockito.verify(topicsDbMigratorV7, Mockito.never()).performMigration(db);
+        Mockito.verify(topicsDbMigratorV8, Mockito.never()).performMigration(db);
+        Mockito.verify(topicsDbMigratorV9, Mockito.never()).performMigration(db);
+
+        // Positive case - 1 -> 9 should use all migrators
+        dbHelper.onUpgrade(db, /* oldVersion */ 5, /* new Version */ 9);
+        Mockito.verify(topicsDbMigratorV7, times(1)).performMigration(db);
+        Mockito.verify(topicsDbMigratorV8, times(1)).performMigration(db);
+        Mockito.verify(topicsDbMigratorV9, times(1)).performMigration(db);
+
+        // Positive case - 6 -> 8 should use V7, V8 migrators only
+        dbHelper.onUpgrade(db, /* oldVersion */ 6, /* new Version */ 8);
+        Mockito.verify(topicsDbMigratorV7, times(2)).performMigration(db);
+        Mockito.verify(topicsDbMigratorV8, times(2)).performMigration(db);
+        Mockito.verify(topicsDbMigratorV9, times(1)).performMigration(db);
+
+        // Positive case - 8 -> 9 should use V9 migrator only
+        dbHelper.onUpgrade(db, /* oldVersion */ 8, /* new Version */ 9);
+        Mockito.verify(topicsDbMigratorV7, times(2)).performMigration(db);
+        Mockito.verify(topicsDbMigratorV8, times(2)).performMigration(db);
+        Mockito.verify(topicsDbMigratorV9, times(2)).performMigration(db);
+    }
+
+    @Test
     public void testOnDowngrade() {
         DbHelper dbHelper = spy(DbTestUtil.getDbHelperForTest());
         SQLiteDatabase db = mock(SQLiteDatabase.class);
 
         // Verify no error if downgrading db from current version to V1
-        dbHelper.onDowngrade(db, DATABASE_VERSION, 1);
+        dbHelper.onDowngrade(db, DATABASE_VERSION_7, 1);
     }
 
     @Test
@@ -236,7 +315,7 @@ public class DbHelperTest {
                         ErrorLogUtil.e(
                                 tr,
                                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION,
-                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED));
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON));
     }
 
     @Test
@@ -254,33 +333,33 @@ public class DbHelperTest {
                         ErrorLogUtil.e(
                                 tr,
                                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_WRITE_EXCEPTION,
-                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED));
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON));
     }
 
     @Test
     public void testOnUpgrade_measurementMigration_tablesExist() {
-        String dbName = "test_db";
+        String dbName = FileCompatUtils.getAdservicesFilename("test_db");
         DbHelperV1 dbHelperV1 = new DbHelperV1(sContext, dbName, 1);
         SQLiteDatabase db = dbHelperV1.safeGetWritableDatabase();
 
         assertEquals(1, db.getVersion());
 
-        DbHelper dbHelper = new DbHelper(sContext, dbName, DATABASE_VERSION);
-        dbHelper.onUpgrade(db, 1, DATABASE_VERSION);
+        DbHelper dbHelper = new DbHelper(sContext, dbName, DATABASE_VERSION_7);
+        dbHelper.onUpgrade(db, 1, DATABASE_VERSION_7);
         assertMeasurementSchema(db);
     }
 
     @Test
     public void testOnUpgrade_measurementMigration_tablesDoNotExist() {
-        String dbName = "test_db_2";
+        String dbName = FileCompatUtils.getAdservicesFilename("test_db_2");
         DbHelperV1 dbHelperV1 = new DbHelperV1(sContext, dbName, 1);
         SQLiteDatabase db = dbHelperV1.safeGetWritableDatabase();
 
         assertEquals(1, db.getVersion());
         Arrays.stream(MeasurementTables.V1_TABLES).forEach((table) -> dropTable(db, table));
 
-        DbHelper dbHelper = new DbHelper(sContext, dbName, DATABASE_VERSION);
-        dbHelper.onUpgrade(db, 1, DATABASE_VERSION);
+        DbHelper dbHelper = new DbHelper(sContext, dbName, DATABASE_VERSION_7);
+        dbHelper.onUpgrade(db, 1, DATABASE_VERSION_7);
         assertMeasurementTablesDoNotExist(db);
     }
 

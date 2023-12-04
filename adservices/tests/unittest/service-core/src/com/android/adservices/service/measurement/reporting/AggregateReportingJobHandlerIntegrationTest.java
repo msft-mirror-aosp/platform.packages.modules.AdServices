@@ -33,6 +33,7 @@ import com.android.adservices.service.measurement.aggregation.AggregateCryptoFix
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -47,6 +48,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /** Integration tests for {@link AggregateReportingJobHandler} */
@@ -55,8 +57,9 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
     private final JSONObject mParam;
     private final EnrollmentDao mEnrollmentDao;
     private final AdServicesLogger mLogger;
+    private final AdServicesErrorLogger mErrorLogger;
 
-    @Parameterized.Parameters(name = "{3}")
+    @Parameterized.Parameters(name = "{4}")
     public static Collection<Object[]> data() throws IOException, JSONException {
         InputStream inputStream = sContext.getAssets().open("aggregate_report_service_test.json");
         return AbstractDbIntegrationTest.getTestCasesFrom(
@@ -66,11 +69,16 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
     // The 'name' parameter is needed for the JUnit parameterized
     // test, although it's ostensibly unused by this constructor.
     public AggregateReportingJobHandlerIntegrationTest(
-            DbState input, DbState output, JSONObject param, String name) {
-        super(input, output);
+            DbState input,
+            DbState output,
+            Map<String, String> flagsMap,
+            JSONObject param,
+            String name) {
+        super(input, output, flagsMap);
         mParam = param;
         mEnrollmentDao = Mockito.mock(EnrollmentDao.class);
         mLogger = Mockito.mock(AdServicesLogger.class);
+        mErrorLogger = Mockito.mock(AdServicesErrorLogger.class);
     }
 
     public enum Action {
@@ -96,16 +104,16 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
                             return keys;
                         });
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
         AggregateReportingJobHandler spyReportingService =
                 Mockito.spy(
                         new AggregateReportingJobHandler(
                                 mEnrollmentDao,
                                 datastoreManager,
                                 mockKeyManager,
-                                ReportingStatus.UploadMethod.REGULAR,
                                 FlagsFactory.getFlagsForTest(),
-                                mLogger));
+                                mLogger,
+                                sContext));
         try {
             Mockito.doReturn(returnCode)
                     .when(spyReportingService)

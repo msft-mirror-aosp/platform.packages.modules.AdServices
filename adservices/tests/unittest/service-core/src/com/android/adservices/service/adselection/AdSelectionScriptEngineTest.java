@@ -20,6 +20,7 @@ import static com.android.adservices.service.adselection.AdSelectionScriptEngine
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
@@ -54,6 +55,8 @@ import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
 import com.android.adservices.service.js.JSScriptEngine;
+import com.android.adservices.service.signals.ProtectedSignal;
+import com.android.adservices.service.signals.ProtectedSignalsFixture;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 
@@ -72,14 +75,19 @@ import org.mockito.MockitoAnnotations;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -1469,10 +1477,10 @@ public class AdSelectionScriptEngineTest {
         // Logger calls come after the callback is returned
         CountDownLatch loggerLatch = new CountDownLatch(1);
         doAnswer(
-                unusedInvocation -> {
-                    loggerLatch.countDown();
-                    return null;
-                })
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
                 .when(mAdSelectionExecutionLoggerMock)
                 .endScoreAds();
         final List<ScoreAdResult> results =
@@ -1500,10 +1508,10 @@ public class AdSelectionScriptEngineTest {
                         CUSTOM_AUDIENCE_SIGNALS_LIST);
         loggerLatch.await();
         assertThat(
-                results.stream()
-                        .map(ScoreAdResult::getSellerRejectReason)
-                        .filter(Objects::nonNull)
-                        .collect(Collectors.toList()))
+                        results.stream()
+                                .map(ScoreAdResult::getSellerRejectReason)
+                                .filter(Objects::nonNull)
+                                .collect(Collectors.toList()))
                 .containsExactly("hello", "world");
         verify(mAdSelectionExecutionLoggerMock).startScoreAds();
         verify(mAdSelectionExecutionLoggerMock).endScoreAds();
@@ -1515,10 +1523,10 @@ public class AdSelectionScriptEngineTest {
         // Logger calls come after the callback is returned
         CountDownLatch loggerLatch = new CountDownLatch(1);
         doAnswer(
-                unusedInvocation -> {
-                    loggerLatch.countDown();
-                    return null;
-                })
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
                 .when(mAdSelectionExecutionLoggerMock)
                 .endScoreAds();
         final List<ScoreAdResult> results =
@@ -1540,10 +1548,10 @@ public class AdSelectionScriptEngineTest {
                         CUSTOM_AUDIENCE_SIGNALS_LIST);
         loggerLatch.await();
         assertThat(
-                results.stream()
-                        .map(ScoreAdResult::getSellerRejectReason)
-                        .filter(Objects::nonNull)
-                        .collect(Collectors.toList()))
+                        results.stream()
+                                .map(ScoreAdResult::getSellerRejectReason)
+                                .filter(Objects::nonNull)
+                                .collect(Collectors.toList()))
                 .containsExactly("", "");
         verify(mAdSelectionExecutionLoggerMock).startScoreAds();
         verify(mAdSelectionExecutionLoggerMock).endScoreAds();
@@ -1637,6 +1645,229 @@ public class AdSelectionScriptEngineTest {
         assertThat(result.status).isEqualTo(0);
         assertThat(((JSONObject) result.results.get(0)).getString("greeting"))
                 .isEqualTo("%shello " + AD_DATA_WITH_DOUBLE_RESULT_1.getRenderUri());
+    }
+
+    @Test
+    public void testEncodeSignals()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        List<String> seeds = List.of("SignalsA", "SignalsB");
+        Map<String, List<ProtectedSignal>> rawSignalsMap =
+                ProtectedSignalsFixture.generateMapOfProtectedSignals(seeds, 20);
+
+        byte[] expectedResult = new byte[] {0x0A, (byte) 0xB1};
+        String encodeSignalsJS =
+                "function encodeSignals(signals, maxSize) {\n"
+                        + "  return {'status': 0, 'results': new Uint8Array([0x0A, 0xB1])};\n"
+                        + "}\n";
+        ListenableFuture<byte[]> jsOutcome =
+                mAdSelectionScriptEngine.encodeSignals(encodeSignalsJS, rawSignalsMap, 10);
+        byte[] result = jsOutcome.get(5, TimeUnit.SECONDS);
+
+        assertArrayEquals(
+                "The result expected is the size of keys in the input signals",
+                expectedResult,
+                result);
+    }
+
+    @Test
+    public void testEncodeSignalsSignalsAreRepresentedAsAMapInJS()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        Map<String, List<ProtectedSignal>> rawSignalsMap = new HashMap<>();
+        rawSignalsMap.put(
+                Base64.getEncoder().encodeToString(new byte[] {0x00}),
+                List.of(
+                        ProtectedSignalsFixture.generateDBProtectedSignal(
+                                "", new byte[] {(byte) 0xA0})));
+
+        rawSignalsMap.put(
+                Base64.getEncoder().encodeToString(new byte[] {0x01}),
+                List.of(
+                        ProtectedSignalsFixture.generateDBProtectedSignal(
+                                "", new byte[] {(byte) 0xA1}),
+                        ProtectedSignalsFixture.generateDBProtectedSignal(
+                                "", new byte[] {(byte) 0xA2})));
+
+        // Assumes keys and values are 1 byte long
+        // Generates an array with the following structure
+        // [signals.size() signal0.key #signal0.values.size() signal0.values[0] signal0.values[2]
+        //                 signal1.key ... ]
+        String encodeSignalsJS =
+                "function encodeSignals(signals, maxSize) {\n"
+                        + "  let result = new Uint8Array(maxSize);\n"
+                        + "  // first entry will contain the total size\n"
+                        + "  let size = 1;\n"
+                        + "  let keys = 0;\n"
+                        + "  \n"
+                        + "  for (const [key, values] of signals.entries()) {\n"
+                        + "    keys++;\n"
+                        + "    // Assuming all data are 1 byte only\n"
+                        + "    console.log(\"key \" + keys + \" is \" + key)\n"
+                        + "    result[size++] = key[0];\n"
+                        + "    result[size++] = values.length;\n"
+                        + "    for(const value of values) {\n"
+                        + "      result[size++] = value.signal_value[0];\n"
+                        + "    }\n"
+                        + "  }\n"
+                        + "  result[0] = keys;\n"
+                        + "  \n"
+                        + "  return { 'status': 0, 'results': result.subarray(0, size)};\n"
+                        + "}\n";
+        ListenableFuture<byte[]> jsOutcome =
+                mAdSelectionScriptEngine.encodeSignals(encodeSignalsJS, rawSignalsMap, 10);
+        byte[] result = jsOutcome.get(5, TimeUnit.SECONDS);
+
+        assertEquals(
+                "Encoded result has wrong count of signal keys",
+                (byte) rawSignalsMap.size(),
+                result[0]);
+        int offset = 1;
+        for (int i = 0; i < rawSignalsMap.size(); i++) {
+            byte signalKey = result[offset++];
+            assertTrue(signalKey == 0x00 || signalKey == 0x01);
+            if (signalKey == 0x00) {
+                assertEquals("Wrong signal values length", 0x01, result[offset++]);
+                assertEquals("Wrong signal values", (byte) 0xA0, result[offset++]);
+            } else {
+                assertEquals("Wrong signal values length", 0x02, result[offset++]);
+                assertEquals("Wrong signal values", (byte) 0xA1, result[offset++]);
+                assertEquals("Wrong signal values", (byte) 0xA2, result[offset++]);
+            }
+        }
+    }
+
+    @Test
+    public void testEncodeSignalsSignalsAreRepresentedAsAMapInJS_timestampIsCorrect()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        Map<String, List<ProtectedSignal>> rawSignalsMap = new HashMap<>();
+        ProtectedSignal signalValue =
+                ProtectedSignalsFixture.generateDBProtectedSignal("", new byte[] {(byte) 0xA0});
+        rawSignalsMap.put(
+                Base64.getEncoder().encodeToString(new byte[] {0x00}), List.of(signalValue));
+
+        String encodeSignalsJS =
+                String.format(
+                        "function encodeSignals(signals, maxSize) {\n"
+                            + "  // returning error if the creation time name of the only signal   "
+                            + " // is correct\n"
+                            + "  if(signals.size != 1) {\n"
+                            + "     return { 'status': 0, 'results': new Uint8Array([1]) };\n"
+                            + "  }\n"
+                            + "  let signalValues = signals.values().next().value;\n"
+                            + "  if(signalValues[0].creation_time == %d) {\n"
+                            + "     return { 'status': 0, 'results': new Uint8Array([0]) };\n"
+                            + "  }\n"
+                            + "  return { 'status': 0, 'results': new Uint8Array([2]) };\n"
+                            + "}\n",
+                        signalValue.getCreationTime().getEpochSecond());
+        ListenableFuture<byte[]> jsOutcome =
+                mAdSelectionScriptEngine.encodeSignals(encodeSignalsJS, rawSignalsMap, 10);
+        byte[] result = jsOutcome.get(5, TimeUnit.SECONDS);
+
+        assertArrayEquals(
+                "Expected a single byte response with value 0 to indicate success "
+                        + "in the JS validations",
+                new byte[] {0},
+                result);
+    }
+
+    @Test
+    public void testEncodeSignalsSignalsAreRepresentedAsAMapInJS_packageNameIsCorrect()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        Map<String, List<ProtectedSignal>> rawSignalsMap = new HashMap<>();
+        ProtectedSignal signalValue =
+                ProtectedSignalsFixture.generateDBProtectedSignal("", new byte[] {(byte) 0xA0});
+        rawSignalsMap.put(
+                Base64.getEncoder().encodeToString(new byte[] {0x00}), List.of(signalValue));
+
+        String encodeSignalsJS =
+                String.format(
+                        "function encodeSignals(signals, maxSize) {\n"
+                                + "  // returning error if the package name of the only signal is"
+                                + "  // correct\n"
+                                + "  if(signals.size != 1) {\n"
+                                + "     return { 'status': 0, 'results': new Uint8Array([1]) };\n"
+                                + "  }\n"
+                                + "  let signalValues = signals.values().next().value;\n"
+                                + "  if(signalValues[0].package_name == '%s') {\n"
+                                + "     return { 'status': 0, 'results': new Uint8Array([0]) };\n"
+                                + "  }\n"
+                                + "  return { 'status': 0, 'results': new Uint8Array([2]) };\n"
+                                + "}\n",
+                        signalValue.getPackageName());
+        ListenableFuture<byte[]> jsOutcome =
+                mAdSelectionScriptEngine.encodeSignals(encodeSignalsJS, rawSignalsMap, 10);
+        byte[] result = jsOutcome.get(5, TimeUnit.SECONDS);
+
+        assertArrayEquals(
+                "Expected a single byte response with value 0 to indicate success "
+                        + "in the JS validations",
+                new byte[] {0},
+                result);
+    }
+
+    @Test
+    public void testEncodeEmptySignals()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        String encodeSignalsJS =
+                "function encodeSignals(signals, maxSize) {\n"
+                        + "    return {'status' : 0, 'results' : new Uint8Array()};\n"
+                        + "}\n";
+        ListenableFuture<byte[]> jsOutcome =
+                mAdSelectionScriptEngine.encodeSignals(encodeSignalsJS, Collections.EMPTY_MAP, 10);
+        byte[] result = jsOutcome.get(5, TimeUnit.SECONDS);
+
+        Assert.assertTrue("The result should have been empty", result.length == 0);
+    }
+
+    @Test
+    public void testHandleEncodingEmptyOutput() {
+        IllegalStateException exception =
+                assertThrows(
+                        IllegalStateException.class,
+                        () -> {
+                            mAdSelectionScriptEngine.handleEncodingOutput("");
+                        });
+        assertEquals(
+                "The encoding script either doesn't contain the required function or the"
+                        + " function returned null",
+                exception.getMessage());
+    }
+
+    @Test
+    public void testHandleEncodingOutputFailedStatus() {
+        int status = 1;
+        String result = "unused";
+
+        String encodingScriptOutput =
+                "  {\"status\": " + status + ", \"results\" : \"" + result + "\" }";
+        IllegalStateException exception =
+                assertThrows(
+                        IllegalStateException.class,
+                        () -> {
+                            mAdSelectionScriptEngine.handleEncodingOutput(encodingScriptOutput);
+                        });
+        assertEquals(
+                String.format(
+                        "Outcome selection script failed with status '%s' or returned unexpected"
+                                + " result '%s'",
+                        status, result),
+                exception.getMessage());
+    }
+
+    @Test
+    public void testHandleEncodingOutputMissingResult() {
+        int status = 1;
+        String result = "unused";
+
+        String encodingScriptOutput =
+                "  {\"status\": " + status + ", \"bad_result_key\" : \"" + result + "\" }";
+        IllegalStateException exception =
+                assertThrows(
+                        IllegalStateException.class,
+                        () -> {
+                            mAdSelectionScriptEngine.handleEncodingOutput(encodingScriptOutput);
+                        });
+        assertEquals("Exception processing result from encoding", exception.getMessage());
     }
 
     private AdSelectionConfig anAdSelectionConfig() {

@@ -37,20 +37,20 @@ interface ISdkSandboxManager {
     const String LOAD_SDK = "LOAD_SDK";
     const String REQUEST_SURFACE_PACKAGE = "REQUEST_SURFACE_PACKAGE";
 
-    void addSdkSandboxProcessDeathCallback(in String callingPackageName, long timeAppCalledSystemServer, in ISdkSandboxProcessDeathCallback callback);
-    void removeSdkSandboxProcessDeathCallback(in String callingPackageName, long timeAppCalledSystemServer, in ISdkSandboxProcessDeathCallback callback);
-    void registerAppOwnedSdkSandboxInterface(in String callingPackageName, in AppOwnedSdkSandboxInterface appOwnedSdkSandboxInterface, long timeAppCalledSystemServer);
-    void unregisterAppOwnedSdkSandboxInterface(in String callingPackageName, in String name, long timeAppCalledSystemServer);
-    oneway void loadSdk(in String callingPackageName, in IBinder appProcessToken, in String sdkName, in SandboxLatencyInfo sandboxLatencyInfo, long timeAppCalledSystemServer, in Bundle params, in ILoadSdkCallback callback);
+    void addSdkSandboxProcessDeathCallback(in String callingPackageName, in SandboxLatencyInfo sandboxLatencyInfo, in ISdkSandboxProcessDeathCallback callback);
+    void removeSdkSandboxProcessDeathCallback(in String callingPackageName, in SandboxLatencyInfo sandboxLatencyInfo, in ISdkSandboxProcessDeathCallback callback);
+    void registerAppOwnedSdkSandboxInterface(in String callingPackageName, in AppOwnedSdkSandboxInterface appOwnedSdkSandboxInterface, in SandboxLatencyInfo sandboxLatencyInfo);
+    void unregisterAppOwnedSdkSandboxInterface(in String callingPackageName, in String name, in SandboxLatencyInfo sandboxLatencyInfo);
+    oneway void loadSdk(in String callingPackageName, in IBinder appProcessToken, in String sdkName, in SandboxLatencyInfo sandboxLatencyInfo, in Bundle params, in ILoadSdkCallback callback);
     void unloadSdk(in String callingPackageName, in String sdkName, long timeAppCalledSystemServer);
     // TODO(b/242031240): wrap the many input params in one parcelable object
-    oneway void requestSurfacePackage(in String callingPackageName, in String sdkName, in IBinder hostToken, int displayId, int width, int height, long timeAppCalledSystemServer, in Bundle params, IRequestSurfacePackageCallback callback);
-    List<AppOwnedSdkSandboxInterface> getAppOwnedSdkSandboxInterfaces(in String callingPackageName, long timeAppCalledSystemServer);
-    List<SandboxedSdk> getSandboxedSdks(in String callingPackageName, long timeAppCalledSystemServer);
-    oneway void syncDataFromClient(in String callingPackageName, long timeAppCalledSystemServer, in SharedPreferencesUpdate update, in ISharedPreferencesSyncCallback callback);
+    oneway void requestSurfacePackage(in String callingPackageName, in String sdkName, in IBinder hostToken, int displayId, int width, int height, in SandboxLatencyInfo sandboxLatencyInfo, in Bundle params, IRequestSurfacePackageCallback callback);
+    List<AppOwnedSdkSandboxInterface> getAppOwnedSdkSandboxInterfaces(in String callingPackageName, in SandboxLatencyInfo sandboxLatencyInfo);
+    List<SandboxedSdk> getSandboxedSdks(in String callingPackageName, in SandboxLatencyInfo sandboxLatencyInfo);
+    oneway void syncDataFromClient(in String callingPackageName, in SandboxLatencyInfo sandboxLatencyInfo, in SharedPreferencesUpdate update, in ISharedPreferencesSyncCallback callback);
     void stopSdkSandbox(in String callingPackageName);
     void logLatencies(in SandboxLatencyInfo sandboxLatencyInfo);
-    void logLatencyFromSystemServerToApp(in String method, int latency);
+    void logSandboxActivityEvent(int method, int callResult, int latencyMillis);
 
     // TODO(b/282239822): Remove this workaround on Android VIC
     IBinder getAdServicesManager();

@@ -16,6 +16,10 @@
 
 package android.adservices.cts;
 
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
+import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE;
+import static com.android.adservices.service.FlagsConstants.KEY_ISOLATE_MAX_HEAP_SIZE_BYTES;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
@@ -35,25 +39,26 @@ import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.adselection.TestAdSelectionClient;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.utils.CtsWebViewSupportUtil;
 import android.net.Uri;
 import android.os.Process;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
-import com.android.adservices.service.PhFlagsFixture;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
-import com.android.adservices.service.js.JSScriptEngine;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
-import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -94,22 +99,29 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
 
     private TestAdSelectionClient mTestAdSelectionClient;
     private boolean mIsDebugMode;
-    private String mPreviousAppAllowList;
 
-    // TODO(b/294423183): refactor to use AdServicesFlagsSetterRule instead of PhFlagsFixture
+    // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    // Skip the test if it runs on unsupported platforms.
+    @Rule(order = 1)
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
+    @Rule(order = 2)
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
+                    .setCompatModeFlags()
+                    .setPpapiAppAllowList(sContext.getPackageName())
+                    .setFlag(KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE, false)
+                    .setFlag(KEY_ISOLATE_MAX_HEAP_SIZE_BYTES, false)
+                    .setFlag(KEY_ENABLE_ENROLLMENT_TEST_SEED, true);
 
     @Before
     public void setup() {
-        // Skip the test if it runs on unsupported platforms
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-
         if (SdkLevel.isAtLeastT()) {
             assertForegroundActivityStarted();
-        } else {
-            mPreviousAppAllowList =
-                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
-                            sContext.getPackageName());
-            CompatAdServicesTestUtils.setFlags();
         }
 
         mTestAdSelectionClient =
@@ -123,30 +135,14 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
-        PhFlagsFixture.overrideEnforceIsolateMaxHeapSize(false);
-        PhFlagsFixture.overrideIsolateMaxHeapSizeBytes(0);
-        PhFlagsFixture.overrideEnableEnrollmentSeed(true);
 
         // Kill AdServices process
         AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
-    @After
-    public void tearDown() {
-        if (!AdservicesTestHelper.isDeviceSupported()) {
-            return;
-        }
-
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
-        PhFlagsFixture.overrideEnableEnrollmentSeed(false);
-    }
-
     @Test
     public void testFailsWithInvalidAdSelectionId() {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(CtsWebViewSupportUtil.isJSSandboxAvailable(sContext));
         sLogger.i("Calling Report Impression");
 
         AdSelectionClient adSelectionClient =
@@ -159,7 +155,7 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
 
     @Test
     public void testFailsWithInvalidAdSelectionId_usingGetMethodToCreateManager() {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(CtsWebViewSupportUtil.isJSSandboxAvailable(sContext));
         sLogger.i("Calling Report Impression");
 
         AdSelectionClient adSelectionClient =
@@ -283,7 +279,7 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
 
     @Test
     public void testFailsWithInvalidAdSelectionConfigNoBuyers() {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(CtsWebViewSupportUtil.isJSSandboxAvailable(sContext));
         AdSelectionClient adSelectionClient =
                 new AdSelectionClient.Builder()
                         .setContext(sContext)
@@ -294,7 +290,7 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
 
     @Test
     public void testFailsWithInvalidAdSelectionConfigNoBuyers_usingGetMethodToCreateManager() {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(CtsWebViewSupportUtil.isJSSandboxAvailable(sContext));
         AdSelectionClient adSelectionClient =
                 new AdSelectionClient.Builder()
                         .setContext(sContext)

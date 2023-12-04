@@ -18,7 +18,12 @@ package com.android.adservices.service.measurement.reporting;
 
 import static android.app.job.JobInfo.NETWORK_TYPE_ANY;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
+import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
+import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
+import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
+import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
+import static com.android.adservices.mockito.MockitoExpectations.verifyJobFinishedLogged;
+import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB;
 
 import static org.junit.Assert.assertEquals;
@@ -38,6 +43,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -47,6 +53,7 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
@@ -81,6 +88,7 @@ public class AggregateFallbackReportingJobServiceTest {
     private static final int MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID =
             MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 1_000L;
+    private static final long JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(4);
 
     private DatastoreManager mMockDatastoreManager;
     private JobScheduler mMockJobScheduler;
@@ -100,21 +108,24 @@ public class AggregateFallbackReportingJobServiceTest {
         mSpyLogger =
                 spy(new AdservicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mockStatsdLogger));
         mMockFlags = mock(Flags.class);
+        when(mMockFlags.getMeasurementAggregateFallbackReportingJobPersisted()).thenReturn(true);
+        when(mMockFlags.getMeasurementAggregateFallbackReportingJobRequiredNetworkType())
+                .thenReturn(JobInfo.NETWORK_TYPE_ANY);
+        when(mMockFlags.getMeasurementAggregateFallbackReportingJobRequiredBatteryNotLow())
+                .thenReturn(true);
+        when(mMockFlags.getMeasurementAggregateFallbackReportingJobPeriodMs())
+                .thenReturn(JOB_PERIOD_MS);
     }
 
     @Test
     public void onStartJob_killSwitchOn_withoutLogging() throws Exception {
         runWithMocks(
                 () -> {
-                    // Logging killswitch is on.
-                    Mockito.doReturn(true).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
 
                     onStartJob_killSwitchOn();
 
-                    // Verify logging methods are not invoked.
-                    verify(mSpyLogger, never()).persistJobExecutionData(anyInt(), anyLong());
-                    verify(mSpyLogger, never())
-                            .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+                    verifyLoggingNotHappened(mSpyLogger);
                 });
     }
 
@@ -122,20 +133,12 @@ public class AggregateFallbackReportingJobServiceTest {
     public void onStartJob_killSwitchOn_withLogging() throws Exception {
         runWithMocks(
                 () -> {
-                    // Logging killswitch is off.
-                    Mockito.doReturn(false).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
+                    JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
 
                     onStartJob_killSwitchOn();
 
-                    // Verify logging methods are invoked.
-                    verify(mSpyLogger).persistJobExecutionData(anyInt(), anyLong());
-                    verify(mSpyLogger)
-                            .logExecutionStats(
-                                    anyInt(),
-                                    anyLong(),
-                                    eq(
-                                            AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON),
-                                    anyInt());
+                    verifyBackgroundJobsSkipLogged(mSpyLogger, callback);
                 });
     }
 
@@ -143,15 +146,11 @@ public class AggregateFallbackReportingJobServiceTest {
     public void onStartJob_killSwitchOff_withoutLogging() throws Exception {
         runWithMocks(
                 () -> {
-                    // Logging killswitch is on.
-                    Mockito.doReturn(true).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
 
                     onStartJob_killSwitchOff();
 
-                    // Verify logging methods are not invoked.
-                    verify(mSpyLogger, never()).persistJobExecutionData(anyInt(), anyLong());
-                    verify(mSpyLogger, never())
-                            .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+                    verifyLoggingNotHappened(mSpyLogger);
                 });
     }
 
@@ -159,14 +158,14 @@ public class AggregateFallbackReportingJobServiceTest {
     public void onStartJob_killSwitchOff_withLogging() throws Exception {
         runWithMocks(
                 () -> {
-                    // Logging killswitch is off.
-                    Mockito.doReturn(false).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
+                    JobServiceLoggingCallback onStartJobCallback =
+                            syncPersistJobExecutionData(mSpyLogger);
+                    JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
 
                     onStartJob_killSwitchOff();
 
-                    // Verify logging methods are invoked.
-                    verify(mSpyLogger).persistJobExecutionData(anyInt(), anyLong());
-                    verify(mSpyLogger).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+                    verifyJobFinishedLogged(mSpyLogger, onStartJobCallback, onJobDoneCallback);
                 });
     }
 
@@ -204,15 +203,12 @@ public class AggregateFallbackReportingJobServiceTest {
     public void onStartJob_shouldDisableJobTrue_withoutLogging() throws Exception {
         runWithMocks(
                 () -> {
-                    // Logging killswitch is on.
                     ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-                    Mockito.doReturn(true).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
 
                     onStartJob_shouldDisableJobTrue();
 
-                    // Verify logging method is not invoked.
-                    verify(mSpyLogger, never())
-                            .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+                    verifyLoggingNotHappened(mSpyLogger);
                 });
     }
 
@@ -220,16 +216,14 @@ public class AggregateFallbackReportingJobServiceTest {
     public void onStartJob_shouldDisableJobTrue_withLoggingEnabled() throws Exception {
         runWithMocks(
                 () -> {
-                    // Logging killswitch is off.
                     ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-                    Mockito.doReturn(false).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
 
                     onStartJob_shouldDisableJobTrue();
 
                     // Verify logging has not happened even though logging is enabled because this
                     // field is not logged
-                    verify(mSpyLogger, never())
-                            .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+                    verifyLoggingNotHappened(mSpyLogger);
                 });
     }
 
@@ -251,7 +245,7 @@ public class AggregateFallbackReportingJobServiceTest {
 
                     // Execute
                     AggregateFallbackReportingJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule = */ false);
+                            mockContext, /* forceSchedule= */ false);
 
                     // Validate
                     ExtendedMockito.verify(
@@ -274,8 +268,6 @@ public class AggregateFallbackReportingJobServiceTest {
                     doReturn(mMockJobScheduler)
                             .when(spyContext)
                             .getSystemService(JobScheduler.class);
-                    long fallbackReportingJobPeriodMs =
-                            AdServicesConfig.getMeasurementAggregateFallbackReportingJobPeriodMs();
                     final JobInfo scheduledJobInfo =
                             new JobInfo.Builder(
                                             MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID,
@@ -283,9 +275,8 @@ public class AggregateFallbackReportingJobServiceTest {
                                                     spyContext,
                                                     AggregateFallbackReportingJobService.class))
                                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                                    .setRequiresDeviceIdle(true)
                                     .setRequiresBatteryNotLow(true)
-                                    .setPeriodic(fallbackReportingJobPeriodMs)
+                                    .setPeriodic(JOB_PERIOD_MS)
                                     .setPersisted(true)
                                     .build();
                     doReturn(scheduledJobInfo)
@@ -294,7 +285,7 @@ public class AggregateFallbackReportingJobServiceTest {
 
                     // Execute
                     AggregateFallbackReportingJobService.scheduleIfNeeded(
-                            spyContext, /* forceSchedule = */ false);
+                            spyContext, /* forceSchedule= */ false);
 
                     // Validate
                     ExtendedMockito.verify(
@@ -317,17 +308,14 @@ public class AggregateFallbackReportingJobServiceTest {
                     doReturn(mMockJobScheduler)
                             .when(spyContext)
                             .getSystemService(JobScheduler.class);
-                    long periodMs =
-                            AdServicesConfig.getMeasurementAggregateFallbackReportingJobPeriodMs();
                     final JobInfo scheduledJobInfo =
                             new JobInfo.Builder(
                                             MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID,
                                             new ComponentName(
                                                     spyContext,
                                                     AggregateFallbackReportingJobService.class))
-                                    .setRequiresDeviceIdle(true)
                                     .setRequiresBatteryNotLow(true)
-                                    .setPeriodic(periodMs - 1)
+                                    .setPeriodic(JOB_PERIOD_MS - 1)
                                     .setPersisted(true)
                                     .build();
                     doReturn(scheduledJobInfo)
@@ -365,7 +353,7 @@ public class AggregateFallbackReportingJobServiceTest {
 
                     // Execute
                     AggregateFallbackReportingJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule = */ true);
+                            mockContext, /* forceSchedule= */ true);
 
                     // Validate
                     ExtendedMockito.verify(
@@ -388,7 +376,8 @@ public class AggregateFallbackReportingJobServiceTest {
                     doReturn(mMockJobScheduler)
                             .when(mockContext)
                             .getSystemService(JobScheduler.class);
-                    doReturn(/* noJobInfo = */ null)
+                    // Mock the JobScheduler to have no pending job.
+                    doReturn(null)
                             .when(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID));
 
@@ -432,7 +421,6 @@ public class AggregateFallbackReportingJobServiceTest {
                     final JobInfo jobInfo = captor.getValue();
                     assertNotNull(jobInfo);
                     assertEquals(NETWORK_TYPE_ANY, jobInfo.getNetworkType());
-                    assertTrue(jobInfo.isRequireDeviceIdle());
                     assertTrue(jobInfo.isRequireBatteryNotLow());
                     assertTrue(jobInfo.isPeriodic());
                     assertTrue(jobInfo.isPersisted());
@@ -529,6 +517,9 @@ public class AggregateFallbackReportingJobServiceTest {
                         .strictness(Strictness.LENIENT)
                         .startMocking();
         try {
+            Context context = Mockito.mock(Context.class);
+            doReturn(CONTEXT.getPackageName()).when(context).getPackageName();
+            doReturn(CONTEXT.getPackageManager()).when(context).getPackageManager();
             // Setup mock everything in job
             mMockDatastoreManager = mock(DatastoreManager.class);
             doReturn(Optional.empty())
@@ -536,7 +527,7 @@ public class AggregateFallbackReportingJobServiceTest {
                     .runInTransactionWithResult(any());
             doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
             doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
-            doReturn(Mockito.mock(Context.class)).when(mSpyService).getApplicationContext();
+            doReturn(context).when(mSpyService).getApplicationContext();
             ExtendedMockito.doReturn(TimeUnit.HOURS.toMillis(4))
                     .when(AdServicesConfig::getMeasurementAggregateMainReportingJobPeriodMs);
             ExtendedMockito.doReturn(TimeUnit.HOURS.toMillis(24))

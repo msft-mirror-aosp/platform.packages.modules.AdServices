@@ -16,10 +16,16 @@
 
 package com.android.adservices.service.common;
 
+import android.annotation.Nullable;
+
+import java.util.Collections;
 import java.util.List;
 
 /** Topics part of the app manifest config (<ad-services-config>). */
-public final class AppManifestTopicsConfig extends AppManifestApiConfig {
+final class AppManifestTopicsConfig extends AppManifestApiConfig {
+
+    @Nullable private static AppManifestTopicsConfig sEnabledByDefaultInstance;
+
     /**
      * Constructor.
      *
@@ -28,5 +34,12 @@ public final class AppManifestTopicsConfig extends AppManifestApiConfig {
      */
     public AppManifestTopicsConfig(boolean allowAllToAccess, List<String> allowAdPartnersToAccess) {
         super(allowAllToAccess, allowAdPartnersToAccess);
+    }
+
+    static AppManifestTopicsConfig getEnabledByDefaultInstance() {
+        if (sEnabledByDefaultInstance == null) {
+            sEnabledByDefaultInstance = new AppManifestTopicsConfig(true, Collections.emptyList());
+        }
+        return sEnabledByDefaultInstance;
     }
 }
