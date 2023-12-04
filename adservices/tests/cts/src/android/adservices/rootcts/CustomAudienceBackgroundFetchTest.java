@@ -98,4 +98,30 @@ public class CustomAudienceBackgroundFetchTest extends FledgeScenarioTest {
         assertThat(dispatcher.getCalledPaths())
                 .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
     }
+
+    /**
+     * Test to ensure that trusted signals are not updated if a daily update server response returns
+     * an excessive amount of data.
+     */
+    @Test
+    public void testAdSelection_withOverlyLargeDailyUpdate_backgroundJobFails() throws Exception {
+        ScenarioDispatcher dispatcher =
+                ScenarioDispatcher.fromScenario(
+                        "scenarios/remarketing-cuj-033.json", getCacheBusterPrefix());
+        setupDefaultMockWebServer(dispatcher);
+        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+
+        try {
+            joinCustomAudience(makeCustomAudience(CA_NAME).setAds(List.of()).build());
+            assertThrows(ExecutionException.class, () -> doSelectAds(adSelectionConfig));
+            assertThat(mBackgroundJobHelper.runJob(FLEDGE_BACKGROUND_FETCH_JOB.getJobId()))
+                    .isTrue();
+            assertThrows(ExecutionException.class, () -> doSelectAds(adSelectionConfig));
+        } finally {
+            leaveCustomAudience(CA_NAME);
+        }
+
+        assertThat(dispatcher.getCalledPaths())
+                .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
+    }
 }
