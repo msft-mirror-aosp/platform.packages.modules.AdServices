@@ -851,7 +851,9 @@ public class AsyncSourceFetcher {
 
         Optional<String> enrollmentId =
                 mFlags.isDisableMeasurementEnrollmentCheck()
-                        ? Optional.of(Enrollment.FAKE_ENROLLMENT)
+                        ? WebAddresses.topPrivateDomainAndScheme(
+                                        asyncRegistration.getRegistrationUri())
+                                .map(Uri::toString)
                         : Enrollment.getValidEnrollmentId(
                                 asyncRegistration.getRegistrationUri(),
                                 asyncRegistration.getRegistrant().getAuthority(),

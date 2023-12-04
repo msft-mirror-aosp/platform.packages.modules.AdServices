@@ -5730,7 +5730,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesUnitTestCase {
     }
 
     @Test
-    public void fetchTrigger_setsFakeEnrollmentId_whenDisableEnrollmentFlagIsTrue()
+    public void fetchTrigger_setsSiteEnrollmentId_whenDisableEnrollmentFlagIsTrue()
             throws Exception {
         String uri = WebUtil.validUrl("https://test1.example.test:8081");
         RegistrationRequest request = buildRequest(uri);
@@ -5762,7 +5762,85 @@ public final class AsyncTriggerFetcherTest extends AdServicesUnitTestCase {
         assertEquals(
                 WebUtil.validUrl("https://test1.example.test:8081"),
                 result.getRegistrationOrigin().toString());
-        assertEquals(Enrollment.FAKE_ENROLLMENT, result.getEnrollmentId());
+        assertEquals("https://example.com", result.getEnrollmentId());
+        assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
+        assertEquals(DEBUG_KEY, result.getDebugKey());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchTrigger_setsSiteEnrollmentId_whenDisableEnrollmentFlagIsTrueForLocalhost()
+            throws Exception {
+        String uri = WebUtil.validUrl("https://localhost:8081");
+        RegistrationRequest request = buildRequest(uri);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(uri));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        doReturn(true).when(mFlags).isDisableMeasurementEnrollmentCheck();
+        Map<String, List<String>> headersRequest = new HashMap<>();
+        headersRequest.put(
+                "Attribution-Reporting-Register-Trigger",
+                List.of(
+                        "{"
+                                + "\"event_trigger_data\": "
+                                + EVENT_TRIGGERS_1
+                                + ", \"debug_key\": \""
+                                + DEBUG_KEY
+                                + "\""
+                                + "}"));
+        when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Trigger result = fetch.get();
+        assertEquals(
+                WebUtil.validUrl("https://localhost:8081"),
+                result.getRegistrationOrigin().toString());
+        assertEquals("https://localhost", result.getEnrollmentId());
+        assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
+        assertEquals(DEBUG_KEY, result.getDebugKey());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchTrigger_setsSiteEnrollmentId_whenDisableEnrollmentFlagIsTrueForIP()
+            throws Exception {
+        String uri = WebUtil.validUrl("https://127.0.0.1:8081");
+        RegistrationRequest request = buildRequest(uri);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(uri));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        doReturn(true).when(mFlags).isDisableMeasurementEnrollmentCheck();
+        Map<String, List<String>> headersRequest = new HashMap<>();
+        headersRequest.put(
+                "Attribution-Reporting-Register-Trigger",
+                List.of(
+                        "{"
+                                + "\"event_trigger_data\": "
+                                + EVENT_TRIGGERS_1
+                                + ", \"debug_key\": \""
+                                + DEBUG_KEY
+                                + "\""
+                                + "}"));
+        when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Trigger result = fetch.get();
+        assertEquals(
+                WebUtil.validUrl("https://127.0.0.1:8081"),
+                result.getRegistrationOrigin().toString());
+        assertEquals("https://127.0.0.1", result.getEnrollmentId());
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
         assertEquals(DEBUG_KEY, result.getDebugKey());
         verify(mUrlConnection).setRequestMethod("POST");
