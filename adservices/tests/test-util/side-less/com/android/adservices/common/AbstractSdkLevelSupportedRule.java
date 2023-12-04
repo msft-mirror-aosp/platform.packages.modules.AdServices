@@ -50,8 +50,7 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
 
     private static final String TAG = "SdkLevelSupportRule";
 
-    @VisibleForTesting
-    static final String REASON_LEVEL_SET_ON_RULE_CONSTRUCTOR = "(level set on rule constructor)";
+    @VisibleForTesting static final String DEFAULT_REASON = "N/A";
 
     private final AndroidSdkRange mDefaultRequiredRange;
     protected final Logger mLog;
@@ -100,13 +99,75 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
 
     @VisibleForTesting
     RequiredRange getRequiredRange(Description description) {
-        return getRequiredRange(description.getAnnotations());
+        // List of ranges defined in the test itself and its superclasses
+        Set<AndroidSdkRange> ranges = new HashSet<>();
+        // TODO(b/295269584): merge all reasons (instead of using just the latest);
+        String reason = null;
+
+        // Start with the test class
+        RequiredRange testRange =
+                getRequiredRange(
+                        description.getAnnotations(),
+                        /* allowEmpty= */ false,
+                        /* addDefaultRange= */ true,
+                        /* setDefaultReason= */ false);
+        reason = testRange.reason;
+        ranges.add(testRange.range);
+
+        // Then the superclasses
+        Class<?> clazz = description.getTestClass();
+        do {
+            RequiredRange testClassRange = getRequiredRangeFromClass(clazz);
+            if (testClassRange != null) {
+                ranges.add(testClassRange.range);
+                if (reason == null) {
+                    reason = testClassRange.reason;
+                }
+            }
+            clazz = clazz.getSuperclass();
+        } while (clazz != null);
+
+        if (reason == null) {
+            reason = DEFAULT_REASON;
+        }
+
+        AndroidSdkRange mergedRange = AndroidSdkRange.merge(ranges);
+        return new RequiredRange(mergedRange, reason);
     }
 
     @VisibleForTesting
     RequiredRange getRequiredRange(Collection<Annotation> annotations) {
+        return getRequiredRange(
+                annotations,
+                /* allowEmpty= */ false,
+                /* addDefaultRange= */ true,
+                /* setDefaultReason= */ true);
+    }
+
+    @Nullable
+    private RequiredRange getRequiredRangeFromClass(Class<?> testClass) {
+        Annotation[] annotations = testClass.getAnnotations();
+        if (annotations == null) {
+            return null;
+        }
+
+        return getRequiredRange(
+                Arrays.asList(annotations),
+                /* allowEmpty= */ true,
+                /* addDefaultRange= */ false,
+                /* setDefaultReason= */ false);
+    }
+
+    @Nullable
+    private RequiredRange getRequiredRange(
+            Collection<Annotation> annotations,
+            boolean allowEmpty,
+            boolean addDefaultRange,
+            boolean setDefaultReason) {
         Set<AndroidSdkRange> ranges = new HashSet<>();
-        ranges.add(mDefaultRequiredRange);
+        if (addDefaultRange) {
+            ranges.add(mDefaultRequiredRange);
+        }
         String reason = null;
 
         for (Annotation annotation : annotations) {
@@ -137,8 +198,12 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
             }
         }
 
-        if (reason == null) {
-            reason = REASON_LEVEL_SET_ON_RULE_CONSTRUCTOR;
+        if (ranges.isEmpty() && allowEmpty) {
+            return null;
+        }
+
+        if (reason == null && setDefaultReason) {
+            reason = DEFAULT_REASON;
         }
 
         try {
@@ -173,11 +238,11 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
     @VisibleForTesting
     static final class RequiredRange {
         public final AndroidSdkRange range;
-        public final String reason;
+        @Nullable public final String reason;
 
-        RequiredRange(AndroidSdkRange range, String reason) {
+        RequiredRange(AndroidSdkRange range, @Nullable String reason) {
             this.range = Objects.requireNonNull(range);
-            this.reason = (reason == null || reason.isBlank()) ? "N/A" : reason;
+            this.reason = reason;
         }
 
         @Override
@@ -231,6 +296,11 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
     /** Gets whether the device supports at least Android {@code U}. */
     public final boolean isAtLeastU() {
         return getDeviceApiLevel().isAtLeast(AndroidSdkLevel.U);
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "[mDefaultRequiredRange=" + mDefaultRequiredRange + "]";
     }
 
     // NOTE: calling it AndroidSdkLevel to avoid conflict with SdkLevel
