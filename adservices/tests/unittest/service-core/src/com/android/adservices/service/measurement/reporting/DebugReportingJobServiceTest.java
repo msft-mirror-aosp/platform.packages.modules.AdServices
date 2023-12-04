@@ -56,9 +56,7 @@ import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -119,8 +117,6 @@ public class DebugReportingJobServiceTest {
 
     @Test
     public void onStartJob_killSwitchOff() throws Exception {
-        // TODO fix in R b/311386129
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
         runWithMocks(
                 () -> {
                     // Setup

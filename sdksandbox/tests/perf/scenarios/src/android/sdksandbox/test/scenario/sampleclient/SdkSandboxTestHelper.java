@@ -19,8 +19,6 @@ import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentat
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.os.SystemClock;
-
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject2;
@@ -49,7 +47,7 @@ public class SdkSandboxTestHelper {
     }
 
     /** Load sdk on sandbox client test app by clicking the loadSdk button. */
-    public void loadSandboxSdk() {
+    public void loadSandboxSdk() throws Exception {
         if (getLoadSdkButton() != null) {
             getLoadSdkButton().click();
         } else {
@@ -60,7 +58,7 @@ public class SdkSandboxTestHelper {
         boolean sdkLoaded = false;
         // wait until loadSdk.
         while (!sdkLoaded && retries < UI_RETRIES_WAIT_LOADSDK) {
-            SystemClock.sleep(UI_WAIT_LOADSDK_MS);
+            Thread.sleep(UI_WAIT_LOADSDK_MS);
             if (getLoadSdkButton().getText().equals("Unload SDKs")) {
                 sdkLoaded = true;
             }
@@ -71,13 +69,13 @@ public class SdkSandboxTestHelper {
     }
 
     /** Remote render ad on sandbox client test app by clicking banner ad button. */
-    public void remoteRenderAd() {
+    public void remoteRenderAd() throws Exception {
         if (getNewBannerAdButton() != null) {
             getNewBannerAdButton().click();
         } else {
             throw new RuntimeException("Did not find 'New Banner Ad' button.");
         }
-        SystemClock.sleep(UI_WAIT_REMOTE_RENDER_MS);
+        Thread.sleep(UI_WAIT_REMOTE_RENDER_MS);
         assertThat(getBannerAdView()).isNotNull();
     }
 

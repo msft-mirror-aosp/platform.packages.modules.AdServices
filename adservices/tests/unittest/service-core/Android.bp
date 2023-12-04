@@ -36,6 +36,8 @@ java_defaults {
         "truth",
         "adservices-assets",
         "adservices-service-core-schema",
+        "adservices-shared-testing",
+        "adservices-test-mockito-expectations",
         "adservices-test-utility",
         "androidx.room_room-runtime",
         "androidx.room_room-testing",
@@ -179,7 +181,9 @@ java_defaults {
     static_libs: [
         "adservices-assets",
         "adservices-service-core-schema",
+        "adservices-shared-testing",
         "adservices-test-fixtures",
+        "adservices-test-mockito-expectations",
         "adservices-test-utility",
         "androidx.concurrent_concurrent-futures",
         "androidx.room_room-runtime",
@@ -332,8 +336,8 @@ cc_library_shared {
         "packages/modules/AdServices/adservices/tests/unittest/service-core/src/jni/cpp"
     ],
     header_libs: ["jni_headers"],
-    shared_libs: ["libcrypto", "liblog",],
-    static_libs: ["libact"],
+    shared_libs: ["liblog",],
+    static_libs: ["libact", "libcrypto_static"],
     apex_available: ["com.android.adservices", "com.android.extservices"],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",

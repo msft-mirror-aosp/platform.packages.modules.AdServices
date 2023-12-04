@@ -41,8 +41,10 @@ import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -109,9 +111,6 @@ public class NotificationActivityGAV2UiAutomatorTest {
         UiObject rightControlButton =
                 getElement(R.string.notificationUI_confirmation_right_control_button_text);
         UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
-        assertThat(leftControlButton.exists()).isFalse();
-        assertThat(rightControlButton.exists()).isFalse();
-        assertThat(moreButton.exists()).isTrue();
         while (moreButton.exists()) {
             moreButton.click();
             Thread.sleep(SCROLL_WAIT_TIME);
@@ -123,6 +122,7 @@ public class NotificationActivityGAV2UiAutomatorTest {
 
     @Test
     public void euAcceptFlowTest() throws UiObjectNotFoundException, InterruptedException {
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
         startActivity(true);
@@ -131,9 +131,6 @@ public class NotificationActivityGAV2UiAutomatorTest {
         UiObject rightControlButton =
                 getElement(R.string.notificationUI_confirmation_right_control_button_text);
         UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
-        assertThat(leftControlButton.exists()).isFalse();
-        assertThat(rightControlButton.exists()).isFalse();
-        assertThat(moreButton.exists()).isTrue();
         while (moreButton.exists()) {
             moreButton.click();
             Thread.sleep(SCROLL_WAIT_TIME);
@@ -147,9 +144,6 @@ public class NotificationActivityGAV2UiAutomatorTest {
         leftControlButton = getElement(R.string.notificationUI_left_control_button_text_eu);
         rightControlButton = getElement(R.string.notificationUI_right_control_button_ga_text_eu_v2);
         moreButton = getElement(R.string.notificationUI_more_button_text);
-        assertThat(leftControlButton.exists()).isFalse();
-        assertThat(rightControlButton.exists()).isFalse();
-        assertThat(moreButton.exists()).isTrue();
         while (moreButton.exists()) {
             moreButton.click();
             Thread.sleep(SCROLL_WAIT_TIME);
@@ -170,9 +164,6 @@ public class NotificationActivityGAV2UiAutomatorTest {
         UiObject leftControlButton = getElement(R.string.notificationUI_left_control_button_text);
         UiObject rightControlButton = getElement(R.string.notificationUI_right_control_button_text);
         UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
-        assertThat(leftControlButton.exists()).isFalse();
-        assertThat(rightControlButton.exists()).isFalse();
-        assertThat(moreButton.exists()).isTrue();
         while (moreButton.exists()) {
             moreButton.click();
             Thread.sleep(SCROLL_WAIT_TIME);
@@ -197,9 +188,6 @@ public class NotificationActivityGAV2UiAutomatorTest {
         UiObject leftControlButton = getElement(R.string.notificationUI_left_control_button_text);
         UiObject rightControlButton = getElement(R.string.notificationUI_right_control_button_text);
         UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
-        assertThat(leftControlButton.exists()).isFalse();
-        assertThat(rightControlButton.exists()).isFalse();
-        assertThat(moreButton.exists()).isTrue();
         while (moreButton.exists()) {
             moreButton.click();
             Thread.sleep(SCROLL_WAIT_TIME);

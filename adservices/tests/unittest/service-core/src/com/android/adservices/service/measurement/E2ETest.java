@@ -42,6 +42,7 @@ import android.view.MotionEvent.PointerProperties;
 import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.AggregateReportingJob;
@@ -82,13 +83,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 /**
- * End-to-end test from source and trigger registration to attribution reporting. Extensions of
- * this class can implement different ways to prepare the registrations, either with an external
- * server or mocking HTTP responses, for example; similarly for examining the attribution reports.
+ * End-to-end test from source and trigger registration to attribution reporting. Extensions of this
+ * class can implement different ways to prepare the registrations, either with an external server
+ * or mocking HTTP responses, for example; similarly for examining the attribution reports.
  *
- * Consider @RunWith(Parameterized.class)
+ * <p>Consider @RunWith(Parameterized.class)
  */
-public abstract class E2ETest {
+public abstract class E2ETest extends AdServicesUnitTestCase {
     // Used to fuzzy-match expected report (not delivery) time
     private static final String LOG_TAG = "ADSERVICES_MSMT_E2E_TEST";
 
@@ -126,6 +127,7 @@ public abstract class E2ETest {
                         "trigger_summary_bucket");
         String DOUBLE = "randomized_trigger_rate";
         String STRING_OR_ARRAY = "attribution_destination";
+        String ARRAY = "trigger_debug_keys";
     }
 
     interface AggregateReportPayloadKeys {
@@ -167,6 +169,7 @@ public abstract class E2ETest {
     }
 
     public interface TestFormatJsonMapping {
+        String DEFAULT_CONFIG_FILENAME = "default_config.json";
         String API_CONFIG_KEY = "api_config";
         String PH_FLAGS_OVERRIDE_KEY = "phflags_override";
         String TEST_INPUT_KEY = "input";
@@ -501,7 +504,7 @@ public abstract class E2ETest {
 
     private static int hashForEventReportObject(OutputType outputType, JSONObject obj) {
         int n = EventReportPayloadKeys.STRINGS.size();
-        int numValuesExcludingN = 3;
+        int numValuesExcludingN = 4;
         Object[] objArray = new Object[n + numValuesExcludingN];
         // TODO (b/306863121) add time to hash
         String url = obj.optString(TestFormatJsonMapping.REPORT_TO_KEY, "");
@@ -516,10 +519,12 @@ public abstract class E2ETest {
         if (maybeString != null) {
             objArray[2] = maybeString;
         }
-        JSONArray maybeArray = payload.optJSONArray(EventReportPayloadKeys.STRING_OR_ARRAY);
-        if (maybeArray != null) {
-            objArray[2] = maybeArray;
+        JSONArray maybeArray1 = payload.optJSONArray(EventReportPayloadKeys.STRING_OR_ARRAY);
+        if (maybeArray1 != null) {
+            objArray[2] = maybeArray1;
         }
+        JSONArray maybeArray2 = payload.optJSONArray(EventReportPayloadKeys.ARRAY);
+        objArray[3] = maybeArray2;
         for (int i = 0; i < n; i++) {
             objArray[i + numValuesExcludingN] =
                     payload.optString(EventReportPayloadKeys.STRINGS.get(i), "");
@@ -590,6 +595,24 @@ public abstract class E2ETest {
         return true;
     }
 
+    private static boolean areNullOrEqualJSONArray(JSONArray expected, JSONArray actual)
+            throws JSONException {
+        if (expected == null) {
+            return actual == null;
+        } else if (actual == null) {
+            return false;
+        }
+        if (expected.length() != actual.length()) {
+            return false;
+        }
+        for (int i = 0; i < expected.length(); i++) {
+            if (!expected.getString(i).equals(actual.getString(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private boolean areEqualEventReportJsons(
             ReportType reportType, JSONObject expected, JSONObject actual) throws JSONException {
         JSONObject expectedPayload = expected.getJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
@@ -602,6 +625,13 @@ public abstract class E2ETest {
         if (!areEqualStringOrJSONArray(
                 expectedPayload.get(EventReportPayloadKeys.STRING_OR_ARRAY),
                 actualPayload.get(EventReportPayloadKeys.STRING_OR_ARRAY))) {
+            log("Event payload string-or-array mismatch. Report type: " + reportType.name());
+            return false;
+        }
+        if (!areNullOrEqualJSONArray(
+                expectedPayload.optJSONArray(EventReportPayloadKeys.ARRAY),
+                actualPayload.optJSONArray(EventReportPayloadKeys.ARRAY))) {
+            log("Event payload array mismatch. Report type: " + reportType.name());
             return false;
         }
         for (String key : EventReportPayloadKeys.STRINGS) {
@@ -893,6 +923,11 @@ public abstract class E2ETest {
             result.append("JSONObject::get failed for EventReportPayloadKeys.STRING_OR_ARRAY "
                     + e + "\n");
         }
+        result.append(EventReportPayloadKeys.ARRAY + ": ")
+                .append(payload1.optJSONArray(EventReportPayloadKeys.ARRAY))
+                .append(" ::: ")
+                .append(payload2.optJSONArray(EventReportPayloadKeys.ARRAY))
+                .append("\n");
         for (String key : EventReportPayloadKeys.STRINGS) {
             result.append(key)
                     .append(": ")
@@ -923,6 +958,10 @@ public abstract class E2ETest {
             result.append("JSONObject::get failed for EventReportPayloadKeys.STRING_OR_ARRAY "
                     + e + "\n");
         }
+        result.append(EventReportPayloadKeys.ARRAY + ": ")
+                .append(pad)
+                .append(payload.optJSONArray(EventReportPayloadKeys.ARRAY))
+                .append("\n");
         for (String key : EventReportPayloadKeys.STRINGS) {
             result.append(key).append(": ").append(pad).append(payload.optString(key)).append("\n");
         }
@@ -997,10 +1036,23 @@ public abstract class E2ETest {
                     expiryTimes.add(
                             MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
                 }
+                if (sourceJson.has("event_report_windows")) {
+                    expiryTimes.addAll(
+                            getFlexEndTimes(sourceJson.getJSONObject("event_report_windows")));
+                }
             }
         }
 
         return expiryTimes;
+    }
+
+    private static Set<Long> getFlexEndTimes(JSONObject eventReportWindows) throws JSONException {
+        Set<Long> endTimes = new HashSet<>();
+        JSONArray endTimesArray = eventReportWindows.getJSONArray("end_times");
+        for (int i = 0; i < endTimesArray.length(); i++) {
+            endTimes.add(endTimesArray.getLong(i));
+        }
+        return endTimes;
     }
 
     private static long roundSecondsToWholeDays(long seconds) {
@@ -1055,6 +1107,10 @@ public abstract class E2ETest {
         List<Object[]> testCases = new ArrayList<>();
 
         for (int i = 0; i < inputStreams.size(); i++) {
+            String name = filenames[i];
+            if (name.equals(TestFormatJsonMapping.DEFAULT_CONFIG_FILENAME)) {
+                continue;
+            }
             int size = inputStreams.get(i).available();
             byte[] buffer = new byte[size];
             inputStreams.get(i).read(buffer);
@@ -1062,7 +1118,6 @@ public abstract class E2ETest {
             String json = new String(buffer, StandardCharsets.UTF_8);
 
             JSONObject testObj = new JSONObject(preprocessor.apply(json));
-            String name = filenames[i];
             JSONObject input = testObj.getJSONObject(TestFormatJsonMapping.TEST_INPUT_KEY);
             JSONObject output = testObj.getJSONObject(TestFormatJsonMapping.TEST_OUTPUT_KEY);
 

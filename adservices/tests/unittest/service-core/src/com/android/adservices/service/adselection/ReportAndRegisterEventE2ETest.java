@@ -86,7 +86,6 @@ import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
-import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
@@ -114,6 +113,7 @@ import com.android.adservices.service.measurement.registration.AsyncTriggerFetch
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -1003,7 +1003,8 @@ public class ReportAndRegisterEventE2ETest {
                 mConsentManagerMock,
                 mObliviousHttpEncryptorMock,
                 mAdSelectionDebugReportDaoMock,
-                mAdIdFetcher);
+                mAdIdFetcher,
+                false);
     }
 
     private void initializeReportingArtifacts() throws JSONException {

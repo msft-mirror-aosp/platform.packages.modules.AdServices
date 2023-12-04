@@ -17,7 +17,7 @@
 package com.android.adservices.service.adselection;
 
 import android.adservices.adselection.AdWithBid;
-import android.adservices.adselection.ContextualAds;
+import android.adservices.adselection.SignedContextualAds;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FrequencyCapFilters;
 import android.adservices.common.KeyedFrequencyCap;
@@ -101,14 +101,14 @@ public final class AdFiltererImpl implements AdFilterer {
     }
 
     /**
-     * Takes in a {@link ContextualAds} object and filters out ads from it that should not be in the
-     * auction
+     * Takes in a {@link SignedContextualAds} object and filters out ads from it that should not be
+     * in the auction
      *
      * @param contextualAds An object containing contextual ads corresponding to a buyer
      * @return A list of object identical to the input, but without any ads that should be filtered
      */
     @Override
-    public ContextualAds filterContextualAds(ContextualAds contextualAds) {
+    public SignedContextualAds filterContextualAds(SignedContextualAds contextualAds) {
         final int traceCookie = Tracing.beginAsyncSection(Tracing.FILTER_CONTEXTUAL);
         try {
             List<AdWithBid> adsList = new ArrayList<>();
@@ -126,14 +126,8 @@ public final class AdFiltererImpl implements AdFilterer {
             sLogger.v(
                     "Filtering finished. %d contextual ads of the original %d remain.",
                     adsList.size(), contextualAds.getAdsWithBid().size());
-            ContextualAds toReturn =
-                    new ContextualAds.Builder()
-                            .setAdsWithBid(adsList)
-                            .setDecisionLogicUri(contextualAds.getDecisionLogicUri())
-                            .setBuyer(contextualAds.getBuyer())
-                            .build();
 
-            return toReturn;
+            return contextualAds.cloneToBuilder().setAdsWithBid(adsList).build();
         } finally {
             Tracing.endAsyncSection(Tracing.FILTER_CONTEXTUAL, traceCookie);
         }

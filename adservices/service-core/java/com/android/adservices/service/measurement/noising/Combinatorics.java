@@ -265,6 +265,9 @@ public class Combinatorics {
      */
     public static long getNumStatesFlexApi(
             int totalCap, int[] perTypeNumWindowList, int[] perTypeCapList) {
+        if (perTypeNumWindowList.length == 0 || perTypeCapList.length == 0) {
+            return 1;
+        }
         boolean canComputeArithmetic = true;
         for (int i = 1; i < perTypeNumWindowList.length; i++) {
             if (perTypeNumWindowList[i] != perTypeNumWindowList[i - 1]) {
@@ -319,7 +322,7 @@ public class Combinatorics {
     }
 
     /**
-     * Generate fake report set given a report specification and the rank order number
+     * Generate fake report set given a trigger specification and the rank order number
      *
      * @param totalCap total_cap
      * @param perTypeNumWindowList per type number of window list

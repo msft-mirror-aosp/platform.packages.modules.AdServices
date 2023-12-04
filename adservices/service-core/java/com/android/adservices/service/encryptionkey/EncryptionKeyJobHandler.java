@@ -21,8 +21,10 @@ import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.enrollment.EnrollmentData;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /** Class for handling encryption key fetch and update. */
 public class EncryptionKeyJobHandler {
@@ -42,18 +44,21 @@ public class EncryptionKeyJobHandler {
 
     /** Fetch encryption keys or update expired encryption keys. */
     public void fetchAndUpdateEncryptionKeys() {
-        List<EncryptionKey> encryptionKeyList = mEncryptionKeyDao.getAllEncryptionKeys();
-        if (encryptionKeyList.size() == 0) {
-            // If no encryption key in table, first time fetch encryption keys for all enrollment
-            // data in db.
-            List<EnrollmentData> enrollmentDataList = mEnrollmentDao.getAllEnrollmentData();
-            for (EnrollmentData enrollmentData : enrollmentDataList) {
+        // Loop all enrollments, for enrollments that we haven't fetch key successfully before
+        // (this can happen when an adtech didn't provide correct key previously), re-fetch the keys
+        // as first time fetch.
+        List<EnrollmentData> enrollmentDataList = mEnrollmentDao.getAllEnrollmentData();
+        Set<String> newlyFetchKeyIdSet = new HashSet<>();
+        for (EnrollmentData enrollmentData : enrollmentDataList) {
+            List<EncryptionKey> existingKeys =
+                    mEncryptionKeyDao.getEncryptionKeyFromEnrollmentId(
+                            enrollmentData.getEnrollmentId());
+            if (existingKeys.size() == 0) {
                 if (Thread.currentThread().isInterrupted()) {
                     LoggerFactory.getLogger()
                             .d(
-                                    "EncryptionKeyJobHandler"
-                                            + " fetchAndUpdateEncryptionKeys thread interrupted,"
-                                            + " exiting early.");
+                                    "EncryptionKeyJobHandler fetchAndUpdateEncryptionKeys"
+                                            + " thread interrupted, exiting early.");
                     return;
                 }
                 Optional<List<EncryptionKey>> newEncryptionKeys =
@@ -62,45 +67,51 @@ public class EncryptionKeyJobHandler {
                                 /* enrollmentData */ enrollmentData,
                                 /* isFirstTimeFetch */ true);
                 if (newEncryptionKeys.isPresent()) {
-                    List<EncryptionKey> newEncryptionKeyList = newEncryptionKeys.get();
-                    mEncryptionKeyDao.insert(newEncryptionKeyList);
-                }
-            }
-        } else {
-            for (EncryptionKey encryptionKey : encryptionKeyList) {
-                if (Thread.currentThread().isInterrupted()) {
-                    LoggerFactory.getLogger()
-                            .d(
-                                    "EncryptionKeyJobHandler"
-                                            + " fetchAndUpdateEncryptionKeys thread interrupted,"
-                                            + " exiting early.");
-                    return;
-                }
-                EnrollmentData enrollmentData =
-                        mEnrollmentDao.getEnrollmentData(encryptionKey.getEnrollmentId());
-                // When the key doesn't have a corresponding enrollment to it, delete the key, don't
-                // need to check expiration time and re-fetch.
-                if (enrollmentData == null) {
-                    mEncryptionKeyDao.delete(encryptionKey.getId());
-                    continue;
-                }
-
-                // Re-fetch keys with "if-modified-since" header to check if we need to update keys.
-                Optional<List<EncryptionKey>> newEncryptionKeys =
-                        mEncryptionKeyFetcher.fetchEncryptionKeys(
-                                /* encryptionKey */ encryptionKey,
-                                /* enrollmentData */ enrollmentData,
-                                /* isFirstTimeFetch */ false);
-                if (newEncryptionKeys.isEmpty()) {
-                    continue;
-                }
-                // Overwrite current key with same key type keys in the Http response.
-                mEncryptionKeyDao.delete(encryptionKey.getId());
-                for (EncryptionKey newKey : newEncryptionKeys.get()) {
-                    if (newKey.getKeyType().equals(encryptionKey.getKeyType())) {
-                        mEncryptionKeyDao.insert(newKey);
+                    for (EncryptionKey encryptionKey : newEncryptionKeys.get()) {
+                        newlyFetchKeyIdSet.add(encryptionKey.getId());
+                        mEncryptionKeyDao.insert(encryptionKey);
                     }
                 }
+            }
+        }
+
+        // Loop all keys, refresh previously saved encryption keys to check whether keys need to be
+        // updated, don't need to refresh newly fetched keys above.
+        List<EncryptionKey> encryptionKeyList = mEncryptionKeyDao.getAllEncryptionKeys();
+        for (EncryptionKey encryptionKey : encryptionKeyList) {
+            // Skip newly fetched keys above.
+            if (newlyFetchKeyIdSet.contains(encryptionKey.getId())) {
+                continue;
+            }
+            if (Thread.currentThread().isInterrupted()) {
+                LoggerFactory.getLogger()
+                        .d(
+                                "EncryptionKeyJobHandler"
+                                        + " fetchAndUpdateEncryptionKeys thread interrupted,"
+                                        + " exiting early.");
+                return;
+            }
+            EnrollmentData enrollmentData =
+                    mEnrollmentDao.getEnrollmentData(encryptionKey.getEnrollmentId());
+            // When the key doesn't have a corresponding enrollment to it, delete the key, don't
+            // need to check expiration time and re-fetch.
+            if (enrollmentData == null) {
+                mEncryptionKeyDao.delete(encryptionKey.getId());
+                continue;
+            }
+
+            // Re-fetch keys with "if-modified-since" header to check if we need to update keys.
+            Optional<List<EncryptionKey>> updateEncryptionKeys =
+                    mEncryptionKeyFetcher.fetchEncryptionKeys(
+                            /* encryptionKey */ encryptionKey,
+                            /* enrollmentData */ enrollmentData,
+                            /* isFirstTimeFetch */ false);
+            if (updateEncryptionKeys.isEmpty() || updateEncryptionKeys.get().isEmpty()) {
+                continue;
+            }
+            mEncryptionKeyDao.delete(encryptionKey.getId());
+            for (EncryptionKey newKey : updateEncryptionKeys.get()) {
+                mEncryptionKeyDao.insert(newKey);
             }
         }
     }

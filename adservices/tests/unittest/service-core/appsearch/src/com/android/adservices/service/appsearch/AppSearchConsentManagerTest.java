@@ -41,6 +41,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.AdServicesCommon;
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.data.common.BooleanFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.topics.Topic;
@@ -71,7 +72,7 @@ import java.io.IOException;
 import java.util.List;
 
 @SmallTest
-public class AppSearchConsentManagerTest {
+public final class AppSearchConsentManagerTest extends AdServicesUnitTestCase {
     private Context mContext = ApplicationProvider.getApplicationContext();
     private MockitoSession mStaticMockSession;
     @Mock private AppSearchConsentWorker mAppSearchConsentWorker;
@@ -103,9 +104,9 @@ public class AppSearchConsentManagerTest {
                         .initMocks(this)
                         .startMocking();
         ExtendedMockito.doReturn(mAppSearchConsentWorker)
-                .when(() -> AppSearchConsentWorker.getInstance(mContext));
+                .when(() -> AppSearchConsentWorker.getInstance());
         ExtendedMockito.doReturn(mFlags).when(() -> FlagsFactory.getFlags());
-        mAppSearchConsentManager = AppSearchConsentManager.getInstance(mContext);
+        mAppSearchConsentManager = AppSearchConsentManager.getInstance();
         ApplicationInfo app1 = new ApplicationInfo();
         app1.packageName = PACKAGE_NAME1;
         ApplicationInfo app2 = new ApplicationInfo();

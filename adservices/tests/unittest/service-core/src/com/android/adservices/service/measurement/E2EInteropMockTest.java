@@ -55,7 +55,7 @@ import java.util.function.Supplier;
  *
  * <p>Tests in assets/msmt_interop_tests/ directory were copied from Chromium
  * src/content/test/data/attribution_reporting/interop GitHub commit
- * 2bba98de81613f3f4580a1c5711ca5221ea95a14.
+ * 0c9f675b04752d7f89400b2499a9fcc84915e951.
  */
 @RunWith(Parameterized.class)
 public class E2EInteropMockTest extends E2EMockTest {

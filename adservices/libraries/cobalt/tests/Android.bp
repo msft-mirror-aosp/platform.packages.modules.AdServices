@@ -20,11 +20,12 @@ android_test {
     srcs: [
         "src/**/*.java",
     ],
-    defaults: ["modules-utils-testable-device-config-defaults"],
+    defaults: ["adservices-extended-mockito-defaults"],
     manifest: "AndroidManifest.xml",
     test_config: "AndroidTest.xml",
     static_libs: [
         "adservices-service-core",
+        "adservices-test-utility",
         "androidx.test.core",
         "androidx.test.runner",
         "androidx.room_room-runtime",
@@ -54,11 +55,12 @@ android_test {
     srcs: [
         "src/**/*.java",
     ],
-    defaults: ["modules-utils-testable-device-config-defaults"],
+    defaults: ["adservices-extended-mockito-defaults"],
     manifest: "AndroidManifest.xml",
     test_config: "AndroidTest.ExtServices.xml",
     static_libs: [
         "adservices-service-core",
+        "adservices-test-utility",
         "androidx.test.core",
         "androidx.test.runner",
         "androidx.room_room-runtime",
