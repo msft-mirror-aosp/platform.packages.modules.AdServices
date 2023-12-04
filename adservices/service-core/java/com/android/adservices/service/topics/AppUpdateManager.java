@@ -423,6 +423,14 @@ public class AppUpdateManager {
         List<Pair<String, String>> tableToEraseData =
                 Arrays.stream(TABLE_INFO_TO_ERASE_APP_DATA).collect(Collectors.toList());
 
+        if (mFlags.getEnableDatabaseSchemaVersion9()) {
+            // Remove the encrypted topic table as well.
+            tableToEraseData.add(
+                    Pair.create(
+                            TopicsTables.ReturnedEncryptedTopicContract.TABLE,
+                            TopicsTables.ReturnedEncryptedTopicContract.APP));
+        }
+
         mTopicsDao.deleteFromTableByColumn(
                 /* tableNamesAndColumnNamePairs */ tableToEraseData, /* valuesToDelete */ apps);
 

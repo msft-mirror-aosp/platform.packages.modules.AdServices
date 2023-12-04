@@ -39,12 +39,9 @@ import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
-import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.EventReport;
-import com.android.adservices.service.measurement.EventReportFixture;
-import com.android.adservices.service.measurement.ReportSpec;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
@@ -55,6 +52,7 @@ import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.aggregation.AggregateReportFixture;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.json.JSONArray;
@@ -76,8 +74,9 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
-import java.util.UUID;
+import java.util.Set;
 
 @RunWith(MockitoJUnitRunner.class)
 public class MeasurementDataDeleterTest {
@@ -309,8 +308,8 @@ public class MeasurementDataDeleterTest {
                 eq(source1.getId()), attributionStatusArg.capture());
         List<String> attributionStatuses = attributionStatusArg.getAllValues();
         assertEquals(
-                getAttributionStatus(List.of("trigger2", "trigger3"),
-                      List.of("5", "6"), List.of("2", "3")),
+                getAttributionStatus(
+                        List.of("trigger2", "trigger3"), List.of("5", "6"), List.of("2", "3")),
                 attributionStatuses.get(0));
         assertEquals(
                 getAttributionStatus(List.of("trigger2"), List.of("5"), List.of("2")),
@@ -490,7 +489,7 @@ public class MeasurementDataDeleterTest {
     @Test
     public void delete_deletionModeAll_success() throws DatastoreException {
         // Setup
-        List<String> triggerIds = List.of("triggerId1", "triggerId2");
+        Set<String> triggerIds = Set.of("triggerId1", "triggerId2");
         List<String> sourceIds = List.of("sourceId1", "sourceId2");
         List<String> asyncRegistrationIds = List.of("asyncRegId1", "asyncRegId2");
         Source source1 = SourceFixture.getMinimalValidSourceBuilder().setId("sourceId1").build();
@@ -518,7 +517,6 @@ public class MeasurementDataDeleterTest {
                         .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
                         .build();
 
-        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
         doNothing()
                 .when(mMeasurementDataDeleter)
                 .resetAggregateContributions(
@@ -553,7 +551,7 @@ public class MeasurementDataDeleterTest {
                         mOriginUris,
                         mDomainUris,
                         DeletionRequest.MATCH_BEHAVIOR_DELETE))
-                .thenReturn(Arrays.asList(trigger1.getId(), trigger2.getId()));
+                .thenReturn(Set.of(trigger1.getId(), trigger2.getId()));
         when(mEventReport1.getSourceId()).thenReturn("sourceId1");
         when(mEventReport2.getSourceId()).thenReturn("sourceId2");
         when(mMeasurementDao.getSource(source1.getId())).thenReturn(source1);
@@ -578,9 +576,151 @@ public class MeasurementDataDeleterTest {
     }
 
     @Test
+    public void delete_deletionModeAllFlexApi_success() throws DatastoreException, JSONException {
+        // Setup
+        // A mutable set -- the expected result of MeasurementDao::fetchMatchingTriggers
+        Set<String> triggerIds = new HashSet<>();
+        triggerIds.addAll(List.of("triggerId1", "triggerId2"));
+        // A list -- the expected result of MeasurementDao::fetchMatchingSources
+        List<String> sourceIds = List.of("sourceId1", "sourceId2");
+        // Expected triggers to delete
+        Set<String> extendedTriggerIds = Set.of(
+                "triggerId1", "triggerId2", "triggerId3", "triggerId4");
+        // A mutable set -- the expected result of MeasurementDao::fetchFlexSourceIdsFor
+        Set<String> extendedSourceIds1 = new HashSet<>();
+        extendedSourceIds1.addAll(List.of("sourceId3", "sourceId4"));
+        // Expected parameter passed to MeasurementDao::fetchMatchingEventReports.
+        Set<String> extendedSourceIds2 = Set.of("sourceId1", "sourceId2", "sourceId3", "sourceId4");
+        List<String> asyncRegistrationIds = List.of("asyncRegId1", "asyncRegId2");
+        Source source1 = SourceFixture.getMinimalValidSourceBuilder().setId("sourceId1").build();
+        Source source2 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("sourceId2")
+                        .setAggregateReportDedupKeys(
+                                List.of(new UnsignedLong(1L), new UnsignedLong(2L)))
+                        .build();
+
+        // Two Flex API sources
+
+        // One trigger is included in triggerIds, the other is not. Both will be added to the set.
+        String attributionStatus3 = getAttributionStatus(
+                List.of("triggerId2", "triggerId3"),
+                List.of("4", "5"),
+                List.of("1", "2"));
+        Source source3 =
+                SourceFixture.getValidSourceBuilderWithFlexEventReport()
+                        .setId("sourceId3")
+                        .setEventAttributionStatus(attributionStatus3)
+                        .build();
+        // A trigger that is not included in triggerIds will be added to the set.
+        String attributionStatus4 = getAttributionStatus(
+                List.of("triggerId4"),
+                List.of("4"),
+                List.of("1"));
+        Source source4 =
+                SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
+                        .setId("sourceId4")
+                        .setEventAttributionStatus(attributionStatus4)
+                        .build();
+
+        when(mEventReport1.getId()).thenReturn("eventReportId1");
+        when(mEventReport2.getId()).thenReturn("eventReportId2");
+        when(mEventReport3.getId()).thenReturn("eventReportId3");
+        when(mAggregateReport1.getId()).thenReturn("aggregateReportId1");
+        when(mAggregateReport2.getId()).thenReturn("aggregateReportId2");
+        DeletionParam deletionParam =
+                new DeletionParam.Builder(
+                                mOriginUris,
+                                mDomainUris,
+                                START,
+                                END,
+                                APP_PACKAGE_NAME,
+                                SDK_PACKAGE_NAME)
+                        .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
+                        .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
+                        .build();
+
+        doNothing()
+                .when(mMeasurementDataDeleter)
+                .resetAggregateContributions(
+                        mMeasurementDao, List.of(mAggregateReport1, mAggregateReport2));
+        doNothing()
+                .when(mMeasurementDataDeleter)
+                .resetDedupKeys(mMeasurementDao, List.of(mEventReport1, mEventReport2));
+        // Due to Flex API, MeasurementDao::fetchMatchingEventReports will be called with
+        // extendedSourceIds.
+        when(mMeasurementDao.fetchMatchingEventReports(extendedSourceIds2, triggerIds))
+                .thenReturn(List.of(mEventReport1, mEventReport2, mEventReport3));
+        when(mMeasurementDao.fetchMatchingAggregateReports(sourceIds, triggerIds))
+                .thenReturn(List.of(mAggregateReport1, mAggregateReport2));
+        when(mMeasurementDao.fetchMatchingSources(
+                        Uri.parse(ANDROID_APP_SCHEME + "://" + APP_PACKAGE_NAME),
+                        START,
+                        END,
+                        mOriginUris,
+                        mDomainUris,
+                        DeletionRequest.MATCH_BEHAVIOR_DELETE))
+                .thenReturn(sourceIds);
+        when(mMeasurementDao.fetchMatchingAsyncRegistrations(
+                        Uri.parse(ANDROID_APP_SCHEME + "://" + APP_PACKAGE_NAME),
+                        START,
+                        END,
+                        mOriginUris,
+                        mDomainUris,
+                        DeletionRequest.MATCH_BEHAVIOR_DELETE))
+                .thenReturn(asyncRegistrationIds);
+        when(mMeasurementDao.fetchMatchingTriggers(
+                        Uri.parse(ANDROID_APP_SCHEME + "://" + APP_PACKAGE_NAME),
+                        START,
+                        END,
+                        mOriginUris,
+                        mDomainUris,
+                        DeletionRequest.MATCH_BEHAVIOR_DELETE))
+                .thenReturn(triggerIds);
+        when(mEventReport1.getSourceId()).thenReturn("sourceId1");
+        when(mEventReport2.getSourceId()).thenReturn("sourceId2");
+        when(mEventReport3.getSourceId()).thenReturn("sourceId3");
+        when(mMeasurementDao.getSource(source1.getId())).thenReturn(source1);
+        when(mMeasurementDao.getSource(source2.getId())).thenReturn(source2);
+        when(mMeasurementDao.getSource(source3.getId())).thenReturn(source3);
+        when(mMeasurementDao.getSource(source4.getId())).thenReturn(source4);
+
+        // Flex API
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        when(mMeasurementDao.fetchFlexSourceIdsFor(triggerIds))
+                .thenReturn(extendedSourceIds1);
+
+        // Execution
+        boolean result = mMeasurementDataDeleter.delete(deletionParam);
+
+        // Assertions
+        assertTrue(result);
+        verify(mMeasurementDataDeleter)
+                .resetAggregateContributions(
+                        mMeasurementDao, List.of(mAggregateReport1, mAggregateReport2));
+        verify(mMeasurementDataDeleter)
+                .resetDedupKeys(
+                        mMeasurementDao, List.of(mEventReport1, mEventReport2, mEventReport3));
+        verify(mMeasurementDao).deleteAsyncRegistrations(asyncRegistrationIds);
+        verify(mMeasurementDao).deleteSources(sourceIds);
+        verify(mMeasurementDao).deleteTriggers(extendedTriggerIds);
+        verify(mMeasurementDataDeleter)
+                .resetAggregateReportDedupKeys(
+                        mMeasurementDao, List.of(mAggregateReport1, mAggregateReport2));
+        ArgumentCaptor<String> sourceIdArg = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> attributionStatusArg = ArgumentCaptor.forClass(String.class);
+        verify(mMeasurementDao, times(2)).updateSourceAttributedTriggers(
+                sourceIdArg.capture(), attributionStatusArg.capture());
+        assertEquals(Set.of("sourceId3", "sourceId4"), new HashSet(sourceIdArg.getAllValues()));
+        assertEquals(
+                List.of(new JSONArray().toString(), new JSONArray().toString()),
+                attributionStatusArg.getAllValues());
+    }
+
+    @Test
     public void delete_deletionModeExcludeInternalData_success() throws DatastoreException {
         // Setup
-        List<String> triggerIds = List.of("triggerId1", "triggerId2");
+        Set<String> triggerIds = Set.of("triggerId1", "triggerId2");
         List<String> sourceIds = List.of("sourceId1", "sourceId2");
         Source source1 = SourceFixture.getMinimalValidSourceBuilder().setId("sourceId1").build();
         Source source2 = SourceFixture.getMinimalValidSourceBuilder().setId("sourceId2").build();
@@ -630,12 +770,10 @@ public class MeasurementDataDeleterTest {
                         mOriginUris,
                         mDomainUris,
                         DeletionRequest.MATCH_BEHAVIOR_DELETE))
-                .thenReturn(Arrays.asList(trigger1.getId(), trigger2.getId()));
-
+                .thenReturn(Set.of(trigger1.getId(), trigger2.getId()));
         when(mMeasurementDao.getSource(source1.getId())).thenReturn(source1);
         when(mMeasurementDao.getSource(source2.getId())).thenReturn(source2);
 
-        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
         // Execution
         boolean result = mMeasurementDataDeleter.delete(deletionParam);
 
@@ -659,504 +797,8 @@ public class MeasurementDataDeleterTest {
                         eq(Source.Status.MARKED_TO_DELETE));
         verify(mMeasurementDao)
                 .updateTriggerStatus(
-                        eq(List.of(trigger1.getId(), trigger2.getId())),
+                        eq(Set.of(trigger1.getId(), trigger2.getId())),
                         eq(Trigger.Status.MARKED_TO_DELETE));
-    }
-
-    @Test
-    public void filterReportFlexibleEventsAPI_deletionBasedSource_noReportFilteredFromDeletion()
-            throws DatastoreException {
-        // Setup
-        Source source = SourceFixture.getValidSourceWithFlexEventReport();
-        when(mMeasurementDao.getSource(source.getId())).thenReturn(source);
-
-        EventReport eventReport1 =
-                EventReportFixture.getBaseEventReportBuild()
-                        .setId(UUID.randomUUID().toString())
-                        .setTriggerId("12345")
-                        .setTriggerValue(1L)
-                        .setSourceId(source.getId())
-                        .build();
-        EventReport eventReport2 =
-                EventReportFixture.getBaseEventReportBuild()
-                        .setId(UUID.randomUUID().toString())
-                        .setTriggerId("23456")
-                        .setTriggerValue(1L)
-                        .setSourceId(source.getId())
-                        .build();
-
-        source.getFlexEventReportSpec().insertAttributedTrigger(eventReport1);
-        source.getFlexEventReportSpec().insertAttributedTrigger(eventReport2);
-
-        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
-        // Execution
-        List<String> sourceIds = new ArrayList<>(Collections.singletonList(source.getId()));
-        List<EventReport> toBeDeleted =
-                mMeasurementDataDeleter.filterReportFlexibleEventsAPI(
-                        mMeasurementDao,
-                        sourceIds,
-                        new ArrayList<>(Arrays.asList(eventReport1, eventReport2)));
-        // Assertion
-        // both reports are deleted because the source was deleted so both deletion list are the
-        // same
-        assertEquals(new ArrayList<>(Arrays.asList(eventReport1, eventReport2)), toBeDeleted);
-    }
-
-    @Test
-    public void filterReportFlexibleEventsAPICountBase_baseCase_noReportFilteredFromDeletion()
-            throws DatastoreException, JSONException {
-        // Setup
-        String sourceId = UUID.randomUUID().toString();
-        EventReport eventReport1 =
-                EventReportFixture.getBaseEventReportBuild()
-                        .setId(UUID.randomUUID().toString())
-                        .setTriggerId("12345")
-                        .setTriggerData(new UnsignedLong(1L))
-                        .setTriggerValue(1L)
-                        .setSourceId(sourceId)
-                        .build();
-        EventReport eventReport2 =
-                EventReportFixture.getBaseEventReportBuild()
-                        .setId(UUID.randomUUID().toString())
-                        .setTriggerId("23456")
-                        .setTriggerData(new UnsignedLong(1L))
-                        .setTriggerValue(1L)
-                        .setSourceId(sourceId)
-                        .build();
-        Source sourceToGenerateTriggerStatus =
-                SourceFixture.getValidSourceBuilderWithFlexEventReport()
-                        .build();
-        Source source =
-                SourceFixture.getValidSourceBuilderWithFlexEventReport()
-                        .setId(sourceId)
-                        .setEventAttributionStatus(
-                                getTriggerStatusJson(
-                                        sourceToGenerateTriggerStatus,
-                                        List.of(eventReport1, eventReport2)))
-                        .build();
-
-        when(mMeasurementDao.getSource(source.getId())).thenReturn(source);
-
-        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
-        // Execution
-
-        List<EventReport> toBeDeleted =
-                mMeasurementDataDeleter.filterReportFlexibleEventsAPI(
-                        mMeasurementDao,
-                        new ArrayList<>(),
-                        new ArrayList<>(Arrays.asList(eventReport1, eventReport2)));
-        // Assertion
-        // both reports are deleted since each trigger generate one report in the count case. (the
-        // simplest cases in deletion)
-        assertEquals(2, toBeDeleted.size());
-        assertEquals(new ArrayList<>(Arrays.asList(eventReport1, eventReport2)), toBeDeleted);
-    }
-
-    @Test
-    public void filterReportFlexibleEventsAPI_nonDecrementalTrigger_allFilteredFromDeletion()
-            throws DatastoreException, JSONException {
-        // This test case is for value-based trigger specifications
-        // Setup
-        String sourceId = UUID.randomUUID().toString();
-        EventReport eventReport1 =
-                EventReportFixture.getBaseEventReportBuild()
-                        .setId(UUID.randomUUID().toString())
-                        .setTriggerId("12345")
-                        .setTriggerData(new UnsignedLong(1L))
-                        .setTriggerValue(1L)
-                        .setSourceId(sourceId)
-                        .build();
-        EventReport eventReport2 =
-                EventReportFixture.getBaseEventReportBuild()
-                        .setId(UUID.randomUUID().toString())
-                        .setTriggerId("23456")
-                        .setTriggerData(new UnsignedLong(1L))
-                        .setTriggerValue(1L)
-                        .setSourceId(sourceId)
-                        .build();
-        Source sourceToGenerateTriggerStatus =
-                SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
-                        .build();
-        Source source =
-                SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
-                        .setId(sourceId)
-                        .setEventAttributionStatus(
-                                getTriggerStatusJson(
-                                        sourceToGenerateTriggerStatus,
-                                        List.of(eventReport1, eventReport2)))
-                        .build();
-
-        when(mMeasurementDao.getSource(source.getId())).thenReturn(source);
-
-        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
-
-        // Execution
-        List<EventReport> toBeDeleted =
-                mMeasurementDataDeleter.filterReportFlexibleEventsAPI(
-                        mMeasurementDao,
-                        new ArrayList<>(),
-                        new ArrayList<>(Arrays.asList(eventReport1, eventReport2)));
-        // Assertion
-        // To-be-deleted reports don't cause decrements in bucket so nothing should be deleted
-        assertEquals(0, toBeDeleted.size());
-        assertEquals(new ArrayList<>(), toBeDeleted);
-    }
-
-    @Test
-    public void filterReportFlexibleEventsAPI_TriggerContributingToReport_oneFilteredFromDeletion()
-            throws DatastoreException, JSONException {
-        // This test case is for value-based trigger specifications
-        // Setup
-        String sourceId = UUID.randomUUID().toString();
-        EventReport eventReport1 =
-                EventReportFixture.getBaseEventReportBuild()
-                        .setId(UUID.randomUUID().toString())
-                        .setTriggerId("12345")
-                        .setTriggerData(new UnsignedLong(1L))
-                        .setTriggerValue(6L)
-                        .setSourceId(sourceId)
-                        .build();
-        EventReport eventReport2 =
-                EventReportFixture.getBaseEventReportBuild()
-                        .setId(UUID.randomUUID().toString())
-                        .setTriggerId("23456")
-                        .setTriggerData(new UnsignedLong(1L))
-                        .setTriggerValue(7L)
-                        .setSourceId(sourceId)
-                        .build();
-        Source sourceToGenerateTriggerStatus =
-                SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
-                        .build();
-        Source source =
-                SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
-                        .setId(sourceId)
-                        .setEventAttributionStatus(
-                                getTriggerStatusJson(
-                                        sourceToGenerateTriggerStatus,
-                                        List.of(eventReport1, eventReport2)))
-                        .build();
-
-        when(mMeasurementDao.getSource(source.getId())).thenReturn(source);
-
-        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
-
-        // Execution
-        List<EventReport> toBeDeleted =
-                mMeasurementDataDeleter.filterReportFlexibleEventsAPI(
-                        mMeasurementDao,
-                        new ArrayList<>(),
-                        new ArrayList<>(Collections.singletonList(eventReport1)));
-        // Assertion
-        // Two triggers combined together to create a report. One trigger is deleted so the value of
-        // another trigger cannot create a report. Therefore, the report is deleted.
-        assertEquals(1, toBeDeleted.size());
-        assertEquals(new ArrayList<>(Collections.singletonList(eventReport1)), toBeDeleted);
-    }
-
-    @Test
-    public void filterReportFlexibleEventsAPI_noDecrements_oneFilteredFromDeletion()
-            throws DatastoreException, JSONException {
-        // This test case is for value-based trigger specifications
-        // Setup
-        String sourceId = UUID.randomUUID().toString();
-        EventReport eventReport1 =
-                EventReportFixture.getBaseEventReportBuild()
-                        .setId(UUID.randomUUID().toString())
-                        .setTriggerId("12345")
-                        .setTriggerData(new UnsignedLong(1L))
-                        .setTriggerValue(50L)
-                        .setSourceId(sourceId)
-                        .build();
-        EventReport eventReport2 =
-                EventReportFixture.getBaseEventReportBuild()
-                        .setId(UUID.randomUUID().toString())
-                        .setTriggerId("23456")
-                        .setTriggerData(new UnsignedLong(1L))
-                        .setTriggerValue(20L)
-                        .setSourceId(sourceId)
-                        .build();
-        Source sourceToGenerateTriggerStatus =
-                SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
-                        .build();
-        Source source =
-                SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
-                        .setId(sourceId)
-                        .setEventAttributionStatus(
-                                getTriggerStatusJson(
-                                        sourceToGenerateTriggerStatus,
-                                        List.of(eventReport1, eventReport2)))
-                        .build();
-
-        when(mMeasurementDao.getSource(source.getId())).thenReturn(source);
-
-        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
-
-        // Execution
-        List<EventReport> toBeDeleted =
-                mMeasurementDataDeleter.filterReportFlexibleEventsAPI(
-                        mMeasurementDao,
-                        new ArrayList<>(),
-                        new ArrayList<>(Collections.singletonList(eventReport2)));
-        // Assertion
-        // no report should be deleted. No decremental of the reports
-        assertEquals(0, toBeDeleted.size());
-    }
-
-    @Test
-    public void filterReportFlexibleEventsAPI_exceedUpperLimit_oneFilteredFromDeletion()
-            throws DatastoreException, JSONException {
-        // This test case is for value-based trigger specifications
-        // Setup
-        String sourceId = UUID.randomUUID().toString();
-        EventReport eventReport1 =
-                EventReportFixture.getBaseEventReportBuild()
-                        .setId(UUID.randomUUID().toString())
-                        .setTriggerId("12345")
-                        .setTriggerData(new UnsignedLong(1L))
-                        .setTriggerValue(101L)
-                        .setSourceId(sourceId)
-                        .build();
-        EventReport eventReport2 =
-                EventReportFixture.getBaseEventReportBuild()
-                        .setId(UUID.randomUUID().toString())
-                        .setTriggerId("23456")
-                        .setTriggerData(new UnsignedLong(1L))
-                        .setTriggerValue(50L)
-                        .setSourceId(sourceId)
-                        .build();
-        Source sourceToGenerateTriggerStatus =
-                SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
-                        .build();
-        Source source =
-                SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
-                        .setId(sourceId)
-                        .setEventAttributionStatus(
-                                getTriggerStatusJson(
-                                        sourceToGenerateTriggerStatus,
-                                        List.of(eventReport1, eventReport2)))
-                        .build();
-
-        when(mMeasurementDao.getSource(source.getId())).thenReturn(source);
-
-        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
-
-        // Execution
-        List<EventReport> toBeDeleted =
-                mMeasurementDataDeleter.filterReportFlexibleEventsAPI(
-                        mMeasurementDao,
-                        new ArrayList<>(),
-                        new ArrayList<>(Collections.singletonList(eventReport2)));
-        // Assertion
-        // Trigger 1 make the value greater than highest bucket, whether or not deleting trigger 2
-        // doesn't change number of report. Therefore, no reports are deleted.
-        assertEquals(0, toBeDeleted.size());
-    }
-
-    @Test
-    public void filterReportFlexibleEventsAPI_earlierLargeTrigger_noneFilteredFromDeletion()
-            throws DatastoreException, JSONException {
-        // This test case is for value-based trigger specifications
-        // Setup
-        String sourceId = UUID.randomUUID().toString();
-        EventReport eventReport1 =
-                EventReportFixture.getBaseEventReportBuild()
-                        .setId(UUID.randomUUID().toString())
-                        .setTriggerId("12345")
-                        .setTriggerData(new UnsignedLong(1L))
-                        .setTriggerValue(101L)
-                        .setSourceId(sourceId)
-                        .build();
-        EventReport eventReport2 =
-                EventReportFixture.getBaseEventReportBuild()
-                        .setId(UUID.randomUUID().toString())
-                        .setTriggerId("23456")
-                        .setTriggerData(new UnsignedLong(1L))
-                        .setTriggerValue(50L)
-                        .setSourceId(sourceId)
-                        .build();
-        Source sourceToGenerateTriggerStatus =
-                SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
-                        .build();
-        Source source =
-                SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
-                        .setId(sourceId)
-                        .setEventAttributionStatus(
-                                getTriggerStatusJson(
-                                        sourceToGenerateTriggerStatus,
-                                        List.of(eventReport1, eventReport2)))
-                        .build();
-
-        when(mMeasurementDao.getSource(source.getId())).thenReturn(source);
-
-        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
-
-        // Execution
-        List<EventReport> toBeDeleted =
-                mMeasurementDataDeleter.filterReportFlexibleEventsAPI(
-                        mMeasurementDao,
-                        new ArrayList<>(),
-                        new ArrayList<>(Collections.singletonList(eventReport1)));
-        // Assertion
-        // The eariler trigger with 101 value is deleted and the later trigger has value of 50 so
-        // only 1 bucket decrement.
-        assertEquals(1, toBeDeleted.size());
-    }
-
-    @Test
-    public void filterReportFlexibleEventsAPI_noDecrementsDeletePrevious_allFilteredFromDeletion()
-            throws DatastoreException, JSONException {
-        // This test case is for value-based trigger specifications
-        // Setup
-        String sourceId = UUID.randomUUID().toString();
-        EventReport eventReport1 =
-                EventReportFixture.getBaseEventReportBuild()
-                        .setId(UUID.randomUUID().toString())
-                        .setTriggerId("12345")
-                        .setTriggerData(new UnsignedLong(1L))
-                        .setTriggerValue(50L)
-                        .setSourceId(sourceId)
-                        .build();
-        EventReport eventReport2 =
-                EventReportFixture.getBaseEventReportBuild()
-                        .setId(UUID.randomUUID().toString())
-                        .setTriggerId("23456")
-                        .setTriggerData(new UnsignedLong(1L))
-                        .setTriggerValue(30L)
-                        .setSourceId(sourceId)
-                        .build();
-        Source sourceToGenerateTriggerStatus =
-                SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
-                        .build();
-        Source source =
-                SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
-                        .setId(sourceId)
-                        .setEventAttributionStatus(
-                                getTriggerStatusJson(
-                                        sourceToGenerateTriggerStatus,
-                                        List.of(eventReport1, eventReport2)))
-                        .build();
-
-        when(mMeasurementDao.getSource(source.getId())).thenReturn(source);
-
-        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
-
-        // Execution
-        List<EventReport> toBeDeleted =
-                mMeasurementDataDeleter.filterReportFlexibleEventsAPI(
-                        mMeasurementDao,
-                        new ArrayList<>(),
-                        new ArrayList<>(Collections.singletonList(eventReport1)));
-        // Assertion
-        // no report should be deleted. No decremental of the reports
-        assertEquals(0, toBeDeleted.size());
-    }
-
-    @Test
-    public void filterReportFlexibleEventsAPI_deletingWithDecrements_noneFilteredFromDeletion()
-            throws DatastoreException, JSONException {
-        // This test case is for value-based trigger specifications
-        // Setup
-        String sourceId = UUID.randomUUID().toString();
-        EventReport eventReport1 =
-                EventReportFixture.getBaseEventReportBuild()
-                        .setId(UUID.randomUUID().toString())
-                        .setTriggerId("12345")
-                        .setTriggerData(new UnsignedLong(1L))
-                        .setTriggerValue(50L)
-                        .setSourceId(sourceId)
-                        .build();
-        EventReport eventReport2 =
-                EventReportFixture.getBaseEventReportBuild()
-                        .setId(UUID.randomUUID().toString())
-                        .setTriggerId("23456")
-                        .setTriggerData(new UnsignedLong(1L))
-                        .setTriggerValue(60L)
-                        .setSourceId(sourceId)
-                        .build();
-        Source sourceToGenerateTriggerStatus =
-                SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
-                        .build();
-        Source source =
-                SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
-                        .setId(sourceId)
-                        .setEventAttributionStatus(
-                                getTriggerStatusJson(
-                                        sourceToGenerateTriggerStatus,
-                                        List.of(eventReport1, eventReport2)))
-                        .build();
-
-        when(mMeasurementDao.getSource(source.getId())).thenReturn(source);
-
-        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
-
-        // Execution
-        List<EventReport> toBeDeleted =
-                mMeasurementDataDeleter.filterReportFlexibleEventsAPI(
-                        mMeasurementDao,
-                        new ArrayList<>(),
-                        new ArrayList<>(Collections.singletonList(eventReport1)));
-        // Assertion
-        // The report causes decrements of the report
-        assertEquals(1, toBeDeleted.size());
-        assertEquals(new ArrayList<>(Collections.singletonList(eventReport1)), toBeDeleted);
-    }
-
-    @Test
-    public void filterReportFlexibleEventsAPI_moreThanOneReportPerTrigger_noneFilteredFromDeletion()
-            throws DatastoreException, JSONException {
-        // This test case is for value-based trigger specifications
-        // Setup
-        String sourceId = UUID.randomUUID().toString();
-        EventReport.Builder eventReportBuilder =
-                EventReportFixture.getBaseEventReportBuild()
-                        .setTriggerId("12345")
-                        .setTriggerData(new UnsignedLong(1L))
-                        .setTriggerValue(100L)
-                        .setSourceId(sourceId);
-        EventReport eventReport1 =
-                eventReportBuilder
-                        .setId("reportId1")
-                        .build();
-        EventReport eventReport2 =
-                eventReportBuilder
-                        .setId("reportId2")
-                        .build();
-        Source sourceToGenerateTriggerStatus =
-                SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
-                        .build();
-        Source source =
-                SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
-                        .setId(sourceId)
-                        .setEventAttributionStatus(
-                                getTriggerStatusJson(
-                                        sourceToGenerateTriggerStatus,
-                                        List.of(eventReport1)))
-                        .build();
-
-        when(mMeasurementDao.getSource(source.getId())).thenReturn(source);
-
-        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
-
-        // Execution
-        List<EventReport> toBeDeleted =
-                mMeasurementDataDeleter.filterReportFlexibleEventsAPI(
-                        mMeasurementDao,
-                        new ArrayList<>(),
-                        new ArrayList<>(Arrays.asList(eventReport1, eventReport2)));
-        // Assertion
-        // The report causes decrements of the report
-        assertEquals(2, toBeDeleted.size());
-        assertEquals(new ArrayList<>(Arrays.asList(eventReport1, eventReport2)), toBeDeleted);
-    }
-
-    private static String getTriggerStatusJson(Source source, List<EventReport> eventReports)
-            throws JSONException {
-        source.buildFlexibleEventReportApi();
-        ReportSpec reportSpec = source.getFlexEventReportSpec();
-        for (EventReport eventReport : eventReports) {
-            reportSpec.insertAttributedTrigger(eventReport);
-        }
-        return source.attributedTriggersToJsonFlexApi();
     }
 
     private static String getAttributionStatus(List<String> triggerIds, List<String> triggerData,

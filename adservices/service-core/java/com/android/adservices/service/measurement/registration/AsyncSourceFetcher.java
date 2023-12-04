@@ -15,10 +15,6 @@
  */
 package com.android.adservices.service.measurement.registration;
 
-import static com.android.adservices.service.measurement.ReportSpec.encodeTriggerSpecsToJson;
-import static com.android.adservices.service.measurement.Source.getOrDefaultEventReportWindows;
-import static com.android.adservices.service.measurement.TriggerSpec.getLongListFromJSON;
-import static com.android.adservices.service.measurement.TriggerSpec.getTriggerDataArrayFromJSON;
 import static com.android.adservices.service.measurement.util.BaseUriExtractor.getBaseUri;
 import static com.android.adservices.service.measurement.util.MathUtils.extractValidNumberInRange;
 
@@ -35,9 +31,9 @@ import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
-import com.android.adservices.service.measurement.ReportSpecUtil;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.TriggerSpec;
+import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -398,13 +394,30 @@ public class AsyncSourceFetcher {
             return false;
         }
 
-        String eventReportWindows = null;
-        if (mFlags.getMeasurementFlexLiteAPIEnabled()
+        Source.TriggerDataMatching triggerDataMatching = Source.TriggerDataMatching.MODULUS;
+
+        if (mFlags.getMeasurementEnableTriggerDataMatching()
+                && !json.isNull(SourceHeaderContract.TRIGGER_DATA_MATCHING)) {
+            // If the token for trigger_data_matching is not in the predefined list, it will throw
+            // IllegalArgumentException that will be caught by the overall parser.
+            triggerDataMatching =
+                    Source.TriggerDataMatching.valueOf(
+                            json
+                                    .getString(SourceHeaderContract.TRIGGER_DATA_MATCHING)
+                                    .toUpperCase(Locale.ENGLISH));
+            builder.setTriggerDataMatching(triggerDataMatching);
+        }
+
+        JSONObject eventReportWindows = null;
+        Integer maxEventLevelReports = null;
+        if (mFlags.getMeasurementFlexLiteApiEnabled()
                 || mFlags.getMeasurementFlexibleEventReportingApiEnabled()) {
             if (!json.isNull(SourceHeaderContract.MAX_EVENT_LEVEL_REPORTS)) {
-                int maxEventLevelReports =
+                Object maxEventLevelReportsObj = json.get(
+                        SourceHeaderContract.MAX_EVENT_LEVEL_REPORTS);
+                maxEventLevelReports =
                         json.getInt(SourceHeaderContract.MAX_EVENT_LEVEL_REPORTS);
-                if (maxEventLevelReports < 0
+                if (!is64BitInteger(maxEventLevelReportsObj) || maxEventLevelReports < 0
                         || maxEventLevelReports > mFlags.getMeasurementFlexApiMaxEventReports()) {
                     return false;
                 }
@@ -429,9 +442,8 @@ public class AsyncSourceFetcher {
                             .d("Invalid value for event_report_windows");
                     return false;
                 }
-                eventReportWindows =
-                        updateEventReportWindowsToMillis(maybeEventReportWindows.get());
-                builder.setEventReportWindows(eventReportWindows);
+                eventReportWindows = maybeEventReportWindows.get();
+                builder.setEventReportWindows(eventReportWindows.toString());
             }
         }
 
@@ -439,23 +451,31 @@ public class AsyncSourceFetcher {
                 && !json.isNull(SourceHeaderContract.TRIGGER_SPECS)) {
             String triggerSpecString = json.getString(SourceHeaderContract.TRIGGER_SPECS);
 
-            Optional<JSONArray> maybeTriggerSpecArray =
-                    getValidTriggerSpecArray(triggerSpecString, expiry);
+            final int finalMaxEventLevelReports =
+                    Source.getOrDefaultMaxEventLevelReports(
+                            asyncRegistration.getSourceType(),
+                            maxEventLevelReports,
+                            mFlags);
+
+            Optional<TriggerSpec[]> maybeTriggerSpecArray =
+                    getValidTriggerSpecs(
+                            triggerSpecString,
+                            eventReportWindows,
+                            expiry,
+                            asyncRegistration.getSourceType(),
+                            finalMaxEventLevelReports,
+                            triggerDataMatching);
 
             if (!maybeTriggerSpecArray.isPresent()) {
                 LoggerFactory.getMeasurementLogger().d("Invalid Trigger Spec format");
                 return false;
             }
 
-            String updatedTriggerSpec =
-                    populateTriggerSpecDefaults(
+            builder.setTriggerSpecs(
+                    new TriggerSpecs(
                             maybeTriggerSpecArray.get(),
-                            eventReportWindows,
-                            expiry,
-                            asyncRegistration.getSourceType());
-
-            builder.setTriggerSpecs(updatedTriggerSpec);
-            builder.buildInitialFlexEventReportSpec(mFlags);
+                            finalMaxEventLevelReports,
+                            null));
         }
 
         if (mFlags.getMeasurementEnableSharedSourceDebugKey()
@@ -471,125 +491,107 @@ public class AsyncSourceFetcher {
         return true;
     }
 
-    private String updateEventReportWindowsToMillis(JSONObject eventReportWindowJson)
-            throws JSONException {
-        List<Pair<Long, Long>> eventReportWindows =
-                Source.parseEventReportWindows(eventReportWindowJson);
-        if (eventReportWindows == null) {
-            return null;
-        }
-        List<Pair<Long, Long>> converted = new ArrayList<>();
-        for (Pair<Long, Long> window : eventReportWindows) {
-            converted.add(
-                    new Pair<>(
-                            TimeUnit.SECONDS.toMillis(window.first),
-                            TimeUnit.SECONDS.toMillis(window.second)));
-        }
-        JSONObject result = new JSONObject();
-        result.put("start_time", converted.get(0).first);
-        JSONArray endTimes = new JSONArray();
-        for (Pair<Long, Long> window : converted) {
-            endTimes.put(window.second);
-        }
-        result.put("end_times", endTimes);
-        return result.toString();
-    }
-
-    private String populateTriggerSpecDefaults(
-            JSONArray triggerSpecJson,
-            String eventReportWindows,
+    private Optional<TriggerSpec[]> getValidTriggerSpecs(
+            String triggerSpecString,
+            JSONObject eventReportWindows,
             long expiry,
-            Source.SourceType sourceType)
-            throws JSONException {
-        List<Pair<Long, Long>> parsedEventReportWindows =
-                getOrDefaultEventReportWindows(eventReportWindows, sourceType, expiry, mFlags);
+            Source.SourceType sourceType,
+            int maxEventLevelReports,
+            Source.TriggerDataMatching triggerDataMatching) {
+        List<Pair<Long, Long>> parsedEventReportWindows = Source.getOrDefaultEventReportWindows(
+                eventReportWindows, sourceType, expiry, mFlags);
         long defaultStart = parsedEventReportWindows.get(0).first;
         List<Long> defaultEnds =
                 parsedEventReportWindows.stream().map((x) -> x.second).collect(Collectors.toList());
-        TriggerSpec[] triggerSpecs = new TriggerSpec[triggerSpecJson.length()];
-        for (int i = 0; i < triggerSpecJson.length(); i++) {
-            triggerSpecs[i] =
-                    new TriggerSpec.Builder(
-                                    triggerSpecJson.getJSONObject(i), defaultStart, defaultEnds)
-                            .build();
-        }
-        return encodeTriggerSpecsToJson(triggerSpecs);
-    }
-
-    private Optional<JSONArray> getValidTriggerSpecArray(String triggerSpecString, long expiry) {
         try {
             JSONArray triggerSpecArray = new JSONArray(triggerSpecString);
-            JSONArray validTriggerSpecArray = new JSONArray();
+            TriggerSpec[] validTriggerSpecs = new TriggerSpec[triggerSpecArray.length()];
             Set<UnsignedLong> triggerDataSet = new HashSet<>();
             for (int i = 0; i < triggerSpecArray.length(); i++) {
-                Optional<JSONObject> maybeTriggerSpec = getValidTriggerSpec(
-                        triggerSpecArray.getJSONObject(i), expiry, triggerDataSet);
+                Optional<TriggerSpec> maybeTriggerSpec = getValidTriggerSpec(
+                        triggerSpecArray.getJSONObject(i),
+                        expiry,
+                        defaultStart,
+                        defaultEnds,
+                        triggerDataSet,
+                        maxEventLevelReports);
                 if (!maybeTriggerSpec.isPresent()) {
                     return Optional.empty();
                 }
-                validTriggerSpecArray.put(i, maybeTriggerSpec.get());
+                validTriggerSpecs[i] = maybeTriggerSpec.get();
             }
             // Check cardinality of trigger_data across the whole trigger spec array
             if (triggerDataSet.size() > mFlags.getMeasurementFlexApiMaxTriggerDataCardinality()) {
                 return Optional.empty();
             }
-            return Optional.of(validTriggerSpecArray);
+            if (mFlags.getMeasurementEnableTriggerDataMatching()
+                    && triggerDataMatching == Source.TriggerDataMatching.MODULUS
+                    && !isContiguousStartingAtZero(triggerDataSet)) {
+                return Optional.empty();
+            }
+            return Optional.of(validTriggerSpecs);
         } catch (JSONException | IllegalArgumentException ex) {
             LoggerFactory.getMeasurementLogger().d(ex, "Trigger Spec parsing failed");
             return Optional.empty();
         }
     }
 
-    private Optional<JSONObject> getValidTriggerSpec(
-            JSONObject triggerSpec, long expiry, Set<UnsignedLong> triggerDataSet)
-            throws JSONException {
+    private Optional<TriggerSpec> getValidTriggerSpec(
+            JSONObject triggerSpecJson,
+            long expiry,
+            long defaultStart,
+            List<Long> defaultEnds,
+            Set<UnsignedLong> triggerDataSet,
+            int maxEventLevelReports) throws JSONException {
         List<UnsignedLong> triggerDataList =
-                getTriggerDataArrayFromJSON(
-                        triggerSpec, ReportSpecUtil.FlexEventReportJsonKeys.TRIGGER_DATA);
+                TriggerSpec.getTriggerDataArrayFromJSON(
+                        triggerSpecJson, TriggerSpecs.FlexEventReportJsonKeys.TRIGGER_DATA);
         if (triggerDataList.isEmpty()
                 || triggerDataList.size()
                         > mFlags.getMeasurementFlexApiMaxTriggerDataCardinality()) {
             return Optional.empty();
         }
-        // Check exclusivity of trigger_data across the whole trigger spec array
+        // Check exclusivity of trigger_data across the whole trigger spec array, and validate
+        // trigger data magnitude.
         for (UnsignedLong triggerData : triggerDataList) {
-            if (!triggerDataSet.add(triggerData)) {
+            if (!triggerDataSet.add(triggerData)
+                    || triggerData.compareTo(TriggerSpecs.MAX_TRIGGER_DATA_VALUE) > 0) {
                 return Optional.empty();
             }
         }
 
-        if (!triggerSpec.isNull(ReportSpecUtil.FlexEventReportJsonKeys.EVENT_REPORT_WINDOWS)) {
+        if (!triggerSpecJson.isNull(TriggerSpecs.FlexEventReportJsonKeys.EVENT_REPORT_WINDOWS)) {
             Optional<JSONObject> maybeEventReportWindows =
                     getValidEventReportWindows(
-                            triggerSpec.getJSONObject(
-                                    ReportSpecUtil.FlexEventReportJsonKeys.EVENT_REPORT_WINDOWS),
+                            triggerSpecJson.getJSONObject(
+                                    TriggerSpecs.FlexEventReportJsonKeys.EVENT_REPORT_WINDOWS),
                             expiry);
             if (!maybeEventReportWindows.isPresent()) {
                 return Optional.empty();
             }
-            triggerSpec.put(
-                    ReportSpecUtil.FlexEventReportJsonKeys.EVENT_REPORT_WINDOWS,
-                    maybeEventReportWindows.get());
         }
 
         TriggerSpec.SummaryOperatorType summaryWindowOperator =
                 TriggerSpec.SummaryOperatorType.COUNT;
-        if (!triggerSpec.isNull(ReportSpecUtil.FlexEventReportJsonKeys.SUMMARY_WINDOW_OPERATOR)) {
-            // If a summary window operator is not in the pre-defined list, it will throw
+        if (!triggerSpecJson.isNull(TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_WINDOW_OPERATOR)) {
+            // If a summary window operator is not in the predefined list, it will throw
             // IllegalArgumentException that will be caught by the overall parser.
             summaryWindowOperator =
                     TriggerSpec.SummaryOperatorType.valueOf(
-                            triggerSpec
+                            triggerSpecJson
                                     .getString(
-                                            ReportSpecUtil.FlexEventReportJsonKeys
+                                            TriggerSpecs.FlexEventReportJsonKeys
                                                     .SUMMARY_WINDOW_OPERATOR)
                                     .toUpperCase(Locale.ENGLISH));
         }
         List<Long> summaryBuckets = null;
-        if (!triggerSpec.isNull(ReportSpecUtil.FlexEventReportJsonKeys.SUMMARY_BUCKETS)) {
+        if (!triggerSpecJson.isNull(TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_BUCKETS)) {
             summaryBuckets =
-                    getLongListFromJSON(
-                            triggerSpec, ReportSpecUtil.FlexEventReportJsonKeys.SUMMARY_BUCKETS);
+                    TriggerSpec.getLongListFromJSON(
+                            triggerSpecJson, TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_BUCKETS);
+            if (summaryBuckets.size() > maxEventLevelReports) {
+                return Optional.empty();
+            }
         }
         if ((summaryBuckets == null || summaryBuckets.isEmpty())
                 && summaryWindowOperator != TriggerSpec.SummaryOperatorType.COUNT) {
@@ -600,58 +602,74 @@ public class AsyncSourceFetcher {
             return Optional.empty();
         }
 
-        return Optional.of(triggerSpec);
+        return Optional.of(
+              new TriggerSpec.Builder(
+                      triggerSpecJson,
+                      defaultStart,
+                      defaultEnds,
+                      maxEventLevelReports).build());
     }
 
     private Optional<JSONObject> getValidEventReportWindows(JSONObject jsonReportWindows,
             long expiry) throws JSONException {
+        // Start time in seconds
         long startTime = 0;
-        if (!jsonReportWindows.isNull(ReportSpecUtil.FlexEventReportJsonKeys.START_TIME)) {
+        if (!jsonReportWindows.isNull(TriggerSpecs.FlexEventReportJsonKeys.START_TIME)) {
+            if (!is64BitInteger(jsonReportWindows.get(
+                    TriggerSpecs.FlexEventReportJsonKeys.START_TIME))) {
+                return Optional.empty();
+            }
+            // We continue to use startTime in seconds for validation but convert it to milliseconds
+            // for the return JSONObject.
             startTime =
-                    jsonReportWindows.getLong(ReportSpecUtil.FlexEventReportJsonKeys.START_TIME);
+                    jsonReportWindows.getLong(TriggerSpecs.FlexEventReportJsonKeys.START_TIME);
+            jsonReportWindows.put(TriggerSpecs.FlexEventReportJsonKeys.START_TIME,
+                    TimeUnit.SECONDS.toMillis(startTime));
         }
         if (startTime < 0 || startTime > expiry) {
             return Optional.empty();
         }
 
-        List<Long> windowsEnd =
-                getLongListFromJSON(
-                        jsonReportWindows, ReportSpecUtil.FlexEventReportJsonKeys.END_TIMES);
+        List<Long> windowEnds =
+                TriggerSpec.getLongListFromJSON(
+                        jsonReportWindows, TriggerSpecs.FlexEventReportJsonKeys.END_TIMES);
 
-        int windowsEndSize = windowsEnd.size();
-        if (windowsEnd.isEmpty()
-                || windowsEndSize > mFlags.getMeasurementFlexApiMaxEventReportWindows()) {
+        int windowEndsSize = windowEnds.size();
+        if (windowEnds.isEmpty()
+                || windowEndsSize > mFlags.getMeasurementFlexApiMaxEventReportWindows()) {
             return Optional.empty();
         }
 
         // Clamp last window end to expiry and min event report window.
-        Long lastWindowsEnd = windowsEnd.get(windowsEndSize - 1);
+        Long lastWindowsEnd = windowEnds.get(windowEndsSize - 1);
         if (lastWindowsEnd < 0) {
             return Optional.empty();
         }
-        windowsEnd.set(windowsEndSize - 1, extractValidNumberInRange(
+        windowEnds.set(windowEndsSize - 1, extractValidNumberInRange(
                 lastWindowsEnd,
                 mFlags.getMeasurementMinimumEventReportWindowInSeconds(),
                 expiry));
 
-        if (windowsEndSize > 1) {
+        if (windowEndsSize > 1) {
             // Clamp first window end to min event report window
-            Long firstWindowsEnd = windowsEnd.get(0);
+            Long firstWindowsEnd = windowEnds.get(0);
             if (firstWindowsEnd < 0) {
                 return Optional.empty();
             }
-            windowsEnd.set(0, Math.max(
+            windowEnds.set(0, Math.max(
                     firstWindowsEnd,
                     mFlags.getMeasurementMinimumEventReportWindowInSeconds()));
         }
 
-        if (startTime >= windowsEnd.get(0) || !TriggerSpec.isStrictIncreasing(windowsEnd)) {
+        if (startTime >= windowEnds.get(0) || !TriggerSpec.isStrictIncreasing(windowEnds)) {
             return Optional.empty();
         }
 
         jsonReportWindows.put(
-                ReportSpecUtil.FlexEventReportJsonKeys.END_TIMES,
-                new JSONArray(windowsEnd));
+                TriggerSpecs.FlexEventReportJsonKeys.END_TIMES,
+                // Convert end times to milliseconds for internal implementation.
+                new JSONArray(windowEnds.stream().map((x) ->
+                        TimeUnit.SECONDS.toMillis(x)).collect(Collectors.toList())));
 
         return Optional.of(jsonReportWindows);
     }
@@ -744,8 +762,9 @@ public class AsyncSourceFetcher {
             LoggerFactory.getMeasurementLogger().d(e, "AsyncSourceFetcher: invalid JSON");
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.PARSING_ERROR);
             return Optional.empty();
-        } catch (IllegalArgumentException e) {
-            LoggerFactory.getMeasurementLogger().d(e, "AsyncSourceFetcher: illegal argument");
+        } catch (IllegalArgumentException | ArithmeticException e) {
+            LoggerFactory.getMeasurementLogger().d(e, "AsyncSourceFetcher: IllegalArgumentException"
+                    + " or ArithmeticException");
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
             return Optional.empty();
         }
@@ -883,6 +902,20 @@ public class AsyncSourceFetcher {
         return true;
     }
 
+    private static boolean isContiguousStartingAtZero(Set<UnsignedLong> unsignedLongs) {
+        UnsignedLong upperBound = new UnsignedLong(((long) unsignedLongs.size()) - 1L);
+        for (UnsignedLong unsignedLong : unsignedLongs) {
+            if (unsignedLong.compareTo(upperBound) > 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean is64BitInteger(Object obj) {
+        return (obj instanceof Integer) || (obj instanceof Long);
+    }
+
     private static long roundSecondsToWholeDays(long seconds) {
         long remainder = seconds % ONE_DAY_IN_SECONDS;
         boolean roundUp = remainder >= ONE_DAY_IN_SECONDS / 2L;
@@ -915,6 +948,7 @@ public class AsyncSourceFetcher {
         String SHARED_DEBUG_KEY = "shared_debug_key";
         String SHARED_FILTER_DATA_KEYS = "shared_filter_data_keys";
         String DROP_SOURCE_IF_INSTALLED = "drop_source_if_installed";
+        String TRIGGER_DATA_MATCHING = "trigger_data_matching";
     }
 
     private interface SourceRequestContract {

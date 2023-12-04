@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.signals;
 
+
 import static com.android.adservices.service.signals.SignalsFixture.BASE64_KEY_1;
 import static com.android.adservices.service.signals.SignalsFixture.BASE64_VALUE_1;
 import static com.android.adservices.service.signals.SignalsFixture.KEY_1;
@@ -23,8 +24,10 @@ import static com.android.adservices.service.signals.SignalsFixture.VALUE_1;
 import static com.android.adservices.service.signals.SignalsFixture.assertSignalsUnorderedListEqualsExceptIdAndTime;
 import static com.android.adservices.service.signals.SignalsFixture.intToBase64;
 import static com.android.adservices.service.signals.SignalsFixture.intToBytes;
+import static com.android.adservices.service.signals.UpdateProcessingOrchestrator.COLLISION_ERROR;
 import static com.android.adservices.service.signals.UpdatesDownloader.CONVERSION_ERROR_MSG;
 import static com.android.adservices.service.signals.UpdatesDownloader.PACKAGE_NAME_HEADER;
+import static com.android.adservices.service.signals.updateprocessors.Append.TOO_MANY_SIGNALS_ERROR;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import static org.junit.Assert.assertEquals;
@@ -59,6 +62,7 @@ import com.android.adservices.data.signals.EncoderLogicMetadataDao;
 import com.android.adservices.data.signals.EncoderPersistenceDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -72,12 +76,14 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.service.signals.evict.SignalEvictionController;
 import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.SettableFuture;
@@ -88,8 +94,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -107,9 +111,11 @@ public class SignalsIntakeE2ETest {
 
     private static final String SIGNALS_PATH = "/signals";
 
-    @Rule public final MockitoRule mMockito = MockitoJUnit.rule();
-
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
+
+    @Rule
+    public final AdServicesExtendedMockitoRule extendedMockito =
+            new AdServicesExtendedMockitoRule.Builder(this).spyStatic(FlagsFactory.class).build();
 
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
@@ -134,6 +140,7 @@ public class SignalsIntakeE2ETest {
     private UpdateProcessingOrchestrator mUpdateProcessingOrchestrator;
     private UpdateProcessorSelector mUpdateProcessorSelector;
     private UpdateEncoderEventHandler mUpdateEncoderEventHandler;
+    private SignalEvictionController mSignalEvictionController;
     private AdTechUriValidator mAdtechUriValidator;
     private FledgeAuthorizationFilter mFledgeAuthorizationFilter;
     private CustomAudienceServiceFilter mCustomAudienceServiceFilter;
@@ -169,9 +176,21 @@ public class SignalsIntakeE2ETest {
                         mBackgroundExecutorService);
         mUpdateEncoderEventHandler =
                 new UpdateEncoderEventHandler(mEncoderEndpointsDao, mEncoderLogicHandler);
+        int oversubscriptionBytesLimit =
+                FlagsFactory.getFlagsForTest()
+                        .getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes();
+        mSignalEvictionController =
+                new SignalEvictionController(
+                        ImmutableList.of(),
+                        FlagsFactory.getFlagsForTest()
+                                .getProtectedSignalsMaxSignalSizePerBuyerBytes(),
+                        oversubscriptionBytesLimit);
         mUpdateProcessingOrchestrator =
                 new UpdateProcessingOrchestrator(
-                        mSignalsDao, mUpdateProcessorSelector, mUpdateEncoderEventHandler);
+                        mSignalsDao,
+                        mUpdateProcessorSelector,
+                        mUpdateEncoderEventHandler,
+                        mSignalEvictionController);
         mAdtechUriValidator = new AdTechUriValidator("", "", "", "");
         mFledgeAuthorizationFilter =
                 ExtendedMockito.spy(
@@ -457,6 +476,178 @@ public class SignalsIntakeE2ETest {
                         generateSignal(4, 105));
         List<DBProtectedSignal> actual2 = mSignalsDao.getSignalsByBuyer(BUYER);
         assertSignalsUnorderedListEqualsExceptIdAndTime(expected2, actual2);
+    }
+
+    @Test
+    public void testOverwriteAppendWithPut() throws Exception {
+        setupService(false);
+        String json1 =
+                "{"
+                        // Append 3 signals to key 1
+                        + "\"append\":{\""
+                        + intToBase64(1)
+                        + "\":"
+                        + "{\"values\": [\""
+                        + intToBase64(100)
+                        + "\",\""
+                        + intToBase64(101)
+                        + "\",\""
+                        + intToBase64(102)
+                        + "\"]"
+                        + ", \"max_signals\": 3}"
+                        + "}}";
+
+        String json2 =
+                "{"
+                        // Overwrite all the appended signals
+                        + "\"put\":{\""
+                        + intToBase64(1)
+                        + "\":\""
+                        + intToBase64(103)
+                        + "\"}}";
+        Uri uri = mMockWebServerRule.uriForPath(SIGNALS_PATH);
+        MockResponse response1 = new MockResponse().setBody(json1);
+        MockResponse response2 = new MockResponse().setBody(json2);
+        mMockWebServerRule.startMockWebServer(Arrays.asList(response1, response2));
+
+        callForUri(uri);
+        List<DBProtectedSignal> expected1 =
+                Arrays.asList(
+                        generateSignal(1, 100), generateSignal(1, 101), generateSignal(1, 102));
+        List<DBProtectedSignal> actual1 = mSignalsDao.getSignalsByBuyer(BUYER);
+        assertSignalsUnorderedListEqualsExceptIdAndTime(expected1, actual1);
+
+        callForUri(uri);
+        List<DBProtectedSignal> expected2 = Arrays.asList(generateSignal(1, 103));
+        List<DBProtectedSignal> actual2 = mSignalsDao.getSignalsByBuyer(BUYER);
+        assertSignalsUnorderedListEqualsExceptIdAndTime(expected2, actual2);
+    }
+
+    @Test
+    public void testAddToPutWithAppend() throws Exception {
+        setupService(false);
+        String json1 =
+                "{"
+                        // Overwrite all the appended signals
+                        + "\"put\":{\""
+                        + intToBase64(1)
+                        + "\":\""
+                        + intToBase64(100)
+                        + "\"}}";
+        String json2 =
+                "{"
+                        // Append 3 signals to key 1
+                        + "\"append\":{\""
+                        + intToBase64(1)
+                        + "\":"
+                        + "{\"values\": [\""
+                        + intToBase64(101)
+                        + "\"]"
+                        + ", \"max_signals\": 2}"
+                        + "}}";
+        Uri uri = mMockWebServerRule.uriForPath(SIGNALS_PATH);
+        MockResponse response1 = new MockResponse().setBody(json1);
+        MockResponse response2 = new MockResponse().setBody(json2);
+        mMockWebServerRule.startMockWebServer(Arrays.asList(response1, response2));
+
+        callForUri(uri);
+        List<DBProtectedSignal> expected1 = Arrays.asList(generateSignal(1, 100));
+        List<DBProtectedSignal> actual1 = mSignalsDao.getSignalsByBuyer(BUYER);
+        assertSignalsUnorderedListEqualsExceptIdAndTime(expected1, actual1);
+
+        callForUri(uri);
+        List<DBProtectedSignal> expected2 =
+                Arrays.asList(generateSignal(1, 100), generateSignal(1, 101));
+        List<DBProtectedSignal> actual2 = mSignalsDao.getSignalsByBuyer(BUYER);
+        assertSignalsUnorderedListEqualsExceptIdAndTime(expected2, actual2);
+    }
+
+    @Test
+    public void testBadAppend() throws Exception {
+        setupService(false);
+        String json =
+                "{"
+                        // Put two signals
+                        + "\"put\":{\""
+                        + intToBase64(1)
+                        + "\":\""
+                        + intToBase64(101)
+                        + "\",\""
+                        + intToBase64(2)
+                        + "\":\""
+                        + intToBase64(102)
+                        + "\""
+                        + "},"
+                        // Try to append two signals with a limit of one
+                        + "\"append\":{\""
+                        + intToBase64(3)
+                        + "\":"
+                        + "{\"values\": [\""
+                        + intToBase64(103)
+                        + "\",\""
+                        + intToBase64(106)
+                        + "\"]"
+                        + ", \"max_signals\": 1}"
+                        + "}}";
+        Uri uri = mMockWebServerRule.uriForPath(SIGNALS_PATH);
+        MockResponse response = new MockResponse().setBody(json);
+        mMockWebServerRule.startMockWebServer(Arrays.asList(response));
+
+        UpdateSignalsInput input =
+                new UpdateSignalsInput.Builder(uri, CommonFixture.TEST_PACKAGE_NAME).build();
+        CallbackForTesting callback = new CallbackForTesting();
+        mService.updateSignals(input, callback);
+        assertTrue(callback.mFailureLatch.await(WAIT_TIME_SECONDS, TimeUnit.SECONDS));
+        FledgeErrorResponse cause = callback.mFailureCause;
+        assertEquals(AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, cause.getStatusCode());
+        assertEquals(
+                String.format(TOO_MANY_SIGNALS_ERROR, 2, 1),
+                callback.mFailureCause.getErrorMessage());
+
+        assertTrue(mSignalsDao.getSignalsByBuyer(BUYER).isEmpty());
+    }
+
+    @Test
+    public void testCollision() throws Exception {
+        setupService(false);
+        String json =
+                "{"
+                        // Put two signals
+                        + "\"put\":{\""
+                        + intToBase64(1)
+                        + "\":\""
+                        + intToBase64(101)
+                        + "\",\""
+                        + intToBase64(3)
+                        + "\":\""
+                        + intToBase64(102)
+                        + "\""
+                        + "},"
+                        // Try to append two signals with a limit of one
+                        + "\"append\":{\""
+                        + intToBase64(3)
+                        + "\":"
+                        + "{\"values\": [\""
+                        + intToBase64(103)
+                        + "\",\""
+                        + intToBase64(106)
+                        + "\"]"
+                        + ", \"max_signals\": 3}"
+                        + "}}";
+        Uri uri = mMockWebServerRule.uriForPath(SIGNALS_PATH);
+        MockResponse response = new MockResponse().setBody(json);
+        mMockWebServerRule.startMockWebServer(Arrays.asList(response));
+
+        UpdateSignalsInput input =
+                new UpdateSignalsInput.Builder(uri, CommonFixture.TEST_PACKAGE_NAME).build();
+        CallbackForTesting callback = new CallbackForTesting();
+        mService.updateSignals(input, callback);
+        assertTrue(callback.mFailureLatch.await(WAIT_TIME_SECONDS, TimeUnit.SECONDS));
+        FledgeErrorResponse cause = callback.mFailureCause;
+        assertEquals(AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, cause.getStatusCode());
+        assertEquals(COLLISION_ERROR, callback.mFailureCause.getErrorMessage());
+
+        assertTrue(mSignalsDao.getSignalsByBuyer(BUYER).isEmpty());
     }
 
     @Test

@@ -45,6 +45,7 @@ import android.os.Process;
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.IntFailureSyncCallback;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -72,7 +73,8 @@ import org.mockito.stubbing.Answer;
 import java.util.concurrent.CountDownLatch;
 
 /** Unit test for {@link com.android.adservices.service.appsetid.AppSetIdServiceImpl}. */
-public class AppSetIdServiceImplTest {
+public final class AppSetIdServiceImplTest extends AdServicesUnitTestCase {
+
     private static final String TEST_APP_PACKAGE_NAME =
             "com.android.adservices.servicecoreappsetidtest";
     private static final String INVALID_PACKAGE_NAME = "com.do_not_exists";
@@ -104,9 +106,7 @@ public class AppSetIdServiceImplTest {
     public void setup() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        mAppSetIdWorker =
-                Mockito.spy(
-                        AppSetIdWorker.getInstance(ApplicationProvider.getApplicationContext()));
+        mAppSetIdWorker = Mockito.spy(AppSetIdWorker.getInstance());
         Mockito.doReturn(null).when(mAppSetIdWorker).getService();
 
         when(mClock.elapsedRealtime()).thenReturn(150L, 200L);

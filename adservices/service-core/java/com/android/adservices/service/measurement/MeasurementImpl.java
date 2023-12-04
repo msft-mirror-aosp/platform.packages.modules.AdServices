@@ -53,10 +53,10 @@ import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.appsearch.AppSearchMeasurementRollbackManager;
 import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.registration.EnqueueAsyncRegistration;
+import com.android.adservices.service.measurement.rollback.MeasurementRollbackCompatManager;
 import com.android.adservices.service.measurement.util.Applications;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementWipeoutStats;
@@ -360,20 +360,17 @@ public final class MeasurementImpl {
     }
 
     /**
-     * Delete all records from a specific package.
+     * Delete all records from a specific package and return a boolean value to indicate whether any
+     * data was deleted.
      */
-    public void deletePackageRecords(Uri packageUri) {
+    public boolean deletePackageRecords(Uri packageUri) {
         Uri appUri = getAppUri(packageUri);
         LoggerFactory.getMeasurementLogger().d("Deleting records for " + appUri);
         mReadWriteLock.writeLock().lock();
+        boolean didDeletionOccur = false;
         try {
-            Optional<Boolean> didDeletionOccurOpt =
-                    mDatastoreManager.runInTransactionWithResult(
-                            (dao) -> {
-                                dao.undoInstallAttribution(appUri);
-                                return dao.deleteAppRecords(appUri);
-                            });
-            if (didDeletionOccurOpt.isPresent() && didDeletionOccurOpt.get()) {
+            didDeletionOccur = mMeasurementDataDeleter.deleteAppUninstalledData(appUri);
+            if (didDeletionOccur) {
                 markDeletion();
             }
         } catch (NullPointerException | IllegalArgumentException e) {
@@ -382,6 +379,7 @@ public final class MeasurementImpl {
         } finally {
             mReadWriteLock.writeLock().unlock();
         }
+        return didDeletionOccur;
     }
 
     /**
@@ -406,18 +404,17 @@ public final class MeasurementImpl {
 
     /** Delete all data generated from apps that are not currently installed. */
     public void deleteAllUninstalledMeasurementData() {
-        List<Uri> installedApplicationsList =
+        final List<Uri> installedAppList =
                 Applications.getCurrentInstalledApplicationsList(mContext);
-        mReadWriteLock.writeLock().lock();
-        try {
-            Optional<Boolean> didDeletionOccurOpt =
-                    mDatastoreManager.runInTransactionWithResult(
-                            (dao) -> dao.deleteAppRecordsNotPresent(installedApplicationsList));
-            if (didDeletionOccurOpt.isPresent() && didDeletionOccurOpt.get()) {
-                markDeletion();
+
+        final Optional<List<Uri>> uninstalledAppsOpt =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) -> dao.getUninstalledAppNamesHavingMeasurementData(installedAppList));
+
+        if (uninstalledAppsOpt.isPresent() && !uninstalledAppsOpt.get().isEmpty()) {
+            for (Uri uninstalledAppName : uninstalledAppsOpt.get()) {
+                deletePackageRecords(uninstalledAppName);
             }
-        } finally {
-            mReadWriteLock.writeLock().unlock();
         }
     }
 
@@ -445,7 +442,9 @@ public final class MeasurementImpl {
     }
 
     private Uri getAppUri(Uri packageUri) {
-        return Uri.parse(ANDROID_APP_SCHEME + "://" + packageUri.getEncodedSchemeSpecificPart());
+        return packageUri.getScheme() == null
+                ? Uri.parse(ANDROID_APP_SCHEME + "://" + packageUri.getEncodedSchemeSpecificPart())
+                : packageUri;
     }
 
     private boolean isValid(WebSourceRegistrationRequest sourceRegistrationRequest) {
@@ -578,14 +577,14 @@ public final class MeasurementImpl {
                     .needsToHandleRollbackReconciliation(AdServicesManager.MEASUREMENT_DELETION);
         }
 
-        // Not on Android T+
-        if (FlagsFactory.getFlags().getMeasurementRollbackDeletionAppSearchKillSwitch()) {
+        // Not on Android T+. Check if flag is enabled if on R/S.
+        if (isMeasurementRollbackCompatDisabled()) {
             LoggerFactory.getMeasurementLogger()
-                    .e("Rollback deletion is disabled. Not checking App Search for rollback.");
+                    .e("Rollback deletion disabled. Not checking compatible store for rollback.");
             return false;
         }
 
-        return AppSearchMeasurementRollbackManager.getInstance(
+        return MeasurementRollbackCompatManager.getInstance(
                         mContext, AdServicesManager.MEASUREMENT_DELETION)
                 .needsToHandleRollbackReconciliation();
     }
@@ -609,16 +608,27 @@ public final class MeasurementImpl {
             return;
         }
 
-        // On Android S or lower.
-        if (FlagsFactory.getFlags().getMeasurementRollbackDeletionAppSearchKillSwitch()) {
+        // If on Android R/S, check if the appropriate flag is enabled, otherwise do nothing.
+        if (isMeasurementRollbackCompatDisabled()) {
             LoggerFactory.getMeasurementLogger()
-                    .e("Rollback deletion in AppSearch disabled. Not storing status in AppSearch.");
+                    .e("Rollback deletion disabled. Not storing status in compatible store.");
             return;
         }
 
-        LoggerFactory.getMeasurementLogger().d("Marking deletion in AppSearch");
-        AppSearchMeasurementRollbackManager.getInstance(
+        MeasurementRollbackCompatManager.getInstance(
                         mContext, AdServicesManager.MEASUREMENT_DELETION)
                 .recordAdServicesDeletionOccurred();
+    }
+
+    private boolean isMeasurementRollbackCompatDisabled() {
+        if (SdkLevel.isAtLeastT()) {
+            // This method should never be called on T+.
+            return true;
+        }
+
+        Flags flags = FlagsFactory.getFlags();
+        return SdkLevel.isAtLeastS()
+                ? flags.getMeasurementRollbackDeletionAppSearchKillSwitch()
+                : !flags.getMeasurementRollbackDeletionREnabled();
     }
 }

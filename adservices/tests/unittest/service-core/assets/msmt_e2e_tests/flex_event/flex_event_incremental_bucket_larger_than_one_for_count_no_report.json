@@ -20,7 +20,7 @@
               "priority": "20",
               "expiry": "172801",
               "trigger_specs": [
-                {"trigger_data": [0,1],
+                {"trigger_data": [0, 1],
                   "event_report_windows":  {
                     "start_time": 0,
                     "end_times": [172800]
@@ -28,7 +28,8 @@
                   "summary_window_operator": "count",
                   "summary_buckets":  [2]}
               ],
-              "max_event_level_reports" : 1
+              "max_event_level_reports": 1,
+              "trigger_data_matching": "exact"
             },
             "Location": null,
             "Attribution-Reporting-Redirect": null

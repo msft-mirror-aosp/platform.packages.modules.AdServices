@@ -24,6 +24,8 @@ import android.annotation.SystemApi;
 public class AdServicesPermissions {
     private AdServicesPermissions() {}
 
+    private static final String KEY_AD_ID_CACHE_ENABLED = FlagsConstants.KEY_AD_ID_CACHE_ENABLED;
+
     /** This permission needs to be declared by the caller of Topics APIs. */
     public static final String ACCESS_ADSERVICES_TOPICS =
             "android.permission.ACCESS_ADSERVICES_TOPICS";
@@ -35,6 +37,14 @@ public class AdServicesPermissions {
     /** This permission needs to be declared by the caller of Custom Audiences APIs. */
     public static final String ACCESS_ADSERVICES_CUSTOM_AUDIENCE =
             "android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE";
+
+    /**
+     * This permission needs to be declared by the caller of Protected Signals APIs.
+     *
+     * @hide
+     */
+    public static final String ACCESS_ADSERVICES_PROTECTED_SIGNALS =
+            "android.permission.ACCESS_ADSERVICES_PROTECTED_SIGNALS";
 
     /** This permission needs to be declared by the caller of Advertising ID APIs. */
     public static final String ACCESS_ADSERVICES_AD_ID =
@@ -122,8 +132,8 @@ public class AdServicesPermissions {
      *
      * @hide
      */
-    // @SystemApi
-    @FlaggedApi(FlagsConstants.KEY_AD_ID_CACHE_ENABLED)
+    @SystemApi
+    @FlaggedApi(KEY_AD_ID_CACHE_ENABLED)
     public static final String UPDATE_PRIVILEGED_AD_ID =
             "android.permission.UPDATE_PRIVILEGED_AD_ID";
 
@@ -132,8 +142,8 @@ public class AdServicesPermissions {
      *
      * @hide
      */
-    // @SystemApi
-    @FlaggedApi(FlagsConstants.KEY_AD_ID_CACHE_ENABLED)
+    @SystemApi
+    @FlaggedApi(KEY_AD_ID_CACHE_ENABLED)
     public static final String UPDATE_PRIVILEGED_AD_ID_COMPAT =
             "android.permission.UPDATE_PRIVILEGED_AD_ID_COMPAT";
 }
