@@ -28,6 +28,7 @@ import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel;
 import com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkRange;
+import com.android.adservices.common.AbstractSdkLevelSupportedRule.RequiredRange;
 import com.android.adservices.common.Logger.RealLogger;
 
 import com.google.common.truth.Expect;
@@ -39,6 +40,7 @@ import org.junit.Test;
 import org.junit.runner.Description;
 
 import java.lang.annotation.Annotation;
+import java.util.Arrays;
 import java.util.Objects;
 
 // TODO(b/295321663): provide host-side implementation
@@ -55,6 +57,7 @@ public class AbstractSdkLevelSupportedRuleTest {
     private static final String TEST_METHOD_BEING_EXECUTED = "testAmI..OrNot";
 
     private static final String REASON = "Because I said so";
+    private static final String ANOTHER_REASON = "To get to the other side.";
 
     private final SimpleStatement mBaseStatement = new SimpleStatement();
 
@@ -126,6 +129,228 @@ public class AbstractSdkLevelSupportedRuleTest {
         expect.withMessage("rule.atLeastT()").that(rule.isAtLeastT()).isTrue();
         expect.withMessage("rule.atLeastU()").that(rule.isAtLeastU()).isTrue();
     }
+
+    @Test
+    public void testPassesWhenDeviceLevelIsInRange() throws Throwable {
+        var ruleRange = AndroidSdkRange.forRange(R.getLevel(), U.getLevel());
+        var deviceLevel = T;
+        var rule = newRule(ruleRange, deviceLevel);
+        Description testMethod = newTestMethod();
+
+        try {
+            rule.apply(mBaseStatement, testMethod).evaluate();
+        } catch (AssumptionViolatedException e) {
+            throw new Exception("test should not throw", e);
+        }
+
+        mBaseStatement.assertEvaluated();
+    }
+
+    @Test
+    public void testSkipsWhenDeviceLevelIsOutsideRange() throws Throwable {
+        var ruleRange = AndroidSdkRange.forRange(R.getLevel(), S.getLevel());
+        var deviceLevel = T;
+        var rule = newRule(ruleRange, deviceLevel);
+
+        Description testMethod = newTestMethod();
+
+        AssumptionViolatedException e =
+                assertThrows(
+                        AssumptionViolatedException.class,
+                        () -> rule.apply(mBaseStatement, testMethod).evaluate());
+
+        expect.withMessage("exception message")
+                .that(e)
+                .hasMessageThat()
+                .contains(ruleRange.toString());
+
+        mBaseStatement.assertNotEvaluated();
+    }
+
+    @Test
+    public void testGetRequiredRange_unannotatedTest() throws Throwable {
+        assertGetRequiredRangeForUnannotatedTest(/* ruleRange= */ AndroidSdkRange.forAnyLevel());
+        assertGetRequiredRangeForUnannotatedTest(/* ruleRange= */ AndroidSdkRange.forAtLeast(42));
+        assertGetRequiredRangeForUnannotatedTest(/* ruleRange= */ AndroidSdkRange.forAtMost(42));
+        assertGetRequiredRangeForUnannotatedTest(/* ruleRange= */ AndroidSdkRange.forExactly(42));
+        assertGetRequiredRangeForUnannotatedTest(
+                /* ruleRange= */ AndroidSdkRange.forRange(42, 108));
+    }
+
+    private void assertGetRequiredRangeForUnannotatedTest(AndroidSdkRange ruleRange) {
+        var rule = new FakeSdkLevelSupportedRule(ruleRange);
+        var expectedRequiredRange =
+                new RequiredRange(
+                        ruleRange,
+                        AbstractSdkLevelSupportedRule.REASON_LEVEL_SET_ON_RULE_CONSTRUCTOR);
+
+        assertGetRequiredRange(expectedRequiredRange, rule);
+    }
+
+    private void assertGetRequiredRange(
+            RequiredRange expectedRequiredRange,
+            AbstractSdkLevelSupportedRule rule,
+            Annotation... annotations) {
+        Description testMethod = newTestMethod(annotations);
+
+        RequiredRange actualRequiredRange = rule.getRequiredRange(testMethod);
+
+        expect.withMessage("getRequiredRange(%s)", Arrays.toString(annotations))
+                .that(actualRequiredRange)
+                .isEqualTo(expectedRequiredRange);
+        expect.withMessage("getRequiredRange(%s).reason", Arrays.toString(annotations))
+                .that(actualRequiredRange.reason)
+                .isEqualTo(expectedRequiredRange.reason);
+    }
+
+    @Test
+    public void testGetRequiredRange_annotatedTest() throws Throwable {
+        // Test with any-range constructor first
+        var ruleForAnyLevel = AndroidSdkRange.forAnyLevel();
+        assertGetRequiredRangeForAnnotatedTest(
+                AndroidSdkRange.forAtLeast(R.getLevel()),
+                REASON,
+                ruleForAnyLevel,
+                newAnnotationForAtLeast(R, REASON));
+        assertGetRequiredRangeForAnnotatedTest(
+                AndroidSdkRange.forAtLeast(S.getLevel()),
+                REASON,
+                ruleForAnyLevel,
+                newAnnotationForAtLeast(S, REASON));
+        assertGetRequiredRangeForAnnotatedTest(
+                AndroidSdkRange.forAtLeast(S2.getLevel()),
+                REASON,
+                ruleForAnyLevel,
+                newAnnotationForAtLeast(S2, REASON));
+        assertGetRequiredRangeForAnnotatedTest(
+                AndroidSdkRange.forAtLeast(T.getLevel()),
+                REASON,
+                ruleForAnyLevel,
+                newAnnotationForAtLeast(T, REASON));
+        assertGetRequiredRangeForAnnotatedTest(
+                AndroidSdkRange.forAtLeast(U.getLevel()),
+                REASON,
+                ruleForAnyLevel,
+                newAnnotationForAtLeast(U, REASON));
+        // TODO(b/295269584): replace lessThatT test for required range annotation
+        assertGetRequiredRangeForAnnotatedTest(
+                AndroidSdkRange.forAtMost(S2.getLevel()),
+                REASON,
+                ruleForAnyLevel,
+                newAnnotationForLessThanT(REASON));
+
+        // Then for well-defined range (min and max)
+        var ruleForClosedRange = AndroidSdkRange.forRange(R.getLevel(), U.getLevel());
+        // T
+        assertGetRequiredRangeForAnnotatedTest(
+                AndroidSdkRange.forRange(R.getLevel(), U.getLevel()),
+                REASON,
+                ruleForClosedRange,
+                newAnnotationForAtLeast(R, REASON));
+        assertGetRequiredRangeForAnnotatedTest(
+                AndroidSdkRange.forRange(S.getLevel(), U.getLevel()),
+                REASON,
+                ruleForClosedRange,
+                newAnnotationForAtLeast(S, REASON));
+        assertGetRequiredRangeForAnnotatedTest(
+                AndroidSdkRange.forRange(S2.getLevel(), U.getLevel()),
+                REASON,
+                ruleForClosedRange,
+                newAnnotationForAtLeast(S2, REASON));
+        assertGetRequiredRangeForAnnotatedTest(
+                AndroidSdkRange.forRange(T.getLevel(), U.getLevel()),
+                REASON,
+                ruleForClosedRange,
+                newAnnotationForAtLeast(T, REASON));
+        assertGetRequiredRangeForAnnotatedTest(
+                AndroidSdkRange.forRange(U.getLevel(), U.getLevel()),
+                REASON,
+                ruleForClosedRange,
+                newAnnotationForAtLeast(U, REASON));
+        //      // TODO(b/295269584): replace lessThatT test for required range annotation
+        assertGetRequiredRangeForAnnotatedTest(
+                AndroidSdkRange.forRange(R.getLevel(), S2.getLevel()),
+                REASON,
+                ruleForClosedRange,
+                newAnnotationForLessThanT(REASON));
+    }
+
+    private void assertGetRequiredRangeForAnnotatedTest(
+            AndroidSdkRange expectedRange,
+            String expectedReason,
+            AndroidSdkRange ruleRange,
+            Annotation... annotations) {
+        var rule = new FakeSdkLevelSupportedRule(ruleRange);
+        var expectedRequiredRange = new RequiredRange(expectedRange, expectedReason);
+
+        assertGetRequiredRange(expectedRequiredRange, rule, annotations);
+    }
+
+    @Test
+    public void testAnnotationToRequiredRangeConversion() throws Throwable {
+        expectAnnotationConvertedToRequiredRange(
+                newAnnotationForAtLeast(R, REASON),
+                AndroidSdkRange.forAtLeast(R.getLevel()),
+                REASON);
+        expectAnnotationConvertedToRequiredRange(
+                newAnnotationForAtLeast(S, REASON),
+                AndroidSdkRange.forAtLeast(S.getLevel()),
+                REASON);
+        expectAnnotationConvertedToRequiredRange(
+                newAnnotationForAtLeast(S2, REASON),
+                AndroidSdkRange.forAtLeast(S2.getLevel()),
+                REASON);
+        expectAnnotationConvertedToRequiredRange(
+                newAnnotationForAtLeast(T, REASON),
+                AndroidSdkRange.forAtLeast(T.getLevel()),
+                REASON);
+        expectAnnotationConvertedToRequiredRange(
+                newAnnotationForAtLeast(U, REASON),
+                AndroidSdkRange.forAtLeast(U.getLevel()),
+                REASON);
+        // TODO(b/295269584): replace lessThatT test for required range annotation
+        expectAnnotationConvertedToRequiredRange(
+                newAnnotationForLessThanT(REASON),
+                AndroidSdkRange.forAtMost(S2.getLevel()),
+                REASON);
+    }
+
+    private void expectAnnotationConvertedToRequiredRange(
+            Annotation annotation, AndroidSdkRange expectedRange, String expectedReason) {
+        var rule = newRuleForDeviceLevelAndRuleAtLeastLevel(ANY);
+        var expectRequiredRange = new RequiredRange(expectedRange, expectedReason);
+        RequiredRange actualRequiredRange = rule.getRequiredRange(Arrays.asList(annotation));
+
+        expect.withMessage("getRequiredRange(%s)", annotation)
+                .that(actualRequiredRange)
+                .isEqualTo(expectRequiredRange);
+        expect.withMessage("getRequiredRange(%s).reason", annotation)
+                .that(actualRequiredRange.reason)
+                .isEqualTo(expectedReason);
+    }
+
+    @Test
+    public void testGetRequiredRange_multipleAnnotationsWithReason() throws Throwable {
+        var rule = newRuleForDeviceLevelAndRuleAtLeastLevel(ANY);
+
+        IllegalStateException e =
+                assertThrows(
+                        IllegalStateException.class,
+                        () ->
+                                rule.getRequiredRange(
+                                        Arrays.asList(
+                                                newAnnotationForAtLeast(R, REASON),
+                                                newAnnotationForAtLeast(S, ANOTHER_REASON))));
+
+        expect.withMessage("exception message").that(e).hasMessageThat().contains(REASON);
+        expect.withMessage("exception message").that(e).hasMessageThat().contains(ANOTHER_REASON);
+    }
+
+    /***************************************************************************************
+     * NOTE: tests below are "legacy", when the rule was hardcoded to check for specific   *
+     * annotations. They're kept here as an extra safety net, but pragmatically, the tests *
+     * above - based in the required range - are enough.                                   *
+     ***************************************************************************************/
 
     /*
      * Tests for rule constructed for any level.
@@ -481,6 +706,15 @@ public class AbstractSdkLevelSupportedRuleTest {
         return new FakeSdkLevelSupportedRule(ruleLevel, deviceLevel);
     }
 
+    /**
+     * Creates a rule that is constructed for the given {@code ruleRange} and also mocks that rule's
+     * {@link AbstractSdkLevelSupportedRule#getDeviceApiLevel()} to return {@code deviceLevel}.
+     */
+    protected AbstractSdkLevelSupportedRule newRule(
+            AndroidSdkRange ruleRange, AndroidSdkLevel deviceLevel) {
+        return new FakeSdkLevelSupportedRule(ruleRange, deviceLevel);
+    }
+
     // NOTE: eventually there will be releases X, Y, Z, but other names would make these methods
     // even longer than what they already are
 
@@ -573,18 +807,27 @@ public class AbstractSdkLevelSupportedRuleTest {
      */
     private static final class FakeSdkLevelSupportedRule extends AbstractSdkLevelSupportedRule {
 
-        private final AndroidSdkLevel mDeviceLevel;
+        @Nullable private final AndroidSdkLevel mDeviceLevel;
 
         private FakeSdkLevelSupportedRule(AndroidSdkLevel ruleLevel, AndroidSdkLevel deviceLevel) {
-            super(
-                    StandardStreamsLogger.getInstance(),
-                    AndroidSdkRange.forAtLeast(ruleLevel.getLevel()));
+            this(AndroidSdkRange.forAtLeast(ruleLevel.getLevel()), deviceLevel);
+        }
 
+        private FakeSdkLevelSupportedRule(AndroidSdkRange ruleRange) {
+            this(ruleRange, /* deviceLevel= */ null);
+        }
+
+        private FakeSdkLevelSupportedRule(AndroidSdkRange ruleRange, AndroidSdkLevel deviceLevel) {
+            super(StandardStreamsLogger.getInstance(), ruleRange);
             mDeviceLevel = deviceLevel;
         }
 
         @Override
         public AndroidSdkLevel getDeviceApiLevel() {
+            if (mDeviceLevel == null) {
+                throw new UnsupportedOperationException(
+                        "Rule created with constructor that doesn't provide the device level");
+            }
             return mDeviceLevel;
         }
     }
