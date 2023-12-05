@@ -69,8 +69,8 @@ android_test {
         "auto_value_annotations",
     ],
     srcs: [
-      "src/android/adservices/rootcts/*.java",
-      "src/android/adservices/utils/*.java",
+        "src/android/adservices/rootcts/*.java",
+        "src/android/adservices/utils/*.java",
     ],
     // Tag this module as a cts test artifact
     exclude_srcs: [
