@@ -89,8 +89,7 @@ public final class SettingsActivityUiAutomatorTest extends AdServicesExtendedMoc
 
     @Before
     public void setup() throws UiObjectNotFoundException, IOException {
-        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        extendedMockito.mockGetFlags(mMockFlags);
         doReturn(false).when(mMockFlags).getUiDialogFragmentEnabled();
         doReturn(true).when(mMockFlags).getUIDialogsFeatureEnabled();
         // prepare objects used by static mocking
