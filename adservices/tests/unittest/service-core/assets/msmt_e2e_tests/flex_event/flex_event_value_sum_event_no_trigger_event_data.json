@@ -145,7 +145,7 @@
           "source_event_id": "2",
           "trigger_data": "0",
           "source_type": "navigation",
-          "trigger_summary_bucket": "[10,99]",
+          "trigger_summary_bucket": [10, 99],
           "randomized_trigger_rate": 0.000012472785585841613
         }
       }

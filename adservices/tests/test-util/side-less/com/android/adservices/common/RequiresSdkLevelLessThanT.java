@@ -16,17 +16,22 @@
 package com.android.adservices.common;
 
 import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+// TODO(b/295269584): remove when callers use @RequiresSdkRange
 /**
  * Used by {@link AbstractSdkLevelSupportedRule SdkLevelSupportedRule} to skip a test if the Android
  * SDK level of the device is {@code T} or higher.
+ *
+ * @deprecated will be eventually replaced by {@code RequiresSdkRange}.
  */
 @Retention(RUNTIME)
-@Target(METHOD)
+@Target({METHOD, TYPE})
+@Deprecated
 public @interface RequiresSdkLevelLessThanT {
     /** Reason why the test should be skipped. */
     String reason() default "";

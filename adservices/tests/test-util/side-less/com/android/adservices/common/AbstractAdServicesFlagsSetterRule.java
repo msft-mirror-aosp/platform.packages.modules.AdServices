@@ -219,6 +219,22 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         return setFlag(FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH, value);
     }
 
+    /**
+     * Overrides flag used by {@link
+     * com.android.adservices.service.PhFlags#getEnforceForegroundStatusForTopics()}.
+     */
+    public T setTopicsEnforceForeground(boolean value) {
+        return setFlag(FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_TOPICS, value);
+    }
+
+    /**
+     * Overrides flag used by {@link
+     * com.android.adservices.service.PhFlags#getTopicsDisableDirectAppCalls()}.
+     */
+    public T setTopicsDisableDirectAppCall(boolean value) {
+        return setFlag(FlagsConstants.KEY_TOPICS_DISABLE_DIRECT_APP_CALLS, value);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // NOTE: DO NOT add new setXyz() methods, unless they need non-trivial logic. Instead, let    //
     // your test call setFlags(flagName) (statically import FlagsConstant.flagName), which will   //
@@ -257,15 +273,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
                     }
                     mLog.d("setCompatModeFlags(): setting flags for R+");
                     setFlag(FlagsConstants.KEY_ENABLE_BACK_COMPAT, true);
-                    // TODO (b/285208753): Update flags once AppSearch is supported on R.
-                    setFlag(
-                            FlagsConstants.KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH,
-                            FlagsConstants.PPAPI_ONLY);
-                    setFlag(FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH, FlagsConstants.PPAPI_ONLY);
-                    setFlag(FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA, false);
-                    setFlag(
-                            FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH,
-                            true);
+                    setFlag(FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_DEBUG_PROXY, true);
                 });
     }
 
