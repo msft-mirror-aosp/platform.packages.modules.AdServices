@@ -6008,6 +6008,55 @@ public class AttributionJobHandlerTest {
     }
 
     @Test
+    public void performAttributions_invalidTriggerId_triggerNotFoundLogged()
+            throws DatastoreException {
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setTriggerTime(TRIGGER_TIME)
+                        .setStatus(Trigger.Status.PENDING)
+                        .setEventTriggers(
+                                "[\n"
+                                        + "{\n"
+                                        + "  \"trigger_data\": \"5\",\n"
+                                        + "  \"priority\": \"123\",\n"
+                                        + "  \"deduplication_key\": \"1\"\n"
+                                        + "}"
+                                        + "]\n")
+                        .setNotFilters(
+                                "[{\n"
+                                        + "  \"key_1\": [\"value_11_x\", \"value_12\"]}, {\n"
+                                        + "  \"key_2\": [\"value_21\", \"value_22_x\"]\n"
+                                        + "}]\n")
+                        .build();
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenThrow(DatastoreException.class);
+
+        // Execution
+        boolean result = mHandler.performPendingAttributions();
+
+        // Assertion
+        assertEquals(false, result);
+        ArgumentCaptor<MeasurementAttributionStats> statusArg =
+                ArgumentCaptor.forClass(MeasurementAttributionStats.class);
+        verify(mLogger).logMeasurementAttributionStats(statusArg.capture());
+        MeasurementAttributionStats measurementAttributionStats = statusArg.getValue();
+        assertEquals(
+                measurementAttributionStats.getSourceType(),
+                AttributionStatus.SourceType.UNKNOWN.getValue());
+        assertEquals(
+                measurementAttributionStats.getSurfaceType(),
+                AttributionStatus.AttributionSurface.UNKNOWN.getValue());
+        assertEquals(
+                measurementAttributionStats.getResult(),
+                AttributionStatus.AttributionResult.UNKNOWN.getValue());
+        assertEquals(
+                measurementAttributionStats.getFailureType(),
+                AttributionStatus.FailureType.TRIGGER_NOT_FOUND.getValue());
+    }
+
+    @Test
     public void performAttributions_withinLookbackWindow_attributeTrigger()
             throws DatastoreException {
         when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
