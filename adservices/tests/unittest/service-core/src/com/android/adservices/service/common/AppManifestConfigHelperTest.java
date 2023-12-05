@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.common;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastS;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilError;
@@ -95,7 +94,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
     public void setCommonExpectations() {
         appContext.set(mMockContext);
         when(mMockContext.getPackageManager()).thenReturn(mMockPackageManager);
-        mockGetFlags(mMockFlags);
+        extendedMockito.mockGetFlags(mMockFlags);
         setEnabledByDefault(false);
         doNothingOnErrorLogUtilError();
         doNothing()
