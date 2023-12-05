@@ -54,26 +54,27 @@ import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
 import android.util.Log;
 
-import androidx.test.filters.SmallTest;
-
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.RequiresSdkLevelAtLeastS;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.exception.XmlParseException;
 import com.android.modules.utils.build.SdkLevel;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.verification.VerificationMode;
 
-@SmallTest
-public final class AppManifestConfigHelperTest extends AdServicesUnitTestCase {
+@SpyStatic(AppManifestConfigParser.class)
+@SpyStatic(AppManifestConfigMetricsLogger.class)
+@SpyStatic(AndroidManifestConfigParser.class)
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(SdkLevel.class)
+@SpyStatic(ErrorLogUtil.class)
+public final class AppManifestConfigHelperTest extends AdServicesExtendedMockitoTestCase {
 
     private static final int RESOURCE_ID = 123;
     private static final String AD_SERVICES_CONFIG_PROPERTY =
@@ -89,19 +90,6 @@ public final class AppManifestConfigHelperTest extends AdServicesUnitTestCase {
     @Mock private Resources mMockResources;
     @Mock private XmlResourceParser mMockParser;
     @Mock private Flags mMockFlags;
-
-    @Rule
-    public final AdServicesExtendedMockitoRule extendedMockito =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(AppManifestConfigParser.class)
-                    .spyStatic(AppManifestConfigMetricsLogger.class)
-                    .spyStatic(AndroidManifestConfigParser.class)
-                    .spyStatic(FlagsFactory.class)
-                    .spyStatic(SdkLevel.class)
-                    .spyStatic(ErrorLogUtil.class)
-                    .build();
-
-    @Rule public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAnyLevel();
 
     @Before
     public void setCommonExpectations() {

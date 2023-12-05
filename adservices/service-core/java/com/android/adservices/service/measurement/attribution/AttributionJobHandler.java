@@ -176,7 +176,14 @@ class AttributionJobHandler {
     private boolean performAttribution(String triggerId, AttributionStatus attributionStatus) {
         return mDatastoreManager.runInTransaction(
                 measurementDao -> {
-                    Trigger trigger = measurementDao.getTrigger(triggerId);
+                    Trigger trigger;
+                    try {
+                        trigger = measurementDao.getTrigger(triggerId);
+                    } catch (DatastoreException e) {
+                        attributionStatus.setFailureType(
+                                AttributionStatus.FailureType.TRIGGER_NOT_FOUND);
+                        throw e;
+                    }
                     attributionStatus.setAttributionDelay(
                             System.currentTimeMillis() - trigger.getTriggerTime());
 
@@ -265,11 +272,14 @@ class AttributionJobHandler {
                         attributeTrigger(trigger, measurementDao);
                         if (mFlags.getMeasurementEnableScopedAttributionRateLimit()) {
                             if (isEventTriggeringStatusAttributed) {
-                                insertAttribution(Attribution.Scope.EVENT, source, trigger,
-                                        measurementDao);
+                                insertAttribution(
+                                        Attribution.Scope.EVENT, source, trigger, measurementDao);
                             }
                             if (isAggregateTriggeringStatusAttributed) {
-                                insertAttribution(Attribution.Scope.AGGREGATE, source, trigger,
+                                insertAttribution(
+                                        Attribution.Scope.AGGREGATE,
+                                        source,
+                                        trigger,
                                         measurementDao);
                             }
                         } else {

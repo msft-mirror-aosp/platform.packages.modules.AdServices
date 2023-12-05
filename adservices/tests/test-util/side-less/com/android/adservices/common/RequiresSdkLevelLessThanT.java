@@ -16,6 +16,7 @@
 package com.android.adservices.common;
 
 import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import java.lang.annotation.Retention;
@@ -29,7 +30,7 @@ import java.lang.annotation.Target;
  * @deprecated will be eventually replaced by {@code RequiresSdkRange}.
  */
 @Retention(RUNTIME)
-@Target(METHOD)
+@Target({METHOD, TYPE})
 @Deprecated
 public @interface RequiresSdkLevelLessThanT {
     /** Reason why the test should be skipped. */
