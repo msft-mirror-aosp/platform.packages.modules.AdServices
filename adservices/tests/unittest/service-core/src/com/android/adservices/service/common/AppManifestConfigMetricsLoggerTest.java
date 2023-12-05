@@ -18,7 +18,6 @@ package com.android.adservices.service.common;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockErrorLogUtilWithThrowable;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockErrorLogUtilWithoutThrowable;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.service.common.AppManifestConfigMetricsLogger.dump;
 import static com.android.adservices.service.common.AppManifestConfigMetricsLogger.logUsage;
 import static com.android.adservices.service.common.AppManifestConfigMetricsLogger.PREFS_NAME;
@@ -89,7 +88,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
     @Before
     public void setExpectations() {
         appContext.set(mMockContext);
-        mockGetFlags(mMockFlags);
+        extendedMockito.mockGetFlags(mMockFlags);
         when(mMockContext.getSharedPreferences(any(String.class), anyInt())).thenReturn(mPrefs);
         mErrorLogUtilWithThrowableCallback = mockErrorLogUtilWithThrowable();
         mErrorLogUtilWithoutThrowableCallback = mockErrorLogUtilWithoutThrowable();
