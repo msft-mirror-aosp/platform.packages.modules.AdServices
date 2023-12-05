@@ -23,8 +23,6 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_TOPICS" />
     <application>
-        <property android:name="android.adservices.AD_SERVICES_CONFIG"
-                  android:resource="@xml/ad_services_config" />
         <uses-library android:name="android.ext.adservices" android:required="false"/>
     </application>
     <instrumentation
