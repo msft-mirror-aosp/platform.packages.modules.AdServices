@@ -69,6 +69,7 @@ import android.os.Process;
 import android.util.Pair;
 
 import androidx.annotation.NonNull;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.IntFailureSyncCallback;
@@ -976,6 +977,7 @@ public final class TopicsServiceImplTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 313942764)
     public void testGetTopics_notRecordObservation() throws Exception {
         mockGetCallingUidOrThrow(MY_UID);
         mockAppContextForAppManifestConfigHelperCall();
