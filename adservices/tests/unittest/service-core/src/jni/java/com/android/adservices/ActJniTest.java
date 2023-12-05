@@ -29,7 +29,10 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.List;
+
+import android.util.Log;
 
 import private_join_and_compute.anonymous_counting_tokens.ClientParameters;
 import private_join_and_compute.anonymous_counting_tokens.ClientPrivateParameters;
@@ -39,9 +42,11 @@ import private_join_and_compute.anonymous_counting_tokens.MessagesSet;
 import private_join_and_compute.anonymous_counting_tokens.SchemeParameters;
 import private_join_and_compute.anonymous_counting_tokens.ServerPrivateParameters;
 import private_join_and_compute.anonymous_counting_tokens.ServerPublicParameters;
+import private_join_and_compute.anonymous_counting_tokens.Token;
 import private_join_and_compute.anonymous_counting_tokens.TokensRequest;
 import private_join_and_compute.anonymous_counting_tokens.TokensRequestPrivateState;
 import private_join_and_compute.anonymous_counting_tokens.TokensResponse;
+import private_join_and_compute.anonymous_counting_tokens.TokensSet;
 import private_join_and_compute.anonymous_counting_tokens.Transcript;
 
 
@@ -52,17 +57,18 @@ public class ActJniTest {
     private static final String GOLDEN_TRANSCRIPT_PATH = "act/golden_transcript_1";
     private ServerPrivateParameters mServerPrivateParameters;
     private ClientParameters mClientParameters;
+    private Transcript mTranscript;
 
     @Before
     public void setup() throws IOException {
         Context sContext = ApplicationProvider.getApplicationContext();
         InputStream inputStream = sContext.getAssets().open(GOLDEN_TRANSCRIPT_PATH);
-        Transcript transcript = Transcript.parseDelimitedFrom(inputStream);
+        mTranscript = Transcript.parseDelimitedFrom(inputStream);
 
-        mSchemeParameters = transcript.getSchemeParameters();
-        mServerPublicParameters = transcript.getServerParameters().getPublicParameters();
-        mServerPrivateParameters = transcript.getServerParameters().getPrivateParameters();
-        mClientParameters = transcript.getClientParameters();
+        mSchemeParameters = mTranscript.getSchemeParameters();
+        mServerPublicParameters = mTranscript.getServerParameters().getPublicParameters();
+        mServerPrivateParameters = mTranscript.getServerParameters().getPrivateParameters();
+        mClientParameters = mTranscript.getClientParameters();
     }
 
     @Test
@@ -195,43 +201,43 @@ public class ActJniTest {
     }
 
     @Test
-    public void test_verifyTokensResponse_returnsTrueWithCorrectTokenResponse()
-            throws InvalidProtocolBufferException {
-        ClientPublicParameters clientPublicParameters = mClientParameters.getPublicParameters();
-        ClientPrivateParameters clientPrivateParameters = mClientParameters.getPrivateParameters();
+    public void test_verifyTokensResponse_returnsTrueWithCorrectTokenResponse() {
         MessagesSet messagesSet =
                 MessagesSet.newBuilder()
-                        .addMessage("message_0")
-                        .addMessage("message_1")
-                        .addMessage("message_2")
+                        .addAllMessage(mTranscript.getMessagesList())
                         .build();
-        GeneratedTokensRequestProto generatedTokenRequestResponse =
-                ActJni.generateTokensRequest(
-                        messagesSet,
-                        mSchemeParameters,
-                        clientPublicParameters,
-                        clientPrivateParameters,
-                        mServerPublicParameters);
-        TokensRequestPrivateState tokensRequestPrivateState =
-                generatedTokenRequestResponse.getTokensRequestPrivateState();
-        TokensRequest tokensRequest = generatedTokenRequestResponse.getTokenRequest();
-        TokensResponse tokensResponse =
-                ActJniUtility.generateTokensResponse(
-                        tokensRequest,
-                        mSchemeParameters,
-                        clientPublicParameters,
-                        mServerPublicParameters,
-                        mServerPrivateParameters);
 
         Assert.assertTrue(
                 ActJni.verifyTokensResponse(
                         messagesSet,
-                        tokensRequest,
-                        tokensRequestPrivateState,
-                        tokensResponse,
-                        mSchemeParameters,
-                        clientPublicParameters,
-                        clientPrivateParameters,
-                        mServerPublicParameters));
+                        mTranscript.getTokensRequest(),
+                        mTranscript.getTokensRequestPrivateState(),
+                        mTranscript.getTokensResponse(),
+                        mTranscript.getSchemeParameters(),
+                        mTranscript.getClientParameters().getPublicParameters(),
+                        mTranscript.getClientParameters().getPrivateParameters(),
+                        mTranscript.getServerParameters().getPublicParameters()));
+    }
+
+    @Test
+    public void test_recoverTokens_returnsTheCorrectTokens()
+            throws InvalidProtocolBufferException {
+        MessagesSet messagesSet =
+                MessagesSet.newBuilder()
+                        .addAllMessage(mTranscript.getMessagesList())
+                        .build();
+
+        TokensSet tokensSet =
+                ActJni.recoverTokens(
+                        messagesSet,
+                        mTranscript.getTokensRequest(),
+                        mTranscript.getTokensRequestPrivateState(),
+                        mTranscript.getTokensResponse(),
+                        mTranscript.getSchemeParameters(),
+                        mTranscript.getClientParameters().getPublicParameters(),
+                        mTranscript.getClientParameters().getPrivateParameters(),
+                        mTranscript.getServerParameters().getPublicParameters());
+
+        Assert.assertEquals(tokensSet.getTokensList(), mTranscript.getTokensList());
     }
 }
