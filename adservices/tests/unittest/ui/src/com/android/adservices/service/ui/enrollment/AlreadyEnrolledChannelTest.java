@@ -16,14 +16,12 @@
 
 package com.android.adservices.service.ui.enrollment;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_ALREADY_INTERACTED_FIX_ENABLE;
 import static com.android.adservices.service.consent.ConsentManager.MANUAL_INTERACTIONS_RECORDED;
 
 import static org.mockito.Mockito.doReturn;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
@@ -31,35 +29,28 @@ import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.enrollment.impl.AlreadyEnrolledChannel;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 import java.io.IOException;
 
-public class AlreadyEnrolledChannelTest extends AdServicesUnitTestCase {
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(UiStatsLogger.class)
+public final class AlreadyEnrolledChannelTest extends AdServicesExtendedMockitoTestCase {
+
     private final AlreadyEnrolledChannel mAlreadyEnrolledChannel = new AlreadyEnrolledChannel();
 
     @Mock private PrivacySandboxUxCollection mPrivacySandboxUxCollection;
     @Mock private UxStatesManager mUxStatesManager;
     @Mock private ConsentManager mConsentManager;
-
     @Mock private Flags mMockFlags;
-
-    @Rule
-    public final AdServicesExtendedMockitoRule mExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(FlagsFactory.class)
-                    .mockStatic(UiStatsLogger.class)
-                    .build();
 
     @Before
     public void setup() throws IOException {
-        MockitoAnnotations.initMocks(this);
-        mockGetFlags(mMockFlags);
+        extendedMockito.mockGetFlags(mMockFlags);
     }
 
     @Test

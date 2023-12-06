@@ -35,12 +35,11 @@ import static org.mockito.Mockito.mock;
 
 import android.content.Context;
 
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.common.AppManifestConfigHelper;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.truth.Expect;
 
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -48,17 +47,12 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
 
-public final class AdServicesShellCommandHandlerTest extends AdServicesUnitTestCase {
+@SpyStatic(AppManifestConfigHelper.class)
+public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedMockitoTestCase {
 
     private static final String PKG_NAME = "d.h.a.r.m.a";
     private static final String ENROLLMENT_ID = "42";
     private static final String USES_SDK = "true";
-
-    @Rule
-    public final AdServicesExtendedMockitoRule extendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(AppManifestConfigHelper.class)
-                    .build();
 
     // mCmd is used on most tests methods, excepted those that runs more than one command
     private final OneTimeCommand mCmd = new OneTimeCommand(expect);

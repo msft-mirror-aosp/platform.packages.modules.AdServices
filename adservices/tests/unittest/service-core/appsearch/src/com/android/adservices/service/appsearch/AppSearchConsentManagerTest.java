@@ -38,10 +38,9 @@ import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.SmallTest;
 
 import com.android.adservices.AdServicesCommon;
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.common.BooleanFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.topics.Topic;
@@ -58,23 +57,24 @@ import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnr
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 import java.util.List;
 
-@SmallTest
-public final class AppSearchConsentManagerTest extends AdServicesUnitTestCase {
-    private Context mContext = ApplicationProvider.getApplicationContext();
-    private MockitoSession mStaticMockSession;
+@SpyStatic(AppSearchConsentWorker.class)
+@SpyStatic(PackageManagerCompatUtils.class)
+@SpyStatic(SdkLevel.class)
+@SpyStatic(FlagsFactory.class)
+public final class AppSearchConsentManagerTest extends AdServicesExtendedMockitoTestCase {
+
+    private final Context mContext = ApplicationProvider.getApplicationContext();
     @Mock private AppSearchConsentWorker mAppSearchConsentWorker;
     @Mock private Flags mFlags;
     @Mock private AdServicesManager mAdServicesManager;
@@ -94,18 +94,9 @@ public final class AppSearchConsentManagerTest extends AdServicesUnitTestCase {
 
     @Before
     public void setup() {
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(AppSearchConsentWorker.class)
-                        .mockStatic(PackageManagerCompatUtils.class)
-                        .mockStatic(SdkLevel.class)
-                        .mockStatic(FlagsFactory.class)
-                        .strictness(Strictness.WARN)
-                        .initMocks(this)
-                        .startMocking();
         ExtendedMockito.doReturn(mAppSearchConsentWorker)
                 .when(() -> AppSearchConsentWorker.getInstance());
-        ExtendedMockito.doReturn(mFlags).when(() -> FlagsFactory.getFlags());
+        extendedMockito.mockGetFlags(mFlags);
         mAppSearchConsentManager = AppSearchConsentManager.getInstance();
         ApplicationInfo app1 = new ApplicationInfo();
         app1.packageName = PACKAGE_NAME1;
@@ -115,13 +106,6 @@ public final class AppSearchConsentManagerTest extends AdServicesUnitTestCase {
         app3.packageName = PACKAGE_NAME3;
         ExtendedMockito.doReturn(List.of(app1, app2, app3))
                 .when(() -> PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()));
-    }
-
-    @After
-    public void teardown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
     }
 
     @Test
